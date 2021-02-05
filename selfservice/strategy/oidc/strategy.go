@@ -32,6 +32,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -53,6 +54,7 @@ type dependencies interface {
 	x.LoggingProvider
 	x.CookieProvider
 	x.CSRFTokenGeneratorProvider
+	x.WriterProvider
 
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider
@@ -89,8 +91,8 @@ func isForced(req interface{}) bool {
 	return ok && f.IsForced()
 }
 
-// Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
-// and registration via OpenID Providers.
+// Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
+// It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
 	d         dependencies
 	f         *fetcher.Fetcher
@@ -129,16 +131,18 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 }
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
+	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.handleCallback)
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
-		r.GET(RouteCallback, s.handleCallback)
+		r.GET(RouteCallback, wrappedHandleCallback)
 	}
 
+	wrappedHandleAuth := strategy.IsDisabled(s.d, s.ID().String(), s.handleAuth)
 	if handle, _, _ := r.Lookup("POST", RouteAuth); handle == nil {
-		r.POST(RouteAuth, s.handleAuth)
+		r.POST(RouteAuth, wrappedHandleAuth)
 	}
 
 	if handle, _, _ := r.Lookup("GET", RouteAuth); handle == nil {
-		r.GET(RouteAuth, s.handleAuth)
+		r.GET(RouteAuth, wrappedHandleAuth)
 	}
 }
 
