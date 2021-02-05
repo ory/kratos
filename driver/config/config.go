@@ -562,7 +562,7 @@ func (p *Config) CourierTemplatesRoot() string {
 }
 
 func (p *Config) parseURIOrFail(key string) *url.URL {
-	u, err := url.ParseRequestURI(p.p.String(key))
+	u, err := url.Parse(p.p.String(key))
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
