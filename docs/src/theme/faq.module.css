@@ -89,47 +89,29 @@ li.selected.kratos~.question.kratos {
     
 }
 
-li.selected.spa {
+li.selected.database {
     color:red;
 }
 
-li.selected.spa~.question.spa {
+li.selected.database~.question.database {
     display: inline;
     
 }
 
-li.selected.hooks {
+li.selected.user {
     color:red;
 }
 
-li.selected.hooks~.question.hooks {
+li.selected.user~.question.user {
     display: inline;
     
 }
 
-li.selected.admin {
+li.selected.validation {
     color:red;
 }
 
-li.selected.admin~.question.admin {
-    display: inline;
-    
-}
-
-li.selected.sessions {
-    color:red;
-}
-
-li.selected.sessions~.question.sessions {
-    display: inline;
-    
-}
-
-li.selected.self-service {
-    color:red;
-}
-
-li.selected.self-service~.question.self-service {
+li.selected.validation~.question.validation {
     display: inline;
     
 }
@@ -143,6 +125,60 @@ li.selected.traits~.question.traits {
     
 }
 
+li.selected.KYC {
+    color:red;
+}
+
+li.selected.KYC~.question.KYC {
+    display: inline;
+    
+}
+
+li.selected.hooks {
+    color:red;
+}
+
+li.selected.hooks~.question.hooks {
+    display: inline;
+    
+}
+
+li.selected.registration {
+    color:red;
+}
+
+li.selected.registration~.question.registration {
+    display: inline;
+    
+}
+
+li.selected.migration {
+    color:red;
+}
+
+li.selected.migration~.question.migration {
+    display: inline;
+    
+}
+
+li.selected.security {
+    color:red;
+}
+
+li.selected.security~.question.security {
+    display: inline;
+    
+}
+
+li.selected.attack {
+    color:red;
+}
+
+li.selected.attack~.question.attack {
+    display: inline;
+    
+}
+
 li.selected.oidc {
     color:red;
 }
@@ -152,11 +188,11 @@ li.selected.oidc~.question.oidc {
     
 }
 
-li.selected.kyc {
+li.selected.spa {
     color:red;
 }
 
-li.selected.kyc~.question.kyc {
+li.selected.spa~.question.spa {
     display: inline;
     
 }
