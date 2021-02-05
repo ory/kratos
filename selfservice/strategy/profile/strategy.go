@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -87,8 +88,9 @@ func (s *Strategy) SettingsStrategyID() string {
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
 	s.d.CSRFHandler().IgnorePath(RouteSettings)
 
-	public.POST(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.d)))
-	public.GET(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.d)))
+	wrappedHandleSubmit := strategy.IsDisabled(s.d, s.SettingsStrategyID(), s.handleSubmit)
+	public.POST(RouteSettings, s.d.SessionHandler().IsAuthenticated(wrappedHandleSubmit, settings.OnUnauthenticated(s.d)))
+	public.GET(RouteSettings, s.d.SessionHandler().IsAuthenticated(wrappedHandleSubmit, settings.OnUnauthenticated(s.d)))
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, pr *settings.Flow) error {

@@ -3,8 +3,10 @@ package password_test
 import (
 	"context"
 	"fmt"
+	"github.com/ory/kratos/internal/testhelpers"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -104,4 +106,56 @@ func TestCountActiveCredentials(t *testing.T) {
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
+}
+
+func TestDisabledEndpoint(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), false)
+
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+
+	c := testhelpers.NewClientWithCookies(t)
+	t.Run("case=should not login when password method is disabled", func(t *testing.T) {
+		res, err := c.PostForm(publicTS.URL+password.RouteLogin, url.Values{"identifier": []string{"identifier"}, "password": []string{"password"}})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+		b := make([]byte, res.ContentLength)
+		_, _ = res.Body.Read(b)
+		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+	})
+
+	t.Run("case=should not registration when password method is disabled", func(t *testing.T) {
+
+		res, err := c.PostForm(publicTS.URL+password.RouteRegistration, url.Values{"identifier": []string{"identifier"}, "password": []string{"password"}})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+		b := make([]byte, res.ContentLength)
+		_, _ = res.Body.Read(b)
+		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+	})
+
+	t.Run("case=should not settings when password method is disabled", func(t *testing.T) {
+
+		t.Run("method=GET", func(t *testing.T) {
+			res, err := c.Get(publicTS.URL + password.RouteSettings)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+
+		t.Run("method=POST", func(t *testing.T) {
+			res, err := c.PostForm(publicTS.URL+password.RouteSettings, url.Values{"age": {"16"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+	})
 }

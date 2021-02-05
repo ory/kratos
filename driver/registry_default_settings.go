@@ -57,3 +57,13 @@ func (m *RegistryDefault) SettingsStrategies() settings.Strategies {
 	}
 	return m.profileStrategies
 }
+
+func (m *RegistryDefault) AllSettingsStrategies() settings.Strategies {
+	var profileStrategies []settings.Strategy
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(settings.Strategy); ok {
+			profileStrategies = append(profileStrategies, s)
+		}
+	}
+	return profileStrategies
+}

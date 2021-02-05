@@ -144,15 +144,15 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 	m.RegistrationHandler().RegisterPublicRoutes(router)
 	m.LogoutHandler().RegisterPublicRoutes(router)
 	m.SettingsHandler().RegisterPublicRoutes(router)
-	m.LoginStrategies().RegisterPublicRoutes(router)
-	m.SettingsStrategies().RegisterPublicRoutes(router)
-	m.RegistrationStrategies().RegisterPublicRoutes(router)
+	m.AllLoginStrategies().RegisterPublicRoutes(router)
+	m.AllSettingsStrategies().RegisterPublicRoutes(router)
+	m.AllRegistrationStrategies().RegisterPublicRoutes(router)
 	m.SessionHandler().RegisterPublicRoutes(router)
 	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	m.SchemaHandler().RegisterPublicRoutes(router)
 
 	if m.c.SelfServiceFlowRecoveryEnabled() {
-		m.RecoveryStrategies().RegisterPublicRoutes(router)
+		m.AllRecoveryStrategies().RegisterPublicRoutes(router)
 		m.RecoveryHandler().RegisterPublicRoutes(router)
 	}
 
@@ -173,7 +173,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 
 	if m.c.SelfServiceFlowRecoveryEnabled() {
 		m.RecoveryHandler().RegisterAdminRoutes(router)
-		m.RecoveryStrategies().RegisterAdminRoutes(router)
+		m.AllRecoveryStrategies().RegisterAdminRoutes(router)
 	}
 
 	m.VerificationHandler().RegisterAdminRoutes(router)
@@ -265,6 +265,17 @@ func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
 	return m.registrationStrategies
 }
 
+func (m *RegistryDefault) AllRegistrationStrategies() registration.Strategies {
+	var registrationStrategies []registration.Strategy
+
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(registration.Strategy); ok {
+			registrationStrategies = append(registrationStrategies, s)
+		}
+	}
+	return registrationStrategies
+}
+
 func (m *RegistryDefault) LoginStrategies() login.Strategies {
 	if len(m.loginStrategies) == 0 {
 		for _, strategy := range m.selfServiceStrategies() {
@@ -276,6 +287,16 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 		}
 	}
 	return m.loginStrategies
+}
+
+func (m *RegistryDefault) AllLoginStrategies() login.Strategies {
+	var loginStrategies []login.Strategy
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(login.Strategy); ok {
+			loginStrategies = append(loginStrategies, s)
+		}
+	}
+	return loginStrategies
 }
 
 func (m *RegistryDefault) VerificationStrategies() verification.Strategies {

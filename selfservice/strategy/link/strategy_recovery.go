@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -41,12 +42,16 @@ func (s *Strategy) RecoveryStrategyID() string {
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnAuthenticated(s.d)
-	public.GET(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(s.handleRecovery, redirect))
-	public.POST(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(s.handleRecovery, redirect))
+
+	wrappedHandleRecovery := strategy.IsDisabled(s.d, s.RecoveryStrategyID(), s.handleRecovery)
+	public.GET(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(wrappedHandleRecovery, redirect))
+
+	public.POST(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(wrappedHandleRecovery, redirect))
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
-	admin.POST(RouteAdminCreateRecoveryLink, s.createRecoveryLink)
+	wrappedCreateRecoveryLink := strategy.IsDisabled(s.d, s.RecoveryStrategyID(), s.createRecoveryLink)
+	admin.POST(RouteAdminCreateRecoveryLink, wrappedCreateRecoveryLink)
 }
 
 func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) error {

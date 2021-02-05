@@ -495,3 +495,35 @@ func TestStrategyTraits(t *testing.T) {
 		})
 	})
 }
+func TestDisabledEndpoint(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, false)
+
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
+	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
+
+	t.Run("case=should not submit when profile method is disabled", func(t *testing.T) {
+
+		t.Run("method=GET", func(t *testing.T) {
+			res, err := browserUser1.Get(publicTS.URL + profile.RouteSettings)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, 10000)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+
+		t.Run("method=POST", func(t *testing.T) {
+			res, err := browserUser1.PostForm(publicTS.URL+profile.RouteSettings, url.Values{"age": {"16"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+	})
+}
