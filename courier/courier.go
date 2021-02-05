@@ -146,6 +146,12 @@ func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {
 							// WithField("email_to", msg.Recipient).
 							WithField("message_from", from).
 							Error("Unable to send email using SMTP connection.")
+						if err := m.d.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusQueued); err != nil {
+							m.d.Logger().
+								WithError(err).
+								WithField("message_id", msg.ID).
+								Error(`Unable to reset the failed message's status to "queued".`)
+						}
 						continue
 					}
 

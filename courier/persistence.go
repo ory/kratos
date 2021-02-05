@@ -63,6 +63,7 @@ func TestPersister(ctx context.Context, p Persister) func(t *testing.T) {
 
 		t.Run("case=pull messages from the queue", func(t *testing.T) {
 			for k, expected := range messages {
+				expected.Status = MessageStatusProcessing
 				t.Run(fmt.Sprintf("message=%d", k), func(t *testing.T) {
 					messages, err := p.NextMessages(ctx, 1)
 					require.NoError(t, err)
@@ -75,8 +76,6 @@ func TestPersister(ctx context.Context, p Persister) func(t *testing.T) {
 					assert.Equal(t, expected.Status, actual.Status)
 					assert.Equal(t, expected.Type, actual.Type)
 					assert.Equal(t, expected.Recipient, actual.Recipient)
-
-					require.NoError(t, p.SetMessageStatus(ctx, actual.ID, MessageStatusSent))
 				})
 			}
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -24,10 +25,18 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) ([]courier.Message, error) {
 	var m []courier.Message
-	if err := p.GetConnection(ctx).
-		Eager().
-		Where("status != ?", courier.MessageStatusSent).
-		Order("created_at ASC").Limit(int(limit)).All(&m); err != nil {
+	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		if err := tx.
+			Eager().
+			Where("status = ?", courier.MessageStatusQueued).
+			Order("created_at ASC").Limit(int(limit)).All(&m); err != nil {
+			return err
+		}
+		for i := range m {
+			m[i].Status = courier.MessageStatusProcessing
+		}
+		return tx.UpdateColumns(&m, "status")
+	}); err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, errors.WithStack(courier.ErrQueueEmpty)
 		}
@@ -45,7 +54,7 @@ func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, 
 	var m courier.Message
 	if err := p.GetConnection(ctx).
 		Eager().
-		Where("status != ?", courier.MessageStatusSent).
+		Where("status = ?", courier.MessageStatusQueued).
 		Order("created_at DESC").First(&m); err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, errors.WithStack(courier.ErrQueueEmpty)
