@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/markbates/pkger"
@@ -561,13 +562,29 @@ func (p *Config) CourierTemplatesRoot() string {
 	return p.p.StringF(ViperKeyCourierTemplatesPath, "/courier/template/templates")
 }
 
+func splitUrlAndFragment(s string) (string, string) {
+	i := strings.IndexByte(s, '#')
+	if i < 0 {
+		return s, ""
+	}
+	return s[:i], s[i+1:]
+}
+
 func (p *Config) parseURIOrFail(key string) *url.URL {
-	u, err := url.Parse(p.p.String(key))
+	u, frag := splitUrlAndFragment(p.p.String(key))
+	url, err := url.ParseRequestURI(u)
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	return u
+	if url.Host == "" || (url.Scheme != "http" && url.Scheme != "https") {
+		p.l.Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
+	}
+
+	if frag != "" {
+		url.Fragment = frag
+	}
+	return url
 }
 
 func (p *Config) Tracing() *tracing.Config {
