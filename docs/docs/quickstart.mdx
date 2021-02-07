@@ -234,8 +234,11 @@ Here's a play-by-play of what happened:
 3. `/auth/login` redirected you to
    `http://127.0.0.1:4433/self-service/login/browser`, which is one of ORY
    Kratos' APIs used for logging in browser-based applications.
-4. ORY Kratos performed some security checks, prepared form data, created a
-   `csrf_token`, and redirected the browser to `/auth/login?flow=<flow_id>`.
+4. Kratos handled `/self-service/login/browser` which created and persisted a
+   new flow with `csrf_token`. Kratos would check no session exists, redirected
+   the browser to `/auth/login?flow=<flow_id>`. If session exists already, the
+   browser will be redirected to `urls.default_redirect_url` unless the query
+   parameter `?refresh=true` was set.
 5. SecureApp handled the `/auth/login` route, found the `<flow_id>` in the URL
    query parameter, and used it to make an HTTP request to
    `http://kratos:4434/self-service/login/flows?id=<flow_id>`. Notice the URI is
