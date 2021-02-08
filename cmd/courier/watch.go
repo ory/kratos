@@ -21,12 +21,16 @@ var watchCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		d := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
 
-		go ServeMetrics(d, cmd, args)
+		metricsPort := d.Config(cmd.Context()).CourierExposeMetricsPort()
+
+		if d.Config(cmd.Context()).CourierExposeMetricsPort() != 0 {
+			go ServeMetrics(d, cmd, metricsPort, args)
+		}
 		Watch(d, cmd, args)
 	},
 }
 
-func ServeMetrics(r driver.Registry, cmd *cobra.Command, args []string) {
+func ServeMetrics(r driver.Registry, cmd *cobra.Command, port int, args []string) {
 
 	c := r.Config(cmd.Context())
 	l := r.Logger()
@@ -43,8 +47,9 @@ func ServeMetrics(r driver.Registry, cmd *cobra.Command, args []string) {
 	}
 
 	n.UseHandler(router)
+
 	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.AdminListenOn(),
+		Addr:    c.MetricsListenOn(),
 		Handler: context.ClearHandler(n),
 	})
 
@@ -52,7 +57,7 @@ func ServeMetrics(r driver.Registry, cmd *cobra.Command, args []string) {
 	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
 		l.Fatalln("Failed to gracefully shutdown metrics httpd")
 	}
-	l.Println("Admin httpd was shutdown gracefully")
+	l.Println("Metrics httpd was shutdown gracefully")
 }
 
 func Watch(d driver.Registry, cmd *cobra.Command, args []string) {

@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/markbates/pkger"
@@ -235,6 +236,9 @@ func (p *Config) listenOn(key string) string {
 	fb := 4433
 	if key == "admin" {
 		fb = 4434
+	} else if key == "metrics" {
+		fb = p.p.Int("expose-metrics-port")
+		key = "admin"
 	}
 
 	port := p.p.IntF("serve."+key+".port", fb)
@@ -580,6 +584,14 @@ func (p *Config) IsInsecureDevMode() bool {
 
 func (p *Config) IsBackgroundCourierEnabled() bool {
 	return p.Source().Bool("watch-courier")
+}
+
+func (p *Config) CourierExposeMetricsPort() int {
+	return p.Source().Int("courier.expose-metrics-port")
+}
+
+func (p *Config) MetricsListenOn() string {
+	return strings.Replace(p.AdminListenOn(), ":4434", fmt.Sprintf(":%d", p.CourierExposeMetricsPort()), 1)
 }
 
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
