@@ -32,7 +32,7 @@ func TestManager(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
-		f, err := recovery.NewFlow(time.Hour, "", u, reg.RecoveryStrategies(), flow.TypeBrowser)
+		f, err := recovery.NewFlow(time.Hour, "", u, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
@@ -54,7 +54,7 @@ func TestManager(t *testing.T) {
 	})
 
 	t.Run("method=SendVerificationLink", func(t *testing.T) {
-		f, err := verification.NewFlow(time.Hour, "", u, reg.VerificationStrategies(), flow.TypeBrowser)
+		f, err := verification.NewFlow(time.Hour, "", u, reg.VerificationStrategies(context.Background()), flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))

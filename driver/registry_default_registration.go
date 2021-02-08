@@ -1,12 +1,13 @@
 package driver
 
 import (
+	"context"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
-func (m *RegistryDefault) PostRegistrationPrePersistHooks(credentialsType identity.CredentialsType) (b []registration.PostHookPrePersistExecutor) {
-	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceFlowRegistrationAfterHooks(string(credentialsType))) {
+func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []registration.PostHookPrePersistExecutor) {
+	for _, v := range m.getHooks(string(credentialsType), m.Config(ctx).SelfServiceFlowRegistrationAfterHooks(string(credentialsType))) {
 		if hook, ok := v.(registration.PostHookPrePersistExecutor); ok {
 			b = append(b, hook)
 		}
@@ -14,12 +15,12 @@ func (m *RegistryDefault) PostRegistrationPrePersistHooks(credentialsType identi
 	return
 }
 
-func (m *RegistryDefault) PostRegistrationPostPersistHooks(credentialsType identity.CredentialsType) (b []registration.PostHookPostPersistExecutor) {
-	if m.c.SelfServiceFlowVerificationEnabled() {
+func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []registration.PostHookPostPersistExecutor) {
+	if m.Config(ctx).SelfServiceFlowVerificationEnabled() {
 		b = append(b, m.HookVerifier())
 	}
 
-	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceFlowRegistrationAfterHooks(string(credentialsType))) {
+	for _, v := range m.getHooks(string(credentialsType), m.Config(ctx).SelfServiceFlowRegistrationAfterHooks(string(credentialsType))) {
 		if hook, ok := v.(registration.PostHookPostPersistExecutor); ok {
 			b = append(b, hook)
 		}
@@ -27,8 +28,8 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(credentialsType ident
 	return
 }
 
-func (m *RegistryDefault) PreRegistrationHooks() (b []registration.PreHookExecutor) {
-	for _, v := range m.getHooks("", m.c.SelfServiceFlowRegistrationBeforeHooks()) {
+func (m *RegistryDefault) PreRegistrationHooks(ctx context.Context, ) (b []registration.PreHookExecutor) {
+	for _, v := range m.getHooks("", m.Config(ctx).SelfServiceFlowRegistrationBeforeHooks()) {
 		if hook, ok := v.(registration.PreHookExecutor); ok {
 			b = append(b, hook)
 		}

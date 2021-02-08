@@ -62,7 +62,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
 	a := NewFlow(h.d.Config(r.Context()).SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
-	for _, s := range h.d.LoginStrategies() {
+	for _, s := range h.d.LoginStrategies(r.Context()) {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return nil, err
 		}

@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"net/http"
 	"reflect"
 
@@ -51,5 +52,5 @@ func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 }
 
 type StrategyProvider interface {
-	SettingsStrategies() Strategies
+	SettingsStrategies(ctx context.Context) Strategies
 }

@@ -88,7 +88,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Identity, ft flow.Type) (*Flow, error) {
 	f := NewFlow(h.d.Config(r.Context()).SelfServiceFlowSettingsFlowLifespan(), r, i, ft)
-	for _, strategy := range h.d.SettingsStrategies() {
+	for _, strategy := range h.d.SettingsStrategies(r.Context()) {
 		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
 			return nil, err
 		}

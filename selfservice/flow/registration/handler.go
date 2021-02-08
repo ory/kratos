@@ -64,7 +64,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
 	a := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
-	for _, s := range h.d.RegistrationStrategies() {
+	for _, s := range h.d.RegistrationStrategies(r.Context()) {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return nil, err
 		}
