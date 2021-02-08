@@ -41,6 +41,6 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	require.NoError(t, conf.Source().Set("dev", false))
 	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 	assert.EqualValues(t, http.SameSiteNoneMode, cookie.SameSite, "can be none because https/secure is true")
-	assert.True(t, cookie.Secure, "false because insecure dev mode")
+	assert.True(t, cookie.Secure, "true because secure mode")
 	assert.True(t, cookie.HttpOnly)
 }
