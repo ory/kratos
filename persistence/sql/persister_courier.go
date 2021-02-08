@@ -67,6 +67,7 @@ func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, 
 
 func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms courier.MessageStatus) error {
 	count, err := p.GetConnection(ctx).RawQuery(
+		// #nosec G201
 		fmt.Sprintf(
 			"UPDATE %s SET status = ? WHERE id = ?",
 			corp.ContextualizeTableName(ctx, "courier_messages"),

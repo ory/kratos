@@ -226,7 +226,7 @@ func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []s
 
 	d.Logger().Println("Courier worker started.")
 	if err := graceful.Graceful(func() error {
-		return d.Courier().Work(ctx)
+		return d.Courier(ctx).Work(ctx)
 	}, func(_ cx.Context) error {
 		cancel()
 		return nil

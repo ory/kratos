@@ -1,6 +1,7 @@
 package login
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -44,5 +45,5 @@ func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 }
 
 type StrategyProvider interface {
-	LoginStrategies() Strategies
+	LoginStrategies(ctx context.Context) Strategies
 }

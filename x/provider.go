@@ -19,6 +19,6 @@ type WriterProvider interface {
 }
 
 type CookieProvider interface {
-	CookieManager() sessions.Store
+	CookieManager(ctx context.Context) sessions.Store
 	ContinuityCookieManager(ctx context.Context) sessions.Store
 }

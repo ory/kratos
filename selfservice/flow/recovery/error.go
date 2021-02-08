@@ -84,7 +84,7 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := NewFlow(s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), f.Type)
+		a, err := NewFlow(s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), f.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, methodName, f, err)

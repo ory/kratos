@@ -47,6 +47,7 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 		return nil, sqlcon.HandleError(err)
 	}
 
+	// #nosec G201
 	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("UPDATE %s SET was_seen = true, seen_at = ? WHERE id = ?", corp.ContextualizeTableName(ctx, "selfservice_errors")), time.Now().UTC(), id).Exec(); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
@@ -56,8 +57,10 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 
 func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bool) (err error) {
 	if force {
+		// #nosec G201
 		err = p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE seen_at < ? AND seen_at IS NOT NULL", corp.ContextualizeTableName(ctx, "selfservice_errors")), olderThan).Exec()
 	} else {
+		// #nosec G201
 		err = p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE was_seen=true AND seen_at < ? AND seen_at IS NOT NULL", corp.ContextualizeTableName(ctx, "selfservice_errors")), time.Now().UTC().Add(-olderThan)).Exec()
 	}
 

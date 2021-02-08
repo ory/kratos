@@ -43,9 +43,8 @@ func (s *Strategy) RecoveryStrategyID() string {
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnAuthenticated(s.d)
 
-	wrappedHandleRecovery := strategy.IsDisabled(s.d, s.RecoveryStrategyID(), s.handleRecovery)
+	wrappedHandleRecovery := strategy.IsRecoveryDisabled(s.d, s.RecoveryStrategyID(), s.handleRecovery)
 	public.GET(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(wrappedHandleRecovery, redirect))
-
 	public.POST(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(wrappedHandleRecovery, redirect))
 }
 
@@ -157,7 +156,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	req, err := recovery.NewFlow(expiresIn, s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), flow.TypeBrowser)
+	req, err := recovery.NewFlow(expiresIn, s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
@@ -363,7 +362,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 
 	var f *recovery.Flow
 	if !token.FlowID.Valid {
-		f, err = recovery.NewFlow(time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), flow.TypeBrowser)
+		f, err = recovery.NewFlow(time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 		if err != nil {
 			s.handleRecoveryError(w, r, nil, body, err)
 			return
@@ -392,7 +391,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewFlow(s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), ft)
+	req, err := recovery.NewFlow(s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), ft)
 	if err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return

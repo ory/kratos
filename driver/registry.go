@@ -49,7 +49,7 @@ type Registry interface {
 	WithCSRFTokenGenerator(cg x.CSRFToken)
 
 	HealthHandler() *healthx.Handler
-	CookieManager() sessions.Store
+	CookieManager(ctx context.Context) sessions.Store
 	ContinuityCookieManager(ctx context.Context) sessions.Store
 
 	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
