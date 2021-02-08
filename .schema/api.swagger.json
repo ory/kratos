@@ -1951,10 +1951,11 @@
       }
     },
     "errorContainer": {
+      "description": "ErrorContainer ErrorContainer ErrorContainer ErrorContainer error container",
       "type": "object",
       "required": [
-        "errors",
-        "id"
+        "id",
+        "errors"
       ],
       "properties": {
         "errors": {
@@ -2013,7 +2014,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "GenericError Error response",
+      "title": "Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -2071,6 +2072,7 @@
       }
     },
     "healthStatus": {
+      "description": "HealthStatus HealthStatus health status",
       "type": "object",
       "properties": {
         "status": {
@@ -2147,12 +2149,11 @@
       }
     },
     "loginFlowMethodConfig": {
-      "description": "LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig login flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2179,11 +2180,11 @@
       }
     },
     "loginViaApiResponse": {
-      "description": "LoginViaAPIResponse The Response for Login Flows via API",
+      "description": "The Response for Login Flows via API",
       "type": "object",
       "required": [
-        "session_token",
-        "session"
+        "session",
+        "session_token"
       ],
       "properties": {
         "session": {
@@ -2198,13 +2199,13 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "A Recovery Flow",
+      "title": "RecoveryFlow A Recovery Flow",
       "required": [
-        "expires_at",
         "id",
+        "expires_at",
         "issued_at",
-        "methods",
         "request_url",
+        "methods",
         "state"
       ],
       "properties": {
@@ -2265,12 +2266,11 @@
       }
     },
     "recoveryFlowMethodConfig": {
-      "description": "RecoveryFlowMethodConfig recovery flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2290,14 +2290,13 @@
       }
     },
     "recoveryLink": {
-      "description": "RecoveryLink RecoveryLink recovery link",
       "type": "object",
       "required": [
         "recovery_link"
       ],
       "properties": {
         "expires_at": {
-          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.\nFormat: date-time\nFormat: date-time",
+          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
           "type": "string",
           "format": "date-time"
         },
@@ -2354,11 +2353,10 @@
       }
     },
     "registrationFlowMethod": {
-      "description": "RegistrationFlowMethod registration flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2370,12 +2368,11 @@
       }
     },
     "registrationFlowMethodConfig": {
-      "description": "RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2402,11 +2399,11 @@
       }
     },
     "registrationViaApiResponse": {
-      "description": "RegistrationViaAPIResponse The Response for Registration Flows via API",
+      "description": "The Response for Registration Flows via API",
       "type": "object",
       "required": [
-        "session_token",
-        "identity"
+        "identity",
+        "session_token"
       ],
       "properties": {
         "identity": {
@@ -2541,12 +2538,11 @@
       }
     },
     "settingsFlowMethodConfig": {
-      "description": "SettingsFlowMethodConfig SettingsFlowMethodConfig settings flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2630,10 +2626,11 @@
       }
     },
     "verificationFlowMethod": {
+      "description": "VerificationFlowMethod verification flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2671,7 +2668,6 @@
       }
     },
     "version": {
-      "description": "Version Version Version Version Version Version version",
       "type": "object",
       "properties": {
         "version": {
