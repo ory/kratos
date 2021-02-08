@@ -755,7 +755,7 @@
 	      "title": "Metrics port",
 	      "description": "The port the courier's metrics endpoint listens on (0/disabled by default).",
 	      "type": "integer",
-	      "minimum": 1,
+	      "minimum": 0,
 	      "maximum": 65535,
 	      "examples": [
 		4434
