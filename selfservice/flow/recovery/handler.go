@@ -1,9 +1,10 @@
 package recovery
 
 import (
-	"github.com/ory/herodot"
 	"net/http"
 	"time"
+
+	"github.com/ory/herodot"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
