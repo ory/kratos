@@ -9125,8 +9125,6 @@ verification flow with link method_
 }
 ```
 
-_ErrorContainer ErrorContainer ErrorContainer ErrorContainer error container_
-
 #### Properties
 
 | Name   | Type                | Required | Restrictions | Description             |
@@ -9159,7 +9157,7 @@ _ErrorContainer ErrorContainer ErrorContainer ErrorContainer error container_
 }
 ```
 
-_Field represents a HTML Form Field_
+_FormField FormField FormField FormField Field represents a HTML Form Field_
 
 #### Properties
 
@@ -9228,7 +9226,7 @@ _Fields contains multiple fields_
 }
 ```
 
-_Error response_
+_GenericError Error response_
 
 #### Properties
 
@@ -9285,6 +9283,8 @@ payload_
   }
 }
 ```
+
+_HealthNotReadyStatus health not ready status_
 
 #### Properties
 
@@ -9456,7 +9456,7 @@ _Login Flow_
 | issued_at                  | string(date-time)                         | true     | none         | IssuedAt is the time (UTC) when the flow started.                                                                                                                                                                                                |
 | messages                   | [Messages](#schemamessages)               | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                                                                                      |
 | methods                    | object                                    | true     | none         | List of login methods This is the list of available login methods with their required form fields, such as `identifier` and `password` for the password login method. This will also contain error messages such as "password can not be empty". |
-| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | LoginFlowMethod login flow method                                                                                                                                                                                                                |
+| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | none                                                                                                                                                                                                                                             |
 | request_url                | string                                    | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                                                                        |
 | type                       | [Type](#schematype)                       | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                                                                                  |
 
@@ -9519,8 +9519,6 @@ _Login Flow_
   "method": "string"
 }
 ```
-
-_LoginFlowMethod login flow method_
 
 #### Properties
 
@@ -9638,13 +9636,13 @@ _LoginFlowMethod login flow method_
 }
 ```
 
-_The Response for Login Flows via API_
+_LoginViaAPIResponse The Response for Login Flows via API_
 
 #### Properties
 
 | Name          | Type                      | Required | Restrictions | Description                                                                                                                                                                                                                             |
 | ------------- | ------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| session       | [session](#schemasession) | true     | none         | none                                                                                                                                                                                                                                    |
+| session       | [session](#schemasession) | true     | none         | Session session                                                                                                                                                                                                                         |
 | session_token | string                    | true     | none         | The Session Token A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header: Authorization: bearer ${session-token} The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrecoveryflow"></a>
@@ -9741,7 +9739,7 @@ _The Response for Login Flows via API_
 }
 ```
 
-_RecoveryFlow A Recovery Flow_
+_A Recovery Flow_
 
 #### Properties
 
@@ -9753,7 +9751,7 @@ _RecoveryFlow A Recovery Flow_
 | issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                 |
 | messages                   | [Messages](#schemamessages)                     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                           |
 | methods                    | object                                          | true     | none         | Methods contains context for all account recovery methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [recoveryFlowMethod](#schemarecoveryflowmethod) | false    | none         | RecoveryFlowMethod RecoveryFlowMethod recovery flow method                                                                                                                            |
+| » **additionalProperties** | [recoveryFlowMethod](#schemarecoveryflowmethod) | false    | none         | none                                                                                                                                                                                  |
 | request_url                | string                                          | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                             |
 | state                      | [State](#schemastate)                           | true     | none         | State State State State State State State State State State State state                                                                                                               |
 | type                       | [Type](#schematype)                             | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                       |
@@ -9799,8 +9797,6 @@ _RecoveryFlow A Recovery Flow_
   "method": "string"
 }
 ```
-
-_RecoveryFlowMethod RecoveryFlowMethod recovery flow method_
 
 #### Properties
 
@@ -10006,9 +10002,6 @@ _RecoveryFlowMethod RecoveryFlowMethod recovery flow method_
 }
 ```
 
-_RegistrationFlow RegistrationFlow RegistrationFlow RegistrationFlow
-registration flow_
-
 #### Properties
 
 | Name                       | Type                                                    | Required | Restrictions | Description                                                                                                                                                                            |
@@ -10085,10 +10078,10 @@ registration flow_
 
 #### Properties
 
-| Name   | Type                                                                | Required | Restrictions | Description |
-| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.  |
+| Name   | Type                                                                | Required | Restrictions | Description                                                                               |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------- |
+| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config |
+| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.                                                                                |
 
 <a id="tocSregistrationflowmethodconfig"></a>
 
@@ -10146,6 +10139,9 @@ registration flow_
   ]
 }
 ```
+
+_RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow
+method config_
 
 #### Properties
 
@@ -10229,7 +10225,7 @@ _The Response for Registration Flows via API_
 | Name          | Type                        | Required | Restrictions | Description                                                                                                                                                                                                                                                                                                                     |
 | ------------- | --------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | identity      | [Identity](#schemaidentity) | true     | none         | Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity identity                                                                                                                                                                                                                     |
-| session       | [session](#schemasession)   | false    | none         | none                                                                                                                                                                                                                                                                                                                            |
+| session       | [session](#schemasession)   | false    | none         | Session session                                                                                                                                                                                                                                                                                                                 |
 | session_token | string                      | true     | none         | The Session Token This field is only set when the session hook is configured as a post-registration hook. A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header: Authorization: bearer ${session-token} The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrevokesession"></a>
@@ -10293,16 +10289,18 @@ RevokeSession revoke session_
 }
 ```
 
+_Session session_
+
 #### Properties
 
 | Name             | Type                        | Required | Restrictions | Description                                                                                                 |
 | ---------------- | --------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------- |
 | active           | boolean                     | false    | none         | active                                                                                                      |
-| authenticated_at | string(date-time)           | true     | none         | none                                                                                                        |
-| expires_at       | string(date-time)           | true     | none         | none                                                                                                        |
+| authenticated_at | string(date-time)           | true     | none         | authenticated at                                                                                            |
+| expires_at       | string(date-time)           | true     | none         | expires at                                                                                                  |
 | id               | [UUID](#schemauuid)         | true     | none         | none                                                                                                        |
 | identity         | [Identity](#schemaidentity) | true     | none         | Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity identity |
-| issued_at        | string(date-time)           | true     | none         | none                                                                                                        |
+| issued_at        | string(date-time)           | true     | none         | issued at                                                                                                   |
 
 <a id="tocSsettingsflow"></a>
 
@@ -10421,7 +10419,7 @@ RevokeSession revoke session_
 }
 ```
 
-_SettingsFlow SettingsFlow Flow represents a Settings Flow_
+_Flow represents a Settings Flow_
 
 #### Properties
 
@@ -10434,7 +10432,7 @@ _SettingsFlow SettingsFlow Flow represents a Settings Flow_
 | issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                               |
 | messages                   | [Messages](#schemamessages)                     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                      |
 | methods                    | object                                          | true     | none         | Methods contains context for all enabled registration methods. If a settings flow has been processed, but for example the first name is empty, this will contain error messages. |
-| » **additionalProperties** | [settingsFlowMethod](#schemasettingsflowmethod) | false    | none         | none                                                                                                                                                                             |
+| » **additionalProperties** | [settingsFlowMethod](#schemasettingsflowmethod) | false    | none         | SettingsFlowMethod settings flow method                                                                                                                                          |
 | request_url                | string                                          | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                        |
 | state                      | [State](#schemastate)                           | true     | none         | State State State State State State State State State State State state                                                                                                          |
 | type                       | [Type](#schematype)                             | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                  |
@@ -10480,6 +10478,8 @@ _SettingsFlow SettingsFlow Flow represents a Settings Flow_
   "method": "string"
 }
 ```
+
+_SettingsFlowMethod settings flow method_
 
 #### Properties
 
@@ -10781,19 +10781,19 @@ _The Response for Settings Flows via API_
 }
 ```
 
-_VerificationFlow VerificationFlow A Verification Flow_
+_A Verification Flow_
 
 #### Properties
 
 | Name                       | Type                                                    | Required | Restrictions | Description                                                                                                                                                                               |
 | -------------------------- | ------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | active                     | string                                                  | false    | none         | Active, if set, contains the registration method that is being used. It is initially not set.                                                                                             |
-| expires_at                 | string(date-time)                                       | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated. Format: date-time Format: date-time              |
+| expires_at                 | string(date-time)                                       | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated.                                                  |
 | id                         | [UUID](#schemauuid)                                     | false    | none         | none                                                                                                                                                                                      |
-| issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred. Format: date-time Format: date-time                                                                                                 |
+| issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                     |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                               |
 | methods                    | object                                                  | true     | none         | Methods contains context for all account verification methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | VerificationFlowMethod verification flow method                                                                                                                                           |
+| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | none                                                                                                                                                                                      |
 | request_url                | string                                                  | false    | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                 |
 | state                      | [State](#schemastate)                                   | true     | none         | State State State State State State State State State State State state                                                                                                                   |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                           |
@@ -10839,8 +10839,6 @@ _VerificationFlow VerificationFlow A Verification Flow_
   "method": "string"
 }
 ```
-
-_VerificationFlowMethod verification flow method_
 
 #### Properties
 
@@ -10910,6 +10908,8 @@ _VerificationFlowMethodConfig verification flow method config_
   "version": "string"
 }
 ```
+
+_Version Version Version Version Version Version version_
 
 #### Properties
 

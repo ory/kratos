@@ -1951,11 +1951,10 @@
       }
     },
     "errorContainer": {
-      "description": "ErrorContainer ErrorContainer ErrorContainer ErrorContainer error container",
       "type": "object",
       "required": [
-        "id",
-        "errors"
+        "errors",
+        "id"
       ],
       "properties": {
         "errors": {
@@ -1968,7 +1967,7 @@
       }
     },
     "formField": {
-      "description": "Field represents a HTML Form Field",
+      "description": "FormField FormField FormField FormField Field represents a HTML Form Field",
       "type": "object",
       "required": [
         "name",
@@ -2014,7 +2013,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "Error response",
+      "title": "GenericError Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -2060,6 +2059,7 @@
       }
     },
     "healthNotReadyStatus": {
+      "description": "HealthNotReadyStatus health not ready status",
       "type": "object",
       "properties": {
         "errors": {
@@ -2133,11 +2133,10 @@
       }
     },
     "loginFlowMethod": {
-      "description": "LoginFlowMethod login flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2180,11 +2179,11 @@
       }
     },
     "loginViaApiResponse": {
-      "description": "The Response for Login Flows via API",
+      "description": "LoginViaAPIResponse The Response for Login Flows via API",
       "type": "object",
       "required": [
-        "session",
-        "session_token"
+        "session_token",
+        "session"
       ],
       "properties": {
         "session": {
@@ -2199,13 +2198,13 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "RecoveryFlow A Recovery Flow",
+      "title": "A Recovery Flow",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
         "methods",
+        "request_url",
         "state"
       ],
       "properties": {
@@ -2249,11 +2248,10 @@
       }
     },
     "recoveryFlowMethod": {
-      "description": "RecoveryFlowMethod RecoveryFlowMethod recovery flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2307,14 +2305,13 @@
       }
     },
     "registrationFlow": {
-      "description": "RegistrationFlow RegistrationFlow RegistrationFlow RegistrationFlow registration flow",
       "type": "object",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
-        "methods"
+        "methods",
+        "request_url"
       ],
       "properties": {
         "active": {
@@ -2368,11 +2365,12 @@
       }
     },
     "registrationFlowMethodConfig": {
+      "description": "RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2432,13 +2430,14 @@
       }
     },
     "session": {
+      "description": "Session session",
       "type": "object",
       "required": [
-        "authenticated_at",
-        "expires_at",
         "id",
-        "identity",
-        "issued_at"
+        "expires_at",
+        "authenticated_at",
+        "issued_at",
+        "identity"
       ],
       "properties": {
         "active": {
@@ -2446,10 +2445,12 @@
           "type": "boolean"
         },
         "authenticated_at": {
+          "description": "authenticated at",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
+          "description": "expires at",
           "type": "string",
           "format": "date-time"
         },
@@ -2460,6 +2461,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
+          "description": "issued at",
           "type": "string",
           "format": "date-time"
         }
@@ -2468,14 +2470,14 @@
     "settingsFlow": {
       "description": "This flow is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nWe recommend reading the [User Settings Documentation](../self-service/flows/user-settings)",
       "type": "object",
-      "title": "SettingsFlow SettingsFlow Flow represents a Settings Flow",
+      "title": "Flow represents a Settings Flow",
       "required": [
-        "id",
         "expires_at",
-        "issued_at",
-        "request_url",
-        "methods",
+        "id",
         "identity",
+        "issued_at",
+        "methods",
+        "request_url",
         "state"
       ],
       "properties": {
@@ -2522,10 +2524,11 @@
       }
     },
     "settingsFlowMethod": {
+      "description": "SettingsFlowMethod settings flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2580,7 +2583,7 @@
     "verificationFlow": {
       "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
       "type": "object",
-      "title": "VerificationFlow VerificationFlow A Verification Flow",
+      "title": "A Verification Flow",
       "required": [
         "methods",
         "state"
@@ -2591,7 +2594,7 @@
           "type": "string"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.\nFormat: date-time\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -2599,7 +2602,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -2626,11 +2629,10 @@
       }
     },
     "verificationFlowMethod": {
-      "description": "VerificationFlowMethod verification flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2668,6 +2670,7 @@
       }
     },
     "version": {
+      "description": "Version Version Version Version Version Version version",
       "type": "object",
       "properties": {
         "version": {
