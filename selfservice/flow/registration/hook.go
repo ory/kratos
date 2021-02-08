@@ -35,7 +35,7 @@ type (
 	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
 
 	HooksProvider interface {
-		PreRegistrationHooks(ctx context.Context, ) []PreHookExecutor
+		PreRegistrationHooks(ctx context.Context) []PreHookExecutor
 		PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookPrePersistExecutor
 		PostRegistrationPostPersistHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookPostPersistExecutor
 	}

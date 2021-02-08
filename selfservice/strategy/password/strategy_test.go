@@ -3,11 +3,12 @@ package password_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/internal/testhelpers"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

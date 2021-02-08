@@ -1,10 +1,11 @@
 package link
 
 import (
-	"github.com/ory/kratos/selfservice/strategy"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/selfservice/strategy"
 
 	"github.com/ory/x/pkgerx"
 

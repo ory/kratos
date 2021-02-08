@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+
 	"github.com/ory/kratos/selfservice/flow/recovery"
 )
 
@@ -22,17 +23,17 @@ func (m *RegistryDefault) RecoveryHandler() *recovery.Handler {
 }
 
 func (m *RegistryDefault) RecoveryStrategies(ctx context.Context) (recoveryStrategies recovery.Strategies) {
-		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(recovery.Strategy); ok {
-				if m.Config(ctx).SelfServiceStrategy(s.RecoveryStrategyID()).Enabled {
-					recoveryStrategies = append(recoveryStrategies, s)
-				}
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(recovery.Strategy); ok {
+			if m.Config(ctx).SelfServiceStrategy(s.RecoveryStrategyID()).Enabled {
+				recoveryStrategies = append(recoveryStrategies, s)
 			}
 		}
+	}
 	return
 }
 
-func (m *RegistryDefault) AllRecoveryStrategies() (recoveryStrategies recovery.Strategies ){
+func (m *RegistryDefault) AllRecoveryStrategies() (recoveryStrategies recovery.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(recovery.Strategy); ok {
 			recoveryStrategies = append(recoveryStrategies, s)

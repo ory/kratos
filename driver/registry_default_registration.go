@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
@@ -28,7 +29,7 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, 
 	return
 }
 
-func (m *RegistryDefault) PreRegistrationHooks(ctx context.Context, ) (b []registration.PreHookExecutor) {
+func (m *RegistryDefault) PreRegistrationHooks(ctx context.Context) (b []registration.PreHookExecutor) {
 	for _, v := range m.getHooks("", m.Config(ctx).SelfServiceFlowRegistrationBeforeHooks()) {
 		if hook, ok := v.(registration.PreHookExecutor); ok {
 			b = append(b, hook)

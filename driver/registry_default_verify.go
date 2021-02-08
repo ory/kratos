@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
