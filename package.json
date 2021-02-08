@@ -16,12 +16,12 @@
     "cypress": "6.0.1",
     "ory-prettier-styles": "1.1.1",
     "prettier": "2.2.1",
+    "remarkable": "^2.0.1",
     "text-runner": "5.0.0-pre10",
     "textrun-make": "0.0.10",
     "textrun-npm": "0.0.10",
     "textrun-repo": "0.0.10",
     "textrun-shell": "0.0.10",
-    "wait-on": "5.2.0",
-    "remarkable": "^2.0.1"
+    "wait-on": "5.2.0"
   }
 }
