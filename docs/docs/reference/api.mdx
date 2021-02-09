@@ -1241,11 +1241,12 @@ Learn how identities work in
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 204    | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)            | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError                                                                                                                  | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 204            | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)            | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 404            | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError                                                                                                   | [genericError](#schemagenericerror) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -1418,9 +1419,10 @@ your-deployment-like-so:-responses"
 
 ##### Overview
 
-| Status | Meaning                                                 | Description                                                                                                                   | Schema |
-| ------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None   |
+| Status         | Meaning                                                 | Description                                                                                                    | Schema |
+| -------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------ |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                    |
 
 <aside class="success">This operation does not require authentication</aside>
 
@@ -1921,10 +1923,11 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -2095,10 +2098,11 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -2770,10 +2774,11 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -3278,12 +3283,13 @@ password: string
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                                            |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | loginViaApiResponse                                                                                                           | [loginViaApiResponse](#schemaloginviaapiresponse) |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                              |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | loginFlow                                                                                                                     | [loginFlow](#schemaloginflow)                     |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror)               |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                                            |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | loginViaApiResponse                                                                                            | [loginViaApiResponse](#schemaloginviaapiresponse) |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | loginFlow                                                                                                      | [loginFlow](#schemaloginflow)                     |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror)               |
 
 ##### Examples
 
@@ -3753,10 +3759,11 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -4240,11 +4247,12 @@ format: uuid
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | recoveryFlow                                                                                                                  | [recoveryFlow](#schemarecoveryflow) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | recoveryFlow                                                                                                   | [recoveryFlow](#schemarecoveryflow) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -4804,10 +4812,11 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -5309,12 +5318,13 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                                                          |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | registrationViaApiResponse                                                                                                    | [registrationViaApiResponse](#schemaregistrationviaapiresponse) |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                                            |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | registrationFlow                                                                                                              | [registrationFlow](#schemaregistrationflow)                     |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror)                             |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                                                          |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | registrationViaApiResponse                                                                                     | [registrationViaApiResponse](#schemaregistrationviaapiresponse) |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | registrationFlow                                                                                               | [registrationFlow](#schemaregistrationflow)                     |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror)                             |
 
 ##### Examples
 
@@ -5833,10 +5843,11 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -6350,14 +6361,15 @@ password: string
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                                                  |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsViaApiResponse                                                                                                        | [settingsViaApiResponse](#schemasettingsviaapiresponse) |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                                    |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | settingsFlow                                                                                                                  | [settingsFlow](#schemasettingsflow)                     |
-| 401    | [Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)            | genericError                                                                                                                  | [genericError](#schemagenericerror)                     |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError                                                                                                                  | [genericError](#schemagenericerror)                     |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror)                     |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                                                  |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsViaApiResponse                                                                                         | [settingsViaApiResponse](#schemasettingsviaapiresponse) |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | settingsFlow                                                                                                   | [settingsFlow](#schemasettingsflow)                     |
+| 401            | [Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)            | genericError                                                                                                   | [genericError](#schemagenericerror)                     |
+| 403            | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError                                                                                                   | [genericError](#schemagenericerror)                     |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror)                     |
 
 ##### Examples
 
@@ -6696,14 +6708,15 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsFlow                                                                                                                  | [settingsFlow](#schemasettingsflow) |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | settingsFlow                                                                                                                  | [settingsFlow](#schemasettingsflow) |
-| 401    | [Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)            | genericError                                                                                                                  | [genericError](#schemagenericerror) |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError                                                                                                                  | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsFlow                                                                                                   | [settingsFlow](#schemasettingsflow) |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | settingsFlow                                                                                                   | [settingsFlow](#schemasettingsflow) |
+| 401            | [Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)            | genericError                                                                                                   | [genericError](#schemagenericerror) |
+| 403            | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError                                                                                                   | [genericError](#schemagenericerror) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -7246,10 +7259,11 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -7734,11 +7748,12 @@ format: uuid
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                                      |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                        |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | verificationFlow                                                                                                              | [verificationFlow](#schemaverificationflow) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror)         |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                                      |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | verificationFlow                                                                                               | [verificationFlow](#schemaverificationflow) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror)         |
 
 ##### Examples
 
@@ -7967,7 +7982,7 @@ p JSON.parse(result)
 
 <a id="opIdrevokeSession"></a>
 
-### Initialize Logout Flow for API Clients - Revoke a Session
+### Revoke and Invalidate a Session
 
 ```
 DELETE /sessions HTTP/1.1
@@ -7980,8 +7995,8 @@ Use this endpoint to revoke a session using its token. This endpoint is
 particularly useful for API clients such as mobile apps to log the user out of
 the system and invalidate the session.
 
-This endpoint does not remove any HTTP Cookies - use the Browser-Based
-Self-Service Logout Flow instead.
+This endpoint does not remove any HTTP Cookies - use the Self-Service Logout
+Flow instead.
 
 #### Request body
 
@@ -7991,7 +8006,7 @@ Self-Service Logout Flow instead.
 }
 ```
 
-<a id="initialize-logout-flow-for-api-clients---revoke-a-session-parameters"></a>
+<a id="revoke-and-invalidate-a-session-parameters"></a>
 
 #### Parameters
 
@@ -8001,15 +8016,16 @@ Self-Service Logout Flow instead.
 
 #### Responses
 
-<a id="initialize-logout-flow-for-api-clients---revoke-a-session-responses"></a>
+<a id="revoke-and-invalidate-a-session-responses"></a>
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 204    | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)            | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError                                                                                                                  | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                                  | [genericError](#schemagenericerror) |
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 204            | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)            | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError                                                                                                   | [genericError](#schemagenericerror) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -9109,8 +9125,6 @@ verification flow with link method_
 }
 ```
 
-_ErrorContainer ErrorContainer ErrorContainer ErrorContainer error container_
-
 #### Properties
 
 | Name   | Type                | Required | Restrictions | Description             |
@@ -9143,7 +9157,7 @@ _ErrorContainer ErrorContainer ErrorContainer ErrorContainer error container_
 }
 ```
 
-_Field represents a HTML Form Field_
+_FormField FormField FormField FormField Field represents a HTML Form Field_
 
 #### Properties
 
@@ -9291,6 +9305,8 @@ _HealthNotReadyStatus health not ready status_
 }
 ```
 
+_HealthStatus HealthStatus health status_
+
 #### Properties
 
 | Name   | Type   | Required | Restrictions | Description                  |
@@ -9427,7 +9443,7 @@ _HealthNotReadyStatus health not ready status_
 }
 ```
 
-_LoginFlow Login Flow_
+_Login Flow_
 
 #### Properties
 
@@ -9506,10 +9522,10 @@ _LoginFlow Login Flow_
 
 #### Properties
 
-| Name   | Type                                                  | Required | Restrictions | Description |
-| ------ | ----------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [loginFlowMethodConfig](#schemaloginflowmethodconfig) | true     | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)             | true     | none         | and so on.  |
+| Name   | Type                                                  | Required | Restrictions | Description                                                                                |
+| ------ | ----------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------ |
+| config | [loginFlowMethodConfig](#schemaloginflowmethodconfig) | true     | none         | LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig login flow method config |
+| method | [CredentialsType](#schemacredentialstype)             | true     | none         | and so on.                                                                                 |
 
 <a id="tocSloginflowmethodconfig"></a>
 
@@ -9568,6 +9584,9 @@ _LoginFlow Login Flow_
 }
 ```
 
+_LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig login flow
+method config_
+
 #### Properties
 
 | Name      | Type                            | Required | Restrictions | Description                                                                                                 |
@@ -9620,13 +9639,13 @@ _LoginFlow Login Flow_
 }
 ```
 
-_The Response for Login Flows via API_
+_LoginViaAPIResponse The Response for Login Flows via API_
 
 #### Properties
 
 | Name          | Type                      | Required | Restrictions | Description                                                                                                                                                                                                                                                            |
 | ------------- | ------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| session       | [session](#schemasession) | true     | none         | none                                                                                                                                                                                                                                                                   |
+| session       | [session](#schemasession) | true     | none         | Session session                                                                                                                                                                                                                                                        |
 | session_token | string                    | true     | none         | The Session Token<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer ${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrecoveryflow"></a>
@@ -9854,14 +9873,12 @@ _RecoveryFlowMethodConfig recovery flow method config_
 }
 ```
 
-_RecoveryLink RecoveryLink recovery link_
-
 #### Properties
 
-| Name          | Type              | Required | Restrictions | Description                                                                                                                 |
-| ------------- | ----------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| expires_at    | string(date-time) | false    | none         | Recovery Link Expires At<br/><br/>The timestamp when the recovery link expires.<br/>Format: date-time<br/>Format: date-time |
-| recovery_link | string            | true     | none         | Recovery Link<br/><br/>This link can be used to recover the account.                                                        |
+| Name          | Type              | Required | Restrictions | Description                                                                     |
+| ------------- | ----------------- | -------- | ------------ | ------------------------------------------------------------------------------- |
+| expires_at    | string(date-time) | false    | none         | Recovery Link Expires At<br/><br/>The timestamp when the recovery link expires. |
+| recovery_link | string            | true     | none         | Recovery Link<br/><br/>This link can be used to recover the account.            |
 
 <a id="tocSregistrationflow"></a>
 
@@ -10005,7 +10022,7 @@ registration flow_
 | issued_at                  | string(date-time)                                       | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                                         |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                                |
 | methods                    | object                                                  | true     | none         | Methods contains context for all enabled registration methods. If a registration flow has been<br/>processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | none                                                                                                                                                                                       |
+| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | RegistrationFlowMethod registration flow method                                                                                                                                            |
 | request_url                | string                                                  | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                              |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                            |
 
@@ -10069,12 +10086,14 @@ registration flow_
 }
 ```
 
+_RegistrationFlowMethod registration flow method_
+
 #### Properties
 
-| Name   | Type                                                                | Required | Restrictions | Description |
-| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.  |
+| Name   | Type                                                                | Required | Restrictions | Description                                                                               |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------- |
+| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config |
+| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.                                                                                |
 
 <a id="tocSregistrationflowmethodconfig"></a>
 
@@ -10132,6 +10151,9 @@ registration flow_
   ]
 }
 ```
+
+_RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow
+method config_
 
 #### Properties
 
@@ -10215,7 +10237,7 @@ _The Response for Registration Flows via API_
 | Name          | Type                        | Required | Restrictions | Description                                                                                                                                                                                                                                                                                                                                                             |
 | ------------- | --------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | identity      | [Identity](#schemaidentity) | true     | none         | Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity identity                                                                                                                                                                                                                                                             |
-| session       | [session](#schemasession)   | false    | none         | none                                                                                                                                                                                                                                                                                                                                                                    |
+| session       | [session](#schemasession)   | false    | none         | Session session                                                                                                                                                                                                                                                                                                                                                         |
 | session_token | string                      | true     | none         | The Session Token<br/><br/>This field is only set when the session hook is configured as a post-registration hook.<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer ${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrevokesession"></a>
@@ -10279,16 +10301,18 @@ RevokeSession revoke session_
 }
 ```
 
+_Session session_
+
 #### Properties
 
 | Name             | Type                        | Required | Restrictions | Description                                                                                                 |
 | ---------------- | --------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------- |
 | active           | boolean                     | false    | none         | active                                                                                                      |
-| authenticated_at | string(date-time)           | true     | none         | none                                                                                                        |
-| expires_at       | string(date-time)           | true     | none         | none                                                                                                        |
+| authenticated_at | string(date-time)           | true     | none         | authenticated at                                                                                            |
+| expires_at       | string(date-time)           | true     | none         | expires at                                                                                                  |
 | id               | [UUID](#schemauuid)         | true     | none         | none                                                                                                        |
 | identity         | [Identity](#schemaidentity) | true     | none         | Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity identity |
-| issued_at        | string(date-time)           | true     | none         | none                                                                                                        |
+| issued_at        | string(date-time)           | true     | none         | issued at                                                                                                   |
 
 <a id="tocSsettingsflow"></a>
 
@@ -10407,7 +10431,7 @@ RevokeSession revoke session_
 }
 ```
 
-_Flow represents a Settings Flow_
+_SettingsFlow SettingsFlow Flow represents a Settings Flow_
 
 #### Properties
 
@@ -10469,10 +10493,10 @@ _Flow represents a Settings Flow_
 
 #### Properties
 
-| Name   | Type                                                        | Required | Restrictions | Description                                                                   |
-| ------ | ----------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------- |
-| config | [settingsFlowMethodConfig](#schemasettingsflowmethodconfig) | true     | none         | SettingsFlowMethodConfig SettingsFlowMethodConfig settings flow method config |
-| method | string                                                      | true     | none         | Method is the name of this flow method.                                       |
+| Name   | Type                                                        | Required | Restrictions | Description                             |
+| ------ | ----------------------------------------------------------- | -------- | ------------ | --------------------------------------- |
+| config | [settingsFlowMethodConfig](#schemasettingsflowmethodconfig) | true     | none         | none                                    |
+| method | string                                                      | true     | none         | Method is the name of this flow method. |
 
 <a id="tocSsettingsflowmethodconfig"></a>
 
@@ -10512,8 +10536,6 @@ _Flow represents a Settings Flow_
   "method": "string"
 }
 ```
-
-_SettingsFlowMethodConfig SettingsFlowMethodConfig settings flow method config_
 
 #### Properties
 
@@ -10770,19 +10792,19 @@ Response for Settings Flows via API_
 }
 ```
 
-_A Verification Flow_
+_VerificationFlow VerificationFlow A Verification Flow_
 
 #### Properties
 
 | Name                       | Type                                                    | Required | Restrictions | Description                                                                                                                                                                                   |
 | -------------------------- | ------------------------------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | active                     | string                                                  | false    | none         | Active, if set, contains the registration method that is being used. It is initially<br/>not set.                                                                                             |
-| expires_at                 | string(date-time)                                       | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,<br/>a new request has to be initiated.                                                  |
+| expires_at                 | string(date-time)                                       | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,<br/>a new request has to be initiated.<br/>Format: date-time<br/>Format: date-time      |
 | id                         | [UUID](#schemauuid)                                     | false    | none         | none                                                                                                                                                                                          |
-| issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                         |
+| issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred.<br/>Format: date-time<br/>Format: date-time                                                                                             |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                                   |
 | methods                    | object                                                  | true     | none         | Methods contains context for all account verification methods. If a registration request has been<br/>processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | none                                                                                                                                                                                          |
+| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | VerificationFlowMethod verification flow method                                                                                                                                               |
 | request_url                | string                                                  | false    | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                                 |
 | state                      | [State](#schemastate)                                   | true     | none         | State State State State State State State State State State State state                                                                                                                       |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                               |
@@ -10828,6 +10850,8 @@ _A Verification Flow_
   "method": "string"
 }
 ```
+
+_VerificationFlowMethod verification flow method_
 
 #### Properties
 

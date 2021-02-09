@@ -142,7 +142,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.
 func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
 	switch via {
 	case identity.AddressTypeEmail:
-		_, err := s.r.Courier().QueueEmail(ctx, t)
+		_, err := s.r.Courier(ctx).QueueEmail(ctx, t)
 		return err
 	default:
 		return errors.Errorf("received unexpected via type: %s", via)

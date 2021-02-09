@@ -50,7 +50,7 @@ func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseW
 }
 
 func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
-	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
+	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName)
 	if s.r.Config(ctx).SessionDomain() != "" {
 		cookie.Options.Domain = s.r.Config(ctx).SessionDomain()
 	}
@@ -93,7 +93,7 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 		return token
 	}
 
-	cookie, err := s.r.CookieManager().Get(r, s.cookieName)
+	cookie, err := s.r.CookieManager(r.Context()).Get(r, s.cookieName)
 	if err != nil {
 		return ""
 	}
@@ -133,7 +133,7 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 		return errors.WithStack(s.r.SessionPersister().RevokeSessionByToken(ctx, token))
 	}
 
-	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
+	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName)
 	token, ok := cookie.Values["session_token"].(string)
 	if !ok {
 		return nil

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/herodot"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -91,7 +93,12 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       500: genericError
 //       400: genericError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeAPI)
+	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
+		return
+	}
+
+	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -123,7 +130,12 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeBrowser)
+	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
+		return
+	}
+
+	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -169,6 +181,11 @@ type getSelfServiceRecoveryFlowParameters struct {
 //       410: genericError
 //       500: genericError
 func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
+		return
+	}
+
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	req, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), rid)
 	if err != nil {

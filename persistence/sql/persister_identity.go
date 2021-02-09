@@ -61,6 +61,7 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 		match = strings.ToLower(match)
 	}
 
+	// #nosec G201
 	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
     ic.identity_id
 FROM %s ic

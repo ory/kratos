@@ -1,6 +1,7 @@
 package registration
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -44,5 +45,5 @@ func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 }
 
 type StrategyProvider interface {
-	RegistrationStrategies() Strategies
+	RegistrationStrategies(ctx context.Context) Strategies
 }

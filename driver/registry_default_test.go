@@ -1,6 +1,7 @@
 package driver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -21,19 +22,20 @@ import (
 )
 
 func TestDriverDefault_Hooks(t *testing.T) {
+	ctx := context.Background()
 	t.Run("case=verification", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
 
 		t.Run("type=registration", func(t *testing.T) {
-			h := reg.PostRegistrationPostPersistHooks(identity.CredentialsTypePassword)
+			h := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
 			require.Len(t, h, 1)
 			assert.Equal(t, []registration.PostHookPostPersistExecutor{hook.NewVerifier(reg)}, h)
 
 			conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".password.hooks",
 				[]map[string]interface{}{{"hook": "session"}})
 
-			h = reg.PostRegistrationPostPersistHooks(identity.CredentialsTypePassword)
+			h = reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
 			require.Len(t, h, 2)
 			assert.Equal(t, []registration.PostHookPostPersistExecutor{
 				hook.NewVerifier(reg),
@@ -42,19 +44,19 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		})
 
 		t.Run("type=login", func(t *testing.T) {
-			h := reg.PostLoginHooks(identity.CredentialsTypePassword)
+			h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
 			require.Len(t, h, 0)
 
 			conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks",
 				[]map[string]interface{}{{"hook": "revoke_active_sessions"}})
 
-			h = reg.PostLoginHooks(identity.CredentialsTypePassword)
+			h = reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
 			require.Len(t, h, 1)
 			assert.Equal(t, []login.PostHookExecutor{hook.NewSessionDestroyer(reg)}, h)
 		})
 
 		t.Run("type=settings", func(t *testing.T) {
-			h := reg.PostSettingsPostPersistHooks("profile")
+			h := reg.PostSettingsPostPersistHooks(ctx, "profile")
 			require.Len(t, h, 1)
 			assert.Equal(t, []settings.PostHookPostPersistExecutor{hook.NewVerifier(reg)}, h)
 		})
@@ -82,7 +84,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			tc.prep(conf)
 
 			t.Run("case=registration", func(t *testing.T) {
-				s := reg.RegistrationStrategies()
+				s := reg.RegistrationStrategies(context.Background())
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
 					assert.Equal(t, e, s[k].ID().String())
@@ -90,7 +92,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			})
 
 			t.Run("case=login", func(t *testing.T) {
-				s := reg.LoginStrategies()
+				s := reg.LoginStrategies(context.Background())
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
 					assert.Equal(t, e, s[k].ID().String())
@@ -115,7 +117,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				conf, reg := internal.NewFastRegistryWithMocks(t)
 				tc.prep(conf)
 
-				s := reg.RecoveryStrategies()
+				s := reg.RecoveryStrategies(context.Background())
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
 					assert.Equal(t, e, s[k].RecoveryStrategyID())
@@ -179,7 +181,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				reg, err := driver.NewRegistryFromDSN(conf, logrusx.New("", ""))
 				require.NoError(t, err)
 
-				s := reg.SettingsStrategies()
+				s := reg.SettingsStrategies(context.Background())
 				require.Len(t, s, len(tc.expect))
 
 				for k, e := range tc.expect {

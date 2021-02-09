@@ -538,7 +538,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	}
 
 	ns := func(t *testing.T, reg *driver.RegistryDefault) *oidc.Strategy {
-		ss, err := reg.SettingsStrategies().Strategy(identity.CredentialsTypeOIDC.String())
+		ss, err := reg.SettingsStrategies(context.Background()).Strategy(identity.CredentialsTypeOIDC.String())
 		require.NoError(t, err)
 		return ss.(*oidc.Strategy)
 	}

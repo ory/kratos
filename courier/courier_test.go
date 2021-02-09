@@ -100,7 +100,7 @@ func TestSMTP(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyCourierSMTPURL, smtp)
 	conf.MustSet(config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
-	c := reg.Courier()
+	c := reg.Courier(context.Background())
 
 	ctx, cancel := context.WithCancel(context.Background())
 

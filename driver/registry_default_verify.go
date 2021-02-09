@@ -1,6 +1,8 @@
 package driver
 
 import (
+	"context"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
@@ -40,4 +42,24 @@ func (m *RegistryDefault) LinkSender() *link.Sender {
 	}
 
 	return m.selfserviceLinkSender
+}
+
+func (m *RegistryDefault) VerificationStrategies(ctx context.Context) (verificationStrategies verification.Strategies) {
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(verification.Strategy); ok {
+			if m.Config(ctx).SelfServiceStrategy(s.VerificationStrategyID()).Enabled {
+				verificationStrategies = append(verificationStrategies, s)
+			}
+		}
+	}
+	return
+}
+
+func (m *RegistryDefault) AllVerificationStrategies() (recoveryStrategies verification.Strategies) {
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(verification.Strategy); ok {
+			recoveryStrategies = append(recoveryStrategies, s)
+		}
+	}
+	return
 }
