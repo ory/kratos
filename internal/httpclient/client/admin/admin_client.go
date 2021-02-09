@@ -25,21 +25,24 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
 // ClientService is the interface for Client methods
 type ClientService interface {
-	CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCreated, error)
+	CreateIdentity(params *CreateIdentityParams, opts ...ClientOption) (*CreateIdentityCreated, error)
 
-	CreateRecoveryLink(params *CreateRecoveryLinkParams) (*CreateRecoveryLinkOK, error)
+	CreateRecoveryLink(params *CreateRecoveryLinkParams, opts ...ClientOption) (*CreateRecoveryLinkOK, error)
 
-	DeleteIdentity(params *DeleteIdentityParams) (*DeleteIdentityNoContent, error)
+	DeleteIdentity(params *DeleteIdentityParams, opts ...ClientOption) (*DeleteIdentityNoContent, error)
 
-	GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error)
+	GetIdentity(params *GetIdentityParams, opts ...ClientOption) (*GetIdentityOK, error)
 
-	ListIdentities(params *ListIdentitiesParams) (*ListIdentitiesOK, error)
+	ListIdentities(params *ListIdentitiesParams, opts ...ClientOption) (*ListIdentitiesOK, error)
 
-	Prometheus(params *PrometheusParams) (*PrometheusOK, error)
+	Prometheus(params *PrometheusParams, opts ...ClientOption) (*PrometheusOK, error)
 
-	UpdateIdentity(params *UpdateIdentityParams) (*UpdateIdentityOK, error)
+	UpdateIdentity(params *UpdateIdentityParams, opts ...ClientOption) (*UpdateIdentityOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -52,13 +55,12 @@ using this method! A way to achieve that will be introduced in the future.
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */
-func (a *Client) CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCreated, error) {
+func (a *Client) CreateIdentity(params *CreateIdentityParams, opts ...ClientOption) (*CreateIdentityCreated, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewCreateIdentityParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "createIdentity",
 		Method:             "POST",
 		PathPattern:        "/identities",
@@ -69,7 +71,12 @@ func (a *Client) CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCr
 		Reader:             &CreateIdentityReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -89,13 +96,12 @@ func (a *Client) CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCr
   This endpoint creates a recovery link which should be given to the user in order for them to recover
 (or activate) their account.
 */
-func (a *Client) CreateRecoveryLink(params *CreateRecoveryLinkParams) (*CreateRecoveryLinkOK, error) {
+func (a *Client) CreateRecoveryLink(params *CreateRecoveryLinkParams, opts ...ClientOption) (*CreateRecoveryLinkOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewCreateRecoveryLinkParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "createRecoveryLink",
 		Method:             "POST",
 		PathPattern:        "/recovery/link",
@@ -106,7 +112,12 @@ func (a *Client) CreateRecoveryLink(params *CreateRecoveryLinkParams) (*CreateRe
 		Reader:             &CreateRecoveryLinkReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -129,13 +140,12 @@ assumed that is has been deleted already.
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */
-func (a *Client) DeleteIdentity(params *DeleteIdentityParams) (*DeleteIdentityNoContent, error) {
+func (a *Client) DeleteIdentity(params *DeleteIdentityParams, opts ...ClientOption) (*DeleteIdentityNoContent, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeleteIdentityParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "deleteIdentity",
 		Method:             "DELETE",
 		PathPattern:        "/identities/{id}",
@@ -146,7 +156,12 @@ func (a *Client) DeleteIdentity(params *DeleteIdentityParams) (*DeleteIdentityNo
 		Reader:             &DeleteIdentityReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -165,13 +180,12 @@ func (a *Client) DeleteIdentity(params *DeleteIdentityParams) (*DeleteIdentityNo
 
   Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */
-func (a *Client) GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error) {
+func (a *Client) GetIdentity(params *GetIdentityParams, opts ...ClientOption) (*GetIdentityOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetIdentityParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getIdentity",
 		Method:             "GET",
 		PathPattern:        "/identities/{id}",
@@ -182,7 +196,12 @@ func (a *Client) GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error) 
 		Reader:             &GetIdentityReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -203,13 +222,12 @@ func (a *Client) GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error) 
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */
-func (a *Client) ListIdentities(params *ListIdentitiesParams) (*ListIdentitiesOK, error) {
+func (a *Client) ListIdentities(params *ListIdentitiesParams, opts ...ClientOption) (*ListIdentitiesOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewListIdentitiesParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "listIdentities",
 		Method:             "GET",
 		PathPattern:        "/identities",
@@ -220,7 +238,12 @@ func (a *Client) ListIdentities(params *ListIdentitiesParams) (*ListIdentitiesOK
 		Reader:             &ListIdentitiesReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -244,13 +267,12 @@ prometheus.io/port: "4434"
 prometheus.io/path: "/metrics/prometheus"
 ```
 */
-func (a *Client) Prometheus(params *PrometheusParams) (*PrometheusOK, error) {
+func (a *Client) Prometheus(params *PrometheusParams, opts ...ClientOption) (*PrometheusOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewPrometheusParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "prometheus",
 		Method:             "GET",
 		PathPattern:        "/metrics/prometheus",
@@ -261,7 +283,12 @@ func (a *Client) Prometheus(params *PrometheusParams) (*PrometheusOK, error) {
 		Reader:             &PrometheusReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -285,13 +312,12 @@ The full identity payload (except credentials) is expected. This endpoint does n
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */
-func (a *Client) UpdateIdentity(params *UpdateIdentityParams) (*UpdateIdentityOK, error) {
+func (a *Client) UpdateIdentity(params *UpdateIdentityParams, opts ...ClientOption) (*UpdateIdentityOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewUpdateIdentityParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "updateIdentity",
 		Method:             "PUT",
 		PathPattern:        "/identities/{id}",
@@ -302,7 +328,12 @@ func (a *Client) UpdateIdentity(params *UpdateIdentityParams) (*UpdateIdentityOK
 		Reader:             &UpdateIdentityReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
