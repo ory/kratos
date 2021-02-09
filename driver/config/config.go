@@ -584,7 +584,7 @@ func (p *Config) IsBackgroundCourierEnabled() bool {
 }
 
 func (p *Config) CourierExposeMetricsPort() int {
-	return p.Source().Int("courier.watch.expose-metrics-port")
+	return p.Source().Int("expose-metrics-port")
 }
 
 func (p *Config) MetricsListenOn() string {
