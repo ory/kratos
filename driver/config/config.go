@@ -577,7 +577,7 @@ func (p *Config) parseURIOrFail(key string) *url.URL {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	if url.Host == "" || (url.Scheme != "http" && url.Scheme != "https") {
+	if url.Host == "" || (url.Scheme != "") {
 		p.l.Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
 
