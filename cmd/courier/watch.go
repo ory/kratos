@@ -65,7 +65,7 @@ func Watch(d driver.Registry, cmd *cobra.Command, args []string) {
 
 	d.Logger().Println("Courier worker started.")
 	if err := graceful.Graceful(func() error {
-		return d.Courier().Work(ctx)
+		return d.Courier(ctx).Work(ctx)
 	}, func(_ cx.Context) error {
 		cancel()
 		return nil
