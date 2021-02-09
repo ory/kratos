@@ -14,7 +14,6 @@ var courierCmd = &cobra.Command{
 
 func init() {
 	configx.RegisterFlags(courierCmd.PersistentFlags())
-	courierCmd.PersistentFlags().Int("expose-metrics-port", 0, "The port to expose the metrics endpoint on (not exposed by default)")
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {
