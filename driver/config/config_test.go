@@ -65,7 +65,7 @@ func TestViperProvider(t *testing.T) {
 				"#/login",
 				"/login",
 				"/",
-				"smtp://test.kratos.ory.sh/login",
+				"test.kratos.ory.sh/login",
 			} {
 
 				logger := logrusx.New("", "")
