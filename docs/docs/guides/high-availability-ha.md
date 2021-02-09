@@ -8,7 +8,7 @@ title: High Availability
 ORY Kratos processes emails by storing them in an email queue on your database
 and running a mail courier worker to handle this queue. To avoid processing the
 same email multiple times, only one instance of this mail courier should be run
-at one time. For simple, single-instance Kratos deployments, the courier can
+at one time. For simple single-instance Kratos deployments, the courier can
 simply be run as a background worker, but for multi-instance Kratos deployments,
 it needs to be run a distinct singleton foreground worker. For setup details,
 refer to the [Out of Band Communication guide](../concepts/email-sms.md).
