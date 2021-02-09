@@ -1,7 +1,8 @@
 ---
 id: kratos-remote
 title: kratos remote
-description: kratos remote Helpers and management for remote ORY Kratos instances
+description:
+  kratos remote Helpers and management for remote ORY Kratos instances
 ---
 
 <!--
@@ -9,6 +10,7 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos remote
 
 Helpers and management for remote ORY Kratos instances
@@ -28,7 +30,8 @@ Helpers and management for remote ORY Kratos instances
 
 ### SEE ALSO
 
-* [kratos](kratos)	 - 
-* [kratos remote status](kratos-remote-status)	 - Print the alive and readiness status of a ORY Kratos instance
-* [kratos remote version](kratos-remote-version)	 - Print the version of an ORY Kratos instance
-
+- [kratos](kratos) -
+- [kratos remote status](kratos-remote-status) - Print the alive and readiness
+  status of a ORY Kratos instance
+- [kratos remote version](kratos-remote-version) - Print the version of an ORY
+  Kratos instance

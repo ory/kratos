@@ -31,7 +31,7 @@ var watchCmd = &cobra.Command{
 }
 
 func init() {
-	courierCmd.PersistentFlags().Int("expose-metrics-port", 0, "The port to expose the metrics endpoint on (not exposed by default)")
+	watchCmd.PersistentFlags().Int("expose-metrics-port", 0, "The port to expose the metrics endpoint on (not exposed by default)")
 }
 
 func ServeMetrics(r driver.Registry, cmd *cobra.Command, port int, args []string) {
