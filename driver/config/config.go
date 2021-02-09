@@ -236,9 +236,6 @@ func (p *Config) listenOn(key string) string {
 	fb := 4433
 	if key == "admin" {
 		fb = 4434
-	} else if key == "metrics" {
-		fb = p.p.Int("expose-metrics-port")
-		key = "admin"
 	}
 
 	port := p.p.IntF("serve."+key+".port", fb)
