@@ -47,7 +47,6 @@ func (o *GetIdentityReader) ReadResponse(response runtime.ClientResponse, consum
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewGetIdentityOK() *GetIdentityOK {
 	return &GetIdentityOK{}
 }
 
-/*GetIdentityOK handles this case with default header values.
+/* GetIdentityOK describes a response with status code 200, with default header values.
 
 A single identity.
 */
@@ -69,7 +68,6 @@ type GetIdentityOK struct {
 func (o *GetIdentityOK) Error() string {
 	return fmt.Sprintf("[GET /identities/{id}][%d] getIdentityOK  %+v", 200, o.Payload)
 }
-
 func (o *GetIdentityOK) GetPayload() *models.Identity {
 	return o.Payload
 }
@@ -91,7 +89,7 @@ func NewGetIdentityBadRequest() *GetIdentityBadRequest {
 	return &GetIdentityBadRequest{}
 }
 
-/*GetIdentityBadRequest handles this case with default header values.
+/* GetIdentityBadRequest describes a response with status code 400, with default header values.
 
 genericError
 */
@@ -102,7 +100,6 @@ type GetIdentityBadRequest struct {
 func (o *GetIdentityBadRequest) Error() string {
 	return fmt.Sprintf("[GET /identities/{id}][%d] getIdentityBadRequest  %+v", 400, o.Payload)
 }
-
 func (o *GetIdentityBadRequest) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -124,7 +121,7 @@ func NewGetIdentityNotFound() *GetIdentityNotFound {
 	return &GetIdentityNotFound{}
 }
 
-/*GetIdentityNotFound handles this case with default header values.
+/* GetIdentityNotFound describes a response with status code 404, with default header values.
 
 genericError
 */
@@ -135,7 +132,6 @@ type GetIdentityNotFound struct {
 func (o *GetIdentityNotFound) Error() string {
 	return fmt.Sprintf("[GET /identities/{id}][%d] getIdentityNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetIdentityNotFound) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -157,7 +153,7 @@ func NewGetIdentityInternalServerError() *GetIdentityInternalServerError {
 	return &GetIdentityInternalServerError{}
 }
 
-/*GetIdentityInternalServerError handles this case with default header values.
+/* GetIdentityInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -168,7 +164,6 @@ type GetIdentityInternalServerError struct {
 func (o *GetIdentityInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /identities/{id}][%d] getIdentityInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetIdentityInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

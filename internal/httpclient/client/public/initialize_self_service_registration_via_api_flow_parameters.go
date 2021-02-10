@@ -16,52 +16,66 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewInitializeSelfServiceRegistrationViaAPIFlowParams creates a new InitializeSelfServiceRegistrationViaAPIFlowParams object
-// with the default values initialized.
+// NewInitializeSelfServiceRegistrationViaAPIFlowParams creates a new InitializeSelfServiceRegistrationViaAPIFlowParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewInitializeSelfServiceRegistrationViaAPIFlowParams() *InitializeSelfServiceRegistrationViaAPIFlowParams {
-
 	return &InitializeSelfServiceRegistrationViaAPIFlowParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewInitializeSelfServiceRegistrationViaAPIFlowParamsWithTimeout creates a new InitializeSelfServiceRegistrationViaAPIFlowParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewInitializeSelfServiceRegistrationViaAPIFlowParamsWithTimeout(timeout time.Duration) *InitializeSelfServiceRegistrationViaAPIFlowParams {
-
 	return &InitializeSelfServiceRegistrationViaAPIFlowParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewInitializeSelfServiceRegistrationViaAPIFlowParamsWithContext creates a new InitializeSelfServiceRegistrationViaAPIFlowParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewInitializeSelfServiceRegistrationViaAPIFlowParamsWithContext(ctx context.Context) *InitializeSelfServiceRegistrationViaAPIFlowParams {
-
 	return &InitializeSelfServiceRegistrationViaAPIFlowParams{
-
 		Context: ctx,
 	}
 }
 
 // NewInitializeSelfServiceRegistrationViaAPIFlowParamsWithHTTPClient creates a new InitializeSelfServiceRegistrationViaAPIFlowParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewInitializeSelfServiceRegistrationViaAPIFlowParamsWithHTTPClient(client *http.Client) *InitializeSelfServiceRegistrationViaAPIFlowParams {
-
 	return &InitializeSelfServiceRegistrationViaAPIFlowParams{
 		HTTPClient: client,
 	}
 }
 
-/*InitializeSelfServiceRegistrationViaAPIFlowParams contains all the parameters to send to the API endpoint
-for the initialize self service registration via API flow operation typically these are written to a http.Request
+/* InitializeSelfServiceRegistrationViaAPIFlowParams contains all the parameters to send to the API endpoint
+   for the initialize self service registration via API flow operation.
+
+   Typically these are written to a http.Request.
 */
 type InitializeSelfServiceRegistrationViaAPIFlowParams struct {
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the initialize self service registration via API flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *InitializeSelfServiceRegistrationViaAPIFlowParams) WithDefaults() *InitializeSelfServiceRegistrationViaAPIFlowParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the initialize self service registration via API flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *InitializeSelfServiceRegistrationViaAPIFlowParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the initialize self service registration via API flow params

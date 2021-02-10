@@ -25,11 +25,14 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
 // ClientService is the interface for Client methods
 type ClientService interface {
-	IsInstanceAlive(params *IsInstanceAliveParams) (*IsInstanceAliveOK, error)
+	IsInstanceAlive(params *IsInstanceAliveParams, opts ...ClientOption) (*IsInstanceAliveOK, error)
 
-	IsInstanceReady(params *IsInstanceReadyParams) (*IsInstanceReadyOK, error)
+	IsInstanceReady(params *IsInstanceReadyParams, opts ...ClientOption) (*IsInstanceReadyOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -46,13 +49,12 @@ If the service supports TLS Edge Termination, this endpoint does not require the
 Be aware that if you are running multiple nodes of this service, the health status will never
 refer to the cluster state, only to a single instance.
 */
-func (a *Client) IsInstanceAlive(params *IsInstanceAliveParams) (*IsInstanceAliveOK, error) {
+func (a *Client) IsInstanceAlive(params *IsInstanceAliveParams, opts ...ClientOption) (*IsInstanceAliveOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewIsInstanceAliveParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "isInstanceAlive",
 		Method:             "GET",
 		PathPattern:        "/health/alive",
@@ -63,7 +65,12 @@ func (a *Client) IsInstanceAlive(params *IsInstanceAliveParams) (*IsInstanceAliv
 		Reader:             &IsInstanceAliveReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -89,13 +96,12 @@ If the service supports TLS Edge Termination, this endpoint does not require the
 Be aware that if you are running multiple nodes of this service, the health status will never
 refer to the cluster state, only to a single instance.
 */
-func (a *Client) IsInstanceReady(params *IsInstanceReadyParams) (*IsInstanceReadyOK, error) {
+func (a *Client) IsInstanceReady(params *IsInstanceReadyParams, opts ...ClientOption) (*IsInstanceReadyOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewIsInstanceReadyParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "isInstanceReady",
 		Method:             "GET",
 		PathPattern:        "/health/ready",
@@ -106,7 +112,12 @@ func (a *Client) IsInstanceReady(params *IsInstanceReadyParams) (*IsInstanceRead
 		Reader:             &IsInstanceReadyReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}

@@ -41,7 +41,6 @@ func (o *InitializeSelfServiceVerificationViaAPIFlowReader) ReadResponse(respons
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewInitializeSelfServiceVerificationViaAPIFlowOK() *InitializeSelfServiceVe
 	return &InitializeSelfServiceVerificationViaAPIFlowOK{}
 }
 
-/*InitializeSelfServiceVerificationViaAPIFlowOK handles this case with default header values.
+/* InitializeSelfServiceVerificationViaAPIFlowOK describes a response with status code 200, with default header values.
 
 verificationFlow
 */
@@ -63,7 +62,6 @@ type InitializeSelfServiceVerificationViaAPIFlowOK struct {
 func (o *InitializeSelfServiceVerificationViaAPIFlowOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/verification/api][%d] initializeSelfServiceVerificationViaApiFlowOK  %+v", 200, o.Payload)
 }
-
 func (o *InitializeSelfServiceVerificationViaAPIFlowOK) GetPayload() *models.VerificationFlow {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewInitializeSelfServiceVerificationViaAPIFlowBadRequest() *InitializeSelfS
 	return &InitializeSelfServiceVerificationViaAPIFlowBadRequest{}
 }
 
-/*InitializeSelfServiceVerificationViaAPIFlowBadRequest handles this case with default header values.
+/* InitializeSelfServiceVerificationViaAPIFlowBadRequest describes a response with status code 400, with default header values.
 
 genericError
 */
@@ -96,7 +94,6 @@ type InitializeSelfServiceVerificationViaAPIFlowBadRequest struct {
 func (o *InitializeSelfServiceVerificationViaAPIFlowBadRequest) Error() string {
 	return fmt.Sprintf("[GET /self-service/verification/api][%d] initializeSelfServiceVerificationViaApiFlowBadRequest  %+v", 400, o.Payload)
 }
-
 func (o *InitializeSelfServiceVerificationViaAPIFlowBadRequest) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -118,7 +115,7 @@ func NewInitializeSelfServiceVerificationViaAPIFlowInternalServerError() *Initia
 	return &InitializeSelfServiceVerificationViaAPIFlowInternalServerError{}
 }
 
-/*InitializeSelfServiceVerificationViaAPIFlowInternalServerError handles this case with default header values.
+/* InitializeSelfServiceVerificationViaAPIFlowInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -129,7 +126,6 @@ type InitializeSelfServiceVerificationViaAPIFlowInternalServerError struct {
 func (o *InitializeSelfServiceVerificationViaAPIFlowInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /self-service/verification/api][%d] initializeSelfServiceVerificationViaApiFlowInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *InitializeSelfServiceVerificationViaAPIFlowInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

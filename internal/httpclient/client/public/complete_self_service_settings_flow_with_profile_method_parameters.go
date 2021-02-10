@@ -16,61 +16,76 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewCompleteSelfServiceSettingsFlowWithProfileMethodParams creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object
-// with the default values initialized.
+// NewCompleteSelfServiceSettingsFlowWithProfileMethodParams creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewCompleteSelfServiceSettingsFlowWithProfileMethodParams() *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
-	var ()
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithTimeout creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
-	var ()
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithContext creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithContext(ctx context.Context) *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
-	var ()
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodParams{
-
 		Context: ctx,
 	}
 }
 
 // NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithHTTPClient creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
-	var ()
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodParams{
 		HTTPClient: client,
 	}
 }
 
-/*CompleteSelfServiceSettingsFlowWithProfileMethodParams contains all the parameters to send to the API endpoint
-for the complete self service settings flow with profile method operation typically these are written to a http.Request
+/* CompleteSelfServiceSettingsFlowWithProfileMethodParams contains all the parameters to send to the API endpoint
+   for the complete self service settings flow with profile method operation.
+
+   Typically these are written to a http.Request.
 */
 type CompleteSelfServiceSettingsFlowWithProfileMethodParams struct {
 
-	/*Payload*/
+	// Payload.
 	Payload interface{}
-	/*Flow
-	  Flow is flow ID.
 
+	/* Flow.
+
+	   Flow is flow ID.
 	*/
 	Flow *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the complete self service settings flow with profile method params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) WithDefaults() *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the complete self service settings flow with profile method params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the complete self service settings flow with profile method params
@@ -135,7 +150,6 @@ func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) WriteToRequest(
 		return err
 	}
 	var res []error
-
 	if o.Payload != nil {
 		if err := r.SetBodyParam(o.Payload); err != nil {
 			return err
@@ -146,16 +160,17 @@ func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) WriteToRequest(
 
 		// query param flow
 		var qrFlow string
+
 		if o.Flow != nil {
 			qrFlow = *o.Flow
 		}
 		qFlow := qrFlow
 		if qFlow != "" {
+
 			if err := r.SetQueryParam("flow", qFlow); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	if len(res) > 0 {

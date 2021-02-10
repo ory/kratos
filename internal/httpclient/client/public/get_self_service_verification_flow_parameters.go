@@ -16,62 +16,76 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewGetSelfServiceVerificationFlowParams creates a new GetSelfServiceVerificationFlowParams object
-// with the default values initialized.
+// NewGetSelfServiceVerificationFlowParams creates a new GetSelfServiceVerificationFlowParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetSelfServiceVerificationFlowParams() *GetSelfServiceVerificationFlowParams {
-	var ()
 	return &GetSelfServiceVerificationFlowParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetSelfServiceVerificationFlowParamsWithTimeout creates a new GetSelfServiceVerificationFlowParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewGetSelfServiceVerificationFlowParamsWithTimeout(timeout time.Duration) *GetSelfServiceVerificationFlowParams {
-	var ()
 	return &GetSelfServiceVerificationFlowParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewGetSelfServiceVerificationFlowParamsWithContext creates a new GetSelfServiceVerificationFlowParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewGetSelfServiceVerificationFlowParamsWithContext(ctx context.Context) *GetSelfServiceVerificationFlowParams {
-	var ()
 	return &GetSelfServiceVerificationFlowParams{
-
 		Context: ctx,
 	}
 }
 
 // NewGetSelfServiceVerificationFlowParamsWithHTTPClient creates a new GetSelfServiceVerificationFlowParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewGetSelfServiceVerificationFlowParamsWithHTTPClient(client *http.Client) *GetSelfServiceVerificationFlowParams {
-	var ()
 	return &GetSelfServiceVerificationFlowParams{
 		HTTPClient: client,
 	}
 }
 
-/*GetSelfServiceVerificationFlowParams contains all the parameters to send to the API endpoint
-for the get self service verification flow operation typically these are written to a http.Request
+/* GetSelfServiceVerificationFlowParams contains all the parameters to send to the API endpoint
+   for the get self service verification flow operation.
+
+   Typically these are written to a http.Request.
 */
 type GetSelfServiceVerificationFlowParams struct {
 
-	/*ID
-	  The Flow ID
+	/* ID.
+
+	     The Flow ID
 
 	The value for this parameter comes from `request` URL Query parameter sent to your
 	application (e.g. `/verification?flow=abcde`).
-
 	*/
 	ID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the get self service verification flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetSelfServiceVerificationFlowParams) WithDefaults() *GetSelfServiceVerificationFlowParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the get self service verification flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetSelfServiceVerificationFlowParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get self service verification flow params
@@ -130,6 +144,7 @@ func (o *GetSelfServiceVerificationFlowParams) WriteToRequest(r runtime.ClientRe
 	qrID := o.ID
 	qID := qrID
 	if qID != "" {
+
 		if err := r.SetQueryParam("id", qID); err != nil {
 			return err
 		}
