@@ -44,7 +44,7 @@ var GetCmd = &cobra.Command{
 
 		if len(identities) == 1 {
 			cmdx.PrintRow(cmd, (*outputIdentity)(identities[0]))
-		} else {
+		} else if len(identities) > 1 {
 			cmdx.PrintTable(cmd, &outputIdentityCollection{identities})
 		}
 		cmdx.PrintErrors(cmd, failed)

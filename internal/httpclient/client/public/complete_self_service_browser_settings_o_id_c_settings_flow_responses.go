@@ -35,6 +35,7 @@ func (o *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowReader) ReadResponse(
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -45,9 +46,9 @@ func NewCompleteSelfServiceBrowserSettingsOIDCSettingsFlowFound() *CompleteSelfS
 	return &CompleteSelfServiceBrowserSettingsOIDCSettingsFlowFound{}
 }
 
-/* CompleteSelfServiceBrowserSettingsOIDCSettingsFlowFound describes a response with status code 302, with default header values.
+/*CompleteSelfServiceBrowserSettingsOIDCSettingsFlowFound handles this case with default header values.
 
- Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type CompleteSelfServiceBrowserSettingsOIDCSettingsFlowFound struct {
@@ -67,7 +68,7 @@ func NewCompleteSelfServiceBrowserSettingsOIDCSettingsFlowInternalServerError() 
 	return &CompleteSelfServiceBrowserSettingsOIDCSettingsFlowInternalServerError{}
 }
 
-/* CompleteSelfServiceBrowserSettingsOIDCSettingsFlowInternalServerError describes a response with status code 500, with default header values.
+/*CompleteSelfServiceBrowserSettingsOIDCSettingsFlowInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -78,6 +79,7 @@ type CompleteSelfServiceBrowserSettingsOIDCSettingsFlowInternalServerError struc
 func (o *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /self-service/browser/flows/registration/strategies/oidc/settings/connections][%d] completeSelfServiceBrowserSettingsOIdCSettingsFlowInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

@@ -6,15 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"context"
-
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// SettingsViaAPIResponse SettingsViaAPIResponse SettingsViaAPIResponse The Response for Settings Flows via API
+// SettingsViaAPIResponse The Response for Settings Flows via API
 //
 // swagger:model settingsViaApiResponse
 type SettingsViaAPIResponse struct {
@@ -72,52 +70,6 @@ func (m *SettingsViaAPIResponse) validateIdentity(formats strfmt.Registry) error
 
 	if m.Identity != nil {
 		if err := m.Identity.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("identity")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ContextValidate validate this settings via Api response based on the context it is used
-func (m *SettingsViaAPIResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.contextValidateFlow(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateIdentity(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *SettingsViaAPIResponse) contextValidateFlow(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.Flow != nil {
-		if err := m.Flow.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("flow")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m *SettingsViaAPIResponse) contextValidateIdentity(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.Identity != nil {
-		if err := m.Identity.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("identity")
 			}

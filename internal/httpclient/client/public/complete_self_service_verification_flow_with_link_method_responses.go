@@ -41,6 +41,7 @@ func (o *CompleteSelfServiceVerificationFlowWithLinkMethodReader) ReadResponse(r
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -51,9 +52,9 @@ func NewCompleteSelfServiceVerificationFlowWithLinkMethodFound() *CompleteSelfSe
 	return &CompleteSelfServiceVerificationFlowWithLinkMethodFound{}
 }
 
-/* CompleteSelfServiceVerificationFlowWithLinkMethodFound describes a response with status code 302, with default header values.
+/*CompleteSelfServiceVerificationFlowWithLinkMethodFound handles this case with default header values.
 
- Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type CompleteSelfServiceVerificationFlowWithLinkMethodFound struct {
@@ -73,7 +74,7 @@ func NewCompleteSelfServiceVerificationFlowWithLinkMethodBadRequest() *CompleteS
 	return &CompleteSelfServiceVerificationFlowWithLinkMethodBadRequest{}
 }
 
-/* CompleteSelfServiceVerificationFlowWithLinkMethodBadRequest describes a response with status code 400, with default header values.
+/*CompleteSelfServiceVerificationFlowWithLinkMethodBadRequest handles this case with default header values.
 
 verificationFlow
 */
@@ -84,6 +85,7 @@ type CompleteSelfServiceVerificationFlowWithLinkMethodBadRequest struct {
 func (o *CompleteSelfServiceVerificationFlowWithLinkMethodBadRequest) Error() string {
 	return fmt.Sprintf("[POST /self-service/verification/methods/link][%d] completeSelfServiceVerificationFlowWithLinkMethodBadRequest  %+v", 400, o.Payload)
 }
+
 func (o *CompleteSelfServiceVerificationFlowWithLinkMethodBadRequest) GetPayload() *models.VerificationFlow {
 	return o.Payload
 }
@@ -105,7 +107,7 @@ func NewCompleteSelfServiceVerificationFlowWithLinkMethodInternalServerError() *
 	return &CompleteSelfServiceVerificationFlowWithLinkMethodInternalServerError{}
 }
 
-/* CompleteSelfServiceVerificationFlowWithLinkMethodInternalServerError describes a response with status code 500, with default header values.
+/*CompleteSelfServiceVerificationFlowWithLinkMethodInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -116,6 +118,7 @@ type CompleteSelfServiceVerificationFlowWithLinkMethodInternalServerError struct
 func (o *CompleteSelfServiceVerificationFlowWithLinkMethodInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /self-service/verification/methods/link][%d] completeSelfServiceVerificationFlowWithLinkMethodInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *CompleteSelfServiceVerificationFlowWithLinkMethodInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

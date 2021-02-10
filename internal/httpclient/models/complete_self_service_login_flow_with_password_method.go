@@ -6,13 +6,11 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"context"
-
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
-// CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod complete self service login flow with password method
+// CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod complete self service login flow with password method
 //
 // swagger:model CompleteSelfServiceLoginFlowWithPasswordMethod
 type CompleteSelfServiceLoginFlowWithPasswordMethod struct {
@@ -29,11 +27,6 @@ type CompleteSelfServiceLoginFlowWithPasswordMethod struct {
 
 // Validate validates this complete self service login flow with password method
 func (m *CompleteSelfServiceLoginFlowWithPasswordMethod) Validate(formats strfmt.Registry) error {
-	return nil
-}
-
-// ContextValidate validates this complete self service login flow with password method based on context it is used
-func (m *CompleteSelfServiceLoginFlowWithPasswordMethod) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

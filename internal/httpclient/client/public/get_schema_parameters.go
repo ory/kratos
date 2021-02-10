@@ -16,73 +16,59 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewGetSchemaParams creates a new GetSchemaParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewGetSchemaParams creates a new GetSchemaParams object
+// with the default values initialized.
 func NewGetSchemaParams() *GetSchemaParams {
+	var ()
 	return &GetSchemaParams{
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetSchemaParamsWithTimeout creates a new GetSchemaParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewGetSchemaParamsWithTimeout(timeout time.Duration) *GetSchemaParams {
+	var ()
 	return &GetSchemaParams{
+
 		timeout: timeout,
 	}
 }
 
 // NewGetSchemaParamsWithContext creates a new GetSchemaParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewGetSchemaParamsWithContext(ctx context.Context) *GetSchemaParams {
+	var ()
 	return &GetSchemaParams{
+
 		Context: ctx,
 	}
 }
 
 // NewGetSchemaParamsWithHTTPClient creates a new GetSchemaParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewGetSchemaParamsWithHTTPClient(client *http.Client) *GetSchemaParams {
+	var ()
 	return &GetSchemaParams{
 		HTTPClient: client,
 	}
 }
 
-/* GetSchemaParams contains all the parameters to send to the API endpoint
-   for the get schema operation.
-
-   Typically these are written to a http.Request.
+/*GetSchemaParams contains all the parameters to send to the API endpoint
+for the get schema operation typically these are written to a http.Request
 */
 type GetSchemaParams struct {
 
-	/* ID.
+	/*ID
+	  ID must be set to the ID of schema you want to get
 
-	   ID must be set to the ID of schema you want to get
 	*/
 	ID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the get schema params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *GetSchemaParams) WithDefaults() *GetSchemaParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the get schema params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *GetSchemaParams) SetDefaults() {
-	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get schema params

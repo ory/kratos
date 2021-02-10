@@ -6,15 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"context"
-
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// LoginViaAPIResponse The Response for Login Flows via API
+// LoginViaAPIResponse LoginViaAPIResponse LoginViaAPIResponse The Response for Login Flows via API
 //
 // swagger:model loginViaApiResponse
 type LoginViaAPIResponse struct {
@@ -75,34 +73,6 @@ func (m *LoginViaAPIResponse) validateSessionToken(formats strfmt.Registry) erro
 
 	if err := validate.Required("session_token", "body", m.SessionToken); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// ContextValidate validate this login via Api response based on the context it is used
-func (m *LoginViaAPIResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.contextValidateSession(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *LoginViaAPIResponse) contextValidateSession(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.Session != nil {
-		if err := m.Session.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("session")
-			}
-			return err
-		}
 	}
 
 	return nil

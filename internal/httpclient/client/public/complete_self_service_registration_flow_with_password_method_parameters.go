@@ -16,76 +16,61 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParams creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParams creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object
+// with the default values initialized.
 func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParams() *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
+	var ()
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodParams{
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithTimeout creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
+	var ()
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodParams{
+
 		timeout: timeout,
 	}
 }
 
 // NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithContext creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithContext(ctx context.Context) *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
+	var ()
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodParams{
+
 		Context: ctx,
 	}
 }
 
 // NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithHTTPClient creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
+	var ()
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodParams{
 		HTTPClient: client,
 	}
 }
 
-/* CompleteSelfServiceRegistrationFlowWithPasswordMethodParams contains all the parameters to send to the API endpoint
-   for the complete self service registration flow with password method operation.
-
-   Typically these are written to a http.Request.
+/*CompleteSelfServiceRegistrationFlowWithPasswordMethodParams contains all the parameters to send to the API endpoint
+for the complete self service registration flow with password method operation typically these are written to a http.Request
 */
 type CompleteSelfServiceRegistrationFlowWithPasswordMethodParams struct {
 
-	// Payload.
+	/*Payload*/
 	Payload interface{}
+	/*Flow
+	  Flow is flow ID.
 
-	/* Flow.
-
-	   Flow is flow ID.
 	*/
 	Flow *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the complete self service registration flow with password method params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) WithDefaults() *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the complete self service registration flow with password method params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) SetDefaults() {
-	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the complete self service registration flow with password method params
@@ -150,6 +135,7 @@ func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) WriteToReq
 		return err
 	}
 	var res []error
+
 	if o.Payload != nil {
 		if err := r.SetBodyParam(o.Payload); err != nil {
 			return err
@@ -160,17 +146,16 @@ func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) WriteToReq
 
 		// query param flow
 		var qrFlow string
-
 		if o.Flow != nil {
 			qrFlow = *o.Flow
 		}
 		qFlow := qrFlow
 		if qFlow != "" {
-
 			if err := r.SetQueryParam("flow", qFlow); err != nil {
 				return err
 			}
 		}
+
 	}
 
 	if len(res) > 0 {

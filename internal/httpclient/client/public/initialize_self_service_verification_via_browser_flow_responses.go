@@ -35,6 +35,7 @@ func (o *InitializeSelfServiceVerificationViaBrowserFlowReader) ReadResponse(res
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -45,9 +46,9 @@ func NewInitializeSelfServiceVerificationViaBrowserFlowFound() *InitializeSelfSe
 	return &InitializeSelfServiceVerificationViaBrowserFlowFound{}
 }
 
-/* InitializeSelfServiceVerificationViaBrowserFlowFound describes a response with status code 302, with default header values.
+/*InitializeSelfServiceVerificationViaBrowserFlowFound handles this case with default header values.
 
- Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type InitializeSelfServiceVerificationViaBrowserFlowFound struct {
@@ -67,7 +68,7 @@ func NewInitializeSelfServiceVerificationViaBrowserFlowInternalServerError() *In
 	return &InitializeSelfServiceVerificationViaBrowserFlowInternalServerError{}
 }
 
-/* InitializeSelfServiceVerificationViaBrowserFlowInternalServerError describes a response with status code 500, with default header values.
+/*InitializeSelfServiceVerificationViaBrowserFlowInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -78,6 +79,7 @@ type InitializeSelfServiceVerificationViaBrowserFlowInternalServerError struct {
 func (o *InitializeSelfServiceVerificationViaBrowserFlowInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /self-service/verification/browser][%d] initializeSelfServiceVerificationViaBrowserFlowInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *InitializeSelfServiceVerificationViaBrowserFlowInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

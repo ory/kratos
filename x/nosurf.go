@@ -110,10 +110,10 @@ func NosurfBaseCookieHandler(reg interface {
 func NewCSRFHandler(
 	router http.Handler,
 	reg interface {
-	config.Provider
-	LoggingProvider
-	WriterProvider
-}) *nosurf.CSRFHandler {
+		config.Provider
+		LoggingProvider
+		WriterProvider
+	}) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
 
 	n.SetBaseCookieFunc(NosurfBaseCookieHandler(reg))

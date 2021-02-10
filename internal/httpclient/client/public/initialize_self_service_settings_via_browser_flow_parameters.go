@@ -16,66 +16,52 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewInitializeSelfServiceSettingsViaBrowserFlowParams creates a new InitializeSelfServiceSettingsViaBrowserFlowParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewInitializeSelfServiceSettingsViaBrowserFlowParams creates a new InitializeSelfServiceSettingsViaBrowserFlowParams object
+// with the default values initialized.
 func NewInitializeSelfServiceSettingsViaBrowserFlowParams() *InitializeSelfServiceSettingsViaBrowserFlowParams {
+
 	return &InitializeSelfServiceSettingsViaBrowserFlowParams{
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewInitializeSelfServiceSettingsViaBrowserFlowParamsWithTimeout creates a new InitializeSelfServiceSettingsViaBrowserFlowParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewInitializeSelfServiceSettingsViaBrowserFlowParamsWithTimeout(timeout time.Duration) *InitializeSelfServiceSettingsViaBrowserFlowParams {
+
 	return &InitializeSelfServiceSettingsViaBrowserFlowParams{
+
 		timeout: timeout,
 	}
 }
 
 // NewInitializeSelfServiceSettingsViaBrowserFlowParamsWithContext creates a new InitializeSelfServiceSettingsViaBrowserFlowParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewInitializeSelfServiceSettingsViaBrowserFlowParamsWithContext(ctx context.Context) *InitializeSelfServiceSettingsViaBrowserFlowParams {
+
 	return &InitializeSelfServiceSettingsViaBrowserFlowParams{
+
 		Context: ctx,
 	}
 }
 
 // NewInitializeSelfServiceSettingsViaBrowserFlowParamsWithHTTPClient creates a new InitializeSelfServiceSettingsViaBrowserFlowParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewInitializeSelfServiceSettingsViaBrowserFlowParamsWithHTTPClient(client *http.Client) *InitializeSelfServiceSettingsViaBrowserFlowParams {
+
 	return &InitializeSelfServiceSettingsViaBrowserFlowParams{
 		HTTPClient: client,
 	}
 }
 
-/* InitializeSelfServiceSettingsViaBrowserFlowParams contains all the parameters to send to the API endpoint
-   for the initialize self service settings via browser flow operation.
-
-   Typically these are written to a http.Request.
+/*InitializeSelfServiceSettingsViaBrowserFlowParams contains all the parameters to send to the API endpoint
+for the initialize self service settings via browser flow operation typically these are written to a http.Request
 */
 type InitializeSelfServiceSettingsViaBrowserFlowParams struct {
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the initialize self service settings via browser flow params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *InitializeSelfServiceSettingsViaBrowserFlowParams) WithDefaults() *InitializeSelfServiceSettingsViaBrowserFlowParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the initialize self service settings via browser flow params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *InitializeSelfServiceSettingsViaBrowserFlowParams) SetDefaults() {
-	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the initialize self service settings via browser flow params

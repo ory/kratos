@@ -6,8 +6,6 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"context"
-
 	"github.com/go-openapi/strfmt"
 )
 
@@ -20,10 +18,5 @@ type CredentialsType string
 
 // Validate validates this credentials type
 func (m CredentialsType) Validate(formats strfmt.Registry) error {
-	return nil
-}
-
-// ContextValidate validates this credentials type based on context it is used
-func (m CredentialsType) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }

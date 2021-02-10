@@ -35,6 +35,7 @@ func (o *ListIdentitiesReader) ReadResponse(response runtime.ClientResponse, con
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -45,7 +46,7 @@ func NewListIdentitiesOK() *ListIdentitiesOK {
 	return &ListIdentitiesOK{}
 }
 
-/* ListIdentitiesOK describes a response with status code 200, with default header values.
+/*ListIdentitiesOK handles this case with default header values.
 
 A list of identities.
 */
@@ -56,6 +57,7 @@ type ListIdentitiesOK struct {
 func (o *ListIdentitiesOK) Error() string {
 	return fmt.Sprintf("[GET /identities][%d] listIdentitiesOK  %+v", 200, o.Payload)
 }
+
 func (o *ListIdentitiesOK) GetPayload() []*models.Identity {
 	return o.Payload
 }
@@ -75,7 +77,7 @@ func NewListIdentitiesInternalServerError() *ListIdentitiesInternalServerError {
 	return &ListIdentitiesInternalServerError{}
 }
 
-/* ListIdentitiesInternalServerError describes a response with status code 500, with default header values.
+/*ListIdentitiesInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -86,6 +88,7 @@ type ListIdentitiesInternalServerError struct {
 func (o *ListIdentitiesInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /identities][%d] listIdentitiesInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *ListIdentitiesInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

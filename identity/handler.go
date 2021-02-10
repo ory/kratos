@@ -150,6 +150,7 @@ type getIdentityParameters struct {
 //     Responses:
 //       200: identityResponse
 //       400: genericError
+//       404: genericError
 //       500: genericError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	i, err := h.r.IdentityPool().GetIdentity(r.Context(), x.ParseUUID(ps.ByName("id")))

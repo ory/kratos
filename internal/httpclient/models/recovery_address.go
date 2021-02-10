@@ -6,15 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"context"
-
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress recovery address
+// RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress recovery address
 //
 // swagger:model RecoveryAddress
 type RecoveryAddress struct {
@@ -22,7 +20,7 @@ type RecoveryAddress struct {
 	// id
 	// Required: true
 	// Format: uuid4
-	ID *UUID `json:"id"`
+	ID UUID `json:"id"`
 
 	// value
 	// Required: true
@@ -30,7 +28,7 @@ type RecoveryAddress struct {
 
 	// via
 	// Required: true
-	Via *RecoveryAddressType `json:"via"`
+	Via RecoveryAddressType `json:"via"`
 }
 
 // Validate validates this recovery address
@@ -57,21 +55,11 @@ func (m *RecoveryAddress) Validate(formats strfmt.Registry) error {
 
 func (m *RecoveryAddress) validateID(formats strfmt.Registry) error {
 
-	if err := validate.Required("id", "body", m.ID); err != nil {
-		return err
-	}
-
-	if err := validate.Required("id", "body", m.ID); err != nil {
-		return err
-	}
-
-	if m.ID != nil {
-		if err := m.ID.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("id")
-			}
-			return err
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
 		}
+		return err
 	}
 
 	return nil
@@ -88,67 +76,11 @@ func (m *RecoveryAddress) validateValue(formats strfmt.Registry) error {
 
 func (m *RecoveryAddress) validateVia(formats strfmt.Registry) error {
 
-	if err := validate.Required("via", "body", m.Via); err != nil {
+	if err := m.Via.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("via")
+		}
 		return err
-	}
-
-	if err := validate.Required("via", "body", m.Via); err != nil {
-		return err
-	}
-
-	if m.Via != nil {
-		if err := m.Via.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("via")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ContextValidate validate this recovery address based on the context it is used
-func (m *RecoveryAddress) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.contextValidateID(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateVia(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *RecoveryAddress) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.ID != nil {
-		if err := m.ID.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("id")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m *RecoveryAddress) contextValidateVia(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.Via != nil {
-		if err := m.Via.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("via")
-			}
-			return err
-		}
 	}
 
 	return nil

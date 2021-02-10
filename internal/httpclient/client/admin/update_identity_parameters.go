@@ -18,76 +18,61 @@ import (
 	"github.com/ory/kratos-client-go/models"
 )
 
-// NewUpdateIdentityParams creates a new UpdateIdentityParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewUpdateIdentityParams creates a new UpdateIdentityParams object
+// with the default values initialized.
 func NewUpdateIdentityParams() *UpdateIdentityParams {
+	var ()
 	return &UpdateIdentityParams{
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewUpdateIdentityParamsWithTimeout creates a new UpdateIdentityParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewUpdateIdentityParamsWithTimeout(timeout time.Duration) *UpdateIdentityParams {
+	var ()
 	return &UpdateIdentityParams{
+
 		timeout: timeout,
 	}
 }
 
 // NewUpdateIdentityParamsWithContext creates a new UpdateIdentityParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewUpdateIdentityParamsWithContext(ctx context.Context) *UpdateIdentityParams {
+	var ()
 	return &UpdateIdentityParams{
+
 		Context: ctx,
 	}
 }
 
 // NewUpdateIdentityParamsWithHTTPClient creates a new UpdateIdentityParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewUpdateIdentityParamsWithHTTPClient(client *http.Client) *UpdateIdentityParams {
+	var ()
 	return &UpdateIdentityParams{
 		HTTPClient: client,
 	}
 }
 
-/* UpdateIdentityParams contains all the parameters to send to the API endpoint
-   for the update identity operation.
-
-   Typically these are written to a http.Request.
+/*UpdateIdentityParams contains all the parameters to send to the API endpoint
+for the update identity operation typically these are written to a http.Request
 */
 type UpdateIdentityParams struct {
 
-	// Body.
+	/*Body*/
 	Body *models.UpdateIdentity
+	/*ID
+	  ID must be set to the ID of identity you want to update
 
-	/* ID.
-
-	   ID must be set to the ID of identity you want to update
 	*/
 	ID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the update identity params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *UpdateIdentityParams) WithDefaults() *UpdateIdentityParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the update identity params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *UpdateIdentityParams) SetDefaults() {
-	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the update identity params
@@ -152,6 +137,7 @@ func (o *UpdateIdentityParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 		return err
 	}
 	var res []error
+
 	if o.Body != nil {
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err

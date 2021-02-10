@@ -6,8 +6,6 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"context"
-
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -39,7 +37,7 @@ type LoginFlow struct {
 	// id
 	// Required: true
 	// Format: uuid4
-	ID *UUID `json:"id"`
+	ID UUID `json:"id"`
 
 	// IssuedAt is the time (UTC) when the flow started.
 	// Required: true
@@ -108,6 +106,7 @@ func (m *LoginFlow) Validate(formats strfmt.Registry) error {
 }
 
 func (m *LoginFlow) validateActive(formats strfmt.Registry) error {
+
 	if swag.IsZero(m.Active) { // not required
 		return nil
 	}
@@ -137,21 +136,11 @@ func (m *LoginFlow) validateExpiresAt(formats strfmt.Registry) error {
 
 func (m *LoginFlow) validateID(formats strfmt.Registry) error {
 
-	if err := validate.Required("id", "body", m.ID); err != nil {
-		return err
-	}
-
-	if err := validate.Required("id", "body", m.ID); err != nil {
-		return err
-	}
-
-	if m.ID != nil {
-		if err := m.ID.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("id")
-			}
-			return err
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
 		}
+		return err
 	}
 
 	return nil
@@ -171,6 +160,7 @@ func (m *LoginFlow) validateIssuedAt(formats strfmt.Registry) error {
 }
 
 func (m *LoginFlow) validateMessages(formats strfmt.Registry) error {
+
 	if swag.IsZero(m.Messages) { // not required
 		return nil
 	}
@@ -186,10 +176,6 @@ func (m *LoginFlow) validateMessages(formats strfmt.Registry) error {
 }
 
 func (m *LoginFlow) validateMethods(formats strfmt.Registry) error {
-
-	if err := validate.Required("methods", "body", m.Methods); err != nil {
-		return err
-	}
 
 	for k := range m.Methods {
 
@@ -217,110 +203,12 @@ func (m *LoginFlow) validateRequestURL(formats strfmt.Registry) error {
 }
 
 func (m *LoginFlow) validateType(formats strfmt.Registry) error {
+
 	if swag.IsZero(m.Type) { // not required
 		return nil
 	}
 
 	if err := m.Type.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("type")
-		}
-		return err
-	}
-
-	return nil
-}
-
-// ContextValidate validate this login flow based on the context it is used
-func (m *LoginFlow) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.contextValidateActive(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateID(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateMessages(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateMethods(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateType(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *LoginFlow) contextValidateActive(ctx context.Context, formats strfmt.Registry) error {
-
-	if err := m.Active.ContextValidate(ctx, formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("active")
-		}
-		return err
-	}
-
-	return nil
-}
-
-func (m *LoginFlow) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.ID != nil {
-		if err := m.ID.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("id")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m *LoginFlow) contextValidateMessages(ctx context.Context, formats strfmt.Registry) error {
-
-	if err := m.Messages.ContextValidate(ctx, formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("messages")
-		}
-		return err
-	}
-
-	return nil
-}
-
-func (m *LoginFlow) contextValidateMethods(ctx context.Context, formats strfmt.Registry) error {
-
-	if err := validate.Required("methods", "body", m.Methods); err != nil {
-		return err
-	}
-
-	for k := range m.Methods {
-
-		if val, ok := m.Methods[k]; ok {
-			if err := val.ContextValidate(ctx, formats); err != nil {
-				return err
-			}
-		}
-
-	}
-
-	return nil
-}
-
-func (m *LoginFlow) contextValidateType(ctx context.Context, formats strfmt.Registry) error {
-
-	if err := m.Type.ContextValidate(ctx, formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("type")
 		}
