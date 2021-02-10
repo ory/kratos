@@ -16,62 +16,76 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewGetSelfServiceLoginFlowParams creates a new GetSelfServiceLoginFlowParams object
-// with the default values initialized.
+// NewGetSelfServiceLoginFlowParams creates a new GetSelfServiceLoginFlowParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetSelfServiceLoginFlowParams() *GetSelfServiceLoginFlowParams {
-	var ()
 	return &GetSelfServiceLoginFlowParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetSelfServiceLoginFlowParamsWithTimeout creates a new GetSelfServiceLoginFlowParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewGetSelfServiceLoginFlowParamsWithTimeout(timeout time.Duration) *GetSelfServiceLoginFlowParams {
-	var ()
 	return &GetSelfServiceLoginFlowParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewGetSelfServiceLoginFlowParamsWithContext creates a new GetSelfServiceLoginFlowParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewGetSelfServiceLoginFlowParamsWithContext(ctx context.Context) *GetSelfServiceLoginFlowParams {
-	var ()
 	return &GetSelfServiceLoginFlowParams{
-
 		Context: ctx,
 	}
 }
 
 // NewGetSelfServiceLoginFlowParamsWithHTTPClient creates a new GetSelfServiceLoginFlowParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewGetSelfServiceLoginFlowParamsWithHTTPClient(client *http.Client) *GetSelfServiceLoginFlowParams {
-	var ()
 	return &GetSelfServiceLoginFlowParams{
 		HTTPClient: client,
 	}
 }
 
-/*GetSelfServiceLoginFlowParams contains all the parameters to send to the API endpoint
-for the get self service login flow operation typically these are written to a http.Request
+/* GetSelfServiceLoginFlowParams contains all the parameters to send to the API endpoint
+   for the get self service login flow operation.
+
+   Typically these are written to a http.Request.
 */
 type GetSelfServiceLoginFlowParams struct {
 
-	/*ID
-	  The Login Flow ID
+	/* ID.
+
+	     The Login Flow ID
 
 	The value for this parameter comes from `flow` URL Query parameter sent to your
 	application (e.g. `/login?flow=abcde`).
-
 	*/
 	ID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the get self service login flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetSelfServiceLoginFlowParams) WithDefaults() *GetSelfServiceLoginFlowParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the get self service login flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *GetSelfServiceLoginFlowParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get self service login flow params
@@ -130,6 +144,7 @@ func (o *GetSelfServiceLoginFlowParams) WriteToRequest(r runtime.ClientRequest, 
 	qrID := o.ID
 	qID := qrID
 	if qID != "" {
+
 		if err := r.SetQueryParam("id", qID); err != nil {
 			return err
 		}

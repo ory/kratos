@@ -6,13 +6,15 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// RecoveryFlow RecoveryFlow A Recovery Flow
+// RecoveryFlow A Recovery Flow
 //
 // This request is used when an identity wants to recover their account.
 //
@@ -34,7 +36,7 @@ type RecoveryFlow struct {
 	// id
 	// Required: true
 	// Format: uuid4
-	ID UUID `json:"id"`
+	ID *UUID `json:"id"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
 	// Required: true
@@ -56,7 +58,7 @@ type RecoveryFlow struct {
 
 	// state
 	// Required: true
-	State State `json:"state"`
+	State *State `json:"state"`
 
 	// type
 	Type Type `json:"type,omitempty"`
@@ -119,11 +121,21 @@ func (m *RecoveryFlow) validateExpiresAt(formats strfmt.Registry) error {
 
 func (m *RecoveryFlow) validateID(formats strfmt.Registry) error {
 
-	if err := m.ID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("id")
-		}
+	if err := validate.Required("id", "body", m.ID); err != nil {
 		return err
+	}
+
+	if err := validate.Required("id", "body", m.ID); err != nil {
+		return err
+	}
+
+	if m.ID != nil {
+		if err := m.ID.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("id")
+			}
+			return err
+		}
 	}
 
 	return nil
@@ -143,7 +155,6 @@ func (m *RecoveryFlow) validateIssuedAt(formats strfmt.Registry) error {
 }
 
 func (m *RecoveryFlow) validateMessages(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Messages) { // not required
 		return nil
 	}
@@ -159,6 +170,10 @@ func (m *RecoveryFlow) validateMessages(formats strfmt.Registry) error {
 }
 
 func (m *RecoveryFlow) validateMethods(formats strfmt.Registry) error {
+
+	if err := validate.Required("methods", "body", m.Methods); err != nil {
+		return err
+	}
 
 	for k := range m.Methods {
 
@@ -187,9 +202,34 @@ func (m *RecoveryFlow) validateRequestURL(formats strfmt.Registry) error {
 
 func (m *RecoveryFlow) validateState(formats strfmt.Registry) error {
 
-	if err := m.State.Validate(formats); err != nil {
+	if err := validate.Required("state", "body", m.State); err != nil {
+		return err
+	}
+
+	if err := validate.Required("state", "body", m.State); err != nil {
+		return err
+	}
+
+	if m.State != nil {
+		if err := m.State.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("state")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *RecoveryFlow) validateType(formats strfmt.Registry) error {
+	if swag.IsZero(m.Type) { // not required
+		return nil
+	}
+
+	if err := m.Type.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("state")
+			return ve.ValidateName("type")
 		}
 		return err
 	}
@@ -197,13 +237,98 @@ func (m *RecoveryFlow) validateState(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryFlow) validateType(formats strfmt.Registry) error {
+// ContextValidate validate this recovery flow based on the context it is used
+func (m *RecoveryFlow) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
 
-	if swag.IsZero(m.Type) { // not required
-		return nil
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
 	}
 
-	if err := m.Type.Validate(formats); err != nil {
+	if err := m.contextValidateMessages(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateMethods(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateState(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateType(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *RecoveryFlow) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.ID != nil {
+		if err := m.ID.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("id")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *RecoveryFlow) contextValidateMessages(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Messages.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("messages")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *RecoveryFlow) contextValidateMethods(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.Required("methods", "body", m.Methods); err != nil {
+		return err
+	}
+
+	for k := range m.Methods {
+
+		if val, ok := m.Methods[k]; ok {
+			if err := val.ContextValidate(ctx, formats); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *RecoveryFlow) contextValidateState(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.State != nil {
+		if err := m.State.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("state")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *RecoveryFlow) contextValidateType(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Type.ContextValidate(ctx, formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("type")
 		}

@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -14,7 +15,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// LoginFlowMethodConfig login flow method config
+// LoginFlowMethodConfig LoginFlowMethodConfig login flow method config
 //
 // swagger:model loginFlowMethodConfig
 type LoginFlowMethodConfig struct {
@@ -94,7 +95,6 @@ func (m *LoginFlowMethodConfig) validateFields(formats strfmt.Registry) error {
 }
 
 func (m *LoginFlowMethodConfig) validateMessages(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Messages) { // not required
 		return nil
 	}
@@ -119,7 +119,6 @@ func (m *LoginFlowMethodConfig) validateMethod(formats strfmt.Registry) error {
 }
 
 func (m *LoginFlowMethodConfig) validateProviders(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Providers) { // not required
 		return nil
 	}
@@ -131,6 +130,70 @@ func (m *LoginFlowMethodConfig) validateProviders(formats strfmt.Registry) error
 
 		if m.Providers[i] != nil {
 			if err := m.Providers[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("providers" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this login flow method config based on the context it is used
+func (m *LoginFlowMethodConfig) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateFields(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateMessages(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateProviders(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *LoginFlowMethodConfig) contextValidateFields(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Fields.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("fields")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *LoginFlowMethodConfig) contextValidateMessages(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Messages.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("messages")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *LoginFlowMethodConfig) contextValidateProviders(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Providers); i++ {
+
+		if m.Providers[i] != nil {
+			if err := m.Providers[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("providers" + "." + strconv.Itoa(i))
 				}

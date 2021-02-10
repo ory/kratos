@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -14,7 +15,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity identity
+// Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity Identity identity
 //
 // swagger:model Identity
 type Identity struct {
@@ -22,7 +23,7 @@ type Identity struct {
 	// id
 	// Required: true
 	// Format: uuid4
-	ID UUID `json:"id"`
+	ID *UUID `json:"id"`
 
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	RecoveryAddresses []*RecoveryAddress `json:"recovery_addresses,omitempty"`
@@ -81,18 +82,27 @@ func (m *Identity) Validate(formats strfmt.Registry) error {
 
 func (m *Identity) validateID(formats strfmt.Registry) error {
 
-	if err := m.ID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("id")
-		}
+	if err := validate.Required("id", "body", m.ID); err != nil {
 		return err
+	}
+
+	if err := validate.Required("id", "body", m.ID); err != nil {
+		return err
+	}
+
+	if m.ID != nil {
+		if err := m.ID.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("id")
+			}
+			return err
+		}
 	}
 
 	return nil
 }
 
 func (m *Identity) validateRecoveryAddresses(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.RecoveryAddresses) { // not required
 		return nil
 	}
@@ -136,15 +146,14 @@ func (m *Identity) validateSchemaURL(formats strfmt.Registry) error {
 
 func (m *Identity) validateTraits(formats strfmt.Registry) error {
 
-	if err := validate.Required("traits", "body", m.Traits); err != nil {
-		return err
+	if m.Traits == nil {
+		return errors.Required("traits", "body", nil)
 	}
 
 	return nil
 }
 
 func (m *Identity) validateVerifiableAddresses(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.VerifiableAddresses) { // not required
 		return nil
 	}
@@ -156,6 +165,78 @@ func (m *Identity) validateVerifiableAddresses(formats strfmt.Registry) error {
 
 		if m.VerifiableAddresses[i] != nil {
 			if err := m.VerifiableAddresses[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("verifiable_addresses" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this identity based on the context it is used
+func (m *Identity) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRecoveryAddresses(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateVerifiableAddresses(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Identity) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.ID != nil {
+		if err := m.ID.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("id")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Identity) contextValidateRecoveryAddresses(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.RecoveryAddresses); i++ {
+
+		if m.RecoveryAddresses[i] != nil {
+			if err := m.RecoveryAddresses[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("recovery_addresses" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Identity) contextValidateVerifiableAddresses(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.VerifiableAddresses); i++ {
+
+		if m.VerifiableAddresses[i] != nil {
+			if err := m.VerifiableAddresses[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("verifiable_addresses" + "." + strconv.Itoa(i))
 				}

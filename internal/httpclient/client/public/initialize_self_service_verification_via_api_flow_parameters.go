@@ -16,52 +16,66 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewInitializeSelfServiceVerificationViaAPIFlowParams creates a new InitializeSelfServiceVerificationViaAPIFlowParams object
-// with the default values initialized.
+// NewInitializeSelfServiceVerificationViaAPIFlowParams creates a new InitializeSelfServiceVerificationViaAPIFlowParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewInitializeSelfServiceVerificationViaAPIFlowParams() *InitializeSelfServiceVerificationViaAPIFlowParams {
-
 	return &InitializeSelfServiceVerificationViaAPIFlowParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewInitializeSelfServiceVerificationViaAPIFlowParamsWithTimeout creates a new InitializeSelfServiceVerificationViaAPIFlowParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewInitializeSelfServiceVerificationViaAPIFlowParamsWithTimeout(timeout time.Duration) *InitializeSelfServiceVerificationViaAPIFlowParams {
-
 	return &InitializeSelfServiceVerificationViaAPIFlowParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewInitializeSelfServiceVerificationViaAPIFlowParamsWithContext creates a new InitializeSelfServiceVerificationViaAPIFlowParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewInitializeSelfServiceVerificationViaAPIFlowParamsWithContext(ctx context.Context) *InitializeSelfServiceVerificationViaAPIFlowParams {
-
 	return &InitializeSelfServiceVerificationViaAPIFlowParams{
-
 		Context: ctx,
 	}
 }
 
 // NewInitializeSelfServiceVerificationViaAPIFlowParamsWithHTTPClient creates a new InitializeSelfServiceVerificationViaAPIFlowParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewInitializeSelfServiceVerificationViaAPIFlowParamsWithHTTPClient(client *http.Client) *InitializeSelfServiceVerificationViaAPIFlowParams {
-
 	return &InitializeSelfServiceVerificationViaAPIFlowParams{
 		HTTPClient: client,
 	}
 }
 
-/*InitializeSelfServiceVerificationViaAPIFlowParams contains all the parameters to send to the API endpoint
-for the initialize self service verification via API flow operation typically these are written to a http.Request
+/* InitializeSelfServiceVerificationViaAPIFlowParams contains all the parameters to send to the API endpoint
+   for the initialize self service verification via API flow operation.
+
+   Typically these are written to a http.Request.
 */
 type InitializeSelfServiceVerificationViaAPIFlowParams struct {
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the initialize self service verification via API flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *InitializeSelfServiceVerificationViaAPIFlowParams) WithDefaults() *InitializeSelfServiceVerificationViaAPIFlowParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the initialize self service verification via API flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *InitializeSelfServiceVerificationViaAPIFlowParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the initialize self service verification via API flow params

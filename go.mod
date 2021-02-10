@@ -27,16 +27,16 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
-	github.com/go-openapi/strfmt v0.19.11
+	github.com/go-openapi/strfmt v0.20.0
 	github.com/go-playground/universal-translator v0.17.0 // indirect
-	github.com/go-swagger/go-swagger v0.25.0
+	github.com/go-swagger/go-swagger v0.26.1
 	github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/pop/v5 v5.3.2-0.20210128124218-e397a61c1704
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.4.4
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/go-jsonnet v0.16.0
 	github.com/google/uuid v1.1.1
@@ -84,8 +84,8 @@ require (
 	github.com/tidwall/sjson v1.0.4
 	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect
 	github.com/urfave/negroni v1.0.0
-	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
+	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
+	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58
+	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
 	gopkg.in/go-playground/validator.v9 v9.28.0
 )
