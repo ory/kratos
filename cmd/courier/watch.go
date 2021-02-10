@@ -19,14 +19,8 @@ var watchCmd = &cobra.Command{
 	Use:   "watch",
 	Short: "Starts the ORY Kratos message courier",
 	Run: func(cmd *cobra.Command, args []string) {
-		d := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
-
-		metricsPort := d.Config(cmd.Context()).CourierExposeMetricsPort()
-
-		if d.Config(cmd.Context()).CourierExposeMetricsPort() != 0 {
-			go ServeMetrics(d, cmd, metricsPort, args)
-		}
-		Watch(d, cmd, args)
+		r := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
+		StartCourier(cmd.Context(), r)
 	},
 }
 
@@ -34,9 +28,18 @@ func init() {
 	watchCmd.PersistentFlags().Int("expose-metrics-port", 0, "The port to expose the metrics endpoint on (not exposed by default)")
 }
 
-func ServeMetrics(r driver.Registry, cmd *cobra.Command, port int, args []string) {
+func StartCourier(ctx cx.Context, r driver.Registry) {
+	c := r.Config(ctx)
 
-	c := r.Config(cmd.Context())
+	if c.CourierExposeMetricsPort() != 0 {
+		go ServeMetrics(ctx, r)
+	}
+	Watch(ctx, r)
+}
+
+func ServeMetrics(ctx cx.Context, r driver.Registry) {
+
+	c := r.Config(ctx)
 	l := r.Logger()
 	n := negroni.New()
 
@@ -46,7 +49,7 @@ func ServeMetrics(r driver.Registry, cmd *cobra.Command, port int, args []string
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
@@ -64,19 +67,19 @@ func ServeMetrics(r driver.Registry, cmd *cobra.Command, port int, args []string
 	l.Println("Metrics httpd was shutdown gracefully")
 }
 
-func Watch(d driver.Registry, cmd *cobra.Command, args []string) {
-	ctx, cancel := cx.WithCancel(cmd.Context())
+func Watch(ctx cx.Context, r driver.Registry) {
+	ctx, cancel := cx.WithCancel(ctx)
 
-	d.Logger().Println("Courier worker started.")
+	r.Logger().Println("Courier worker started.")
 	if err := graceful.Graceful(func() error {
-		return d.Courier(ctx).Work(ctx)
+		return r.Courier(ctx).Work(ctx)
 	}, func(_ cx.Context) error {
 		cancel()
 		return nil
 	}); err != nil {
-		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
+		r.Logger().WithError(err).Fatalf("Failed to run courier worker.")
 	}
 
-	d.Logger().Println("Courier worker was shutdown gracefully.")
+	r.Logger().Println("Courier worker was shutdown gracefully.")
 
 }
