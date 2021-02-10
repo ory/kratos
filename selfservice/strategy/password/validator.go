@@ -167,7 +167,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 	passwordPolicyConfig := s.reg.Config(ctx).PasswordPolicyConfig()
 
 	if !ok {
-		err := s.fetch(hpw, passwordPolicyConfig.APIDNSName)
+		err := s.fetch(hpw, passwordPolicyConfig.HaveIBeenPwnedHost)
 		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && passwordPolicyConfig.IgnoreNetworkErrors {
 			return nil
 		} else if err != nil {

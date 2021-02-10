@@ -162,14 +162,14 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 
 }
 
-func TestChangeValidationDNSName(t *testing.T) {
+func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 	testServer := httptest.NewUnstartedServer(&fakeValidatorAPI{})
 	defer testServer.Close()
 	testServer.StartTLS()
 	testServerURL, _ := url.Parse(testServer.URL)
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	s := password.NewDefaultPasswordValidatorStrategy(reg)
-	conf.MustSet(config.ViperKeyPasswordAPIDNSName, testServerURL.Host)
+	conf.MustSet(config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host)
 
 	fakeClient := NewFakeHTTPClient()
 	s.Client = &fakeClient.Client
