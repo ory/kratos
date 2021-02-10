@@ -60,6 +60,8 @@ New feature or request.
       ([kratos#286](https://github.com/ory/kratos/issues/286))
 - [ ] How to sign in with Twitter
       ([kratos#517](https://github.com/ory/kratos/issues/517))
+- [ ] login ui returned without flowid
+      ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [x] Implement Security Questions MFA
       ([kratos#469](https://github.com/ory/kratos/issues/469))
 - [x] Double slash in URLs causes CSRF issues
