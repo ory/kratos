@@ -47,6 +47,7 @@ func (o *CreateIdentityReader) ReadResponse(response runtime.ClientResponse, con
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -57,7 +58,7 @@ func NewCreateIdentityCreated() *CreateIdentityCreated {
 	return &CreateIdentityCreated{}
 }
 
-/* CreateIdentityCreated describes a response with status code 201, with default header values.
+/*CreateIdentityCreated handles this case with default header values.
 
 A single identity.
 */
@@ -68,6 +69,7 @@ type CreateIdentityCreated struct {
 func (o *CreateIdentityCreated) Error() string {
 	return fmt.Sprintf("[POST /identities][%d] createIdentityCreated  %+v", 201, o.Payload)
 }
+
 func (o *CreateIdentityCreated) GetPayload() *models.Identity {
 	return o.Payload
 }
@@ -89,7 +91,7 @@ func NewCreateIdentityBadRequest() *CreateIdentityBadRequest {
 	return &CreateIdentityBadRequest{}
 }
 
-/* CreateIdentityBadRequest describes a response with status code 400, with default header values.
+/*CreateIdentityBadRequest handles this case with default header values.
 
 genericError
 */
@@ -100,6 +102,7 @@ type CreateIdentityBadRequest struct {
 func (o *CreateIdentityBadRequest) Error() string {
 	return fmt.Sprintf("[POST /identities][%d] createIdentityBadRequest  %+v", 400, o.Payload)
 }
+
 func (o *CreateIdentityBadRequest) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -121,7 +124,7 @@ func NewCreateIdentityConflict() *CreateIdentityConflict {
 	return &CreateIdentityConflict{}
 }
 
-/* CreateIdentityConflict describes a response with status code 409, with default header values.
+/*CreateIdentityConflict handles this case with default header values.
 
 genericError
 */
@@ -132,6 +135,7 @@ type CreateIdentityConflict struct {
 func (o *CreateIdentityConflict) Error() string {
 	return fmt.Sprintf("[POST /identities][%d] createIdentityConflict  %+v", 409, o.Payload)
 }
+
 func (o *CreateIdentityConflict) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -153,7 +157,7 @@ func NewCreateIdentityInternalServerError() *CreateIdentityInternalServerError {
 	return &CreateIdentityInternalServerError{}
 }
 
-/* CreateIdentityInternalServerError describes a response with status code 500, with default header values.
+/*CreateIdentityInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -164,6 +168,7 @@ type CreateIdentityInternalServerError struct {
 func (o *CreateIdentityInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /identities][%d] createIdentityInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *CreateIdentityInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

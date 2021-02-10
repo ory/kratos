@@ -41,6 +41,7 @@ func (o *RevokeSessionReader) ReadResponse(response runtime.ClientResponse, cons
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -51,9 +52,9 @@ func NewRevokeSessionNoContent() *RevokeSessionNoContent {
 	return &RevokeSessionNoContent{}
 }
 
-/* RevokeSessionNoContent describes a response with status code 204, with default header values.
+/*RevokeSessionNoContent handles this case with default header values.
 
- Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type RevokeSessionNoContent struct {
@@ -73,7 +74,7 @@ func NewRevokeSessionBadRequest() *RevokeSessionBadRequest {
 	return &RevokeSessionBadRequest{}
 }
 
-/* RevokeSessionBadRequest describes a response with status code 400, with default header values.
+/*RevokeSessionBadRequest handles this case with default header values.
 
 genericError
 */
@@ -84,6 +85,7 @@ type RevokeSessionBadRequest struct {
 func (o *RevokeSessionBadRequest) Error() string {
 	return fmt.Sprintf("[DELETE /sessions][%d] revokeSessionBadRequest  %+v", 400, o.Payload)
 }
+
 func (o *RevokeSessionBadRequest) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -105,7 +107,7 @@ func NewRevokeSessionInternalServerError() *RevokeSessionInternalServerError {
 	return &RevokeSessionInternalServerError{}
 }
 
-/* RevokeSessionInternalServerError describes a response with status code 500, with default header values.
+/*RevokeSessionInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -116,6 +118,7 @@ type RevokeSessionInternalServerError struct {
 func (o *RevokeSessionInternalServerError) Error() string {
 	return fmt.Sprintf("[DELETE /sessions][%d] revokeSessionInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *RevokeSessionInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

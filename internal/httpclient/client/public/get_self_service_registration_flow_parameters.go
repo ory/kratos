@@ -16,76 +16,62 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewGetSelfServiceRegistrationFlowParams creates a new GetSelfServiceRegistrationFlowParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewGetSelfServiceRegistrationFlowParams creates a new GetSelfServiceRegistrationFlowParams object
+// with the default values initialized.
 func NewGetSelfServiceRegistrationFlowParams() *GetSelfServiceRegistrationFlowParams {
+	var ()
 	return &GetSelfServiceRegistrationFlowParams{
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewGetSelfServiceRegistrationFlowParamsWithTimeout creates a new GetSelfServiceRegistrationFlowParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewGetSelfServiceRegistrationFlowParamsWithTimeout(timeout time.Duration) *GetSelfServiceRegistrationFlowParams {
+	var ()
 	return &GetSelfServiceRegistrationFlowParams{
+
 		timeout: timeout,
 	}
 }
 
 // NewGetSelfServiceRegistrationFlowParamsWithContext creates a new GetSelfServiceRegistrationFlowParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewGetSelfServiceRegistrationFlowParamsWithContext(ctx context.Context) *GetSelfServiceRegistrationFlowParams {
+	var ()
 	return &GetSelfServiceRegistrationFlowParams{
+
 		Context: ctx,
 	}
 }
 
 // NewGetSelfServiceRegistrationFlowParamsWithHTTPClient creates a new GetSelfServiceRegistrationFlowParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewGetSelfServiceRegistrationFlowParamsWithHTTPClient(client *http.Client) *GetSelfServiceRegistrationFlowParams {
+	var ()
 	return &GetSelfServiceRegistrationFlowParams{
 		HTTPClient: client,
 	}
 }
 
-/* GetSelfServiceRegistrationFlowParams contains all the parameters to send to the API endpoint
-   for the get self service registration flow operation.
-
-   Typically these are written to a http.Request.
+/*GetSelfServiceRegistrationFlowParams contains all the parameters to send to the API endpoint
+for the get self service registration flow operation typically these are written to a http.Request
 */
 type GetSelfServiceRegistrationFlowParams struct {
 
-	/* ID.
-
-	     The Registration Flow ID
+	/*ID
+	  The Registration Flow ID
 
 	The value for this parameter comes from `flow` URL Query parameter sent to your
 	application (e.g. `/registration?flow=abcde`).
+
 	*/
 	ID string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the get self service registration flow params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *GetSelfServiceRegistrationFlowParams) WithDefaults() *GetSelfServiceRegistrationFlowParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the get self service registration flow params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *GetSelfServiceRegistrationFlowParams) SetDefaults() {
-	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the get self service registration flow params
@@ -144,7 +130,6 @@ func (o *GetSelfServiceRegistrationFlowParams) WriteToRequest(r runtime.ClientRe
 	qrID := o.ID
 	qID := qrID
 	if qID != "" {
-
 		if err := r.SetQueryParam("id", qID); err != nil {
 			return err
 		}

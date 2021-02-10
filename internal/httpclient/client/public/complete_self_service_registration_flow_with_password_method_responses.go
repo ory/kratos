@@ -47,6 +47,7 @@ func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodReader) ReadRespon
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -57,7 +58,7 @@ func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodOK() *CompleteSelfS
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodOK{}
 }
 
-/* CompleteSelfServiceRegistrationFlowWithPasswordMethodOK describes a response with status code 200, with default header values.
+/*CompleteSelfServiceRegistrationFlowWithPasswordMethodOK handles this case with default header values.
 
 registrationViaApiResponse
 */
@@ -68,6 +69,7 @@ type CompleteSelfServiceRegistrationFlowWithPasswordMethodOK struct {
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodOK) Error() string {
 	return fmt.Sprintf("[POST /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodOK  %+v", 200, o.Payload)
 }
+
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodOK) GetPayload() *models.RegistrationViaAPIResponse {
 	return o.Payload
 }
@@ -89,9 +91,9 @@ func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodFound() *CompleteSe
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodFound{}
 }
 
-/* CompleteSelfServiceRegistrationFlowWithPasswordMethodFound describes a response with status code 302, with default header values.
+/*CompleteSelfServiceRegistrationFlowWithPasswordMethodFound handles this case with default header values.
 
- Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type CompleteSelfServiceRegistrationFlowWithPasswordMethodFound struct {
@@ -111,7 +113,7 @@ func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest() *Compl
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest{}
 }
 
-/* CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest describes a response with status code 400, with default header values.
+/*CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest handles this case with default header values.
 
 registrationFlow
 */
@@ -122,6 +124,7 @@ type CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest struct {
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest) Error() string {
 	return fmt.Sprintf("[POST /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
 }
+
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest) GetPayload() *models.RegistrationFlow {
 	return o.Payload
 }
@@ -143,7 +146,7 @@ func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError{}
 }
 
-/* CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError describes a response with status code 500, with default header values.
+/*CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -154,6 +157,7 @@ type CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError st
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

@@ -17,100 +17,86 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewListIdentitiesParams creates a new ListIdentitiesParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewListIdentitiesParams creates a new ListIdentitiesParams object
+// with the default values initialized.
 func NewListIdentitiesParams() *ListIdentitiesParams {
+	var (
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
+	)
 	return &ListIdentitiesParams{
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewListIdentitiesParamsWithTimeout creates a new ListIdentitiesParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewListIdentitiesParamsWithTimeout(timeout time.Duration) *ListIdentitiesParams {
+	var (
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
+	)
 	return &ListIdentitiesParams{
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
+
 		timeout: timeout,
 	}
 }
 
 // NewListIdentitiesParamsWithContext creates a new ListIdentitiesParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewListIdentitiesParamsWithContext(ctx context.Context) *ListIdentitiesParams {
+	var (
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
+	)
 	return &ListIdentitiesParams{
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
+
 		Context: ctx,
 	}
 }
 
 // NewListIdentitiesParamsWithHTTPClient creates a new ListIdentitiesParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewListIdentitiesParamsWithHTTPClient(client *http.Client) *ListIdentitiesParams {
+	var (
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
+	)
 	return &ListIdentitiesParams{
+		Page:       &pageDefault,
+		PerPage:    &perPageDefault,
 		HTTPClient: client,
 	}
 }
 
-/* ListIdentitiesParams contains all the parameters to send to the API endpoint
-   for the list identities operation.
-
-   Typically these are written to a http.Request.
+/*ListIdentitiesParams contains all the parameters to send to the API endpoint
+for the list identities operation typically these are written to a http.Request
 */
 type ListIdentitiesParams struct {
 
-	/* Page.
+	/*Page
+	  Pagination Page
 
-	   Pagination Page
-
-	   Format: int64
 	*/
 	Page *int64
-
-	/* PerPage.
-
-	     Items per Page
+	/*PerPage
+	  Items per Page
 
 	This is the number of items per page.
 
-	     Format: int64
-	     Default: 100
 	*/
 	PerPage *int64
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the list identities params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *ListIdentitiesParams) WithDefaults() *ListIdentitiesParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the list identities params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *ListIdentitiesParams) SetDefaults() {
-	var (
-		pageDefault = int64(0)
-
-		perPageDefault = int64(100)
-	)
-
-	val := ListIdentitiesParams{
-		Page:    &pageDefault,
-		PerPage: &perPageDefault,
-	}
-
-	val.timeout = o.timeout
-	val.Context = o.Context
-	val.HTTPClient = o.HTTPClient
-	*o = val
 }
 
 // WithTimeout adds the timeout to the list identities params
@@ -180,34 +166,32 @@ func (o *ListIdentitiesParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 
 		// query param page
 		var qrPage int64
-
 		if o.Page != nil {
 			qrPage = *o.Page
 		}
 		qPage := swag.FormatInt64(qrPage)
 		if qPage != "" {
-
 			if err := r.SetQueryParam("page", qPage); err != nil {
 				return err
 			}
 		}
+
 	}
 
 	if o.PerPage != nil {
 
 		// query param per_page
 		var qrPerPage int64
-
 		if o.PerPage != nil {
 			qrPerPage = *o.PerPage
 		}
 		qPerPage := swag.FormatInt64(qrPerPage)
 		if qPerPage != "" {
-
 			if err := r.SetQueryParam("per_page", qPerPage); err != nil {
 				return err
 			}
 		}
+
 	}
 
 	if len(res) > 0 {

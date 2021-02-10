@@ -18,87 +18,71 @@ import (
 	"github.com/ory/kratos-client-go/models"
 )
 
-// NewCompleteSelfServiceRecoveryFlowWithLinkMethodParams creates a new CompleteSelfServiceRecoveryFlowWithLinkMethodParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewCompleteSelfServiceRecoveryFlowWithLinkMethodParams creates a new CompleteSelfServiceRecoveryFlowWithLinkMethodParams object
+// with the default values initialized.
 func NewCompleteSelfServiceRecoveryFlowWithLinkMethodParams() *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
+	var ()
 	return &CompleteSelfServiceRecoveryFlowWithLinkMethodParams{
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewCompleteSelfServiceRecoveryFlowWithLinkMethodParamsWithTimeout creates a new CompleteSelfServiceRecoveryFlowWithLinkMethodParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewCompleteSelfServiceRecoveryFlowWithLinkMethodParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
+	var ()
 	return &CompleteSelfServiceRecoveryFlowWithLinkMethodParams{
+
 		timeout: timeout,
 	}
 }
 
 // NewCompleteSelfServiceRecoveryFlowWithLinkMethodParamsWithContext creates a new CompleteSelfServiceRecoveryFlowWithLinkMethodParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewCompleteSelfServiceRecoveryFlowWithLinkMethodParamsWithContext(ctx context.Context) *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
+	var ()
 	return &CompleteSelfServiceRecoveryFlowWithLinkMethodParams{
+
 		Context: ctx,
 	}
 }
 
 // NewCompleteSelfServiceRecoveryFlowWithLinkMethodParamsWithHTTPClient creates a new CompleteSelfServiceRecoveryFlowWithLinkMethodParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewCompleteSelfServiceRecoveryFlowWithLinkMethodParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
+	var ()
 	return &CompleteSelfServiceRecoveryFlowWithLinkMethodParams{
 		HTTPClient: client,
 	}
 }
 
-/* CompleteSelfServiceRecoveryFlowWithLinkMethodParams contains all the parameters to send to the API endpoint
-   for the complete self service recovery flow with link method operation.
-
-   Typically these are written to a http.Request.
+/*CompleteSelfServiceRecoveryFlowWithLinkMethodParams contains all the parameters to send to the API endpoint
+for the complete self service recovery flow with link method operation typically these are written to a http.Request
 */
 type CompleteSelfServiceRecoveryFlowWithLinkMethodParams struct {
 
-	// Body.
+	/*Body*/
 	Body *models.CompleteSelfServiceRecoveryFlowWithLinkMethod
-
-	/* Flow.
-
-	     The Flow ID
+	/*Flow
+	  The Flow ID
 
 	format: uuid
+
 	*/
 	Flow *string
-
-	/* Token.
-
-	     Recovery Token
+	/*Token
+	  Recovery Token
 
 	The recovery token which completes the recovery request. If the token
 	is invalid (e.g. expired) an error will be shown to the end-user.
+
 	*/
 	Token *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the complete self service recovery flow with link method params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) WithDefaults() *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the complete self service recovery flow with link method params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) SetDefaults() {
-	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the complete self service recovery flow with link method params
@@ -174,6 +158,7 @@ func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) WriteToRequest(r r
 		return err
 	}
 	var res []error
+
 	if o.Body != nil {
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err
@@ -184,34 +169,32 @@ func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) WriteToRequest(r r
 
 		// query param flow
 		var qrFlow string
-
 		if o.Flow != nil {
 			qrFlow = *o.Flow
 		}
 		qFlow := qrFlow
 		if qFlow != "" {
-
 			if err := r.SetQueryParam("flow", qFlow); err != nil {
 				return err
 			}
 		}
+
 	}
 
 	if o.Token != nil {
 
 		// query param token
 		var qrToken string
-
 		if o.Token != nil {
 			qrToken = *o.Token
 		}
 		qToken := qrToken
 		if qToken != "" {
-
 			if err := r.SetQueryParam("token", qToken); err != nil {
 				return err
 			}
 		}
+
 	}
 
 	if len(res) > 0 {

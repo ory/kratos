@@ -47,6 +47,7 @@ func (o *GetSelfServiceVerificationFlowReader) ReadResponse(response runtime.Cli
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -57,7 +58,7 @@ func NewGetSelfServiceVerificationFlowOK() *GetSelfServiceVerificationFlowOK {
 	return &GetSelfServiceVerificationFlowOK{}
 }
 
-/* GetSelfServiceVerificationFlowOK describes a response with status code 200, with default header values.
+/*GetSelfServiceVerificationFlowOK handles this case with default header values.
 
 verificationFlow
 */
@@ -68,6 +69,7 @@ type GetSelfServiceVerificationFlowOK struct {
 func (o *GetSelfServiceVerificationFlowOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/verification/flows][%d] getSelfServiceVerificationFlowOK  %+v", 200, o.Payload)
 }
+
 func (o *GetSelfServiceVerificationFlowOK) GetPayload() *models.VerificationFlow {
 	return o.Payload
 }
@@ -89,7 +91,7 @@ func NewGetSelfServiceVerificationFlowForbidden() *GetSelfServiceVerificationFlo
 	return &GetSelfServiceVerificationFlowForbidden{}
 }
 
-/* GetSelfServiceVerificationFlowForbidden describes a response with status code 403, with default header values.
+/*GetSelfServiceVerificationFlowForbidden handles this case with default header values.
 
 genericError
 */
@@ -100,6 +102,7 @@ type GetSelfServiceVerificationFlowForbidden struct {
 func (o *GetSelfServiceVerificationFlowForbidden) Error() string {
 	return fmt.Sprintf("[GET /self-service/verification/flows][%d] getSelfServiceVerificationFlowForbidden  %+v", 403, o.Payload)
 }
+
 func (o *GetSelfServiceVerificationFlowForbidden) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -121,7 +124,7 @@ func NewGetSelfServiceVerificationFlowNotFound() *GetSelfServiceVerificationFlow
 	return &GetSelfServiceVerificationFlowNotFound{}
 }
 
-/* GetSelfServiceVerificationFlowNotFound describes a response with status code 404, with default header values.
+/*GetSelfServiceVerificationFlowNotFound handles this case with default header values.
 
 genericError
 */
@@ -132,6 +135,7 @@ type GetSelfServiceVerificationFlowNotFound struct {
 func (o *GetSelfServiceVerificationFlowNotFound) Error() string {
 	return fmt.Sprintf("[GET /self-service/verification/flows][%d] getSelfServiceVerificationFlowNotFound  %+v", 404, o.Payload)
 }
+
 func (o *GetSelfServiceVerificationFlowNotFound) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -153,7 +157,7 @@ func NewGetSelfServiceVerificationFlowInternalServerError() *GetSelfServiceVerif
 	return &GetSelfServiceVerificationFlowInternalServerError{}
 }
 
-/* GetSelfServiceVerificationFlowInternalServerError describes a response with status code 500, with default header values.
+/*GetSelfServiceVerificationFlowInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -164,6 +168,7 @@ type GetSelfServiceVerificationFlowInternalServerError struct {
 func (o *GetSelfServiceVerificationFlowInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /self-service/verification/flows][%d] getSelfServiceVerificationFlowInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *GetSelfServiceVerificationFlowInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

@@ -18,70 +18,56 @@ import (
 	"github.com/ory/kratos-client-go/models"
 )
 
-// NewRevokeSessionParams creates a new RevokeSessionParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewRevokeSessionParams creates a new RevokeSessionParams object
+// with the default values initialized.
 func NewRevokeSessionParams() *RevokeSessionParams {
+	var ()
 	return &RevokeSessionParams{
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewRevokeSessionParamsWithTimeout creates a new RevokeSessionParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewRevokeSessionParamsWithTimeout(timeout time.Duration) *RevokeSessionParams {
+	var ()
 	return &RevokeSessionParams{
+
 		timeout: timeout,
 	}
 }
 
 // NewRevokeSessionParamsWithContext creates a new RevokeSessionParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewRevokeSessionParamsWithContext(ctx context.Context) *RevokeSessionParams {
+	var ()
 	return &RevokeSessionParams{
+
 		Context: ctx,
 	}
 }
 
 // NewRevokeSessionParamsWithHTTPClient creates a new RevokeSessionParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewRevokeSessionParamsWithHTTPClient(client *http.Client) *RevokeSessionParams {
+	var ()
 	return &RevokeSessionParams{
 		HTTPClient: client,
 	}
 }
 
-/* RevokeSessionParams contains all the parameters to send to the API endpoint
-   for the revoke session operation.
-
-   Typically these are written to a http.Request.
+/*RevokeSessionParams contains all the parameters to send to the API endpoint
+for the revoke session operation typically these are written to a http.Request
 */
 type RevokeSessionParams struct {
 
-	// Body.
+	/*Body*/
 	Body *models.RevokeSession
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the revoke session params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *RevokeSessionParams) WithDefaults() *RevokeSessionParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the revoke session params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *RevokeSessionParams) SetDefaults() {
-	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the revoke session params
@@ -135,6 +121,7 @@ func (o *RevokeSessionParams) WriteToRequest(r runtime.ClientRequest, reg strfmt
 		return err
 	}
 	var res []error
+
 	if o.Body != nil {
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err

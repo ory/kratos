@@ -16,66 +16,52 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewInitializeSelfServiceVerificationViaBrowserFlowParams creates a new InitializeSelfServiceVerificationViaBrowserFlowParams object,
-// with the default timeout for this client.
-//
-// Default values are not hydrated, since defaults are normally applied by the API server side.
-//
-// To enforce default values in parameter, use SetDefaults or WithDefaults.
+// NewInitializeSelfServiceVerificationViaBrowserFlowParams creates a new InitializeSelfServiceVerificationViaBrowserFlowParams object
+// with the default values initialized.
 func NewInitializeSelfServiceVerificationViaBrowserFlowParams() *InitializeSelfServiceVerificationViaBrowserFlowParams {
+
 	return &InitializeSelfServiceVerificationViaBrowserFlowParams{
+
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewInitializeSelfServiceVerificationViaBrowserFlowParamsWithTimeout creates a new InitializeSelfServiceVerificationViaBrowserFlowParams object
-// with the ability to set a timeout on a request.
+// with the default values initialized, and the ability to set a timeout on a request
 func NewInitializeSelfServiceVerificationViaBrowserFlowParamsWithTimeout(timeout time.Duration) *InitializeSelfServiceVerificationViaBrowserFlowParams {
+
 	return &InitializeSelfServiceVerificationViaBrowserFlowParams{
+
 		timeout: timeout,
 	}
 }
 
 // NewInitializeSelfServiceVerificationViaBrowserFlowParamsWithContext creates a new InitializeSelfServiceVerificationViaBrowserFlowParams object
-// with the ability to set a context for a request.
+// with the default values initialized, and the ability to set a context for a request
 func NewInitializeSelfServiceVerificationViaBrowserFlowParamsWithContext(ctx context.Context) *InitializeSelfServiceVerificationViaBrowserFlowParams {
+
 	return &InitializeSelfServiceVerificationViaBrowserFlowParams{
+
 		Context: ctx,
 	}
 }
 
 // NewInitializeSelfServiceVerificationViaBrowserFlowParamsWithHTTPClient creates a new InitializeSelfServiceVerificationViaBrowserFlowParams object
-// with the ability to set a custom HTTPClient for a request.
+// with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewInitializeSelfServiceVerificationViaBrowserFlowParamsWithHTTPClient(client *http.Client) *InitializeSelfServiceVerificationViaBrowserFlowParams {
+
 	return &InitializeSelfServiceVerificationViaBrowserFlowParams{
 		HTTPClient: client,
 	}
 }
 
-/* InitializeSelfServiceVerificationViaBrowserFlowParams contains all the parameters to send to the API endpoint
-   for the initialize self service verification via browser flow operation.
-
-   Typically these are written to a http.Request.
+/*InitializeSelfServiceVerificationViaBrowserFlowParams contains all the parameters to send to the API endpoint
+for the initialize self service verification via browser flow operation typically these are written to a http.Request
 */
 type InitializeSelfServiceVerificationViaBrowserFlowParams struct {
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
-}
-
-// WithDefaults hydrates default values in the initialize self service verification via browser flow params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *InitializeSelfServiceVerificationViaBrowserFlowParams) WithDefaults() *InitializeSelfServiceVerificationViaBrowserFlowParams {
-	o.SetDefaults()
-	return o
-}
-
-// SetDefaults hydrates default values in the initialize self service verification via browser flow params (not the query body).
-//
-// All values with no default are reset to their zero value.
-func (o *InitializeSelfServiceVerificationViaBrowserFlowParams) SetDefaults() {
-	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the initialize self service verification via browser flow params

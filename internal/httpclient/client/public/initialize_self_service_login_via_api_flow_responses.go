@@ -41,6 +41,7 @@ func (o *InitializeSelfServiceLoginViaAPIFlowReader) ReadResponse(response runti
 			return nil, err
 		}
 		return nil, result
+
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -51,7 +52,7 @@ func NewInitializeSelfServiceLoginViaAPIFlowOK() *InitializeSelfServiceLoginViaA
 	return &InitializeSelfServiceLoginViaAPIFlowOK{}
 }
 
-/* InitializeSelfServiceLoginViaAPIFlowOK describes a response with status code 200, with default header values.
+/*InitializeSelfServiceLoginViaAPIFlowOK handles this case with default header values.
 
 loginFlow
 */
@@ -62,6 +63,7 @@ type InitializeSelfServiceLoginViaAPIFlowOK struct {
 func (o *InitializeSelfServiceLoginViaAPIFlowOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/api][%d] initializeSelfServiceLoginViaApiFlowOK  %+v", 200, o.Payload)
 }
+
 func (o *InitializeSelfServiceLoginViaAPIFlowOK) GetPayload() *models.LoginFlow {
 	return o.Payload
 }
@@ -83,7 +85,7 @@ func NewInitializeSelfServiceLoginViaAPIFlowBadRequest() *InitializeSelfServiceL
 	return &InitializeSelfServiceLoginViaAPIFlowBadRequest{}
 }
 
-/* InitializeSelfServiceLoginViaAPIFlowBadRequest describes a response with status code 400, with default header values.
+/*InitializeSelfServiceLoginViaAPIFlowBadRequest handles this case with default header values.
 
 genericError
 */
@@ -94,6 +96,7 @@ type InitializeSelfServiceLoginViaAPIFlowBadRequest struct {
 func (o *InitializeSelfServiceLoginViaAPIFlowBadRequest) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/api][%d] initializeSelfServiceLoginViaApiFlowBadRequest  %+v", 400, o.Payload)
 }
+
 func (o *InitializeSelfServiceLoginViaAPIFlowBadRequest) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -115,7 +118,7 @@ func NewInitializeSelfServiceLoginViaAPIFlowInternalServerError() *InitializeSel
 	return &InitializeSelfServiceLoginViaAPIFlowInternalServerError{}
 }
 
-/* InitializeSelfServiceLoginViaAPIFlowInternalServerError describes a response with status code 500, with default header values.
+/*InitializeSelfServiceLoginViaAPIFlowInternalServerError handles this case with default header values.
 
 genericError
 */
@@ -126,6 +129,7 @@ type InitializeSelfServiceLoginViaAPIFlowInternalServerError struct {
 func (o *InitializeSelfServiceLoginViaAPIFlowInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/api][%d] initializeSelfServiceLoginViaApiFlowInternalServerError  %+v", 500, o.Payload)
 }
+
 func (o *InitializeSelfServiceLoginViaAPIFlowInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }
