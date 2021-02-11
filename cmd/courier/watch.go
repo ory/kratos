@@ -61,13 +61,18 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 	})
 
 	l.Printf("Starting the metrics httpd on: %s", server.Addr)
-	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
+	if err := graceful.Graceful(func() error {
+		go server.ListenAndServe()
+		<-ctx.Done()
+		return server.Shutdown(ctx)
+	}, server.Shutdown); err != nil {
 		l.Fatalln("Failed to gracefully shutdown metrics httpd")
 	}
 	l.Println("Metrics httpd was shutdown gracefully")
 }
 
 func Watch(ctx cx.Context, r driver.Registry) {
+
 	ctx, cancel := cx.WithCancel(ctx)
 
 	r.Logger().Println("Courier worker started.")

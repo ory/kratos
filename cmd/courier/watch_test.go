@@ -4,22 +4,31 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"time"
 
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/configx"
-	"github.com/ory/x/logrusx"
+	"github.com/ory/kratos/internal"
 	"github.com/stretchr/testify/require"
 )
 
 func TestStartCourier(t *testing.T) {
-	c := config.MustNew(logrusx.New("", ""),
-		configx.WithConfigFiles("../../internal/.kratos.yaml"))
 	t.Run("case=without metrics", func(t *testing.T) {
-		r := driver.NewRegistryDefault().WithConfig(c)
-		StartCourier(context.Background(), r)
-		_, err := http.Get(c.MetricsListenOn())
-		require.Error(t, err)
+		ctx, cancel := context.WithCancel(context.Background())
+		_, r := internal.NewFastRegistryWithMocks(t)
+		go StartCourier(ctx, r)
+		require.Equal(t, r.Config(ctx).CourierExposeMetricsPort(), 0)
+		cancel()
+
+	})
+	t.Run("case=with metrics", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		_, r := internal.NewFastRegistryWithMocks(t)
+		r.Config(ctx).Set("expose-metrics-port", 8080)
+		go StartCourier(ctx, r)
+		time.Sleep(time.Second)
+		res, err := http.Get("http://" + r.Config(ctx).MetricsListenOn() + "/metrics/prometheus")
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+		cancel()
 	})
 
 }

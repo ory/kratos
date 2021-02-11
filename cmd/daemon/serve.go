@@ -214,7 +214,7 @@ func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []s
 	defer wg.Done()
 
 	if d.Config(cmd.Context()).IsBackgroundCourierEnabled() {
-		go courier.Watch(d, cmd, args)
+		go courier.Watch(cmd.Context(), d)
 	}
 }
 
