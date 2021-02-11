@@ -62,7 +62,12 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 
 	l.Printf("Starting the metrics httpd on: %s", server.Addr)
 	if err := graceful.Graceful(func() error {
-		go server.ListenAndServe()
+		go func() {
+			if err := server.ListenAndServe(); err != nil {
+				l.Fatalf("Failed to start the metrics httpd: %s\n", err)
+				return
+			}
+		}()
 		<-ctx.Done()
 		return server.Shutdown(ctx)
 	}, server.Shutdown); err != nil {
