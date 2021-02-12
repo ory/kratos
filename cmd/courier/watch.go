@@ -71,7 +71,7 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 		<-ctx.Done()
 		return server.Shutdown(ctx)
 	}, server.Shutdown); err != nil {
-		l.Fatalln("Failed to gracefully shutdown metrics httpd")
+		l.Errorln("Failed to gracefully shutdown metrics httpd")
 	}
 	l.Println("Metrics httpd was shutdown gracefully")
 }
