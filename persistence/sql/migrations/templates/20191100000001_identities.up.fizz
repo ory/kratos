@@ -1,3 +1,7 @@
+{{ if .IsSQLite }}
+sql("SELECT 1")
+{{ end }}
+
 create_table("identities") {
 	t.Column("id", "uuid", {primary: true})
     t.Column("traits_schema_id", "string", {"size": 2048})
