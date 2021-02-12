@@ -72,8 +72,9 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 		return server.Shutdown(ctx)
 	}, server.Shutdown); err != nil {
 		l.Errorln("Failed to gracefully shutdown metrics httpd")
+	} else {
+		l.Println("Metrics httpd was shutdown gracefully")
 	}
-	l.Println("Metrics httpd was shutdown gracefully")
 }
 
 func Watch(ctx cx.Context, r driver.Registry) {
