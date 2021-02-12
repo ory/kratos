@@ -2153,12 +2153,11 @@
       }
     },
     "loginFlowMethodConfig": {
-      "description": "LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig login flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2185,11 +2184,11 @@
       }
     },
     "loginViaApiResponse": {
-      "description": "The Response for Login Flows via API",
+      "description": "LoginViaAPIResponse The Response for Login Flows via API",
       "type": "object",
       "required": [
-        "session",
-        "session_token"
+        "session_token",
+        "session"
       ],
       "properties": {
         "session": {
@@ -2270,11 +2269,12 @@
       }
     },
     "recoveryFlowMethodConfig": {
+      "description": "RecoveryFlowMethodConfig recovery flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2373,12 +2373,11 @@
       }
     },
     "registrationFlowMethodConfig": {
-      "description": "RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2573,7 +2572,7 @@
       }
     },
     "settingsViaApiResponse": {
-      "description": "The Response for Settings Flows via API",
+      "description": "SettingsViaAPIResponse The Response for Settings Flows via API",
       "type": "object",
       "required": [
         "flow",

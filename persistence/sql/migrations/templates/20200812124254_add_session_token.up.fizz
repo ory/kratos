@@ -1,4 +1,4 @@
-{{ if eq .Dialect "cockroach" }}
+{{ if eq .Dialect "postgres" }}
   sql("DELETE FROM sessions;COMMIT TRANSACTION;BEGIN TRANSACTION;")
 {{ else }}
   sql("DELETE FROM sessions")
