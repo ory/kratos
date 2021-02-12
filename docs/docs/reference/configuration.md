@@ -1352,6 +1352,37 @@ help: false
 #
 sqa-opt-out: false
 
+## watch-courier ##
+#
+# Default value: false
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export WATCH-COURIER=<value>
+# - Windows Command Line (CMD):
+#    > set WATCH-COURIER=<value>
+#
+watch-courier: false
+
+## Metrics port ##
+#
+# The port the courier's metrics endpoint listens on (0/disabled by default).
+#
+# Minimum value: 0
+#
+# Maximum value: 65535
+#
+# Examples:
+# - 4434
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export EXPOSE-METRICS-PORT=<value>
+# - Windows Command Line (CMD):
+#    > set EXPOSE-METRICS-PORT=<value>
+#
+expose-metrics-port: 4434
+
 ## config ##
 #
 # Set this value using environment variables on
