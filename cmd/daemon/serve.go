@@ -1,13 +1,13 @@
 package daemon
 
 import (
-	cx "context"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/ory/x/reqlog"
 
+	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/driver/config"
 
 	"github.com/rs/cors"
@@ -213,19 +213,9 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	ctx, cancel := cx.WithCancel(cmd.Context())
-
-	d.Logger().Println("Courier worker started.")
-	if err := graceful.Graceful(func() error {
-		return d.Courier(ctx).Work(ctx)
-	}, func(_ cx.Context) error {
-		cancel()
-		return nil
-	}); err != nil {
-		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
+	if d.Config(cmd.Context()).IsBackgroundCourierEnabled() {
+		go courier.Watch(cmd.Context(), d)
 	}
-
-	d.Logger().Println("Courier worker was shutdown gracefully.")
 }
 
 func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args []string) {

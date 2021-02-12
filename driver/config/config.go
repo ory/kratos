@@ -595,6 +595,18 @@ func (p *Config) IsInsecureDevMode() bool {
 	return p.Source().Bool("dev")
 }
 
+func (p *Config) IsBackgroundCourierEnabled() bool {
+	return p.Source().Bool("watch-courier")
+}
+
+func (p *Config) CourierExposeMetricsPort() int {
+	return p.Source().Int("expose-metrics-port")
+}
+
+func (p *Config) MetricsListenOn() string {
+	return strings.Replace(p.AdminListenOn(), ":4434", fmt.Sprintf(":%d", p.CourierExposeMetricsPort()), 1)
+}
+
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
 	return p.parseURIOrFail(ViperKeySelfServiceVerificationUI)
 }

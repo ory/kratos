@@ -2019,7 +2019,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "Error response",
+      "title": "GenericError Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -2077,6 +2077,7 @@
       }
     },
     "healthStatus": {
+      "description": "HealthStatus health status",
       "type": "object",
       "properties": {
         "status": {
@@ -2436,13 +2437,14 @@
       }
     },
     "session": {
+      "description": "Session session",
       "type": "object",
       "required": [
-        "authenticated_at",
-        "expires_at",
         "id",
-        "identity",
-        "issued_at"
+        "expires_at",
+        "authenticated_at",
+        "issued_at",
+        "identity"
       ],
       "properties": {
         "active": {
@@ -2450,10 +2452,12 @@
           "type": "boolean"
         },
         "authenticated_at": {
+          "description": "authenticated at",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
+          "description": "expires at",
           "type": "string",
           "format": "date-time"
         },
@@ -2464,6 +2468,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
+          "description": "issued at",
           "type": "string",
           "format": "date-time"
         }
@@ -2672,6 +2677,7 @@
       }
     },
     "version": {
+      "description": "Version version",
       "type": "object",
       "properties": {
         "version": {

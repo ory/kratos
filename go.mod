@@ -51,14 +51,14 @@ require (
 	github.com/knadh/koanf v0.14.1-0.20201201075439-e0853799f9ec
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/markbates/pkger v0.17.1
-	github.com/mattn/goveralls v0.0.5
+	github.com/mattn/goveralls v0.0.7
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
 	github.com/ory/cli v0.0.35
 	github.com/ory/dockertest/v3 v3.6.2
-	github.com/ory/go-acc v0.1.0
+	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.9.0

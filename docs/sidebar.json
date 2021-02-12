@@ -63,6 +63,8 @@
       "label": "Command Line Interface (CLI)",
       "items": [
         "cli/kratos", 
+        "cli/kratos-courier", 
+        "cli/kratos-courier-watch", 
         "cli/kratos-hashers", 
         "cli/kratos-hashers-argon2", 
         "cli/kratos-hashers-argon2-calibrate", 
