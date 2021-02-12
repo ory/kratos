@@ -66,7 +66,6 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 		go func(errChan chan error) {
 			if err := server.ListenAndServe(); err != nil {
 				errChan <- err
-				return
 			}
 		}(errChan)
 		select {
