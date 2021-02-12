@@ -16,6 +16,7 @@ func TestStartCourier(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		_, r := internal.NewFastRegistryWithMocks(t)
 		go StartCourier(ctx, r)
+		time.Sleep(time.Second)
 		require.Equal(t, r.Config(ctx).CourierExposeMetricsPort(), 0)
 		cancel()
 
