@@ -73,7 +73,7 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 			l.Errorf("Failed to start the metrics httpd: %s\n", err)
 			return err
 		case <-ctx.Done():
-			l.Printf("Context closed: %s\n", ctx.Err())
+			l.Printf("Shutting down the metrics httpd: context closed: %s\n", ctx.Err())
 			return server.Shutdown(ctx)
 		}
 	}, server.Shutdown); err != nil {
