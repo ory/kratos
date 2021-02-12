@@ -25,7 +25,8 @@ kratos courier watch [flags]
 ### Options
 
 ```
-  -h, --help   help for watch
+      --expose-metrics-port int   The port to expose the metrics endpoint on (not exposed by default)
+  -h, --help                      help for watch
 ```
 
 ### Options inherited from parent commands
