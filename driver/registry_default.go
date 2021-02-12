@@ -472,6 +472,7 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 			if dbal.InMemoryDSN == m.Config(ctx).DSN() {
 				m.Logger().Infoln("ORY Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
 				if err := p.MigrateUp(ctx); err != nil {
+				m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
 					return err
 				}
 			}
