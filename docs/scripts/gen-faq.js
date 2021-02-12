@@ -2,11 +2,19 @@
 const fs = require('fs')
 const yaml = require('js-yaml')
 const { Remarkable } = require('remarkable')
+const yamlPath = './docs/faq.yaml'
+
 
 try {
   // Generating FAQ.mdx
 
-  let fayYaml = fs.readFileSync('./docs/faq.yaml', 'utf8')
+  if (!fs.existsSync(yamlPath)) {
+    //file exists
+    console.warn(".yaml File does not exists, skipping generating FAQ")
+    return 0
+  }
+
+  let fayYaml = fs.readFileSync('yamlPath', 'utf8')
   let faq = yaml.load(fayYaml)
 
   const tags = Array.from(
