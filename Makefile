@@ -14,7 +14,8 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
-				  github.com/mikefarah/yq
+				  github.com/mikefarah/yq \
+				  github.com/mattn/goveralls
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
@@ -77,6 +78,11 @@ test-resetdb:
 .PHONY: test
 test:
 		go test -p 1 -tags sqlite -count=1 -failfast ./...
+
+.PHONY: test-coverage
+test-coverage: .bin/go-acc .bin/goveralls
+		go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m -tags sqlite
+		test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
 
 # Generates the SDK
 .PHONY: sdk
