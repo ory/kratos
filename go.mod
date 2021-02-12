@@ -67,7 +67,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.183-0.20210212163400-67bc59f9920b
+	github.com/ory/x v0.0.185-0.20210212173500-1699a8af4d57
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
@@ -88,5 +88,4 @@ require (
 	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58
 	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
 	gopkg.in/go-playground/validator.v9 v9.28.0
-	gopkg.in/gorp.v1 v1.7.2 // indirect
 )
