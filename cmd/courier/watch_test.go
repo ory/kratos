@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/internal"
+	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +23,9 @@ func TestStartCourier(t *testing.T) {
 	t.Run("case=with metrics", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		_, r := internal.NewFastRegistryWithMocks(t)
-		r.Config(ctx).Set("expose-metrics-port", 8080)
+		port, err := freeport.GetFreePort()
+		require.NoError(t, err)
+		r.Config(ctx).Set("expose-metrics-port", port)
 		go StartCourier(ctx, r)
 		time.Sleep(time.Second)
 		res, err := http.Get("http://" + r.Config(ctx).MetricsListenOn() + "/metrics/prometheus")
