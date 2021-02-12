@@ -4,13 +4,12 @@ const yaml = require('js-yaml')
 const { Remarkable } = require('remarkable')
 const yamlPath = './docs/faq.yaml'
 
-
 try {
   // Generating FAQ.mdx
 
   if (!fs.existsSync(yamlPath)) {
     //file exists
-    console.warn(".yaml File does not exists, skipping generating FAQ")
+    console.warn('.yaml File does not exists, skipping generating FAQ')
     return 0
   }
 
