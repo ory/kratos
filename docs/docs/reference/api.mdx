@@ -9228,13 +9228,13 @@ _Field represents a HTML Form Field_
 ]
 ```
 
-_Fields contains multiple fields_
+_FormFields FormFields Fields contains multiple fields_
 
 #### Properties
 
-| Name        | Type                            | Required | Restrictions | Description                     |
-| ----------- | ------------------------------- | -------- | ------------ | ------------------------------- |
-| _anonymous_ | [[formField](#schemaformfield)] | false    | none         | Fields contains multiple fields |
+| Name        | Type                            | Required | Restrictions | Description                                           |
+| ----------- | ------------------------------- | -------- | ------------ | ----------------------------------------------------- |
+| _anonymous_ | [[formField](#schemaformfield)] | false    | none         | FormFields FormFields Fields contains multiple fields |
 
 <a id="tocSgenericerror"></a>
 
@@ -9256,7 +9256,7 @@ _Fields contains multiple fields_
 }
 ```
 
-_Error response_
+_GenericError Error response_
 
 #### Properties
 
@@ -9335,8 +9335,6 @@ _HealthNotReadyStatus health not ready status_
   "status": "string"
 }
 ```
-
-_HealthStatus health status_
 
 #### Properties
 
@@ -9625,7 +9623,7 @@ method config_
 | Name      | Type                            | Required | Restrictions | Description                                                                                                                                     |
 | --------- | ------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.                                                     |
-| fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                                                                                 |
+| fields    | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                                                                           |
 | messages  | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages |
 | method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                                                                           |
 | providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" flow method.                                                                                                    |
@@ -9775,7 +9773,7 @@ _LoginViaAPIResponse The Response for Login Flows via API_
 }
 ```
 
-_RecoveryFlow RecoveryFlow A Recovery Flow_
+_A Recovery Flow_
 
 #### Properties
 
@@ -9885,7 +9883,7 @@ _RecoveryFlow RecoveryFlow A Recovery Flow_
 | Name     | Type                            | Required | Restrictions | Description                                                                                                                                     |
 | -------- | ------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.                                                     |
-| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                                                                                 |
+| fields   | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                                                                           |
 | messages | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages |
 | method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                                                                           |
 
@@ -10050,7 +10048,7 @@ _RecoveryLink recovery link_
 | issued_at                  | string(date-time)                                       | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                                     |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                        |
 | methods                    | object                                                  | true     | none         | Methods contains context for all enabled registration methods. If a registration flow has been processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | none                                                                                                                                                                                   |
+| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | RegistrationFlowMethod registration flow method                                                                                                                                        |
 | request_url                | string                                                  | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                              |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                        |
 
@@ -10114,12 +10112,14 @@ _RecoveryLink recovery link_
 }
 ```
 
+_RegistrationFlowMethod registration flow method_
+
 #### Properties
 
-| Name   | Type                                                                | Required | Restrictions | Description |
-| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.  |
+| Name   | Type                                                                | Required | Restrictions | Description                                                                               |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------- |
+| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config |
+| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.                                                                                |
 
 <a id="tocSregistrationflowmethodconfig"></a>
 
@@ -10178,12 +10178,15 @@ _RecoveryLink recovery link_
 }
 ```
 
+_RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow
+method config_
+
 #### Properties
 
 | Name      | Type                            | Required | Restrictions | Description                                                                                                                                     |
 | --------- | ------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.                                                     |
-| fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                                                                                 |
+| fields    | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                                                                           |
 | messages  | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages |
 | method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                                                                           |
 | providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" registration method.                                                                                            |
@@ -10520,10 +10523,10 @@ _SettingsFlowMethod settings flow method_
 
 #### Properties
 
-| Name   | Type                                                        | Required | Restrictions | Description                                          |
-| ------ | ----------------------------------------------------------- | -------- | ------------ | ---------------------------------------------------- |
-| config | [settingsFlowMethodConfig](#schemasettingsflowmethodconfig) | true     | none         | SettingsFlowMethodConfig settings flow method config |
-| method | string                                                      | true     | none         | Method is the name of this flow method.              |
+| Name   | Type                                                        | Required | Restrictions | Description                             |
+| ------ | ----------------------------------------------------------- | -------- | ------------ | --------------------------------------- |
+| config | [settingsFlowMethodConfig](#schemasettingsflowmethodconfig) | true     | none         | none                                    |
+| method | string                                                      | true     | none         | Method is the name of this flow method. |
 
 <a id="tocSsettingsflowmethodconfig"></a>
 
@@ -10564,14 +10567,12 @@ _SettingsFlowMethod settings flow method_
 }
 ```
 
-_SettingsFlowMethodConfig settings flow method config_
-
 #### Properties
 
 | Name     | Type                            | Required | Restrictions | Description                                                                                                                                     |
 | -------- | ------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.                                                     |
-| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                                                                                 |
+| fields   | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                                                                           |
 | messages | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages |
 | method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                                                                           |
 
@@ -10930,7 +10931,7 @@ _VerificationFlow A Verification Flow_
 | Name     | Type                            | Required | Restrictions | Description                                                                                                                                     |
 | -------- | ------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.                                                     |
-| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                                                                                 |
+| fields   | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                                                                           |
 | messages | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages |
 | method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                                                                           |
 
@@ -10945,8 +10946,6 @@ _VerificationFlow A Verification Flow_
   "version": "string"
 }
 ```
-
-_Version version_
 
 #### Properties
 
