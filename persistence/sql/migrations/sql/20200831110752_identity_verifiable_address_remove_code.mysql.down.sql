@@ -1,1 +1,0 @@
-ALTER TABLE `identity_verifiable_addresses` ADD COLUMN `code` VARCHAR (32);

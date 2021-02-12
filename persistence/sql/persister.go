@@ -2,9 +2,8 @@ package sql
 
 import (
 	"context"
+	"github.com/ory/x/popx"
 	"io"
-
-	"github.com/ory/x/pkgerx"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/markbates/pkger"
@@ -30,14 +29,14 @@ type (
 	}
 	Persister struct {
 		c        *pop.Connection
-		mb       *pkgerx.MigrationBox
+		mb       *popx.MigrationBoxPkger
 		r        persisterDependencies
 		isSQLite bool
 	}
 )
 
 func NewPersister(r persisterDependencies, c *pop.Connection) (*Persister, error) {
-	m, err := pkgerx.NewMigrationBox(migrations, c, r.Logger())
+	m, err := popx.NewMigrationBoxPkger(migrations, c, r.Logger())
 	if err != nil {
 		return nil, err
 	}

@@ -9,9 +9,10 @@ import (
 
 	"github.com/ory/x/configx"
 
+	"github.com/sirupsen/logrus/hooks/test"
+
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/urlx"
-	"github.com/sirupsen/logrus/hooks/test"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
 

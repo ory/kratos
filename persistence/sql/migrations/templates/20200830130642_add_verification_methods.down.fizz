@@ -1,7 +1,7 @@
-{{ if .IsPostgreSQL || .IsMySQL }}
+{{ if or .IsPostgreSQL .IsMySQL .IsMariaDB }}
   add_column("selfservice_verification_flows", "form", "json", { "null": true })
   sql("UPDATE selfservice_verification_flows SET form=(SELECT * FROM (SELECT m.config FROM selfservice_verification_flows AS r INNER JOIN selfservice_verification_flow_methods AS m ON r.id=m.selfservice_verification_flow_id) as t);")
-  change_column("selfservice_verification_flows", "config", "json", { "null": false })
+  change_column("selfservice_verification_flows", "form", "json", { "null": false })
 {{ end }}
 
 {{ if .IsCockroach }}
