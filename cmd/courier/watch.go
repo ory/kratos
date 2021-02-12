@@ -62,14 +62,21 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 
 	l.Printf("Starting the metrics httpd on: %s", server.Addr)
 	if err := graceful.Graceful(func() error {
-		go func() {
+		errChan := make(chan error, 1)
+		go func(errChan chan error) {
 			if err := server.ListenAndServe(); err != nil {
-				l.Fatalf("Failed to start the metrics httpd: %s\n", err)
+				errChan <- err
 				return
 			}
-		}()
-		<-ctx.Done()
-		return server.Shutdown(ctx)
+		}(errChan)
+		select {
+		case err := <-errChan:
+			l.Errorf("Failed to start the metrics httpd: %s\n", err)
+			return err
+		case <-ctx.Done():
+			l.Printf("Context closed: %s\n", ctx.Err())
+			return server.Shutdown(ctx)
+		}
 	}, server.Shutdown); err != nil {
 		l.Errorln("Failed to gracefully shutdown metrics httpd")
 	} else {
