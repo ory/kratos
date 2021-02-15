@@ -10,9 +10,10 @@ import (
 
 	"github.com/ory/x/configx"
 
+	"github.com/sirupsen/logrus/hooks/test"
+
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/urlx"
-	"github.com/sirupsen/logrus/hooks/test"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
@@ -242,7 +243,7 @@ func TestViperProvider(t *testing.T) {
 				},
 				{
 					strategy: "profile",
-					hooks: []SelfServiceHook{
+					hooks:    []SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 					},
 				},
@@ -465,8 +466,7 @@ func TestViperProvider_DSN(t *testing.T) {
 func TestViperProvider_ParseURIOrFail(t *testing.T) {
 	var exitCode int
 
-	hook := &test.Hook{}
-	l := logrusx.New("", "", logrusx.WithHook(hook), logrusx.WithExitFunc(func(i int) {
+	l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 		exitCode = i
 	}))
 	p := MustNew(l, configx.SkipValidation())
