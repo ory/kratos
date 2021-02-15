@@ -47,8 +47,7 @@ func NewInitializeSelfServiceLoginViaBrowserFlowFound() *InitializeSelfServiceLo
 
 /* InitializeSelfServiceLoginViaBrowserFlowFound describes a response with status code 302, with default header values.
 
- Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.
+Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201.
 */
 type InitializeSelfServiceLoginViaBrowserFlowFound struct {
 }

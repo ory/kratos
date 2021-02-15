@@ -319,7 +319,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "404": {
             "description": "genericError",
@@ -349,7 +349,7 @@
         "operationId": "prometheus",
         "responses": {
           "200": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           }
         }
       }
@@ -469,7 +469,7 @@
         "operationId": "initializeSelfServiceBrowserLogoutFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "500": {
             "description": "genericError",
@@ -498,7 +498,7 @@
         "operationId": "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "500": {
             "description": "genericError",
@@ -618,7 +618,7 @@
         "operationId": "initializeSelfServiceLoginViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "500": {
             "description": "genericError",
@@ -731,7 +731,7 @@
             }
           },
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "400": {
             "description": "loginFlow",
@@ -796,7 +796,7 @@
         "operationId": "initializeSelfServiceRecoveryViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "500": {
             "description": "genericError",
@@ -902,7 +902,7 @@
         ],
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "400": {
             "description": "recoveryFlow",
@@ -967,7 +967,7 @@
         "operationId": "initializeSelfServiceRegistrationViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "500": {
             "description": "genericError",
@@ -1079,7 +1079,7 @@
             }
           },
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "400": {
             "description": "registrationFlow",
@@ -1154,7 +1154,7 @@
         "operationId": "initializeSelfServiceSettingsViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "500": {
             "description": "genericError",
@@ -1276,7 +1276,7 @@
             }
           },
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "400": {
             "description": "settingsFlow",
@@ -1352,7 +1352,7 @@
             }
           },
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "400": {
             "description": "settingsFlow",
@@ -1429,7 +1429,7 @@
         "operationId": "initializeSelfServiceVerificationViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "500": {
             "description": "genericError",
@@ -1535,7 +1535,7 @@
         ],
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "400": {
             "description": "verificationFlow",
@@ -1554,7 +1554,7 @@
     },
     "/sessions": {
       "delete": {
-        "description": "Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients\nsuch as mobile apps to log the user out of the system and invalidate the session.\n\nThis endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.",
+        "description": "Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients\nsuch as mobile apps to log the user out of the system and invalidate the session.\n\nThis endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.",
         "consumes": [
           "application/json"
         ],
@@ -1568,7 +1568,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Revoke and Invalidate a Session",
+        "summary": "Initialize Logout Flow for API Clients - Revoke a Session",
         "operationId": "revokeSession",
         "parameters": [
           {
@@ -1582,7 +1582,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
           },
           "400": {
             "description": "genericError",
@@ -2078,7 +2078,6 @@
       }
     },
     "healthStatus": {
-      "description": "HealthStatus HealthStatus health status",
       "type": "object",
       "properties": {
         "status": {
@@ -2205,13 +2204,13 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "A Recovery Flow",
+      "title": "RecoveryFlow A Recovery Flow",
       "required": [
-        "expires_at",
         "id",
+        "expires_at",
         "issued_at",
-        "methods",
         "request_url",
+        "methods",
         "state"
       ],
       "properties": {
@@ -2271,12 +2270,11 @@
       }
     },
     "recoveryFlowMethodConfig": {
-      "description": "RecoveryFlowMethodConfig recovery flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2358,11 +2356,10 @@
       }
     },
     "registrationFlowMethod": {
-      "description": "RegistrationFlowMethod registration flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {

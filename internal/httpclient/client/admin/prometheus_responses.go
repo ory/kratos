@@ -38,8 +38,7 @@ func NewPrometheusOK() *PrometheusOK {
 
 /* PrometheusOK describes a response with status code 200, with default header values.
 
- Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.
+Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201.
 */
 type PrometheusOK struct {
 }
