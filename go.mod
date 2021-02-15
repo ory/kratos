@@ -14,6 +14,8 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 // Use the internal name for tablename generation
 replace github.com/ory/kratos/corp => ./corp
 
+replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
+
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
