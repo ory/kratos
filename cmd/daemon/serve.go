@@ -1,16 +1,14 @@
 package daemon
 
 import (
-	cx "context"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/ory/x/reqlog"
 
+	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/driver/config"
-
-	"github.com/ory/x/stringsx"
 
 	"github.com/rs/cors"
 
@@ -75,14 +73,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	router := x.NewRouterPublic()
-	csrf := x.NewCSRFHandler(
-		router,
-		r.Writer(),
-		l,
-		stringsx.Coalesce(c.SelfPublicURL().Path, "/"),
-		c.SelfPublicURL().Hostname(),
-		!c.IsInsecureDevMode(),
-	)
+	csrf := x.NewCSRFHandler(router, r)
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
@@ -222,19 +213,9 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	ctx, cancel := cx.WithCancel(cmd.Context())
-
-	d.Logger().Println("Courier worker started.")
-	if err := graceful.Graceful(func() error {
-		return d.Courier(ctx).Work(ctx)
-	}, func(_ cx.Context) error {
-		cancel()
-		return nil
-	}); err != nil {
-		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
+	if d.Config(cmd.Context()).IsBackgroundCourierEnabled() {
+		go courier.Watch(cmd.Context(), d)
 	}
-
-	d.Logger().Println("Courier worker was shutdown gracefully.")
 }
 
 func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args []string) {

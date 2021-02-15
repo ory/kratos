@@ -50,6 +50,7 @@ type Registry interface {
 
 	HealthHandler() *healthx.Handler
 	CookieManager(ctx context.Context) sessions.Store
+	MetricsHandler() *prometheus.Handler
 	ContinuityCookieManager(ctx context.Context) sessions.Store
 
 	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)

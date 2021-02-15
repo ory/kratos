@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// VerificationFlow VerificationFlow VerificationFlow A Verification Flow
+// VerificationFlow A Verification Flow
 //
 // Used to verify an out-of-band communication
 // channel such as an email address or a phone number.
@@ -31,8 +31,6 @@ type VerificationFlow struct {
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,
 	// a new request has to be initiated.
 	// Format: date-time
-	// Format: date-time
-	// Format: date-time
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
 
 	// id
@@ -40,8 +38,6 @@ type VerificationFlow struct {
 	ID UUID `json:"id,omitempty"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
-	// Format: date-time
-	// Format: date-time
 	// Format: date-time
 	IssuedAt strfmt.DateTime `json:"issued_at,omitempty"`
 

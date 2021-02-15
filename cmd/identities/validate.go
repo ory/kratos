@@ -51,7 +51,7 @@ var schemas = make(map[string]*jsonschema.Schema)
 
 const createIdentityPath = "api.swagger.json#/definitions/CreateIdentity"
 
-type schemaGetter = func(params *public.GetSchemaParams) (*public.GetSchemaOK, error)
+type schemaGetter = func(params *public.GetSchemaParams, opts ...public.ClientOption) (*public.GetSchemaOK, error)
 
 // validateIdentity validates the json payload fc against
 // 1. the swagger payload definition and

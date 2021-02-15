@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RegistrationFlowMethodConfig registration flow method config
+// RegistrationFlowMethodConfig RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config
 //
 // swagger:model registrationFlowMethodConfig
 type RegistrationFlowMethodConfig struct {
