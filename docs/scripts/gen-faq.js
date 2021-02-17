@@ -27,7 +27,7 @@ try {
 
   data = `---
 id: faq
-title: Faq
+title: Frequently Asked Questions (FAQ)
 ---
 
 
