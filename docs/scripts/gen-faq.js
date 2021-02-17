@@ -63,9 +63,7 @@ const md = new Remarkable()
   const taglist = Array.from(
     new Set(
       faq
-        .map((el) => {
-          return el.tags
-        })
+      .map(({tags}) => tags)
         .flat(1)
     )
   )
