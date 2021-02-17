@@ -54,7 +54,7 @@ require (
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.39
+	github.com/ory/cli v0.0.41
 	github.com/ory/dockertest/v3 v3.6.3
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
