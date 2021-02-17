@@ -7,5 +7,6 @@ CREATE TABLE "_selfservice_profile_management_requests_tmp" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
 "update_successful" bool NOT NULL DEFAULT 'false',
+"form" TEXT,
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
 );

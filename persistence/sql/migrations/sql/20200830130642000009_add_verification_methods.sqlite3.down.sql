@@ -8,5 +8,6 @@ CREATE TABLE "_selfservice_verification_flows_tmp" (
 "updated_at" DATETIME NOT NULL,
 "messages" TEXT,
 "type" TEXT NOT NULL DEFAULT 'browser',
-"state" TEXT NOT NULL DEFAULT 'show_form'
+"state" TEXT NOT NULL DEFAULT 'show_form',
+"form" TEXT
 );

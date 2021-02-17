@@ -6,6 +6,7 @@ CREATE TABLE "_selfservice_verification_requests_tmp" (
 "csrf_token" TEXT NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
+"form" TEXT,
 "via" TEXT NOT NULL DEFAULT 'email',
 "success" bool NOT NULL DEFAULT 'FALSE'
 );

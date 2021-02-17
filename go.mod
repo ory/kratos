@@ -16,6 +16,8 @@ replace github.com/ory/kratos/corp => ./corp
 
 replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
+replace github.com/ory/x => ../../go/src/github.com/ory/x
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
@@ -30,7 +32,7 @@ require (
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.0
 	github.com/go-swagger/go-swagger v0.26.1
-	github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46
+	github.com/gobuffalo/fizz 3416f0e6618fcf1c0f1c7b45892c6bbb5d8eb65d
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/pop/v5 v5.3.2-0.20210128124218-e397a61c1704
 	github.com/gobuffalo/uuid v2.0.5+incompatible
@@ -65,7 +67,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.187
+	github.com/ory/x v0.0.188
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
@@ -85,4 +87,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
 	gopkg.in/go-playground/validator.v9 v9.28.0
+	gopkg.in/gorp.v1 v1.7.2 // indirect
 )

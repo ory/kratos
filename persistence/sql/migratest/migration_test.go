@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -85,15 +86,15 @@ func TestMigrations(t *testing.T) {
 			}()
 
 			ctx := context.Background()
-			l := logrusx.New("", "")
+			l := logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel))
 
 			t.Logf("Cleaning up before migrations")
 			_ = os.Remove("../migrations/sql/schema.sql")
 			testhelpers.CleanSQL(t, c)
 
 			t.Cleanup(func() {
-				t.Logf("Cleaning up after migrations")
-				testhelpers.CleanSQL(t, c)
+				//t.Logf("Cleaning up after migrations")
+				//testhelpers.CleanSQL(t, c)
 				require.NoError(t, c.Close())
 			})
 
@@ -155,10 +156,6 @@ func TestMigrations(t *testing.T) {
 				t.Run("case=verification_token", func(t *testing.T) {
 					var ids []link.VerificationToken
 
-					var idd []string
-					require.NoError(t, c.Store.Select(&idd, "SELECT id FROM identity_verification_tokens"))
-					require.NotEmpty(t, idd)
-
 					require.NoError(t, c.All(&ids))
 					require.NotEmpty(t, ids)
 
@@ -187,11 +184,14 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
 
+					var found []string
 					for _, id := range ids {
+						found = append(found, id.ID.String())
 						actual, err := d.LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "login_flow", id.ID.String())
 					}
+					containsExpectedIds(t, filepath.Join("fixtures", "login_flow"), found)
 				})
 
 				t.Run("case=registration", func(t *testing.T) {
@@ -199,11 +199,14 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
 
+					var found []string
 					for _, id := range ids {
+						found = append(found, id.ID.String())
 						actual, err := d.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "registration_flow", id.ID.String())
 					}
+					containsExpectedIds(t, filepath.Join("fixtures", "registration_flow"), found)
 				})
 
 				t.Run("case=settings_flow", func(t *testing.T) {
@@ -211,11 +214,14 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
 
+					var found []string
 					for _, id := range ids {
+						found = append(found, id.ID.String())
 						actual, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "settings_flow", id.ID.String())
 					}
+					containsExpectedIds(t, filepath.Join("fixtures", "settings_flow"), found)
 				})
 
 				t.Run("case=recovery_flow", func(t *testing.T) {
@@ -223,11 +229,14 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
 
+					var found []string
 					for _, id := range ids {
+						found = append(found, id.ID.String())
 						actual, err := d.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "recovery_flow", id.ID.String())
 					}
+					containsExpectedIds(t, filepath.Join("fixtures", "recovery_flow"), found)
 				})
 
 				t.Run("case=verification_flow", func(t *testing.T) {
@@ -235,11 +244,14 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 					require.NotEmpty(t, ids)
 
+					var found []string
 					for _, id := range ids {
+						found = append(found, id.ID.String())
 						actual, err := d.VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "verification_flow", id.ID.String())
 					}
+					containsExpectedIds(t, filepath.Join("fixtures", "verification_flow"), found)
 				})
 
 				t.Run("case=recovery_token", func(t *testing.T) {
@@ -247,9 +259,12 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.All(&ids))
 					require.NotEmpty(t, ids)
 
+					var found []string
 					for _, id := range ids {
+						found = append(found, id.ID.String())
 						compareWithFixture(t, id, "recovery_token", id.ID.String())
 					}
+					containsExpectedIds(t, filepath.Join("fixtures", "recovery_token"), found)
 				})
 
 				t.Run("suite=constraints", func(t *testing.T) {
@@ -263,6 +278,8 @@ func TestMigrations(t *testing.T) {
 					require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 				})
 			})
+
+			return
 
 			t.Run("suite=down", func(t *testing.T) {
 				tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata", l)
