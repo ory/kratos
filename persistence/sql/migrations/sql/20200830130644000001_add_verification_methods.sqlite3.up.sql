@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" ADD COLUMN "active_method" TEXT;;
+ALTER TABLE "selfservice_verification_flows" ADD COLUMN "active_method" TEXT;

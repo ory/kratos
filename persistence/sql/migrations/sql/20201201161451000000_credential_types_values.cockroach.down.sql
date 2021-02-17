@@ -1,1 +1,1 @@
-DELETE FROM identity_credential_types WHERE name = 'password' OR name = 'oidc';;
+DELETE FROM identity_credential_types WHERE name = 'password' OR name = 'oidc';

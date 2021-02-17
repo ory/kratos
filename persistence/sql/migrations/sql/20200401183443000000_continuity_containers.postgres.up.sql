@@ -8,4 +8,4 @@ PRIMARY KEY("id"),
 "created_at" timestamp NOT NULL,
 "updated_at" timestamp NOT NULL,
 FOREIGN KEY ("identity_id") REFERENCES "identities" ("id") ON DELETE cascade
-);;
+);

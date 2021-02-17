@@ -1,1 +1,1 @@
-ALTER TABLE `identity_recovery_tokens` DROP COLUMN `issued_at`;;
+ALTER TABLE `identity_recovery_tokens` DROP COLUMN `issued_at`;

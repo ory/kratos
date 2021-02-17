@@ -10,4 +10,4 @@ PRIMARY KEY(`id`),
 `created_at` DATETIME NOT NULL,
 `updated_at` DATETIME NOT NULL,
 FOREIGN KEY (`identity_id`) REFERENCES `identities` (`id`) ON DELETE cascade
-) ENGINE=InnoDB;;
+) ENGINE=InnoDB;

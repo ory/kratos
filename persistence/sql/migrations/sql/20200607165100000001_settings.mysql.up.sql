@@ -1,1 +1,1 @@
-ALTER TABLE `selfservice_settings_requests` DROP COLUMN `update_successful`;;
+ALTER TABLE `selfservice_settings_requests` DROP COLUMN `update_successful`;

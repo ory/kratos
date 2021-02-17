@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" DROP COLUMN "active";;
+ALTER TABLE "sessions" DROP COLUMN "active";

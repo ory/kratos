@@ -1,1 +1,1 @@
-DROP TABLE `selfservice_errors`;;
+DROP TABLE `selfservice_errors`;

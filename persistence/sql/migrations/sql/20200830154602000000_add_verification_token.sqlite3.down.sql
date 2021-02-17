@@ -1,1 +1,1 @@
-DROP TABLE "identity_verification_tokens";;
+DROP TABLE "identity_verification_tokens";

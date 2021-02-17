@@ -7,4 +7,4 @@ CREATE TABLE "courier_messages" (
 "recipient" TEXT NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
-);;
+);

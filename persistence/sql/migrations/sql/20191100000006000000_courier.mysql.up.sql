@@ -8,4 +8,4 @@ PRIMARY KEY(`id`),
 `recipient` VARCHAR (255) NOT NULL,
 `created_at` DATETIME NOT NULL,
 `updated_at` DATETIME NOT NULL
-) ENGINE=InnoDB;;
+) ENGINE=InnoDB;

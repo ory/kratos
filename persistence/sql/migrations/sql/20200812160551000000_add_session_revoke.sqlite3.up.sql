@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" ADD COLUMN "active" NUMERIC DEFAULT 'false';;
+ALTER TABLE "sessions" ADD COLUMN "active" NUMERIC DEFAULT 'false';

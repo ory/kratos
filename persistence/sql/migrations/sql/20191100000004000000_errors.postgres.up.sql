@@ -6,4 +6,4 @@ PRIMARY KEY("id"),
 "was_seen" bool NOT NULL,
 "created_at" timestamp NOT NULL,
 "updated_at" timestamp NOT NULL
-);;
+);
