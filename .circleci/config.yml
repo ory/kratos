@@ -38,7 +38,7 @@ jobs:
         environment:
           - MYSQL_ROOT_PASSWORD=test
       -
-        image: cockroachdb/cockroach:v20.1.1
+        image: cockroachdb/cockroach:v20.2.5
         command: start --insecure
       -
         image: oryd/hydra:v1.4.10
