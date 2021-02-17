@@ -13,7 +13,7 @@ jobs:
   test:
     docker:
       -
-        image: cimg/go:1.16.0-node
+        image: cimg/go:1.16-node
         environment:
           - GO111MODULE=on
           - TEST_MAILHOG_SMTP=smtp://test:test@127.0.0.1:1025
@@ -124,7 +124,7 @@ jobs:
 
   validate:
     docker:
-      - image: cimg/go:1.16.0-node
+      - image: cimg/go:1.16-node
         environment:
           GO111MODULE: 'on'
     working_directory: /go/src/github.com/ory/kratos
