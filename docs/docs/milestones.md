@@ -123,6 +123,9 @@ Something is not working.
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] panic: a handle is already registered for path
+      '/self-service/recovery/methods/link'
+      ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [x] Password reset emails sent twice by each of the two kratos pods in my

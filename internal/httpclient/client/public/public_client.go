@@ -1266,12 +1266,12 @@ func (a *Client) InitializeSelfServiceVerificationViaBrowserFlow(params *Initial
 }
 
 /*
-  RevokeSession revokes and invalidate a session
+  RevokeSession initializes logout flow for API clients revoke a session
 
   Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
 such as mobile apps to log the user out of the system and invalidate the session.
 
-This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.
+This endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.
 */
 func (a *Client) RevokeSession(params *RevokeSessionParams, opts ...ClientOption) (*RevokeSessionNoContent, error) {
 	// TODO: Validate the params before sending

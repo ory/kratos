@@ -83,12 +83,12 @@ type revokeSession struct {
 
 // swagger:route DELETE /sessions public revokeSession
 //
-// Revoke and Invalidate a Session
+// Initialize Logout Flow for API Clients - Revoke a Session
 //
 // Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
 // such as mobile apps to log the user out of the system and invalidate the session.
 //
-// This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.
+// This endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.
 //
 //     Consumes:
 //     - application/json
