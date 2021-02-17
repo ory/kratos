@@ -5,7 +5,6 @@ const { Remarkable } = require('remarkable')
 const path = require('path');
 const yamlPath = path.resolve('./docs/faq.yaml')
 
-try {
   // Generating FAQ.mdx
 
   if (!fs.existsSync(yamlPath)) {
@@ -164,6 +163,4 @@ li.selected.${tag}~.question.${tag} {
   fs.writeFile('./docs/src/theme/faq.module.css', css_file, (err) => {
     if (err) throw err
   })
-} catch (e) {
-  throw e
-}
+
