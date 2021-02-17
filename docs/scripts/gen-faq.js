@@ -38,7 +38,7 @@ import {Question, Faq} from '@theme/Faq'
 <br/><br/>
 
 `
-  md = new Remarkable()
+const md = new Remarkable()
   faq.forEach((el) => {
     react_tags = el.tags.map((tag) => {
       return tag + '_src-theme-'
