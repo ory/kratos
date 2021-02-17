@@ -66,7 +66,7 @@ const md = new Remarkable()
         .flat(1)
     )
   )
-  css_file = `
+  let css_file = `
 .pills,
 .tabs {
     font-weight:var(--ifm-font-weight-bold)
