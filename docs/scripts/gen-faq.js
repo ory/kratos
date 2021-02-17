@@ -14,8 +14,8 @@ try {
     return 0
   }
 
-  let fayYaml = fs.readFileSync(yamlPath, 'utf8')
-  let faq = yaml.load(fayYaml)
+  let faqYaml = fs.readFileSync(yamlPath, 'utf8')
+  let faq = yaml.load(faqYaml)
 
   const tags = Array.from(
     new Set(
