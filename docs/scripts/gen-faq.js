@@ -24,7 +24,7 @@ const yamlPath = path.resolve('./docs/faq.yaml')
     )
   )
 
-  data = `---
+  let  data = `---
 id: faq
 title: Frequently Asked Questions (FAQ)
 ---
