@@ -54,7 +54,7 @@ const md = new Remarkable()
     data += `</Question>\n\n<br/>`
   })
 
-  fs.writeFile('./docs/docs/faq.mdx', data, (err) => {
+  fs.writeFile(path.resolve('./docs/docs/faq.mdx'), data, (err) => {
     if (err) throw err
   })
 
