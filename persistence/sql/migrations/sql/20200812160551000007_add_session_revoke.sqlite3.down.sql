@@ -1,1 +1,1 @@
-ALTER TABLE "_sessions_tmp" RENAME TO "sessions";
+DROP INDEX IF EXISTS "sessions_token_idx";

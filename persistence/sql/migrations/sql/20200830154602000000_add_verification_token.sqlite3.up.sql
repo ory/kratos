@@ -11,4 +11,4 @@ CREATE TABLE "identity_verification_tokens" (
 "updated_at" DATETIME NOT NULL,
 FOREIGN KEY (identity_verifiable_address_id) REFERENCES identity_verifiable_addresses (id) ON DELETE cascade,
 FOREIGN KEY (selfservice_verification_flow_id) REFERENCES selfservice_verification_flows (id) ON DELETE cascade
-)
+);

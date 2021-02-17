@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" ADD COLUMN "via" VARCHAR (16) NOT NULL DEFAULT 'email'
+UPDATE selfservice_verification_flows SET form=(SELECT * FROM (SELECT m.config FROM selfservice_verification_flows AS r INNER JOIN selfservice_verification_flow_methods AS m ON r.id=m.selfservice_verification_flow_id) as t);

@@ -1,1 +1,1 @@
-ALTER TABLE `selfservice_registration_flow_methods` RENAME TO `selfservice_registration_request_methods`
+ALTER TABLE `selfservice_recovery_flow_methods` RENAME TO `selfservice_recovery_request_methods`;

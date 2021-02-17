@@ -10,4 +10,4 @@ PRIMARY KEY("id"),
 "success" bool NOT NULL,
 "created_at" timestamp NOT NULL,
 "updated_at" timestamp NOT NULL
-);
+);;

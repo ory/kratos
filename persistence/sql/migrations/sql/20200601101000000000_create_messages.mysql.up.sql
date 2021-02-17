@@ -1,1 +1,1 @@
-ALTER TABLE `selfservice_settings_requests` ADD COLUMN `messages` JSON;
+ALTER TABLE `selfservice_settings_requests` ADD COLUMN `messages` JSON;;

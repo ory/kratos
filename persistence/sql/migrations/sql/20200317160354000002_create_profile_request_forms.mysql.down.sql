@@ -1,1 +1,1 @@
-ALTER TABLE `selfservice_profile_management_requests` MODIFY `form` JSON
+ALTER TABLE `selfservice_profile_management_requests` MODIFY `form` JSON;

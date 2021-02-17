@@ -8,4 +8,4 @@ CREATE TABLE "_sessions_tmp" (
 "updated_at" DATETIME NOT NULL,
 "token" TEXT,
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
-)
+);

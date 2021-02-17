@@ -14,6 +14,8 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 // Use the internal name for tablename generation
 replace github.com/ory/kratos/corp => ./corp
 
+replace github.com/ory/x => ../../go/src/github.com/ory/x
+
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
@@ -39,7 +41,7 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/go-jsonnet v0.16.0
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.5
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/consul/api v1.5.0
@@ -56,14 +58,14 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.35
+	github.com/ory/cli v0.0.38-0.20210120105333-159525a16324
 	github.com/ory/dockertest/v3 v3.6.3
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.9.0
 	github.com/ory/jsonschema/v3 v3.0.2
-	github.com/ory/kratos-client-go v0.0.0-00010101000000-000000000000
+	github.com/ory/kratos-client-go v0.5.4-alpha.1
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
@@ -76,16 +78,17 @@ require (
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.6.0
 	github.com/slack-go/slack v0.7.4
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.0.1-0.20201006035406-b97b5ead31f7
 	github.com/spf13/pflag v1.0.5
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.7.0
-	github.com/tidwall/gjson v1.3.5
-	github.com/tidwall/sjson v1.0.4
+	github.com/tidwall/gjson v1.6.7
+	github.com/tidwall/sjson v1.1.4
 	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
-	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58
+	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
 	gopkg.in/go-playground/validator.v9 v9.28.0
+	gopkg.in/gorp.v1 v1.7.2 // indirect
 )

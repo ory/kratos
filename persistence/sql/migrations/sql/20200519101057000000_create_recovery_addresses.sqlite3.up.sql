@@ -6,4 +6,4 @@ CREATE TABLE "identity_recovery_addresses" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON DELETE cascade
-)
+);

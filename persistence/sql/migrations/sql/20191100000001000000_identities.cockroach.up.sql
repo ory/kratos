@@ -5,4 +5,4 @@ PRIMARY KEY("id"),
 "traits" json NOT NULL,
 "created_at" timestamp NOT NULL,
 "updated_at" timestamp NOT NULL
-)
+);

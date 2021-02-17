@@ -1,1 +1,1 @@
-DELETE FROM identity_recovery_tokens WHERE selfservice_recovery_flow_id IS NULL
+ALTER TABLE "identity_recovery_tokens" DROP COLUMN "issued_at";;

@@ -1,1 +1,1 @@
-ALTER TABLE `identity_recovery_tokens` MODIFY `selfservice_recovery_flow_id` char(36) NOT NULL
+ALTER TABLE `identity_recovery_tokens` DROP COLUMN `expires_at`;

@@ -1,1 +1,1 @@
-DROP TABLE "selfservice_profile_management_request_methods"
+ALTER TABLE "_selfservice_profile_management_requests_tmp" RENAME TO "selfservice_profile_management_requests";;

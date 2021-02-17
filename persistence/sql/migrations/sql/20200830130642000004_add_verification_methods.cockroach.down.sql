@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" ADD COLUMN "via" VARCHAR (16) NOT NULL DEFAULT 'email'
+DROP TABLE "selfservice_verification_flow_methods";

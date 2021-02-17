@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" ADD COLUMN "token" TEXT
+ALTER TABLE "sessions" ADD COLUMN "token" TEXT;

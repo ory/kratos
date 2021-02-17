@@ -444,6 +444,11 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 	return errors.WithStack(
 		backoff.Retry(func() error {
 			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
+			m.Logger().
+				WithField("pool", pool).
+				WithField("idlePool", idlePool).
+				WithField("connMaxLifetime", connMaxLifetime).
+				Debug("Connecting to SQL Database")
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
 				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
 				IdlePool:        idlePool,
@@ -472,7 +477,7 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 			if dbal.InMemoryDSN == m.Config(ctx).DSN() {
 				m.Logger().Infoln("ORY Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
 				if err := p.MigrateUp(ctx); err != nil {
-				m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
+					m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
 					return err
 				}
 			}

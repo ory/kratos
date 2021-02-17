@@ -1,1 +1,1 @@
-DROP TABLE `selfservice_registration_request_methods`
+DROP TABLE `selfservice_registration_request_methods`;

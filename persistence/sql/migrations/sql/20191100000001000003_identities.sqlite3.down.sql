@@ -1,1 +1,1 @@
-DROP TABLE "identities";
+DROP TABLE "identity_credential_identifiers";

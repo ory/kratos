@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" ADD COLUMN "success" bool NOT NULL DEFAULT FALSE;
+DROP TABLE "selfservice_verification_flow_methods";

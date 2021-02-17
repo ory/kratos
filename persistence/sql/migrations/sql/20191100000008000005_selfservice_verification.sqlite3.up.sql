@@ -9,4 +9,4 @@ CREATE TABLE "selfservice_verification_requests" (
 "success" bool NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
-);
+);;

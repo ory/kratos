@@ -6,4 +6,4 @@ PRIMARY KEY("id"),
 "config" jsonb NOT NULL,
 "created_at" timestamp NOT NULL,
 "updated_at" timestamp NOT NULL
-)
+);

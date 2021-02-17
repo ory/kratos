@@ -1,1 +1,1 @@
-DROP TABLE "selfservice_login_requests"
+DROP TABLE "selfservice_registration_requests";

@@ -7,4 +7,4 @@ CREATE TABLE "selfservice_login_requests" (
 "csrf_token" TEXT NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
-)
+);

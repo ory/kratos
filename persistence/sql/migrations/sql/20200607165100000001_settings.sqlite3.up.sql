@@ -10,4 +10,4 @@ CREATE TABLE "_selfservice_settings_requests_tmp" (
 "messages" TEXT,
 "state" TEXT NOT NULL DEFAULT 'show_form',
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
-)
+);

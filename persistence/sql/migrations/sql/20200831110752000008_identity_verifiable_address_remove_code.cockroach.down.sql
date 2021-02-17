@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verifiable_addresses" DROP COLUMN "_code_tmp"
+UPDATE "identity_verifiable_addresses" SET "code" = "_code_tmp";

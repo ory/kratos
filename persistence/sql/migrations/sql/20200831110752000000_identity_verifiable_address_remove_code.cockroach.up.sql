@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "identity_verifiable_addresses_code_uq_idx"
+DROP INDEX IF EXISTS "identity_verifiable_addresses_code_uq_idx";

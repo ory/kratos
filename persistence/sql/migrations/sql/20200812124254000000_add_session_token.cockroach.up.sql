@@ -1,1 +1,1 @@
-DELETE FROM sessions
+DELETE FROM sessions;

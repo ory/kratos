@@ -1,1 +1,1 @@
-ALTER TABLE `selfservice_registration_requests` DROP COLUMN `type`
+ALTER TABLE `selfservice_recovery_requests` DROP COLUMN `type`;

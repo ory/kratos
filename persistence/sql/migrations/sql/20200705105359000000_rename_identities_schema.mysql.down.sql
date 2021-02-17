@@ -1,1 +1,1 @@
-ALTER TABLE `identities` CHANGE `schema_id` `traits_schema_id` varchar(2048) NOT NULL;
+ALTER TABLE `identities` CHANGE `schema_id` `traits_schema_id` varchar(2048) NOT NULL;;

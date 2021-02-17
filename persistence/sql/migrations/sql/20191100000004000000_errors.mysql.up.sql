@@ -6,4 +6,4 @@ PRIMARY KEY(`id`),
 `was_seen` bool NOT NULL,
 `created_at` DATETIME NOT NULL,
 `updated_at` DATETIME NOT NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB;;

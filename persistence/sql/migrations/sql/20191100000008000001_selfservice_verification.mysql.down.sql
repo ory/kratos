@@ -1,1 +1,1 @@
-DROP TABLE `identity_verifiable_addresses`;
+DROP TABLE `selfservice_verification_requests`;

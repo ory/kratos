@@ -5,4 +5,4 @@ CREATE TABLE "selfservice_verification_flow_methods" (
 "config" TEXT NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
-)
+);

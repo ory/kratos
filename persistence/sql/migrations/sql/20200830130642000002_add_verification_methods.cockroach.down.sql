@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" DROP COLUMN "active_method"
+ALTER TABLE "selfservice_verification_flows" DROP COLUMN "state";

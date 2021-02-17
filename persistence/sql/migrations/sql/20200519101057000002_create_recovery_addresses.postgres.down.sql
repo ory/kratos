@@ -1,1 +1,1 @@
-DROP TABLE "selfservice_recovery_requests"
+DROP TABLE "selfservice_recovery_request_methods";

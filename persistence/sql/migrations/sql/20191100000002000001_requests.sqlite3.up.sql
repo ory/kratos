@@ -6,4 +6,4 @@ CREATE TABLE "selfservice_login_request_methods" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
 FOREIGN KEY (selfservice_login_request_id) REFERENCES selfservice_login_requests (id) ON DELETE cascade
-)
+);

@@ -1,1 +1,1 @@
-UPDATE "sessions" SET "token" = "_token_tmp"
+UPDATE "sessions" SET "token" = "_token_tmp";

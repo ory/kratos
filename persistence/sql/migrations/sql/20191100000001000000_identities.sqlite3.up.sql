@@ -4,4 +4,4 @@ CREATE TABLE "identities" (
 "traits" TEXT NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
-)
+);

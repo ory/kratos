@@ -10,4 +10,4 @@ PRIMARY KEY(`id`),
 `success` bool NOT NULL,
 `created_at` DATETIME NOT NULL,
 `updated_at` DATETIME NOT NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB;;

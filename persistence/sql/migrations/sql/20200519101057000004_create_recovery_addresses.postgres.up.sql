@@ -7,4 +7,4 @@ PRIMARY KEY("id"),
 "created_at" timestamp NOT NULL,
 "updated_at" timestamp NOT NULL,
 FOREIGN KEY ("selfservice_recovery_request_id") REFERENCES "selfservice_recovery_requests" ("id") ON DELETE cascade
-)
+);

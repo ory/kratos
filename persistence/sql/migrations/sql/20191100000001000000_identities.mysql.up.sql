@@ -5,4 +5,4 @@ PRIMARY KEY(`id`),
 `traits` JSON NOT NULL,
 `created_at` DATETIME NOT NULL,
 `updated_at` DATETIME NOT NULL
-) ENGINE=InnoDB
+) ENGINE=InnoDB;

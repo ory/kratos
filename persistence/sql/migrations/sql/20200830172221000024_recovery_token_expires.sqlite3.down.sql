@@ -1,1 +1,1 @@
-ALTER TABLE "_identity_recovery_tokens_tmp" RENAME TO "identity_recovery_tokens";
+DELETE FROM identity_recovery_tokens WHERE selfservice_recovery_flow_id IS NULL;

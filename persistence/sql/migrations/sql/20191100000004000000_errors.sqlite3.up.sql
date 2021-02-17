@@ -5,4 +5,4 @@ CREATE TABLE "selfservice_errors" (
 "was_seen" bool NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
-);
+);;

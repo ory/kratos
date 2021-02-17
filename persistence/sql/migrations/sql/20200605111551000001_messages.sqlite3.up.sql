@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_login_requests" ADD COLUMN "messages" TEXT
+ALTER TABLE "selfservice_login_requests" ADD COLUMN "messages" TEXT;

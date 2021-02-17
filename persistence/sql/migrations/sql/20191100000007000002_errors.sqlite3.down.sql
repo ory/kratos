@@ -1,2 +1,1 @@
-
-DROP TABLE "selfservice_errors"
+INSERT INTO "_selfservice_errors_tmp" (id, errors, seen_at, was_seen, created_at, updated_at) SELECT id, errors, seen_at, was_seen, created_at, updated_at FROM "selfservice_errors";

@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_errors" DROP COLUMN "_seen_at_tmp";
+UPDATE selfservice_errors SET seen_at = '1980-01-01 00:00:00' WHERE seen_at = NULL;

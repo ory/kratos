@@ -1,1 +1,1 @@
-ALTER TABLE `identity_verifiable_addresses` DROP COLUMN `code`
+ALTER TABLE `identity_verifiable_addresses` DROP COLUMN `code`;

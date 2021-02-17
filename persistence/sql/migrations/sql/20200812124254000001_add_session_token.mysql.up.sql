@@ -1,1 +1,1 @@
-ALTER TABLE `sessions` ADD COLUMN `token` VARCHAR (32)
+ALTER TABLE `sessions` ADD COLUMN `token` VARCHAR (32);

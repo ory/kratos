@@ -1,1 +1,1 @@
-DROP TABLE "identity_recovery_tokens"
+DROP INDEX IF EXISTS "identity_recovery_addresses_code_uq_idx";

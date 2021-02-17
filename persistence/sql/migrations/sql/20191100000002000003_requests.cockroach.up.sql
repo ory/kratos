@@ -7,4 +7,4 @@ PRIMARY KEY("id"),
 "created_at" timestamp NOT NULL,
 "updated_at" timestamp NOT NULL,
 CONSTRAINT "selfservice_registration_request_methods_selfservice_registration_requests_id_fk" FOREIGN KEY ("selfservice_registration_request_id") REFERENCES "selfservice_registration_requests" ("id") ON DELETE cascade
-)
+);

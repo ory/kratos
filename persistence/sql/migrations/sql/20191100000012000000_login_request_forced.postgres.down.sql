@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_login_requests" DROP COLUMN "forced";
+ALTER TABLE "selfservice_login_requests" DROP COLUMN "forced";;

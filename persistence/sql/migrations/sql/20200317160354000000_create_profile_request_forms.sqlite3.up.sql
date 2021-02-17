@@ -5,4 +5,4 @@ CREATE TABLE "selfservice_profile_management_request_methods" (
 "config" TEXT NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
-)
+);

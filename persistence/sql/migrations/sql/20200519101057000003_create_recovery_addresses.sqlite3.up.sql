@@ -11,4 +11,4 @@ CREATE TABLE "selfservice_recovery_requests" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
 FOREIGN KEY (recovered_identity_id) REFERENCES identities (id) ON DELETE cascade
-)
+);

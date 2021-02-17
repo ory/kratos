@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" ADD COLUMN "success" bool NOT NULL DEFAULT FALSE;
+ALTER TABLE "selfservice_verification_flows" ADD COLUMN "form" json NOT NULL DEFAULT '{}';

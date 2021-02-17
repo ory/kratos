@@ -7,4 +7,4 @@ CREATE TABLE "continuity_containers" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON DELETE cascade
-);
+);;

@@ -1,1 +1,1 @@
-DROP TABLE `selfservice_verification_flow_methods`
+ALTER TABLE `selfservice_verification_flows` DROP COLUMN `active_method`;

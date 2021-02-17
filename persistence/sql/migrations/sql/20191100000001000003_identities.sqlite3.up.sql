@@ -7,4 +7,4 @@ CREATE TABLE "identity_credentials" (
 "updated_at" DATETIME NOT NULL,
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON DELETE cascade,
 FOREIGN KEY (identity_credential_type_id) REFERENCES identity_credential_types (id) ON DELETE cascade
-)
+);

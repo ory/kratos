@@ -9,4 +9,4 @@ CREATE TABLE "selfservice_profile_management_requests" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON DELETE cascade
-);
+);;

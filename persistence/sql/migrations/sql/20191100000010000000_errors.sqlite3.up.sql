@@ -6,4 +6,4 @@ CREATE TABLE "_selfservice_errors_tmp" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
 "csrf_token" TEXT NOT NULL DEFAULT ''
-)
+);

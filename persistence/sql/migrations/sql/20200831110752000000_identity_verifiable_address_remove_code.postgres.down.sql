@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verifiable_addresses" ADD COLUMN "code" VARCHAR (32)
+CREATE INDEX "identity_verifiable_addresses_code_idx" ON "identity_verifiable_addresses" (code);;

@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verifiable_addresses" ALTER COLUMN "code" TYPE VARCHAR (32), ALTER COLUMN "code" SET NOT NULL
+UPDATE identity_verifiable_addresses SET expires_at = CURRENT_TIMESTAMP WHERE expires_at IS NULL;

@@ -9,4 +9,4 @@ CREATE TABLE "_selfservice_profile_management_requests_tmp" (
 "updated_at" DATETIME NOT NULL,
 "active_method" TEXT,
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
-)
+);

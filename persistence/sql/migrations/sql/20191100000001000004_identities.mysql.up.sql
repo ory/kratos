@@ -6,4 +6,4 @@ PRIMARY KEY(`id`),
 `created_at` DATETIME NOT NULL,
 `updated_at` DATETIME NOT NULL,
 FOREIGN KEY (`identity_credential_id`) REFERENCES `identity_credentials` (`id`) ON DELETE cascade
-) ENGINE=InnoDB
+) ENGINE=InnoDB;

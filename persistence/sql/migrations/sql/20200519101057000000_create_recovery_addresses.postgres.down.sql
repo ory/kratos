@@ -1,1 +1,1 @@
-DROP TABLE "identity_recovery_tokens"
+DROP TABLE "identity_recovery_addresses";;

@@ -1,1 +1,1 @@
-DROP TABLE `continuity_containers`;
+DROP TABLE `continuity_containers`;;

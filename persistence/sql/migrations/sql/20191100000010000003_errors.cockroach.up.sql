@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_errors" DROP COLUMN "_seen_at_tmp";
+ALTER TABLE "selfservice_errors" DROP COLUMN "_seen_at_tmp";;

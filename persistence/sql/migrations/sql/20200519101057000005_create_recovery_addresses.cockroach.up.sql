@@ -10,4 +10,4 @@ PRIMARY KEY("id"),
 "updated_at" timestamp NOT NULL,
 CONSTRAINT "identity_recovery_tokens_identity_recovery_addresses_id_fk" FOREIGN KEY ("identity_recovery_address_id") REFERENCES "identity_recovery_addresses" ("id") ON DELETE cascade,
 CONSTRAINT "identity_recovery_tokens_selfservice_recovery_requests_id_fk" FOREIGN KEY ("selfservice_recovery_request_id") REFERENCES "selfservice_recovery_requests" ("id") ON DELETE cascade
-)
+);

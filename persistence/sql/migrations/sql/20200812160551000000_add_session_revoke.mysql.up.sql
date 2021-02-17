@@ -1,1 +1,1 @@
-ALTER TABLE `sessions` ADD COLUMN `active` boolean DEFAULT false;
+ALTER TABLE `sessions` ADD COLUMN `active` boolean DEFAULT false;;

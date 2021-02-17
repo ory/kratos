@@ -8,4 +8,4 @@ PRIMARY KEY("id"),
 "updated_at" timestamp NOT NULL,
 CONSTRAINT "identity_credentials_identities_id_fk" FOREIGN KEY ("identity_id") REFERENCES "identities" ("id") ON DELETE cascade,
 CONSTRAINT "identity_credentials_identity_credential_types_id_fk" FOREIGN KEY ("identity_credential_type_id") REFERENCES "identity_credential_types" ("id") ON DELETE cascade
-)
+);

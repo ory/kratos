@@ -1,1 +1,1 @@
-ALTER TABLE "_courier_messages_tmp" RENAME TO "courier_messages";
+ALTER TABLE "_courier_messages_tmp" RENAME TO "courier_messages";;

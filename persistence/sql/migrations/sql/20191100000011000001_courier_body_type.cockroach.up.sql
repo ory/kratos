@@ -1,1 +1,1 @@
-ALTER TABLE "courier_messages" ADD COLUMN "body" text
+ALTER TABLE "courier_messages" ADD COLUMN "body" text;

@@ -1,1 +1,1 @@
-DROP TABLE `selfservice_login_request_methods`
+DROP TABLE `selfservice_profile_management_requests`;;

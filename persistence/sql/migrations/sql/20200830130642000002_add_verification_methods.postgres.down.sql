@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" ALTER COLUMN "form" TYPE jsonb, ALTER COLUMN "form" DROP NOT NULL
+ALTER TABLE "selfservice_verification_flows" DROP COLUMN "state";

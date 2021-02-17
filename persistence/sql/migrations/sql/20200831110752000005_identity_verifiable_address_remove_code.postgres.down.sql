@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verifiable_addresses" ALTER COLUMN "expires_at" TYPE timestamp, ALTER COLUMN "expires_at" DROP NOT NULL
+UPDATE identity_verifiable_addresses SET code = substr(md5(random()::text), 0, 32) WHERE code IS NULL;

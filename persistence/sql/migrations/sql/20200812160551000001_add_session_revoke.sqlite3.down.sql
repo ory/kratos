@@ -1,1 +1,2 @@
-DROP INDEX IF EXISTS "sessions_token_uq_idx"
+
+DROP TABLE "sessions";

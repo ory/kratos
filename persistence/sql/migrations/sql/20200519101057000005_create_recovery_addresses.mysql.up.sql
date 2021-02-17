@@ -10,4 +10,4 @@ PRIMARY KEY(`id`),
 `updated_at` DATETIME NOT NULL,
 FOREIGN KEY (`identity_recovery_address_id`) REFERENCES `identity_recovery_addresses` (`id`) ON DELETE cascade,
 FOREIGN KEY (`selfservice_recovery_request_id`) REFERENCES `selfservice_recovery_requests` (`id`) ON DELETE cascade
-) ENGINE=InnoDB
+) ENGINE=InnoDB;

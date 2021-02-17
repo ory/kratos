@@ -1,1 +1,1 @@
-DROP TABLE "courier_messages";
+DROP TABLE "courier_messages";;

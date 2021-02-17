@@ -1,1 +1,1 @@
-ALTER TABLE `sessions` DROP COLUMN `token`;
+ALTER TABLE `sessions` DROP COLUMN `token`;;
