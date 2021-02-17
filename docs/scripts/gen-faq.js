@@ -2,7 +2,8 @@
 const fs = require('fs')
 const yaml = require('js-yaml')
 const { Remarkable } = require('remarkable')
-const yamlPath = './docs/faq.yaml'
+const path = require('path');
+const yamlPath = path.resolve('./docs/faq.yaml')
 
 try {
   // Generating FAQ.mdx
@@ -13,7 +14,7 @@ try {
     return 0
   }
 
-  let fayYaml = fs.readFileSync('yamlPath', 'utf8')
+  let fayYaml = fs.readFileSync(yamlPath, 'utf8')
   let faq = yaml.load(fayYaml)
 
   const tags = Array.from(
