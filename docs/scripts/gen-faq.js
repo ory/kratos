@@ -45,9 +45,7 @@ const md = new Remarkable()
     })
     data += `<Question tags="question_src-theme- ${react_tags.join(' ')}">\n`
     data += `${el.tags
-      .map((tag) => {
-        return '#' + tag
-      })
+      .map(({tag}) => '#' + tag)
       .join(' ')} <br/>\n`
     data += md.render(`**Q**: ${el.q}`)
     data += md.render(`**A**: ${el.a}\n`)
