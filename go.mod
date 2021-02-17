@@ -1,6 +1,6 @@
 module github.com/ory/kratos
 
-go 1.15
+go 1.16
 
 // See https://github.com/markbates/pkger/pull/112
 replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.20200722132747-95726f5b9b9b
