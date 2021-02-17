@@ -15,10 +15,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Patch identities by ID (not yet implemented)
 
-### Synopsis
-
-Patch identities by ID (not yet implemented)
-
 ```
 kratos identities patch <file.json [file-2.json [file-3.json] ...]> [flags]
 ```

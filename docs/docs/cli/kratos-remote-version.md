@@ -14,10 +14,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Print the version of an ORY Kratos instance
 
-### Synopsis
-
-Print the version of an ORY Kratos instance
-
 ```
 kratos remote version [flags]
 ```

@@ -14,10 +14,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Run the ORY Kratos server
 
-### Synopsis
-
-Run the ORY Kratos server
-
 ```
 kratos serve [flags]
 ```

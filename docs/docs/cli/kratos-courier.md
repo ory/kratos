@@ -14,10 +14,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Commands related to the ORY Kratos message courier
 
-### Synopsis
-
-Commands related to the ORY Kratos message courier
-
 ### Options
 
 ```

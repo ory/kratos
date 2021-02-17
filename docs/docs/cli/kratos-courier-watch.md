@@ -14,10 +14,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Starts the ORY Kratos message courier
 
-### Synopsis
-
-Starts the ORY Kratos message courier
-
 ```
 kratos courier watch [flags]
 ```
