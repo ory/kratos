@@ -14,10 +14,7 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 // Use the internal name for tablename generation
 replace github.com/ory/kratos/corp => ./corp
 
-replace github.com/ory/x => ../../go/src/github.com/ory/x
-
 require (
-	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/bwmarrin/discordgo v0.23.0
@@ -30,7 +27,6 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.0
-	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-swagger/go-swagger v0.26.1
 	github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46
 	github.com/gobuffalo/httptest v1.0.2
@@ -51,14 +47,12 @@ require (
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/knadh/koanf v0.14.1-0.20201201075439-e0853799f9ec
-	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/markbates/pkger v0.17.1
 	github.com/mattn/goveralls v0.0.7
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
-	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.38-0.20210120105333-159525a16324
+	github.com/ory/cli v0.0.39
 	github.com/ory/dockertest/v3 v3.6.3
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
@@ -69,7 +63,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.185-0.20210212173500-1699a8af4d57
+	github.com/ory/x v0.0.187
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
@@ -84,11 +78,9 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.6.7
 	github.com/tidwall/sjson v1.1.4
-	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
 	gopkg.in/go-playground/validator.v9 v9.28.0
-	gopkg.in/gorp.v1 v1.7.2 // indirect
 )
