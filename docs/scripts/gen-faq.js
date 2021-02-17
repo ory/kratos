@@ -40,7 +40,7 @@ import {Question, Faq} from '@theme/Faq'
 `
 const md = new Remarkable()
   faq.forEach((el) => {
-    react_tags = el.tags.map((tag) => {
+  const react_tags = el.tags.map((tag) => {
       return tag + '_src-theme-'
     })
     data += `<Question tags="question_src-theme- ${react_tags.join(' ')}">\n`
