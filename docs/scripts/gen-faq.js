@@ -20,9 +20,7 @@ try {
   const tags = Array.from(
     new Set(
       faq
-        .map((el) => {
-          return el.tags
-        })
+        .map(({tags}) => tags)
         .flat(1)
     )
   )
