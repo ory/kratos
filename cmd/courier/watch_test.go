@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal"
 	"github.com/phayes/freeport"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/internal"
 )
 
 func TestStartCourier(t *testing.T) {

@@ -14,6 +14,8 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 // Use the internal name for tablename generation
 replace github.com/ory/kratos/corp => ./corp
 
+replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
