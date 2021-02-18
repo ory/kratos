@@ -43,18 +43,21 @@ func NewHandler(
 }
 
 const (
-	RouteWhoami = "/sessions/whoami"
-	RouteRevoke = "/sessions"
+	RouteWhoami       = "/sessions/whoami"
+	RouteRevoke       = "/sessions"
+	RouteDecodeCookie = "/sessions/decodeCookie"
 	// SessionsWhoisPath  = "/sessions/whois"
 )
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().ExemptPath(RouteWhoami)
+	h.r.CSRFHandler().ExemptPath(RouteDecodeCookie)
 	h.r.CSRFHandler().ExemptPath(RouteRevoke)
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
+		public.Handle(m, RouteDecodeCookie, h.decodeCookie)
 	}
 
 	public.DELETE(RouteRevoke, h.revoke)
@@ -152,6 +155,7 @@ type whoamiParameters struct {
 //       401: genericError
 //       500: genericError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
@@ -166,6 +170,19 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
 	h.r.Writer().Write(w, r, s)
+}
+
+func (h *Handler) decodeCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	s := h.r.SessionManager().(*ManagerHTTP)
+	token := s.extractToken(r)
+	if token == "" {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not extract token")))
+		return
+	}
+
+	w.Write([]byte(token))
+
 }
 
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {
