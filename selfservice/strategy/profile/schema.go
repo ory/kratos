@@ -1,7 +1,8 @@
 package profile
 
 import (
-	"github.com/markbates/pkger"
+	_ "embed"
 )
 
-var _ = pkger.Dir("github.com/ory/kratos:/selfservice/strategy/profile/.schema")
+//go:embed .schema/settings.schema.json
+var settingsSchema []byte

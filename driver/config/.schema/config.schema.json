@@ -1,5 +1,5 @@
 {
-  "$id": "https://github.com/ory/kratos/.schema/config.schema.json",
+  "$id": "https://github.com/ory/kratos/driver/config/.schema/config.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ORY Kratos Configuration",
   "type": "object",
@@ -9,7 +9,10 @@
       "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
       "format": "uri-reference",
-      "examples": ["https://my-app.com/dashboard", "/dashboard"]
+      "examples": [
+        "https://my-app.com/dashboard",
+        "/dashboard"
+      ]
     },
     "selfServiceSessionRevokerHook": {
       "type": "object",

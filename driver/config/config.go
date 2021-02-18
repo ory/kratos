@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/markbates/pkger"
 	"github.com/rs/cors"
 	"github.com/tidwall/gjson"
 
@@ -152,16 +150,6 @@ func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 }
 
 func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
-	f, err := pkger.Open("github.com/ory/kratos:/.schema/config.schema.json")
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to open config.schema.json")
-	}
-
-	schema, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read config.schema.json")
-	}
-
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
@@ -169,7 +157,7 @@ func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 		configx.WithLogrusWatcher(l),
 	}, opts...)
 
-	p, err := configx.New(schema, opts...)
+	p, err := configx.New(ValidationSchema, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -559,7 +547,7 @@ func (p *Config) CourierSMTPFrom() string {
 }
 
 func (p *Config) CourierTemplatesRoot() string {
-	return p.p.StringF(ViperKeyCourierTemplatesPath, "/courier/template/templates")
+	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
 }
 
 func splitUrlAndFragment(s string) (string, string) {

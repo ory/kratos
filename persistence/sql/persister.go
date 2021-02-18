@@ -2,9 +2,9 @@ package sql
 
 import (
 	"context"
+	"embed"
 
 	"github.com/gobuffalo/pop/v5"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/popx"
@@ -18,7 +18,8 @@ import (
 
 var _ persistence.Persister = new(Persister)
 
-var migrations = pkger.Dir("github.com/ory/kratos:/persistence/sql/migrations/sql") // do not remove this!
+//go:embed migrations/sql/*.sql
+var migrations embed.FS
 
 type (
 	persisterDependencies interface {
@@ -26,17 +27,18 @@ type (
 		identity.ValidationProvider
 		x.LoggingProvider
 		config.Provider
+		x.TracingProvider
 	}
 	Persister struct {
 		c        *pop.Connection
-		mb       *popx.MigrationBoxPkger
+		mb       *popx.MigrationBox
 		r        persisterDependencies
 		isSQLite bool
 	}
 )
 
-func NewPersister(r persisterDependencies, c *pop.Connection) (*Persister, error) {
-	m, err := popx.NewMigrationBoxPkger(migrations, c, r.Logger())
+func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection) (*Persister, error) {
+	m, err := popx.NewMigrationBox(migrations, popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +68,7 @@ func (p *Persister) MigrateUp(ctx context.Context) error {
 }
 
 func (p *Persister) Migrator() *popx.Migrator {
-	return &p.mb.Migrator
+	return p.mb.Migrator
 }
 
 func (p *Persister) Close(ctx context.Context) error {
