@@ -22,6 +22,7 @@ let data = `---
 id: faq
 title: Frequently Asked Questions (FAQ)
 ---
+<!-- This file is generated. Please edit /docs/faq.yaml or /docs/scripts/gen-faq.js instead. Changes will be overwritten otherwise -->
 
 
 
@@ -65,6 +66,4 @@ li.selected.${tag}~.question.${tag} {
 `
 })
 
-fs.writeFile('./docs/src/theme/faq.module.gen.css', css_file, (err) => { 
-    if (err) throw err; 
-}) 
+fs.writeFileSync('./docs/src/theme/faq.module.gen.css', css_file)

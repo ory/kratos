@@ -3,7 +3,7 @@ import cn from 'classnames'
 import styles from './faq.module.css'
 //import questions from './faq_questions.json'
 
-const Question = ({ children, tags }) => <div className={tags}>{children}</div>
+const Question = ({ children, tags }) => <div className={cn(tags)}>{children}</div>
 
 const TagButton = ({ tag, isSelected, children, toggleSelected }) => (
   <li
@@ -25,8 +25,9 @@ const Faq = ({ tags }) => {
   const [selectedTags, setSelectedTags] = useState(tags)
 
   const displayFunc = (tags) => {
-    for (var i = 0; i < tags.length; i++) {
-      if (selectedTags.find((t) => t === tags[i])) {
+    for (const tag of tags) {
+    // for (var i = 0; i < tags.length; i++) {
+      if (selectedTags.find((t) => t === tag)) {
         return 'block'
       }
     }
