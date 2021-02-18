@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// GenericError GenericError Error response
+// GenericError GenericError GenericError Error response
 //
 // Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.
 //

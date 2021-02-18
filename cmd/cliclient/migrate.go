@@ -52,8 +52,9 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 	}
 
 	var plan bytes.Buffer
-	err := d.Persister().MigrationStatus(cmd.Context(), &plan)
+	statuses, err := d.Persister().MigrationStatus(cmd.Context())
 	cmdx.Must(err, "An error occurred planning migrations: %s", err)
+	cmdx.Must(err, "An error occurred planning migrations: %s", statuses.Write(&plan))
 
 	fmt.Println("The following migration is planned:")
 	fmt.Println("")

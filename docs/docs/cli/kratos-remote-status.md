@@ -16,10 +16,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Print the alive and readiness status of a ORY Kratos instance
 
-### Synopsis
-
-Print the alive and readiness status of a ORY Kratos instance
-
 ```
 kratos remote status [flags]
 ```

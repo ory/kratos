@@ -14,10 +14,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 This command contains helpers around hashing.
 
-### Synopsis
-
-This command contains helpers around hashing.
-
 ### Options
 
 ```
