@@ -6,11 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -337,8 +334,7 @@ func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Id
 	if err != nil {
 		return nil, err
 	}
-	raw, err := sjson.SetBytes(pkgerx.MustRead(pkger.Open(
-		"github.com/ory/kratos:/selfservice/strategy/password/.schema/settings.schema.json")),
+	raw, err := sjson.SetBytes(settingsSchema,
 		"properties.traits.$ref", ss.URL.String()+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)

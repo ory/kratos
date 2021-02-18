@@ -5,11 +5,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -488,12 +485,9 @@ func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, r
 
 func (s *Strategy) decodeRecovery(r *http.Request, decodeBody bool) (*completeSelfServiceRecoveryFlowWithLinkMethodParameters, error) {
 	var body completeSelfServiceRecoveryFlowWithLinkMethod
-
 	if decodeBody {
 		if err := s.dx.Decode(r, &body,
-			decoderx.MustHTTPRawJSONSchemaCompiler(
-				pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/link/.schema/email.schema.json")),
-			),
+			decoderx.MustHTTPRawJSONSchemaCompiler(emailSchema),
 			decoderx.HTTPDecoderSetValidatePayloads(false),
 			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 			return nil, err

@@ -2,9 +2,6 @@ module github.com/ory/kratos
 
 go 1.16
 
-// See https://github.com/markbates/pkger/pull/112
-replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.20200722132747-95726f5b9b9b
-
 replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 
 // Use the internal httpclient which can be generated in this codebase but mark it as the
@@ -51,7 +48,6 @@ require (
 	github.com/knadh/koanf v0.14.1-0.20201201075439-e0853799f9ec
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/luna-duclos/instrumentedsql/opentracing v0.0.0-20201103091713-40d03108b6f4
-	github.com/markbates/pkger v0.17.1
 	github.com/mattn/goveralls v0.0.7
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
@@ -67,7 +63,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.189
+	github.com/ory/x v0.0.191
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0

@@ -7,11 +7,8 @@ import (
 
 	"github.com/ory/kratos/selfservice/strategy"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -63,9 +60,7 @@ func (s *Strategy) decodeVerification(r *http.Request, decodeBody bool) (*comple
 
 	if decodeBody {
 		if err := s.dx.Decode(r, &body,
-			decoderx.MustHTTPRawJSONSchemaCompiler(
-				pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/link/.schema/email.schema.json")),
-			),
+			decoderx.MustHTTPRawJSONSchemaCompiler(emailSchema),
 			decoderx.HTTPDecoderSetValidatePayloads(false),
 			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 			return nil, err

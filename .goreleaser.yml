@@ -3,12 +3,11 @@
 project_name: kratos
 
 env:
-  - GO111MODULE=on
+  - GOPROXY=https://proxy.golang.org,direct
 
 before:
   hooks:
     - go mod download
-    - make pack
 
 builds:
   -
