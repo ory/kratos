@@ -52,16 +52,7 @@ jobs:
       - checkout
       - setup_remote_docker
       -
-        restore_cache:
-          keys:
-            - go-v1-{{ checksum "go.sum" }}
-      -
         run: go mod download
-      -
-        save_cache:
-          key: go-v1-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
       -
         run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
       -
@@ -109,14 +100,7 @@ jobs:
             - ~/.npm
             - ~/.cache
       # go modules cache
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
       - run: go mod download
-      - save_cache:
-          key: go-mod-v1-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
       - run: sudo npm i -g expo-cli
       - run: ./test/e2e/run.sh << parameters.flavor >>
 
