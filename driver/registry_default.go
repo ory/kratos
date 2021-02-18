@@ -195,12 +195,14 @@ func (m *RegistryDefault) LogoutHandler() *logout.Handler {
 	return m.selfserviceLogoutHandler
 }
 
-func (m *RegistryDefault) HealthHandler(ctx context.Context) *healthx.Handler {
+func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 	if m.healthxHandler == nil {
 		m.healthxHandler = healthx.NewHandler(m.Writer(), config.Version,
 			healthx.ReadyCheckers{
-				"database": m.Ping,
-				"migrations": func() error {
+				"database": func(_ context.Context) error {
+					return m.Ping()
+				},
+				"migrations": func(ctx context.Context) error {
 					status, err := m.Persister().MigrationStatus(ctx)
 					if err != nil {
 						return err
