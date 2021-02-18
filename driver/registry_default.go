@@ -134,7 +134,7 @@ func (m *RegistryDefault) Audit() *logrusx.Logger {
 	return m.a
 }
 
-func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
+func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.RouterPublic) {
 	m.LoginHandler().RegisterPublicRoutes(router)
 	m.RegistrationHandler().RegisterPublicRoutes(router)
 	m.LogoutHandler().RegisterPublicRoutes(router)
@@ -152,10 +152,10 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 	m.VerificationHandler().RegisterPublicRoutes(router)
 	m.AllVerificationStrategies().RegisterPublicRoutes(router)
 
-	m.HealthHandler().SetRoutes(router.Router, false)
+	m.HealthHandler(ctx).SetRoutes(router.Router, false)
 }
 
-func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
+func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.RouterAdmin) {
 	m.RegistrationHandler().RegisterAdminRoutes(router)
 	m.LoginHandler().RegisterAdminRoutes(router)
 	m.SchemaHandler().RegisterAdminRoutes(router)
@@ -170,13 +170,13 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 	m.VerificationHandler().RegisterAdminRoutes(router)
 	m.AllVerificationStrategies().RegisterAdminRoutes(router)
 
-	m.HealthHandler().SetRoutes(router.Router, true)
+	m.HealthHandler(ctx).SetRoutes(router.Router, true)
 	m.MetricsHandler().SetRoutes(router.Router)
 }
 
-func (m *RegistryDefault) RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
-	m.RegisterAdminRoutes(admin)
-	m.RegisterPublicRoutes(public)
+func (m *RegistryDefault) RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin) {
+	m.RegisterAdminRoutes(ctx, admin)
+	m.RegisterPublicRoutes(ctx, public)
 }
 
 func NewRegistryDefault() *RegistryDefault {
@@ -195,10 +195,24 @@ func (m *RegistryDefault) LogoutHandler() *logout.Handler {
 	return m.selfserviceLogoutHandler
 }
 
-func (m *RegistryDefault) HealthHandler() *healthx.Handler {
+func (m *RegistryDefault) HealthHandler(ctx context.Context) *healthx.Handler {
 	if m.healthxHandler == nil {
 		m.healthxHandler = healthx.NewHandler(m.Writer(), config.Version,
-			healthx.ReadyCheckers{"database": m.Ping})
+			healthx.ReadyCheckers{
+				"database": m.Ping,
+				"migrations": func() error {
+					status, err := m.Persister().MigrationStatus(ctx)
+					if err != nil {
+						return err
+					}
+
+					if status.HasPending() {
+						return errors.Errorf("migrations have not yet been fully applied")
+					}
+
+					return nil
+				},
+			})
 	}
 
 	return m.healthxHandler
