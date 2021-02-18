@@ -7,7 +7,7 @@ build
 # Generated files
 .docusaurus
 .cache-loader
-src/theme/faq.module.css
+src/theme/faq.module.gen.css
 docs/faq.mdx
 
 # Misc
