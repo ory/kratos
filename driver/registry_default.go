@@ -7,6 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/luna-duclos/instrumentedsql"
+	"github.com/luna-duclos/instrumentedsql/opentracing"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/ory/kratos/metrics/prometheus"
@@ -443,6 +446,14 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 	bc.Reset()
 	return errors.WithStack(
 		backoff.Retry(func() error {
+			var opts []instrumentedsql.Opt
+			if m.Tracer(ctx).IsLoaded() {
+				opts = []instrumentedsql.Opt{
+					instrumentedsql.WithTracer(opentracing.NewTracer(true)),
+					instrumentedsql.WithOmitArgs(),
+				}
+			}
+
 			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
 			m.Logger().
 				WithField("pool", pool).
@@ -450,10 +461,12 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 				WithField("connMaxLifetime", connMaxLifetime).
 				Debug("Connecting to SQL Database")
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
-				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
-				IdlePool:        idlePool,
-				ConnMaxLifetime: connMaxLifetime,
-				Pool:            pool,
+				URL:                       sqlcon.FinalizeDSN(m.l, cleanedDSN),
+				IdlePool:                  idlePool,
+				ConnMaxLifetime:           connMaxLifetime,
+				Pool:                      pool,
+				UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
+				InstrumentedDriverOptions: opts,
 			})
 			if err != nil {
 				m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
