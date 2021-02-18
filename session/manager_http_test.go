@@ -80,7 +80,7 @@ func TestManagerHTTP(t *testing.T) {
 		pts := httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
 		t.Cleanup(pts.Close)
 		conf.MustSet(config.ViperKeyPublicBaseURL, pts.URL)
-		reg.RegisterPublicRoutes(rp)
+		reg.RegisterPublicRoutes(context.Background(), rp)
 
 		t.Run("case=valid", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySessionLifespan, "1m")

@@ -65,6 +65,8 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	defer wg.Done()
 	modifiers := newOptions(opts)
 
+	ctx := cmd.Context()
+
 	c := r.Config(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
@@ -79,17 +81,17 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 
-	r.RegisterPublicRoutes(router)
+	r.RegisterPublicRoutes(ctx, router)
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
 	var handler http.Handler = n
-	options, enabled := r.Config(cmd.Context()).CORS("public")
+	options, enabled := r.Config(ctx).CORS("public")
 	if enabled {
 		handler = cors.New(options).Handler(handler)
 	}
@@ -109,6 +111,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
 	defer wg.Done()
 	modifiers := newOptions(opts)
+	ctx := cmd.Context()
 
 	c := r.Config(cmd.Context())
 	l := r.Logger()
@@ -118,12 +121,12 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	}
 
 	router := x.NewRouterAdmin()
-	r.RegisterAdminRoutes(router)
+	r.RegisterAdminRoutes(ctx, router)
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
