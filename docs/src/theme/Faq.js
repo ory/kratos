@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import cn from 'classnames'
 import styles from './faq.module.css'
-//import questions from './faq_questions.json'
 
 const Question = ({ children, tags }) => (
   <div className={cn(tags)}>{children}</div>
