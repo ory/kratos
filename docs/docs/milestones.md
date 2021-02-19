@@ -126,6 +126,8 @@ Something is not working.
 - [ ] panic: a handle is already registered for path
       '/self-service/recovery/methods/link'
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
+- [ ] Recovery link doesn't log out existing users
+      ([kratos#1077](https://github.com/ory/kratos/issues/1077))
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [x] Password reset emails sent twice by each of the two kratos pods in my
