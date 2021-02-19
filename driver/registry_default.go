@@ -199,11 +199,11 @@ func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 	if m.healthxHandler == nil {
 		m.healthxHandler = healthx.NewHandler(m.Writer(), config.Version,
 			healthx.ReadyCheckers{
-				"database": func(_ context.Context) error {
+				"database": func(_ *http.Request) error {
 					return m.Ping()
 				},
-				"migrations": func(ctx context.Context) error {
-					status, err := m.Persister().MigrationStatus(ctx)
+				"migrations": func(r *http.Request) error {
+					status, err := m.Persister().MigrationStatus(r.Context())
 					if err != nil {
 						return err
 					}
