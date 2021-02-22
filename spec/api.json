@@ -1957,10 +1957,11 @@
       }
     },
     "errorContainer": {
+      "description": "ErrorContainer error container",
       "type": "object",
       "required": [
-        "errors",
-        "id"
+        "id",
+        "errors"
       ],
       "properties": {
         "errors": {
@@ -1973,7 +1974,7 @@
       }
     },
     "formField": {
-      "description": "FormField FormField Field represents a HTML Form Field",
+      "description": "Field represents a HTML Form Field",
       "type": "object",
       "required": [
         "name",
@@ -2010,7 +2011,7 @@
       }
     },
     "formFields": {
-      "description": "Fields contains multiple fields",
+      "description": "FormFields FormFields FormFields Fields contains multiple fields",
       "type": "array",
       "items": {
         "$ref": "#/definitions/formField"
@@ -2019,7 +2020,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "Error response",
+      "title": "GenericError GenericError GenericError Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -2077,6 +2078,7 @@
       }
     },
     "healthStatus": {
+      "description": "HealthStatus HealthStatus health status",
       "type": "object",
       "properties": {
         "status": {
@@ -2137,10 +2139,11 @@
       }
     },
     "loginFlowMethod": {
+      "description": "LoginFlowMethod LoginFlowMethod LoginFlowMethod login flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2152,11 +2155,12 @@
       }
     },
     "loginFlowMethodConfig": {
+      "description": "LoginFlowMethodConfig login flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2293,14 +2297,13 @@
       }
     },
     "recoveryLink": {
-      "description": "RecoveryLink RecoveryLink recovery link",
       "type": "object",
       "required": [
         "recovery_link"
       ],
       "properties": {
         "expires_at": {
-          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.\nFormat: date-time\nFormat: date-time",
+          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
           "type": "string",
           "format": "date-time"
         },
@@ -2372,11 +2375,12 @@
       }
     },
     "registrationFlowMethodConfig": {
+      "description": "RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2403,11 +2407,11 @@
       }
     },
     "registrationViaApiResponse": {
-      "description": "The Response for Registration Flows via API",
+      "description": "RegistrationViaAPIResponse The Response for Registration Flows via API",
       "type": "object",
       "required": [
-        "identity",
-        "session_token"
+        "session_token",
+        "identity"
       ],
       "properties": {
         "identity": {
@@ -2526,10 +2530,11 @@
       }
     },
     "settingsFlowMethod": {
+      "description": "SettingsFlowMethod SettingsFlowMethod settings flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2542,12 +2547,11 @@
       }
     },
     "settingsFlowMethodConfig": {
-      "description": "SettingsFlowMethodConfig SettingsFlowMethodConfig settings flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2567,7 +2571,7 @@
       }
     },
     "settingsViaApiResponse": {
-      "description": "SettingsViaAPIResponse SettingsViaAPIResponse The Response for Settings Flows via API",
+      "description": "The Response for Settings Flows via API",
       "type": "object",
       "required": [
         "flow",
@@ -2647,12 +2651,11 @@
       }
     },
     "verificationFlowMethodConfig": {
-      "description": "VerificationFlowMethodConfig verification flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2672,6 +2675,7 @@
       }
     },
     "version": {
+      "description": "Version version",
       "type": "object",
       "properties": {
         "version": {

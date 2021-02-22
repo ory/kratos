@@ -1217,7 +1217,9 @@ tracing:
   #
   provider: jaeger
 
-## log ##
+## Log ##
+#
+# Configure logging using the following options. Logging will always be sent to stdout and stderr.
 #
 log:
   ## Leak Sensitive Log Values ##
@@ -1234,6 +1236,8 @@ log:
 
   ## format ##
   #
+  # The log format can either be text or JSON.
+  #
   # One of:
   # - json
   # - text
@@ -1247,6 +1251,10 @@ log:
   format: json
 
   ## level ##
+  #
+  # Debug enables stack traces on errors. Can also be set using environment variable LOG_LEVEL.
+  #
+  # Default value: info
   #
   # One of:
   # - trace
