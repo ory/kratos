@@ -196,10 +196,8 @@ checksum:
 
 dockers:
   - dockerfile: .docker/Dockerfile-sqlite
-    builds:
+    ids:
       - kratos-sqlite-linux-libmusl
-    binaries:
-      - kratos
     image_templates:
       - "oryd/kratos:v{{ .Major }}-sqlite"
       - "oryd/kratos:v{{ .Major }}.{{ .Minor }}-sqlite"
@@ -207,9 +205,7 @@ dockers:
       - "oryd/kratos:{{.Tag}}-sqlite"
       - "oryd/kratos:latest-sqlite"
   - dockerfile: .docker/Dockerfile
-    builds:
-      - kratos
-    binaries:
+    ids:
       - kratos
     image_templates:
       - "oryd/kratos:v{{ .Major }}"
