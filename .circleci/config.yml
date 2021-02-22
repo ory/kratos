@@ -86,6 +86,7 @@ jobs:
       - image: oryd/mailslurper:latest-smtps
     steps:
       - checkout
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends -y psmisc
       # core node_modules cache
       - restore_cache:
           keys:
