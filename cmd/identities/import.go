@@ -59,8 +59,9 @@ WARNING: Importing credentials is not yet supported.`,
 			}
 
 			resp, err := c.Admin.CreateIdentity(&admin.CreateIdentityParams{
-				Body:    &params,
-				Context: cmd.Context(),
+				Body:       &params,
+				Context:    cmd.Context(),
+				HTTPClient: cliclient.NewHTTPClient(cmd),
 			})
 			if err != nil {
 				failed[src] = err

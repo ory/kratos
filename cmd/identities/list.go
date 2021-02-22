@@ -28,7 +28,8 @@ var ListCmd = &cobra.Command{
 		c := cliclient.NewClient(cmd)
 
 		params := &admin.ListIdentitiesParams{
-			Context: cmd.Context(),
+			Context:    cmd.Context(),
+			HTTPClient: cliclient.NewHTTPClient(cmd),
 		}
 
 		if len(args) == 2 {

@@ -33,7 +33,7 @@ var GetCmd = &cobra.Command{
 		identities := make([]*models.Identity, 0, len(args))
 		failed := make(map[string]error)
 		for _, id := range args {
-			resp, err := c.Admin.GetIdentity(admin.NewGetIdentityParamsWithTimeout(time.Second).WithID(id))
+			resp, err := c.Admin.GetIdentity(admin.NewGetIdentityParamsWithTimeout(time.Second).WithID(id).WithHTTPClient(cliclient.NewHTTPClient(cmd)))
 			if err != nil {
 				failed[id] = err
 				continue
