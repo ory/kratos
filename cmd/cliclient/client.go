@@ -2,8 +2,11 @@ package cliclient
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/spf13/cobra"
 
@@ -22,7 +25,15 @@ type ContextKey int
 
 const (
 	ClientContextKey ContextKey = iota + 1
+	HTTPClientContextKey
 )
+
+func NewHTTPClient(cmd *cobra.Command) *http.Client {
+	if f, ok := cmd.Context().Value(HTTPClientContextKey).(func(cmd *cobra.Command) *http.Client); ok {
+		return f(cmd)
+	}
+	return httpx.NewResilientClientLatencyToleranceMedium(http.DefaultTransport)
+}
 
 func NewClient(cmd *cobra.Command) *client.OryKratos {
 	if f, ok := cmd.Context().Value(ClientContextKey).(func(cmd *cobra.Command) *client.OryKratos); ok {

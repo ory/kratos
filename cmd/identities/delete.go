@@ -32,7 +32,7 @@ var DeleteCmd = &cobra.Command{
 		)
 
 		for _, a := range args {
-			_, err := c.Admin.DeleteIdentity(admin.NewDeleteIdentityParams().WithID(a).WithTimeout(time.Second))
+			_, err := c.Admin.DeleteIdentity(admin.NewDeleteIdentityParams().WithID(a).WithTimeout(time.Second).WithHTTPClient(cliclient.NewHTTPClient(cmd)))
 			if err != nil {
 				errs = append(errs, err)
 				continue
