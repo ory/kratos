@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/x/swaggerx"
+
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos-client-go/client/admin"
@@ -34,7 +38,7 @@ var DeleteCmd = &cobra.Command{
 		for _, a := range args {
 			_, err := c.Admin.DeleteIdentity(admin.NewDeleteIdentityParams().WithID(a).WithTimeout(time.Second).WithHTTPClient(cliclient.NewHTTPClient(cmd)))
 			if err != nil {
-				errs = append(errs, err)
+				errs = append(errs, errors.New(swaggerx.FormatSwaggerError(err)))
 				continue
 			}
 			deleted = append(deleted, a)

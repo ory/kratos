@@ -26,6 +26,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.0
+	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-swagger/go-swagger v0.26.1
 	github.com/gobuffalo/fizz v1.13.1-0.20201104174146-3416f0e6618f
 	github.com/gobuffalo/httptest v1.0.2
@@ -63,7 +64,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.193
+	github.com/ory/x v0.0.195
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
@@ -72,7 +73,7 @@ require (
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.8.0
 	github.com/slack-go/slack v0.7.4
-	github.com/spf13/cobra v1.0.1-0.20201006035406-b97b5ead31f7
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.7.0
@@ -82,5 +83,4 @@ require (
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
-	gopkg.in/go-playground/validator.v9 v9.28.0
 )
