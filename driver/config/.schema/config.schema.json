@@ -1009,10 +1009,14 @@
       }
     },
     "log": {
+      "title": "Log",
+      "description": "Configure logging using the following options. Logging will always be sent to stdout and stderr.",
       "type": "object",
       "properties": {
         "level": {
+          "description": "Debug enables stack traces on errors. Can also be set using environment variable LOG_LEVEL.",
           "type": "string",
+          "default": "info",
           "enum": [
             "trace",
             "debug",
@@ -1029,8 +1033,12 @@
           "description": "If set will leak sensitive values (e.g. emails) in the logs."
         },
         "format": {
+          "description": "The log format can either be text or JSON.",
           "type": "string",
-          "enum": ["json", "text"]
+          "enum": [
+            "json",
+            "text"
+          ]
         }
       },
       "additionalProperties": false
