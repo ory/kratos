@@ -70,7 +70,7 @@ require (
 	github.com/prometheus/common v0.9.1
 	github.com/rs/cors v1.6.0
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.8.0
 	github.com/slack-go/slack v0.7.4
 	github.com/spf13/cobra v1.0.1-0.20201006035406-b97b5ead31f7
 	github.com/spf13/pflag v1.0.5
