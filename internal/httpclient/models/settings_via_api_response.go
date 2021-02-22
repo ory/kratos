@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// SettingsViaAPIResponse SettingsViaAPIResponse The Response for Settings Flows via API
+// SettingsViaAPIResponse The Response for Settings Flows via API
 //
 // swagger:model settingsViaApiResponse
 type SettingsViaAPIResponse struct {
