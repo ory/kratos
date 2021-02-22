@@ -640,7 +640,75 @@ selfservice:
 Next, open the login endpoint of the SecureApp and you should see the Facebook
 Login option!
 
-## Google, LinkedIn
+## Google
+
+**Set up on Google Cloud Platform**
+
+1. Create an
+   [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
+2. Create
+   [OAuth 2.0 Client IDs](https://console.cloud.google.com/apis/credentials)
+
+In the new _OAuth 2.0 Client ID_, you will need the `Client ID` and
+`Client secret`.
+
+**Configuring Kratos**
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.google.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.google.jsonnet"
+local claims = {
+  email_verified: true
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+      first_name: claims.given_name,
+      last_name: claims.family_name,
+      [if "hd" in claims && claims.email_verified then "hd" else null]: claims.hd,
+    },
+  },
+}
+```
+
+Now, enable the Google provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: google # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: google
+            client_id: .... # Replace this with the OAuth2 Client ID
+            client_secret: .... # Replace this with the OAuth2 Client secret
+            mapper_url: file:///etc/config/kratos/oidc.google.jsonnet
+            scope:
+              - email
+              - profile
+              # other supported scopes can be found in Google OAuth 2.0 dev docs
+            requested_claims:
+              id_token:
+                email:
+                  essential: true
+                email_verified:
+                  essential: true
+                given_name:
+                  essential: true
+                family_name: null
+                hd: null # If you want the G Suite domain
+```
+
+## LinkedIn
 
 Connecting with other Social Sign In providers will be very similar to the
 GitHub flow. If you've managed to do it, add to this document by writing it down
