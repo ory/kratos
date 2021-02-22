@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/x/swaggerx"
+
 	"github.com/ory/kratos-client-go/client/admin"
 
 	"github.com/ory/x/cmdx"
@@ -35,7 +39,7 @@ var GetCmd = &cobra.Command{
 		for _, id := range args {
 			resp, err := c.Admin.GetIdentity(admin.NewGetIdentityParamsWithTimeout(time.Second).WithID(id).WithHTTPClient(cliclient.NewHTTPClient(cmd)))
 			if err != nil {
-				failed[id] = err
+				failed[id] = errors.New(swaggerx.FormatSwaggerError(err))
 				continue
 			}
 

@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/x/swaggerx"
+
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
@@ -64,7 +68,7 @@ WARNING: Importing credentials is not yet supported.`,
 				HTTPClient: cliclient.NewHTTPClient(cmd),
 			})
 			if err != nil {
-				failed[src] = err
+				failed[src] = errors.New(swaggerx.FormatSwaggerError(err))
 			} else {
 				imported = append(imported, resp.Payload)
 			}
