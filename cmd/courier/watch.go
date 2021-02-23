@@ -38,7 +38,6 @@ func StartCourier(ctx cx.Context, r driver.Registry) {
 }
 
 func ServeMetrics(ctx cx.Context, r driver.Registry) {
-
 	c := r.Config(ctx)
 	l := r.Logger()
 	n := negroni.New()
