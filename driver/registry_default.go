@@ -128,10 +128,7 @@ type RegistryDefault struct {
 }
 
 func (m *RegistryDefault) Audit() *logrusx.Logger {
-	if m.a == nil {
-		m.a = logrusx.NewAudit("ORY Kratos", config.Version)
-	}
-	return m.a
+	return m.Logger().WithField("audience", "audit")
 }
 
 func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.RouterPublic) {
