@@ -65,6 +65,8 @@ const (
 	ViperKeySelfServiceLoginUI                                      = "selfservice.flows.login.ui_url"
 	ViperKeySelfServiceLoginRequestLifespan                         = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                                   = "selfservice.flows.login.after"
+	ViperKeySelfServiceLoginRandomDelayBase                         = "selfservice.flows.login.random_delay.base"
+	ViperKeySelfServiceLoginRandomDelayDeviation                    = "selfservice.flows.login.random_delay.deviation"
 	ViperKeySelfServiceLoginBeforeHooks                             = "selfservice.flows.login.before.hooks"
 	ViperKeySelfServiceErrorUI                                      = "selfservice.flows.error.ui_url"
 	ViperKeySelfServiceLogoutBrowserDefaultReturnTo                 = "selfservice.flows.logout.after." + DefaultBrowserReturnURL
@@ -678,6 +680,14 @@ func (p *Config) selfServiceReturnTo(key string, strategy string) *url.URL {
 			p.SelfServiceBrowserDefaultReturnTo(),
 		),
 	)
+}
+
+func (p *Config) SelfServiceFlowLoginRandomDelayBase() time.Duration {
+	return p.p.Duration(ViperKeySelfServiceLoginRandomDelayBase)
+}
+
+func (p *Config) SelfServiceFlowLoginRandomDelayDeviation() time.Duration {
+	return p.p.Duration(ViperKeySelfServiceLoginRandomDelayDeviation)
 }
 
 func (p *Config) ConfigVersion() string {
