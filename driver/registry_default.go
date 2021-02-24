@@ -59,7 +59,6 @@ import (
 type RegistryDefault struct {
 	rwl sync.RWMutex
 	l   *logrusx.Logger
-	a   *logrusx.Logger
 	c   *config.Config
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
