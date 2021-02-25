@@ -12,8 +12,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos hashers argon2
 
-### Synopsis
-
 ### Options
 
 ```

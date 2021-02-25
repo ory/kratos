@@ -2,13 +2,12 @@ package sql
 
 import (
 	"context"
-	"io"
-
-	"github.com/ory/x/pkgerx"
+	"embed"
 
 	"github.com/gobuffalo/pop/v5"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/popx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -19,7 +18,8 @@ import (
 
 var _ persistence.Persister = new(Persister)
 
-var migrations = pkger.Dir("github.com/ory/kratos:/persistence/sql/migrations/sql") // do not remove this!
+//go:embed migrations/sql/*.sql
+var migrations embed.FS
 
 type (
 	persisterDependencies interface {
@@ -27,17 +27,18 @@ type (
 		identity.ValidationProvider
 		x.LoggingProvider
 		config.Provider
+		x.TracingProvider
 	}
 	Persister struct {
 		c        *pop.Connection
-		mb       *pkgerx.MigrationBox
+		mb       *popx.MigrationBox
 		r        persisterDependencies
 		isSQLite bool
 	}
 )
 
-func NewPersister(r persisterDependencies, c *pop.Connection) (*Persister, error) {
-	m, err := pkgerx.NewMigrationBox(migrations, c, r.Logger())
+func NewPersister(ctx context.Context, r persisterDependencies, c *pop.Connection) (*Persister, error) {
+	m, err := popx.NewMigrationBox(migrations, popx.NewMigrator(c, r.Logger(), r.Tracer(ctx), 0))
 	if err != nil {
 		return nil, err
 	}
@@ -49,16 +50,25 @@ func (p *Persister) Connection(ctx context.Context) *pop.Connection {
 	return p.c.WithContext(ctx)
 }
 
-func (p *Persister) MigrationStatus(ctx context.Context, w io.Writer) error {
-	return errors.WithStack(p.mb.Status(w))
+func (p *Persister) MigrationStatus(ctx context.Context) (popx.MigrationStatuses, error) {
+	status, err := p.mb.Status(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return status, nil
 }
 
 func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
-	return errors.WithStack(p.mb.Down(steps))
+	return p.mb.Down(ctx, steps)
 }
 
 func (p *Persister) MigrateUp(ctx context.Context) error {
-	return errors.WithStack(p.mb.Up())
+	return p.mb.Up(ctx)
+}
+
+func (p *Persister) Migrator() *popx.Migrator {
+	return p.mb.Migrator
 }
 
 func (p *Persister) Close(ctx context.Context) error {

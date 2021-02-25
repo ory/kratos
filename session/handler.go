@@ -83,12 +83,12 @@ type revokeSession struct {
 
 // swagger:route DELETE /sessions public revokeSession
 //
-// Revoke and Invalidate a Session
+// Initialize Logout Flow for API Clients - Revoke a Session
 //
 // Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
 // such as mobile apps to log the user out of the system and invalidate the session.
 //
-// This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.
+// This endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.
 //
 //     Consumes:
 //     - application/json
@@ -155,8 +155,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r,
-			errors.WithStack(herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.")))
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
 		return
 	}
 

@@ -2,17 +2,20 @@ package template
 
 import (
 	"bytes"
+	"embed"
 	"io"
 	"os"
 	"text/template"
 
+	_ "embed"
+
 	"github.com/Masterminds/sprig/v3"
 	lru "github.com/hashicorp/golang-lru"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 )
 
-var _ = pkger.Dir("github.com/ory/kratos:/courier/template/templates")
+//go:embed courier/builtin/templates/*
+var templates embed.FS
 
 var cache, _ = lru.New(16)
 
@@ -27,7 +30,7 @@ func loadTextTemplate(path string, model interface{}) (string, error) {
 		return tb.String(), nil
 	}
 
-	if file, err := pkger.Open(path); err == nil {
+	if file, err := templates.Open(path); err == nil {
 		defer file.Close()
 		if _, err := io.Copy(&b, file); err != nil {
 			return "", errors.WithStack(err)

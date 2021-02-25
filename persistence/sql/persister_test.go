@@ -1,6 +1,7 @@
 package sql_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -131,8 +132,14 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 		})
 
 		pop.SetLogger(pl(t))
-		require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
 		require.NoError(t, p.MigrateUp(context.Background()))
+		status, err := p.MigrationStatus(context.Background())
+		require.NoError(t, err)
+		require.False(t, status.HasPending())
+
+		var b bytes.Buffer
+		require.NoError(t, status.Write(&b))
+		t.Logf("%s", b.String())
 
 		ps[name] = reg
 	}

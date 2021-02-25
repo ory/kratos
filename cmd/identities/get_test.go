@@ -43,6 +43,6 @@ func TestGetCmd(t *testing.T) {
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
 		stdErr := execErr(t, GetCmd, x.NewUUID().String())
 
-		assert.Contains(t, stdErr, "status 404", stdErr)
+		assert.Contains(t, stdErr, "getIdentityNotFound", stdErr)
 	})
 }

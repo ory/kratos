@@ -14,6 +14,7 @@ type MessageStatus int
 const (
 	MessageStatusQueued MessageStatus = iota + 1
 	MessageStatusSent
+	MessageStatusProcessing
 )
 
 type MessageType int

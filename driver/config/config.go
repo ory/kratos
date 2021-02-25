@@ -5,14 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
-	"github.com/markbates/pkger"
 	"github.com/rs/cors"
 	"github.com/tidwall/gjson"
 
@@ -151,16 +150,6 @@ func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 }
 
 func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
-	f, err := pkger.Open("github.com/ory/kratos:/.schema/config.schema.json")
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to open config.schema.json")
-	}
-
-	schema, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read config.schema.json")
-	}
-
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
@@ -168,7 +157,7 @@ func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 		configx.WithLogrusWatcher(l),
 	}, opts...)
 
-	p, err := configx.New(schema, opts...)
+	p, err := configx.New(ValidationSchema, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -558,16 +547,33 @@ func (p *Config) CourierSMTPFrom() string {
 }
 
 func (p *Config) CourierTemplatesRoot() string {
-	return p.p.StringF(ViperKeyCourierTemplatesPath, "/courier/template/templates")
+	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
+}
+
+func splitUrlAndFragment(s string) (string, string) {
+	i := strings.IndexByte(s, '#')
+	if i < 0 {
+		return s, ""
+	}
+	return s[:i], s[i+1:]
 }
 
 func (p *Config) parseURIOrFail(key string) *url.URL {
-	u, err := url.ParseRequestURI(p.p.String(key))
+	u, frag := splitUrlAndFragment(p.p.String(key))
+	url, err := url.ParseRequestURI(u)
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	return u
+	if url.Scheme == "" {
+		p.l.WithField("reason", "expected scheme to be set").
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
+	}
+
+	if frag != "" {
+		url.Fragment = frag
+	}
+	return url
 }
 
 func (p *Config) Tracing() *tracing.Config {
@@ -576,6 +582,18 @@ func (p *Config) Tracing() *tracing.Config {
 
 func (p *Config) IsInsecureDevMode() bool {
 	return p.Source().Bool("dev")
+}
+
+func (p *Config) IsBackgroundCourierEnabled() bool {
+	return p.Source().Bool("watch-courier")
+}
+
+func (p *Config) CourierExposeMetricsPort() int {
+	return p.Source().Int("expose-metrics-port")
+}
+
+func (p *Config) MetricsListenOn() string {
+	return strings.Replace(p.AdminListenOn(), ":4434", fmt.Sprintf(":%d", p.CourierExposeMetricsPort()), 1)
 }
 
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {

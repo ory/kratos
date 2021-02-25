@@ -32,7 +32,7 @@ func TestManager(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
-		f, err := recovery.NewFlow(time.Hour, "", u, reg.RecoveryStrategies(), flow.TypeBrowser)
+		f, err := recovery.NewFlow(time.Hour, "", u, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
@@ -54,7 +54,7 @@ func TestManager(t *testing.T) {
 	})
 
 	t.Run("method=SendVerificationLink", func(t *testing.T) {
-		f, err := verification.NewFlow(time.Hour, "", u, reg.VerificationStrategies(), flow.TypeBrowser)
+		f, err := verification.NewFlow(time.Hour, "", u, reg.VerificationStrategies(context.Background()), flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
@@ -64,14 +64,14 @@ func TestManager(t *testing.T) {
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
-		require.Len(t, messages, 4)
+		require.Len(t, messages, 2)
 
-		assert.EqualValues(t, "tracked@ory.sh", messages[2].Recipient)
-		assert.Contains(t, messages[2].Subject, "Please verify")
-		assert.Contains(t, messages[2].Body, urlx.AppendPaths(conf.SelfPublicURL(), link.RouteVerification).String()+"?token=")
+		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
+		assert.Contains(t, messages[0].Subject, "Please verify")
+		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(), link.RouteVerification).String()+"?token=")
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
-		assert.Contains(t, messages[3].Subject, "tried to verify")
-		assert.NotContains(t, messages[3].Body, urlx.AppendPaths(conf.SelfPublicURL(), link.RouteVerification).String()+"?token=")
+		assert.Contains(t, messages[1].Subject, "tried to verify")
+		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(), link.RouteVerification).String()+"?token=")
 	})
 }

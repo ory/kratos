@@ -5,10 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -111,8 +108,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	var p CompleteSelfServiceLoginFlowWithPasswordMethod
-	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(pkgerx.MustRead(
-		pkger.Open("github.com/ory/kratos:/selfservice/strategy/password/.schema/login.schema.json")))); err != nil {
+	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema)); err != nil {
 		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}

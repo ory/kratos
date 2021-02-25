@@ -1,7 +1,8 @@
 package link
 
 import (
-	"github.com/markbates/pkger"
+	_ "embed"
 )
 
-var _ = pkger.Dir("github.com/ory/kratos:/selfservice/strategy/link/.schema")
+//go:embed .schema/email.schema.json
+var emailSchema []byte

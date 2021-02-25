@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/ory/x/swaggerx"
+
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
@@ -28,7 +30,8 @@ var ListCmd = &cobra.Command{
 		c := cliclient.NewClient(cmd)
 
 		params := &admin.ListIdentitiesParams{
-			Context: cmd.Context(),
+			Context:    cmd.Context(),
+			HTTPClient: cliclient.NewHTTPClient(cmd),
 		}
 
 		if len(args) == 2 {
@@ -49,7 +52,7 @@ var ListCmd = &cobra.Command{
 
 		resp, err := c.Admin.ListIdentities(params)
 		if err != nil {
-			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not get the identities: %+v\n", err)
+			_, _ = fmt.Fprint(cmd.ErrOrStderr(), swaggerx.FormatSwaggerError(err))
 			return cmdx.FailSilently(cmd)
 		}
 

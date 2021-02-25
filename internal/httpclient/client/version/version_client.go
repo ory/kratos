@@ -25,9 +25,12 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
 // ClientService is the interface for Client methods
 type ClientService interface {
-	GetVersion(params *GetVersionParams) (*GetVersionOK, error)
+	GetVersion(params *GetVersionParams, opts ...ClientOption) (*GetVersionOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -43,13 +46,12 @@ If the service supports TLS Edge Termination, this endpoint does not require the
 Be aware that if you are running multiple nodes of this service, the health status will never
 refer to the cluster state, only to a single instance.
 */
-func (a *Client) GetVersion(params *GetVersionParams) (*GetVersionOK, error) {
+func (a *Client) GetVersion(params *GetVersionParams, opts ...ClientOption) (*GetVersionOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetVersionParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "getVersion",
 		Method:             "GET",
 		PathPattern:        "/version",
@@ -60,7 +62,12 @@ func (a *Client) GetVersion(params *GetVersionParams) (*GetVersionOK, error) {
 		Reader:             &GetVersionReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}

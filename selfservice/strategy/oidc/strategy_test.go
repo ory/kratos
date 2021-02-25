@@ -409,7 +409,7 @@ func TestStrategy(t *testing.T) {
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
+		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
 		expected := &registration.FlowMethod{
 			Method: identity.CredentialsTypeOIDC,
@@ -449,7 +449,7 @@ func TestStrategy(t *testing.T) {
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr := login.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
+		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
 
 		expected := &login.FlowMethod{
 			Method: identity.CredentialsTypeOIDC,

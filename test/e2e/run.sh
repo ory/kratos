@@ -19,7 +19,7 @@ if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
   docker run --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
   docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
-  docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.1.1 start --insecure
+  docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
 
   export TEST_DATABASE_MYSQL="mysql://root:secret@(127.0.0.1:3444)/mysql?parseTime=true&multiStatements=true"
   export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@127.0.0.1:3445/postgres?sslmode=disable"
@@ -138,7 +138,7 @@ run() {
   fi
 
   yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
-  ($kratos serve --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
+  ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
 
   npm run wait-on -- -l -t 30000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \

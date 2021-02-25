@@ -43,8 +43,6 @@ New feature or request.
       ([kratos#820](https://github.com/ory/kratos/issues/820))
 - [ ] Add i18n support to mail templates
       ([kratos#834](https://github.com/ory/kratos/issues/834))
-- [ ] Add option for disabling registration
-      ([kratos#882](https://github.com/ory/kratos/issues/882))
 - [ ] Rename strategy to method in internal APIs and Documentation
       ([kratos#683](https://github.com/ory/kratos/issues/683)) -
       [@hackerman](https://github.com/aeneasr)
@@ -60,6 +58,8 @@ New feature or request.
       ([kratos#286](https://github.com/ory/kratos/issues/286))
 - [ ] How to sign in with Twitter
       ([kratos#517](https://github.com/ory/kratos/issues/517))
+- [ ] login ui returned without flowid
+      ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [x] Implement Security Questions MFA
       ([kratos#469](https://github.com/ory/kratos/issues/469))
 - [x] Double slash in URLs causes CSRF issues
@@ -105,8 +105,6 @@ Something is not working.
 
 - [ ] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
-- [ ] Password reset emails sent twice by each of the two kratos pods in my
-      cluster ([kratos#652](https://github.com/ory/kratos/issues/652))
 - [ ] Investigate why smtps fails but smtp does not
       ([kratos#781](https://github.com/ory/kratos/issues/781)) -
       [@hackerman](https://github.com/aeneasr)
@@ -123,8 +121,15 @@ Something is not working.
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] panic: a handle is already registered for path
+      '/self-service/recovery/methods/link'
+      ([kratos#1068](https://github.com/ory/kratos/issues/1068))
+- [ ] Recovery link doesn't log out existing users
+      ([kratos#1077](https://github.com/ory/kratos/issues/1077))
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
+- [x] Password reset emails sent twice by each of the two kratos pods in my
+      cluster ([kratos#652](https://github.com/ory/kratos/issues/652))
 - [x] Building From Source fails
       ([kratos#711](https://github.com/ory/kratos/issues/711))
 - [x] Quickstart is failing to mount volume kratos.yml when SELinux is enabled
@@ -186,6 +191,9 @@ New feature or request.
       ([kratos#969](https://github.com/ory/kratos/issues/969))
 - [ ] Access identity schema information (e.g. usernames) within the jsonnet
       mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
+- [ ] Add option for disabling registration
+      ([kratos#882](https://github.com/ory/kratos/issues/882)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Support remote argon2 execution
       ([kratos#357](https://github.com/ory/kratos/issues/357)) -
       [@hackerman](https://github.com/aeneasr)
