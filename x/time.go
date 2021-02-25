@@ -18,6 +18,6 @@ func RequireEqualTime(t *testing.T, expected, actual time.Time) {
 }
 
 func RandomDelay(base time.Duration, deviation time.Duration) {
-	randomDelay := rand.NormFloat64()*float64(base) + float64(deviation)
+	randomDelay := rand.NormFloat64()*float64(deviation) + float64(base)
 	time.Sleep(time.Duration(randomDelay))
 }
