@@ -7,9 +7,6 @@ import (
 	"github.com/ory/herodot"
 )
 
-// DefaultSessionCookieName returns the default cookie name for the kratos session.
-const DefaultSessionCookieName = "ory_kratos_session"
-
 var (
 	// ErrNoActiveSessionFound is returned when no active cookie session could be found in the request.
 	ErrNoActiveSessionFound = herodot.ErrUnauthorized.WithError("request does not have a valid authentication session").WithReason("No active session was found in this request.")

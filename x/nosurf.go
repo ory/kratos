@@ -118,10 +118,13 @@ func NewCSRFHandler(
 
 	n.SetBaseCookieFunc(NosurfBaseCookieHandler(reg))
 	n.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		reg.Logger().
+			WithField("result", nosurf.VerifyToken(nosurf.Token(r), r.Form.Get("csrf_token"))).
 			WithField("expected_token", nosurf.Token(r)).
-			WithField("received_token", r.Form.Get("csrf_token")).
-			WithField("received_token_form", r.PostForm.Get("csrf_token")).
+			WithField("received_cookies", r.Cookies()).
+			WithField("received_token_form", r.Form.Get("csrf_token")).
+			WithField("received_token_body", r.PostForm.Get("csrf_token")).
 			Warn("A request failed due to a missing or invalid csrf_token value")
 
 		reg.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("CSRF token is missing or invalid.")))
