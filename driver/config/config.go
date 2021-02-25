@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/rs/cors"
 	"github.com/tidwall/gjson"
 
@@ -47,6 +49,7 @@ const (
 	ViperKeySessionLifespan                                         = "session.lifespan"
 	ViperKeySessionSameSite                                         = "session.cookie.same_site"
 	ViperKeySessionDomain                                           = "session.cookie.domain"
+	ViperKeySessionName                                             = "session.cookie.name"
 	ViperKeySessionPath                                             = "session.cookie.path"
 	ViperKeySessionPersistentCookie                                 = "session.cookie.persistent"
 	ViperKeySelfServiceStrategyConfig                               = "selfservice.methods"
@@ -89,6 +92,9 @@ const (
 	Argon2DefaultSaltLength                                  uint32 = 16
 	Argon2DefaultKeyLength                                   uint32 = 32
 )
+
+// DefaultSessionCookieName returns the default cookie name for the kratos session.
+const DefaultSessionCookieName = "ory_kratos_session"
 
 type (
 	Argon2 struct {
@@ -202,6 +208,10 @@ func (p *Config) MustSet(key string, value interface{}) {
 
 func (p *Config) SessionDomain() string {
 	return p.p.String(ViperKeySessionDomain)
+}
+
+func (p *Config) SessionName() string {
+	return stringsx.Coalesce(p.p.String(ViperKeySessionName), DefaultSessionCookieName)
 }
 
 func (p *Config) SessionPath() string {
