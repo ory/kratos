@@ -37,27 +37,40 @@ import {Question, Faq} from '@theme/Faq'
 <br/><br/>
 
 `
-    md = new Remarkable();
-    faq.forEach(el => {
-        react_tags = el.tags.map((tag) => {return tag+"_src-theme-"})
-        data += `<Question tags="question_src-theme- ${react_tags.join(" ")}">\n`
-        data += `    ${el.tags.map( tag => {return "#"+tag }).join(" ")} <br/>\n` 
-        data += "    " + md.render(`**Q**: ${el.q}`) 
-        data += "    " + md.render(`**A**: ${el.a}\n`)
-        if (el.context) {
-            data += "    " + md.render(`context: ${el.context}\n`)
-        }
-        data += `</Question>\n\n<br/>`
-        
-    });
-    // Unfortunatly this is a mix of html/markdown and prettier is either not 
-    // properly formatting html or mixing up the syntax (with the html parser)
+md = new Remarkable()
+faq.forEach((el) => {
+  react_tags = el.tags.map((tag) => {
+    return tag + '_src-theme-'
+  })
+  data += `<Question tags="question_src-theme- ${react_tags.join(' ')}">\n`
+  data += `    ${el.tags
+    .map((tag) => {
+      return '#' + tag
+    })
+    .join(' ')} <br/>\n`
+  data += '    ' + md.render(`**Q**: ${el.q}`)
+  data += '    ' + md.render(`**A**: ${el.a}\n`)
+  if (el.context) {
+    data += '    ' + md.render(`context: ${el.context}\n`)
+  }
+  data += `</Question>\n\n<br/>`
+})
+// Unfortunatly this is a mix of html/markdown and prettier is either not
+// properly formatting html or mixing up the syntax (with the html parser)
 
-    fs.writeFileSync(path.resolve('./docs/docs/faq.mdx'), data)
+fs.writeFileSync(path.resolve('./docs/docs/faq.mdx'), data)
 
-    // Generating faq.module.css
-    const taglist = Array.from(new Set(faq.map(el => { return el.tags }).flat(1)))
-    let css_file=``
+// Generating faq.module.css
+const taglist = Array.from(
+  new Set(
+    faq
+      .map((el) => {
+        return el.tags
+      })
+      .flat(1)
+  )
+)
+let css_file = ``
 
 taglist.forEach((tag) => {
   css_file += `

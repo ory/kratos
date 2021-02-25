@@ -23,7 +23,7 @@ const TagButton = ({ tag, isSelected, children, toggleSelected }) => (
 
 const Faq = ({ tags, switchofftags }) => {
   const [selectedTags, setSelectedTags] = useState(
-    tags.filter((t) => ! switchofftags.includes(t))
+    tags.filter((t) => !switchofftags.includes(t))
   )
   const displayFunc = (tags) => {
     for (const tag of tags) {
