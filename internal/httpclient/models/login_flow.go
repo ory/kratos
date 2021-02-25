@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// LoginFlow LoginFlow Login Flow
+// LoginFlow LoginFlow LoginFlow Login Flow
 //
 // This object represents a login flow. A login flow is initiated at the "Initiate Login API / Browser Flow"
 // endpoint by a client.

@@ -2487,6 +2487,7 @@
       }
     },
     "healthNotReadyStatus": {
+      "description": "HealthNotReadyStatus HealthNotReadyStatus health not ready status",
       "type": "object",
       "properties": {
         "errors": {
@@ -2511,13 +2512,13 @@
     "loginFlow": {
       "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
       "type": "object",
-      "title": "Login Flow",
+      "title": "LoginFlow LoginFlow Login Flow",
       "required": [
-        "expires_at",
         "id",
+        "expires_at",
         "issued_at",
-        "methods",
-        "request_url"
+        "request_url",
+        "methods"
       ],
       "properties": {
         "active": {
@@ -2576,12 +2577,11 @@
       }
     },
     "loginFlowMethodConfig": {
-      "description": "LoginFlowMethodConfig login flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2608,11 +2608,11 @@
       }
     },
     "loginViaApiResponse": {
-      "description": "LoginViaAPIResponse The Response for Login Flows via API",
+      "description": "The Response for Login Flows via API",
       "type": "object",
       "required": [
-        "session_token",
-        "session"
+        "session",
+        "session_token"
       ],
       "properties": {
         "session": {
@@ -2798,12 +2798,11 @@
       }
     },
     "registrationFlowMethodConfig": {
-      "description": "RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -3098,6 +3097,7 @@
       }
     },
     "version": {
+      "description": "Version version",
       "type": "object",
       "properties": {
         "version": {
