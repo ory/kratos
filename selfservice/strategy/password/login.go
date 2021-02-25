@@ -141,10 +141,9 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	x.RandomDelay(s.d.Config(r.Context()).SelfServiceFlowLoginRandomDelayBase(), s.d.Config(r.Context()).SelfServiceFlowLoginRandomDelayDeviation())
-
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
+		x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation)
 		s.handleLoginError(w, r, ar, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 		return
 	}

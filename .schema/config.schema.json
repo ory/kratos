@@ -500,27 +500,7 @@
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterLogin"
-                },
-		"random_delay": {
-		  "title": "Login Randomized Delay Configuration",
-		  "description": "Configuration for the random delay introduced during the login flow to mitigate timing attacks",
-		  "type": "object",
-		  "additionalProperties": false,
-		  "properties": {
-		    "base": {
-		      "type": "string",
-		      "title": "Randomization Base",
-		      "description": "The base (mean) duration for the randomization distribution",
-		      "default": "100ms"
-		    },
-		    "deviation": {
-		      "type": "string",
-		      "title": "Randomization Deviation",
-		      "description": "The standard deviation duration for the randomization distribution",
-		      "default": "50ms"
-		    }
-		  }
-		}
+                }
               }
             },
             "verification": {
