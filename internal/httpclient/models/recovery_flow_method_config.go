@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RecoveryFlowMethodConfig recovery flow method config
+// RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config
 //
 // swagger:model recoveryFlowMethodConfig
 type RecoveryFlowMethodConfig struct {

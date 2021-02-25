@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// SettingsFlow SettingsFlow Flow represents a Settings Flow
+// SettingsFlow SettingsFlow SettingsFlow Flow represents a Settings Flow
 //
 // This flow is used when an identity wants to update settings
 // (e.g. profile data, passwords, ...) in a selfservice manner.
