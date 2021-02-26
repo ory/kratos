@@ -227,7 +227,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
-	action := sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRegistration))
+	action := sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteRegistration))
 
 	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {

@@ -94,7 +94,7 @@ func (s *ErrorHandler) WriteFlowError(
 		}
 
 		if f.Type == flow.TypeAPI {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
 		} else {
 			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)

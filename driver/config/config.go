@@ -30,37 +30,38 @@ import (
 )
 
 const (
-	DefaultIdentityTraitsSchemaID                                   = "default"
-	DefaultBrowserReturnURL                                         = "default_browser_return_url"
-	DefaultSQLiteMemoryDSN                                          = "sqlite://:memory:?_fk=true"
-	UnknownVersion                                                  = "unknown version"
-	ViperKeyDSN                                                     = "dsn"
-	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
-	ViperKeyCourierTemplatesPath                                    = "courier.template_override_path"
-	ViperKeyCourierSMTPFrom                                         = "courier.smtp.from_address"
-	ViperKeySecretsDefault                                          = "secrets.default"
-	ViperKeySecretsCookie                                           = "secrets.cookie"
-	ViperKeyPublicBaseURL                                           = "serve.public.base_url"
-	ViperKeyPublicPort                                              = "serve.public.port"
-	ViperKeyPublicHost                                              = "serve.public.host"
-	ViperKeyAdminBaseURL                                            = "serve.admin.base_url"
-	ViperKeyAdminPort                                               = "serve.admin.port"
-	ViperKeyAdminHost                                               = "serve.admin.host"
-	ViperKeySessionLifespan                                         = "session.lifespan"
-	ViperKeySessionSameSite                                         = "session.cookie.same_site"
-	ViperKeySessionDomain                                           = "session.cookie.domain"
-	ViperKeySessionName                                             = "session.cookie.name"
-	ViperKeySessionPath                                             = "session.cookie.path"
-	ViperKeySessionPersistentCookie                                 = "session.cookie.persistent"
-	ViperKeySelfServiceStrategyConfig                               = "selfservice.methods"
-	ViperKeySelfServiceBrowserDefaultReturnTo                       = "selfservice." + DefaultBrowserReturnURL
-	ViperKeyURLsWhitelistedReturnToDomains                          = "selfservice.whitelisted_return_urls"
-	ViperKeySelfServiceRegistrationUI                               = "selfservice.flows.registration.ui_url"
-	ViperKeySelfServiceRegistrationRequestLifespan                  = "selfservice.flows.registration.lifespan"
-	ViperKeySelfServiceRegistrationAfter                            = "selfservice.flows.registration.after"
-	ViperKeySelfServiceRegistrationBeforeHooks                      = "selfservice.flows.registration.before.hooks"
-	ViperKeySelfServiceLoginUI                                      = "selfservice.flows.login.ui_url"
-	ViperKeySelfServiceLoginRequestLifespan                         = "selfservice.flows.login.lifespan"
+	DefaultIdentityTraitsSchemaID                  = "default"
+	DefaultBrowserReturnURL                        = "default_browser_return_url"
+	DefaultSQLiteMemoryDSN                         = "sqlite://:memory:?_fk=true"
+	UnknownVersion                                 = "unknown version"
+	ViperKeyDSN                                    = "dsn"
+	ViperKeyCourierSMTPURL                         = "courier.smtp.connection_uri"
+	ViperKeyCourierTemplatesPath                   = "courier.template_override_path"
+	ViperKeyCourierSMTPFrom                        = "courier.smtp.from_address"
+	ViperKeySecretsDefault                         = "secrets.default"
+	ViperKeySecretsCookie                          = "secrets.cookie"
+	ViperKeyPublicBaseURL                          = "serve.public.base_url"
+	ViperKeyPublicDomainAliases                    = "serve.public.domain_aliases"
+	ViperKeyPublicPort                             = "serve.public.port"
+	ViperKeyPublicHost                             = "serve.public.host"
+	ViperKeyAdminBaseURL                           = "serve.admin.base_url"
+	ViperKeyAdminPort                              = "serve.admin.port"
+	ViperKeyAdminHost                              = "serve.admin.host"
+	ViperKeySessionLifespan                        = "session.lifespan"
+	ViperKeySessionSameSite                        = "session.cookie.same_site"
+	ViperKeySessionDomain                          = "session.cookie.domain"
+	ViperKeySessionName                            = "session.cookie.name"
+	ViperKeySessionPath                            = "session.cookie.path"
+	ViperKeySessionPersistentCookie                = "session.cookie.persistent"
+	ViperKeySelfServiceStrategyConfig              = "selfservice.methods"
+	ViperKeySelfServiceBrowserDefaultReturnTo      = "selfservice." + DefaultBrowserReturnURL
+	ViperKeyURLsWhitelistedReturnToDomains         = "selfservice.whitelisted_return_urls"
+	ViperKeySelfServiceRegistrationUI              = "selfservice.flows.registration.ui_url"
+	ViperKeySelfServiceRegistrationRequestLifespan = "selfservice.flows.registration.lifespan"
+	ViperKeySelfServiceRegistrationAfter           = "selfservice.flows.registration.after"
+	ViperKeySelfServiceRegistrationBeforeHooks     = "selfservice.flows.registration.before.hooks"
+	ViperKeySelfServiceLoginUI                     = "selfservice.flows.login.ui_url"
+	ViperKeySelfServiceLoginRequestLifespan        = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                                   = "selfservice.flows.login.after"
 	ViperKeySelfServiceLoginBeforeHooks                             = "selfservice.flows.login.before.hooks"
 	ViperKeySelfServiceErrorUI                                      = "selfservice.flows.error.ui_url"
@@ -476,8 +477,44 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 	return p.guessBaseURL(keyHost, keyPort, defaultPort)
 }
 
-func (p *Config) SelfPublicURL() *url.URL {
-	return p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
+type domainAlias struct {
+	BaseURL     string `json:"base_url"`
+	MatchDomain string `json:"match_domain"`
+}
+
+func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
+	primary := p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
+	if r == nil {
+		return primary
+	}
+
+	out, err := p.p.Marshal(kjson.Parser())
+	if err != nil {
+		p.l.WithError(err).Errorf("Unable to marshal configuration.")
+		return primary
+	}
+
+	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
+
+	var aliases []domainAlias
+	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
+		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
+		return primary
+	}
+
+	for _, a := range aliases {
+		if strings.ToLower(a.MatchDomain) == strings.ToLower(r.Host) {
+			parsed, err := url.ParseRequestURI(a.BaseURL)
+			if err != nil {
+				p.l.WithError(err).WithField("config", raw).WithField("url", a.BaseURL).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
+				return primary
+			}
+
+			return parsed
+		}
+	}
+
+	return primary
 }
 
 func (p *Config) SelfAdminURL() *url.URL {

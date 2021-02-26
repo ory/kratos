@@ -76,7 +76,7 @@ func (s *Strategy) linkedProviders(ctx context.Context, conf *ConfigurationColle
 
 	var result []Provider
 	for _, p := range available.Providers {
-		prov, err := conf.Provider(p.Provider, s.d.Config(ctx).SelfPublicURL())
+		prov, err := conf.Provider(p.Provider, s.d.Config(ctx).SelfPublicURL(r))
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,7 @@ func (s *Strategy) linkableProviders(ctx context.Context, conf *ConfigurationCol
 		}
 
 		if !found {
-			prov, err := conf.Provider(p.ID, s.d.Config(ctx).SelfPublicURL())
+			prov, err := conf.Provider(p.ID, s.d.Config(ctx).SelfPublicURL(r))
 			if err != nil {
 				return nil, err
 			}
@@ -143,7 +143,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	}
 
 	f := form.NewHTMLForm(urlx.CopyWithQuery(urlx.AppendPaths(
-		s.d.Config(r.Context()).SelfPublicURL(), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
+		s.d.Config(r.Context()).SelfPublicURL(r), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	for _, l := range linkable {
@@ -308,7 +308,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 		strings.Replace(RouteAuth, ":flow", p.FlowID, 1)),
 		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
 }
