@@ -175,7 +175,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 	}
 
 	f := &form.HTMLForm{
-		Action: sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteLogin)).String(),
+		Action: sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteLogin)).String(),
 		Method: "POST",
 		Fields: form.Fields{{
 			Name:     "identifier",

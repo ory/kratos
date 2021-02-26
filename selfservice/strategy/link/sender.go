@@ -120,7 +120,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, address *identity.Reco
 		Info("Sending out recovery email with recovery link.")
 	return s.send(ctx, string(address.Via), templates.NewRecoveryValid(s.r.Config(ctx),
 		&templates.RecoveryValidModel{To: address.Value, RecoveryURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(), RouteRecovery),
+			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(r), RouteRecovery),
 			url.Values{"token": {token.Token}}).String()}))
 }
 
@@ -135,7 +135,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.
 
 	return s.send(ctx, string(address.Via), templates.NewVerificationValid(s.r.Config(ctx),
 		&templates.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(), RouteVerification),
+			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(r), RouteVerification),
 			url.Values{"token": {token.Token}}).String()}))
 }
 

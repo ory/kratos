@@ -46,11 +46,11 @@ func TestManager(t *testing.T) {
 
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Recover access to your account")
-		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(), link.RouteRecovery).String()+"?token=")
+		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), link.RouteRecovery).String()+"?token=")
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "Account access attempted")
-		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(), link.RouteRecovery).String()+"?token=")
+		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), link.RouteRecovery).String()+"?token=")
 	})
 
 	t.Run("method=SendVerificationLink", func(t *testing.T) {
@@ -68,10 +68,10 @@ func TestManager(t *testing.T) {
 
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Please verify")
-		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(), link.RouteVerification).String()+"?token=")
+		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), link.RouteVerification).String()+"?token=")
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "tried to verify")
-		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(), link.RouteVerification).String()+"?token=")
+		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), link.RouteVerification).String()+"?token=")
 	})
 }

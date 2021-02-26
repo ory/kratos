@@ -100,7 +100,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	schemaCompiler := jsonschema.NewCompiler()
 
 	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
-		urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
+		urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {pr.ID.String()}},
 	).String(), traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
@@ -278,7 +278,7 @@ func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uu
 }
 
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
-	action := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
+	action := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {ar.ID.String()}})
 
 	ar.Methods[settings.StrategyProfile].Config.Reset()

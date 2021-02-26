@@ -93,13 +93,13 @@ func NosurfBaseCookieHandler(reg interface {
 			sameSite = http.SameSiteLaxMode
 		}
 
-		name := base64.RawURLEncoding.EncodeToString([]byte(reg.Config(r.Context()).SelfPublicURL().String())) + "_csrf_token"
+		name := base64.RawURLEncoding.EncodeToString([]byte(reg.Config(r.Context()).SelfPublicURL(r).String())) + "_csrf_token"
 
 		return http.Cookie{
 			Name:     name,
 			MaxAge:   nosurf.MaxAge,
-			Path:     stringsx.Coalesce(reg.Config(r.Context()).SelfPublicURL().Path, "/"),
-			Domain:   reg.Config(r.Context()).SelfPublicURL().Hostname(),
+			Path:     stringsx.Coalesce(reg.Config(r.Context()).SelfPublicURL(r).Path, "/"),
+			Domain:   reg.Config(r.Context()).SelfPublicURL(r).Hostname(),
 			HttpOnly: true,
 			Secure:   secure,
 			SameSite: sameSite,

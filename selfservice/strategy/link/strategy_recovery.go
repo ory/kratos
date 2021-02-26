@@ -51,7 +51,7 @@ func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
 }
 
 func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) error {
-	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery)).String())
+	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteRecovery)).String())
 
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.SetField(form.Field{Name: "email", Type: "email", Required: true})
@@ -187,7 +187,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 	s.d.Writer().Write(w, r, &recoveryLink{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery),
+			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteRecovery),
 			url.Values{
 				"token": {token.Token},
 				"flow":  {req.ID.String()},
@@ -405,7 +405,7 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 		recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusFound)
 }
 

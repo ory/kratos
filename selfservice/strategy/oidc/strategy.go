@@ -376,7 +376,7 @@ func uid(provider, subject string) string {
 
 func (s *Strategy) authURL(ctx context.Context, flowID uuid.UUID) string {
 	return urlx.AppendPaths(
-		urlx.Copy(s.d.Config(ctx).SelfPublicURL()),
+		urlx.Copy(s.d.Config(ctx).SelfPublicURL(r)),
 		strings.Replace(
 			RouteAuth, ":flow", flowID.String(), 1,
 		),
@@ -413,7 +413,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
-	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL()); err != nil {
+	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL(r)); err != nil {
 		return nil, err
 	} else {
 		return provider, nil
