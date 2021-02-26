@@ -208,7 +208,11 @@ func (p *Config) MustSet(key string, value interface{}) {
 	}
 }
 
-func (p *Config) SessionDomain() string {
+func (p *Config) SessionDomain(r *http.Request) string {
+	if alias := p.findDomainAlias(r); alias != nil {
+		return alias.SessionCookieDomain
+	}
+
 	return p.p.String(ViperKeySessionDomain)
 }
 
@@ -479,21 +483,21 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 }
 
 type domainAlias struct {
-	BasePath    string `json:"base_path"`
-	Scheme      string `json:"scheme"`
-	MatchDomain string `json:"match_domain"`
+	BasePath            string `json:"base_path"`
+	Scheme              string `json:"scheme"`
+	SessionCookieDomain string `json:"session_cookie_domain"`
+	MatchDomain         string `json:"match_domain"`
 }
 
-func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
-	primary := p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
+func (p *Config) findDomainAlias(r *http.Request) *domainAlias {
 	if r == nil {
-		return primary
+		return nil
 	}
 
 	out, err := p.p.Marshal(kjson.Parser())
 	if err != nil {
 		p.l.WithError(err).Errorf("Unable to marshal configuration.")
-		return primary
+		return nil
 	}
 
 	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
@@ -501,23 +505,29 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 	var aliases []domainAlias
 	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
 		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
-		return primary
+		return nil
 	}
 
 	for _, a := range aliases {
 		hostname, _, _ := net.SplitHostPort(r.Host)
 		if strings.EqualFold(a.MatchDomain, hostname) || strings.EqualFold(a.MatchDomain, r.Host) {
-			parsed := &url.URL{
-				Scheme: a.Scheme,
-				Host:   r.Host,
-				Path:   a.BasePath,
-			}
-
-			return parsed
+			return &a
 		}
 	}
 
-	return primary
+	return nil
+}
+
+func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
+	if alias := p.findDomainAlias(r); alias != nil {
+		return &url.URL{
+			Scheme: alias.Scheme,
+			Host:   r.Host,
+			Path:   alias.BasePath,
+		}
+	}
+
+	return p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
 }
 
 func (p *Config) SelfAdminURL() *url.URL {

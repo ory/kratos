@@ -54,12 +54,8 @@ func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseW
 func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName(ctx))
 
-	if domain := s.r.Config(ctx).SessionDomain(); domain != "" {
+	if domain := s.r.Config(ctx).SessionDomain(r); domain != "" {
 		cookie.Options.Domain = domain
-	} else if alias := s.r.Config(ctx).SelfPublicURL(r); s.r.Config(ctx).SelfPublicURL(nil).String() != alias.String() {
-		// If a domain alias is detected use that instead.
-		cookie.Options.Domain = alias.Hostname()
-		cookie.Options.Path = alias.Path
 	}
 
 	old, err := s.FetchFromRequest(ctx, r)

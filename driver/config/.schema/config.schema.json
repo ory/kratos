@@ -964,6 +964,15 @@
                         "/",
                         "/.ory/kratos"
                       ]
+                    },
+                    "session_cookie_domain": {
+                      "title": "Session Cookie Domain",
+                      "description": "Sets the session's cookie domain and overrides the value set in sessions.cookie.domain.",
+                      "type": "string",
+                      "examples": [
+                        "localhost",
+                        "my-domain.com"
+                      ]
                     }
                   }
                 }
@@ -1339,7 +1348,7 @@
           "properties": {
             "domain": {
               "title": "Session Cookie Domain",
-              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care!",
+              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care! This will not change the domain if the request is coming in through an alias domain.",
               "type": "string"
             },
             "name": {
@@ -1474,47 +1483,6 @@
         "required": [
           "courier"
         ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "session": {
-            "properties": {
-              "cookie": {
-                "properties": {
-                  "domain": {
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "domain"
-                ]
-              }
-            },
-            "required": [
-              "cookie"
-            ]
-          }
-        },
-        "required": [
-          "session"
-        ]
-      },
-      "then": {
-        "properties": {
-          "serve": {
-            "properties": {
-              "public": {
-                "properties": {
-                  "domain_aliases": {
-                    "maxItems": 0
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     }
   ],

@@ -304,16 +304,22 @@ func TestProviderBaseURLs(t *testing.T) {
 	p := MustNew(logrusx.New("", ""), configx.SkipValidation())
 	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL().String())
+	assert.Equal(t, "", p.SessionDomain(nil))
 
 	p.MustSet(ViperKeyPublicPort, 4444)
 	p.MustSet(ViperKeyAdminPort, 4445)
 	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "https://"+machineHostname+":4445/", p.SelfAdminURL().String())
+	assert.Equal(t, "", p.SessionDomain(nil))
 
 	p.MustSet(ViperKeyPublicHost, "public.ory.sh")
 	p.MustSet(ViperKeyAdminHost, "admin.ory.sh")
 	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "https://admin.ory.sh:4445/", p.SelfAdminURL().String())
+	assert.Equal(t, "", p.SessionDomain(nil))
+
+	p.MustSet(ViperKeySessionDomain, "admin.ory.sh")
+	assert.Equal(t, "admin.ory.sh", p.SessionDomain(nil))
 
 	// Set to dev mode
 	p.MustSet("dev", true)
@@ -328,21 +334,25 @@ func TestProviderBaseURLs(t *testing.T) {
 			Scheme:      "https",
 		},
 		{
-			MatchDomain: "www.amazon.com",
-			BasePath:    "/",
-			Scheme:      "http",
+			MatchDomain:         "www.amazon.com",
+			BasePath:            "/",
+			Scheme:              "http",
+			SessionCookieDomain: "amazon.com",
 		},
 	})
 	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(&http.Request{
-		Host: "www.not-google.com",
-	}).String())
+	assert.Equal(t, "admin.ory.sh", p.SessionDomain(nil))
+
+	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(&http.Request{Host: "www.not-google.com"}).String())
+	assert.Equal(t, "admin.ory.sh", p.SessionDomain(&http.Request{Host: "www.not-google.com"}))
+
 	assert.Equal(t, "https://www.GooGle.com:312/.ory/", p.SelfPublicURL(&http.Request{
 		Host: "www.GooGle.com:312",
 	}).String())
-	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
-		Host: "www.amazon.com",
-	}).String())
+	assert.Equal(t, "", p.SessionDomain(&http.Request{Host: "www.GooGle.com:312"}))
+
+	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{Host: "www.amazon.com"}).String())
+	assert.Equal(t, "amazon.com", p.SessionDomain(&http.Request{Host: "www.amazon.com"}))
 }
 
 func TestViperProvider_Secrets(t *testing.T) {
