@@ -506,7 +506,7 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 
 	for _, a := range aliases {
 		hostname, _, _ := net.SplitHostPort(r.Host)
-		if strings.ToLower(a.MatchDomain) == strings.ToLower(hostname) || strings.ToLower(a.MatchDomain) == strings.ToLower(r.Host) {
+		if strings.EqualFold(a.MatchDomain, hostname) || strings.EqualFold(a.MatchDomain, r.Host) {
 			parsed := &url.URL{
 				Scheme: a.Scheme,
 				Host:   r.Host,
