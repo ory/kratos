@@ -37,8 +37,8 @@ func TestManager(t *testing.T) {
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
-		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "tracked@ory.sh"))
-		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
+		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), nil, f, "email", "tracked@ory.sh"))
+		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), nil, f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)

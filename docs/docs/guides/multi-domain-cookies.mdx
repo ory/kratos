@@ -9,8 +9,7 @@ The public base URL (`serve.public.base_url`) is used to compute redirect URLs,
 form action URLs, and more. If you host Ory Kratos on more than one domain you
 might want to enable the domain aliasing feature. This allows to register
 additional base URLs. On incoming HTTP Requests, Ory Kratos checks the HTTP
-`Host` Header and compares that to the list of domain aliases. If a match is
-found, that base url is used instead of `serve.public.base_url`:
+`Host` Header and compares that to the list of domain aliases.
 
 ```yaml title="path/to/kratos/config.yml
 serve:
@@ -18,10 +17,29 @@ serve:
     base_url: https://this-is-the-default/base-url
     domain_aliases:
       - match_domain: www.another-domain.com
-        base_url: https://www.another-domain.com/another-path
+        base_path: /kratos
+        scheme: https
       - match_domain: that-domain.com
-        base_url: https://that-domain.com/another-path
+        base_path: /
+        scheme: http
 ```
+
+If a match is found, the value `serve.public.base_url` will be ignored and
+instead the base URL is computed:
+
+```
+<config.protocol>://<request.host + request.port><config.base_path>
+```
+
+Values `<request.host>`, `<request.port>` are set by the incoming HTTP request
+and `<config.base_path>`, `<config.protocol>`, by the config:
+
+- Incoming request is to `https://www.another-domain.com:123/kratos/identities/`
+  so the result is `https://www.another-domain.com:123/kratos`
+- Incoming request is to `http://www.another-domain.com/kratos/sessions/` so the
+  result is `http://www.another-domain.com/kratos`
+- Incoming request is to `https://that-domain.com/identities/` so the result is
+  `https://that-domain.com/identities`
 
 ## Cookies
 
@@ -30,10 +48,10 @@ attack vectors and make the integration as easy as possible to use. Therefore it
 is important to know that
 
 1. [HTTP Cookies ignore ports](https://stackoverflow.com/questions/1612177/are-http-cookies-port-specific),
-meaning the browser will send a cookie it received for
-`http://my-domain.com:1234` to `http://my-domain.com:4321` as well.
+   meaning the browser will send a cookie it received for
+   `http://my-domain.com:1234` to `http://my-domain.com:4321` as well.
 2. [Subdomains can set HTTP Cookies for parent domains](https://stackoverflow.com/questions/18492576/share-cookie-between-subdomain-and-domain),
-meaning a HTTP Cookie specifying `domain=my-domain.com` will be allowed to
+   meaning a HTTP Cookie specifying `domain=my-domain.com` will be allowed to
    set even if the URL is `http://sub.my-domain.com` or
    `http://sub.sub.my-domain.com`.
 
@@ -43,7 +61,15 @@ You can adjust the session cookie's domain using:
 session:
   cookie:
     domain: my-domain.com
+    path: /
 ```
+
+:::warn
+
+Do not set the cookie domain when using multiple domain aliases as it enforces
+the domain - breaking sessions on your alias domains.
+
+:::
 
 What **is not** currently possible is to set up ORY Kratos in a way where you
 get session cookies running on two separate top level domains (e.g.

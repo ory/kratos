@@ -427,7 +427,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), req, identity.VerifiableAddressTypeEmail, body.Body.Email); err != nil {
+	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, req, identity.VerifiableAddressTypeEmail, body.Body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			s.handleRecoveryError(w, r, req, body, err)
 			return
