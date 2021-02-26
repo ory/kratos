@@ -380,6 +380,7 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.Store {
 	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
 	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
 	cs.Options.HttpOnly = true
+
 	if domain := m.Config(ctx).SessionDomain(); domain != "" {
 		cs.Options.Domain = domain
 	}

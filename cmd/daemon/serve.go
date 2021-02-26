@@ -82,7 +82,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	n.UseHandler(r.CSRFHandler())
 
 	r.RegisterPublicRoutes(ctx, router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL().String()))
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
 
@@ -122,7 +122,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(ctx, router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
 
@@ -155,7 +155,7 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 			ClusterID: metricsx.Hash(
 				strings.Join([]string{
 					d.Config(cmd.Context()).DSN(),
-					d.Config(cmd.Context()).SelfPublicURL().String(),
+					d.Config(cmd.Context()).SelfPublicURL(nil).String(),
 					d.Config(cmd.Context()).SelfAdminURL().String(),
 				}, "|"),
 			),

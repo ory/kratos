@@ -171,7 +171,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	provider, err := s.provider(r.Context(), pid)
+	provider, err := s.provider(r.Context(), r, pid)
 	if err != nil {
 		s.handleError(w, r, rid, pid, nil, err)
 		return
@@ -324,7 +324,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	provider, err := s.provider(r.Context(), pid)
+	provider, err := s.provider(r.Context(), r, pid)
 	if err != nil {
 		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
@@ -374,9 +374,9 @@ func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (s *Strategy) authURL(ctx context.Context, flowID uuid.UUID) string {
+func (s *Strategy) authURL(ctx context.Context, r *http.Request, flowID uuid.UUID) string {
 	return urlx.AppendPaths(
-		urlx.Copy(s.d.Config(ctx).SelfPublicURL()),
+		urlx.Copy(s.d.Config(ctx).SelfPublicURL(r)),
 		strings.Replace(
 			RouteAuth, ":flow", flowID.String(), 1,
 		),
@@ -389,7 +389,7 @@ func (s *Strategy) populateMethod(r *http.Request, flowID uuid.UUID) (*FlowMetho
 		return nil, err
 	}
 
-	f := form.NewHTMLForm(s.authURL(r.Context(), flowID))
+	f := form.NewHTMLForm(s.authURL(r.Context(), r, flowID))
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
 
@@ -410,10 +410,10 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	return &c, nil
 }
 
-func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
+func (s *Strategy) provider(ctx context.Context, r *http.Request, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
-	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL()); err != nil {
+	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL(r)); err != nil {
 		return nil, err
 	} else {
 		return provider, nil

@@ -210,7 +210,7 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
-	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
+	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {f.ID.String()}}).String(), Fields: form.Fields{{Name: "password",
 		Type: "password", Required: true}}, Method: "POST"}
 	hf.SetCSRF(s.d.GenerateCSRFToken(r))

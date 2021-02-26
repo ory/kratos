@@ -4,6 +4,16 @@
   "title": "ORY Kratos Configuration",
   "type": "object",
   "definitions": {
+    "baseUrl": {
+      "title": "Base URL",
+      "description": "The URL where the endpoint is exposed at. This domain is used to generate redirects, form URLs, and more.",
+      "type": "string",
+      "format": "uri-reference",
+      "examples": [
+        "https://my-app.com/",
+        "https://my-app.com/.ory/kratos/public"
+      ]
+    },
     "defaultReturnTo": {
       "title": "Redirect browsers to set URL per default",
       "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
@@ -908,13 +918,55 @@
               }
             },
             "base_url": {
-              "title": "Public Base URL",
-              "description": "The URL where the public endpoint is exposed at.",
-              "type": "string",
-              "format": "uri-reference",
-              "examples": [
-                "https://my-app.com/.ory/kratos/public",
-                "/.ory/kratos/public/"
+              "$ref": "#/definitions/baseUrl"
+            },
+            "domain_aliases": {
+              "title": "Domain Aliases",
+              "description": "Adds an alias domain. If a request with the hostname (FQDN) matching the hostname in the alias is found, that URL is used as the base URL.",
+              "type": "array",
+              "items": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "match_domain",
+                    "base_path",
+                    "scheme"
+                  ],
+                  "properties": {
+                    "match_domain": {
+                      "minLength": 1,
+                      "title": "Matching Domain",
+                      "description": "Sets the matching domain. If the domain matches with this entry, the accompanying base_url will be used.",
+                      "type": "string",
+                      "examples": [
+                        "localhost",
+                        "my-domain.com"
+                      ]
+                    },
+                    "scheme": {
+                      "title": "Scheme",
+                      "description": "Sets the scheme, for example https or http.",
+                      "type": "string",
+                      "enum": [
+                        "http",
+                        "https"
+                      ]
+                    },
+                    "base_path": {
+                      "minLength": 1,
+                      "title": "Base Path",
+                      "description": "Sets the base path for the matched domain.",
+                      "type": "string",
+                      "default": "/",
+                      "pattern": "^/.*$",
+                      "examples": [
+                        "/",
+                        "/.ory/kratos"
+                      ]
+                    }
+                  }
+                }
               ]
             },
             "host": {
@@ -1422,6 +1474,47 @@
         "required": [
           "courier"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "session": {
+            "properties": {
+              "cookie": {
+                "properties": {
+                  "domain": {
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "domain"
+                ]
+              }
+            },
+            "required": [
+              "cookie"
+            ]
+          }
+        },
+        "required": [
+          "session"
+        ]
+      },
+      "then": {
+        "properties": {
+          "serve": {
+            "properties": {
+              "public": {
+                "properties": {
+                  "domain_aliases": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   ],

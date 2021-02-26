@@ -43,7 +43,7 @@ func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
 }
 
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, req *verification.Flow) error {
-	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteVerification)).String())
+	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteVerification)).String())
 
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.SetField(form.Field{Name: "email", Type: "email", Required: true})
@@ -347,6 +347,6 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 		return
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 		verification.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusFound)
 }
