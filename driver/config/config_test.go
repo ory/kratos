@@ -324,15 +324,24 @@ func TestProviderBaseURLs(t *testing.T) {
 	p.MustSet(ViperKeyPublicDomainAliases, []domainAlias{
 		{
 			MatchDomain: "www.google.com",
-			BaseURL:     "https://www.google.com/.ory/",
+			BasePath:    "/.ory/",
+			Scheme:      "https",
+		},
+		{
+			MatchDomain: "www.amazon.com",
+			BasePath:    "/",
+			Scheme:      "http",
 		},
 	})
 	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(&http.Request{
 		Host: "www.not-google.com",
 	}).String())
-	assert.Equal(t, "https://www.google.com/.ory/", p.SelfPublicURL(&http.Request{
-		Host: "www.GooGle.com",
+	assert.Equal(t, "https://www.GooGle.com:312/.ory/", p.SelfPublicURL(&http.Request{
+		Host: "www.GooGle.com:312",
+	}).String())
+	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
+		Host: "www.amazon.com",
 	}).String())
 }
 

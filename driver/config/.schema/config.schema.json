@@ -926,9 +926,16 @@
               "type": "array",
               "items": [
                 {
+                  "additionalProperties": false,
                   "type": "object",
+                  "required": [
+                    "match_domain",
+                    "base_path",
+                    "scheme"
+                  ],
                   "properties": {
                     "match_domain": {
+                      "minLength": 1,
                       "title": "Matching Domain",
                       "description": "Sets the matching domain. If the domain matches with this entry, the accompanying base_url will be used.",
                       "type": "string",
@@ -937,8 +944,26 @@
                         "my-domain.com"
                       ]
                     },
-                    "base_url": {
-                      "$ref": "#/definitions/baseUrl"
+                    "scheme": {
+                      "title": "Scheme",
+                      "description": "Sets the scheme, for example https or http.",
+                      "type": "string",
+                      "enum": [
+                        "http",
+                        "https"
+                      ]
+                    },
+                    "base_path": {
+                      "minLength": 1,
+                      "title": "Base Path",
+                      "description": "Sets the base path for the matched domain.",
+                      "type": "string",
+                      "default": "/",
+                      "pattern": "^/.*$",
+                      "examples": [
+                        "/",
+                        "/.ory/kratos"
+                      ]
                     }
                   }
                 }
@@ -1312,7 +1337,7 @@
         "cookie": {
           "type": "object",
           "properties": {
-            "domains": {
+            "domain": {
               "title": "Session Cookie Domain",
               "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care!",
               "type": "string"
@@ -1449,6 +1474,47 @@
         "required": [
           "courier"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "session": {
+            "properties": {
+              "cookie": {
+                "properties": {
+                  "domain": {
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "domain"
+                ]
+              }
+            },
+            "required": [
+              "cookie"
+            ]
+          }
+        },
+        "required": [
+          "session"
+        ]
+      },
+      "then": {
+        "properties": {
+          "serve": {
+            "properties": {
+              "public": {
+                "properties": {
+                  "domain_aliases": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   ],
