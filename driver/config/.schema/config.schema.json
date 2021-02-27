@@ -752,8 +752,8 @@
               "title": "SMTP Sender Address",
               "description": "The recipient of an email will see this as the sender address.",
               "type": "string",
-              "format": "email",
-              "default": "no-reply@ory.kratos.sh"
+              "format": "idn-email",
+              "default": "Kratos <no-reply@ory.kratos.sh>"
             }
           },
           "required": [
