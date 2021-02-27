@@ -834,13 +834,13 @@ serve:
   ## public ##
   #
   public:
-    ## Public Base URL ##
+    ## Base URL ##
     #
-    # The URL where the public endpoint is exposed at.
+    # The URL where the endpoint is exposed at. This domain is used to generate redirects, form URLs, and more.
     #
     # Examples:
+    # - https://my-app.com/
     # - https://my-app.com/.ory/kratos/public
-    # - /.ory/kratos/public/
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -848,7 +848,22 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_BASE_URL=<value>
     #
-    base_url: https://my-app.com/.ory/kratos/public
+    base_url: https://my-app.com/
+
+    ## Domain Aliases ##
+    #
+    # Adds an alias domain. If a request with the hostname (FQDN) matching the hostname in the alias is found, that URL is used as the base URL.
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SERVE_PUBLIC_DOMAIN_ALIASES=<value>
+    # - Windows Command Line (CMD):
+    #    > set SERVE_PUBLIC_DOMAIN_ALIASES=<value>
+    #
+    domain_aliases:
+      - match_domain: localhost
+        base_path: /
+        scheme: http
 
     ## Public Host ##
     #
@@ -1374,6 +1389,20 @@ session:
   ## cookie ##
   #
   cookie:
+    ## Session Cookie Name ##
+    #
+    # Sets the session cookie name. Use with care!
+    #
+    # Default value: ory_kratos_session
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SESSION_COOKIE_NAME=<value>
+    # - Windows Command Line (CMD):
+    #    > set SESSION_COOKIE_NAME=<value>
+    #
+    name: ''
+
     ## Make Session Cookie Persistent ##
     #
     # If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4).
