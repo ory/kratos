@@ -12,7 +12,7 @@ func TestRandomDelay(t *testing.T) {
 	deviation := time.Millisecond * 5
 	start := time.Now()
 	RandomDelay(base, deviation)
-	delay := time.Now().Sub(start)
+	delay := time.Since(start)
 	require.LessOrEqual(t, delay, base+deviation)
 	require.GreaterOrEqual(t, delay, base-deviation)
 }
