@@ -7,8 +7,6 @@ build
 # Generated files
 .docusaurus
 .cache-loader
-src/theme/faq.module.gen.css
-docs/faq.mdx
 
 # Misc
 .DS_Store
