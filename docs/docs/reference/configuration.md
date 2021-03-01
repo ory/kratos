@@ -1593,6 +1593,21 @@ courier:
     #
     connection_uri: smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false
 
+    ## SMTP Sender Name ##
+    #
+    # The recipient of an email will see this as the sender name.
+    #
+    # Examples:
+    # - Bob
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export COURIER_SMTP_FROM_NAME=<value>
+    # - Windows Command Line (CMD):
+    #    > set COURIER_SMTP_FROM_NAME=<value>
+    #
+    from_name: Bob
+
     ## SMTP Sender Address ##
     #
     # The recipient of an email will see this as the sender address.

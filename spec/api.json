@@ -1713,7 +1713,7 @@
       }
     },
     "ContainerWaitOKBodyError": {
-      "description": "ContainerWaitOKBodyError container waiting error, if any",
+      "description": "ContainerWaitOKBodyError ContainerWaitOKBodyError container waiting error, if any",
       "type": "object",
       "properties": {
         "Message": {
@@ -1843,7 +1843,7 @@
     },
     "PluginConfig": {
       "type": "object",
-      "title": "PluginConfig The config of a plugin.",
+      "title": "PluginConfig PluginConfig The config of a plugin.",
       "required": [
         "Args",
         "Description",
@@ -1930,7 +1930,7 @@
       }
     },
     "PluginConfigArgs": {
-      "description": "PluginConfigArgs plugin config args",
+      "description": "PluginConfigArgs PluginConfigArgs plugin config args",
       "type": "object",
       "required": [
         "Description",
@@ -1964,7 +1964,7 @@
       }
     },
     "PluginConfigInterface": {
-      "description": "PluginConfigInterface PluginConfigInterface The interface between Docker and the plugin",
+      "description": "PluginConfigInterface The interface between Docker and the plugin",
       "type": "object",
       "required": [
         "Socket",
@@ -2060,7 +2060,7 @@
       }
     },
     "PluginDevice": {
-      "description": "PluginDevice plugin device",
+      "description": "PluginDevice PluginDevice plugin device",
       "type": "object",
       "required": [
         "Description",
@@ -2122,7 +2122,7 @@
       }
     },
     "PluginInterfaceType": {
-      "description": "PluginInterfaceType PluginInterfaceType plugin interface type",
+      "description": "PluginInterfaceType plugin interface type",
       "type": "object",
       "required": [
         "Capability",
@@ -2145,7 +2145,7 @@
       }
     },
     "PluginMount": {
-      "description": "PluginMount PluginMount plugin mount",
+      "description": "PluginMount plugin mount",
       "type": "object",
       "required": [
         "Description",
@@ -2331,7 +2331,7 @@
       "type": "string"
     },
     "VolumeUsageData": {
-      "description": "VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
+      "description": "VolumeUsageData VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
       "type": "object",
       "required": [
         "RefCount",
@@ -2379,10 +2379,11 @@
       }
     },
     "errorContainer": {
+      "description": "ErrorContainer error container",
       "type": "object",
       "required": [
-        "errors",
-        "id"
+        "id",
+        "errors"
       ],
       "properties": {
         "errors": {
@@ -2441,7 +2442,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "Error response",
+      "title": "GenericError Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -2500,7 +2501,6 @@
       }
     },
     "healthStatus": {
-      "description": "HealthStatus HealthStatus health status",
       "type": "object",
       "properties": {
         "status": {
@@ -2628,13 +2628,13 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "RecoveryFlow A Recovery Flow",
+      "title": "A Recovery Flow",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
         "methods",
+        "request_url",
         "state"
       ],
       "properties": {
@@ -2678,10 +2678,11 @@
       }
     },
     "recoveryFlowMethod": {
+      "description": "RecoveryFlowMethod RecoveryFlowMethod recovery flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2799,12 +2800,11 @@
       }
     },
     "registrationFlowMethodConfig": {
-      "description": "RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2831,11 +2831,11 @@
       }
     },
     "registrationViaApiResponse": {
-      "description": "The Response for Registration Flows via API",
+      "description": "RegistrationViaAPIResponse The Response for Registration Flows via API",
       "type": "object",
       "required": [
-        "identity",
-        "session_token"
+        "session_token",
+        "identity"
       ],
       "properties": {
         "identity": {
@@ -2958,10 +2958,11 @@
       }
     },
     "settingsFlowMethod": {
+      "description": "SettingsFlowMethod settings flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2999,7 +3000,7 @@
       }
     },
     "settingsViaApiResponse": {
-      "description": "The Response for Settings Flows via API",
+      "description": "SettingsViaAPIResponse SettingsViaAPIResponse The Response for Settings Flows via API",
       "type": "object",
       "required": [
         "flow",
@@ -3063,11 +3064,10 @@
       }
     },
     "verificationFlowMethod": {
-      "description": "VerificationFlowMethod verification flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -3080,12 +3080,11 @@
       }
     },
     "verificationFlowMethodConfig": {
-      "description": "VerificationFlowMethodConfig VerificationFlowMethodConfig VerificationFlowMethodConfig verification flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
