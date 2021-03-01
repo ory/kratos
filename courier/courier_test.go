@@ -72,6 +72,16 @@ func TestSMTP(t *testing.T) {
 		}))
 		require.NoError(t, err)
 		require.NotEqual(t, uuid.Nil, id)
+
+    // The third email contains a sender name
+    conf.MustSet(config.ViperKeyCourierSMTPFromName, "Bob")
+		id, err = c.QueueEmail(context.Background(), templates.NewTestStub(conf, &templates.TestStubModel{
+			To:      "test-recipient-3@example.org",
+			Subject: "test-subject-3",
+			Body:    "test-body-3",
+		}))
+		require.NoError(t, err)
+		require.NotEqual(t, uuid.Nil, id)
 	})
 
 	t.Run("case=check for delivery", func(t *testing.T) {
@@ -95,8 +105,8 @@ func TestSMTP(t *testing.T) {
 					return errors.Errorf("expected status code 200 but got %d with body: %s", res.StatusCode, body)
 				}
 
-				if total := gjson.GetBytes(body, "total").Int(); total != 2 {
-					return errors.Errorf("expected to have delivered at least 2 messages but got count %d with body: %s", total, body)
+				if total := gjson.GetBytes(body, "total").Int(); total != 3 {
+					return errors.Errorf("expected to have delivered at least 3 messages but got count %d with body: %s", total, body)
 				}
 
 				return nil
@@ -107,11 +117,14 @@ func TestSMTP(t *testing.T) {
 		}
 		require.NoError(t, err)
 
-		for k := 1; k <= 2; k++ {
+		for k := 1; k <= 3; k++ {
 			assert.Contains(t, string(body), fmt.Sprintf("test-subject-%d", k))
 			assert.Contains(t, string(body), fmt.Sprintf("test-body-%d", k))
 			assert.Contains(t, string(body), fmt.Sprintf("test-recipient-%d@example.org", k))
 			assert.Contains(t, string(body), "test-stub@ory.sh")
 		}
+
+    // Assertion for the third email with sender name
+    assert.Contains(t, string(body), "Bob")
 	})
 }
