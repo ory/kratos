@@ -754,6 +754,12 @@
               "type": "string",
               "format": "email",
               "default": "no-reply@ory.kratos.sh"
+            },
+            "from_name": {
+              "title": "SMTP Sender Name",
+              "description": "The recipient of an email will see this as the sender name.",
+              "type": "string",
+              "examples": ["Bob"]
             }
           },
           "required": [

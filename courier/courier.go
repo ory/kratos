@@ -140,8 +140,13 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 		switch msg.Type {
 		case MessageTypeEmail:
 			from := m.d.Config(ctx).CourierSMTPFrom()
+			fromName := m.d.Config(ctx).CourierSMTPFromName()
 			gm := gomail.NewMessage()
-			gm.SetHeader("From", from)
+			if fromName == "" {
+				gm.SetHeader("From", from)
+			} else {
+				gm.SetAddressHeader("From", from, fromName)
+			}
 			gm.SetHeader("To", msg.Recipient)
 			gm.SetHeader("Subject", msg.Subject)
 			gm.SetBody("text/plain", msg.Body)

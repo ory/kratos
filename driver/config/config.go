@@ -39,6 +39,7 @@ const (
 	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
 	ViperKeyCourierTemplatesPath                                    = "courier.template_override_path"
 	ViperKeyCourierSMTPFrom                                         = "courier.smtp.from_address"
+	ViperKeyCourierSMTPFromName                                     = "courier.smtp.from_name"
 	ViperKeySecretsDefault                                          = "secrets.default"
 	ViperKeySecretsCookie                                           = "secrets.cookie"
 	ViperKeyPublicBaseURL                                           = "serve.public.base_url"
@@ -594,6 +595,10 @@ func (p *Config) SelfServiceFlowLogoutRedirectURL() *url.URL {
 
 func (p *Config) CourierSMTPFrom() string {
 	return p.p.StringF(ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
+}
+
+func (p *Config) CourierSMTPFromName() string {
+	return p.p.StringF(ViperKeyCourierSMTPFromName, "")
 }
 
 func (p *Config) CourierTemplatesRoot() string {
