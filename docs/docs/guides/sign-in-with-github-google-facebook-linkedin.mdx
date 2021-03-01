@@ -668,6 +668,8 @@ local claims = {
   identity: {
     traits: {
       [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+      // additional claims
+      // please also see the `Google specific claims` section
       first_name: claims.given_name,
       last_name: claims.family_name,
       [if "hd" in claims && claims.email_verified then "hd" else null]: claims.hd,
@@ -707,6 +709,17 @@ selfservice:
                 family_name: null
                 hd: null # If you want the G Suite domain
 ```
+
+**Google specific claims**
+
+- `hd`: The hosted G Suite domain of the user. Provided only if the user belongs
+  to a hosted domain. For a given email account with custom domain
+  `example.com` - `user1@example.com` would produce `example.com` in the `hd`
+  claim.
+
+Please look at the Google developer documentation which can be found
+[here](https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload)
+.
 
 ## LinkedIn
 
