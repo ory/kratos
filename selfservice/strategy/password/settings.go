@@ -6,11 +6,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -143,7 +140,7 @@ func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps
 }
 
 func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
-	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/password/.schema/settings.schema.json")))
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(settingsSchema)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -213,7 +210,7 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
-	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
+	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {f.ID.String()}}).String(), Fields: form.Fields{{Name: "password",
 		Type: "password", Required: true}}, Method: "POST"}
 	hf.SetCSRF(s.d.GenerateCSRFToken(r))

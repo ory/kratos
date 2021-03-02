@@ -1,0 +1,15 @@
+serve:
+  public:
+    base_url: "#/definitions/baseUrl"
+    domain_aliases:
+      - match_domain: foobar
+        base_path: /
+        scheme: https
+
+selfservice:
+  default_browser_return_url: "#/definitions/defaultReturnTo"
+
+dsn: foo
+
+identity:
+  default_schema_url: https://example.com

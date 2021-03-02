@@ -71,8 +71,8 @@ traits:
 
 Identities are
 
-- `created` - via API or self-service registration);
-- `updated` - via API or self-service settings, account recovery, ...;
+- `created` - via API or self-service registration;
+- `updated` - via API or self-service settings, account recovery, etc.;
 - `disabled` - not yet implemented, see
   [#598](https://github.com/ory/kratos/issues/598);
 - `deleted` - via API or with a self-service flow (not yet implemented see

@@ -5,10 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -80,7 +77,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
-	raw, err := sjson.SetBytes(pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/password/.schema/registration.schema.json")),
+	raw, err := sjson.SetBytes(registrationSchema,
 		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
@@ -230,7 +227,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
-	action := sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRegistration))
+	action := sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteRegistration))
 
 	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {

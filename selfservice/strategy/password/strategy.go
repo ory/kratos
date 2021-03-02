@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
-	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/ory/x/decoderx"
 

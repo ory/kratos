@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,7 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/markbates/pkger"
+	"github.com/ory/x/stringsx"
+
 	"github.com/rs/cors"
 	"github.com/tidwall/gjson"
 
@@ -38,9 +39,11 @@ const (
 	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
 	ViperKeyCourierTemplatesPath                                    = "courier.template_override_path"
 	ViperKeyCourierSMTPFrom                                         = "courier.smtp.from_address"
+	ViperKeyCourierSMTPFromName                                     = "courier.smtp.from_name"
 	ViperKeySecretsDefault                                          = "secrets.default"
 	ViperKeySecretsCookie                                           = "secrets.cookie"
 	ViperKeyPublicBaseURL                                           = "serve.public.base_url"
+	ViperKeyPublicDomainAliases                                     = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                              = "serve.public.port"
 	ViperKeyPublicHost                                              = "serve.public.host"
 	ViperKeyAdminBaseURL                                            = "serve.admin.base_url"
@@ -49,6 +52,7 @@ const (
 	ViperKeySessionLifespan                                         = "session.lifespan"
 	ViperKeySessionSameSite                                         = "session.cookie.same_site"
 	ViperKeySessionDomain                                           = "session.cookie.domain"
+	ViperKeySessionName                                             = "session.cookie.name"
 	ViperKeySessionPath                                             = "session.cookie.path"
 	ViperKeySessionPersistentCookie                                 = "session.cookie.persistent"
 	ViperKeySelfServiceStrategyConfig                               = "selfservice.methods"
@@ -91,6 +95,9 @@ const (
 	Argon2DefaultSaltLength                                  uint32 = 16
 	Argon2DefaultKeyLength                                   uint32 = 32
 )
+
+// DefaultSessionCookieName returns the default cookie name for the kratos session.
+const DefaultSessionCookieName = "ory_kratos_session"
 
 type (
 	Argon2 struct {
@@ -152,16 +159,6 @@ func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 }
 
 func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
-	f, err := pkger.Open("github.com/ory/kratos:/.schema/config.schema.json")
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to open config.schema.json")
-	}
-
-	schema, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read config.schema.json")
-	}
-
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
@@ -169,7 +166,7 @@ func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 		configx.WithLogrusWatcher(l),
 	}, opts...)
 
-	p, err := configx.New(schema, opts...)
+	p, err := configx.New(ValidationSchema, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -214,6 +211,10 @@ func (p *Config) MustSet(key string, value interface{}) {
 
 func (p *Config) SessionDomain() string {
 	return p.p.String(ViperKeySessionDomain)
+}
+
+func (p *Config) SessionName() string {
+	return stringsx.Coalesce(p.p.String(ViperKeySessionName), DefaultSessionCookieName)
 }
 
 func (p *Config) SessionPath() string {
@@ -478,8 +479,46 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 	return p.guessBaseURL(keyHost, keyPort, defaultPort)
 }
 
-func (p *Config) SelfPublicURL() *url.URL {
-	return p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
+type domainAlias struct {
+	BasePath    string `json:"base_path"`
+	Scheme      string `json:"scheme"`
+	MatchDomain string `json:"match_domain"`
+}
+
+func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
+	primary := p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
+	if r == nil {
+		return primary
+	}
+
+	out, err := p.p.Marshal(kjson.Parser())
+	if err != nil {
+		p.l.WithError(err).Errorf("Unable to marshal configuration.")
+		return primary
+	}
+
+	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
+
+	var aliases []domainAlias
+	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
+		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
+		return primary
+	}
+
+	for _, a := range aliases {
+		hostname, _, _ := net.SplitHostPort(r.Host)
+		if strings.EqualFold(a.MatchDomain, hostname) || strings.EqualFold(a.MatchDomain, r.Host) {
+			parsed := &url.URL{
+				Scheme: a.Scheme,
+				Host:   r.Host,
+				Path:   a.BasePath,
+			}
+
+			return parsed
+		}
+	}
+
+	return primary
 }
 
 func (p *Config) SelfAdminURL() *url.URL {
@@ -558,8 +597,12 @@ func (p *Config) CourierSMTPFrom() string {
 	return p.p.StringF(ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
 }
 
+func (p *Config) CourierSMTPFromName() string {
+	return p.p.StringF(ViperKeyCourierSMTPFromName, "")
+}
+
 func (p *Config) CourierTemplatesRoot() string {
-	return p.p.StringF(ViperKeyCourierTemplatesPath, "/courier/template/templates")
+	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
 }
 
 func splitUrlAndFragment(s string) (string, string) {

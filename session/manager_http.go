@@ -25,15 +25,17 @@ type (
 		PersistenceProvider
 	}
 	ManagerHTTP struct {
-		cookieName string
+		cookieName func(ctx context.Context) string
 		r          managerHTTPDependencies
 	}
 )
 
 func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 	return &ManagerHTTP{
-		r:          r,
-		cookieName: DefaultSessionCookieName,
+		r: r,
+		cookieName: func(ctx context.Context) string {
+			return r.Config(ctx).SessionName()
+		},
 	}
 }
 
@@ -50,9 +52,14 @@ func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseW
 }
 
 func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
-	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName)
-	if s.r.Config(ctx).SessionDomain() != "" {
-		cookie.Options.Domain = s.r.Config(ctx).SessionDomain()
+	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName(ctx))
+
+	if domain := s.r.Config(ctx).SessionDomain(); domain != "" {
+		cookie.Options.Domain = domain
+	} else if alias := s.r.Config(ctx).SelfPublicURL(r); s.r.Config(ctx).SelfPublicURL(nil).String() != alias.String() {
+		// If a domain alias is detected use that instead.
+		cookie.Options.Domain = alias.Hostname()
+		cookie.Options.Path = alias.Path
 	}
 
 	old, err := s.FetchFromRequest(ctx, r)
@@ -93,7 +100,7 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 		return token
 	}
 
-	cookie, err := s.r.CookieManager(r.Context()).Get(r, s.cookieName)
+	cookie, err := s.r.CookieManager(r.Context()).Get(r, s.cookieName(r.Context()))
 	if err != nil {
 		return ""
 	}
@@ -133,7 +140,7 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 		return errors.WithStack(s.r.SessionPersister().RevokeSessionByToken(ctx, token))
 	}
 
-	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName)
+	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName(ctx))
 	token, ok := cookie.Values["session_token"].(string)
 	if !ok {
 		return nil

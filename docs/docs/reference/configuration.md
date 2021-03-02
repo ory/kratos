@@ -834,13 +834,13 @@ serve:
   ## public ##
   #
   public:
-    ## Public Base URL ##
+    ## Base URL ##
     #
-    # The URL where the public endpoint is exposed at.
+    # The URL where the endpoint is exposed at. This domain is used to generate redirects, form URLs, and more.
     #
     # Examples:
+    # - https://my-app.com/
     # - https://my-app.com/.ory/kratos/public
-    # - /.ory/kratos/public/
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -848,7 +848,22 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_BASE_URL=<value>
     #
-    base_url: https://my-app.com/.ory/kratos/public
+    base_url: https://my-app.com/
+
+    ## Domain Aliases ##
+    #
+    # Adds an alias domain. If a request with the hostname (FQDN) matching the hostname in the alias is found, that URL is used as the base URL.
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SERVE_PUBLIC_DOMAIN_ALIASES=<value>
+    # - Windows Command Line (CMD):
+    #    > set SERVE_PUBLIC_DOMAIN_ALIASES=<value>
+    #
+    domain_aliases:
+      - match_domain: localhost
+        base_path: /
+        scheme: http
 
     ## Public Host ##
     #
@@ -1217,7 +1232,9 @@ tracing:
   #
   provider: jaeger
 
-## log ##
+## Log ##
+#
+# Configure logging using the following options. Logging will always be sent to stdout and stderr.
 #
 log:
   ## Leak Sensitive Log Values ##
@@ -1234,6 +1251,8 @@ log:
 
   ## format ##
   #
+  # The log format can either be text or JSON.
+  #
   # One of:
   # - json
   # - text
@@ -1247,6 +1266,10 @@ log:
   format: json
 
   ## level ##
+  #
+  # Debug enables stack traces on errors. Can also be set using environment variable LOG_LEVEL.
+  #
+  # Default value: info
   #
   # One of:
   # - trace
@@ -1366,6 +1389,20 @@ session:
   ## cookie ##
   #
   cookie:
+    ## Session Cookie Name ##
+    #
+    # Sets the session cookie name. Use with care!
+    #
+    # Default value: ory_kratos_session
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SESSION_COOKIE_NAME=<value>
+    # - Windows Command Line (CMD):
+    #    > set SESSION_COOKIE_NAME=<value>
+    #
+    name: ''
+
     ## Make Session Cookie Persistent ##
     #
     # If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4).
@@ -1555,6 +1592,21 @@ courier:
     #    > set COURIER_SMTP_CONNECTION_URI=<value>
     #
     connection_uri: smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false
+
+    ## SMTP Sender Name ##
+    #
+    # The recipient of an email will see this as the sender name.
+    #
+    # Examples:
+    # - Bob
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export COURIER_SMTP_FROM_NAME=<value>
+    # - Windows Command Line (CMD):
+    #    > set COURIER_SMTP_FROM_NAME=<value>
+    #
+    from_name: Bob
 
     ## SMTP Sender Address ##
     #

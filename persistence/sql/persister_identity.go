@@ -399,6 +399,6 @@ func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Ident
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
-	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL()).String()
+	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL(nil)).String()
 	return nil
 }

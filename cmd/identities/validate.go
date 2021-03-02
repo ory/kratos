@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ory/kratos/spec"
+
 	"github.com/ory/x/jsonschemax"
 
 	"github.com/ory/x/cmdx"
 
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
@@ -49,7 +50,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 
 var schemas = make(map[string]*jsonschema.Schema)
 
-const createIdentityPath = "api.swagger.json#/definitions/CreateIdentity"
+const createIdentityPath = "api.json#/definitions/CreateIdentity"
 
 type schemaGetter = func(params *public.GetSchemaParams, opts ...public.ClientOption) (*public.GetSchemaOK, error)
 
@@ -59,15 +60,9 @@ type schemaGetter = func(params *public.GetSchemaParams, opts ...public.ClientOp
 func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaGetter) error {
 	swaggerSchema, ok := schemas[createIdentityPath]
 	if !ok {
-		// get swagger schema
-		sf, err := pkger.Open("github.com/ory/kratos:/.schema/api.swagger.json")
-		if err != nil {
-			return errors.Wrap(err, "Could not open swagger schema. This is an error with the binary you use and should be reported. Thanks ;)")
-		}
-
 		// add swagger schema
 		schemaCompiler := jsonschema.NewCompiler()
-		err = schemaCompiler.AddResource("api.swagger.json", sf)
+		err := schemaCompiler.AddResource("api.json", bytes.NewReader(spec.API))
 		if err != nil {
 			return errors.Wrap(err, "Could not add swagger schema to the schema compiler. This is an error with the binary you use and should be reported. Thanks ;)")
 		}

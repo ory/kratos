@@ -38,7 +38,6 @@ func StartCourier(ctx cx.Context, r driver.Registry) {
 }
 
 func ServeMetrics(ctx cx.Context, r driver.Registry) {
-
 	c := r.Config(ctx)
 	l := r.Logger()
 	n := negroni.New()
@@ -46,7 +45,7 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 	router := x.NewRouterAdmin()
 
 	r.MetricsHandler().SetRoutes(router.Router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
 	n.Use(r.PrometheusManager())
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
