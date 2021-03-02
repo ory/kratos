@@ -30,16 +30,16 @@ ORY Kratos 是当今世界上有且仅有的一个支持云原生的身份认证
 
 **内容目录：**
 
-- [为什么是 ORY Kratos？](#为什么是-ORY-Kratos？)
-- [谁正在使用 ORY Kratos？](#谁正在使用-ORY-Kratos？)
+- [为什么是 ORY Kratos？](#为什么是-ory-kratos)
+- [谁正在使用 ORY Kratos？](#谁正在使用-ory-kratos)
 - [千里之行 始于足下](#千里之行-始于足下)
   - [快速开始](#快速开始)
   - [安装指南](#安装指南)
-- [ORY Kratos的生态](#ORY-Kratos的生态)
-  - [ORY Kratos：身份认证和用户管理系统](#ORY-Kratos：身份认证和用户管理系统)
-  - [ORY Hydra：OAuth2 和 OpenID 联接的服务端](#ORY-Hydra：OAuth2-和-OpenID-联接的服务端)
-  - [ORY OAuthkeeper：认证和接入代理](#ORY0OAuthkeeper：认证和接入代理)
-  - [ORY Keto：将接入控制策略作为服务](#ORY-Keto：将接入控制策略作为服务)
+- [ORY Kratos的生态](#ory-kratos的生态)
+  - [ORY Kratos：身份认证和用户管理系统](#ory-kratos身份认证和用户管理系统)
+  - [ORY Hydra：OAuth2 和 OpenID 联接的服务端](#ory-hydraoauth2-和-openid-联接的服务端)
+  - [ORY OAuthkeeper：认证和接入代理](#ory-oauthkeeper认证和接入代理)
+  - [ORY Keto：将接入控制策略作为服务](#ory-keto将接入控制策略作为服务)
 - [安全](#安全)
   - [揭露漏洞](#揭露漏洞)
 - [匿名数据](#匿名数据)
@@ -56,7 +56,7 @@ ORY Kratos 是当今世界上有且仅有的一个支持云原生的身份认证
       - [简短测试](#简短测试)
       - [常规测试](#常规测试)
       - [端到端测试](#端到端测试)
-    - [构建Docker](#构建Docker)
+    - [构建Docker](#构建docker)
     - [文档测试](#文档测试)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -207,7 +207,7 @@ TheCrealm。
 **[ORY Kratos快速入门](https://www.ory.sh/kratos/docs/quickstart)** 将教您ORY Kratos的基础知识，
 并在不到五分钟的时间内建立一个基于 Docker Compose 的示例。
 
-### 安装
+### 安装指南
 
 请阅读 [ORY 开发人员文档](https://www.ory.sh/kratos/docs/install) ，以了解如何在 Linux，macOS，
 Windows 和 Docker上安装ORY Kratos，以及如何从源代码构建 ORY Kratos。
