@@ -226,7 +226,10 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
-		var check = func(t *testing.T, body string) {
+		var check = func(t *testing.T, body string, start time.Time) {
+			delay := time.Since(start)
+			minConfiguredDelay := conf.HasherArgon2().ExpectedDuration - conf.HasherArgon2().ExpectedDeviation
+			assert.GreaterOrEqual(t, delay, minConfiguredDelay)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.Get(body, "methods.password.config.action").String(), publicTS.URL+password.RouteLogin, "%s", body)
 			assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.Get(body, "methods.password.config.messages.0.text").String())
@@ -238,11 +241,13 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, false, values))
+			start := time.Now()
+			check(t, expectValidationError(t, false, false, values), start)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, false, values))
+			start := time.Now()
+			check(t, expectValidationError(t, true, false, values), start)
 		})
 	})
 
