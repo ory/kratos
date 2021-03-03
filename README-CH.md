@@ -14,6 +14,7 @@
 <a href="./README.md">English README</a>
 </h4>
 
+> **注意⚠️：为了便于沟通，开发者们在参与 ORY Kratos 项目中使用到的邮件和 issues 等，依然使用英文作为主要沟通语言。**
 ---
 
 <p align="left">
