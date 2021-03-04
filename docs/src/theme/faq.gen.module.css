@@ -1,4 +1,3 @@
-
 .selected {
   background-color: #ffba00;
 }
@@ -8,118 +7,105 @@ div.question {
 }
 
 li.selected.kratos {
-    color:red;
+  color: red;
 }
 
-li.selected.kratos~.question.kratos {
-    display: inline;
-
+li.selected.kratos ~ .question.kratos {
+  display: inline;
 }
 
 li.selected.database {
-    color:red;
+  color: red;
 }
 
-li.selected.database~.question.database {
-    display: inline;
-
+li.selected.database ~ .question.database {
+  display: inline;
 }
 
 li.selected.user {
-    color:red;
+  color: red;
 }
 
-li.selected.user~.question.user {
-    display: inline;
-
+li.selected.user ~ .question.user {
+  display: inline;
 }
 
 li.selected.validation {
-    color:red;
+  color: red;
 }
 
-li.selected.validation~.question.validation {
-    display: inline;
-
+li.selected.validation ~ .question.validation {
+  display: inline;
 }
 
 li.selected.traits {
-    color:red;
+  color: red;
 }
 
-li.selected.traits~.question.traits {
-    display: inline;
-
+li.selected.traits ~ .question.traits {
+  display: inline;
 }
 
 li.selected.KYC {
-    color:red;
+  color: red;
 }
 
-li.selected.KYC~.question.KYC {
-    display: inline;
-
+li.selected.KYC ~ .question.KYC {
+  display: inline;
 }
 
 li.selected.hooks {
-    color:red;
+  color: red;
 }
 
-li.selected.hooks~.question.hooks {
-    display: inline;
-
+li.selected.hooks ~ .question.hooks {
+  display: inline;
 }
 
 li.selected.registration {
-    color:red;
+  color: red;
 }
 
-li.selected.registration~.question.registration {
-    display: inline;
-
+li.selected.registration ~ .question.registration {
+  display: inline;
 }
 
 li.selected.migration {
-    color:red;
+  color: red;
 }
 
-li.selected.migration~.question.migration {
-    display: inline;
-
+li.selected.migration ~ .question.migration {
+  display: inline;
 }
 
 li.selected.security {
-    color:red;
+  color: red;
 }
 
-li.selected.security~.question.security {
-    display: inline;
-
+li.selected.security ~ .question.security {
+  display: inline;
 }
 
 li.selected.attack {
-    color:red;
+  color: red;
 }
 
-li.selected.attack~.question.attack {
-    display: inline;
-
+li.selected.attack ~ .question.attack {
+  display: inline;
 }
 
 li.selected.oidc {
-    color:red;
+  color: red;
 }
 
-li.selected.oidc~.question.oidc {
-    display: inline;
-
+li.selected.oidc ~ .question.oidc {
+  display: inline;
 }
 
 li.selected.spa {
-    color:red;
+  color: red;
 }
 
-li.selected.spa~.question.spa {
-    display: inline;
-
+li.selected.spa ~ .question.spa {
+  display: inline;
 }
