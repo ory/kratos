@@ -7,24 +7,25 @@ const path = require('path')
 const yamlPath = path.resolve('./docs/faq.yaml')
 const prettier = require('prettier')
 const prettierStyles = require('ory-prettier-styles')
+const config = require('../contrib/config.js')
 
 // Generating FAQ.mdx
 
 if (!fs.existsSync(yamlPath)) {
   //file exists
-  console.warn('.yaml File does not exists, skipping generating FAQ')
+  console.warn('faq.yaml File does not exists, skipping generating FAQ')
   return 0
 }
 
-let faqYaml = fs.readFileSync(yamlPath, 'utf8')
-let faq = yaml.load(faqYaml)
+const faqYaml = fs.readFileSync(yamlPath, 'utf8')
+const faq = yaml.load(faqYaml)
 
 const tags = Array.from(new Set(faq.map(({ tags }) => tags).flat(1)))
 
 // which project are we running in?
-const project = process.env.CIRCLE_PROJECT_REPONAME
+const project = config.projectSlug
 
-let data = `---
+let markdownPage = `---
 id: faq
 title: Frequently Asked Questions (FAQ)
 ---
@@ -32,37 +33,41 @@ title: Frequently Asked Questions (FAQ)
 
 
 
-import {Question, Faq} from '@theme/Faq'
+import {Question, FaqTags} from '@theme/Faq'
 
-<Faq tags={${JSON.stringify(tags)}} switchofftags="${project}"/>
+<FaqTags tags={${JSON.stringify(tags)}} initiallyDisabled={[${JSON.stringify(
+  project
+)}]}/>
 <br/><br/>
 
 `
 md = new Remarkable()
 faq.forEach((el) => {
-  react_tags = el.tags.map((tag) => {
-    return tag + '_src-theme-'
-  })
-  data += `<Question tags="question_src-theme- ${react_tags.join(' ')}">\n`
-  data += `    ${el.tags
+  markdownPage += `<Question tags={${JSON.stringify(el.tags)}}>\n`
+  markdownPage += `${el.tags
     .map((tag) => {
       return '#' + tag
     })
-    .join(' ')} <br/>\n`
-  data += '    ' + md.render(`**Q**: ${el.q}`)
-  data += '    ' + md.render(`**A**: ${el.a}\n`)
+    .join(' ')}
+`
+  markdownPage += md.render(`**Q**: ${el.q}`)
+  markdownPage += md.render(`**A**: ${el.a}`)
   if (el.context) {
-    data += '    ' + md.render(`context: ${el.context}\n`)
+    markdownPage += md.render(`context: ${el.context}`)
   }
-  data += `</Question>\n\n<br/>`
-})
-// Unfortunatly this is a mix of html/markdown and prettier is either not
-// properly formatting html or mixing up the syntax (with the html parser)
+  markdownPage += `</Question>
 
-fs.writeFileSync(path.resolve('./docs/docs/faq.mdx'), data)
+<br/>
+`
+})
+
+fs.writeFileSync(
+  path.resolve('./docs/docs/faq.mdx'),
+  prettier.format(markdownPage, { ...prettierStyles, parser: 'mdx' })
+)
 
 // Generating faq.module.css
-const taglist = Array.from(
+const tagList = Array.from(
   new Set(
     faq
       .map((el) => {
@@ -71,19 +76,30 @@ const taglist = Array.from(
       .flat(1)
   )
 )
-let css_file = ``
 
-taglist.forEach((tag) => {
-  css_file += `
+let generatedCSS = `
+.selected {
+  background-color: #ffba00;
+}
+
+div.question {
+  display: none;
+}
+`
+
+tagList.forEach((tag) => {
+  generatedCSS += `
 li.selected.${tag} {
     color:red;
 }
 
 li.selected.${tag}~.question.${tag} {
     display: inline;
-    
 }
 `
 })
 
-fs.writeFileSync('./docs/src/theme/faq.module.gen.css', css_file)
+fs.writeFileSync(
+  './docs/src/theme/faq.gen.module.css',
+  prettier.format(generatedCSS, { ...prettierStyles, parser: 'css' })
+)
