@@ -137,6 +137,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.Ro
 	m.RegistrationHandler().RegisterPublicRoutes(router)
 	m.LogoutHandler().RegisterPublicRoutes(router)
 	m.SettingsHandler().RegisterPublicRoutes(router)
+	m.IdentityHandler().RegisterPublicRoutes(router)
 	m.AllLoginStrategies().RegisterPublicRoutes(router)
 	m.AllSettingsStrategies().RegisterPublicRoutes(router)
 	m.AllRegistrationStrategies().RegisterPublicRoutes(router)
