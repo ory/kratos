@@ -19,6 +19,7 @@ import (
 )
 
 const RouteBase = "/identities"
+const RouteMethod = "/method/:id"
 
 type (
 	handlerDependencies interface {
@@ -40,6 +41,13 @@ func NewHandler(r handlerDependencies) *Handler {
 	return &Handler{r: r}
 }
 
+func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
+		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
+		public.Handle(m, RouteMethod, h.method)
+	}
+}
+
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteBase, h.list)
 	admin.GET(RouteBase+"/:id", h.get)
@@ -47,6 +55,25 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 	admin.POST(RouteBase, h.create)
 	admin.PUT(RouteBase+"/:id", h.update)
+}
+
+type methodResponse struct {
+	Method string `json:"method"`
+}
+
+func (h *Handler) method(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	_, _, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), CredentialsTypePassword, ps.ByName("id"))
+	if err != nil {
+		_, _, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), CredentialsTypeOIDC, ps.ByName("id"))
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+		h.r.Writer().Write(w, r, &methodResponse{Method: CredentialsTypeOIDC.String()})
+	}
+
+	h.r.Writer().Write(w, r, &methodResponse{Method: CredentialsTypePassword.String()})
+
 }
 
 // A single identity.
