@@ -41,9 +41,10 @@ import {Question, Faq} from '@theme/Faq'
 md = new Remarkable()
 faq.forEach((el) => {
   react_tags = el.tags.map((tag) => {
-    return tag + '_src-theme-'
+    return tag
   })
-  data += `<Question tags="question_src-theme- ${react_tags.join(' ')}">\n`
+
+  data += `<Question tags={${JSON.stringify(react_tags)}}>\n`
   data += `    ${el.tags
     .map((tag) => {
       return '#' + tag
@@ -71,7 +72,15 @@ const taglist = Array.from(
       .flat(1)
   )
 )
-let css_file = ``
+let css_file = `
+.selected {
+  background-color: #ffba00;
+}
+
+div.question {
+  display: none;
+}
+`
 
 taglist.forEach((tag) => {
   css_file += `
@@ -81,9 +90,9 @@ li.selected.${tag} {
 
 li.selected.${tag}~.question.${tag} {
     display: inline;
-    
+
 }
 `
 })
 
-fs.writeFileSync('./docs/src/theme/faq.module.gen.css', css_file)
+fs.writeFileSync('./docs/src/theme/faq.gen.module.css', css_file)

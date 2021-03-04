@@ -71,13 +71,3 @@
 p {
   margin-bottom: 0px;
 }
-
-.selected {
-  background-color: #ffba00;
-}
-
-div.question {
-  display: none;
-}
-
-@import 'faq.module.gen.css';

@@ -1,3 +1,11 @@
+.selected {
+  background-color: #ffba00;
+}
+
+div.question {
+  display: none;
+}
+
 li.selected.kratos {
   color: red;
 }
