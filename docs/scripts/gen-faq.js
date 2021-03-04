@@ -40,11 +40,7 @@ import {Question, Faq} from '@theme/Faq'
 `
 md = new Remarkable()
 faq.forEach((el) => {
-  react_tags = el.tags.map((tag) => {
-    return tag
-  })
-
-  data += `<Question tags={${JSON.stringify(react_tags)}}>\n`
+  data += `<Question tags={${JSON.stringify(el.tags)}}>\n`
   data += `    ${el.tags
     .map((tag) => {
       return '#' + tag
