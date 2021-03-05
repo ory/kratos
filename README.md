@@ -251,7 +251,7 @@ design:
 - Scales without effort
 - Minimize room for human and network errors
 
-ORY's architecture designed to run best on a Container Orchestration Systems
+ORY's architecture is designed to run best on Container Orchestration Systems
 such as Kubernetes, CloudFoundry, OpenShift, and similar projects. Binaries are
 small (5-15MB) and available for all popular processor types (ARM, AMD64, i386)
 and operating systems (FreeBSD, Linux, macOS, Windows) without system
