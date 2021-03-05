@@ -8935,28 +8935,28 @@ _NullTime implements sql.NullTime functionality._
 }
 ```
 
-_PluginConfig PluginConfig The config of a plugin._
+_PluginConfig The config of a plugin._
 
 #### Properties
 
-| Name            | Type                                                  | Required | Restrictions | Description                                                       |
-| --------------- | ----------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------- |
-| Args            | [PluginConfigArgs](#schemapluginconfigargs)           | true     | none         | PluginConfigArgs PluginConfigArgs plugin config args              |
-| Description     | string                                                | true     | none         | description                                                       |
-| DockerVersion   | string                                                | false    | none         | Docker Version used to create the plugin                          |
-| Documentation   | string                                                | true     | none         | documentation                                                     |
-| Entrypoint      | [string]                                              | true     | none         | entrypoint                                                        |
-| Env             | [[PluginEnv](#schemapluginenv)]                       | true     | none         | env                                                               |
-| Interface       | [PluginConfigInterface](#schemapluginconfiginterface) | true     | none         | PluginConfigInterface The interface between Docker and the plugin |
-| IpcHost         | boolean                                               | true     | none         | ipc host                                                          |
-| Linux           | [PluginConfigLinux](#schemapluginconfiglinux)         | true     | none         | PluginConfigLinux plugin config linux                             |
-| Mounts          | [[PluginMount](#schemapluginmount)]                   | true     | none         | mounts                                                            |
-| Network         | [PluginConfigNetwork](#schemapluginconfignetwork)     | true     | none         | PluginConfigNetwork plugin config network                         |
-| PidHost         | boolean                                               | true     | none         | pid host                                                          |
-| PropagatedMount | string                                                | true     | none         | propagated mount                                                  |
-| User            | [PluginConfigUser](#schemapluginconfiguser)           | false    | none         | PluginConfigUser plugin config user                               |
-| WorkDir         | string                                                | true     | none         | work dir                                                          |
-| rootfs          | [PluginConfigRootfs](#schemapluginconfigrootfs)       | false    | none         | PluginConfigRootfs PluginConfigRootfs plugin config rootfs        |
+| Name            | Type                                                  | Required | Restrictions | Description                                                                             |
+| --------------- | ----------------------------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------- |
+| Args            | [PluginConfigArgs](#schemapluginconfigargs)           | true     | none         | PluginConfigArgs plugin config args                                                     |
+| Description     | string                                                | true     | none         | description                                                                             |
+| DockerVersion   | string                                                | false    | none         | Docker Version used to create the plugin                                                |
+| Documentation   | string                                                | true     | none         | documentation                                                                           |
+| Entrypoint      | [string]                                              | true     | none         | entrypoint                                                                              |
+| Env             | [[PluginEnv](#schemapluginenv)]                       | true     | none         | env                                                                                     |
+| Interface       | [PluginConfigInterface](#schemapluginconfiginterface) | true     | none         | PluginConfigInterface PluginConfigInterface The interface between Docker and the plugin |
+| IpcHost         | boolean                                               | true     | none         | ipc host                                                                                |
+| Linux           | [PluginConfigLinux](#schemapluginconfiglinux)         | true     | none         | PluginConfigLinux PluginConfigLinux plugin config linux                                 |
+| Mounts          | [[PluginMount](#schemapluginmount)]                   | true     | none         | mounts                                                                                  |
+| Network         | [PluginConfigNetwork](#schemapluginconfignetwork)     | true     | none         | PluginConfigNetwork plugin config network                                               |
+| PidHost         | boolean                                               | true     | none         | pid host                                                                                |
+| PropagatedMount | string                                                | true     | none         | propagated mount                                                                        |
+| User            | [PluginConfigUser](#schemapluginconfiguser)           | false    | none         | PluginConfigUser plugin config user                                                     |
+| WorkDir         | string                                                | true     | none         | work dir                                                                                |
+| rootfs          | [PluginConfigRootfs](#schemapluginconfigrootfs)       | false    | none         | PluginConfigRootfs PluginConfigRootfs plugin config rootfs                              |
 
 <a id="tocSpluginconfigargs"></a>
 
@@ -8973,7 +8973,7 @@ _PluginConfig PluginConfig The config of a plugin._
 }
 ```
 
-_PluginConfigArgs PluginConfigArgs plugin config args_
+_PluginConfigArgs plugin config args_
 
 #### Properties
 
@@ -9003,7 +9003,8 @@ _PluginConfigArgs PluginConfigArgs plugin config args_
 }
 ```
 
-_PluginConfigInterface The interface between Docker and the plugin_
+_PluginConfigInterface PluginConfigInterface The interface between Docker and
+the plugin_
 
 #### Properties
 
@@ -9033,7 +9034,7 @@ _PluginConfigInterface The interface between Docker and the plugin_
 }
 ```
 
-_PluginConfigLinux plugin config linux_
+_PluginConfigLinux PluginConfigLinux plugin config linux_
 
 #### Properties
 
@@ -9499,9 +9500,8 @@ VerifiableAddressType verifiable address type_
 }
 ```
 
-_VolumeUsageData VolumeUsageData Usage details about the volume. This
-information is used by the `GET /system/df` endpoint, and omitted in other
-endpoints._
+_VolumeUsageData Usage details about the volume. This information is used by the
+`GET /system/df` endpoint, and omitted in other endpoints._
 
 #### Properties
 
@@ -9605,6 +9605,8 @@ verification flow with link method_
 }
 ```
 
+_ErrorContainer error container_
+
 #### Properties
 
 | Name   | Type                | Required | Restrictions | Description             |
@@ -9706,7 +9708,7 @@ _Fields contains multiple fields_
 }
 ```
 
-_Error response_
+_GenericError Error response_
 
 #### Properties
 
@@ -9765,6 +9767,9 @@ payload_
   }
 }
 ```
+
+_HealthNotReadyStatus HealthNotReadyStatus HealthNotReadyStatus health not ready
+status_
 
 #### Properties
 
@@ -9923,7 +9928,7 @@ _HealthStatus HealthStatus health status_
 }
 ```
 
-_LoginFlow LoginFlow LoginFlow Login Flow_
+_Login Flow_
 
 #### Properties
 
@@ -9936,7 +9941,7 @@ _LoginFlow LoginFlow LoginFlow Login Flow_
 | issued_at                  | string(date-time)                         | true     | none         | IssuedAt is the time (UTC) when the flow started.                                                                                                                                                                                                             |
 | messages                   | [Messages](#schemamessages)               | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                           |
 | methods                    | object                                    | true     | none         | List of login methods<br/><br/>This is the list of available login methods with their required form fields, such as `identifier` and `password`<br/>for the password login method. This will also contain error messages such as "password can not be empty". |
-| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | none                                                                                                                                                                                                                                                          |
+| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | LoginFlowMethod LoginFlowMethod login flow method                                                                                                                                                                                                             |
 | request_url                | string                                    | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                                                                                                 |
 | type                       | [Type](#schematype)                       | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                                                                                               |
 
@@ -9999,6 +10004,8 @@ _LoginFlow LoginFlow LoginFlow Login Flow_
   "method": "string"
 }
 ```
+
+_LoginFlowMethod LoginFlowMethod login flow method_
 
 #### Properties
 
@@ -10233,7 +10240,7 @@ _RecoveryFlow A Recovery Flow_
 | issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                     |
 | messages                   | [Messages](#schemamessages)                     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages       |
 | methods                    | object                                          | true     | none         | Methods contains context for all account recovery methods. If a registration request has been<br/>processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [recoveryFlowMethod](#schemarecoveryflowmethod) | false    | none         | RecoveryFlowMethod RecoveryFlowMethod recovery flow method                                                                                                                                |
+| » **additionalProperties** | [recoveryFlowMethod](#schemarecoveryflowmethod) | false    | none         | none                                                                                                                                                                                      |
 | request_url                | string                                          | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                             |
 | state                      | [State](#schemastate)                           | true     | none         | State State State State State State State State State State State State State State State State State State State state                                                                   |
 | type                       | [Type](#schematype)                             | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                           |
@@ -10279,8 +10286,6 @@ _RecoveryFlow A Recovery Flow_
   "method": "string"
 }
 ```
-
-_RecoveryFlowMethod RecoveryFlowMethod recovery flow method_
 
 #### Properties
 
@@ -10488,6 +10493,8 @@ _RecoveryLink RecoveryLink recovery link_
 }
 ```
 
+_RegistrationFlow registration flow_
+
 #### Properties
 
 | Name                       | Type                                                    | Required | Restrictions | Description                                                                                                                                                                                |
@@ -10498,7 +10505,7 @@ _RecoveryLink RecoveryLink recovery link_
 | issued_at                  | string(date-time)                                       | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                                         |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages        |
 | methods                    | object                                                  | true     | none         | Methods contains context for all enabled registration methods. If a registration flow has been<br/>processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | RegistrationFlowMethod RegistrationFlowMethod registration flow method                                                                                                                     |
+| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | none                                                                                                                                                                                       |
 | request_url                | string                                                  | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                              |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                            |
 
@@ -10562,14 +10569,12 @@ _RecoveryLink RecoveryLink recovery link_
 }
 ```
 
-_RegistrationFlowMethod RegistrationFlowMethod registration flow method_
-
 #### Properties
 
-| Name   | Type                                                                | Required | Restrictions | Description |
-| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.  |
+| Name   | Type                                                                | Required | Restrictions | Description                                                  |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------ |
+| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | RegistrationFlowMethodConfig registration flow method config |
+| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.                                                   |
 
 <a id="tocSregistrationflowmethodconfig"></a>
 
@@ -10627,6 +10632,8 @@ _RegistrationFlowMethod RegistrationFlowMethod registration flow method_
   ]
 }
 ```
+
+_RegistrationFlowMethodConfig registration flow method config_
 
 #### Properties
 
@@ -10703,7 +10710,7 @@ _RegistrationFlowMethod RegistrationFlowMethod registration flow method_
 }
 ```
 
-_The Response for Registration Flows via API_
+_RegistrationViaAPIResponse The Response for Registration Flows via API_
 
 #### Properties
 
@@ -10905,7 +10912,7 @@ _Session session_
 }
 ```
 
-_SettingsFlow SettingsFlow SettingsFlow Flow represents a Settings Flow_
+_Flow represents a Settings Flow_
 
 #### Properties
 
@@ -10969,10 +10976,10 @@ _SettingsFlowMethod settings flow method_
 
 #### Properties
 
-| Name   | Type                                                        | Required | Restrictions | Description                             |
-| ------ | ----------------------------------------------------------- | -------- | ------------ | --------------------------------------- |
-| config | [settingsFlowMethodConfig](#schemasettingsflowmethodconfig) | true     | none         | none                                    |
-| method | string                                                      | true     | none         | Method is the name of this flow method. |
+| Name   | Type                                                        | Required | Restrictions | Description                                          |
+| ------ | ----------------------------------------------------------- | -------- | ------------ | ---------------------------------------------------- |
+| config | [settingsFlowMethodConfig](#schemasettingsflowmethodconfig) | true     | none         | SettingsFlowMethodConfig settings flow method config |
+| method | string                                                      | true     | none         | Method is the name of this flow method.              |
 
 <a id="tocSsettingsflowmethodconfig"></a>
 
@@ -11012,6 +11019,8 @@ _SettingsFlowMethod settings flow method_
   "method": "string"
 }
 ```
+
+_SettingsFlowMethodConfig settings flow method config_
 
 #### Properties
 
@@ -11164,8 +11173,7 @@ _SettingsFlowMethod settings flow method_
 }
 ```
 
-_SettingsViaAPIResponse SettingsViaAPIResponse The Response for Settings Flows
-via API_
+_The Response for Settings Flows via API_
 
 #### Properties
 
@@ -11280,7 +11288,7 @@ _VerificationFlow A Verification Flow_
 | issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred.<br/>Format: date-time                                                                                                                   |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages           |
 | methods                    | object                                                  | true     | none         | Methods contains context for all account verification methods. If a registration request has been<br/>processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | VerificationFlowMethod verification flow method                                                                                                                                               |
+| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | none                                                                                                                                                                                          |
 | request_url                | string                                                  | false    | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                                 |
 | state                      | [State](#schemastate)                                   | true     | none         | State State State State State State State State State State State State State State State State State State State state                                                                       |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                               |
@@ -11326,8 +11334,6 @@ _VerificationFlow A Verification Flow_
   "method": "string"
 }
 ```
-
-_VerificationFlowMethod verification flow method_
 
 #### Properties
 
@@ -11398,8 +11404,6 @@ VerificationFlowMethodConfig verification flow method config_
   "version": "string"
 }
 ```
-
-_Version Version version_
 
 #### Properties
 
