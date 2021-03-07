@@ -26,6 +26,7 @@ if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   export TEST_DATABASE_COCKROACHDB="cockroach://root@127.0.0.1:3446/defaultdb?sslmode=disable"
 fi
 
+# Check if any ports that we need are open already
 ! nc -zv 127.0.0.1 4434
 ! nc -zv 127.0.0.1 4433
 ! nc -zv 127.0.0.1 4446
