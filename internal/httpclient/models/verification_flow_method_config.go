@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// VerificationFlowMethodConfig VerificationFlowMethodConfig VerificationFlowMethodConfig verification flow method config
+// VerificationFlowMethodConfig verification flow method config
 //
 // swagger:model verificationFlowMethodConfig
 type VerificationFlowMethodConfig struct {
