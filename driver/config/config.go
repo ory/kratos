@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/spec"
 	"net"
 	"net/http"
 	"net/url"
@@ -166,7 +167,7 @@ func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 		configx.WithLogrusWatcher(l),
 	}, opts...)
 
-	p, err := configx.New(ValidationSchema, opts...)
+	p, err := configx.New(spec.ConfigValidationSchema, opts...)
 	if err != nil {
 		return nil, err
 	}
