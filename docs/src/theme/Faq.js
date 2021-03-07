@@ -1,19 +1,22 @@
 import React, { useState } from 'react'
 import cn from 'classnames'
 import styles from './faq.module.css'
+import genStyle from './faq.gen.module.css'
 
 const Question = ({ children, tags }) => (
-  <div className={cn(tags)}>{children}</div>
+  <div className={cn(genStyle.question, ...tags.map((tag) => genStyle[tag]))}>
+    {children}
+  </div>
 )
 
 const TagButton = ({ tag, isSelected, children, toggleSelected }) => (
   <li
     className={cn(
-      { [styles.selected]: isSelected },
-      tag + '_src-theme-',
-      'pills',
-      'pills__item',
-      { 'styles.pills__item--active': isSelected }
+      { [genStyle.selected]: isSelected },
+      genStyle[tag],
+      styles.pills,
+      styles.pills__item,
+      { [styles['pills__item--active']]: isSelected }
     )}
     onClick={toggleSelected}
   >
@@ -21,19 +24,10 @@ const TagButton = ({ tag, isSelected, children, toggleSelected }) => (
   </li>
 )
 
-const Faq = ({ tags, switchofftags }) => {
+const FaqTags = ({ tags, initiallyDisabled }) => {
   const [selectedTags, setSelectedTags] = useState(
-    tags.filter((t) => !switchofftags.includes(t))
+    tags.filter((t) => !initiallyDisabled.includes(t))
   )
-  const displayFunc = (tags) => {
-    for (const tag of tags) {
-      // for (var i = 0; i < tags.length; i++) {
-      if (selectedTags.find((t) => t === tag)) {
-        return 'block'
-      }
-    }
-    return 'none'
-  }
 
   return (
     <>
@@ -57,4 +51,4 @@ const Faq = ({ tags, switchofftags }) => {
   )
 }
 
-export { Faq, Question }
+export { FaqTags, Question }

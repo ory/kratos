@@ -8941,7 +8941,7 @@ _PluginConfig The config of a plugin._
 
 | Name            | Type                                                  | Required | Restrictions | Description                                                                             |
 | --------------- | ----------------------------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------- |
-| Args            | [PluginConfigArgs](#schemapluginconfigargs)           | true     | none         | PluginConfigArgs PluginConfigArgs plugin config args                                    |
+| Args            | [PluginConfigArgs](#schemapluginconfigargs)           | true     | none         | PluginConfigArgs plugin config args                                                     |
 | Description     | string                                                | true     | none         | description                                                                             |
 | DockerVersion   | string                                                | false    | none         | Docker Version used to create the plugin                                                |
 | Documentation   | string                                                | true     | none         | documentation                                                                           |
@@ -8949,7 +8949,7 @@ _PluginConfig The config of a plugin._
 | Env             | [[PluginEnv](#schemapluginenv)]                       | true     | none         | env                                                                                     |
 | Interface       | [PluginConfigInterface](#schemapluginconfiginterface) | true     | none         | PluginConfigInterface PluginConfigInterface The interface between Docker and the plugin |
 | IpcHost         | boolean                                               | true     | none         | ipc host                                                                                |
-| Linux           | [PluginConfigLinux](#schemapluginconfiglinux)         | true     | none         | PluginConfigLinux plugin config linux                                                   |
+| Linux           | [PluginConfigLinux](#schemapluginconfiglinux)         | true     | none         | PluginConfigLinux PluginConfigLinux plugin config linux                                 |
 | Mounts          | [[PluginMount](#schemapluginmount)]                   | true     | none         | mounts                                                                                  |
 | Network         | [PluginConfigNetwork](#schemapluginconfignetwork)     | true     | none         | PluginConfigNetwork plugin config network                                               |
 | PidHost         | boolean                                               | true     | none         | pid host                                                                                |
@@ -8973,7 +8973,7 @@ _PluginConfig The config of a plugin._
 }
 ```
 
-_PluginConfigArgs PluginConfigArgs plugin config args_
+_PluginConfigArgs plugin config args_
 
 #### Properties
 
@@ -9034,7 +9034,7 @@ the plugin_
 }
 ```
 
-_PluginConfigLinux plugin config linux_
+_PluginConfigLinux PluginConfigLinux plugin config linux_
 
 #### Properties
 
@@ -9174,7 +9174,7 @@ _PluginEnv PluginEnv plugin env_
 }
 ```
 
-_PluginInterfaceType plugin interface type_
+_PluginInterfaceType PluginInterfaceType plugin interface type_
 
 #### Properties
 
@@ -9202,7 +9202,7 @@ _PluginInterfaceType plugin interface type_
 }
 ```
 
-_PluginMount plugin mount_
+_PluginMount PluginMount plugin mount_
 
 #### Properties
 
@@ -9500,9 +9500,8 @@ VerifiableAddressType verifiable address type_
 }
 ```
 
-_VolumeUsageData VolumeUsageData Usage details about the volume. This
-information is used by the `GET /system/df` endpoint, and omitted in other
-endpoints._
+_VolumeUsageData Usage details about the volume. This information is used by the
+`GET /system/df` endpoint, and omitted in other endpoints._
 
 #### Properties
 
@@ -9640,7 +9639,7 @@ _ErrorContainer error container_
 }
 ```
 
-_Field represents a HTML Form Field_
+_FormField FormField FormField FormField Field represents a HTML Form Field_
 
 #### Properties
 
@@ -9768,6 +9767,9 @@ payload_
   }
 }
 ```
+
+_HealthNotReadyStatus HealthNotReadyStatus HealthNotReadyStatus health not ready
+status_
 
 #### Properties
 
@@ -9926,7 +9928,7 @@ _HealthStatus HealthStatus health status_
 }
 ```
 
-_LoginFlow LoginFlow LoginFlow Login Flow_
+_Login Flow_
 
 #### Properties
 
@@ -9939,7 +9941,7 @@ _LoginFlow LoginFlow LoginFlow Login Flow_
 | issued_at                  | string(date-time)                         | true     | none         | IssuedAt is the time (UTC) when the flow started.                                                                                                                                                                                                             |
 | messages                   | [Messages](#schemamessages)               | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                           |
 | methods                    | object                                    | true     | none         | List of login methods<br/><br/>This is the list of available login methods with their required form fields, such as `identifier` and `password`<br/>for the password login method. This will also contain error messages such as "password can not be empty". |
-| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | none                                                                                                                                                                                                                                                          |
+| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | LoginFlowMethod LoginFlowMethod login flow method                                                                                                                                                                                                             |
 | request_url                | string                                    | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                                                                                                 |
 | type                       | [Type](#schematype)                       | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                                                                                               |
 
@@ -10002,6 +10004,8 @@ _LoginFlow LoginFlow LoginFlow Login Flow_
   "method": "string"
 }
 ```
+
+_LoginFlowMethod LoginFlowMethod login flow method_
 
 #### Properties
 
@@ -10285,10 +10289,10 @@ _RecoveryFlow A Recovery Flow_
 
 #### Properties
 
-| Name   | Type                                                        | Required | Restrictions | Description                                                                   |
-| ------ | ----------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------- |
-| config | [recoveryFlowMethodConfig](#schemarecoveryflowmethodconfig) | true     | none         | RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config |
-| method | string                                                      | true     | none         | Method contains the request credentials type.                                 |
+| Name   | Type                                                        | Required | Restrictions | Description                                   |
+| ------ | ----------------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
+| config | [recoveryFlowMethodConfig](#schemarecoveryflowmethodconfig) | true     | none         | none                                          |
+| method | string                                                      | true     | none         | Method contains the request credentials type. |
 
 <a id="tocSrecoveryflowmethodconfig"></a>
 
@@ -10329,8 +10333,6 @@ _RecoveryFlow A Recovery Flow_
 }
 ```
 
-_RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config_
-
 #### Properties
 
 | Name     | Type                            | Required | Restrictions | Description                                                                                                                                                                         |
@@ -10353,12 +10355,14 @@ _RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config_
 }
 ```
 
+_RecoveryLink RecoveryLink recovery link_
+
 #### Properties
 
-| Name          | Type              | Required | Restrictions | Description                                                                     |
-| ------------- | ----------------- | -------- | ------------ | ------------------------------------------------------------------------------- |
-| expires_at    | string(date-time) | false    | none         | Recovery Link Expires At<br/><br/>The timestamp when the recovery link expires. |
-| recovery_link | string            | true     | none         | Recovery Link<br/><br/>This link can be used to recover the account.            |
+| Name          | Type              | Required | Restrictions | Description                                                                                                                 |
+| ------------- | ----------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| expires_at    | string(date-time) | false    | none         | Recovery Link Expires At<br/><br/>The timestamp when the recovery link expires.<br/>Format: date-time<br/>Format: date-time |
+| recovery_link | string            | true     | none         | Recovery Link<br/><br/>This link can be used to recover the account.                                                        |
 
 <a id="tocSregistrationflow"></a>
 
@@ -10488,6 +10492,8 @@ _RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config_
   "type": "string"
 }
 ```
+
+_RegistrationFlow registration flow_
 
 #### Properties
 
@@ -10906,7 +10912,7 @@ _Session session_
 }
 ```
 
-_SettingsFlow SettingsFlow SettingsFlow Flow represents a Settings Flow_
+_Flow represents a Settings Flow_
 
 #### Properties
 
@@ -11167,8 +11173,7 @@ _SettingsFlowMethodConfig settings flow method config_
 }
 ```
 
-_SettingsViaAPIResponse SettingsViaAPIResponse The Response for Settings Flows
-via API_
+_The Response for Settings Flows via API_
 
 #### Properties
 
@@ -11332,10 +11337,10 @@ _VerificationFlow A Verification Flow_
 
 #### Properties
 
-| Name   | Type                                                                | Required | Restrictions | Description                                   |
-| ------ | ------------------------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
-| config | [verificationFlowMethodConfig](#schemaverificationflowmethodconfig) | true     | none         | none                                          |
-| method | string                                                              | true     | none         | Method contains the request credentials type. |
+| Name   | Type                                                                | Required | Restrictions | Description                                                                                                            |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| config | [verificationFlowMethodConfig](#schemaverificationflowmethodconfig) | true     | none         | VerificationFlowMethodConfig VerificationFlowMethodConfig VerificationFlowMethodConfig verification flow method config |
+| method | string                                                              | true     | none         | Method contains the request credentials type.                                                                          |
 
 <a id="tocSverificationflowmethodconfig"></a>
 
@@ -11375,6 +11380,9 @@ _VerificationFlow A Verification Flow_
   "method": "string"
 }
 ```
+
+_VerificationFlowMethodConfig VerificationFlowMethodConfig
+VerificationFlowMethodConfig verification flow method config_
 
 #### Properties
 

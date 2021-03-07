@@ -5,9 +5,9 @@ title: Frequently Asked Questions (FAQ)
 
 <!-- This file is generated. Please edit /docs/faq.yaml or /docs/scripts/gen-faq.js instead. Changes will be overwritten otherwise -->
 
-import { Question, Faq } from '@theme/Faq'
+import { Question, FaqTags } from '@theme/Faq'
 
-<Faq
+<FaqTags
   tags={[
     'kratos',
     'database',
@@ -23,13 +23,13 @@ import { Question, Faq } from '@theme/Faq'
     'oidc',
     'spa'
   ]}
-  switchofftags="kratos"
+  initiallyDisabled={['kratos']}
 />
 <br />
 <br />
 
-<Question tags="question_src-theme- kratos_src-theme- database_src-theme-">
-  #kratos #database <br />
+<Question tags={['kratos', 'database']}>
+  #kratos #database
   <p>
     <strong>Q</strong>: We want to seperate our customers and employees, so we
     store them in different databases. But we would like to have them use the
@@ -43,8 +43,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- kratos_src-theme- user_src-theme- validation_src-theme- traits_src-theme-">
-  #kratos #user #validation #traits <br />
+<Question tags={['kratos', 'user', 'validation', 'traits']}>
+  #kratos #user #validation #traits
   <p>
     <strong>Q</strong>: What is the correct flow to sanitize the username and
     make sure it satisfies a specific regex (e.g. only alphanumeric characters)?
@@ -58,8 +58,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- kratos_src-theme- traits_src-theme- KYC_src-theme-">
-  #kratos #traits #KYC <br />
+<Question tags={['kratos', 'traits', 'KYC']}>
+  #kratos #traits #KYC
   <p>
     <strong>Q</strong>: Some of our identity traits fields may be the subject to
     identity validation (know your customer, KYC). Once they are validated we do
@@ -73,8 +73,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- kratos_src-theme- hooks_src-theme-">
-  #kratos #hooks <br />
+<Question tags={['kratos', 'hooks']}>
+  #kratos #hooks
   <p>
     <strong>Q</strong>: Are there plans to provide hooks on
     registration/login/logouts/identity updates?
@@ -87,8 +87,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- registration_src-theme- kratos_src-theme- traits_src-theme-">
-  #registration #kratos #traits <br />
+<Question tags={['registration', 'kratos', 'traits']}>
+  #registration #kratos #traits
   <p>
     <strong>Q</strong>: How can I verify beforehand if a username is available
     during registration?
@@ -100,8 +100,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- kratos_src-theme- database_src-theme- migration_src-theme-">
-  #kratos #database #migration <br />
+<Question tags={['kratos', 'database', 'migration']}>
+  #kratos #database #migration
   <p>
     <strong>Q</strong>: Do have plans to support user migration scenarios
     similar to auth0 automatic migrations? E.g. configure a callback to the
@@ -118,8 +118,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- kratos_src-theme- security_src-theme- attack_src-theme-">
-  #kratos #security #attack <br />
+<Question tags={['kratos', 'security', 'attack']}>
+  #kratos #security #attack
   <p>
     <strong>Q</strong>: Do you have protection or plans for brute force attacks
     i.e. repetitive login attempts? Leaked database scans?
@@ -133,8 +133,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- kratos_src-theme- oidc_src-theme-">
-  #kratos #oidc <br />
+<Question tags={['kratos', 'oidc']}>
+  #kratos #oidc
   <p>
     <strong>Q</strong>: How do I append a random suffix e.g. a number to OIDC
     usernames if the username returned by a provider is already taken.
@@ -146,8 +146,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- kratos_src-theme- spa_src-theme-">
-  #kratos #spa <br />
+<Question tags={['kratos', 'spa']}>
+  #kratos #spa
   <p>
     <strong>Q</strong>: I want to implement a single-page-app (SPA). Can i do
     that with kratos?
@@ -162,8 +162,8 @@ import { Question, Faq } from '@theme/Faq'
 </Question>
 
 <br />
-<Question tags="question_src-theme- kratos_src-theme- traits_src-theme-">
-  #kratos #traits <br />
+<Question tags={['kratos', 'traits']}>
+  #kratos #traits
   <p>
     <strong>Q</strong>: I want read-only or hidden user-specific data. Can't i
     use traits for that?
