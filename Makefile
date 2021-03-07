@@ -109,7 +109,7 @@ quickstart-dev:
 
 # Formats the code
 .PHONY: format
-format: .bin/goimports
+format: .bin/goimports docs/node_modules node_modules
 		goimports -w -local github.com/ory .
 		cd docs; npm run format
 		npm run format
