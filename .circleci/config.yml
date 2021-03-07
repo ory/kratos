@@ -15,8 +15,7 @@ orbs:
 jobs:
   test:
     docker:
-      -
-        image: cimg/go:1.16-node
+      - image: cimg/go:1.16-node
         environment:
           TEST_MAILHOG_SMTP: smtp://test:test@127.0.0.1:1025
           TEST_MAILHOG_API: http://127.0.0.1:8025
@@ -26,24 +25,19 @@ jobs:
           TEST_DATABASE_POSTGRESQL: postgres://test:test@localhost:5432/postgres?sslmode=disable
           TEST_DATABASE_MYSQL: mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true
           TEST_DATABASE_COCKROACHDB: cockroach://root@localhost:26257/defaultdb?sslmode=disable
-      -
-        image: mailhog/mailhog:v1.0.0
+      - image: mailhog/mailhog:v1.0.0
         command: MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500
-      -
-        image: postgres:9.6
+      - image: postgres:9.6
         environment:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
           POSTGRES_DB: postgres
-      -
-        image: mysql:5.7
+      - image: mysql:5.7
         environment:
           - MYSQL_ROOT_PASSWORD=test
-      -
-        image: cockroachdb/cockroach:v20.2.5
+      - image: cockroachdb/cockroach:v20.2.5
         command: start-single-node --insecure
-      -
-        image: oryd/hydra:v1.4.10
+      - image: oryd/hydra:v1.4.10
         environment:
           DSN: memory
           URLS_SELF_ISSUER: http://127.0.0.1:4444/
@@ -69,16 +63,11 @@ jobs:
       - go/mod-download
       - go/save-cache
       - node/install-packages
-      -
-        run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
-      -
-        run: make install
-      -
-        run: make test-docs
-      -
-        run: make test-coverage
-      -
-        run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+      - run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
+      - run: make install
+      - run: make test-docs
+      - run: make test-coverage
+      - run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
 
   test-e2e:
     docker:
@@ -125,7 +114,7 @@ jobs:
             node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
             echo 'export NODE_UI_PATH=$node_ui_dir' >> $BASH_ENV
 
-            git clone git@github.com:ory/kratos-selfservice-ui-node.git --depth 1 --branch master "$node_ui_dir"
+            git clone https://github.com/ory/kratos-selfservice-ui-node.git --depth 1 --branch master "$node_ui_dir"
             cd "$node_ui_dir"
             npm i
             npm run build
@@ -136,14 +125,30 @@ jobs:
             rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
             echo 'export RN_UI_PATH=$rn_ui_dir' >> $BASH_ENV
 
-            git clone git@github.com:ory/kratos-selfservice-ui-react-native.git --depth 1 --branch master "$rn_ui_dir"
+            git clone https://github.com/ory/kratos-selfservice-ui-react-native.git --depth 1 --branch master "$rn_ui_dir"
             cd "$rn_ui_dir"
             npm i
 
-      - run: ./test/e2e/run.sh sqlite
-      - run: ./test/e2e/run.sh postgres
-      - run: ./test/e2e/run.sh mysql
-      - run: ./test/e2e/run.sh cockroach
+      - run:
+          description: Run sqlite e2e test
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh sqlite
+      - run:
+          description: Run postrgres e2e test
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh postgres
+      - run:
+          description: Run mysql e2e test
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh mysql
+      - run:
+          description: Run cockroach e2e test
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh cockroach
 
 workflows:
   tbr:
@@ -152,8 +157,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      -
-        test:
+      - test:
           filters:
             tags:
               only: /.*/
@@ -197,8 +201,7 @@ workflows:
               only: /.*/
             branches:
               only: master
-      -
-        goreleaser/release:
+      - goreleaser/release:
           requires:
             - test
             - test-e2e
@@ -213,8 +216,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      -
-        goreleaser/newsletter-draft:
+      - goreleaser/newsletter-draft:
           chimp-list: f605a41b53
           chimp-segment: 6479477
           requires:
@@ -222,8 +224,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      -
-        slack/approval-notification:
+      - slack/approval-notification:
           message: Pending approval
           channel: release-automation
           requires:
@@ -231,16 +232,14 @@ workflows:
           filters:
             tags:
               only: /.*/
-      -
-        newsletter-approval:
+      - newsletter-approval:
           type: approval
           requires:
             - goreleaser/newsletter-draft
           filters:
             tags:
               only: /.*/
-      -
-        goreleaser/newsletter-send:
+      - goreleaser/newsletter-send:
           chimp-list: f605a41b53
           requires:
             - newsletter-approval
