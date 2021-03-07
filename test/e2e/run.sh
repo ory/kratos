@@ -30,7 +30,7 @@ base=$(pwd)
 
 if [ -z ${NODE_UI_PATH+x} ]; then
   node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
-  git clone git@github.com:ory/kratos-selfservice-ui-node.git "$node_ui_dir"
+  git clone https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
   (cd "$node_ui_dir" && npm i && npm run build)
 else
   node_ui_dir="${NODE_UI_PATH}"
@@ -38,7 +38,7 @@ fi
 
 if [ -z ${RN_UI_PATH+x} ]; then
   rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
-  git clone git@github.com:ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
+  git clone https://github.com/ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
   (cd "$rn_ui_dir" && npm i)
 else
   rn_ui_dir="${RN_UI_PATH}"
