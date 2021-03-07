@@ -107,6 +107,7 @@ jobs:
       - go/mod-download
       - go/save-cache
 
+      - run: sudo chmod -R 777 /usr/local/lib/node_modules
       - restore_cache:
           keys:
             - v2-deps-expo
