@@ -7,7 +7,7 @@
   "videosFolder": "test/e2e/cypress/videos",
   "screenshotsFolder": "test/e2e/cypress/screenshots",
   "retries": {
-    "runMode": 2,
+    "runMode": 3,
     "openMode": 1
   }
 }

@@ -100,7 +100,18 @@ jobs:
       - image: oryd/mailslurper:latest-smtps
     steps:
       - checkout
-      - node/install-packages
+
+      - restore_cache:
+          keys:
+            - v1-e2e-deps-{{ checksum "package-lock.json" }}
+      - run: npm ci
+      - run: sudo npm i -g expo-cli
+      - save_cache:
+          key: v1-e2e-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+            - ~/.cache # cypress
+            - ~/.npm/node_modules # global npm
 
       - go/load-cache
       - go/mod-download
@@ -128,15 +139,6 @@ jobs:
             git clone git@github.com:ory/kratos-selfservice-ui-react-native.git --depth 1 --branch master "$rn_ui_dir"
             cd "$rn_ui_dir"
             npm i
-
-      - restore_cache:
-          keys:
-            - v3-deps-expo
-      - run: sudo npm i -g expo-cli
-      - save_cache:
-          key: v3-deps-expo
-          paths:
-            - ~/.npm/node_modules
 
       - run: ./test/e2e/run.sh sqlite
       - run: ./test/e2e/run.sh postgres
