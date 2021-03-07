@@ -176,14 +176,8 @@ workflows:
             branches:
               only: master
       -
-        goreleaser/test:
-          filters:
-            tags:
-              only: /.*/
-      -
         goreleaser/release:
           requires:
-            - goreleaser/test
             - test
             - test-e2e
           filters:
