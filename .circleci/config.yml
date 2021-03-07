@@ -100,17 +100,38 @@ jobs:
       - image: oryd/mailslurper:latest-smtps
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends -y psmisc
       - node/install-packages
 
       - go/load-cache
       - go/mod-download
       - go/save-cache
 
+      - run: npm config set prefix ~/.npm/node_modules
+
+      - run:
+          description: "Install selfservice-ui-node"
+          command: |
+            node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
+            echo 'export NODE_UI_PATH=$node_ui_dir' >> $BASH_ENV
+
+            git clone git@github.com:ory/kratos-selfservice-ui-node.git --depth 0 --branch master "$node_ui_dir"
+            cd "$node_ui_dir"
+            npm i
+            npm run build
+
+      - run:
+          description: "Install selfservice-ui-react-native"
+          command: |
+            rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
+            echo 'export RN_UI_PATH=$rn_ui_dir' >> $BASH_ENV
+
+            git clone git@github.com:ory/kratos-selfservice-ui-react-native.git --depth 0 --branch master "$rn_ui_dir"
+            cd "$rn_ui_dir"
+            npm i
+
       - restore_cache:
           keys:
             - v3-deps-expo
-      - run: npm config set prefix ~/.npm/node_modules
       - run: sudo npm i -g expo-cli
       - save_cache:
           key: v3-deps-expo
