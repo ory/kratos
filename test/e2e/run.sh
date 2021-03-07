@@ -89,7 +89,7 @@ run() {
     URLS_CONSENT=http://127.0.0.1:4446/consent \
     hydra serve all --dangerous-force-http > "${base}/test/e2e/hydra.e2e.log" 2>&1 &
 
-  npm run wait-on -- -l -t 30000 http-get://127.0.0.1:4445/health/alive
+  npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive
 
   hydra clients create \
     --endpoint http://127.0.0.1:4445 \
@@ -141,7 +141,7 @@ run() {
   yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
   ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -l -t 30000 http-get://127.0.0.1:4434/health/ready \
+  npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
     http-get://127.0.0.1:4445/health/ready \
     http-get://127.0.0.1:4446/ \
