@@ -26,14 +26,6 @@ if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   export TEST_DATABASE_COCKROACHDB="cockroach://root@127.0.0.1:3446/defaultdb?sslmode=disable"
 fi
 
-# Check if any ports that we need are open already
-! nc -zv 127.0.0.1 4434
-! nc -zv 127.0.0.1 4433
-! nc -zv 127.0.0.1 4446
-! nc -zv 127.0.0.1 4455
-! nc -zv 127.0.0.1 4456
-! nc -zv 127.0.0.1 4457
-
 base=$(pwd)
 
 if [ -z ${NODE_UI_PATH+x} ]; then
@@ -79,6 +71,14 @@ run() {
   killall node || true
   killall hydra || true
   killall hydra-login-consent || true
+
+  # Check if any ports that we need are open already
+  ! nc -zv 127.0.0.1 4434
+  ! nc -zv 127.0.0.1 4433
+  ! nc -zv 127.0.0.1 4446
+  ! nc -zv 127.0.0.1 4455
+  ! nc -zv 127.0.0.1 4456
+  ! nc -zv 127.0.0.1 4457
 
   (cd "$rn_ui_dir"; WEB_PORT=4457 KRATOS_URL=http://127.0.0.1:4433 npm run web -- --non-interactive \
    > "${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &)
