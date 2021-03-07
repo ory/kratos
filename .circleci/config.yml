@@ -114,7 +114,7 @@ jobs:
             node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
             echo 'export NODE_UI_PATH=$node_ui_dir' >> $BASH_ENV
 
-            git clone git@github.com:ory/kratos-selfservice-ui-node.git --depth 0 --branch master "$node_ui_dir"
+            git clone git@github.com:ory/kratos-selfservice-ui-node.git --depth 1 --branch master "$node_ui_dir"
             cd "$node_ui_dir"
             npm i
             npm run build
@@ -125,7 +125,7 @@ jobs:
             rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
             echo 'export RN_UI_PATH=$rn_ui_dir' >> $BASH_ENV
 
-            git clone git@github.com:ory/kratos-selfservice-ui-react-native.git --depth 0 --branch master "$rn_ui_dir"
+            git clone git@github.com:ory/kratos-selfservice-ui-react-native.git --depth 1 --branch master "$rn_ui_dir"
             cd "$rn_ui_dir"
             npm i
 
