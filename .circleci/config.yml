@@ -107,15 +107,15 @@ jobs:
       - go/mod-download
       - go/save-cache
 
-      - run: sudo chmod -R 777 /usr/local/lib/node_modules
       - restore_cache:
           keys:
-            - v2-deps-expo
+            - v3-deps-expo
+      - run: npm config set prefix ~/.npm/node_modules
       - run: sudo npm i -g expo-cli
       - save_cache:
-          key: v2-deps-expo
+          key: v3-deps-expo
           paths:
-            - /usr/local/lib/node_modules
+            - ~/.npm/node_modules
 
       - run: ./test/e2e/run.sh sqlite
       - run: ./test/e2e/run.sh postgres
