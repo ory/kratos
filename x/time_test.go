@@ -8,11 +8,11 @@ import (
 )
 
 func TestRandomDelay(t *testing.T) {
-	base := time.Millisecond * 20
-	deviation := time.Millisecond * 5
-	start := time.Now()
-	RandomDelay(base, deviation)
-	delay := time.Since(start)
-	require.LessOrEqual(t, delay, base+deviation)
-	require.GreaterOrEqual(t, delay, base-deviation)
+	base := time.Millisecond * 2
+	deviation := time.Millisecond
+	for i := 0; i < 100; i++ {
+		delay := RandomDelay(base, deviation)
+		require.LessOrEqual(t, delay, base+deviation)
+		require.GreaterOrEqual(t, delay, base-deviation)
+	}
 }
