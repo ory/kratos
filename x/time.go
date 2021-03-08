@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var rnd = rand.New(rand.NewSource(time.Now().Unix()))
+
 func AssertEqualTime(t *testing.T, expected, actual time.Time) {
 	assert.EqualValues(t, expected.UTC().Round(time.Second), actual.UTC().Round(time.Second))
 }
@@ -18,6 +20,6 @@ func RequireEqualTime(t *testing.T, expected, actual time.Time) {
 }
 
 func RandomDelay(base time.Duration, deviation time.Duration) {
-	randomDelay := rand.NormFloat64()*float64(deviation) + float64(base)
+	randomDelay := rnd.NormFloat64()*float64(deviation) + float64(base)
 	time.Sleep(time.Duration(randomDelay))
 }
