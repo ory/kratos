@@ -19,6 +19,6 @@ func RequireEqualTime(t *testing.T, expected, actual time.Time) {
 	require.EqualValues(t, expected.UTC().Round(time.Second), actual.UTC().Round(time.Second))
 }
 
-func RandomDelay(base time.Duration, deviation time.Duration)time.Duration {
-	return time.Duration(rnd.NormFloat64()*float64(deviation) + float64(base))
+func RandomDelay(base, deviation time.Duration) time.Duration {
+	return time.Duration(rnd.NormFloat64()*(float64(deviation)/3) + float64(base))
 }
