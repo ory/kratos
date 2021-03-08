@@ -153,6 +153,10 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 		return errors.Errorf("the password is too similar to the user identifier")
 	}
 
+	if s.reg.Config(ctx).PasswordPolicyConfig().DisableBreachesCheck {
+		return nil
+	}
+
 	/* #nosec G401 sha1 is used for k-anonymity */
 	h := sha1.New()
 	if _, err := h.Write([]byte(password)); err != nil {

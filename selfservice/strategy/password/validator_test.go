@@ -75,6 +75,14 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		require.Contains(t, fakeClient.RequestedURLs(), "https://api.pwnedpasswords.com/range/BCBA9")
 	})
 
+	t.Run("case=should not send request to pwnedpasswords.com when breaches check is disabled", func(t *testing.T) {
+		conf.Set("disable_breaches_check", true)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+		require.NoError(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
+		require.NotContains(t, fakeClient.RequestedURLs(), "https://api.pwnedpasswords.com/range/BCBA9")
+		conf.Set("disable_breaches_check", false)
+	})
+
 	t.Run("case=should fail if request fails and ignoreNetworkErrors is not set", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		fakeClient.RespondWithError("Network request failed")

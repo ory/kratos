@@ -89,6 +89,7 @@ const (
 	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
+	ViperKeyDisableBreachesCheck                                    = "selfservice.methods.password.config.disable_breaches_check"
 	ViperKeyVersion                                                 = "version"
 	Argon2DefaultMemory                                      uint32 = 4 * 1024 * 1024
 	Argon2DefaultIterations                                  uint32 = 4
@@ -120,8 +121,9 @@ type (
 		URL string `json:"url"`
 	}
 	PasswordPolicy struct {
-		MaxBreaches         uint `json:"max_breaches"`
-		IgnoreNetworkErrors bool `json:"ignore_network_errors"`
+		MaxBreaches          uint `json:"max_breaches"`
+		IgnoreNetworkErrors  bool `json:"ignore_network_errors"`
+		DisableBreachesCheck bool `json:"disable_breaches_check"`
 	}
 	Schemas []Schema
 	Config  struct {
@@ -719,7 +721,8 @@ func (p *Config) ConfigVersion() string {
 
 func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 	return &PasswordPolicy{
-		MaxBreaches:         uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
-		IgnoreNetworkErrors: p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+		MaxBreaches:          uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
+		IgnoreNetworkErrors:  p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+		DisableBreachesCheck: p.p.BoolF(ViperKeyDisableBreachesCheck, false),
 	}
 }
