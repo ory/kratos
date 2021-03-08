@@ -1,19 +1,21 @@
 version: 2.1
 
 orbs:
-  changelog: ory/changelog@0.1.4
-  goreleaser: ory/goreleaser@0.1.22
+  changelog: ory/changelog@0.1.8
+  goreleaser: ory/goreleaser@0.1.28
   slack: circleci/slack@3.4.2
   sdk: ory/sdk@0.1.40
   docs: ory/docs@0.0.10
-  nancy: ory/nancy@0.0.14
-  golangci: ory/golangci@0.0.13
+  nancy: ory/nancy@0.0.17
+  golangci: ory/golangci@0.0.18
+  prettier: ory/prettier@0.0.11
+  go: circleci/go@1.5.0
+  node: circleci/node@4.2.0
 
 jobs:
   test:
     docker:
-      -
-        image: cimg/go:1.16-node
+      - image: cimg/go:1.16-node
         environment:
           TEST_MAILHOG_SMTP: smtp://test:test@127.0.0.1:1025
           TEST_MAILHOG_API: http://127.0.0.1:8025
@@ -23,24 +25,19 @@ jobs:
           TEST_DATABASE_POSTGRESQL: postgres://test:test@localhost:5432/postgres?sslmode=disable
           TEST_DATABASE_MYSQL: mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true
           TEST_DATABASE_COCKROACHDB: cockroach://root@localhost:26257/defaultdb?sslmode=disable
-      -
-        image: mailhog/mailhog:v1.0.0
+      - image: mailhog/mailhog:v1.0.0
         command: MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500
-      -
-        image: postgres:9.6
+      - image: postgres:9.6
         environment:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
           POSTGRES_DB: postgres
-      -
-        image: mysql:5.7
+      - image: mysql:5.7
         environment:
           - MYSQL_ROOT_PASSWORD=test
-      -
-        image: cockroachdb/cockroach:v20.2.5
+      - image: cockroachdb/cockroach:v20.2.5
         command: start-single-node --insecure
-      -
-        image: oryd/hydra:v1.4.10
+      - image: oryd/hydra:v1.4.10
         environment:
           DSN: memory
           URLS_SELF_ISSUER: http://127.0.0.1:4444/
@@ -50,23 +47,29 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      -
-        run: go mod download
-      -
-        run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
-      -
-        run: make install
-      -
-        run: make test-docs
-      -
-        run: make test-coverage
-      -
-        run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+
+      - prettier/install
+      - prettier/check
+      - prettier/install:
+          dir: docs/
+      - prettier/check:
+          dir: docs/
+      - goreleaser/install
+      - goreleaser/check
+
+      - golangci/install
+      - golangci/lint
+      - go/load-cache
+      - go/mod-download
+      - go/save-cache
+      - node/install-packages
+      - run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
+      - run: make install
+      - run: make test-docs
+      - run: make test-coverage
+      - run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
 
   test-e2e:
-    parameters:
-      flavor:
-        type: string
     docker:
       - image: oryd/e2e-env:latest
         environment:
@@ -86,81 +89,75 @@ jobs:
       - image: oryd/mailslurper:latest-smtps
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends -y psmisc
-      # core node_modules cache
+
       - restore_cache:
           keys:
-            - ory-kratos-e2e-{{ checksum "package-lock.json" }}
+            - v2-e2e-deps-{{ checksum "package-lock.json" }}
       - run: npm ci
-      - save_cache:
-          key: ory-kratos-e2e-{{ checksum "package-lock.json" }}
-          # cache NPM modules and the folder with the Cypress binary
-          paths:
-            - ~/.npm
-            - ~/.cache
-      # go modules cache
-      - run: go mod download
       - run: sudo npm i -g expo-cli
-      - run: ./test/e2e/run.sh << parameters.flavor >>
+      - save_cache:
+          key: v2-e2e-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+            - ~/.cache # cypress
+            - ~/.npm/node_modules # global npm
 
-  validate:
-    docker:
-      - image: cimg/go:1.16-node
-        environment:
-          GO111MODULE: 'on'
-    steps:
-      - checkout
-      - golangci/lint
-      - docs/check-format
-      - run: |
-          bash <(curl -s https://raw.githubusercontent.com/ory/ci/master/src/scripts/install/prettier.sh)
-          npm run format:check
+      - go/load-cache
+      - go/mod-download
+      - go/save-cache
+
+      - run: npm config set prefix ~/.npm/node_modules
+
+      - run:
+          description: "Install selfservice-ui-node"
+          command: |
+            node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
+            echo "export NODE_UI_PATH=$node_ui_dir" >> $BASH_ENV
+
+            git clone https://github.com/ory/kratos-selfservice-ui-node.git --depth 1 --branch master "$node_ui_dir"
+            cd "$node_ui_dir"
+            npm i
+            npm run build
+
+      - run:
+          description: "Install selfservice-ui-react-native"
+          command: |
+            rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
+            echo "export RN_UI_PATH=$rn_ui_dir" >> $BASH_ENV
+
+            git clone https://github.com/ory/kratos-selfservice-ui-react-native.git --depth 1 --branch master "$rn_ui_dir"
+            cd "$rn_ui_dir"
+            npm i
+
+      - run:
+          description: Run sqlite e2e test
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh sqlite
+      - run:
+          description: Run postrgres e2e test
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh postgres
+      - run:
+          description: Run mysql e2e test
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh mysql
+      - run:
+          description: Run cockroach e2e test
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh cockroach
 
 workflows:
   tbr:
     jobs:
-#      - nancy/test
-      -
-        validate:
-          filters:
-            tags:
-              only: /.*/
       - test-e2e:
-          name: test-e2e-sqlite
-          flavor: sqlite
-          requires:
-            - test
-#            - nancy/test
-            - validate
           filters:
             tags:
               only: /.*/
-      - test-e2e:
-          name: test-e2e-postgres
-          flavor: postgres
-          requires:
-            - test-e2e-sqlite
-          filters:
-            tags:
-              only: /.*/
-      - test-e2e:
-          name: test-e2e-mysql
-          flavor: mysql
-          requires:
-            - test-e2e-sqlite
-          filters:
-            tags:
-              only: /.*/
-      - test-e2e:
-          name: test-e2e-cockroach
-          flavor: cockroach
-          requires:
-            - test-e2e-sqlite
-          filters:
-            tags:
-              only: /.*/
-      -
-        test:
+      - test:
           filters:
             tags:
               only: /.*/
@@ -169,23 +166,15 @@ workflows:
           swagpath: spec/api.json
           requires:
             - test
-            - test-e2e-sqlite
-            - test-e2e-postgres
-            - test-e2e-mysql
-            - test-e2e-cockroach
-            - validate
+            - test-e2e
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /master/
-      - docs/cli:
-          requires:
-            - validate
+      - docs/cli
       - docs/build:
           swag-spec-location: spec/api.json
-          requires:
-            - validate
           filters:
             tags:
               only: /.*/
@@ -195,11 +184,7 @@ workflows:
           swagpath: spec/api.json
           requires:
             - test
-            - test-e2e-sqlite
-            - test-e2e-postgres
-            - test-e2e-mysql
-            - test-e2e-cockroach
-            - validate
+            - test-e2e
             - sdk/generate
             - goreleaser/release
           filters:
@@ -210,31 +195,16 @@ workflows:
       - changelog/generate:
           requires:
             - test
-            - test-e2e-sqlite
-            - test-e2e-postgres
-            - test-e2e-mysql
-            - test-e2e-cockroach
-            - validate
+            - test-e2e
           filters:
             tags:
               only: /.*/
             branches:
               only: master
-      -
-        goreleaser/test:
-          filters:
-            tags:
-              only: /.*/
-      -
-        goreleaser/release:
+      - goreleaser/release:
           requires:
-            - goreleaser/test
             - test
-            - test-e2e-sqlite
-            - test-e2e-postgres
-            - test-e2e-mysql
-            - test-e2e-cockroach
-            - validate
+            - test-e2e
           filters:
             branches:
               ignore: /.*/
@@ -246,8 +216,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      -
-        goreleaser/newsletter-draft:
+      - goreleaser/newsletter-draft:
           chimp-list: f605a41b53
           chimp-segment: 6479477
           requires:
@@ -255,8 +224,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      -
-        slack/approval-notification:
+      - slack/approval-notification:
           message: Pending approval
           channel: release-automation
           requires:
@@ -264,16 +232,14 @@ workflows:
           filters:
             tags:
               only: /.*/
-      -
-        newsletter-approval:
+      - newsletter-approval:
           type: approval
           requires:
             - goreleaser/newsletter-draft
           filters:
             tags:
               only: /.*/
-      -
-        goreleaser/newsletter-send:
+      - goreleaser/newsletter-send:
           chimp-list: f605a41b53
           requires:
             - newsletter-approval
