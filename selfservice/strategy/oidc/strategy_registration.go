@@ -32,20 +32,13 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
-	if sr.Type != flow.TypeBrowser {
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
+	if f.Type != flow.TypeBrowser {
 		return nil
 	}
 
-	config, err := s.populateMethod(r, sr.ID)
-	if err != nil {
-		return err
-	}
-	sr.Methods[s.ID()] = &registration.FlowMethod{
-		Method: s.ID(),
-		Config: &registration.FlowMethodConfig{FlowMethodConfigurator: config},
-	}
-	return nil
+	panic("should not be nil")
+	return s.populateMethod(r, nil)
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer) {

@@ -63,7 +63,9 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 	l := logrusx.New("ORY Kratos", config.Version)
 	conf := &argon2Config{}
 	var err error
-	conf.config, err = config.New(l,
+	conf.config, err = config.New(
+		context.Background(),
+		l,
 		configx.WithFlags(cmd.Flags()),
 		configx.SkipValidation(),
 		configx.WithContext(cmd.Context()),

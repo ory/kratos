@@ -1,0 +1,3 @@
+drop_table("selfservice_login_flow_methods")
+add_column("selfservice_login_flows", "ui", "json", { "null": false })
+drop_column("selfservice_login_flows", "messages")

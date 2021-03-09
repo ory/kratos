@@ -2,6 +2,7 @@ package password
 
 import (
 	"encoding/json"
+	"github.com/ory/kratos/ui/node"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -69,6 +70,14 @@ type Strategy struct {
 	hd *decoderx.HTTP
 }
 
+func NewStrategy(d registrationStrategyDependencies) *Strategy {
+	return &Strategy{
+		d:  d,
+		v:  validator.New(),
+		hd: decoderx.NewHTTP(),
+	}
+}
+
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 {
@@ -86,14 +95,10 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 	return
 }
 
-func NewStrategy(d registrationStrategyDependencies) *Strategy {
-	return &Strategy{
-		d:  d,
-		v:  validator.New(),
-		hd: decoderx.NewHTTP(),
-	}
-}
-
 func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypePassword
+}
+
+func (s *Strategy) NodeGroup() node.Group {
+	return node.PasswordGroup
 }

@@ -93,7 +93,7 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 
 	var l sync.Mutex
 	if !testing.Short() {
-		funcs := map[string]func(t *testing.T) string{
+		funcs := map[string]func(t testing.TB) string{
 			"postgres":  dockertest.RunTestPostgreSQL,
 			"mysql":     dockertest.RunTestMySQL,
 			"cockroach": dockertest.RunTestCockroachDB}
@@ -102,7 +102,7 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 		wg.Add(len(funcs))
 
 		for k, f := range funcs {
-			go func(s string, f func(t *testing.T) string) {
+			go func(s string, f func(t testing.TB) string) {
 				defer wg.Done()
 				db := f(t)
 				l.Lock()
@@ -236,7 +236,6 @@ func TestPersister_Transaction(t *testing.T) {
 		err := c.Transaction(func(tx *pop.Connection) error {
 			ctx := sql.WithTransaction(context.Background(), tx)
 			require.NoError(t, p.CreateLoginFlow(ctx, lr), "%+v", lr)
-			require.NoError(t, p.UpdateLoginFlowMethod(ctx, lr.ID, identity.CredentialsTypePassword, &login.FlowMethod{}))
 			require.NoError(t, getErr(p.GetLoginFlow(ctx, lr.ID)), "%+v", lr)
 			return errors.Errorf(errMessage)
 		})
