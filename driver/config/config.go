@@ -199,18 +199,19 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 }
 
 func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
-	p, err := New(l, opts...)
+	p, err := New(context.TODO(), l, opts...)
 	require.NoError(t, err)
 	return p
 }
 
-func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
+		configx.WithContext(ctx),
 	}, opts...)
 
 	p, err := configx.New(ValidationSchema, opts...)
