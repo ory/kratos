@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// State State State State State State State State State State State State State State State State State State State State State state
+// State State State State State State State State State State State State State State State State State State State State State State state
 //
 // swagger:model State
 type State string
