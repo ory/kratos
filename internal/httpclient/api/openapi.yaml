@@ -111,7 +111,7 @@ paths:
           maximum: 500
           minimum: 1
           type: integer
-        style: container
+        style: form
       - description: Pagination Page
         explode: true
         in: query
@@ -122,7 +122,7 @@ paths:
           format: int64
           minimum: 0
           type: integer
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -472,7 +472,7 @@ paths:
         required: true
         schema:
           type: string
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -537,7 +537,7 @@ paths:
         required: false
         schema:
           type: boolean
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -605,7 +605,7 @@ paths:
         required: true
         schema:
           type: string
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -666,7 +666,7 @@ paths:
         required: true
         schema:
           type: string
-        style: container
+        style: form
       requestBody:
         content:
           application/json:
@@ -789,7 +789,7 @@ paths:
         required: true
         schema:
           type: string
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -851,7 +851,7 @@ paths:
         required: false
         schema:
           type: string
-        style: container
+        style: form
       - description: |-
           The Flow ID
 
@@ -862,7 +862,7 @@ paths:
         required: false
         schema:
           type: string
-        style: container
+        style: form
       requestBody:
         content:
           application/json:
@@ -985,7 +985,7 @@ paths:
         required: true
         schema:
           type: string
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -1047,7 +1047,7 @@ paths:
         required: false
         schema:
           type: string
-        style: container
+        style: form
       requestBody:
         content:
           application/json:
@@ -1181,7 +1181,7 @@ paths:
         required: true
         schema:
           type: string
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -1248,7 +1248,7 @@ paths:
         required: false
         schema:
           type: string
-        style: container
+        style: form
       requestBody:
         content:
           application/json:
@@ -1327,7 +1327,7 @@ paths:
         required: false
         schema:
           type: string
-        style: container
+        style: form
       requestBody:
         content:
           application/json:
@@ -1461,7 +1461,7 @@ paths:
         required: true
         schema:
           type: string
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -1523,7 +1523,7 @@ paths:
         required: false
         schema:
           type: string
-        style: container
+        style: form
       - description: |-
           The Flow ID
 
@@ -1534,7 +1534,7 @@ paths:
         required: false
         schema:
           type: string
-        style: container
+        style: form
       requestBody:
         content:
           application/json:
@@ -1623,7 +1623,7 @@ paths:
         required: false
         schema:
           type: string
-        style: container
+        style: form
       responses:
         "200":
           content:
@@ -2026,30 +2026,6 @@ components:
       - errors
       - id
       type: object
-    form:
-      description: HTMLForm represents a HTML Form. The container can work with both
-        HTTP Form and JSON requests
-      properties:
-        action:
-          description: Action should be used as the container action URL `<container action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the container method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
-      type: object
     genericError:
       description: Error responses are sent when an error (e.g. unauthorized, bad
         request, ...) occurred.
@@ -2108,139 +2084,7 @@ components:
         Once a login flow is completed successfully, a session cookie or session token will be issued.
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
-        forced: true
-        methods:
-          key:
-            method: method
-            config:
-              nodes:
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              method: method
-              action: action
-              messages:
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              providers:
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-        active: active
-        messages:
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        id: id
-        type: type
-        issued_at: 2000-01-23T04:56:07.000+00:00
-        request_url: request_url
-      properties:
-        active:
-          description: and so on.
-          title: CredentialsType  represents several different credential types, like
-            password credentials, passwordless credentials,
-          type: string
-        expires_at:
-          description: |-
-            ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,
-            a new flow has to be initiated.
-          format: date-time
-          type: string
-        forced:
-          description: Forced stores whether this login flow should enforce re-authentication.
-          type: boolean
-        id:
-          format: uuid4
-          type: string
-        issued_at:
-          description: IssuedAt is the time (UTC) when the flow started.
-          format: date-time
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        methods:
-          additionalProperties:
-            $ref: '#/components/schemas/loginFlowMethod'
-          description: |-
-            List of login methods
-
-            This is the list of available login methods with their required form fields, such as `identifier` and `password`
-            for the password login method. This will also contain error messages such as "password can not be empty".
-          type: object
-        request_url:
-          description: |-
-            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
-            to forward information contained in the URL's path or query for example.
-          type: string
-        type:
-          description: The flow type can either be `api` or `browser`.
-          title: Type is the flow type.
-          type: string
-      required:
-      - expires_at
-      - id
-      - issued_at
-      - methods
-      - request_url
-      - type
-      title: Login Flow
-      type: object
-    loginFlowMethod:
-      example:
-        method: method
-        config:
+        ui:
           nodes:
           - messages:
             - context: '{}'
@@ -2275,150 +2119,53 @@ components:
             id: 0
             text: text
             type: type
-          providers:
-          - messages:
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            type: type
-            group: group
-          - messages:
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            type: type
-            group: group
+        forced: true
+        active: active
+        id: id
+        type: type
+        issued_at: 2000-01-23T04:56:07.000+00:00
+        request_url: request_url
       properties:
-        config:
-          $ref: '#/components/schemas/loginFlowMethodConfig'
-        method:
+        active:
           description: and so on.
           title: CredentialsType  represents several different credential types, like
             password credentials, passwordless credentials,
           type: string
+        expires_at:
+          description: |-
+            ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,
+            a new flow has to be initiated.
+          format: date-time
+          type: string
+        forced:
+          description: Forced stores whether this login flow should enforce re-authentication.
+          type: boolean
+        id:
+          format: uuid4
+          type: string
+        issued_at:
+          description: IssuedAt is the time (UTC) when the flow started.
+          format: date-time
+          type: string
+        request_url:
+          description: |-
+            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+            to forward information contained in the URL's path or query for example.
+          type: string
+        type:
+          description: The flow type can either be `api` or `browser`.
+          title: Type is the flow type.
+          type: string
+        ui:
+          $ref: '#/components/schemas/uiContainer'
       required:
-      - config
-      - method
-      type: object
-    loginFlowMethodConfig:
-      example:
-        nodes:
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        method: method
-        action: action
-        messages:
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        providers:
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-      properties:
-        action:
-          description: Action should be used as the container action URL `<container action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the container method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-        providers:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
-      type: object
-    loginFlowMethodConfigPayload:
-      properties:
-        action:
-          description: Action should be used as the container action URL `<container action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the container method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-        providers:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
+      - expires_at
+      - id
+      - issued_at
+      - request_url
+      - type
+      - ui
+      title: Login Flow
       type: object
     loginViaApiResponse:
       description: The Response for Login Flows via API
@@ -2669,7 +2416,7 @@ components:
           type: type
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2677,7 +2424,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2691,7 +2438,7 @@ components:
     recoveryFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2699,7 +2446,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2929,7 +2676,7 @@ components:
         - null
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2937,7 +2684,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2956,7 +2703,7 @@ components:
     registrationFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2964,7 +2711,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3354,7 +3101,7 @@ components:
           type: type
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3362,7 +3109,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3376,7 +3123,7 @@ components:
     settingsFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3384,7 +3131,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3398,7 +3145,7 @@ components:
     settingsProfileFormConfig:
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3406,7 +3153,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3533,6 +3280,65 @@ components:
       required:
       - flow
       - identity
+      type: object
+    uiContainer:
+      description: Container represents a HTML Form. The container can work with both
+        HTTP Form and JSON requests
+      example:
+        nodes:
+        - messages:
+          - context: '{}'
+            id: 0
+            text: text
+            type: type
+          - context: '{}'
+            id: 0
+            text: text
+            type: type
+          type: type
+          group: group
+        - messages:
+          - context: '{}'
+            id: 0
+            text: text
+            type: type
+          - context: '{}'
+            id: 0
+            text: text
+            type: type
+          type: type
+          group: group
+        method: method
+        action: action
+        messages:
+        - context: '{}'
+          id: 0
+          text: text
+          type: type
+        - context: '{}'
+          id: 0
+          text: text
+          type: type
+      properties:
+        action:
+          description: Action should be used as the form action URL `<form action="{{
+            .Action }}" method="post">`.
+          type: string
+        messages:
+          items:
+            $ref: '#/components/schemas/uiText'
+          type: array
+        method:
+          description: Method is the form method (e.g. POST)
+          type: string
+        nodes:
+          items:
+            $ref: '#/components/schemas/uiNode'
+          type: array
+      required:
+      - action
+      - method
+      - nodes
       type: object
     uiNode:
       description: |-
@@ -3875,7 +3681,7 @@ components:
           type: type
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3883,7 +3689,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3897,7 +3703,7 @@ components:
     verificationFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the container action URL `<container action="{{
+          description: Action should be used as the form action URL `<form action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3905,7 +3711,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the container method (e.g. POST)
+          description: Method is the form method (e.g. POST)
           type: string
         nodes:
           items:
