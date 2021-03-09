@@ -113,3 +113,13 @@ func NewDuplicateCredentialsError() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentials()),
 	})
 }
+
+func NewNoLoginStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to login with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationLoginNoStrategyFound()),
+	})
+}
