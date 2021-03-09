@@ -12,6 +12,7 @@ const (
 const (
 	ErrorValidationLogin            ID = 4010000 + iota // 4010000
 	ErrorValidationLoginFlowExpired                     // 4010001
+	ErrorValidationLoginNoStrategyFound                    // 4010002
 )
 
 func NewErrorValidationLoginFlowExpired(ago time.Duration) *Message {
@@ -22,5 +23,13 @@ func NewErrorValidationLoginFlowExpired(ago time.Duration) *Message {
 		Context: context(map[string]interface{}{
 			"expired_at": time.Now().Add(ago),
 		}),
+	}
+}
+
+func NewErrorValidationLoginNoStrategyFound() *Message {
+	return &Message{
+		ID:   ErrorValidationLoginNoStrategyFound,
+		Text: "Could not find a strategy to log you in with. Did you fill out the form correctly?",
+		Type: Error,
 	}
 }
