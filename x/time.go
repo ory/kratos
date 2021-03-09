@@ -32,7 +32,7 @@ func RequireEqualTime(t *testing.T, expected, actual time.Time) {
 func RandomDelay(base, deviation time.Duration) time.Duration {
 	max := float64(base + deviation)
 	min := float64(base - deviation)
-	stddev := float64(64) / 3
+	stddev := float64(deviation) / 3
 	sample := rnd.NormFloat64() * (stddev + float64(base))
 	boundedSample := math.Min(math.Max(sample, min), max)
 	return time.Duration(boundedSample)
