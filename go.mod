@@ -1,6 +1,6 @@
 module github.com/ory/kratos
 
-go 1.15
+go 1.16
 
 // See https://github.com/markbates/pkger/pull/112
 replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.20200722132747-95726f5b9b9b
@@ -29,15 +29,14 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
-	github.com/go-openapi/strfmt v0.19.11
-	github.com/go-swagger/go-swagger v0.25.0
-	github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46
+	github.com/go-openapi/strfmt v0.20.0
+	github.com/go-swagger/go-swagger v0.26.1
+	github.com/gobuffalo/fizz v1.13.1-0.20201104174146-3416f0e6618f
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/pop/v5 v5.3.2-0.20210108121026-333700c8729e
+	github.com/gobuffalo/pop/v5 v5.3.2-0.20210128124218-e397a61c1704
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/go-jsonnet v0.16.0
@@ -52,24 +51,24 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/knadh/koanf v0.14.1-0.20201201075439-e0853799f9ec
 	github.com/markbates/pkger v0.17.1
-	github.com/mattn/goveralls v0.0.5
+	github.com/mattn/goveralls v0.0.7
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.38-0.20210120105333-159525a16324
-	github.com/ory/dockertest/v3 v3.6.2
-	github.com/ory/go-acc v0.1.0
+	github.com/ory/cli v0.0.41
+	github.com/ory/dockertest/v3 v3.6.3
+	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.9.0
-	github.com/ory/jsonschema/v3 v3.0.1
-	github.com/ory/kratos-client-go v0.5.4-alpha.1
+	github.com/ory/jsonschema/v3 v3.0.2
+	github.com/ory/kratos-client-go v0.5.4-alpha.1.0.20210308170950-06c2c1c071a8
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
-	github.com/ory/nosurf v1.2.3
-	github.com/ory/x v0.0.176
+	github.com/ory/nosurf v1.2.4
+	github.com/ory/x v0.0.198
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/profile v1.5.0 // indirect
@@ -77,9 +76,9 @@ require (
 	github.com/prometheus/common v0.9.1
 	github.com/rs/cors v1.6.0
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.8.0
 	github.com/slack-go/slack v0.7.4
-	github.com/spf13/cobra v1.0.1-0.20201006035406-b97b5ead31f7
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.7.0
@@ -87,10 +86,10 @@ require (
 	github.com/tidwall/sjson v1.1.4
 	github.com/urfave/negroni v1.0.0
 	go.uber.org/atomic v1.7.0 // indirect
-	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
-	golang.org/x/tools v0.0.0-20200825202427-b303f430e36d
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
 	google.golang.org/grpc v1.34.0 // indirect
 	google.golang.org/protobuf v1.25.1-0.20201208041424-160c7477e0e8 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
