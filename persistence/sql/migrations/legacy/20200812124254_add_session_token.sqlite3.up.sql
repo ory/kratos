@@ -1,3 +1,4 @@
+DELETE FROM sessions;
 ALTER TABLE "sessions" ADD COLUMN "token" TEXT;
 CREATE TABLE "_sessions_tmp" (
 "id" TEXT PRIMARY KEY,
