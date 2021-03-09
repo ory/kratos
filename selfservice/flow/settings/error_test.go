@@ -70,7 +70,7 @@ func TestHandleError(t *testing.T) {
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *settings.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		f := settings.NewFlow(ttl, req, &id, ft)
-		for _, s := range reg.SettingsStrategies() {
+		for _, s := range reg.SettingsStrategies(context.Background()) {
 			require.NoError(t, s.PopulateSettingsMethod(req, &id, f))
 		}
 

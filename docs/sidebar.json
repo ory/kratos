@@ -4,7 +4,8 @@
     "quickstart", 
     "install", 
     "configuring", 
-    "contributing"
+    "contributing", 
+    "faq"
   ],
   "Concepts": [
     "concepts/index", 
@@ -43,6 +44,7 @@
     "guides/sign-in-with-github-google-facebook-linkedin", 
     "guides/login-session", 
     "guides/configuring-cookies", 
+    "guides/multi-domain-cookies", 
     "guides/setting-up-cors", 
     "guides/account-recovery-password-reset", 
     "guides/account-activation-email-verification", 
@@ -63,6 +65,8 @@
       "label": "Command Line Interface (CLI)",
       "items": [
         "cli/kratos", 
+        "cli/kratos-courier", 
+        "cli/kratos-courier-watch", 
         "cli/kratos-hashers", 
         "cli/kratos-hashers-argon2", 
         "cli/kratos-hashers-argon2-calibrate", 

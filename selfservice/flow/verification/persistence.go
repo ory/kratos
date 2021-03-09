@@ -34,7 +34,7 @@ type (
 	}
 )
 
-func TestFlowPersister(conf *config.Config, p interface {
+func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 	FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
@@ -42,7 +42,6 @@ func TestFlowPersister(conf *config.Config, p interface {
 		r.ID = uuid.UUID{}
 	}
 
-	ctx := context.Background()
 	return func(t *testing.T) {
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 

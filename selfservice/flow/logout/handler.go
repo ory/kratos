@@ -21,18 +21,18 @@ type (
 		x.CSRFProvider
 		session.ManagementProvider
 		errorx.ManagementProvider
+		config.Provider
 	}
 	HandlerProvider interface {
 		LogoutHandler() *Handler
 	}
 	Handler struct {
-		c *config.Config
 		d handlerDependencies
 	}
 )
 
-func NewHandler(d handlerDependencies, c *config.Config) *Handler {
-	return &Handler{d: d, c: c}
+func NewHandler(d handlerDependencies) *Handler {
+	return &Handler{d: d}
 }
 
 func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
@@ -66,10 +66,10 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	ret, err := x.SecureRedirectTo(r, h.c.SelfServiceFlowLogoutRedirectURL(),
+	ret, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceFlowLogoutRedirectURL(),
 		x.SecureRedirectUseSourceURL(r.RequestURI),
-		x.SecureRedirectAllowURLs(h.c.SelfServiceBrowserWhitelistedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(h.c.SelfPublicURL()),
+		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL(r)),
 	)
 	if err != nil {
 		fmt.Printf("\n%s\n\n", err.Error())

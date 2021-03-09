@@ -1,12 +1,15 @@
 package sql_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/ory/kratos/corpx"
 
 	"github.com/ory/kratos/driver"
 
@@ -45,7 +48,7 @@ import (
 var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(os.TempDir(), uuid.New().String()))
 
 func init() {
-	internal.RegisterFakes()
+	corpx.RegisterFakes()
 	// op.Debug = true
 }
 
@@ -129,8 +132,14 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 		})
 
 		pop.SetLogger(pl(t))
-		require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
 		require.NoError(t, p.MigrateUp(context.Background()))
+		status, err := p.MigrationStatus(context.Background())
+		require.NoError(t, err)
+		require.False(t, status.HasPending())
+
+		var b bytes.Buffer
+		require.NoError(t, status.Write(&b))
+		t.Logf("%s", b.String())
 
 		ps[name] = reg
 	}
@@ -140,6 +149,7 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 
 func TestPersister(t *testing.T) {
 	conns := createCleanDatabases(t)
+	ctx := context.Background()
 
 	for name, reg := range conns {
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
@@ -149,47 +159,47 @@ func TestPersister(t *testing.T) {
 			t.Logf("DSN: %s", conf.DSN())
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				identity.TestPool(conf, p)(t)
+				identity.TestPool(ctx, conf, p)(t)
 			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				registration.TestFlowPersister(p)(t)
+				registration.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=errorx.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				errorx.TestPersister(p)(t)
+				errorx.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=login.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				login.TestFlowPersister(p)(t)
+				login.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=settings.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				settings.TestRequestPersister(conf, p)(t)
+				settings.TestRequestPersister(ctx, conf, p)(t)
 			})
 			t.Run("contract=session.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				session.TestPersister(conf, p)(t)
+				session.TestPersister(ctx, conf, p)(t)
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				courier.TestPersister(p)(t)
+				courier.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=verification.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				verification.TestFlowPersister(conf, p)(t)
+				verification.TestFlowPersister(ctx, conf, p)(t)
 			})
 			t.Run("contract=recovery.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				recovery.TestFlowPersister(conf, p)(t)
+				recovery.TestFlowPersister(ctx, conf, p)(t)
 			})
 			t.Run("contract=link.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				link.TestPersister(conf, p)(t)
+				link.TestPersister(ctx, conf, p)(t)
 			})
 			t.Run("contract=continuity.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				continuity.TestPersister(p)(t)
+				continuity.TestPersister(ctx, p)(t)
 			})
 		})
 	}

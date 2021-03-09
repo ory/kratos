@@ -47,11 +47,10 @@ type Persister interface {
 	RevokeSessionByToken(ctx context.Context, token string) error
 }
 
-func TestPersister(conf *config.Config, p interface {
+func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	Persister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	ctx := context.Background()
 	return func(t *testing.T) {
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 

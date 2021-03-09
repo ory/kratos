@@ -26,12 +26,10 @@ type Persister interface {
 	DeleteContinuitySession(ctx context.Context, id uuid.UUID) error
 }
 
-func TestPersister(p interface {
+func TestPersister(ctx context.Context, p interface {
 	Persister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	ctx := context.Background()
-
 	var createIdentity = func(t *testing.T) *identity.Identity {
 		id := identity.Identity{ID: x.NewUUID()}
 		require.NoError(t, p.CreateIdentity(ctx, &id))

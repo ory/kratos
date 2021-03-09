@@ -2,10 +2,9 @@ package login
 
 import (
 	"github.com/ory/kratos/ui/node"
+	"context"
 	"net/http"
-
 	"github.com/pkg/errors"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 )
@@ -47,5 +46,5 @@ func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 }
 
 type StrategyProvider interface {
-	LoginStrategies() Strategies
+	LoginStrategies(ctx context.Context) Strategies
 }

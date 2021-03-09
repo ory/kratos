@@ -14,10 +14,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Tools to interact with remote identities
 
-### Synopsis
-
-Tools to interact with remote identities
-
 ### Options
 
 ```

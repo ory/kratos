@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/x"
 )
 
@@ -36,15 +37,16 @@ var ConnectionExistValidationError = &jsonschema.ValidationError{
 	Message: "can not link unknown or already existing OpenID Connect connection", InstancePtr: "#/"}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
-	router.POST(SettingsPath, s.completeSettingsFlow)
-	router.GET(SettingsPath, s.completeSettingsFlow)
+	wrappedCompleteSettingsFlow := strategy.IsDisabled(s.d, s.SettingsStrategyID(), s.completeSettingsFlow)
+	router.POST(SettingsPath, wrappedCompleteSettingsFlow)
+	router.GET(SettingsPath, wrappedCompleteSettingsFlow)
 }
 
 func (s *Strategy) SettingsStrategyID() string {
 	return s.ID().String()
 }
 
-func (s *Strategy) linkedProviders(ctx context.Context, conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
+func (s *Strategy) linkedProviders(ctx context.Context, r *http.Request, conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
 	creds, ok := confidential.GetCredentials(s.ID())
 	if !ok {
 		return nil, nil
@@ -76,7 +78,7 @@ func (s *Strategy) linkedProviders(ctx context.Context, conf *ConfigurationColle
 
 	var result []Provider
 	for _, p := range available.Providers {
-		prov, err := conf.Provider(p.Provider, s.d.Config(ctx).SelfPublicURL())
+		prov, err := conf.Provider(p.Provider, s.d.Config(ctx).SelfPublicURL(r))
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +88,7 @@ func (s *Strategy) linkedProviders(ctx context.Context, conf *ConfigurationColle
 	return result, nil
 }
 
-func (s *Strategy) linkableProviders(ctx context.Context, conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
+func (s *Strategy) linkableProviders(ctx context.Context, r *http.Request, conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
 	var available CredentialsConfig
 	creds, ok := confidential.GetCredentials(s.ID())
 	if ok {
@@ -106,7 +108,7 @@ func (s *Strategy) linkableProviders(ctx context.Context, conf *ConfigurationCol
 		}
 
 		if !found {
-			prov, err := conf.Provider(p.ID, s.d.Config(ctx).SelfPublicURL())
+			prov, err := conf.Provider(p.ID, s.d.Config(ctx).SelfPublicURL(r))
 			if err != nil {
 				return nil, err
 			}
@@ -132,18 +134,18 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return err
 	}
 
-	linkable, err := s.linkableProviders(r.Context(), conf, confidential)
+	linkable, err := s.linkableProviders(r.Context(), r, conf, confidential)
 	if err != nil {
 		return err
 	}
 
-	linked, err := s.linkedProviders(r.Context(), conf, confidential)
+	linked, err := s.linkedProviders(r.Context(), r, conf, confidential)
 	if err != nil {
 		return err
 	}
 
 	f := container.New(urlx.CopyWithQuery(urlx.AppendPaths(
-		s.d.Config(r.Context()).SelfPublicURL(), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
+		s.d.Config(r.Context()).SelfPublicURL(r), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	for _, l := range linkable {
@@ -269,7 +271,7 @@ func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext
 		return nil, err
 	}
 
-	linkable, err := s.linkableProviders(r.Context(), providers, i)
+	linkable, err := s.linkableProviders(r.Context(), r, providers, i)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +302,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 		strings.Replace(RouteAuth, ":flow", p.FlowID, 1)),
 		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
 }
@@ -370,7 +372,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	availableProviders, err := s.linkedProviders(r.Context(), providers, i)
+	availableProviders, err := s.linkedProviders(r.Context(), r, providers, i)
 	if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return

@@ -9,6 +9,8 @@ import (
 
 	"github.com/ory/kratos-client-go"
 
+	"github.com/ory/kratos/corpx"
+
 	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
@@ -28,7 +30,7 @@ import (
 )
 
 func init() {
-	internal.RegisterFakes()
+	corpx.RegisterFakes()
 }
 
 func TestHandler(t *testing.T) {

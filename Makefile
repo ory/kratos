@@ -10,16 +10,11 @@ export PWD := $(shell pwd)
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/ory/x/tools/listx \
-				  github.com/markbates/pkger/cmd/pkger \
 				  github.com/golang/mock/mockgen \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
 				  github.com/mikefarah/yq \
-				  github.com/bufbuild/buf/cmd/buf \
-					github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
-					github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
-					google.golang.org/protobuf/cmd/protoc-gen-go \
-					google.golang.org/grpc/cmd/protoc-gen-go-grpc
+				  github.com/mattn/goveralls
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
@@ -72,7 +67,7 @@ mocks: .bin/mockgen
 		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
 .PHONY: install
-install: pack
+install:
 		GO111MODULE=on go install -tags sqlite .
 
 .PHONY: test-resetdb
@@ -83,20 +78,27 @@ test-resetdb:
 test:
 		go test -p 1 -tags sqlite -count=1 -failfast ./...
 
+.PHONY: test-coverage
+test-coverage: .bin/go-acc .bin/goveralls
+		go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m -tags sqlite
+		test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+
 # Generates the SDK
 .PHONY: sdk
-sdk: # .bin/swagger .bin/cli node_modules
-		swagger generate spec -m -o .schema/api.swagger.json -x github.com/ory/kratos-client-go
-		cli dev swagger sanitize ./.schema/api.swagger.json
-		swagger validate ./.schema/api.swagger.json
+sdk: .bin/swagger .bin/cli node_modules
+		swagger generate spec -m -o spec/swagger.json -x github.com/ory/kratos-client-go
+		cli dev swagger sanitize ./spec/swagger.json
+		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
 				cli dev openapi migrate \
 					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
 					-p file://.schema/openapi/patches/meta.yaml \
 					-p file://.schema/openapi/patches/schema.yaml \
-					.schema/api.swagger.json .schema/api.openapi.json
+					spec/swagger.json spec/openapi.json
 
-		npm run openapi-generator-cli -- generate -i ".schema/api.openapi.json" \
+		rm -rf internal/httpclient/models internal/httpclient/clients
+		mkdir -p internal/httpclient/
+		npm run openapi-generator-cli -- generate -i "spec/openapi.json" \
 				-g go \
 				-o "internal/httpclient" \
 				--git-user-id ory \
@@ -120,7 +122,7 @@ quickstart-dev:
 
 # Formats the code
 .PHONY: format
-format: .bin/goimports
+format: .bin/goimports docs/node_modules node_modules
 		goimports -w -local github.com/ory .
 		cd docs; npm run format
 		npm run format
@@ -158,18 +160,3 @@ migrations-render-replace: .bin/cli
 .PHONY: migratest-refresh
 migratest-refresh:
 		cd persistence/sql/migratest; go test -tags sqlite,refresh -short .
-
-.PHONY: pack
-pack: .bin/pkger
-		pkger -exclude node_modules -exclude docs -exclude .git -exclude .github -exclude .bin -exclude test -exclude script -exclude contrib
-
-.PHONY: buf-tools
-buf-tools: .bin/buf .bin/protoc-gen-grpc-gateway .bin/protoc-gen-openapiv2 .bin/protoc-gen-go .bin/protoc-gen-go-grpc
-
-.PHONY: buf-lint
-buf-lint: buf-tools
-		buf lint
-
-.PHONY: buf-gen
-buf-gen: buf-tools
-		buf generate

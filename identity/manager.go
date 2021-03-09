@@ -149,7 +149,7 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 func (m *Manager) validate(ctx context.Context, i *Identity, o *managerOptions) error {
 	if err := m.r.IdentityValidator().Validate(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok && !o.ExposeValidationErrors {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+			return herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)
 		}
 		return err
 	}

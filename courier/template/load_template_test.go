@@ -21,7 +21,7 @@ func TestLoadTextTemplate(t *testing.T) {
 	}
 
 	t.Run("method=from bundled", func(t *testing.T) {
-		actual := executeTemplate(t, "/courier/template/templates/test_stub/email.body.gotmpl")
+		actual := executeTemplate(t, "courier/builtin/templates/test_stub/email.body.gotmpl")
 		assert.Contains(t, actual, "stub email")
 	})
 

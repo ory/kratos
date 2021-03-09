@@ -60,7 +60,7 @@ func TestHandleError(t *testing.T) {
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *login.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		f := login.NewFlow(conf,ttl, "csrf_token", req, ft)
-		for _, s := range reg.LoginStrategies() {
+		for _, s := range reg.LoginStrategies(context.Background()) {
 			require.NoError(t, s.PopulateLoginMethod(req, f))
 		}
 

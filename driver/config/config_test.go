@@ -3,11 +3,15 @@ package config_test
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/ory/x/configx"
+
+	"github.com/sirupsen/logrus/hooks/test"
 
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/urlx"
@@ -33,7 +37,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/error", p.SelfServiceFlowErrorURL().String())
 
 			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL().String())
-			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL().String())
+			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL(nil).String())
 
 			var ds []string
 			for _, v := range p.SelfServiceBrowserWhitelistedReturnToDomains() {
@@ -44,6 +48,47 @@ func TestViperProvider(t *testing.T) {
 				"http://return-to-1-test.ory.sh/",
 				"http://return-to-2-test.ory.sh/",
 			}, ds)
+
+			pWithFragments := config.MustNew(t,logrusx.New("", ""),
+				configx.WithValues(map[string]interface{}{
+					config.ViperKeySelfServiceLoginUI:        "http://test.kratos.ory.sh/#/login",
+					config.ViperKeySelfServiceSettingsURL:    "http://test.kratos.ory.sh/#/settings",
+					config.ViperKeySelfServiceRegistrationUI: "http://test.kratos.ory.sh/#/register",
+					config.ViperKeySelfServiceErrorUI:        "http://test.kratos.ory.sh/#/error",
+				}),
+				configx.SkipValidation(),
+			)
+
+			assert.Equal(t, "http://test.kratos.ory.sh/#/login", pWithFragments.SelfServiceFlowLoginUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/settings", pWithFragments.SelfServiceFlowSettingsUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/register", pWithFragments.SelfServiceFlowRegistrationUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/error", pWithFragments.SelfServiceFlowErrorURL().String())
+
+			for _, v := range []string{
+				"#/login",
+				"/login",
+				"/",
+				"test.kratos.ory.sh/login",
+			} {
+
+				logger := logrusx.New("", "")
+				logger.Logger.ExitFunc = func(code int) { panic("") }
+				hook := new(test.Hook)
+				logger.Logger.Hooks.Add(hook)
+
+				pWithIncorrectUrls := MustNew(logger,
+					configx.WithValues(map[string]interface{}{
+						ViperKeySelfServiceLoginUI: v,
+					}),
+					configx.SkipValidation(),
+				)
+
+				assert.Panics(t, func() { pWithIncorrectUrls.SelfServiceFlowLoginUI() })
+
+				assert.Equal(t, logrus.FatalLevel, hook.LastEntry().Level)
+				assert.Equal(t, "Configuration value from key selfservice.flows.login.ui_url is not a valid URL: "+v, hook.LastEntry().Message)
+				assert.Equal(t, 1, len(hook.Entries))
+			}
 		})
 
 		t.Run("group=default_return_to", func(t *testing.T) {
@@ -275,8 +320,32 @@ func TestProviderBaseURLs(t *testing.T) {
 
 	// Set to dev mode
 	p.MustSet("dev", true)
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL().String())
+	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL().String())
+
+	// Check domain aliases
+	p.MustSet(config.ViperKeyPublicDomainAliases, []config.DomainAlias{
+		{
+			MatchDomain: "www.google.com",
+			BasePath:    "/.ory/",
+			Scheme:      "https",
+		},
+		{
+			MatchDomain: "www.amazon.com",
+			BasePath:    "/",
+			Scheme:      "http",
+		},
+	})
+	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(&http.Request{
+		Host: "www.not-google.com",
+	}).String())
+	assert.Equal(t, "https://www.GooGle.com:312/.ory/", p.SelfPublicURL(&http.Request{
+		Host: "www.GooGle.com:312",
+	}).String())
+	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
+		Host: "www.amazon.com",
+	}).String())
 }
 
 func TestViperProvider_Secrets(t *testing.T) {
@@ -420,4 +489,60 @@ func TestViperProvider_DSN(t *testing.T) {
 		assert.Equal(t, dsn, p.DSN())
 		assert.NotEqual(t, 0, exitCode)
 	})
+}
+
+func TestViperProvider_ParseURIOrFail(t *testing.T) {
+	var exitCode int
+
+	l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
+		exitCode = i
+	}))
+	p := config.MustNew(t,l, configx.SkipValidation())
+	require.Zero(t, exitCode)
+
+	const testKey = "testKeyNotUsedInTheRealSchema"
+
+	for _, tc := range []struct {
+		u        string
+		expected url.URL
+	}{
+		{
+			u: "file:///etc/config/kratos/identity.schema.json",
+			expected: url.URL{
+				Scheme: "file",
+				Path:   "/etc/config/kratos/identity.schema.json",
+			},
+		},
+		{
+			u: "file://./identity.schema.json",
+			expected: url.URL{
+				Scheme: "file",
+				Host:   ".",
+				Path:   "/identity.schema.json",
+			},
+		},
+		{
+			u: "base64://bG9jYWwgc3ViamVjdCA9I",
+			expected: url.URL{
+				Scheme: "base64",
+				Host:   "bG9jYWwgc3ViamVjdCA9I",
+			},
+		},
+		{
+			u: "https://foo.bar/schema.json",
+			expected: url.URL{
+				Scheme: "https",
+				Host:   "foo.bar",
+				Path:   "/schema.json",
+			},
+		},
+	} {
+		t.Run("case=parse "+tc.u, func(t *testing.T) {
+			require.NoError(t, p.Set(testKey, tc.u))
+
+			u := p.ParseURIOrFail(testKey)
+			require.Zero(t, exitCode)
+			assert.Equal(t, tc.expected, *u)
+		})
+	}
 }

@@ -1,7 +1,14 @@
 package password
 
 import (
-	"github.com/markbates/pkger"
+	_ "embed"
 )
 
-var _ = pkger.Dir("github.com/ory/kratos:/selfservice/strategy/password/.schema")
+//go:embed .schema/login.schema.json
+var loginSchema []byte
+
+//go:embed .schema/registration.schema.json
+var registrationSchema []byte
+
+//go:embed .schema/settings.schema.json
+var settingsSchema []byte

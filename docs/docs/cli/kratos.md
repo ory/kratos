@@ -12,8 +12,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos
 
-### Synopsis
-
 ### Options
 
 ```
@@ -22,6 +20,8 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ### SEE ALSO
 
+- [kratos courier](kratos-courier) - Commands related to the ORY Kratos message
+  courier
 - [kratos hashers](kratos-hashers) - This command contains helpers around
   hashing
 - [kratos identities](kratos-identities) - Tools to interact with remote

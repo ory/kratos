@@ -3,7 +3,6 @@ package password
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/markbates/pkger"
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -50,7 +49,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 	var p CompleteSelfServiceLoginFlowWithPasswordMethod
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
-		decoderx.MustHTTPRawJSONSchemaCompiler(pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/password/.schema/login.schema.json"))),
+		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}

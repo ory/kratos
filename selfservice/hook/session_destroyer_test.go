@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/ory/kratos/corpx"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
@@ -20,7 +22,7 @@ import (
 )
 
 func init() {
-	internal.RegisterFakes()
+	corpx.RegisterFakes()
 }
 
 func TestSessionDestroyer(t *testing.T) {

@@ -12,6 +12,26 @@ required for The following exemplary use cases require these messages:
 - Sending a 2FA Codes
 - ...
 
+## Mail courier
+
+ORY Kratos processes email dispatch using a mail courier worker, which must run
+as a singleton in order to process the mail queue correctly. It can be run as a
+background worker on a single-instance Kratos setup or as a distinct singleton
+foreground worker in multi-instance deployments.
+
+### Single instance
+
+To run the mail courier in the background on your single Kratos instance, add
+the `--watch-courier` flag to your `kratos serve` command, as outlined in the
+[CLI docs](../cli/kratos-serve.md)
+
+### Multi-instance
+
+If you're running multiple instances of Kratos (eg replicated Kubernetes
+deployment), you need to run the mail courier as a separate singleton job. The
+courier can be started with the `kratos courier watch` command
+([CLI docs](../cli/kratos-courier.md)).
+
 ## Sending E-Mails via SMTP
 
 To have E-Mail delivery running with ORY Kratos requires an SMTP server. This is
@@ -79,7 +99,7 @@ filling E-mail subject and body.
     invalidating a verification
 
 For example:
-[`/courier/template/templates/verification/valid/email.body.gotmpl`](https://github.com/ory/kratos/blob/master/courier/template/templates/verification/valid/email.body.gotmpl)
+[`/courier/template/courier/builtin/templates/verification/valid/email.body.gotmpl`](https://github.com/ory/kratos/blob/master/courier/template/templates/verification/valid/email.body.gotmpl)
 
 ```gotmpl title="courier/template/templates/verification/valid/email.body.gotmpl"
 Hi, please verify your account by clicking the following link:

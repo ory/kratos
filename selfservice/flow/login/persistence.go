@@ -28,12 +28,11 @@ type (
 	}
 )
 
-func TestFlowPersister(p FlowPersister) func(t *testing.T) {
+func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) {
 	var clearids = func(r *Flow) {
 		r.ID = uuid.UUID{}
 	}
 
-	ctx := context.Background()
 	return func(t *testing.T) {
 		t.Run("case=should error when the login flow does not exist", func(t *testing.T) {
 			_, err := p.GetLoginFlow(ctx, x.NewUUID())

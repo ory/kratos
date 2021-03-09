@@ -2,9 +2,6 @@ module github.com/ory/kratos
 
 go 1.16
 
-// See https://github.com/markbates/pkger/pull/112
-replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.20200722132747-95726f5b9b9b
-
 replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 
 // Use the internal httpclient which can be generated in this codebase but mark it as the
@@ -15,6 +12,8 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 replace github.com/ory/kratos/corp => ./corp
 
 replace github.com/ory/cli => ../cli
+
+replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
@@ -30,14 +29,14 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.0
+	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-swagger/go-swagger v0.26.1
 	github.com/gobuffalo/fizz v1.13.1-0.20201104174146-3416f0e6618f
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/pop/v5 v5.3.2-0.20210128124218-e397a61c1704
-	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.4.4
-	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/go-jsonnet v0.16.0
 	github.com/google/uuid v1.1.5
@@ -50,6 +49,8 @@ require (
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/knadh/koanf v0.14.1-0.20201201075439-e0853799f9ec
+	github.com/luna-duclos/instrumentedsql v1.1.3
+	github.com/luna-duclos/instrumentedsql/opentracing v0.0.0-20201103091713-40d03108b6f4
 	github.com/markbates/pkger v0.17.1
 	github.com/mattn/goveralls v0.0.7
 	github.com/mikefarah/yq v1.15.0
@@ -85,13 +86,8 @@ require (
 	github.com/tidwall/gjson v1.6.7
 	github.com/tidwall/sjson v1.1.4
 	github.com/urfave/negroni v1.0.0
-	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b
-	google.golang.org/grpc v1.34.0 // indirect
-	google.golang.org/protobuf v1.25.1-0.20201208041424-160c7477e0e8 // indirect
-	gopkg.in/go-playground/validator.v9 v9.28.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

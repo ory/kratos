@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/corpx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -25,7 +27,7 @@ import (
 )
 
 func init() {
-	internal.RegisterFakes()
+	corpx.RegisterFakes()
 }
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {

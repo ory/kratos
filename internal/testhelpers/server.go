@@ -26,7 +26,7 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 	reg.Config(context.Background()).MustSet(config.ViperKeyPublicBaseURL, public.URL)
 	reg.Config(context.Background()).MustSet(config.ViperKeyAdminBaseURL, admin.URL)
 
-	reg.RegisterRoutes(rp, ra)
+	reg.RegisterRoutes(context.Background(), rp, ra)
 
 	t.Cleanup(public.Close)
 	t.Cleanup(admin.Close)
@@ -51,7 +51,7 @@ func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptes
 	reg.Config(context.Background()).MustSet(config.ViperKeyPublicBaseURL, public.URL)
 	reg.Config(context.Background()).MustSet(config.ViperKeyAdminBaseURL, admin.URL)
 
-	reg.RegisterRoutes(public.Config.Handler.(*x.RouterPublic), admin.Config.Handler.(*x.RouterAdmin))
+	reg.RegisterRoutes(context.Background(), public.Config.Handler.(*x.RouterPublic), admin.Config.Handler.(*x.RouterAdmin))
 }
 
 func NewKratosServers(t *testing.T) (public, admin *httptest.Server) {

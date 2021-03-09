@@ -22,4 +22,4 @@ run:
     - sdk/
   skip-files:
     - ".+_test.go"
-    - "internal/faker.go"
+    - "corpx/faker.go"

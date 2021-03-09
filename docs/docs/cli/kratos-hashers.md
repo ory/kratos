@@ -1,7 +1,7 @@
 ---
 id: kratos-hashers
 title: kratos hashers
-description: kratos hashers This command contains helpers around hashing
+description: kratos hashers This command contains helpers around hashing.
 ---
 
 <!--
@@ -12,11 +12,7 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos hashers
 
-This command contains helpers around hashing
-
-### Synopsis
-
-This command contains helpers around hashing
+This command contains helpers around hashing.
 
 ### Options
 

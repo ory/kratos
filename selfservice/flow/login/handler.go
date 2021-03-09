@@ -76,7 +76,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
 	conf := h.d.Config(r.Context())
 	a := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
-	for _, s := range h.d.LoginStrategies() {
+	for _, s := range h.d.LoginStrategies(r.Context()) {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return nil, err
 		}
@@ -200,7 +200,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	returnTo, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(),
-		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL()),
+		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL(r)),
 		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
 	)
 	if err != nil {
@@ -254,12 +254,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 		if ar.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitBrowserFlow).String())))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The login flow has expired. Call the login flow init API endpoint to initialize a new login flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitAPIFlow).String())))
 		return
 	}
 

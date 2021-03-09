@@ -19,14 +19,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestPersister(conf *config.Config, p interface {
+func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	RecoveryTokenPersister
 	VerificationTokenPersister
 	recovery.FlowPersister
 	verification.FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	ctx := context.Background()
 	return func(t *testing.T) {
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 		conf.MustSet(config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})

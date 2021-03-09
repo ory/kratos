@@ -124,7 +124,7 @@ that your company deserves a spot here, reach out to
         </tr>
         <tr>
             <td>Contributor</td>
-            <td>Kyma Project</a>
+            <td>Kyma Project</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/kyma.svg" alt="Kyma Project"></td>
             <td><a href="https://kyma-project.io">kyma-project.io</a></td>
         </tr>
@@ -188,12 +188,12 @@ that your company deserves a spot here, reach out to
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/spiribo.svg" alt="Spiri.bo"></td>
             <td><a href="https://spiri.bo/">spiri.bo</a></td>
         </tr>
-    </tdbody>
+    </tbody>
 </table>
 
 We also want to thank all individual contributors
 
-<img src="https://opencollective.com/ory/contributors.svg?width=890&button=false" />
+<a href="https://opencollective.com/ory" target="_blank"><img src="https://opencollective.com/ory/contributors.svg?width=890&button=false" /></a>
 
 as well as all of our backers
 
@@ -251,7 +251,7 @@ design:
 - Scales without effort
 - Minimize room for human and network errors
 
-ORY's architecture designed to run best on a Container Orchestration Systems
+ORY's architecture is designed to run best on Container Orchestration Systems
 such as Kubernetes, CloudFoundry, OpenShift, and similar projects. Binaries are
 small (5-15MB) and available for all popular processor types (ARM, AMD64, i386)
 and operating systems (FreeBSD, Linux, macOS, Windows) without system
@@ -269,8 +269,9 @@ deal with: Self-service Login and Registration, Multi-Factor Authentication
 ### ORY Hydra: OAuth2 & OpenID Connect Server
 
 [ORY Hydra](https://github.com/ory/hydra) is an OpenID Certified™ OAuth2 and
-OpenID Connect Provider can connect to any existing identity database (LDAP, AD,
-KeyCloak, PHP+MySQL, ...) and user interface.
+OpenID Connect Provider which easily connects to any existing identity system by
+writing a tiny "bridge" application. Gives absolute control over user interface
+and user experience flows.
 
 ### ORY Oathkeeper: Identity & Access Proxy
 

@@ -18,6 +18,8 @@ Something is not working.
 - [ ] Refresh Sessions Without Having to Log In Again
       ([kratos#615](https://github.com/ory/kratos/issues/615)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] handle 409 error in settings flow
+      ([kratos#1107](https://github.com/ory/kratos/issues/1107))
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 
@@ -43,8 +45,6 @@ New feature or request.
       ([kratos#820](https://github.com/ory/kratos/issues/820))
 - [ ] Add i18n support to mail templates
       ([kratos#834](https://github.com/ory/kratos/issues/834))
-- [ ] Add option for disabling registration
-      ([kratos#882](https://github.com/ory/kratos/issues/882))
 - [ ] Rename strategy to method in internal APIs and Documentation
       ([kratos#683](https://github.com/ory/kratos/issues/683)) -
       [@hackerman](https://github.com/aeneasr)
@@ -60,6 +60,8 @@ New feature or request.
       ([kratos#286](https://github.com/ory/kratos/issues/286))
 - [ ] How to sign in with Twitter
       ([kratos#517](https://github.com/ory/kratos/issues/517))
+- [ ] login ui returned without flowid
+      ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [x] Implement Security Questions MFA
       ([kratos#469](https://github.com/ory/kratos/issues/469))
 - [x] Double slash in URLs causes CSRF issues
@@ -105,13 +107,9 @@ Something is not working.
 
 - [ ] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
-- [ ] Password reset emails sent twice by each of the two kratos pods in my
-      cluster ([kratos#652](https://github.com/ory/kratos/issues/652))
 - [ ] Investigate why smtps fails but smtp does not
       ([kratos#781](https://github.com/ory/kratos/issues/781)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Add randomized constant time to every login request
-      ([kratos#832](https://github.com/ory/kratos/issues/832))
 - [ ] Fetching a settings request after error is missing identity data
       ([kratos#689](https://github.com/ory/kratos/issues/689)) -
       [@hackerman](https://github.com/aeneasr)
@@ -123,13 +121,22 @@ Something is not working.
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] panic: a handle is already registered for path
+      '/self-service/recovery/methods/link'
+      ([kratos#1068](https://github.com/ory/kratos/issues/1068))
+- [ ] Recovery link doesn't log out existing users
+      ([kratos#1077](https://github.com/ory/kratos/issues/1077))
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
+- [x] Password reset emails sent twice by each of the two kratos pods in my
+      cluster ([kratos#652](https://github.com/ory/kratos/issues/652))
 - [x] Building From Source fails
       ([kratos#711](https://github.com/ory/kratos/issues/711))
 - [x] Quickstart is failing to mount volume kratos.yml when SELinux is enabled
       using Podman ([kratos#831](https://github.com/ory/kratos/issues/831)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Add randomized constant time to every login request
+      ([kratos#832](https://github.com/ory/kratos/issues/832))
 - [x] Kratos Admin API return 409 when createIdentity is called simultaneously
       ([kratos#861](https://github.com/ory/kratos/issues/861)) -
       [@Patrik](https://github.com/zepatrik)
@@ -141,6 +148,9 @@ Something is not working.
 
 #### Pull Requests
 
+- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Implement FIDO2/MFA and refactor flow payloads and identity credentials
       and authenticators
       ([kratos#921](https://github.com/ory/kratos/pull/921)) -
@@ -183,6 +193,11 @@ New feature or request.
       ([kratos#969](https://github.com/ory/kratos/issues/969))
 - [ ] Access identity schema information (e.g. usernames) within the jsonnet
       mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
+- [ ] Add option for disabling registration
+      ([kratos#882](https://github.com/ory/kratos/issues/882)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Support dynamic return_to address on verification flow
+      ([kratos#1123](https://github.com/ory/kratos/issues/1123))
 - [x] Support remote argon2 execution
       ([kratos#357](https://github.com/ory/kratos/issues/357)) -
       [@hackerman](https://github.com/aeneasr)
@@ -204,7 +219,10 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] docs: Initial set of documentation tests
+- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] docs: Initial set of documentation tests
       ([kratos#567](https://github.com/ory/kratos/pull/567)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] feat: add selinux compatible quickstart config
@@ -234,7 +252,7 @@ Affects documentation.
 
 #### Pull Requests
 
-- [ ] docs: Initial set of documentation tests
+- [x] docs: Initial set of documentation tests
       ([kratos#567](https://github.com/ory/kratos/pull/567)) -
       [@hackerman](https://github.com/aeneasr)
 
@@ -248,4 +266,14 @@ A request for comments to discuss and share ideas.
       ([kratos#47](https://github.com/ory/kratos/issues/47))
 - [ ] Refactor form builder
       ([kratos#929](https://github.com/ory/kratos/issues/929)) -
+      [@hackerman](https://github.com/aeneasr)
+
+### [Blocking](https://github.com/ory/kratos/labels/blocking)
+
+Blocks milestones or other issues or pulls.
+
+#### Pull Requests
+
+- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
       [@hackerman](https://github.com/aeneasr)

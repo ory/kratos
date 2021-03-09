@@ -2,8 +2,11 @@ package cliclient
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/spf13/cobra"
 
@@ -22,11 +25,23 @@ type ContextKey int
 
 const (
 	ClientContextKey ContextKey = iota + 1
+	HTTPClientContextKey
 )
+
+func NewHTTPClient(cmd *cobra.Command) *http.Client {
+	if f, ok := cmd.Context().Value(HTTPClientContextKey).(func(cmd *cobra.Command) *http.Client); ok {
+		return f(cmd)
+	} else if f != nil {
+		panic(fmt.Sprintf("ClientContextKey was expected to be *http.Client but it contained an invalid type %T ", f))
+	}
+	return httpx.NewResilientClientLatencyToleranceMedium(http.DefaultTransport)
+}
 
 func NewClient(cmd *cobra.Command) *kratos.APIClient {
 	if f, ok := cmd.Context().Value(ClientContextKey).(func(cmd *cobra.Command) *kratos.APIClient); ok {
 		return f(cmd)
+	} else if f != nil {
+		panic(fmt.Sprintf("ClientContextKey was expected to be *client.OryKratos but it contained an invalid type %T ", f))
 	}
 
 	endpoint, err := cmd.Flags().GetString(FlagEndpoint)

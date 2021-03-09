@@ -6,6 +6,7 @@ import (
 	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/decoderx"
 )
 
 var _ recovery.Strategy = new(Strategy)

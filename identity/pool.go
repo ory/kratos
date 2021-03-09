@@ -86,10 +86,9 @@ type (
 	}
 )
 
-func TestPool(conf *config.Config, p interface {
+func TestPool(ctx context.Context, conf *config.Config, p interface {
 	PrivilegedPool
 }) func(t *testing.T) {
-	ctx := context.Background()
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
 		conf.MustSet(config.ViperKeyPublicBaseURL, exampleServerURL.String())
@@ -148,7 +147,7 @@ func TestPool(conf *config.Config, p interface {
 
 			count, err := p.CountIdentities(ctx)
 			require.NoError(t, err)
-			assert.EqualValues(t, 1, count)
+			assert.EqualValues(t, int64(1), count)
 		})
 
 		t.Run("case=create with default values", func(t *testing.T) {

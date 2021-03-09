@@ -181,10 +181,10 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	reg.WithCSRFHandler(hh)
 
 	reg.SettingsHandler().RegisterPublicRoutes(public)
-	reg.SettingsStrategies().RegisterPublicRoutes(public)
+	reg.SettingsStrategies(context.Background()).RegisterPublicRoutes(public)
 	reg.LoginHandler().RegisterPublicRoutes(public)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginStrategies().RegisterPublicRoutes(public)
+	reg.LoginStrategies(context.Background()).RegisterPublicRoutes(public)
 
 	tsp, tsa := httptest.NewServer(hh), httptest.NewServer(admin)
 	t.Cleanup(tsp.Close)

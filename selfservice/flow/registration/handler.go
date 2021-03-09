@@ -64,7 +64,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
 	a := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
-	for _, s := range h.d.RegistrationStrategies() {
+	for _, s := range h.d.RegistrationStrategies(r.Context()) {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return nil, err
 		}
@@ -199,12 +199,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 		if ar.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The registration flow has expired. Redirect the user to the registration flow init endpoint to initialize a new registration flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitBrowserFlow).String())))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The registration flow has expired. Call the registration flow init API endpoint to initialize a new registration flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitAPIFlow).String())))
 		return
 	}
 

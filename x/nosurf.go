@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"net/http"
 
+	"github.com/ory/kratos/driver/config"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/nosurf"
-	"github.com/ory/x/logrusx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/stringsx"
 )
@@ -83,37 +84,52 @@ type CSRFHandler interface {
 	IgnorePath(string)
 }
 
+func NosurfBaseCookieHandler(reg interface {
+	config.Provider
+}) func(w http.ResponseWriter, r *http.Request) http.Cookie {
+	return func(w http.ResponseWriter, r *http.Request) http.Cookie {
+		secure := !reg.Config(r.Context()).IsInsecureDevMode()
+
+		sameSite := http.SameSiteNoneMode
+		if !secure {
+			sameSite = http.SameSiteLaxMode
+		}
+
+		name := base64.RawURLEncoding.EncodeToString([]byte(reg.Config(r.Context()).SelfPublicURL(r).String())) + "_csrf_token"
+
+		return http.Cookie{
+			Name:     name,
+			MaxAge:   nosurf.MaxAge,
+			Path:     stringsx.Coalesce(reg.Config(r.Context()).SelfPublicURL(r).Path, "/"),
+			Domain:   reg.Config(r.Context()).SelfPublicURL(r).Hostname(),
+			HttpOnly: true,
+			Secure:   secure,
+			SameSite: sameSite,
+		}
+	}
+}
+
 func NewCSRFHandler(
 	router http.Handler,
-	writer herodot.Writer,
-	logger *logrusx.Logger,
-	path string,
-	domain string,
-	secure bool,
-) *nosurf.CSRFHandler {
+	reg interface {
+		config.Provider
+		LoggingProvider
+		WriterProvider
+	}) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
 
-	samesiteattribute := http.SameSiteNoneMode
-	if !secure {
-		samesiteattribute = http.SameSiteLaxMode
-	}
-
-	n.SetBaseCookie(http.Cookie{
-		MaxAge:   nosurf.MaxAge,
-		Path:     path,
-		Domain:   domain,
-		HttpOnly: true,
-		Secure:   secure,
-		SameSite: samesiteattribute,
-	})
+	n.SetBaseCookieFunc(NosurfBaseCookieHandler(reg))
 	n.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger.
+
+		reg.Logger().
+			WithField("result", nosurf.VerifyToken(nosurf.Token(r), r.Form.Get("csrf_token"))).
 			WithField("expected_token", nosurf.Token(r)).
-			WithField("received_token", r.Form.Get("csrf_token")).
-			WithField("received_token_form", r.PostForm.Get("csrf_token")).
+			WithField("received_cookies", r.Cookies()).
+			WithField("received_token_form", r.Form.Get("csrf_token")).
+			WithField("received_token_body", r.PostForm.Get("csrf_token")).
 			Warn("A request failed due to a missing or invalid csrf_token value")
 
-		writer.WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("CSRF token is missing or invalid.")))
+		reg.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("CSRF token is missing or invalid.")))
 	}))
 	return n
 }
@@ -123,8 +139,9 @@ func NewTestCSRFHandler(router http.Handler, reg interface {
 	WithCSRFTokenGenerator(CSRFToken)
 	WriterProvider
 	LoggingProvider
+	config.Provider
 }) *nosurf.CSRFHandler {
-	n := NewCSRFHandler(router, reg.Writer(), reg.Logger(), "/", "", false)
+	n := NewCSRFHandler(router, reg)
 	reg.WithCSRFHandler(n)
 	reg.WithCSRFTokenGenerator(nosurf.Token)
 	return n

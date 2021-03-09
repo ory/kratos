@@ -48,13 +48,14 @@ type Registry interface {
 	WithCSRFHandler(c x.CSRFHandler)
 	WithCSRFTokenGenerator(cg x.CSRFToken)
 
-	HealthHandler() *healthx.Handler
-	CookieManager() sessions.Store
+	HealthHandler(ctx context.Context) *healthx.Handler
+	CookieManager(ctx context.Context) sessions.Store
+	MetricsHandler() *prometheus.Handler
 	ContinuityCookieManager(ctx context.Context) sessions.Store
 
-	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
-	RegisterPublicRoutes(public *x.RouterPublic)
-	RegisterAdminRoutes(admin *x.RouterAdmin)
+	RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin)
+	RegisterPublicRoutes(ctx context.Context, public *x.RouterPublic)
+	RegisterAdminRoutes(ctx context.Context, admin *x.RouterAdmin)
 	PrometheusManager() *prometheus.MetricsManager
 	Tracer(context.Context) *tracing.Tracer
 

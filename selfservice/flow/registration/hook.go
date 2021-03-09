@@ -1,6 +1,7 @@
 package registration
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -34,9 +35,9 @@ type (
 	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
 
 	HooksProvider interface {
-		PreRegistrationHooks() []PreHookExecutor
-		PostRegistrationPrePersistHooks(credentialsType identity.CredentialsType) []PostHookPrePersistExecutor
-		PostRegistrationPostPersistHooks(credentialsType identity.CredentialsType) []PostHookPostPersistExecutor
+		PreRegistrationHooks(ctx context.Context) []PreHookExecutor
+		PostRegistrationPrePersistHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookPrePersistExecutor
+		PostRegistrationPostPersistHooks(ctx context.Context, credentialsType identity.CredentialsType) []PostHookPostPersistExecutor
 	}
 )
 
@@ -86,14 +87,14 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		WithField("flow_method", ct).
 		Debug("Running PostRegistrationPrePersistHooks.")
-	for k, executor := range e.d.PostRegistrationPrePersistHooks(ct) {
+	for k, executor := range e.d.PostRegistrationPrePersistHooks(r.Context(), ct) {
 		if err := executor.ExecutePostRegistrationPrePersistHook(w, r, a, i); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", ct).
 					Debug("A ExecutePostRegistrationPrePersistHook hook aborted early.")
@@ -105,7 +106,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", ct).
 			Debug("ExecutePostRegistrationPrePersistHook completed successfully.")
@@ -134,14 +135,14 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		WithField("flow_method", ct).
 		Debug("Running PostRegistrationPostPersistHooks.")
-	for k, executor := range e.d.PostRegistrationPostPersistHooks(ct) {
+	for k, executor := range e.d.PostRegistrationPostPersistHooks(r.Context(), ct) {
 		if err := executor.ExecutePostRegistrationPostPersistHook(w, r, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
 					WithField("identity_id", i.ID).
 					WithField("flow_method", ct).
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
@@ -153,7 +154,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(r.Context(), ct))).
 			WithField("identity_id", i.ID).
 			WithField("flow_method", ct).
 			Debug("ExecutePostRegistrationPostPersistHook completed successfully.")
@@ -175,7 +176,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 }
 
 func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
-	for _, executor := range e.d.PreRegistrationHooks() {
+	for _, executor := range e.d.PreRegistrationHooks(r.Context()) {
 		if err := executor.ExecuteRegistrationPreHook(w, r, a); err != nil {
 			return err
 		}
