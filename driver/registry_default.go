@@ -207,7 +207,9 @@ func (m *RegistryDefault) LogoutHandler() *logout.Handler {
 func (m *RegistryDefault) HealthHandler() *healthx.Handler {
 	if m.healthxHandler == nil {
 		m.healthxHandler = healthx.NewHandler(m.Writer(), config.Version,
-			healthx.ReadyCheckers{"database": m.Ping})
+			healthx.ReadyCheckers{"database": func(_ *http.Request) error {
+				return m.Ping()
+			}})
 	}
 
 	return m.healthxHandler

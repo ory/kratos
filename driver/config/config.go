@@ -181,12 +181,12 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 }
 
 func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
-	p, err := New(l, opts...)
+	p, err := New(context.TODO(), l, opts...)
 	require.NoError(t, err)
 	return p
 }
 
-func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 	f, err := pkger.Open("github.com/ory/kratos:/.schema/config.schema.json")
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to open config.schema.json")
@@ -203,6 +203,7 @@ func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
+		configx.WithContext(ctx),
 	}, opts...)
 
 	p, err := configx.New(schema, opts...)
