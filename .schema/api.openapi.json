@@ -325,31 +325,6 @@
         ],
         "type": "object"
       },
-      "form": {
-        "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
-        "type": "object"
-      },
       "genericError": {
         "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
         "properties": {
@@ -440,22 +415,15 @@
             "format": "date-time",
             "type": "string"
           },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "methods": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/loginFlowMethod"
-            },
-            "description": "List of login methods\n\nThis is the list of available login methods with their required form fields, such as `identifier` and `password`\nfor the password login method. This will also contain error messages such as \"password can not be empty\".",
-            "type": "object"
-          },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
             "type": "string"
           },
           "type": {
             "$ref": "#/components/schemas/Type"
+          },
+          "ui": {
+            "$ref": "#/components/schemas/uiContainer"
           }
         },
         "required": [
@@ -464,78 +432,9 @@
           "expires_at",
           "issued_at",
           "request_url",
-          "methods"
+          "ui"
         ],
         "title": "Login Flow",
-        "type": "object"
-      },
-      "loginFlowMethod": {
-        "properties": {
-          "config": {
-            "$ref": "#/components/schemas/loginFlowMethodConfig"
-          },
-          "method": {
-            "$ref": "#/components/schemas/CredentialsType"
-          }
-        },
-        "required": [
-          "method",
-          "config"
-        ],
-        "type": "object"
-      },
-      "loginFlowMethodConfig": {
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          },
-          "providers": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
-        "type": "object"
-      },
-      "loginFlowMethodConfigPayload": {
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          },
-          "providers": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
         "type": "object"
       },
       "loginViaApiResponse": {
@@ -1032,6 +931,31 @@
         "required": [
           "flow",
           "identity"
+        ],
+        "type": "object"
+      },
+      "uiContainer": {
+        "description": "Container represents a HTML Form. The container can work with both HTTP Form and JSON requests",
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
         ],
         "type": "object"
       },

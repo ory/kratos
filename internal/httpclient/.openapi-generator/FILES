@@ -16,7 +16,6 @@ docs/CompleteSelfServiceVerificationFlowWithLinkMethod.md
 docs/CreateIdentity.md
 docs/CreateRecoveryLink.md
 docs/ErrorContainer.md
-docs/Form.md
 docs/GenericError.md
 docs/GenericErrorPayload.md
 docs/HealthNotReadyStatus.md
@@ -26,9 +25,6 @@ docs/InlineResponse200.md
 docs/InlineResponse2001.md
 docs/InlineResponse503.md
 docs/LoginFlow.md
-docs/LoginFlowMethod.md
-docs/LoginFlowMethodConfig.md
-docs/LoginFlowMethodConfigPayload.md
 docs/LoginViaApiResponse.md
 docs/PublicApi.md
 docs/RecoveryAddress.md
@@ -50,6 +46,7 @@ docs/SettingsFlowMethodConfig.md
 docs/SettingsFlowMethodConfigPayload.md
 docs/SettingsProfileFormConfig.md
 docs/SettingsViaApiResponse.md
+docs/UiContainer.md
 docs/UiNode.md
 docs/UiNodeAnchorAttributes.md
 docs/UiNodeAttributes.md
@@ -77,7 +74,6 @@ model_complete_self_service_verification_flow_with_link_method.go
 model_create_identity.go
 model_create_recovery_link.go
 model_error_container.go
-model_form.go
 model_generic_error.go
 model_generic_error_payload.go
 model_health_not_ready_status.go
@@ -87,9 +83,6 @@ model_inline_response_200.go
 model_inline_response_200_1.go
 model_inline_response_503.go
 model_login_flow.go
-model_login_flow_method.go
-model_login_flow_method_config.go
-model_login_flow_method_config_payload.go
 model_login_via_api_response.go
 model_recovery_address.go
 model_recovery_flow.go
@@ -110,6 +103,7 @@ model_settings_flow_method_config.go
 model_settings_flow_method_config_payload.go
 model_settings_profile_form_config.go
 model_settings_via_api_response.go
+model_ui_container.go
 model_ui_node.go
 model_ui_node_anchor_attributes.go
 model_ui_node_attributes.go
