@@ -70,25 +70,17 @@ func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.S
 	return rs
 }
 
-func GetLoginFlowMethodConfig(t *testing.T, rs *kratos.LoginFlow, id string) *kratos.LoginFlowMethodConfig {
-	require.NotEmpty(t, rs.Methods[id])
-	require.NotEmpty(t, rs.Methods[id].Config)
-	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	c := rs.Methods[id].Config
-	return &c
-}
-
 func LoginMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *kratos.LoginFlowMethodConfig,
+	f *kratos.LoginFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
-	require.NotEmpty(t, f.Action)
+	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Action, bytes.NewBufferString(values)))
-	require.NoError(t, err)
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
+	require.NoError(t, err, "action: %s", f.Ui.Action)
 	defer res.Body.Close()
 
 	return string(ioutilx.MustReadAll(res.Body)), res
@@ -125,11 +117,9 @@ func SubmitLoginForm(
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetLoginFlowMethodConfig(t, f, method.String())
-
-	payload := SDKFormFieldsToURLValues(config.Nodes)
+	payload := SDKFormFieldsToURLValues(f.Ui.Nodes)
 	withValues(payload)
-	b, res := LoginMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, payload))
+	b, res := LoginMakeRequest(t, isAPI, f, hc, EncodeFormAsJSON(t, isAPI, payload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 
