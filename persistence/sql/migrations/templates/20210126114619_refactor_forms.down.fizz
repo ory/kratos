@@ -1,0 +1,11 @@
+create_table("selfservice_login_flow_methods") {
+	t.Column("id", "uuid", {primary: true})
+  t.Column("method", "string", {"size": 32})
+  t.Column("selfservice_login_flow_id", "uuid")
+  t.Column("config", "json")
+
+  t.ForeignKey("selfservice_login_flow_id", {"selfservice_login_flow_methods": ["id"]}, {"on_delete": "cascade"})
+}
+
+drop_column("selfservice_login_flows", "ui")
+add_column("selfservice_login_flows", "messages", "json", {"null": true})
