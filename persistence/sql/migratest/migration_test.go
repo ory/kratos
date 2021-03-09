@@ -11,6 +11,8 @@ import (
 	"runtime/debug"
 	"testing"
 
+	"github.com/ory/x/logrusx"
+
 	"github.com/ory/x/configx"
 
 	"github.com/stretchr/testify/assert"
@@ -46,6 +48,9 @@ func TestMigrations(t *testing.T) {
 	connections := map[string]*pop.Connection{
 		"sqlite": sqlite,
 	}
+
+	ctx := context.Background()
+	l := logrusx.New("", "")
 
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
@@ -89,8 +94,8 @@ func TestMigrations(t *testing.T) {
 			}
 			t.Logf("URL: %s", url)
 
-			tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata")
-			require.NoError(t, tm.Up())
+			tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata", l)
+			require.NoError(t, tm.Up(ctx))
 
 			d := driver.New(
 				context.Background(),
@@ -218,7 +223,7 @@ func TestMigrations(t *testing.T) {
 				require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 			})
 
-			require.NoError(t, tm.Down(-1))
+			require.NoError(t, tm.Down(ctx, -1))
 		}
 	}
 
