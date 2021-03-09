@@ -2,15 +2,15 @@ package login
 
 import (
 	"context"
+	"github.com/ory/kratos/driver/config"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/kratos/corp"
 
-	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -18,7 +18,6 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -64,27 +63,10 @@ type Flow struct {
 	// If set contains the login method used. If the flow is new, it is unset.
 	Active identity.CredentialsType `json:"active,omitempty" db:"active_method"`
 
-	// Messages contains a list of messages to be displayed in the Login UI. Omitting these
-	// messages makes it significantly harder for users to figure out what is going on.
-	//
-	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
-	Messages text.Messages `json:"messages" db:"messages" faker:"-"`
-
-	// List of login methods
-	//
-	// This is the list of available login methods with their required form fields, such as `identifier` and `password`
-	// for the password login method. This will also contain error messages such as "password can not be empty".
-	//
-	// required: true
-	Methods map[identity.CredentialsType]*FlowMethod `json:"methods" faker:"login_flow_methods" db:"-"`
-
-	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw []FlowMethod `json:"-" faker:"-" has_many:"selfservice_login_flow_methods" fk_id:"selfservice_login_flow_id"`
-
 	// UI contains data which must be shown in the user interface.
 	//
 	// required: true
-	UI node.Nodes `json:"ui" db:"ui"`
+	UI *container.Container `json:"ui" db:"ui"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" db:"created_at"`
@@ -99,14 +81,18 @@ type Flow struct {
 	Forced bool `json:"forced" db:"forced"`
 }
 
-func NewFlow(exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
 	now := time.Now().UTC()
+	id := x.NewUUID()
 	return &Flow{
-		ID:         x.NewUUID(),
-		ExpiresAt:  now.Add(exp),
-		IssuedAt:   now,
+		ID:        id,
+		ExpiresAt: now.Add(exp),
+		IssuedAt:  now,
+		UI: &container.Container{
+			Method: "POST",
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow),id).String(),
+		},
 		RequestURL: x.RequestURL(r).String(),
-		Methods:    map[identity.CredentialsType]*FlowMethod{},
 		CSRFToken:  csrf,
 		Type:       flowType,
 		Forced:     r.URL.Query().Get("refresh") == "true",
@@ -168,5 +154,5 @@ func (f *Flow) IsForced() bool {
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
+	return flow.AppendFlowTo(src, f.ID)
 }

@@ -15,7 +15,7 @@ var ErrOriginHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
 var ErrCookieHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
 	WithReasonf(`The HTTP Request Header included the "Cookie" key, indicating that this request was made by a Browser. The flow however was initiated as an API request. To prevent potential misuse and mitigate several attack vectors including CSRF, the request has been blocked. Please consult the documentation.`)
 
-func VerifyRequest(
+func EnsureCSRF(
 	r *http.Request,
 	flowType Type,
 	disableAPIFlowEnforcement bool,
