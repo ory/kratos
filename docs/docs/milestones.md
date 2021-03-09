@@ -110,8 +110,6 @@ Something is not working.
 - [ ] Investigate why smtps fails but smtp does not
       ([kratos#781](https://github.com/ory/kratos/issues/781)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Add randomized constant time to every login request
-      ([kratos#832](https://github.com/ory/kratos/issues/832))
 - [ ] Fetching a settings request after error is missing identity data
       ([kratos#689](https://github.com/ory/kratos/issues/689)) -
       [@hackerman](https://github.com/aeneasr)
@@ -137,6 +135,8 @@ Something is not working.
 - [x] Quickstart is failing to mount volume kratos.yml when SELinux is enabled
       using Podman ([kratos#831](https://github.com/ory/kratos/issues/831)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Add randomized constant time to every login request
+      ([kratos#832](https://github.com/ory/kratos/issues/832))
 - [x] Kratos Admin API return 409 when createIdentity is called simultaneously
       ([kratos#861](https://github.com/ory/kratos/issues/861)) -
       [@Patrik](https://github.com/zepatrik)
@@ -196,6 +196,8 @@ New feature or request.
 - [ ] Add option for disabling registration
       ([kratos#882](https://github.com/ory/kratos/issues/882)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Support dynamic return_to address on verification flow
+      ([kratos#1123](https://github.com/ory/kratos/issues/1123))
 - [x] Support remote argon2 execution
       ([kratos#357](https://github.com/ory/kratos/issues/357)) -
       [@hackerman](https://github.com/aeneasr)
