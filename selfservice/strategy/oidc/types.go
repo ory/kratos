@@ -45,11 +45,10 @@ type FlowMethod struct {
 	*container.Container
 }
 
-func (r *FlowMethod) AddProviders(providers []Configuration) *FlowMethod {
+func  AddProviders(c *container.Container, providers []Configuration) {
 	for _, p := range providers {
-		r.GetNodes().Append(node.NewInputField("provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
+		c.GetNodes().Append(node.NewInputField("provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
 	}
-	return r
 }
 
 func NewFlowMethod(f *container.Container) *FlowMethod {

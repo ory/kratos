@@ -10,7 +10,7 @@ import (
 
 func New(ctx context.Context, opts ...configx.OptionModifier) Registry {
 	l := logrusx.New("ORY Kratos", config.Version)
-	c, err := config.New(l, opts...)
+	c, err := config.New(ctx, l, opts...)
 	if err != nil {
 		l.WithError(err).Fatal("Unable to instantiate configuration.")
 	}

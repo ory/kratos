@@ -27,27 +27,25 @@ type LoginFlow struct {
 	Id     string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow started.
 	IssuedAt time.Time `json:"issued_at"`
-	Messages []UiText  `json:"messages,omitempty"`
-	// List of login methods  This is the list of available login methods with their required form fields, such as `identifier` and `password` for the password login method. This will also contain error messages such as \"password can not be empty\".
-	Methods map[string]LoginFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
 	// The flow type can either be `api` or `browser`.
-	Type string `json:"type"`
+	Type string      `json:"type"`
+	Ui   UiContainer `json:"ui"`
 }
 
 // NewLoginFlow instantiates a new LoginFlow object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]LoginFlowMethod, requestUrl string, type_ string) *LoginFlow {
+func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, type_ string, ui UiContainer) *LoginFlow {
 	this := LoginFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
 	this.IssuedAt = issuedAt
-	this.Methods = methods
 	this.RequestUrl = requestUrl
 	this.Type = type_
+	this.Ui = ui
 	return &this
 }
 
@@ -195,62 +193,6 @@ func (o *LoginFlow) SetIssuedAt(v time.Time) {
 	o.IssuedAt = v
 }
 
-// GetMessages returns the Messages field value if set, zero value otherwise.
-func (o *LoginFlow) GetMessages() []UiText {
-	if o == nil || o.Messages == nil {
-		var ret []UiText
-		return ret
-	}
-	return o.Messages
-}
-
-// GetMessagesOk returns a tuple with the Messages field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *LoginFlow) GetMessagesOk() ([]UiText, bool) {
-	if o == nil || o.Messages == nil {
-		return nil, false
-	}
-	return o.Messages, true
-}
-
-// HasMessages returns a boolean if a field has been set.
-func (o *LoginFlow) HasMessages() bool {
-	if o != nil && o.Messages != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetMessages gets a reference to the given []UiText and assigns it to the Messages field.
-func (o *LoginFlow) SetMessages(v []UiText) {
-	o.Messages = v
-}
-
-// GetMethods returns the Methods field value
-func (o *LoginFlow) GetMethods() map[string]LoginFlowMethod {
-	if o == nil {
-		var ret map[string]LoginFlowMethod
-		return ret
-	}
-
-	return o.Methods
-}
-
-// GetMethodsOk returns a tuple with the Methods field value
-// and a boolean to check if the value has been set.
-func (o *LoginFlow) GetMethodsOk() (*map[string]LoginFlowMethod, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Methods, true
-}
-
-// SetMethods sets field value
-func (o *LoginFlow) SetMethods(v map[string]LoginFlowMethod) {
-	o.Methods = v
-}
-
 // GetRequestUrl returns the RequestUrl field value
 func (o *LoginFlow) GetRequestUrl() string {
 	if o == nil {
@@ -299,6 +241,30 @@ func (o *LoginFlow) SetType(v string) {
 	o.Type = v
 }
 
+// GetUi returns the Ui field value
+func (o *LoginFlow) GetUi() UiContainer {
+	if o == nil {
+		var ret UiContainer
+		return ret
+	}
+
+	return o.Ui
+}
+
+// GetUiOk returns a tuple with the Ui field value
+// and a boolean to check if the value has been set.
+func (o *LoginFlow) GetUiOk() (*UiContainer, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Ui, true
+}
+
+// SetUi sets field value
+func (o *LoginFlow) SetUi(v UiContainer) {
+	o.Ui = v
+}
+
 func (o LoginFlow) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Active != nil {
@@ -316,17 +282,14 @@ func (o LoginFlow) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["issued_at"] = o.IssuedAt
 	}
-	if o.Messages != nil {
-		toSerialize["messages"] = o.Messages
-	}
-	if true {
-		toSerialize["methods"] = o.Methods
-	}
 	if true {
 		toSerialize["request_url"] = o.RequestUrl
 	}
 	if true {
 		toSerialize["type"] = o.Type
+	}
+	if true {
+		toSerialize["ui"] = o.Ui
 	}
 	return json.Marshal(toSerialize)
 }

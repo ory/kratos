@@ -2,6 +2,7 @@ package login_test
 
 import (
 	"crypto/tls"
+	"github.com/ory/kratos/internal"
 	"net/http"
 	"testing"
 	"time"
@@ -26,16 +27,13 @@ func TestFakeFlow(t *testing.T) {
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)
 	assert.NotEmpty(t, r.Active)
-	assert.NotEmpty(t, r.Methods)
-	for _, m := range r.Methods {
-		assert.NotEmpty(t, m.Method)
-		assert.NotEmpty(t, m.Config)
-	}
+	assert.NotEmpty(t, r.UI.Nodes)
 }
 
 func TestNewFlow(t *testing.T) {
+	conf, _ := internal.NewFastRegistryWithMocks(t)
 	t.Run("case=0", func(t *testing.T) {
-		r := login.NewFlow(0, "csrf", &http.Request{
+		r := login.NewFlow(conf,0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("/"),
 			Host: "ory.sh", TLS: &tls.ConnectionState{},
 		}, flow.TypeBrowser)
@@ -46,7 +44,7 @@ func TestNewFlow(t *testing.T) {
 	})
 
 	t.Run("case=1", func(t *testing.T) {
-		r := login.NewFlow(0, "csrf", &http.Request{
+		r := login.NewFlow(conf,0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("/?refresh=true"),
 			Host: "ory.sh"}, flow.TypeAPI)
 		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
@@ -56,7 +54,7 @@ func TestNewFlow(t *testing.T) {
 	})
 
 	t.Run("case=2", func(t *testing.T) {
-		r := login.NewFlow(0, "csrf", &http.Request{
+		r := login.NewFlow(conf,0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("https://ory.sh/"),
 			Host: "ory.sh"}, flow.TypeBrowser)
 		assert.Equal(t, "https://ory.sh/", r.RequestURL)

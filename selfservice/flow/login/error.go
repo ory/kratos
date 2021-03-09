@@ -17,14 +17,14 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
 )
 
 var (
-	ErrHookAbortFlow   = errors.New("aborted login hook execution")
-	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
+	ErrStrategyNotResponsible = errors.New("strategy is not responsible for this request")
+	ErrHookAbortFlow          = errors.New("aborted login hook execution")
+	ErrAlreadyLoggedIn        = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
 )
 
 type (
@@ -65,18 +65,7 @@ func NewFlowErrorHandler(d errorHandlerDependencies, c *config.Config) *ErrorHan
 	return &ErrorHandler{d: d, c: c}
 }
 
-func MethodToNodeGroup(method identity.CredentialsType) node.Group {
-	switch method {
-	case identity.CredentialsTypePassword:
-		return node.PasswordGroup
-	case identity.CredentialsTypeOIDC:
-		return node.OpenIDConnectGroup
-	default:
-		return node.DefaultGroup
-	}
-}
-
-func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, f *Flow, err error) {
+func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f *Flow, group node.Group, err error) {
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
@@ -93,11 +82,11 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, ct
 		a, err := s.d.LoginHandler().NewLoginFlow(w, r, f.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
-			s.WriteFlowError(w, r, ct, f, err)
+			s.WriteFlowError(w, r, f, group, err)
 			return
 		}
 
-		a.Messages.Add(text.NewErrorValidationLoginFlowExpired(e.ago))
+		a.UI.Messages.Add(text.NewErrorValidationLoginFlowExpired(e.ago))
 		if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return
@@ -112,19 +101,12 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, ct
 		return
 	}
 
-	method, ok := f.Methods[ct]
-	if !ok {
-		s.forward(w, r, f, errors.WithStack(herodot.ErrInternalServerError.
-			WithErrorf(`Expected login method "%s" to exist in flow. This is a bug in the code and should be reported on GitHub.`, ct)))
-		return
-	}
-
-	if err := method.Config.ParseError(MethodToNodeGroup(ct), err); err != nil {
+	if err := f.UI.ParseError(group, err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
 
-	if err := s.d.LoginFlowPersister().UpdateLoginFlowMethod(r.Context(), f.ID, ct, method); err != nil {
+	if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

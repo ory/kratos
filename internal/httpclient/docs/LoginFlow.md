@@ -9,16 +9,15 @@ Name | Type | Description | Notes
 **Forced** | Pointer to **bool** | Forced stores whether this login flow should enforce re-authentication. | [optional] 
 **Id** | **string** |  | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow started. | 
-**Messages** | Pointer to [**[]UiText**](UiText.md) |  | [optional] 
-**Methods** | [**map[string]LoginFlowMethod**](loginFlowMethod.md) | List of login methods  This is the list of available login methods with their required form fields, such as &#x60;identifier&#x60; and &#x60;password&#x60; for the password login method. This will also contain error messages such as \&quot;password can not be empty\&quot;. | 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
 **Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
+**Ui** | [**UiContainer**](uiContainer.md) |  | 
 
 ## Methods
 
 ### NewLoginFlow
 
-`func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]LoginFlowMethod, requestUrl string, type_ string, ) *LoginFlow`
+`func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, type_ string, ui UiContainer, ) *LoginFlow`
 
 NewLoginFlow instantiates a new LoginFlow object
 This constructor will assign default values to properties that have it defined,
@@ -143,51 +142,6 @@ and a boolean to check if the value has been set.
 SetIssuedAt sets IssuedAt field to given value.
 
 
-### GetMessages
-
-`func (o *LoginFlow) GetMessages() []UiText`
-
-GetMessages returns the Messages field if non-nil, zero value otherwise.
-
-### GetMessagesOk
-
-`func (o *LoginFlow) GetMessagesOk() (*[]UiText, bool)`
-
-GetMessagesOk returns a tuple with the Messages field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetMessages
-
-`func (o *LoginFlow) SetMessages(v []UiText)`
-
-SetMessages sets Messages field to given value.
-
-### HasMessages
-
-`func (o *LoginFlow) HasMessages() bool`
-
-HasMessages returns a boolean if a field has been set.
-
-### GetMethods
-
-`func (o *LoginFlow) GetMethods() map[string]LoginFlowMethod`
-
-GetMethods returns the Methods field if non-nil, zero value otherwise.
-
-### GetMethodsOk
-
-`func (o *LoginFlow) GetMethodsOk() (*map[string]LoginFlowMethod, bool)`
-
-GetMethodsOk returns a tuple with the Methods field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetMethods
-
-`func (o *LoginFlow) SetMethods(v map[string]LoginFlowMethod)`
-
-SetMethods sets Methods field to given value.
-
-
 ### GetRequestUrl
 
 `func (o *LoginFlow) GetRequestUrl() string`
@@ -226,6 +180,26 @@ and a boolean to check if the value has been set.
 `func (o *LoginFlow) SetType(v string)`
 
 SetType sets Type field to given value.
+
+
+### GetUi
+
+`func (o *LoginFlow) GetUi() UiContainer`
+
+GetUi returns the Ui field if non-nil, zero value otherwise.
+
+### GetUiOk
+
+`func (o *LoginFlow) GetUiOk() (*UiContainer, bool)`
+
+GetUiOk returns a tuple with the Ui field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUi
+
+`func (o *LoginFlow) SetUi(v UiContainer)`
+
+SetUi sets Ui field to given value.
 
 
 
