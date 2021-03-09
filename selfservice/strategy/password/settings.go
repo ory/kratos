@@ -161,7 +161,7 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceSettingsFlowWithPasswordMethod,
 ) {
-	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
@@ -219,7 +219,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity,
 	hf := &container.Container{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {f.ID.String()}}).String(),
 		// v0.5: Fields: form.Fields{{Name: "password", Type: "password", Required: true}},
-		Nodes:  node.Nodes{NewPasswordNode()},
+		Nodes:  node.Nodes{NewPasswordNode("password")},
 		Method: "POST"}
 	hf.SetCSRF(s.d.GenerateCSRFToken(r))
 

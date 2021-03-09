@@ -59,7 +59,7 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *login.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f := login.NewFlow(ttl, "csrf_token", req, ft)
+		f := login.NewFlow(conf,ttl, "csrf_token", req, ft)
 		for _, s := range reg.LoginStrategies(context.Background()) {
 			require.NoError(t, s.PopulateLoginMethod(req, f))
 		}
@@ -202,8 +202,8 @@ func TestHandleError(t *testing.T) {
 			ct = identity.CredentialsTypePassword
 
 			lf, _ := expectLoginUI(t)
-			require.Len(t, lf.Messages, 1)
-			assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(lf.Messages[0].Id))
+			require.Len(t, lf.Ui.Messages, 1)
+			assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(lf.Ui.Messages[0].Id))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {
@@ -214,9 +214,9 @@ func TestHandleError(t *testing.T) {
 			ct = identity.CredentialsTypePassword
 
 			lf, _ := expectLoginUI(t)
-			require.NotEmpty(t, lf.Methods[string(ct)], x.MustEncodeJSON(t, lf))
-			require.Len(t, lf.Methods[string(ct)].Config.Messages, 1, x.MustEncodeJSON(t, lf))
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Methods[string(ct)].Config.Messages[0].Id), x.MustEncodeJSON(t, lf))
+			require.NotEmpty(t, lf.Ui.Nodes, x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.Ui.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Ui.Messages[0].Id), x.MustEncodeJSON(t, lf))
 		})
 
 		t.Run("case=generic error", func(t *testing.T) {
