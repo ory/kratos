@@ -123,6 +123,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		}
 		return err
 	}
+
 	e.d.Audit().
 		WithRequest(r).
 		WithField("identity_id", i.ID).

@@ -165,7 +165,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	if err := flow.VerifyRequest(r, ar.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(r, ar.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}
@@ -241,7 +241,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 
 	htmlf.Method = "POST"
 	htmlf.SetCSRF(s.d.GenerateCSRFToken(r))
-	htmlf.GetNodes().Upsert(NewPasswordNode())
+	htmlf.GetNodes().Upsert(NewPasswordNode("password"))
 
 	if err := htmlf.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
 		return err
