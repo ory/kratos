@@ -5,12 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/ui/container"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -101,6 +100,10 @@ type Strategy struct {
 	d         dependencies
 	f         *fetcher.Fetcher
 	validator *schema.Validator
+}
+
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) (i *identity.Identity, err error) {
+	panic("implement me")
 }
 
 type authCodeContainer struct {
@@ -387,17 +390,17 @@ func (s *Strategy) authURL(ctx context.Context, r *http.Request, flowID uuid.UUI
 	).String()
 }
 
-func (s *Strategy) populateMethod(r *http.Request, flowID uuid.UUID) (*FlowMethod, error) {
+func (s *Strategy) populateMethod(r *http.Request, c *container.Container) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	f := container.New(s.authURL(r.Context(), r, flowID))
-	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
+	c.SetCSRF(s.d.GenerateCSRFToken(r))
+	AddProviders(c,conf.Providers)
 
-	return NewFlowMethod(f).AddProviders(conf.Providers), nil
+	return nil
 }
 
 func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error) {
@@ -431,7 +434,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 	}
 
 	if lr, rerr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), rid); rerr == nil {
-		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, s.ID(), lr, err)
+		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, lr, s.NodeGroup(), err)
 		return
 	} else if sr, rerr := s.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid); rerr == nil {
 		sess, sessErr := s.d.SessionManager().FetchFromRequest(r.Context(), r)
@@ -476,4 +479,8 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 	}
 
 	s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+}
+
+func (s *Strategy) NodeGroup() node.Group {
+	return node.OpenIDConnectGroup
 }
