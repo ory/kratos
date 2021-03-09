@@ -30,7 +30,6 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -78,21 +77,21 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
-			body, res := testhelpers.LoginMakeRequest(t, true, c, apiClient, "14=)=!(%)$/ZP()GHIÖ")
-			assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteLogin)
+
+			body, res := testhelpers.LoginMakeRequest(t, true, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Contains(t, body, `cannot unmarshal number into`)
+			assert.Contains(t, body, `Expected JSON sent in request body to be an object but got: Number`)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
-			body, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, "14=)=!(%)$/ZP()GHIÖ")
+
+			body, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.Get(body, "methods.password.config.messages.0.text").String(), "invalid URL escape", "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "invalid URL escape", "%s", body)
 		})
 	})
 
@@ -103,12 +102,15 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
 		}
 
-		fakeFlow := &kratos.LoginFlowMethodConfig{Action: publicTS.URL + password.RouteLogin + "?flow=" + x.NewUUID().String()}
+		fakeFlow := &kratos.LoginFlow{
+			Ui: kratos.UiContainer{
+				Action: publicTS.URL + login.RouteSubmitFlow + "?flow=" + x.NewUUID().String()},
+		}
 
 		t.Run("type=api", func(t *testing.T) {
 			actual, res := testhelpers.LoginMakeRequest(t, true, fakeFlow, apiClient, "{}")
 			assert.Len(t, res.Cookies(), 0)
-			assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteLogin)
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			check(t, gjson.Get(actual, "error").Raw)
 		})
 
@@ -126,47 +128,45 @@ func TestCompleteLogin(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "10m")
 		})
 		values := url.Values{
-			"csrf_token": {x.FakeCSRFToken},
-			"identifier": {"identifier"},
-			"password":   {"password"},
+			"csrf_token":          {x.FakeCSRFToken},
+			"password.identifier": {"identifier"},
+			"password":            {"password"},
 		}
 
 		t.Run("type=api", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 			time.Sleep(time.Millisecond * 60)
-			actual, res := testhelpers.LoginMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+			actual, res := testhelpers.LoginMakeRequest(t, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteGetFlow)
 			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "messages.0.text").String(), "expired", "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 			time.Sleep(time.Millisecond * 60)
-			actual, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values.Encode())
+			actual, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values.Encode())
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
 			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "messages.0.text").String(), "expired", "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
 		})
 	})
 
 	t.Run("case=should have correct CSRF behavior", func(t *testing.T) {
 		var values = url.Values{
-			"csrf_token": {"invalid_token"},
-			"identifier": {"login-identifier-csrf-browser"},
-			"password":   {x.NewUUID().String()},
+			"csrf_token":          {"invalid_token"},
+			"password.identifier": {"login-identifier-csrf-browser"},
+			"password.password":   {x.NewUUID().String()},
 		}
+
 		t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-			actual, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values.Encode())
+			actual, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
 				json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
@@ -174,9 +174,8 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-			actual, res := testhelpers.LoginMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+			actual, res := testhelpers.LoginMakeRequest(t, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 			assert.Contains(t, actual, "provided credentials are invalid")
 		})
@@ -201,9 +200,8 @@ func TestCompleteLogin(t *testing.T) {
 			} {
 				t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 					f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
-					c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-					req := testhelpers.NewRequest(t, true, "POST", c.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+					req := testhelpers.NewRequest(t, true, "POST", f.Ui.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
 					tc.mod(req.Header)
 
 					res, err := apiClient.Do(req)
@@ -222,7 +220,7 @@ func TestCompleteLogin(t *testing.T) {
 		return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
 			identity.CredentialsTypePassword, forced,
 			testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
-			testhelpers.ExpectURL(isAPI, publicTS.URL+password.RouteLogin, conf.SelfServiceFlowLoginUI().String()))
+			testhelpers.ExpectURL(isAPI, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI().String()))
 	}
 
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
@@ -231,13 +229,13 @@ func TestCompleteLogin(t *testing.T) {
 			minConfiguredDelay := conf.HasherArgon2().ExpectedDuration - conf.HasherArgon2().ExpectedDeviation
 			assert.GreaterOrEqual(t, delay, minConfiguredDelay)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.Get(body, "methods.password.config.action").String(), publicTS.URL+password.RouteLogin, "%s", body)
-			assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.Get(body, "methods.password.config.messages.0.text").String())
+			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
+			assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.Get(body, "ui.messages.0.text").String(), body)
 		}
 
 		var values = func(v url.Values) {
-			v.Set("identifier", "identifier")
-			v.Set("password", "password")
+			v.Set("password.identifier", "identifier")
+			v.Set("password.password", "password")
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -254,19 +252,19 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should return an error because no identifier is set", func(t *testing.T) {
 		var check = func(t *testing.T, body string) {
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.Get(body, "methods.password.config.action").String(), publicTS.URL+password.RouteLogin, "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
 
 			ensureFieldsExist(t, []byte(body))
-			assert.Equal(t, "Property identifier is missing.", gjson.Get(body, "methods.password.config.nodes.#(attributes.name==identifier).messages.0.text").String(), "%s", body)
-			assert.Len(t, gjson.Get(body, "methods.password.config.nodes").Array(), 3)
+			assert.Equal(t, "Property identifier is missing.", gjson.Get(body, "ui.nodes.#(attributes.name==password.identifier).messages.0.text").String(), "%s", body)
+			assert.Len(t, gjson.Get(body, "ui.nodes").Array(), 3)
 
 			// The password value should not be returned!
-			assert.Empty(t, gjson.Get(body, "methods.password.config.nodes.#(attributes.name==password).attributes.value").String())
+			assert.Empty(t, gjson.Get(body, "ui.nodes.#(==password.password).attributes.value").String())
 		}
 
 		var values = func(v url.Values) {
-			v.Del("identifier")
-			v.Set("password", "password")
+			v.Del("password.identifier")
+			v.Set("password.password", "password")
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -281,20 +279,20 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should return an error because no password is set", func(t *testing.T) {
 		var check = func(t *testing.T, body string) {
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.Get(body, "methods.password.config.action").String(), publicTS.URL+password.RouteLogin, "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
 
 			ensureFieldsExist(t, []byte(body))
-			assert.Equal(t, "Property password is missing.", gjson.Get(body, "methods.password.config.nodes.#(attributes.name==password).messages.0.text").String(), "%s", body)
-			assert.Equal(t, "identifier", gjson.Get(body, "methods.password.config.nodes.#(attributes.name==identifier).attributes.value").String(), "%s", body)
-			assert.Len(t, gjson.Get(body, "methods.password.config.nodes").Array(), 3)
+			assert.Equal(t, "Property password is missing.", gjson.Get(body, "ui.nodes.#(==password.password).messages.0.text").String(), "%s", body)
+			assert.Equal(t, "identifier", gjson.Get(body, "ui.nodes.#(attributes.name==password.identifier).attributes.value").String(), "%s", body)
+			assert.Len(t, gjson.Get(body, "ui.nodes").Array(), 3)
 
 			// This must not include the password!
-			assert.Empty(t, gjson.Get(body, "methods.password.config.nodes.#(attributes.name==password).attributes.value").String())
+			assert.Empty(t, gjson.Get(body, "ui.nodes.#(==password.password).attributes.value").String())
 		}
 
 		var values = func(v url.Values) {
-			v.Set("identifier", "identifier")
-			v.Del("password")
+			v.Set("password.identifier", "identifier")
+			v.Del("password.password")
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -309,20 +307,20 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should return an error both identifier and password are missing", func(t *testing.T) {
 		var check = func(t *testing.T, body string) {
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.Get(body, "methods.password.config.action").String(), publicTS.URL+password.RouteLogin, "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
 
 			ensureFieldsExist(t, []byte(body))
-			assert.Equal(t, "length must be >= 1, but got 0", gjson.Get(body, "methods.password.config.nodes.#(attributes.name==password).messages.0.text").String(), "%s", body)
-			assert.Equal(t, "length must be >= 1, but got 0", gjson.Get(body, "methods.password.config.nodes.#(attributes.name==identifier).messages.0.text").String(), "%s", body)
-			assert.Len(t, gjson.Get(body, "methods.password.config.nodes").Array(), 3)
+			assert.Equal(t, "length must be >= 1, but got 0", gjson.Get(body, "ui.nodes.#(==password.password).messages.0.text").String(), "%s", body)
+			assert.Equal(t, "length must be >= 1, but got 0", gjson.Get(body, "ui.nodes.#(attributes.name==password.identifier).messages.0.text").String(), "%s", body)
+			assert.Len(t, gjson.Get(body, "ui.nodes").Array(), 3)
 
 			// This must not include the password!
-			assert.Empty(t, gjson.Get(body, "methods.password.config.nodes.#(attributes.name==password).attributes.value").String())
+			assert.Empty(t, gjson.Get(body, "ui.nodes.#(==password.password).attributes.value").String())
 		}
 
 		var values = func(v url.Values) {
-			v.Set("password", "")
-			v.Set("identifier", "")
+			v.Set("password.password", "")
+			v.Set("password.identifier", "")
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -337,25 +335,25 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should return an error because the credentials are invalid (password not correct)", func(t *testing.T) {
 		var check = func(t *testing.T, body string) {
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.Get(body, "methods.password.config.action").String(), publicTS.URL+password.RouteLogin, "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
 
 			ensureFieldsExist(t, []byte(body))
 			assert.Equal(t,
 				errorsx.Cause(schema.NewInvalidCredentialsError()).(*schema.ValidationError).Messages[0].Text,
-				gjson.Get(body, "methods.password.config.messages.0.text").String(),
+				gjson.Get(body, "ui.messages.0.text").String(),
 				"%s", body,
 			)
 
 			// This must not include the password!
-			assert.Empty(t, gjson.Get(body, "methods.password.config.nodes.#(attributes.name==password).attributes.value").String())
+			assert.Empty(t, gjson.Get(body, "ui.nodes.#(==password.password).attributes.value").String())
 		}
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(identifier, pwd)
 
 		var values = func(v url.Values) {
-			v.Set("identifier", identifier)
-			v.Set("password", "not-password")
+			v.Set("password.identifier", identifier)
+			v.Set("password.password", "not-password")
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -372,8 +370,8 @@ func TestCompleteLogin(t *testing.T) {
 		createIdentity(identifier, pwd)
 
 		var values = func(v url.Values) {
-			v.Set("identifier", identifier)
-			v.Set("password", pwd)
+			v.Set("password.identifier", identifier)
+			v.Set("password.password", pwd)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -406,15 +404,15 @@ func TestCompleteLogin(t *testing.T) {
 					body, err := ioutil.ReadAll(res.Body)
 					require.NoError(t, err)
 					assert.True(t, gjson.GetBytes(body, "forced").Bool())
-					assert.Equal(t, identifier, gjson.GetBytes(body, "methods.password.config.nodes.#(attributes.name==identifier).attributes.value").String(), "%s", body)
-					assert.Empty(t, gjson.GetBytes(body, "methods.password.config.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
+					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password.identifier).attributes.value").String(), "%s", body)
+					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(==password.password).attributes.value").String(), "%s", body)
 				})
 			})
 		})
 
 		t.Run("type=api", func(t *testing.T) {
 			body := testhelpers.SubmitLoginForm(t, true, nil, publicTS, values,
-				identity.CredentialsTypePassword, false, http.StatusOK, publicTS.URL+password.RouteLogin)
+				identity.CredentialsTypePassword, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow)
 
 			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.subject").String(), "%s", body)
 			st := gjson.Get(body, "session_token").String()
@@ -440,8 +438,8 @@ func TestCompleteLogin(t *testing.T) {
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.True(t, gjson.GetBytes(body, "forced").Bool())
-					assert.Equal(t, identifier, gjson.GetBytes(body, "methods.password.config.nodes.#(attributes.name==identifier).attributes.value").String(), "%s", body)
-					assert.Empty(t, gjson.GetBytes(body, "methods.password.config.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
+					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password.identifier).attributes.value").String(), "%s", body)
+					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(==password.password).attributes.value").String(), "%s", body)
 				})
 			})
 		})
@@ -452,53 +450,51 @@ func TestCompleteLogin(t *testing.T) {
 
 		var check = func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "methods.password.config.action").String(), publicTS.URL+password.RouteLogin, "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", actual)
 		}
 
 		var checkFirst = func(t *testing.T, actual string) {
 			check(t, actual)
-			assert.Contains(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==identifier).messages.0").String(), "Property identifier is missing.", "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password.identifier).messages.0").String(), "Property identifier is missing.", "%s", actual)
 		}
 
 		var checkSecond = func(t *testing.T, actual string) {
 			check(t, actual)
 
-			assert.Empty(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==identifier).attributes.error"))
-			assert.EqualValues(t, "identifier", gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==identifier).attributes.value").String())
-			assert.Empty(t, gjson.Get(actual, "methods.password.config.error"))
-			assert.Contains(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==password).messages.0").String(), "Property password is missing.", "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password.identifier).attributes.error"))
+			assert.EqualValues(t, "identifier", gjson.Get(actual, "ui.nodes.#(attributes.name==password.identifier).attributes.value").String(), actual)
+			assert.Empty(t, gjson.Get(actual, "ui.error"))
+			assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password.password).messages.0").String(), "Property password is missing.", "%s", actual)
 		}
 
 		var valuesFirst = func(v url.Values) url.Values {
-			v.Del("identifier")
-			v.Set("password", x.NewUUID().String())
+			v.Del("password.identifier")
+			v.Set("password.password", x.NewUUID().String())
 			return v
 		}
 
 		var valuesSecond = func(v url.Values) url.Values {
-			v.Set("identifier", "identifier")
-			v.Del("password")
+			v.Set("password.identifier", "identifier")
+			v.Del("password.password")
 			return v
 		}
 
 		t.Run("type=api", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-			actual, _ := testhelpers.LoginMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Nodes))))
+			actual, _ := testhelpers.LoginMakeRequest(t, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesFirst(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes))))
 			checkFirst(t, actual)
-			actual, _ = testhelpers.LoginMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesSecond(testhelpers.SDKFormFieldsToURLValues(c.Nodes))))
+			actual, _ = testhelpers.LoginMakeRequest(t, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesSecond(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes))))
 			checkSecond(t, actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-			actual, _ := testhelpers.LoginMakeRequest(t, false, c, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Nodes)).Encode())
+			actual, _ := testhelpers.LoginMakeRequest(t, false, f, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)).Encode())
 			checkFirst(t, actual)
-			actual, _ = testhelpers.LoginMakeRequest(t, false, c, browserClient, valuesSecond(testhelpers.SDKFormFieldsToURLValues(c.Nodes)).Encode())
+			actual, _ = testhelpers.LoginMakeRequest(t, false, f, browserClient, valuesSecond(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)).Encode())
 			checkSecond(t, actual)
 		})
 	})
@@ -509,16 +505,14 @@ func TestCompleteLogin(t *testing.T) {
 
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
-		c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-		values := url.Values{"identifier": {identifier}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		values := url.Values{"password.identifier": {identifier}, "password.password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
-		body1, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values)
+		body1, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
 		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true)
-		c = testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
-		body2, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values)
+		body2, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
 
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
 		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
@@ -531,16 +525,14 @@ func TestCompleteLogin(t *testing.T) {
 
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
-		c := testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-		values := url.Values{"identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		values := url.Values{"password.identifier": {strings.ToUpper(identifier)}, "password.password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
-		_, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values)
+		_, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
 		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true)
-		c = testhelpers.GetLoginFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
-		body2, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values)
+		body2, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
 
 		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
 	})
