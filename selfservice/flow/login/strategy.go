@@ -1,6 +1,7 @@
 package login
 
 import (
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -11,8 +12,10 @@ import (
 
 type Strategy interface {
 	ID() identity.CredentialsType
+	NodeGroup() node.Group
 	RegisterLoginRoutes(*x.RouterPublic)
 	PopulateLoginMethod(r *http.Request, sr *Flow) error
+	Login(w http.ResponseWriter, r *http.Request, f *Flow) (i *identity.Identity, err error)
 }
 
 type Strategies []Strategy

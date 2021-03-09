@@ -21,18 +21,12 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
-	if sr.Type != flow.TypeBrowser {
+func (s *Strategy) PopulateLoginMethod(r *http.Request, l *login.Flow) error {
+	if l.Type != flow.TypeBrowser {
 		return nil
 	}
 
-	config, err := s.populateMethod(r, sr.ID)
-	if err != nil {
-		return err
-	}
-	sr.Methods[s.ID()] = &login.FlowMethod{Method: s.ID(),
-		Config: &login.FlowMethodConfig{FlowMethodConfigurator: config}}
-	return nil
+	return s.populateMethod(r, l.UI)
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) {
