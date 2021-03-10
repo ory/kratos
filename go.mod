@@ -12,8 +12,11 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 replace github.com/ory/kratos/corp => ./corp
 
 replace github.com/ory/cli => ../cli
+
 replace github.com/ory/x => ../x
+
 replace github.com/ory/jsonschema/v3 => ../jsonschema
+
 replace github.com/ory/herodot => ../herodot
 
 replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
@@ -74,7 +77,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.204
+	github.com/ory/x v0.0.206
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/profile v1.5.0 // indirect
