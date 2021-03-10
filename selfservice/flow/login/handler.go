@@ -328,8 +328,6 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	// TODO first decoding here - we need to CSRF token
-
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil && !f.Forced {
 		if f.Type == flow.TypeBrowser {
 			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
