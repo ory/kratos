@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos-client-go"
+	"github.com/ory/kratos-client-go/client/admin"
 
 	"github.com/ory/kratos/corpx"
 

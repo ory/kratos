@@ -47,7 +47,7 @@ func checkFormContent(t *testing.T, body []byte, requiredFields ...string) {
 // fieldNameSet checks if the fields have the right "name" set.
 func fieldNameSet(t *testing.T, body []byte, fields []string) {
 	for _, f := range fields {
-		assert.Equal(t, f, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.nodes.#(attributes.name==%s).attributes.name", f)).String(), "%s", body)
+		assert.Equal(t, f, gjson.GetBytes(body, fmt.Sprintf("ui.nodes.#(attributes.name==%s).attributes.name", f)).String(), "%s", body)
 	}
 }
 
@@ -59,7 +59,7 @@ func outdatedFieldsDoNotExist(t *testing.T, body []byte) {
 }
 
 func formMethodIsPOST(t *testing.T, body []byte) {
-	assert.Equal(t, "POST", gjson.GetBytes(body, "methods.password.config.method").String())
+	assert.Equal(t, "POST", gjson.GetBytes(body, "ui.method").String())
 }
 
 func TestRegistration(t *testing.T) {
