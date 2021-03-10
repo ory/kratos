@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos-client-go"
 
 	"github.com/gobuffalo/httptest"
@@ -20,7 +22,6 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
@@ -46,9 +47,9 @@ func TestHandleError(t *testing.T) {
 
 	var loginFlow *login.Flow
 	var flowError error
-	var ct identity.CredentialsType
+	var ct node.Group
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		h.WriteFlowError(w, r, ct, loginFlow, flowError)
+		h.WriteFlowError(w, r, loginFlow, ct, flowError)
 	})
 
 	reset := func() {
@@ -59,7 +60,7 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *login.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f := login.NewFlow(conf,ttl, "csrf_token", req, ft)
+		f := login.NewFlow(conf, ttl, "csrf_token", req, ft)
 		for _, s := range reg.LoginStrategies(context.Background()) {
 			require.NoError(t, s.PopulateLoginMethod(req, f))
 		}
@@ -86,7 +87,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = identity.CredentialsTypePassword
+		ct = node.PasswordGroup
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
@@ -96,7 +97,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = identity.CredentialsTypePassword
+		ct = node.PasswordGroup
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
@@ -115,7 +116,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = login.NewFlowExpiredError(anHourAgo)
-			ct = identity.CredentialsTypePassword
+			ct = node.PasswordGroup
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -134,7 +135,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = schema.NewInvalidCredentialsError()
-			ct = identity.CredentialsTypePassword
+			ct = node.PasswordGroup
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -152,7 +153,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = identity.CredentialsTypePassword
+			ct = node.PasswordGroup
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -199,7 +200,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = &login.Flow{Type: flow.TypeBrowser}
 			flowError = login.NewFlowExpiredError(anHourAgo)
-			ct = identity.CredentialsTypePassword
+			ct = node.PasswordGroup
 
 			lf, _ := expectLoginUI(t)
 			require.Len(t, lf.Ui.Messages, 1)
@@ -211,7 +212,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = schema.NewInvalidCredentialsError()
-			ct = identity.CredentialsTypePassword
+			ct = node.PasswordGroup
 
 			lf, _ := expectLoginUI(t)
 			require.NotEmpty(t, lf.Ui.Nodes, x.MustEncodeJSON(t, lf))
@@ -224,7 +225,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = identity.CredentialsTypePassword
+			ct = node.PasswordGroup
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, []interface{}{flowError}, sse)

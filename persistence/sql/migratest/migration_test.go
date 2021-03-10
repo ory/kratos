@@ -12,15 +12,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sirupsen/logrus"
-	"github.com/ory/x/logrusx"
-	"github.com/ory/x/configx"
-	"github.com/stretchr/testify/assert"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/popx"
-	"github.com/ory/x/sqlcon/dockertest"
 	"github.com/gobuffalo/pop/v5"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -32,6 +28,11 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/popx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlcon/dockertest"
 )
 
 func containsExpectedIds(t *testing.T, path string, ids []string) {
@@ -56,9 +57,6 @@ func TestMigrations(t *testing.T) {
 	connections := map[string]*pop.Connection{
 		"sqlite": sqlite,
 	}
-
-	ctx := context.Background()
-	l := logrusx.New("", "")
 
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
