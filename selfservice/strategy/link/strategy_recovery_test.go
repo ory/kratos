@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ory/kratos-client-go"
-	"github.com/ory/kratos-client-go/client/admin"
 
 	"github.com/ory/kratos/corpx"
 
@@ -362,14 +361,14 @@ func TestDisabledEndpoint(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Create(context.Background(),
 				&id, identity.ManagerAllowWriteProtectedTraits))
 
-			uuid := models.UUID(id.ID.String())
-			rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
-				WithBody(&models.CreateRecoveryLink{IdentityID: &uuid}))
+			rl, _, err := adminSDK.AdminApi.CreateRecoveryLink(context.Background()).CreateRecoveryLink(kratos.CreateRecoveryLink{
+				IdentityId: id.ID.String(),
+			}).Execute()
 			assert.Nil(t, rl)
-			require.IsType(t, new(admin.CreateRecoveryLinkNotFound), err, "%s", err)
+			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%s", err)
 
-			br, _ := err.(*admin.CreateRecoveryLinkNotFound)
-			assert.Contains(t, br.Payload.Error.Reason, "This endpoint was disabled by system administrator")
+			br, _ := err.(*kratos.GenericOpenAPIError)
+			assert.Contains(t, br.Body(), "This endpoint was disabled by system administrator")
 		})
 	})
 
