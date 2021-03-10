@@ -6,12 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -19,9 +13,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
-	"github.com/ory/x/decoderx"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -29,10 +20,13 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/urlx"
 )
 
 const (

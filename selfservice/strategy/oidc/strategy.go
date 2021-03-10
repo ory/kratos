@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/ui/container"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -398,7 +399,7 @@ func (s *Strategy) populateMethod(r *http.Request, c *container.Container) error
 
 	// does not need sorting because there is only one field
 	c.SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(c,conf.Providers)
+	AddProviders(c, conf.Providers)
 
 	return nil
 }

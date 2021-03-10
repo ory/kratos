@@ -1,10 +1,6 @@
 package link
 
 import (
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/ui/container"
-	"github.com/ory/x/decoderx"
-
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -13,8 +9,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 )

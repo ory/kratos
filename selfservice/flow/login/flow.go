@@ -2,10 +2,11 @@ package login
 
 import (
 	"context"
-	"github.com/ory/kratos/driver/config"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/ory/kratos/ui/container"
 
@@ -90,7 +91,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		IssuedAt:  now,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow),id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
 		RequestURL: x.RequestURL(r).String(),
 		CSRFToken:  csrf,

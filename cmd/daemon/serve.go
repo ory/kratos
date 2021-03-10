@@ -168,7 +168,6 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				healthx.VersionPath,
 
 				password.RouteRegistration,
-				password.RouteLogin,
 				password.RouteSettings,
 
 				oidc.RouteBase,
@@ -176,6 +175,7 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				login.RouteInitBrowserFlow,
 				login.RouteInitAPIFlow,
 				login.RouteGetFlow,
+				login.RouteSubmitFlow,
 
 				logout.RouteBrowser,
 

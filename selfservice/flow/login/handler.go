@@ -1,13 +1,14 @@
 package login
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/decoderx"
-	"net/http"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -346,7 +347,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 
 	var i *identity.Identity
 	var s identity.CredentialsType
-	for _, ss := range h.d.LoginStrategies() {
+	for _, ss := range h.d.LoginStrategies(r.Context()) {
 		interim, err := ss.Login(w, r, f)
 		if errors.Is(err, ErrStrategyNotResponsible) {
 			continue

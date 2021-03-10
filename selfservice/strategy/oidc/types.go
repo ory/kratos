@@ -45,7 +45,7 @@ type FlowMethod struct {
 	*container.Container
 }
 
-func  AddProviders(c *container.Container, providers []Configuration) {
+func AddProviders(c *container.Container, providers []Configuration) {
 	for _, p := range providers {
 		c.GetNodes().Append(node.NewInputField("provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
 	}
