@@ -3,6 +3,11 @@ package password
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"time"
+
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -11,10 +16,6 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
-	"github.com/ory/x/pkgerx"
-	"github.com/pkg/errors"
-	"net/http"
-	"time"
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
@@ -22,7 +23,6 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *CompleteSelfServiceLoginFlowWithPasswordMethod, err error) error {
 	if f != nil {
-		// TODO replace "payload.Identifier"
 		f.UI.Nodes.Upsert(node.NewInputField("password.identifier", payload.Password.Identifier, s.NodeGroup(), node.InputAttributeTypeText, node.WithRequiredInputAttribute))
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))

@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"context"
 
+	"github.com/hashicorp/go-retryablehttp"
+
 	"github.com/ory/kratos/driver/config"
 
 	/* #nosec G505 sha1 is used for k-anonymity */
@@ -53,7 +55,7 @@ var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 type DefaultPasswordValidator struct {
 	sync.RWMutex
 	reg    validatorDependencies
-	Client *http.Client
+	Client *retryablehttp.Client
 	hashes map[string]int64
 
 	minIdentifierPasswordDist            int
@@ -66,7 +68,7 @@ type validatorDependencies interface {
 
 func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		Client:                    httpx.NewResilientClientLatencyToleranceMedium(nil),
+		Client:                    httpx.NewResilientClient(),
 		reg:                       reg,
 		hashes:                    map[string]int64{},
 		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}

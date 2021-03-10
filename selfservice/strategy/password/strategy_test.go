@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/kratos/selfservice/flow/login"
+
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
@@ -117,7 +119,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 	c := testhelpers.NewClientWithCookies(t)
 	t.Run("case=should not login when password method is disabled", func(t *testing.T) {
-		res, err := c.PostForm(publicTS.URL+password.RouteLogin, url.Values{"identifier": []string{"identifier"}, "password": []string{"password"}})
+		res, err := c.PostForm(publicTS.URL+login.RouteSubmitFlow, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
@@ -127,8 +129,7 @@ func TestDisabledEndpoint(t *testing.T) {
 	})
 
 	t.Run("case=should not registration when password method is disabled", func(t *testing.T) {
-
-		res, err := c.PostForm(publicTS.URL+password.RouteRegistration, url.Values{"identifier": []string{"identifier"}, "password": []string{"password"}})
+		res, err := c.PostForm(publicTS.URL+password.RouteRegistration, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
@@ -138,7 +139,6 @@ func TestDisabledEndpoint(t *testing.T) {
 	})
 
 	t.Run("case=should not settings when password method is disabled", func(t *testing.T) {
-
 		t.Run("method=GET", func(t *testing.T) {
 			res, err := c.Get(publicTS.URL + password.RouteSettings)
 			require.NoError(t, err)

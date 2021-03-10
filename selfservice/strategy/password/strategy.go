@@ -2,8 +2,9 @@ package password
 
 import (
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"strings"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"

@@ -14,26 +14,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/stringsx"
-
-	"github.com/stretchr/testify/require"
-
+	"github.com/google/uuid"
 	"github.com/inhies/go-bytesize"
-
-	"github.com/markbates/pkger"
+	kjson "github.com/knadh/koanf/parsers/json"
+	"github.com/pkg/errors"
 	"github.com/rs/cors"
+	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/configx"
 	"github.com/ory/x/jsonx"
-
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
-
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tracing"
-
-	kjson "github.com/knadh/koanf/parsers/json"
 )
 
 const (
@@ -290,7 +283,7 @@ func (p *Config) listenOn(key string) string {
 }
 
 func (p *Config) DefaultIdentityTraitsSchemaURL() *url.URL {
-	return p.parseURIOrFail(ViperKeyDefaultIdentitySchemaURL)
+	return p.ParseURIOrFail(ViperKeyDefaultIdentitySchemaURL)
 }
 
 func (p *Config) IdentityTraitsSchemas() Schemas {
@@ -478,7 +471,7 @@ func (p *Config) SecretsSession() [][]byte {
 }
 
 func (p *Config) SelfServiceBrowserDefaultReturnTo() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
+	return p.ParseURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
 }
 
 func (p *Config) guessBaseURL(keyHost, keyPort string, defaultPort int) *url.URL {
@@ -521,7 +514,7 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 	return p.guessBaseURL(keyHost, keyPort, defaultPort)
 }
 
-type domainAlias struct {
+type DomainAlias struct {
 	BasePath    string `json:"base_path"`
 	Scheme      string `json:"scheme"`
 	MatchDomain string `json:"match_domain"`
@@ -541,7 +534,7 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 
 	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
 
-	var aliases []domainAlias
+	var aliases []DomainAlias
 	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
 		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
 		return primary
@@ -568,27 +561,27 @@ func (p *Config) SelfAdminURL() *url.URL {
 }
 
 func (p *Config) CourierSMTPURL() *url.URL {
-	return p.parseURIOrFail(ViperKeyCourierSMTPURL)
+	return p.ParseURIOrFail(ViperKeyCourierSMTPURL)
 }
 
 func (p *Config) SelfServiceFlowLoginUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceLoginUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceLoginUI)
 }
 
 func (p *Config) SelfServiceFlowSettingsUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceSettingsURL)
+	return p.ParseURIOrFail(ViperKeySelfServiceSettingsURL)
 }
 
 func (p *Config) SelfServiceFlowErrorURL() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceErrorUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceErrorUI)
 }
 
 func (p *Config) SelfServiceFlowRegistrationUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceRegistrationUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceRegistrationUI)
 }
 
 func (p *Config) SelfServiceFlowRecoveryUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceRecoveryUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceRecoveryUI)
 }
 
 // SessionLifespan returns nil when the value is not set.
@@ -655,22 +648,22 @@ func splitUrlAndFragment(s string) (string, string) {
 	return s[:i], s[i+1:]
 }
 
-func (p *Config) parseURIOrFail(key string) *url.URL {
+func (p *Config) ParseURIOrFail(key string) *url.URL {
 	u, frag := splitUrlAndFragment(p.p.String(key))
-	url, err := url.ParseRequestURI(u)
+	parsed, err := url.ParseRequestURI(u)
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	if url.Scheme == "" {
+	if parsed.Scheme == "" {
 		p.l.WithField("reason", "expected scheme to be set").
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
 
 	if frag != "" {
-		url.Fragment = frag
+		parsed.Fragment = frag
 	}
-	return url
+	return parsed
 }
 
 func (p *Config) Tracing() *tracing.Config {
@@ -694,7 +687,7 @@ func (p *Config) MetricsListenOn() string {
 }
 
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceVerificationUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceVerificationUI)
 }
 
 func (p *Config) SelfServiceFlowVerificationRequestLifespan() time.Duration {

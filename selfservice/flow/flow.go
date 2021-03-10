@@ -1,9 +1,11 @@
 package flow
 
 import (
-	"github.com/gofrs/uuid"
-	"github.com/ory/x/urlx"
 	"net/url"
+
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/x/urlx"
 )
 
 func AppendFlowTo(src *url.URL, id uuid.UUID) *url.URL {

@@ -2,10 +2,11 @@ package login_test
 
 import (
 	"crypto/tls"
-	"github.com/ory/kratos/internal"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/internal"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,7 @@ func TestFakeFlow(t *testing.T) {
 func TestNewFlow(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 	t.Run("case=0", func(t *testing.T) {
-		r := login.NewFlow(conf,0, "csrf", &http.Request{
+		r := login.NewFlow(conf, 0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("/"),
 			Host: "ory.sh", TLS: &tls.ConnectionState{},
 		}, flow.TypeBrowser)
@@ -44,7 +45,7 @@ func TestNewFlow(t *testing.T) {
 	})
 
 	t.Run("case=1", func(t *testing.T) {
-		r := login.NewFlow(conf,0, "csrf", &http.Request{
+		r := login.NewFlow(conf, 0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("/?refresh=true"),
 			Host: "ory.sh"}, flow.TypeAPI)
 		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
@@ -54,7 +55,7 @@ func TestNewFlow(t *testing.T) {
 	})
 
 	t.Run("case=2", func(t *testing.T) {
-		r := login.NewFlow(conf,0, "csrf", &http.Request{
+		r := login.NewFlow(conf, 0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("https://ory.sh/"),
 			Host: "ory.sh"}, flow.TypeBrowser)
 		assert.Equal(t, "https://ory.sh/", r.RequestURL)

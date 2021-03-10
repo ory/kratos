@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/ory/kratos/corpx"
+
 	"github.com/ory/kratos/ui/container"
 
 	"github.com/bxcodec/faker/v3"
@@ -13,13 +15,11 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/jsonschema/v3"
-	"github.com/ory/kratos/internal"
-
 	"github.com/ory/kratos/ui/node"
 )
 
 func init() {
-	internal.RegisterFakes()
+	corpx.RegisterFakes()
 }
 
 func TestNodesSort(t *testing.T) {

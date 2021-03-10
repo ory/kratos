@@ -5,24 +5,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/decoderx"
-
-	"github.com/ory/x/sqlxx"
-
 	"github.com/ory/herodot"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -30,7 +17,13 @@ import (
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 const (

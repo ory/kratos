@@ -49,7 +49,7 @@ func TestViperProvider(t *testing.T) {
 				"http://return-to-2-test.ory.sh/",
 			}, ds)
 
-			pWithFragments := config.MustNew(t,logrusx.New("", ""),
+			pWithFragments := config.MustNew(t, logrusx.New("", ""),
 				configx.WithValues(map[string]interface{}{
 					config.ViperKeySelfServiceLoginUI:        "http://test.kratos.ory.sh/#/login",
 					config.ViperKeySelfServiceSettingsURL:    "http://test.kratos.ory.sh/#/settings",
@@ -76,9 +76,9 @@ func TestViperProvider(t *testing.T) {
 				hook := new(test.Hook)
 				logger.Logger.Hooks.Add(hook)
 
-				pWithIncorrectUrls := MustNew(logger,
+				pWithIncorrectUrls := config.MustNew(t, logger,
 					configx.WithValues(map[string]interface{}{
-						ViperKeySelfServiceLoginUI: v,
+						config.ViperKeySelfServiceLoginUI: v,
 					}),
 					configx.SkipValidation(),
 				)
@@ -305,17 +305,17 @@ func TestProviderBaseURLs(t *testing.T) {
 	}
 
 	p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
-	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL().String())
+	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL().String())
 
 	p.MustSet(config.ViperKeyPublicPort, 4444)
 	p.MustSet(config.ViperKeyAdminPort, 4445)
-	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL().String())
+	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "https://"+machineHostname+":4445/", p.SelfAdminURL().String())
 
 	p.MustSet(config.ViperKeyPublicHost, "public.ory.sh")
 	p.MustSet(config.ViperKeyAdminHost, "admin.ory.sh")
-	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL().String())
+	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "https://admin.ory.sh:4445/", p.SelfAdminURL().String())
 
 	// Set to dev mode
@@ -497,7 +497,7 @@ func TestViperProvider_ParseURIOrFail(t *testing.T) {
 	l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 		exitCode = i
 	}))
-	p := config.MustNew(t,l, configx.SkipValidation())
+	p := config.MustNew(t, l, configx.SkipValidation())
 	require.Zero(t, exitCode)
 
 	const testKey = "testKeyNotUsedInTheRealSchema"
