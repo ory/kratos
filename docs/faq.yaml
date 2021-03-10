@@ -4,18 +4,19 @@
   q: We want to seperate our customers and employees, so we store them in different
     databases. But we would like to have them use the same login dialog for our portal.
     How can I achieve that with Ory Kratos?
-  a: You can deploy Ory Kratos two times, and use the same login/registration endpoints
-    if you like. You may need to tell your login/registration UI which Kratos it is
-    supposed to talk to. The instances are cheap to deploy and the databases are completely
-    isolated from each other.  For example you can have something like `/login/customer`
-    and `login/employee`.
+  a: You can deploy Ory Kratos two times, and use the same login/registration endpoints.
+    So you define the same login/registration UI URLs in both of the Kratos configurations.
+    You may need to tell your login/registration UI which Kratos it is supposed to
+    talk to. The instances are cheap to deploy and the databases are completely isolated
+    from each other.  For example you can have something like `/login/customer` and
+    `/login/employee`.
 - tags:
   - kratos
   - ecosystem
-  - bug
-  q: Will you audit the code and/or provide bug bounties?
-  a: Yes, when we are near stable candidate we will audit the code and provide bug
-    bounties.
+  q: Is the code audited by an independent entity and is there a bug bounty program?
+  a: We will do that when the APIs and core are stable. A bug bounty program is in
+    the making but not done yet. If you are a security researcher and interested in
+    working on Kratos, please reach out to [security@ory.sh](mailto:security@ory.sh).
 - tags:
   - kratos
   - user
@@ -36,7 +37,7 @@
   a: You are using AJAX to submit the form. This is not supported right now. You need
     to submit a regular HTML form. Do not use AJAX. Do not use fetch. Let the user
     click the submit button and do not do anything. AJAX will be better supported
-    starting Kratos 0.6.  s
+    starting Kratos v0.6.
 - tags:
   - kratos
   - traits
@@ -46,7 +47,7 @@
     traits for that? Example: Some of our identity traits fields may be the subject
     to identity validation ([know your customer](https://en.wikipedia.org/wiki/Know_your_customer)).
     Once they are validated we do not allow the identity to be edited by the end-user.'
-  a: 'Currently traits are  visible to the user and also editable by him. It makes
+  a: 'Currently traits are visible to the users and also editable by them. It makes
     sense to have read-only and/or hidden traits for users, but we can not give an
     exact timing when this will be available. There is an open issue for this feature:
     [Issue](https://github.com/ory/kratos/issues/47).'
@@ -94,8 +95,8 @@
 - tags:
   - kratos
   - spa
-  q: I want to implement a single-page-app (SPA). Is this possible with Ory Kratos.
-  a: Yes, definitely. We do not have an example-app (yet). Also you might not come
-    around some page-reloads, as you definitely should avoid the API-flows and use
-    the browser-flows! So hopefully you are not too strict with your SPA. A sample
-    app is being worked on here:[Implement React SPA sample app](https://github.com/ory/kratos/issues/668).
+  q: I want to implement a single-page-app (SPA). Is this possible with Ory Kratos?
+  a: 'Yes, definitely. We do not have an example-app (yet). around some page-reloads,
+    as it is not possible to use the API flows in the browser. This is important to
+    prevent CSRF attacks. So hopefully you are not too strict with your SPA. A sample
+    app is being worked on here: [Implement React SPA sample app](https://github.com/ory/kratos/issues/668).'
