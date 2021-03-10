@@ -105,17 +105,6 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			assert.Equal(t, "not.ory-sh", actual.UI.Action)
 		})
 
-		t.Run("case=should properly update a flow", func(t *testing.T) {
-			expected := newFlow(t)
-			expected.Type = flow.TypeAPI
-			err := p.CreateLoginFlow(ctx, expected)
-			require.NoError(t, err)
-
-			actual, err := p.GetLoginFlow(ctx, expected.ID)
-			require.NoError(t, err)
-			assert.Equal(t, flow.TypeAPI, actual.Type)
-		})
-
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
 			expected := newFlow(t)
 			err := p.CreateLoginFlow(ctx, expected)
