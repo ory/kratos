@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/kratos/selfservice/flow/registration"
+
 	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/internal/testhelpers"
@@ -129,7 +131,7 @@ func TestDisabledEndpoint(t *testing.T) {
 	})
 
 	t.Run("case=should not registration when password method is disabled", func(t *testing.T) {
-		res, err := c.PostForm(publicTS.URL+password.RouteRegistration, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
+		res, err := c.PostForm(publicTS.URL+registration.RouteSubmitFlow, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 

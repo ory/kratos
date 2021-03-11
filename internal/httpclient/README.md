@@ -101,9 +101,7 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**Prometheus**](docs/AdminApi.md#prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Hydra service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 *AdminApi* | [**UpdateIdentity**](docs/AdminApi.md#updateidentity) | **Put** /identities/{id} | Update an Identity
 *PublicApi* | [**CompleteSelfServiceBrowserSettingsOIDCSettingsFlow**](docs/PublicApi.md#completeselfservicebrowsersettingsoidcsettingsflow) | **Post** /self-service/browser/flows/registration/strategies/oidc/settings/connections | Complete the Browser-Based Settings Flow for the OpenID Connect Strategy
-*PublicApi* | [**CompleteSelfServiceLoginFlowWithPasswordMethod**](docs/PublicApi.md#completeselfserviceloginflowwithpasswordmethod) | **Post** /self-service/login/methods/password | Complete Login Flow with Username/Email Password Method
 *PublicApi* | [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#completeselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
-*PublicApi* | [**CompleteSelfServiceRegistrationFlowWithPasswordMethod**](docs/PublicApi.md#completeselfserviceregistrationflowwithpasswordmethod) | **Post** /self-service/registration/methods/password | Complete Registration Flow with Username/Email Password Method
 *PublicApi* | [**CompleteSelfServiceSettingsFlowWithPasswordMethod**](docs/PublicApi.md#completeselfservicesettingsflowwithpasswordmethod) | **Post** /self-service/settings/methods/password | Complete Settings Flow with Username/Email Password Method
 *PublicApi* | [**CompleteSelfServiceSettingsFlowWithProfileMethod**](docs/PublicApi.md#completeselfservicesettingsflowwithprofilemethod) | **Post** /self-service/settings/methods/profile | Complete Settings Flow with Profile Method
 *PublicApi* | [**CompleteSelfServiceVerificationFlowWithLinkMethod**](docs/PublicApi.md#completeselfserviceverificationflowwithlinkmethod) | **Post** /self-service/verification/methods/link | Complete Verification Flow with Link Method
@@ -125,31 +123,60 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**InitializeSelfServiceSettingsViaBrowserFlow**](docs/PublicApi.md#initializeselfservicesettingsviabrowserflow) | **Get** /self-service/settings/browser | Initialize Settings Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceVerificationViaAPIFlow**](docs/PublicApi.md#initializeselfserviceverificationviaapiflow) | **Get** /self-service/verification/api | Initialize Verification Flow for API Clients
 *PublicApi* | [**InitializeSelfServiceVerificationViaBrowserFlow**](docs/PublicApi.md#initializeselfserviceverificationviabrowserflow) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
-*PublicApi* | [**RevokeSession**](docs/PublicApi.md#revokesession) | **Delete** /sessions | Revoke and Invalidate a Session
+*PublicApi* | [**RevokeSession**](docs/PublicApi.md#revokesession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
+*PublicApi* | [**SubmitSelfServiceLoginFlow**](docs/PublicApi.md#submitselfserviceloginflow) | **Post** /self-service/login/flows | Submit a Login Flow
+*PublicApi* | [**SubmitSelfServiceRegistrationFlow**](docs/PublicApi.md#submitselfserviceregistrationflow) | **Post** /self-service/registration | Submit a Registration Flow
 *PublicApi* | [**Whoami**](docs/PublicApi.md#whoami) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
 
 ## Documentation For Models
 
+ - [AuthenticateOKBody](docs/AuthenticateOKBody.md)
  - [CompleteSelfServiceBrowserSettingsOIDCFlowPayload](docs/CompleteSelfServiceBrowserSettingsOIDCFlowPayload.md)
  - [CompleteSelfServiceBrowserSettingsProfileStrategyFlow](docs/CompleteSelfServiceBrowserSettingsProfileStrategyFlow.md)
  - [CompleteSelfServiceLoginFlowWithPasswordMethod](docs/CompleteSelfServiceLoginFlowWithPasswordMethod.md)
+ - [CompleteSelfServiceLoginFlowWithPasswordMethodPayload](docs/CompleteSelfServiceLoginFlowWithPasswordMethodPayload.md)
  - [CompleteSelfServiceRecoveryFlowWithLinkMethod](docs/CompleteSelfServiceRecoveryFlowWithLinkMethod.md)
  - [CompleteSelfServiceSettingsFlowWithPasswordMethod](docs/CompleteSelfServiceSettingsFlowWithPasswordMethod.md)
  - [CompleteSelfServiceVerificationFlowWithLinkMethod](docs/CompleteSelfServiceVerificationFlowWithLinkMethod.md)
+ - [ContainerChangeResponseItem](docs/ContainerChangeResponseItem.md)
+ - [ContainerCreateCreatedBody](docs/ContainerCreateCreatedBody.md)
+ - [ContainerTopOKBody](docs/ContainerTopOKBody.md)
+ - [ContainerUpdateOKBody](docs/ContainerUpdateOKBody.md)
+ - [ContainerWaitOKBody](docs/ContainerWaitOKBody.md)
+ - [ContainerWaitOKBodyError](docs/ContainerWaitOKBodyError.md)
  - [CreateIdentity](docs/CreateIdentity.md)
  - [CreateRecoveryLink](docs/CreateRecoveryLink.md)
  - [ErrorContainer](docs/ErrorContainer.md)
+ - [ErrorResponse](docs/ErrorResponse.md)
  - [GenericError](docs/GenericError.md)
  - [GenericErrorPayload](docs/GenericErrorPayload.md)
+ - [GraphDriverData](docs/GraphDriverData.md)
  - [HealthNotReadyStatus](docs/HealthNotReadyStatus.md)
  - [HealthStatus](docs/HealthStatus.md)
+ - [IdResponse](docs/IdResponse.md)
  - [Identity](docs/Identity.md)
+ - [ImageDeleteResponseItem](docs/ImageDeleteResponseItem.md)
+ - [ImageSummary](docs/ImageSummary.md)
  - [InlineResponse200](docs/InlineResponse200.md)
  - [InlineResponse2001](docs/InlineResponse2001.md)
  - [InlineResponse503](docs/InlineResponse503.md)
  - [LoginFlow](docs/LoginFlow.md)
  - [LoginViaApiResponse](docs/LoginViaApiResponse.md)
+ - [Plugin](docs/Plugin.md)
+ - [PluginConfig](docs/PluginConfig.md)
+ - [PluginConfigArgs](docs/PluginConfigArgs.md)
+ - [PluginConfigInterface](docs/PluginConfigInterface.md)
+ - [PluginConfigLinux](docs/PluginConfigLinux.md)
+ - [PluginConfigNetwork](docs/PluginConfigNetwork.md)
+ - [PluginConfigRootfs](docs/PluginConfigRootfs.md)
+ - [PluginConfigUser](docs/PluginConfigUser.md)
+ - [PluginDevice](docs/PluginDevice.md)
+ - [PluginEnv](docs/PluginEnv.md)
+ - [PluginInterfaceType](docs/PluginInterfaceType.md)
+ - [PluginMount](docs/PluginMount.md)
+ - [PluginSettings](docs/PluginSettings.md)
+ - [Port](docs/Port.md)
  - [RecoveryAddress](docs/RecoveryAddress.md)
  - [RecoveryFlow](docs/RecoveryFlow.md)
  - [RecoveryFlowMethod](docs/RecoveryFlowMethod.md)
@@ -157,11 +184,9 @@ Class | Method | HTTP request | Description
  - [RecoveryFlowMethodConfigPayload](docs/RecoveryFlowMethodConfigPayload.md)
  - [RecoveryLink](docs/RecoveryLink.md)
  - [RegistrationFlow](docs/RegistrationFlow.md)
- - [RegistrationFlowMethod](docs/RegistrationFlowMethod.md)
- - [RegistrationFlowMethodConfig](docs/RegistrationFlowMethodConfig.md)
- - [RegistrationFlowMethodConfigPayload](docs/RegistrationFlowMethodConfigPayload.md)
  - [RegistrationViaApiResponse](docs/RegistrationViaApiResponse.md)
  - [RevokeSession](docs/RevokeSession.md)
+ - [ServiceUpdateResponse](docs/ServiceUpdateResponse.md)
  - [Session](docs/Session.md)
  - [SettingsFlow](docs/SettingsFlow.md)
  - [SettingsFlowMethod](docs/SettingsFlowMethod.md)
@@ -185,6 +210,8 @@ Class | Method | HTTP request | Description
  - [VerificationFlowMethodConfig](docs/VerificationFlowMethodConfig.md)
  - [VerificationFlowMethodConfigPayload](docs/VerificationFlowMethodConfigPayload.md)
  - [Version](docs/Version.md)
+ - [Volume](docs/Volume.md)
+ - [VolumeUsageData](docs/VolumeUsageData.md)
 
 
 ## Documentation For Authorization

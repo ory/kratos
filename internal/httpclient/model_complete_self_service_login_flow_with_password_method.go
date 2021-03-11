@@ -19,10 +19,9 @@ import (
 type CompleteSelfServiceLoginFlowWithPasswordMethod struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
-	// Identifier is the email or username of the user trying to log in.
-	Identifier *string `json:"identifier,omitempty"`
-	// The user's password.
-	Password *string `json:"password,omitempty"`
+	// Method should be set to \"password\" when logging in using the identifier and password strategy.
+	Method   *string                                                `json:"method,omitempty"`
+	Password *CompleteSelfServiceLoginFlowWithPasswordMethodPayload `json:"password,omitempty"`
 }
 
 // NewCompleteSelfServiceLoginFlowWithPasswordMethod instantiates a new CompleteSelfServiceLoginFlowWithPasswordMethod object
@@ -74,42 +73,42 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetCsrfToken(v string) 
 	o.CsrfToken = &v
 }
 
-// GetIdentifier returns the Identifier field value if set, zero value otherwise.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetIdentifier() string {
-	if o == nil || o.Identifier == nil {
+// GetMethod returns the Method field value if set, zero value otherwise.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetMethod() string {
+	if o == nil || o.Method == nil {
 		var ret string
 		return ret
 	}
-	return *o.Identifier
+	return *o.Method
 }
 
-// GetIdentifierOk returns a tuple with the Identifier field value if set, nil otherwise
+// GetMethodOk returns a tuple with the Method field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetIdentifierOk() (*string, bool) {
-	if o == nil || o.Identifier == nil {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetMethodOk() (*string, bool) {
+	if o == nil || o.Method == nil {
 		return nil, false
 	}
-	return o.Identifier, true
+	return o.Method, true
 }
 
-// HasIdentifier returns a boolean if a field has been set.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasIdentifier() bool {
-	if o != nil && o.Identifier != nil {
+// HasMethod returns a boolean if a field has been set.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasMethod() bool {
+	if o != nil && o.Method != nil {
 		return true
 	}
 
 	return false
 }
 
-// SetIdentifier gets a reference to the given string and assigns it to the Identifier field.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetIdentifier(v string) {
-	o.Identifier = &v
+// SetMethod gets a reference to the given string and assigns it to the Method field.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetMethod(v string) {
+	o.Method = &v
 }
 
 // GetPassword returns the Password field value if set, zero value otherwise.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() string {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() CompleteSelfServiceLoginFlowWithPasswordMethodPayload {
 	if o == nil || o.Password == nil {
-		var ret string
+		var ret CompleteSelfServiceLoginFlowWithPasswordMethodPayload
 		return ret
 	}
 	return *o.Password
@@ -117,7 +116,7 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() string {
 
 // GetPasswordOk returns a tuple with the Password field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordOk() (*string, bool) {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordOk() (*CompleteSelfServiceLoginFlowWithPasswordMethodPayload, bool) {
 	if o == nil || o.Password == nil {
 		return nil, false
 	}
@@ -133,8 +132,8 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasPassword() bool {
 	return false
 }
 
-// SetPassword gets a reference to the given string and assigns it to the Password field.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPassword(v string) {
+// SetPassword gets a reference to the given CompleteSelfServiceLoginFlowWithPasswordMethodPayload and assigns it to the Password field.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPassword(v CompleteSelfServiceLoginFlowWithPasswordMethodPayload) {
 	o.Password = &v
 }
 
@@ -143,8 +142,8 @@ func (o CompleteSelfServiceLoginFlowWithPasswordMethod) MarshalJSON() ([]byte, e
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
 	}
-	if o.Identifier != nil {
-		toSerialize["identifier"] = o.Identifier
+	if o.Method != nil {
+		toSerialize["method"] = o.Method
 	}
 	if o.Password != nil {
 		toSerialize["password"] = o.Password

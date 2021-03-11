@@ -43,7 +43,7 @@ type MessageResetter interface {
 }
 
 type FieldSorter interface {
-	SortNodes(schemaRef string) error
+	SortNodes(schemaRef string, prefix string, keysInOrder []string) error
 }
 
 type NodeGetter interface {

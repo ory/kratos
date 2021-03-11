@@ -12,7 +12,6 @@ import (
 
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/stringslice"
 )
 
@@ -80,7 +79,11 @@ type jsonRawNode struct {
 }
 
 func (n *Node) ID() string {
-	return string(n.Group) + "/" + n.Attributes.ID()
+	return ToID(n.Group, n.Attributes.ID())
+}
+
+func ToID(group Group, attributeID string) string {
+	return string(group) + "/" + attributeID
 }
 
 func (n *Node) Reset() {
@@ -113,16 +116,10 @@ func (n Nodes) Reset(exclude ...string) {
 	}
 }
 
-func (n Nodes) SortBySchema(schemaRef, prefix string) error {
+func (n Nodes) SortBySchema(schemaRef, prefix string, keysInOrder []string) error {
 	schemaKeys, err := schema.GetKeysInOrder(schemaRef)
 	if err != nil {
 		return err
-	}
-
-	keysInOrder := []string{
-		x.CSRFTokenName,
-		"identifier",
-		"password",
 	}
 
 	for _, k := range schemaKeys {
@@ -136,7 +133,7 @@ func (n Nodes) SortBySchema(schemaRef, prefix string) error {
 		lastPrefix := len(keysInOrder)
 		for i, n := range keysInOrder {
 			if strings.HasPrefix(name, n) {
-				lastPrefix = i
+				return i
 			}
 		}
 		return lastPrefix
@@ -181,6 +178,17 @@ func (n *Nodes) Upsert(node *Node) {
 	}
 
 	*n = append(*n, node)
+}
+
+// SetValueAttribute sets a node's attribute's value or returns false if no node is found.
+func (n *Nodes) SetValueAttribute(id string, value interface{}) bool {
+	for i := range *n {
+		if (*n)[i].ID() == id {
+			(*n)[i].Attributes.SetValue(value)
+			return true
+		}
+	}
+	return false
 }
 
 // Append appends a node.

@@ -9,15 +9,15 @@ Name | Type | Description | Notes
 **Id** | **string** |  | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow occurred. | 
 **Messages** | Pointer to [**[]UiText**](UiText.md) |  | [optional] 
-**Methods** | [**map[string]RegistrationFlowMethod**](registrationFlowMethod.md) | Methods contains context for all enabled registration methods. If a registration flow has been processed, but for example the password is incorrect, this will contain error messages. | 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
 **Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
+**Ui** | [**UiContainer**](uiContainer.md) |  | 
 
 ## Methods
 
 ### NewRegistrationFlow
 
-`func NewRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]RegistrationFlowMethod, requestUrl string, ) *RegistrationFlow`
+`func NewRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, ui UiContainer, ) *RegistrationFlow`
 
 NewRegistrationFlow instantiates a new RegistrationFlow object
 This constructor will assign default values to properties that have it defined,
@@ -142,26 +142,6 @@ SetMessages sets Messages field to given value.
 
 HasMessages returns a boolean if a field has been set.
 
-### GetMethods
-
-`func (o *RegistrationFlow) GetMethods() map[string]RegistrationFlowMethod`
-
-GetMethods returns the Methods field if non-nil, zero value otherwise.
-
-### GetMethodsOk
-
-`func (o *RegistrationFlow) GetMethodsOk() (*map[string]RegistrationFlowMethod, bool)`
-
-GetMethodsOk returns a tuple with the Methods field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetMethods
-
-`func (o *RegistrationFlow) SetMethods(v map[string]RegistrationFlowMethod)`
-
-SetMethods sets Methods field to given value.
-
-
 ### GetRequestUrl
 
 `func (o *RegistrationFlow) GetRequestUrl() string`
@@ -206,6 +186,26 @@ SetType sets Type field to given value.
 `func (o *RegistrationFlow) HasType() bool`
 
 HasType returns a boolean if a field has been set.
+
+### GetUi
+
+`func (o *RegistrationFlow) GetUi() UiContainer`
+
+GetUi returns the Ui field if non-nil, zero value otherwise.
+
+### GetUiOk
+
+`func (o *RegistrationFlow) GetUiOk() (*UiContainer, bool)`
+
+GetUiOk returns a tuple with the Ui field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUi
+
+`func (o *RegistrationFlow) SetUi(v UiContainer)`
+
+SetUi sets Ui field to given value.
+
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

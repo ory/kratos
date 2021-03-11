@@ -3,7 +3,10 @@ package node_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"testing"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/corpx"
 
@@ -33,14 +36,40 @@ func TestNodesSort(t *testing.T) {
 	f.UpdateNodesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
 	f.SetCSRF("csrf_token")
 
-	require.NoError(t, f.SortNodes(schemaPath))
+	for k, tc := range []struct {
+		p string
+		k []string
+		e []string
+	}{
+		{
+			k: []string{
+				"traits.stringy",
+				x.CSRFTokenName,
+				"traits.numby",
+			},
+			e: []string{"traits.stringy", "csrf_token", "traits.numby", "traits.email", "traits.booly", "traits.should_big_number", "traits.should_long_string"},
+		},
+		{
+			p: "traits",
+			k: []string{
+				x.CSRFTokenName,
+				"traits.stringy",
+				"traits.numby",
+			},
+			e: []string{"csrf_token", "traits.stringy", "traits.numby", "traits.email", "traits.booly", "traits.should_big_number", "traits.should_long_string"},
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			require.NoError(t, f.SortNodes(schemaPath, tc.p, tc.k))
 
-	var names []string
-	for _, f := range f.Nodes {
-		names = append(names, f.Attributes.ID())
+			var names []string
+			for _, f := range f.Nodes {
+				names = append(names, f.Attributes.ID())
+			}
+
+			assert.EqualValues(t, tc.e, names, "%+v", f.Nodes)
+		})
 	}
-
-	assert.EqualValues(t, []string{"csrf_token", "traits.email", "traits.stringy", "traits.numby", "traits.booly", "traits.should_big_number", "traits.should_long_string"}, names, "%+v", f.Nodes)
 }
 
 func TestNodesUpsert(t *testing.T) {

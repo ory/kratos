@@ -1,0 +1,3954 @@
+{
+  "components": {
+    "responses": {
+      "emptyResponse": {
+        "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
+      },
+      "errorContainer": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errorContainer"
+            }
+          }
+        },
+        "description": "User-facing error response"
+      },
+      "identityList": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/Identity"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "description": "A list of identities."
+      },
+      "identityResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Identity"
+            }
+          }
+        },
+        "description": "A single identity."
+      }
+    },
+    "schemas": {
+      "AuthenticateOKBody": {
+        "description": "AuthenticateOKBody authenticate o k body",
+        "properties": {
+          "IdentityToken": {
+            "description": "An opaque token used to authenticate a user after a successful login",
+            "type": "string"
+          },
+          "Status": {
+            "description": "The status of the authentication",
+            "type": "string"
+          }
+        },
+        "required": [
+          "IdentityToken",
+          "Status"
+        ],
+        "type": "object"
+      },
+      "CompleteSelfServiceBrowserSettingsProfileStrategyFlow": {
+        "description": "nolint:deadcode,unused",
+        "properties": {
+          "csrf_token": {
+            "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
+            "type": "string"
+          },
+          "traits": {
+            "description": "Traits contains all of the identity's traits.",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "CompleteSelfServiceLoginFlowWithPasswordMethod": {
+        "properties": {
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
+            "type": "string"
+          },
+          "password": {
+            "$ref": "#/components/schemas/CompleteSelfServiceLoginFlowWithPasswordMethodPayload"
+          }
+        },
+        "type": "object"
+      },
+      "CompleteSelfServiceLoginFlowWithPasswordMethodPayload": {
+        "properties": {
+          "identifier": {
+            "description": "Identifier is the email or username of the user trying to log in.",
+            "type": "string"
+          },
+          "password": {
+            "description": "The user's password.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CompleteSelfServiceSettingsFlowWithPasswordMethod": {
+        "properties": {
+          "csrf_token": {
+            "description": "CSRFToken is the anti-CSRF token\n\ntype: string",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password is the updated password\n\ntype: string",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "type": "object"
+      },
+      "ContainerChangeResponseItem": {
+        "description": "ContainerChangeResponseItem change item in response to ContainerChanges operation",
+        "properties": {
+          "Kind": {
+            "description": "Kind of change",
+            "format": "uint8",
+            "type": "integer"
+          },
+          "Path": {
+            "description": "Path to file that has changed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "Kind",
+          "Path"
+        ],
+        "type": "object"
+      },
+      "ContainerCreateCreatedBody": {
+        "description": "ContainerCreateCreatedBody OK response to ContainerCreate operation",
+        "properties": {
+          "Id": {
+            "description": "The ID of the created container",
+            "type": "string"
+          },
+          "Warnings": {
+            "description": "Warnings encountered when creating the container",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "Id",
+          "Warnings"
+        ],
+        "type": "object"
+      },
+      "ContainerTopOKBody": {
+        "description": "ContainerTopOKBody OK response to ContainerTop operation",
+        "properties": {
+          "Processes": {
+            "description": "Each process running in the container, where each is process is an array of values corresponding to the titles",
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "Titles": {
+            "description": "The ps column titles",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "Processes",
+          "Titles"
+        ],
+        "type": "object"
+      },
+      "ContainerUpdateOKBody": {
+        "description": "ContainerUpdateOKBody OK response to ContainerUpdate operation",
+        "properties": {
+          "Warnings": {
+            "description": "warnings",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "Warnings"
+        ],
+        "type": "object"
+      },
+      "ContainerWaitOKBody": {
+        "description": "ContainerWaitOKBody OK response to ContainerWait operation",
+        "properties": {
+          "Error": {
+            "$ref": "#/components/schemas/ContainerWaitOKBodyError"
+          },
+          "StatusCode": {
+            "description": "Exit code of the container",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "Error",
+          "StatusCode"
+        ],
+        "type": "object"
+      },
+      "ContainerWaitOKBodyError": {
+        "description": "ContainerWaitOKBodyError container waiting error, if any",
+        "properties": {
+          "Message": {
+            "description": "Details of an error",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CreateIdentity": {
+        "properties": {
+          "schema_id": {
+            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+            "type": "string"
+          },
+          "traits": {
+            "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema_id",
+          "traits"
+        ],
+        "type": "object"
+      },
+      "CreateRecoveryLink": {
+        "properties": {
+          "expires_in": {
+            "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+            "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+            "type": "string"
+          },
+          "identity_id": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        },
+        "required": [
+          "identity_id"
+        ],
+        "type": "object"
+      },
+      "CredentialsType": {
+        "description": "and so on.",
+        "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
+        "type": "string"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "message": {
+            "description": "The error message.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ErrorResponse Represents an error.",
+        "type": "object"
+      },
+      "GraphDriverData": {
+        "properties": {
+          "Data": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "data",
+            "type": "object"
+          },
+          "Name": {
+            "description": "name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "Data",
+          "Name"
+        ],
+        "title": "GraphDriverData Information about a container's graph driver.",
+        "type": "object"
+      },
+      "ID": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "IdResponse": {
+        "description": "IDResponse Response to an API call that returns just an Id",
+        "properties": {
+          "Id": {
+            "description": "The id of the newly created object.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "Id"
+        ],
+        "type": "object"
+      },
+      "Identity": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "recovery_addresses": {
+            "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
+            "items": {
+              "$ref": "#/components/schemas/RecoveryAddress"
+            },
+            "type": "array",
+            "x-omitempty": true
+          },
+          "schema_id": {
+            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+            "type": "string"
+          },
+          "schema_url": {
+            "description": "SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
+            "type": "string"
+          },
+          "traits": {
+            "$ref": "#/components/schemas/Traits"
+          },
+          "verifiable_addresses": {
+            "description": "VerifiableAddresses contains all the addresses that can be verified by the user.",
+            "items": {
+              "$ref": "#/components/schemas/VerifiableAddress"
+            },
+            "type": "array",
+            "x-omitempty": true
+          }
+        },
+        "required": [
+          "id",
+          "schema_id",
+          "schema_url",
+          "traits"
+        ],
+        "type": "object"
+      },
+      "ImageDeleteResponseItem": {
+        "description": "ImageDeleteResponseItem image delete response item",
+        "properties": {
+          "Deleted": {
+            "description": "The image ID of an image that was deleted",
+            "type": "string"
+          },
+          "Untagged": {
+            "description": "The image ID of an image that was untagged",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImageSummary": {
+        "description": "ImageSummary image summary",
+        "properties": {
+          "Containers": {
+            "description": "containers",
+            "format": "int64",
+            "type": "integer"
+          },
+          "Created": {
+            "description": "created",
+            "format": "int64",
+            "type": "integer"
+          },
+          "Id": {
+            "description": "Id",
+            "type": "string"
+          },
+          "Labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "labels",
+            "type": "object"
+          },
+          "ParentId": {
+            "description": "parent Id",
+            "type": "string"
+          },
+          "RepoDigests": {
+            "description": "repo digests",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "RepoTags": {
+            "description": "repo tags",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "SharedSize": {
+            "description": "shared size",
+            "format": "int64",
+            "type": "integer"
+          },
+          "Size": {
+            "description": "size",
+            "format": "int64",
+            "type": "integer"
+          },
+          "VirtualSize": {
+            "description": "virtual size",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "Containers",
+          "Created",
+          "Id",
+          "Labels",
+          "ParentId",
+          "RepoDigests",
+          "RepoTags",
+          "SharedSize",
+          "Size",
+          "VirtualSize"
+        ],
+        "type": "object"
+      },
+      "NullTime": {
+        "format": "date-time",
+        "title": "NullTime implements sql.NullTime functionality.",
+        "type": "string"
+      },
+      "Plugin": {
+        "description": "Plugin A plugin for the Engine API",
+        "properties": {
+          "Config": {
+            "$ref": "#/components/schemas/PluginConfig"
+          },
+          "Enabled": {
+            "description": "True if the plugin is running. False if the plugin is not running, only installed.",
+            "type": "boolean"
+          },
+          "Id": {
+            "description": "Id",
+            "type": "string"
+          },
+          "Name": {
+            "description": "name",
+            "type": "string"
+          },
+          "PluginReference": {
+            "description": "plugin remote reference used to push/pull the plugin",
+            "type": "string"
+          },
+          "Settings": {
+            "$ref": "#/components/schemas/PluginSettings"
+          }
+        },
+        "required": [
+          "Config",
+          "Enabled",
+          "Name",
+          "Settings"
+        ],
+        "type": "object"
+      },
+      "PluginConfig": {
+        "properties": {
+          "Args": {
+            "$ref": "#/components/schemas/PluginConfigArgs"
+          },
+          "Description": {
+            "description": "description",
+            "type": "string"
+          },
+          "DockerVersion": {
+            "description": "Docker Version used to create the plugin",
+            "type": "string"
+          },
+          "Documentation": {
+            "description": "documentation",
+            "type": "string"
+          },
+          "Entrypoint": {
+            "description": "entrypoint",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "Env": {
+            "description": "env",
+            "items": {
+              "$ref": "#/components/schemas/PluginEnv"
+            },
+            "type": "array"
+          },
+          "Interface": {
+            "$ref": "#/components/schemas/PluginConfigInterface"
+          },
+          "IpcHost": {
+            "description": "ipc host",
+            "type": "boolean"
+          },
+          "Linux": {
+            "$ref": "#/components/schemas/PluginConfigLinux"
+          },
+          "Mounts": {
+            "description": "mounts",
+            "items": {
+              "$ref": "#/components/schemas/PluginMount"
+            },
+            "type": "array"
+          },
+          "Network": {
+            "$ref": "#/components/schemas/PluginConfigNetwork"
+          },
+          "PidHost": {
+            "description": "pid host",
+            "type": "boolean"
+          },
+          "PropagatedMount": {
+            "description": "propagated mount",
+            "type": "string"
+          },
+          "User": {
+            "$ref": "#/components/schemas/PluginConfigUser"
+          },
+          "WorkDir": {
+            "description": "work dir",
+            "type": "string"
+          },
+          "rootfs": {
+            "$ref": "#/components/schemas/PluginConfigRootfs"
+          }
+        },
+        "required": [
+          "Args",
+          "Description",
+          "Documentation",
+          "Entrypoint",
+          "Env",
+          "Interface",
+          "IpcHost",
+          "Linux",
+          "Mounts",
+          "Network",
+          "PidHost",
+          "PropagatedMount",
+          "WorkDir"
+        ],
+        "title": "PluginConfig The config of a plugin.",
+        "type": "object"
+      },
+      "PluginConfigArgs": {
+        "description": "PluginConfigArgs plugin config args",
+        "properties": {
+          "Description": {
+            "description": "description",
+            "type": "string"
+          },
+          "Name": {
+            "description": "name",
+            "type": "string"
+          },
+          "Settable": {
+            "description": "settable",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "Value": {
+            "description": "value",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "Description",
+          "Name",
+          "Settable",
+          "Value"
+        ],
+        "type": "object"
+      },
+      "PluginConfigInterface": {
+        "description": "PluginConfigInterface The interface between Docker and the plugin",
+        "properties": {
+          "Socket": {
+            "description": "socket",
+            "type": "string"
+          },
+          "Types": {
+            "description": "types",
+            "items": {
+              "$ref": "#/components/schemas/PluginInterfaceType"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "Socket",
+          "Types"
+        ],
+        "type": "object"
+      },
+      "PluginConfigLinux": {
+        "description": "PluginConfigLinux plugin config linux",
+        "properties": {
+          "AllowAllDevices": {
+            "description": "allow all devices",
+            "type": "boolean"
+          },
+          "Capabilities": {
+            "description": "capabilities",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "Devices": {
+            "description": "devices",
+            "items": {
+              "$ref": "#/components/schemas/PluginDevice"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "AllowAllDevices",
+          "Capabilities",
+          "Devices"
+        ],
+        "type": "object"
+      },
+      "PluginConfigNetwork": {
+        "description": "PluginConfigNetwork plugin config network",
+        "properties": {
+          "Type": {
+            "description": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "Type"
+        ],
+        "type": "object"
+      },
+      "PluginConfigRootfs": {
+        "description": "PluginConfigRootfs plugin config rootfs",
+        "properties": {
+          "diff_ids": {
+            "description": "diff ids",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "type",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PluginConfigUser": {
+        "description": "PluginConfigUser plugin config user",
+        "properties": {
+          "GID": {
+            "description": "g ID",
+            "format": "uint32",
+            "type": "integer"
+          },
+          "UID": {
+            "description": "UID",
+            "format": "uint32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PluginDevice": {
+        "description": "PluginDevice plugin device",
+        "properties": {
+          "Description": {
+            "description": "description",
+            "type": "string"
+          },
+          "Name": {
+            "description": "name",
+            "type": "string"
+          },
+          "Path": {
+            "description": "path",
+            "type": "string"
+          },
+          "Settable": {
+            "description": "settable",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "Description",
+          "Name",
+          "Path",
+          "Settable"
+        ],
+        "type": "object"
+      },
+      "PluginEnv": {
+        "description": "PluginEnv plugin env",
+        "properties": {
+          "Description": {
+            "description": "description",
+            "type": "string"
+          },
+          "Name": {
+            "description": "name",
+            "type": "string"
+          },
+          "Settable": {
+            "description": "settable",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "Value": {
+            "description": "value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "Description",
+          "Name",
+          "Settable",
+          "Value"
+        ],
+        "type": "object"
+      },
+      "PluginInterfaceType": {
+        "description": "PluginInterfaceType plugin interface type",
+        "properties": {
+          "Capability": {
+            "description": "capability",
+            "type": "string"
+          },
+          "Prefix": {
+            "description": "prefix",
+            "type": "string"
+          },
+          "Version": {
+            "description": "version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "Capability",
+          "Prefix",
+          "Version"
+        ],
+        "type": "object"
+      },
+      "PluginMount": {
+        "description": "PluginMount plugin mount",
+        "properties": {
+          "Description": {
+            "description": "description",
+            "type": "string"
+          },
+          "Destination": {
+            "description": "destination",
+            "type": "string"
+          },
+          "Name": {
+            "description": "name",
+            "type": "string"
+          },
+          "Options": {
+            "description": "options",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "Settable": {
+            "description": "settable",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "Source": {
+            "description": "source",
+            "type": "string"
+          },
+          "Type": {
+            "description": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "Description",
+          "Destination",
+          "Name",
+          "Options",
+          "Settable",
+          "Source",
+          "Type"
+        ],
+        "type": "object"
+      },
+      "PluginSettings": {
+        "properties": {
+          "Args": {
+            "description": "args",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "Devices": {
+            "description": "devices",
+            "items": {
+              "$ref": "#/components/schemas/PluginDevice"
+            },
+            "type": "array"
+          },
+          "Env": {
+            "description": "env",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "Mounts": {
+            "description": "mounts",
+            "items": {
+              "$ref": "#/components/schemas/PluginMount"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "Args",
+          "Devices",
+          "Env",
+          "Mounts"
+        ],
+        "title": "PluginSettings Settings that can be modified by users.",
+        "type": "object"
+      },
+      "Port": {
+        "description": "Port An open port on a container",
+        "properties": {
+          "IP": {
+            "description": "IP",
+            "type": "string"
+          },
+          "PrivatePort": {
+            "description": "Port on the container",
+            "format": "uint16",
+            "type": "integer"
+          },
+          "PublicPort": {
+            "description": "Port exposed on the host",
+            "format": "uint16",
+            "type": "integer"
+          },
+          "Type": {
+            "description": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "PrivatePort",
+          "Type"
+        ],
+        "type": "object"
+      },
+      "RecoveryAddress": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "value": {
+            "type": "string"
+          },
+          "via": {
+            "$ref": "#/components/schemas/RecoveryAddressType"
+          }
+        },
+        "required": [
+          "id",
+          "value",
+          "via"
+        ],
+        "type": "object"
+      },
+      "RecoveryAddressType": {
+        "type": "string"
+      },
+      "ServiceUpdateResponse": {
+        "description": "ServiceUpdateResponse service update response",
+        "properties": {
+          "Warnings": {
+            "description": "Optional warning messages",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "State": {
+        "type": "string"
+      },
+      "Traits": {
+        "type": "object"
+      },
+      "Type": {
+        "description": "The flow type can either be `api` or `browser`.",
+        "title": "Type is the flow type.",
+        "type": "string"
+      },
+      "UUID": {
+        "format": "uuid4",
+        "type": "string"
+      },
+      "UpdateIdentity": {
+        "properties": {
+          "schema_id": {
+            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
+            "type": "string"
+          },
+          "traits": {
+            "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "traits"
+        ],
+        "type": "object"
+      },
+      "VerifiableAddress": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerifiableAddressStatus"
+          },
+          "value": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "verified_at": {
+            "$ref": "#/components/schemas/NullTime"
+          },
+          "via": {
+            "$ref": "#/components/schemas/VerifiableAddressType"
+          }
+        },
+        "required": [
+          "id",
+          "value",
+          "verified",
+          "via",
+          "status"
+        ],
+        "type": "object"
+      },
+      "VerifiableAddressStatus": {
+        "type": "string"
+      },
+      "VerifiableAddressType": {
+        "type": "string"
+      },
+      "Volume": {
+        "description": "Volume volume",
+        "properties": {
+          "CreatedAt": {
+            "description": "Date/Time the volume was created.",
+            "type": "string"
+          },
+          "Driver": {
+            "description": "Name of the volume driver used by the volume.",
+            "type": "string"
+          },
+          "Labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "User-defined key/value metadata.",
+            "type": "object"
+          },
+          "Mountpoint": {
+            "description": "Mount path of the volume on the host.",
+            "type": "string"
+          },
+          "Name": {
+            "description": "Name of the volume.",
+            "type": "string"
+          },
+          "Options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The driver specific options used when creating the volume.",
+            "type": "object"
+          },
+          "Scope": {
+            "description": "The level at which the volume exists. Either `global` for cluster-wide, or `local` for machine level.",
+            "type": "string"
+          },
+          "Status": {
+            "additionalProperties": true,
+            "description": "Low-level details about the volume, provided by the volume driver.\nDetails are returned as a map with key/value pairs:\n`{\"key\":\"value\",\"key2\":\"value2\"}`.\n\nThe `Status` field is optional, and is omitted if the volume driver\ndoes not support this feature.",
+            "type": "object"
+          },
+          "UsageData": {
+            "$ref": "#/components/schemas/VolumeUsageData"
+          }
+        },
+        "required": [
+          "Driver",
+          "Labels",
+          "Mountpoint",
+          "Name",
+          "Options",
+          "Scope"
+        ],
+        "type": "object"
+      },
+      "VolumeUsageData": {
+        "description": "VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
+        "properties": {
+          "RefCount": {
+            "description": "The number of containers referencing this volume. This field\nis set to `-1` if the reference-count is not available.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "Size": {
+            "description": "Amount of disk space used by the volume (in bytes). This information\nis only available for volumes created with the `\"local\"` volume\ndriver. For volumes created with other volume drivers, this field\nis set to `-1` (\"not available\")",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "RefCount",
+          "Size"
+        ],
+        "type": "object"
+      },
+      "completeSelfServiceBrowserSettingsOIDCFlowPayload": {
+        "properties": {
+          "flow": {
+            "description": "Flow ID is the flow's ID.\n\nin: query",
+            "type": "string"
+          },
+          "link": {
+            "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+            "type": "string"
+          },
+          "unlink": {
+            "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "completeSelfServiceRecoveryFlowWithLinkMethod": {
+        "properties": {
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "completeSelfServiceVerificationFlowWithLinkMethod": {
+        "properties": {
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "errorContainer": {
+        "properties": {
+          "errors": {
+            "description": "Errors in the container",
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        },
+        "required": [
+          "id",
+          "errors"
+        ],
+        "type": "object"
+      },
+      "genericError": {
+        "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/genericErrorPayload"
+          }
+        },
+        "title": "Error response",
+        "type": "object"
+      },
+      "genericErrorPayload": {
+        "properties": {
+          "code": {
+            "description": "Code represents the error status code (404, 403, 401, ...).",
+            "example": 404,
+            "format": "int64",
+            "type": "integer"
+          },
+          "debug": {
+            "description": "Debug contains debug information. This is usually not available and has to be enabled.",
+            "example": "The database adapter was unable to find the element",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "request": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "healthNotReadyStatus": {
+        "properties": {
+          "errors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Errors contains a list of errors that caused the not ready status.",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "healthStatus": {
+        "properties": {
+          "status": {
+            "description": "Status always contains \"ok\".",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "jsonSchema": {
+        "description": "Raw JSON Schema",
+        "type": "object"
+      },
+      "loginFlow": {
+        "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
+        "properties": {
+          "active": {
+            "$ref": "#/components/schemas/CredentialsType"
+          },
+          "expires_at": {
+            "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,\na new flow has to be initiated.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "forced": {
+            "description": "Forced stores whether this login flow should enforce re-authentication.",
+            "type": "boolean"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "issued_at": {
+            "description": "IssuedAt is the time (UTC) when the flow started.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "request_url": {
+            "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          },
+          "ui": {
+            "$ref": "#/components/schemas/uiContainer"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "expires_at",
+          "issued_at",
+          "request_url",
+          "ui"
+        ],
+        "title": "Login Flow",
+        "type": "object"
+      },
+      "loginViaApiResponse": {
+        "description": "The Response for Login Flows via API",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/session"
+          },
+          "session_token": {
+            "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_token",
+          "session"
+        ],
+        "type": "object"
+      },
+      "recoveryFlow": {
+        "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
+        "properties": {
+          "active": {
+            "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,\na new request has to be initiated.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "issued_at": {
+            "description": "IssuedAt is the time (UTC) when the request occurred.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "methods": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/recoveryFlowMethod"
+            },
+            "description": "Methods contains context for all account recovery methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
+            "type": "object"
+          },
+          "request_url": {
+            "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/State"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          }
+        },
+        "required": [
+          "id",
+          "expires_at",
+          "issued_at",
+          "request_url",
+          "methods",
+          "state"
+        ],
+        "title": "A Recovery Flow",
+        "type": "object"
+      },
+      "recoveryFlowMethod": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/recoveryFlowMethodConfig"
+          },
+          "method": {
+            "description": "Method contains the request credentials type.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "config"
+        ],
+        "type": "object"
+      },
+      "recoveryFlowMethodConfig": {
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
+        "type": "object"
+      },
+      "recoveryFlowMethodConfigPayload": {
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
+        "type": "object"
+      },
+      "recoveryLink": {
+        "properties": {
+          "expires_at": {
+            "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "recovery_link": {
+            "description": "Recovery Link\n\nThis link can be used to recover the account.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recovery_link"
+        ],
+        "type": "object"
+      },
+      "registrationFlow": {
+        "properties": {
+          "active": {
+            "$ref": "#/components/schemas/CredentialsType"
+          },
+          "expires_at": {
+            "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,\na new flow has to be initiated.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "issued_at": {
+            "description": "IssuedAt is the time (UTC) when the flow occurred.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "request_url": {
+            "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          },
+          "ui": {
+            "$ref": "#/components/schemas/uiContainer"
+          }
+        },
+        "required": [
+          "id",
+          "expires_at",
+          "issued_at",
+          "request_url",
+          "ui"
+        ],
+        "type": "object"
+      },
+      "registrationViaApiResponse": {
+        "description": "The Response for Registration Flows via API",
+        "properties": {
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "session": {
+            "$ref": "#/components/schemas/session"
+          },
+          "session_token": {
+            "description": "The Session Token\n\nThis field is only set when the session hook is configured as a post-registration hook.\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_token",
+          "identity"
+        ],
+        "type": "object"
+      },
+      "revokeSession": {
+        "properties": {
+          "session_token": {
+            "description": "The Session Token\n\nInvalidate this session token.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_token"
+        ],
+        "type": "object"
+      },
+      "session": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "authenticated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "expires_at",
+          "authenticated_at",
+          "issued_at",
+          "identity"
+        ],
+        "type": "object"
+      },
+      "settingsFlow": {
+        "description": "This flow is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nWe recommend reading the [User Settings Documentation](../self-service/flows/user-settings)",
+        "properties": {
+          "active": {
+            "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to update the setting,\na new flow has to be initiated.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "issued_at": {
+            "description": "IssuedAt is the time (UTC) when the flow occurred.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "methods": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/settingsFlowMethod"
+            },
+            "description": "Methods contains context for all enabled registration methods. If a settings flow has been\nprocessed, but for example the first name is empty, this will contain error messages.",
+            "type": "object"
+          },
+          "request_url": {
+            "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/State"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          }
+        },
+        "required": [
+          "id",
+          "expires_at",
+          "issued_at",
+          "request_url",
+          "methods",
+          "identity",
+          "state"
+        ],
+        "title": "Flow represents a Settings Flow",
+        "type": "object"
+      },
+      "settingsFlowMethod": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/settingsFlowMethodConfig"
+          },
+          "method": {
+            "description": "Method is the name of this flow method.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "config"
+        ],
+        "type": "object"
+      },
+      "settingsFlowMethodConfig": {
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
+        "type": "object"
+      },
+      "settingsFlowMethodConfigPayload": {
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
+        "type": "object"
+      },
+      "settingsProfileFormConfig": {
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
+        "type": "object"
+      },
+      "settingsViaApiResponse": {
+        "description": "The Response for Settings Flows via API",
+        "properties": {
+          "flow": {
+            "$ref": "#/components/schemas/settingsFlow"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          }
+        },
+        "required": [
+          "flow",
+          "identity"
+        ],
+        "type": "object"
+      },
+      "uiContainer": {
+        "description": "Container represents a HTML Form. The container can work with both HTTP Form and JSON requests",
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
+        "type": "object"
+      },
+      "uiNode": {
+        "description": "Nodes are represented as HTML elements or their native UI equivalents. For example,\na node can be an `\u003cimg\u003e` tag, or an `\u003cinput element\u003e` but also `some plain text`.",
+        "properties": {
+          "attributes": {
+            "$ref": "#/components/schemas/uiNodeAttributes"
+          },
+          "group": {
+            "$ref": "#/components/schemas/uiNodeGroup"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "type": {
+            "$ref": "#/components/schemas/uiNodeType"
+          }
+        },
+        "required": [
+          "type",
+          "group",
+          "attributes",
+          "messages"
+        ],
+        "title": "Node represents a flow's nodes",
+        "type": "object"
+      },
+      "uiNodeAnchorAttributes": {
+        "properties": {
+          "href": {
+            "description": "The link's href (destination) URL.\n\nformat: uri",
+            "type": "string"
+          },
+          "title": {
+            "$ref": "#/components/schemas/uiText"
+          }
+        },
+        "required": [
+          "href",
+          "title"
+        ],
+        "title": "AnchorAttributes represents the attributes of an anchor node.",
+        "type": "object"
+      },
+      "uiNodeAttributes": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/uiNodeInputAttributes"
+          },
+          {
+            "$ref": "#/components/schemas/uiNodeTextAttributes"
+          },
+          {
+            "$ref": "#/components/schemas/uiNodeImageAttributes"
+          },
+          {
+            "$ref": "#/components/schemas/uiNodeAnchorAttributes"
+          }
+        ],
+        "title": "Attributes represents a list of attributes (e.g. `href=\"foo\"` for links)."
+      },
+      "uiNodeGroup": {
+        "type": "string"
+      },
+      "uiNodeImageAttributes": {
+        "properties": {
+          "src": {
+            "description": "The image's source URL.\n\nformat: uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "src"
+        ],
+        "title": "ImageAttributes represents the attributes of an image node.",
+        "type": "object"
+      },
+      "uiNodeInputAttributeType": {
+        "type": "string"
+      },
+      "uiNodeInputAttributes": {
+        "description": "InputAttributes represents the attributes of an input node",
+        "properties": {
+          "disabled": {
+            "description": "Sets the input's disabled field to true or false.",
+            "type": "boolean"
+          },
+          "label": {
+            "$ref": "#/components/schemas/uiText"
+          },
+          "name": {
+            "description": "The input's element name.",
+            "type": "string"
+          },
+          "pattern": {
+            "description": "The input's pattern.",
+            "type": "string"
+          },
+          "required": {
+            "description": "Mark this input field as required.",
+            "type": "boolean"
+          },
+          "type": {
+            "$ref": "#/components/schemas/uiNodeInputAttributeType"
+          },
+          "value": {
+            "$ref": "#/components/schemas/uiNodeInputAttributesValue",
+            "description": "The input's value.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "disabled"
+        ],
+        "type": "object"
+      },
+      "uiNodeInputAttributesValue": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "uiNodeTextAttributes": {
+        "properties": {
+          "text": {
+            "$ref": "#/components/schemas/uiText"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TextAttributes represents the attributes of a text node.",
+        "type": "object"
+      },
+      "uiNodeType": {
+        "type": "string"
+      },
+      "uiNodes": {
+        "items": {
+          "$ref": "#/components/schemas/uiNode"
+        },
+        "type": "array"
+      },
+      "uiText": {
+        "properties": {
+          "context": {
+            "description": "The message's context. Useful when customizing messages.",
+            "type": "object"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "text": {
+            "description": "The message text. Written in american english.",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/uiTextType"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "type"
+        ],
+        "type": "object"
+      },
+      "uiTextType": {
+        "type": "string"
+      },
+      "uiTexts": {
+        "items": {
+          "$ref": "#/components/schemas/uiText"
+        },
+        "type": "array"
+      },
+      "verificationFlow": {
+        "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
+        "properties": {
+          "active": {
+            "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "issued_at": {
+            "description": "IssuedAt is the time (UTC) when the request occurred.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "methods": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/verificationFlowMethod"
+            },
+            "description": "Methods contains context for all account verification methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
+            "type": "object"
+          },
+          "request_url": {
+            "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/State"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "methods",
+          "state"
+        ],
+        "title": "A Verification Flow",
+        "type": "object"
+      },
+      "verificationFlowMethod": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/verificationFlowMethodConfig"
+          },
+          "method": {
+            "description": "Method contains the request credentials type.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "config"
+        ],
+        "type": "object"
+      },
+      "verificationFlowMethodConfig": {
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
+        "type": "object"
+      },
+      "verificationFlowMethodConfigPayload": {
+        "properties": {
+          "action": {
+            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+            "type": "string"
+          },
+          "messages": {
+            "$ref": "#/components/schemas/uiTexts"
+          },
+          "method": {
+            "description": "Method is the form method (e.g. POST)",
+            "type": "string"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/uiNodes"
+          }
+        },
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
+        "type": "object"
+      },
+      "version": {
+        "properties": {
+          "version": {
+            "description": "Version is the service's version.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "sessionCookie": {
+        "in": "cookie",
+        "name": "ory_kratos_session",
+        "type": "apiKey"
+      },
+      "sessionToken": {
+        "in": "header",
+        "name": "X-Session-Token",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "hi@ory.sh"
+    },
+    "description": "Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs\nare exposed on different ports. Public APIs can face the public internet without any protection\nwhile administrative APIs should never be exposed without prior authorization. To protect\nthe administative API port you should use something like Nginx, Ory Oathkeeper, or any other\ntechnology capable of authorizing incoming requests.\n",
+    "license": {
+      "name": "Apache 2.0"
+    },
+    "title": "Ory Kratos API",
+    "version": ""
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/health/alive": {
+      "get": {
+        "description": "This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming\nHTTP requests. This status does currently not include checks whether the database connection is working.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
+        "operationId": "isAlive",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "description": "Always \"ok\".",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ory Kratos is ready to accept connections."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Check HTTP Server Status",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.\nthe database) are responsive as well.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of Ory Kratos, the health status will never\nrefer to the cluster state, only to a single instance.",
+        "operationId": "isReady",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "description": "Always \"ok\".",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ory Kratos is ready to accept requests."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Errors contains a list of errors that caused the not ready status.",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "errors"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ory Kratos is not yet ready to accept requests."
+          }
+        },
+        "summary": "Check HTTP Server and Database Status",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/identities": {
+      "get": {
+        "description": "Lists all identities. Does not support search at the moment.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "operationId": "listIdentities",
+        "parameters": [
+          {
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "default": 100,
+              "format": "int64",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Pagination Page",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/identityList"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "List Identities",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "operationId": "createIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIdentity"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/identityResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Create an Identity",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/identities/{id}": {
+      "delete": {
+        "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "operationId": "deleteIdentity",
+        "parameters": [
+          {
+            "description": "ID is the identity's ID.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Delete an Identity",
+        "tags": [
+          "admin"
+        ]
+      },
+      "get": {
+        "description": "Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "operationId": "getIdentity",
+        "parameters": [
+          {
+            "description": "ID must be set to the ID of identity you want to get",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/identityResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Get an Identity",
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "description": "This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nThe full identity payload (except credentials) is expected. This endpoint does not support patching.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "operationId": "updateIdentity",
+        "parameters": [
+          {
+            "description": "ID must be set to the ID of identity you want to update",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIdentity"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/identityResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Update an Identity",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/metrics/prometheus": {
+      "get": {
+        "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4434\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
+        "operationId": "prometheus",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/emptyResponse"
+          }
+        },
+        "summary": "Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/recovery/link": {
+      "post": {
+        "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
+        "operationId": "createRecoveryLink",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecoveryLink"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/recoveryLink"
+                }
+              }
+            },
+            "description": "recoveryLink"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Create a Recovery Link",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/schemas/{id}": {
+      "get": {
+        "description": "Get a Traits Schema Definition",
+        "operationId": "getSchema",
+        "parameters": [
+          {
+            "description": "ID must be set to the ID of schema you want to get",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonSchema"
+                }
+              }
+            },
+            "description": "jsonSchema"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "tags": [
+          "public",
+          "admin"
+        ]
+      }
+    },
+    "/self-service/browser/flows/logout": {
+      "get": {
+        "description": "This endpoint initializes a logout flow.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nOn successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request\nor fall back to `urls.default_return_to`.\n\nMore information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).",
+        "operationId": "initializeSelfServiceBrowserLogoutFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Browser-Based Logout User Flow",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/browser/flows/registration/strategies/oidc/settings/connections": {
+      "post": {
+        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "operationId": "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Complete the Browser-Based Settings Flow for the OpenID Connect Strategy",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/errors": {
+      "get": {
+        "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nThis endpoint supports stub values to help you implement the error UI:\n\n`?error=stub:500` - returns a stub 500 (Internal Server Error) error.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
+        "operationId": "getSelfServiceError",
+        "parameters": [
+          {
+            "description": "Error is the container's ID",
+            "in": "query",
+            "name": "error",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/errorContainer"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Get User-Facing Self-Service Errors",
+        "tags": [
+          "public",
+          "admin"
+        ]
+      }
+    },
+    "/self-service/login/api": {
+      "get": {
+        "description": "This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing login flow call `/self-service/login/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks, including CSRF login attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "initializeSelfServiceLoginViaAPIFlow",
+        "parameters": [
+          {
+            "description": "Refresh a login session\n\nIf set to true, this will refresh an existing login session by\nasking the user to sign in again. This will reset the\nauthenticated_at time of the session.",
+            "in": "query",
+            "name": "refresh",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginFlow"
+                }
+              }
+            },
+            "description": "loginFlow"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Login Flow for API clients",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/login/browser": {
+      "get": {
+        "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "initializeSelfServiceLoginViaBrowserFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Login Flow for browsers",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/login/flows": {
+      "get": {
+        "description": "This endpoint returns a login flow's context with, for example, error details and other information.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "getSelfServiceLoginFlow",
+        "parameters": [
+          {
+            "description": "The Login Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/login?flow=abcde`).",
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginFlow"
+                }
+              }
+            },
+            "description": "loginFlow"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Get Login Flow",
+        "tags": [
+          "public",
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Use this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "submitSelfServiceLoginFlow",
+        "parameters": [
+          {
+            "description": "The Login Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/login?flow=abcde`).",
+            "in": "query",
+            "name": "flow",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginViaApiResponse"
+                }
+              }
+            },
+            "description": "loginViaApiResponse"
+          },
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginFlow"
+                }
+              }
+            },
+            "description": "loginFlow"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Submit a Login Flow",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/recovery/api": {
+      "get": {
+        "description": "This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nTo fetch an existing recovery flow call `/self-service/recovery/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
+        "operationId": "initializeSelfServiceRecoveryViaAPIFlow",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/recoveryFlow"
+                }
+              }
+            },
+            "description": "recoveryFlow"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Recovery Flow for API Clients",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/recovery/browser": {
+      "get": {
+        "description": "This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists, the browser is returned to the configured return URL.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
+        "operationId": "initializeSelfServiceRecoveryViaBrowserFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Recovery Flow for Browser Clients",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/recovery/flows": {
+      "get": {
+        "description": "This endpoint returns a recovery flow's context with, for example, error details and other information.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
+        "operationId": "getSelfServiceRecoveryFlow",
+        "parameters": [
+          {
+            "description": "The Flow ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/recovery?flow=abcde`).",
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/recoveryFlow"
+                }
+              }
+            },
+            "description": "recoveryFlow"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Get information about a recovery flow",
+        "tags": [
+          "public",
+          "admin"
+        ]
+      }
+    },
+    "/self-service/recovery/methods/link": {
+      "post": {
+        "description": "Use this endpoint to complete a recovery flow using the link method. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.\n`sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a recovery link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with\na new Recovery Flow ID which contains an error message that the recovery link was invalid.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
+        "operationId": "completeSelfServiceRecoveryFlowWithLinkMethod",
+        "parameters": [
+          {
+            "description": "Recovery Token\n\nThe recovery token which completes the recovery request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.",
+            "in": "query",
+            "name": "token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The Flow ID\n\nformat: uuid",
+            "in": "query",
+            "name": "flow",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/completeSelfServiceRecoveryFlowWithLinkMethod"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/completeSelfServiceRecoveryFlowWithLinkMethod"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/recoveryFlow"
+                }
+              }
+            },
+            "description": "recoveryFlow"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Complete Recovery Flow with Link Method",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/registration": {
+      "post": {
+        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "submitSelfServiceRegistrationFlow",
+        "parameters": [
+          {
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/login?flow=abcde`).",
+            "in": "query",
+            "name": "flow",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/registrationViaApiResponse"
+                }
+              }
+            },
+            "description": "registrationViaApiResponse"
+          },
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/registrationFlow"
+                }
+              }
+            },
+            "description": "registrationFlow"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Submit a Registration Flow",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/registration/api": {
+      "get": {
+        "description": "This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing registration flow call `/self-service/registration/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "initializeSelfServiceRegistrationViaAPIFlow",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/registrationFlow"
+                }
+              }
+            },
+            "description": "registrationFlow"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Registration Flow for API clients",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/registration/browser": {
+      "get": {
+        "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\n:::\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "initializeSelfServiceRegistrationViaBrowserFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Registration Flow for browsers",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/registration/flows": {
+      "get": {
+        "description": "This endpoint returns a registration flow's context with, for example, error details and other information.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "getSelfServiceRegistrationFlow",
+        "parameters": [
+          {
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/registrationFlow"
+                }
+              }
+            },
+            "description": "registrationFlow"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Get Registration Flow",
+        "tags": [
+          "public",
+          "admin"
+        ]
+      }
+    },
+    "/self-service/settings/api": {
+      "get": {
+        "description": "This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.\nYou must provide a valid ORY Kratos Session Token for this endpoint to respond with HTTP 200 OK.\n\nTo fetch an existing settings flow call `/self-service/settings/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "operationId": "initializeSelfServiceSettingsViaAPIFlow",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsFlow"
+                }
+              }
+            },
+            "description": "settingsFlow"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "security": [
+          {
+            "sessionToken": []
+          }
+        ],
+        "summary": "Initialize Settings Flow for API Clients",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/settings/browser": {
+      "get": {
+        "description": "This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid\nORY Kratos Session Cookie is included in the request, a login flow will be initialized.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\n:::\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "operationId": "initializeSelfServiceSettingsViaBrowserFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "security": [
+          {
+            "sessionToken": []
+          }
+        ],
+        "summary": "Initialize Settings Flow for Browsers",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/settings/flows": {
+      "get": {
+        "description": "When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie\nor the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes\nbut instead 403 or 500 to improve data privacy.\n\nYou can access this endpoint without credentials when using ORY Kratos' Admin API.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "operationId": "getSelfServiceSettingsFlow",
+        "parameters": [
+          {
+            "description": "ID is the Settings Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/settings?flow=abcde`).",
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsFlow"
+                }
+              }
+            },
+            "description": "settingsFlow"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "security": [
+          {
+            "sessionToken": []
+          }
+        ],
+        "summary": "Get Settings Flow",
+        "tags": [
+          "public",
+          "admin"
+        ]
+      }
+    },
+    "/self-service/settings/methods/password": {
+      "post": {
+        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.\nImplies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "operationId": "completeSelfServiceSettingsFlowWithPasswordMethod",
+        "parameters": [
+          {
+            "description": "Flow is flow ID.",
+            "in": "query",
+            "name": "flow",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteSelfServiceSettingsFlowWithPasswordMethod"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteSelfServiceSettingsFlowWithPasswordMethod"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsViaApiResponse"
+                }
+              }
+            },
+            "description": "settingsViaApiResponse"
+          },
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsFlow"
+                }
+              }
+            },
+            "description": "settingsFlow"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "security": [
+          {
+            "sessionToken": []
+          }
+        ],
+        "summary": "Complete Settings Flow with Username/Email Password Method",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/settings/methods/profile": {
+      "post": {
+        "description": "Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was\nupdated (e.g. recovery email). Implies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "operationId": "completeSelfServiceSettingsFlowWithProfileMethod",
+        "parameters": [
+          {
+            "description": "Flow is flow ID.",
+            "in": "query",
+            "name": "flow",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "x-originalParamName": "Payload"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsFlow"
+                }
+              }
+            },
+            "description": "settingsFlow"
+          },
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsFlow"
+                }
+              }
+            },
+            "description": "settingsFlow"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "security": [
+          {
+            "sessionToken": []
+          }
+        ],
+        "summary": "Complete Settings Flow with Profile Method",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/verification/api": {
+      "get": {
+        "description": "This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.\n\nTo fetch an existing verification flow call `/self-service/verification/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "operationId": "initializeSelfServiceVerificationViaAPIFlow",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/verificationFlow"
+                }
+              }
+            },
+            "description": "verificationFlow"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Verification Flow for API Clients",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/verification/browser": {
+      "get": {
+        "description": "This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "operationId": "initializeSelfServiceVerificationViaBrowserFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Verification Flow for Browser Clients",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/verification/flows": {
+      "get": {
+        "description": "This endpoint returns a verification flow's context with, for example, error details and other information.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "operationId": "getSelfServiceVerificationFlow",
+        "parameters": [
+          {
+            "description": "The Flow ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/verification?flow=abcde`).",
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/verificationFlow"
+                }
+              }
+            },
+            "description": "verificationFlow"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Get Verification Flow",
+        "tags": [
+          "public",
+          "admin"
+        ]
+      }
+    },
+    "/self-service/verification/methods/link": {
+      "post": {
+        "description": "Use this endpoint to complete a verification flow using the link method. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.\n`sent_email` is the success state after `choose_method` and allows the user to request another verification email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a verification link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with\na new Verification Flow ID which contains an error message that the verification link was invalid.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "operationId": "completeSelfServiceVerificationFlowWithLinkMethod",
+        "parameters": [
+          {
+            "description": "Verification Token\n\nThe verification token which completes the verification request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.",
+            "in": "query",
+            "name": "token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The Flow ID\n\nformat: uuid",
+            "in": "query",
+            "name": "flow",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/completeSelfServiceVerificationFlowWithLinkMethod"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/completeSelfServiceVerificationFlowWithLinkMethod"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/verificationFlow"
+                }
+              }
+            },
+            "description": "verificationFlow"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Complete Verification Flow with Link Method",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/sessions": {
+      "delete": {
+        "description": "Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients\nsuch as mobile apps to log the user out of the system and invalidate the session.\n\nThis endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.",
+        "operationId": "revokeSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/revokeSession"
+              }
+            }
+          },
+          "required": true,
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Initialize Logout Flow for API Clients - Revoke a Session",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/sessions/whoami": {
+      "get": {
+        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nThis endpoint is useful for reverse proxies and API Gateways.",
+        "operationId": "whoami",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Cookie",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "in: authorization",
+            "in": "query",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/session"
+                }
+              }
+            },
+            "description": "session"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "security": [
+          {
+            "sessionToken": []
+          }
+        ],
+        "summary": "Check Who the Current HTTP Session Belongs To",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/version": {
+      "get": {
+        "description": "This endpoint returns the version of Ory Kratos.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the version will never\nrefer to the cluster state, only to a single instance.",
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "version": {
+                      "description": "The version of Ory Kratos.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Returns the Ory Kratos version."
+          }
+        },
+        "summary": "Return Running Software Version.",
+        "tags": [
+          "admin"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://{tenant}.tenants.oryapis.com/api/kratos/{api}",
+      "variables": {
+        "api": {
+          "default": "public",
+          "description": "Target the public or administrative API.",
+          "enum": [
+            "public",
+            "admin"
+          ]
+        },
+        "tenant": {
+          "default": "demo",
+          "description": "Tenant ID as provided by Ory Cloud."
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "description": "All administrative API endpoints exposed at the admin API port.",
+      "externalDocs": {
+        "url": "https://www.ory.sh/kratos/docs/reference/api"
+      },
+      "name": "admin"
+    },
+    {
+      "description": "All public API endpoints exposed at the public API port.",
+      "externalDocs": {
+        "url": "https://www.ory.sh/kratos/docs/reference/api"
+      },
+      "name": "public"
+    }
+  ],
+  "x-forwarded-proto": "string",
+  "x-request-id": "string"
+}

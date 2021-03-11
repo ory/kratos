@@ -5,8 +5,8 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | Sending the anti-csrf token is only required for browser login flows. | [optional] 
-**Identifier** | Pointer to **string** | Identifier is the email or username of the user trying to log in. | [optional] 
-**Password** | Pointer to **string** | The user&#39;s password. | [optional] 
+**Method** | Pointer to **string** | Method should be set to \&quot;password\&quot; when logging in using the identifier and password strategy. | [optional] 
+**Password** | Pointer to [**CompleteSelfServiceLoginFlowWithPasswordMethodPayload**](CompleteSelfServiceLoginFlowWithPasswordMethodPayload.md) |  | [optional] 
 
 ## Methods
 
@@ -52,47 +52,47 @@ SetCsrfToken sets CsrfToken field to given value.
 
 HasCsrfToken returns a boolean if a field has been set.
 
-### GetIdentifier
+### GetMethod
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetIdentifier() string`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetMethod() string`
 
-GetIdentifier returns the Identifier field if non-nil, zero value otherwise.
+GetMethod returns the Method field if non-nil, zero value otherwise.
 
-### GetIdentifierOk
+### GetMethodOk
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetIdentifierOk() (*string, bool)`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetMethodOk() (*string, bool)`
 
-GetIdentifierOk returns a tuple with the Identifier field if it's non-nil, zero value otherwise
+GetMethodOk returns a tuple with the Method field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetIdentifier
+### SetMethod
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetIdentifier(v string)`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetMethod(v string)`
 
-SetIdentifier sets Identifier field to given value.
+SetMethod sets Method field to given value.
 
-### HasIdentifier
+### HasMethod
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasIdentifier() bool`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasMethod() bool`
 
-HasIdentifier returns a boolean if a field has been set.
+HasMethod returns a boolean if a field has been set.
 
 ### GetPassword
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() string`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() CompleteSelfServiceLoginFlowWithPasswordMethodPayload`
 
 GetPassword returns the Password field if non-nil, zero value otherwise.
 
 ### GetPasswordOk
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordOk() (*string, bool)`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordOk() (*CompleteSelfServiceLoginFlowWithPasswordMethodPayload, bool)`
 
 GetPasswordOk returns a tuple with the Password field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetPassword
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPassword(v string)`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPassword(v CompleteSelfServiceLoginFlowWithPasswordMethodPayload)`
 
 SetPassword sets Password field to given value.
 

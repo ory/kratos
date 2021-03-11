@@ -26,25 +26,24 @@ type RegistrationFlow struct {
 	// IssuedAt is the time (UTC) when the flow occurred.
 	IssuedAt time.Time `json:"issued_at"`
 	Messages []UiText  `json:"messages,omitempty"`
-	// Methods contains context for all enabled registration methods. If a registration flow has been processed, but for example the password is incorrect, this will contain error messages.
-	Methods map[string]RegistrationFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
 	// The flow type can either be `api` or `browser`.
-	Type *string `json:"type,omitempty"`
+	Type *string     `json:"type,omitempty"`
+	Ui   UiContainer `json:"ui"`
 }
 
 // NewRegistrationFlow instantiates a new RegistrationFlow object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]RegistrationFlowMethod, requestUrl string) *RegistrationFlow {
+func NewRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, ui UiContainer) *RegistrationFlow {
 	this := RegistrationFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
 	this.IssuedAt = issuedAt
-	this.Methods = methods
 	this.RequestUrl = requestUrl
+	this.Ui = ui
 	return &this
 }
 
@@ -192,30 +191,6 @@ func (o *RegistrationFlow) SetMessages(v []UiText) {
 	o.Messages = v
 }
 
-// GetMethods returns the Methods field value
-func (o *RegistrationFlow) GetMethods() map[string]RegistrationFlowMethod {
-	if o == nil {
-		var ret map[string]RegistrationFlowMethod
-		return ret
-	}
-
-	return o.Methods
-}
-
-// GetMethodsOk returns a tuple with the Methods field value
-// and a boolean to check if the value has been set.
-func (o *RegistrationFlow) GetMethodsOk() (*map[string]RegistrationFlowMethod, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Methods, true
-}
-
-// SetMethods sets field value
-func (o *RegistrationFlow) SetMethods(v map[string]RegistrationFlowMethod) {
-	o.Methods = v
-}
-
 // GetRequestUrl returns the RequestUrl field value
 func (o *RegistrationFlow) GetRequestUrl() string {
 	if o == nil {
@@ -272,6 +247,30 @@ func (o *RegistrationFlow) SetType(v string) {
 	o.Type = &v
 }
 
+// GetUi returns the Ui field value
+func (o *RegistrationFlow) GetUi() UiContainer {
+	if o == nil {
+		var ret UiContainer
+		return ret
+	}
+
+	return o.Ui
+}
+
+// GetUiOk returns a tuple with the Ui field value
+// and a boolean to check if the value has been set.
+func (o *RegistrationFlow) GetUiOk() (*UiContainer, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Ui, true
+}
+
+// SetUi sets field value
+func (o *RegistrationFlow) SetUi(v UiContainer) {
+	o.Ui = v
+}
+
 func (o RegistrationFlow) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Active != nil {
@@ -290,13 +289,13 @@ func (o RegistrationFlow) MarshalJSON() ([]byte, error) {
 		toSerialize["messages"] = o.Messages
 	}
 	if true {
-		toSerialize["methods"] = o.Methods
-	}
-	if true {
 		toSerialize["request_url"] = o.RequestUrl
 	}
 	if o.Type != nil {
 		toSerialize["type"] = o.Type
+	}
+	if true {
+		toSerialize["ui"] = o.Ui
 	}
 	return json.Marshal(toSerialize)
 }
