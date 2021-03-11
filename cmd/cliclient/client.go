@@ -32,7 +32,9 @@ func NewHTTPClient(cmd *cobra.Command) *http.Client {
 	} else if f != nil {
 		panic(fmt.Sprintf("ClientContextKey was expected to be *http.Client but it contained an invalid type %T ", f))
 	}
-	return &http.Client{Transport: http.DefaultTransport}
+	return &http.Client{
+		Transport: http.DefaultTransport,
+	}
 }
 
 func NewClient(cmd *cobra.Command) *kratos.APIClient {

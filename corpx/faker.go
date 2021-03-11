@@ -11,14 +11,12 @@ import (
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
-	"github.com/pkg/errors"
 
 	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 
@@ -88,23 +86,6 @@ func RegisterFakes() {
 
 	if err := faker.AddProvider("time_type", func(v reflect.Value) (interface{}, error) {
 		return time.Now().Add(time.Duration(rand.Int())).Round(time.Second).UTC(), nil
-	}); err != nil {
-		panic(err)
-	}
-
-	if err := faker.AddProvider("registration_flow_methods", func(v reflect.Value) (interface{}, error) {
-		var methods = make(map[identity.CredentialsType]*registration.FlowMethod)
-		for _, ct := range []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeOIDC} {
-			var f container.Container
-			if err := faker.FakeData(&f); err != nil {
-				return nil, errors.WithStack(err)
-			}
-			methods[ct] = &registration.FlowMethod{
-				Method: ct,
-				Config: &registration.FlowMethodConfig{FlowMethodConfigurator: &f},
-			}
-		}
-		return methods, nil
 	}); err != nil {
 		panic(err)
 	}

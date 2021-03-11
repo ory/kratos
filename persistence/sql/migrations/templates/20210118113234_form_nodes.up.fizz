@@ -1,5 +1,0 @@
-sql("UPDATE selfservice_login_flow_methods SET config='{}';")
-sql("UPDATE selfservice_recovery_flow_methods SET config='{}';")
-sql("UPDATE selfservice_registration_flow_methods SET config='{}';")
-sql("UPDATE selfservice_settings_flow_methods SET config='{}';")
-sql("UPDATE selfservice_verification_flow_methods SET config='{}';")

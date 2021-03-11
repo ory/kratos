@@ -16,7 +16,6 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
 )
@@ -64,22 +63,11 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 	return &ErrorHandler{d: d}
 }
 
-func MethodToNodeGroup(method identity.CredentialsType) node.Group {
-	switch method {
-	case identity.CredentialsTypePassword:
-		return node.PasswordGroup
-	case identity.CredentialsTypeOIDC:
-		return node.OpenIDConnectGroup
-	default:
-		return node.DefaultGroup
-	}
-}
-
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
-	ct identity.CredentialsType,
 	f *Flow,
+	group node.Group,
 	err error,
 ) {
 	s.d.Audit().
@@ -98,11 +86,11 @@ func (s *ErrorHandler) WriteFlowError(
 		a, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, f.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
-			s.WriteFlowError(w, r, ct, f, err)
+			s.WriteFlowError(w, r, f, group, err)
 			return
 		}
 
-		a.Messages.Add(text.NewErrorValidationRegistrationFlowExpired(e.ago))
+		a.UI.AddMessage(group, text.NewErrorValidationRegistrationFlowExpired(e.ago))
 		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return
@@ -117,19 +105,13 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	method, ok := f.Methods[ct]
-	if !ok {
-		s.forward(w, r, f, errors.WithStack(herodot.ErrInternalServerError.
-			WithErrorf(`Expected registration method "%s" to exist in flow. This is a bug in the code and should be reported on GitHub.`, ct)))
-		return
-	}
-
-	if err := method.Config.ParseError(MethodToNodeGroup(ct), err); err != nil {
+	f.UI.ResetMessages()
+	if err := f.UI.ParseError(group, err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
 
-	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlowMethod(r.Context(), f.ID, ct, method); err != nil {
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

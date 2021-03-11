@@ -202,9 +202,8 @@ paths:
         style: simple
       responses:
         "204":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "404":
           content:
             application/json:
@@ -241,6 +240,12 @@ paths:
                 $ref: '#/components/schemas/Identity'
           description: A single identity.
         "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genericError'
+          description: genericError
+        "404":
           content:
             application/json:
               schema:
@@ -319,9 +324,8 @@ paths:
       operationId: prometheus
       responses:
         "200":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
       summary: |-
         Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to
         your deployment like so:
@@ -417,9 +421,8 @@ paths:
       operationId: initializeSelfServiceBrowserLogoutFlow
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "500":
           content:
             application/json:
@@ -441,9 +444,8 @@ paths:
       operationId: completeSelfServiceBrowserSettingsOIDCSettingsFlow
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "500":
           content:
             application/json:
@@ -574,9 +576,8 @@ paths:
       operationId: initializeSelfServiceLoginViaBrowserFlow
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "500":
           content:
             application/json:
@@ -641,10 +642,9 @@ paths:
       tags:
       - public
       - admin
-  /self-service/login/methods/password:
     post:
       description: |-
-        Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint
+        Use this endpoint to complete a login flow. This endpoint
         behaves differently for API and browser flows.
 
         API flows expect `application/json` to be sent in the body and responds with
@@ -657,9 +657,13 @@ paths:
         a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
         More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: completeSelfServiceLoginFlowWithPasswordMethod
+      operationId: submitSelfServiceLoginFlow
       parameters:
-      - description: The Flow ID
+      - description: |-
+          The Login Flow ID
+
+          The value for this parameter comes from `flow` URL Query parameter sent to your
+          application (e.g. `/login?flow=abcde`).
         explode: true
         in: query
         name: flow
@@ -667,15 +671,6 @@ paths:
         schema:
           type: string
         style: form
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompleteSelfServiceLoginFlowWithPasswordMethod'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CompleteSelfServiceLoginFlowWithPasswordMethod'
-        x-originalParamName: Body
       responses:
         "200":
           content:
@@ -684,9 +679,8 @@ paths:
                 $ref: '#/components/schemas/loginViaApiResponse'
           description: loginViaApiResponse
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "400":
           content:
             application/json:
@@ -699,7 +693,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/genericError'
           description: genericError
-      summary: Complete Login Flow with Username/Email Password Method
+      summary: Submit a Login Flow
       tags:
       - public
   /self-service/recovery/api:
@@ -758,9 +752,8 @@ paths:
       operationId: initializeSelfServiceRecoveryViaBrowserFlow
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "500":
           content:
             application/json:
@@ -874,9 +867,8 @@ paths:
         x-originalParamName: Body
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "400":
           content:
             application/json:
@@ -890,6 +882,62 @@ paths:
                 $ref: '#/components/schemas/genericError'
           description: genericError
       summary: Complete Recovery Flow with Link Method
+      tags:
+      - public
+  /self-service/registration:
+    post:
+      description: |-
+        Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
+        behaves differently for API and browser flows.
+
+        API flows expect `application/json` to be sent in the body and respond with
+        HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
+        `session` and `session_token` will also be included;
+        HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+        HTTP 400 on form validation errors.
+
+        Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+        a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+        a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+
+        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+      operationId: submitSelfServiceRegistrationFlow
+      parameters:
+      - description: |-
+          The Registration Flow ID
+
+          The value for this parameter comes from `flow` URL Query parameter sent to your
+          application (e.g. `/login?flow=abcde`).
+        explode: true
+        in: query
+        name: flow
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/registrationViaApiResponse'
+          description: registrationViaApiResponse
+        "302":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/registrationFlow'
+          description: registrationFlow
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genericError'
+          description: genericError
+      summary: Submit a Registration Flow
       tags:
       - public
   /self-service/registration/api:
@@ -954,9 +1002,8 @@ paths:
       operationId: initializeSelfServiceRegistrationViaBrowserFlow
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "500":
           content:
             application/json:
@@ -1021,68 +1068,6 @@ paths:
       tags:
       - public
       - admin
-  /self-service/registration/methods/password:
-    post:
-      description: |-
-        Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
-        behaves differently for API and browser flows.
-
-        API flows expect `application/json` to be sent in the body and respond with
-        HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
-        `session` and `session_token` will also be included;
-        HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
-        HTTP 400 on form validation errors.
-
-        Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-        a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
-        a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
-
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: completeSelfServiceRegistrationFlowWithPasswordMethod
-      parameters:
-      - description: Flow is flow ID.
-        explode: true
-        in: query
-        name: flow
-        required: false
-        schema:
-          type: string
-        style: form
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-        x-originalParamName: Payload
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/registrationViaApiResponse'
-          description: registrationViaApiResponse
-        "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/registrationFlow'
-          description: registrationFlow
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      summary: Complete Registration Flow with Username/Email Password Method
-      tags:
-      - public
   /self-service/settings/api:
     get:
       description: |-
@@ -1144,9 +1129,8 @@ paths:
       operationId: initializeSelfServiceSettingsViaBrowserFlow
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "500":
           content:
             application/json:
@@ -1266,9 +1250,8 @@ paths:
                 $ref: '#/components/schemas/settingsViaApiResponse'
           description: settingsViaApiResponse
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "400":
           content:
             application/json:
@@ -1345,9 +1328,8 @@ paths:
                 $ref: '#/components/schemas/settingsFlow'
           description: settingsFlow
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "400":
           content:
             application/json:
@@ -1430,9 +1412,8 @@ paths:
       operationId: initializeSelfServiceVerificationViaBrowserFlow
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "500":
           content:
             application/json:
@@ -1546,9 +1527,8 @@ paths:
         x-originalParamName: Body
       responses:
         "302":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "400":
           content:
             application/json:
@@ -1570,7 +1550,7 @@ paths:
         Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
         such as mobile apps to log the user out of the system and invalidate the session.
 
-        This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.
+        This endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.
       operationId: revokeSession
       requestBody:
         content:
@@ -1581,9 +1561,8 @@ paths:
         x-originalParamName: Body
       responses:
         "204":
-          description: |-
-            Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-            typically 201.
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
         "400":
           content:
             application/json:
@@ -1596,7 +1575,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/genericError'
           description: genericError
-      summary: Revoke and Invalidate a Session
+      summary: Initialize Logout Flow for API Clients - Revoke a Session
       tags:
       - public
   /sessions/whoami:
@@ -1672,9 +1651,8 @@ paths:
 components:
   responses:
     emptyResponse:
-      description: |-
-        Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-        typically 201.
+      description: Empty responses are sent when, for example, resources are deleted.
+        The HTTP status code for empty responses is typically 201.
     errorContainer:
       content:
         application/json:
@@ -1696,6 +1674,20 @@ components:
             $ref: '#/components/schemas/Identity'
       description: A single identity.
   schemas:
+    AuthenticateOKBody:
+      description: AuthenticateOKBody authenticate o k body
+      properties:
+        IdentityToken:
+          description: An opaque token used to authenticate a user after a successful
+            login
+          type: string
+        Status:
+          description: The status of the authentication
+          type: string
+      required:
+      - IdentityToken
+      - Status
+      type: object
     CompleteSelfServiceBrowserSettingsProfileStrategyFlow:
       description: nolint:deadcode,unused
       properties:
@@ -1710,15 +1702,20 @@ components:
           type: object
       type: object
     CompleteSelfServiceLoginFlowWithPasswordMethod:
-      example:
-        identifier: identifier
-        password: password
-        csrf_token: csrf_token
       properties:
         csrf_token:
           description: Sending the anti-csrf token is only required for browser login
             flows.
           type: string
+        method:
+          description: Method should be set to "password" when logging in using the
+            identifier and password strategy.
+          type: string
+        password:
+          $ref: '#/components/schemas/CompleteSelfServiceLoginFlowWithPasswordMethodPayload'
+      type: object
+    CompleteSelfServiceLoginFlowWithPasswordMethodPayload:
+      properties:
         identifier:
           description: Identifier is the email or username of the user trying to log
             in.
@@ -1746,6 +1743,87 @@ components:
           type: string
       required:
       - password
+      type: object
+    ContainerChangeResponseItem:
+      description: ContainerChangeResponseItem change item in response to ContainerChanges
+        operation
+      properties:
+        Kind:
+          description: Kind of change
+          format: uint8
+          type: integer
+        Path:
+          description: Path to file that has changed
+          type: string
+      required:
+      - Kind
+      - Path
+      type: object
+    ContainerCreateCreatedBody:
+      description: ContainerCreateCreatedBody OK response to ContainerCreate operation
+      properties:
+        Id:
+          description: The ID of the created container
+          type: string
+        Warnings:
+          description: Warnings encountered when creating the container
+          items:
+            type: string
+          type: array
+      required:
+      - Id
+      - Warnings
+      type: object
+    ContainerTopOKBody:
+      description: ContainerTopOKBody OK response to ContainerTop operation
+      properties:
+        Processes:
+          description: Each process running in the container, where each is process
+            is an array of values corresponding to the titles
+          items:
+            items:
+              type: string
+            type: array
+          type: array
+        Titles:
+          description: The ps column titles
+          items:
+            type: string
+          type: array
+      required:
+      - Processes
+      - Titles
+      type: object
+    ContainerUpdateOKBody:
+      description: ContainerUpdateOKBody OK response to ContainerUpdate operation
+      properties:
+        Warnings:
+          description: warnings
+          items:
+            type: string
+          type: array
+      required:
+      - Warnings
+      type: object
+    ContainerWaitOKBody:
+      description: ContainerWaitOKBody OK response to ContainerWait operation
+      properties:
+        Error:
+          $ref: '#/components/schemas/ContainerWaitOKBodyError'
+        StatusCode:
+          description: Exit code of the container
+          format: int64
+          type: integer
+      required:
+      - Error
+      - StatusCode
+      type: object
+    ContainerWaitOKBodyError:
+      description: ContainerWaitOKBodyError container waiting error, if any
+      properties:
+        Message:
+          description: Details of an error
+          type: string
       type: object
     CreateIdentity:
       example:
@@ -1790,9 +1868,42 @@ components:
       title: CredentialsType  represents several different credential types, like
         password credentials, passwordless credentials,
       type: string
+    ErrorResponse:
+      properties:
+        message:
+          description: The error message.
+          type: string
+      required:
+      - message
+      title: ErrorResponse Represents an error.
+      type: object
+    GraphDriverData:
+      properties:
+        Data:
+          additionalProperties:
+            type: string
+          description: data
+          type: object
+        Name:
+          description: name
+          type: string
+      required:
+      - Data
+      - Name
+      title: GraphDriverData Information about a container's graph driver.
+      type: object
     ID:
       format: int64
       type: integer
+    IdResponse:
+      description: IDResponse Response to an API call that returns just an Id
+      properties:
+        Id:
+          description: The id of the newly created object.
+          type: string
+      required:
+      - Id
+      type: object
     Identity:
       example:
         recovery_addresses:
@@ -1855,10 +1966,412 @@ components:
       - schema_url
       - traits
       type: object
+    ImageDeleteResponseItem:
+      description: ImageDeleteResponseItem image delete response item
+      properties:
+        Deleted:
+          description: The image ID of an image that was deleted
+          type: string
+        Untagged:
+          description: The image ID of an image that was untagged
+          type: string
+      type: object
+    ImageSummary:
+      description: ImageSummary image summary
+      properties:
+        Containers:
+          description: containers
+          format: int64
+          type: integer
+        Created:
+          description: created
+          format: int64
+          type: integer
+        Id:
+          description: Id
+          type: string
+        Labels:
+          additionalProperties:
+            type: string
+          description: labels
+          type: object
+        ParentId:
+          description: parent Id
+          type: string
+        RepoDigests:
+          description: repo digests
+          items:
+            type: string
+          type: array
+        RepoTags:
+          description: repo tags
+          items:
+            type: string
+          type: array
+        SharedSize:
+          description: shared size
+          format: int64
+          type: integer
+        Size:
+          description: size
+          format: int64
+          type: integer
+        VirtualSize:
+          description: virtual size
+          format: int64
+          type: integer
+      required:
+      - Containers
+      - Created
+      - Id
+      - Labels
+      - ParentId
+      - RepoDigests
+      - RepoTags
+      - SharedSize
+      - Size
+      - VirtualSize
+      type: object
     NullTime:
       format: date-time
       title: NullTime implements sql.NullTime functionality.
       type: string
+    Plugin:
+      description: Plugin A plugin for the Engine API
+      properties:
+        Config:
+          $ref: '#/components/schemas/PluginConfig'
+        Enabled:
+          description: True if the plugin is running. False if the plugin is not running,
+            only installed.
+          type: boolean
+        Id:
+          description: Id
+          type: string
+        Name:
+          description: name
+          type: string
+        PluginReference:
+          description: plugin remote reference used to push/pull the plugin
+          type: string
+        Settings:
+          $ref: '#/components/schemas/PluginSettings'
+      required:
+      - Config
+      - Enabled
+      - Name
+      - Settings
+      type: object
+    PluginConfig:
+      properties:
+        Args:
+          $ref: '#/components/schemas/PluginConfigArgs'
+        Description:
+          description: description
+          type: string
+        DockerVersion:
+          description: Docker Version used to create the plugin
+          type: string
+        Documentation:
+          description: documentation
+          type: string
+        Entrypoint:
+          description: entrypoint
+          items:
+            type: string
+          type: array
+        Env:
+          description: env
+          items:
+            $ref: '#/components/schemas/PluginEnv'
+          type: array
+        Interface:
+          $ref: '#/components/schemas/PluginConfigInterface'
+        IpcHost:
+          description: ipc host
+          type: boolean
+        Linux:
+          $ref: '#/components/schemas/PluginConfigLinux'
+        Mounts:
+          description: mounts
+          items:
+            $ref: '#/components/schemas/PluginMount'
+          type: array
+        Network:
+          $ref: '#/components/schemas/PluginConfigNetwork'
+        PidHost:
+          description: pid host
+          type: boolean
+        PropagatedMount:
+          description: propagated mount
+          type: string
+        User:
+          $ref: '#/components/schemas/PluginConfigUser'
+        WorkDir:
+          description: work dir
+          type: string
+        rootfs:
+          $ref: '#/components/schemas/PluginConfigRootfs'
+      required:
+      - Args
+      - Description
+      - Documentation
+      - Entrypoint
+      - Env
+      - Interface
+      - IpcHost
+      - Linux
+      - Mounts
+      - Network
+      - PidHost
+      - PropagatedMount
+      - WorkDir
+      title: PluginConfig The config of a plugin.
+      type: object
+    PluginConfigArgs:
+      description: PluginConfigArgs plugin config args
+      properties:
+        Description:
+          description: description
+          type: string
+        Name:
+          description: name
+          type: string
+        Settable:
+          description: settable
+          items:
+            type: string
+          type: array
+        Value:
+          description: value
+          items:
+            type: string
+          type: array
+      required:
+      - Description
+      - Name
+      - Settable
+      - Value
+      type: object
+    PluginConfigInterface:
+      description: PluginConfigInterface The interface between Docker and the plugin
+      properties:
+        Socket:
+          description: socket
+          type: string
+        Types:
+          description: types
+          items:
+            $ref: '#/components/schemas/PluginInterfaceType'
+          type: array
+      required:
+      - Socket
+      - Types
+      type: object
+    PluginConfigLinux:
+      description: PluginConfigLinux plugin config linux
+      properties:
+        AllowAllDevices:
+          description: allow all devices
+          type: boolean
+        Capabilities:
+          description: capabilities
+          items:
+            type: string
+          type: array
+        Devices:
+          description: devices
+          items:
+            $ref: '#/components/schemas/PluginDevice'
+          type: array
+      required:
+      - AllowAllDevices
+      - Capabilities
+      - Devices
+      type: object
+    PluginConfigNetwork:
+      description: PluginConfigNetwork plugin config network
+      properties:
+        Type:
+          description: type
+          type: string
+      required:
+      - Type
+      type: object
+    PluginConfigRootfs:
+      description: PluginConfigRootfs plugin config rootfs
+      properties:
+        diff_ids:
+          description: diff ids
+          items:
+            type: string
+          type: array
+        type:
+          description: type
+          type: string
+      type: object
+    PluginConfigUser:
+      description: PluginConfigUser plugin config user
+      properties:
+        GID:
+          description: g ID
+          format: uint32
+          type: integer
+        UID:
+          description: UID
+          format: uint32
+          type: integer
+      type: object
+    PluginDevice:
+      description: PluginDevice plugin device
+      properties:
+        Description:
+          description: description
+          type: string
+        Name:
+          description: name
+          type: string
+        Path:
+          description: path
+          type: string
+        Settable:
+          description: settable
+          items:
+            type: string
+          type: array
+      required:
+      - Description
+      - Name
+      - Path
+      - Settable
+      type: object
+    PluginEnv:
+      description: PluginEnv plugin env
+      properties:
+        Description:
+          description: description
+          type: string
+        Name:
+          description: name
+          type: string
+        Settable:
+          description: settable
+          items:
+            type: string
+          type: array
+        Value:
+          description: value
+          type: string
+      required:
+      - Description
+      - Name
+      - Settable
+      - Value
+      type: object
+    PluginInterfaceType:
+      description: PluginInterfaceType plugin interface type
+      properties:
+        Capability:
+          description: capability
+          type: string
+        Prefix:
+          description: prefix
+          type: string
+        Version:
+          description: version
+          type: string
+      required:
+      - Capability
+      - Prefix
+      - Version
+      type: object
+    PluginMount:
+      description: PluginMount plugin mount
+      properties:
+        Description:
+          description: description
+          type: string
+        Destination:
+          description: destination
+          type: string
+        Name:
+          description: name
+          type: string
+        Options:
+          description: options
+          items:
+            type: string
+          type: array
+        Settable:
+          description: settable
+          items:
+            type: string
+          type: array
+        Source:
+          description: source
+          type: string
+        Type:
+          description: type
+          type: string
+      required:
+      - Description
+      - Destination
+      - Name
+      - Options
+      - Settable
+      - Source
+      - Type
+      type: object
+    PluginSettings:
+      properties:
+        Args:
+          description: args
+          items:
+            type: string
+          type: array
+        Devices:
+          description: devices
+          items:
+            $ref: '#/components/schemas/PluginDevice'
+          type: array
+        Env:
+          description: env
+          items:
+            type: string
+          type: array
+        Mounts:
+          description: mounts
+          items:
+            $ref: '#/components/schemas/PluginMount'
+          type: array
+      required:
+      - Args
+      - Devices
+      - Env
+      - Mounts
+      title: PluginSettings Settings that can be modified by users.
+      type: object
+    Port:
+      description: Port An open port on a container
+      properties:
+        IP:
+          description: IP
+          type: string
+        PrivatePort:
+          description: Port on the container
+          format: uint16
+          type: integer
+        PublicPort:
+          description: Port exposed on the host
+          format: uint16
+          type: integer
+        Type:
+          description: type
+          type: string
+      required:
+      - PrivatePort
+      - Type
+      type: object
     RecoveryAddress:
       example:
         id: id
@@ -1879,6 +2392,15 @@ components:
       type: object
     RecoveryAddressType:
       type: string
+    ServiceUpdateResponse:
+      description: ServiceUpdateResponse service update response
+      properties:
+        Warnings:
+          description: Optional warning messages
+          items:
+            type: string
+          type: array
+      type: object
     State:
       type: string
     Traits:
@@ -1944,6 +2466,78 @@ components:
       type: string
     VerifiableAddressType:
       type: string
+    Volume:
+      description: Volume volume
+      properties:
+        CreatedAt:
+          description: Date/Time the volume was created.
+          type: string
+        Driver:
+          description: Name of the volume driver used by the volume.
+          type: string
+        Labels:
+          additionalProperties:
+            type: string
+          description: User-defined key/value metadata.
+          type: object
+        Mountpoint:
+          description: Mount path of the volume on the host.
+          type: string
+        Name:
+          description: Name of the volume.
+          type: string
+        Options:
+          additionalProperties:
+            type: string
+          description: The driver specific options used when creating the volume.
+          type: object
+        Scope:
+          description: The level at which the volume exists. Either `global` for cluster-wide,
+            or `local` for machine level.
+          type: string
+        Status:
+          additionalProperties: true
+          description: |-
+            Low-level details about the volume, provided by the volume driver.
+            Details are returned as a map with key/value pairs:
+            `{"key":"value","key2":"value2"}`.
+
+            The `Status` field is optional, and is omitted if the volume driver
+            does not support this feature.
+          type: object
+        UsageData:
+          $ref: '#/components/schemas/VolumeUsageData'
+      required:
+      - Driver
+      - Labels
+      - Mountpoint
+      - Name
+      - Options
+      - Scope
+      type: object
+    VolumeUsageData:
+      description: |-
+        VolumeUsageData Usage details about the volume. This information is used by the
+        `GET /system/df` endpoint, and omitted in other endpoints.
+      properties:
+        RefCount:
+          description: |-
+            The number of containers referencing this volume. This field
+            is set to `-1` if the reference-count is not available.
+          format: int64
+          type: integer
+        Size:
+          description: |-
+            Amount of disk space used by the volume (in bytes). This information
+            is only available for volumes created with the `"local"` volume
+            driver. For volumes created with other volume drivers, this field
+            is set to `-1` ("not available")
+          format: int64
+          type: integer
+      required:
+      - RefCount
+      - Size
+      type: object
     completeSelfServiceBrowserSettingsOIDCFlowPayload:
       properties:
         flow:
@@ -2481,47 +3075,41 @@ components:
     registrationFlow:
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
-        methods:
-          key:
-            method: method
-            config:
-              nodes:
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              method: method
-              action: action
-              messages:
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              providers:
-              - null
-              - null
+        ui:
+          nodes:
+          - messages:
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            type: type
+            group: group
+          - messages:
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            type: type
+            group: group
+          method: method
+          action: action
+          messages:
+          - context: '{}'
+            id: 0
+            text: text
+            type: type
+          - context: '{}'
+            id: 0
+            text: text
+            type: type
         active: active
         messages:
         - context: '{}'
@@ -2559,13 +3147,6 @@ components:
           items:
             $ref: '#/components/schemas/uiText'
           type: array
-        methods:
-          additionalProperties:
-            $ref: '#/components/schemas/registrationFlowMethod'
-          description: |-
-            Methods contains context for all enabled registration methods. If a registration flow has been
-            processed, but for example the password is incorrect, this will contain error messages.
-          type: object
         request_url:
           description: |-
             RequestURL is the initial URL that was requested from ORY Kratos. It can be used
@@ -2575,157 +3156,14 @@ components:
           description: The flow type can either be `api` or `browser`.
           title: Type is the flow type.
           type: string
+        ui:
+          $ref: '#/components/schemas/uiContainer'
       required:
       - expires_at
       - id
       - issued_at
-      - methods
       - request_url
-      type: object
-    registrationFlowMethod:
-      example:
-        method: method
-        config:
-          nodes:
-          - messages:
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            type: type
-            group: group
-          - messages:
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            type: type
-            group: group
-          method: method
-          action: action
-          messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          providers:
-          - null
-          - null
-      properties:
-        config:
-          $ref: '#/components/schemas/registrationFlowMethodConfig'
-        method:
-          description: and so on.
-          title: CredentialsType  represents several different credential types, like
-            password credentials, passwordless credentials,
-          type: string
-      required:
-      - config
-      - method
-      type: object
-    registrationFlowMethodConfig:
-      example:
-        nodes:
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        method: method
-        action: action
-        messages:
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        providers:
-        - null
-        - null
-      properties:
-        action:
-          description: Action should be used as the form action URL `<form action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the form method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-        providers:
-          description: Providers is set for the "oidc" registration method.
-          items:
-            $ref: '#/components/schemas/uiNodes'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
-      type: object
-    registrationFlowMethodConfigPayload:
-      properties:
-        action:
-          description: Action should be used as the form action URL `<form action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the form method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-        providers:
-          description: Providers is set for the "oidc" registration method.
-          items:
-            $ref: '#/components/schemas/uiNodes'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
+      - ui
       type: object
     registrationViaApiResponse:
       description: The Response for Registration Flows via API
