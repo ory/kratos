@@ -277,7 +277,7 @@ type submitSelfServiceLoginFlow struct {
 	//
 	// required: true
 	// in: query
-	ID string `json:"id"`
+	Flow string `json:"flow"`
 }
 
 // swagger:route POST /self-service/login/flows public submitSelfServiceLoginFlow
@@ -334,7 +334,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 			return
 		}
 
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 		return
 	}
 
@@ -347,7 +347,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	var s identity.CredentialsType
 	for _, ss := range h.d.LoginStrategies(r.Context()) {
 		interim, err := ss.Login(w, r, f)
-		if errors.Is(err, ErrStrategyNotResponsible) {
+		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
 		} else if err != nil {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)

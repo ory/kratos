@@ -23,7 +23,8 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *CompleteSelfServiceLoginFlowWithPasswordMethod, err error) error {
 	if f != nil {
-		f.UI.Nodes.Upsert(node.NewInputField("password.identifier", payload.Password.Identifier, s.NodeGroup(), node.InputAttributeTypeText, node.WithRequiredInputAttribute))
+		f.UI.Nodes.Reset()
+		f.UI.Nodes.SetValueAttribute(node.ToID(s.NodeGroup(), "password.identifier"), payload.Password.Identifier)
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}
@@ -46,16 +47,16 @@ type completeSelfServiceLoginFlowWithPasswordMethodParameters struct {
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) (i *identity.Identity, err error) {
+	if err := flow.MethodEnabledAndAllowed(r, s.ID().String(), s.d); err != nil {
+		return nil, err
+	}
+
 	var p CompleteSelfServiceLoginFlowWithPasswordMethod
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, err)
-	}
-
-	if p.Method != s.ID().String() {
-		return nil, errors.WithStack(login.ErrStrategyNotResponsible)
 	}
 
 	if err := flow.EnsureCSRF(r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {

@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/assertx"
+
 	"github.com/ory/kratos-client-go"
 
 	"github.com/ory/x/ioutilx"
@@ -53,24 +55,16 @@ func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *htt
 	return rs
 }
 
-func GetRegistrationFlowMethodConfig(t *testing.T, rs *kratos.RegistrationFlow, id string) *kratos.RegistrationFlowMethodConfig {
-	require.NotEmpty(t, rs.Methods[id])
-	require.NotEmpty(t, rs.Methods[id].Config)
-	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	c := rs.Methods[id].Config
-	return &c
-}
-
 func RegistrationMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *kratos.RegistrationFlowMethodConfig,
+	f *kratos.RegistrationFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
-	require.NotEmpty(t, f.Action)
+	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Action, bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -104,11 +98,10 @@ func SubmitRegistrationForm(
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetRegistrationFlowMethodConfig(t, payload, method.String())
-	values := SDKFormFieldsToURLValues(config.Nodes)
+	values := SDKFormFieldsToURLValues(payload.Ui.Nodes)
 	withValues(values)
-	b, res := RegistrationMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, values))
-	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
-	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
+	b, res := RegistrationMakeRequest(t, isAPI, payload, hc, EncodeFormAsJSON(t, isAPI, values))
+	assert.EqualValues(t, expectedStatusCode, res.StatusCode, assertx.PrettifyJSONPayload(t, b))
+	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, b))
 	return b
 }

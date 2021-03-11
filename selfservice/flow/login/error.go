@@ -22,9 +22,8 @@ import (
 )
 
 var (
-	ErrStrategyNotResponsible = errors.New("strategy is not responsible for this request")
-	ErrHookAbortFlow          = errors.New("aborted login hook execution")
-	ErrAlreadyLoggedIn        = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
+	ErrHookAbortFlow   = errors.New("aborted login hook execution")
+	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
 )
 
 type (

@@ -167,7 +167,6 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				healthx.ReadyCheckPath,
 				healthx.VersionPath,
 
-				password.RouteRegistration,
 				password.RouteSettings,
 
 				oidc.RouteBase,

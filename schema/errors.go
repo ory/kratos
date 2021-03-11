@@ -123,3 +123,13 @@ func NewNoLoginStrategyResponsible() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationLoginNoStrategyFound()),
 	})
 }
+
+func NewNoRegistrationStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to registration with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationRegistrationNoStrategyFound()),
+	})
+}

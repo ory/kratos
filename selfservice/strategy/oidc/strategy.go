@@ -103,10 +103,6 @@ type Strategy struct {
 	validator *schema.Validator
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) (i *identity.Identity, err error) {
-	panic("implement me")
-}
-
 type authCodeContainer struct {
 	FlowID string     `json:"flow_id"`
 	State  string     `json:"state"`
@@ -447,35 +443,36 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), sr, sess.Identity, err)
 		return
 	} else if rr, rerr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid); rerr == nil {
-		if method, ok := rr.Methods[s.ID()]; ok {
-			method.Config.UnsetNode("provider")
-			method.Config.Reset()
+		rr.UI.UnsetNode("oidc.provider")
+		rr.UI.Reset()
 
-			if traits != nil {
-				method.Config.UpdateNodesFromJSON(traits, "traits", node.OpenIDConnectGroup)
-			}
-
-			if errSec := method.Config.ParseError(node.OpenIDConnectGroup, err); errSec != nil {
-				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, s.ID(), rr, errSec)
-				return
-			}
-			method.Config.ResetMessages()
-
-			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
-			if errSec := method.Config.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
-				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, s.ID(), rr, errors.Wrap(err, errSec.Error()))
-				return
-			}
-
-			method.Config.UnsetNode("provider")
-			method.Config.GetNodes().Upsert(
-				// v0.5: form.Field{Name: "provider", Value: provider, Type: "submit"}
-				node.NewInputField("provider", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
-			)
-			rr.Methods[s.ID()] = method
+		if traits != nil {
+			rr.UI.UpdateNodesFromJSON(traits, "traits", node.OpenIDConnectGroup)
 		}
 
-		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, s.ID(), rr, err)
+		if errSec := rr.UI.ParseError(node.OpenIDConnectGroup, err); errSec != nil {
+			s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, rr, s.NodeGroup(), err)
+			return
+		}
+		rr.UI.ResetMessages()
+
+		rr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		if errSec := rr.UI.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", []string{
+			x.CSRFTokenName,
+			"identifier",
+			"password",
+		}); errSec != nil {
+			s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, rr, s.NodeGroup(), errors.Wrap(err, errSec.Error()))
+			return
+		}
+
+		rr.UI.UnsetNode("oidc.provider")
+		rr.UI.GetNodes().Upsert(
+			// v0.5: form.Field{Name: "provider", Value: provider, Type: "submit"}
+			node.NewInputField("provider", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
+		)
+
+		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, rr, s.NodeGroup(), err)
 		return
 	}
 

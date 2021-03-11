@@ -90,26 +90,37 @@ func NewFromJSON(action string, group node.Group, raw json.RawMessage, prefix st
 // NewFromJSONSchema creates a new Container and populates the fields
 // using the provided JSON Schema.
 func NewFromJSONSchema(action string, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {
+	c := New(action)
+	nodes, err := NodesFromJSONSchema(group, jsonSchemaRef, prefix, compiler)
+	if err != nil {
+		return nil, err
+	}
+
+	c.Nodes = nodes
+	return c, nil
+}
+
+func NodesFromJSONSchema(group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (node.Nodes, error) {
 	paths, err := jsonschemax.ListPaths(jsonSchemaRef, compiler)
 	if err != nil {
 		return nil, err
 	}
 
-	c := New(action)
+	nodes := node.Nodes{}
 	for _, value := range paths {
 		name := addPrefix(value.Name, prefix, ".")
-		c.Nodes = append(c.Nodes, node.NewInputFieldFromSchema(name, group, value))
+		nodes = append(nodes, node.NewInputFieldFromSchema(name, group, value))
 	}
 
-	return c, nil
+	return nodes, nil
 }
 
 func (c *Container) GetNodes() *node.Nodes {
 	return &c.Nodes
 }
 
-func (c *Container) SortNodes(schemaRef string) error {
-	return c.Nodes.SortBySchema(schemaRef, "")
+func (c *Container) SortNodes(schemaRef string, prefix string, keysInOrder []string) error {
+	return c.Nodes.SortBySchema(schemaRef, prefix, keysInOrder)
 }
 
 // ResetMessages resets the container's own and its node's messages.
@@ -162,12 +173,15 @@ func (c *Container) ParseError(group node.Group, err error) error {
 			// the empty field (global error).
 			var causes = e.Causes
 			if len(e.Causes) == 0 {
-				causes = []*jsonschema.ValidationError{e}
+				pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
+				c.AddMessage(group, text.NewValidationErrorGeneric(e.Message), pointer)
+				return nil
 			}
 
 			for _, ee := range causes {
-				pointer, _ := jsonschemax.JSONPointerToDotNotation(ee.InstancePtr)
-				c.AddMessage(group, text.NewValidationErrorGeneric(ee.Message), pointer)
+				if err := c.ParseError(group, ee); err != nil {
+					return err
+				}
 			}
 		}
 		return nil

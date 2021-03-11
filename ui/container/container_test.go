@@ -9,6 +9,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
@@ -314,7 +316,11 @@ func TestContainer(t *testing.T) {
 		f.UpdateNodesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
 		f.SetCSRF("csrf_token")
 
-		require.NoError(t, f.SortNodes(schemaPath))
+		require.NoError(t, f.SortNodes(schemaPath, "", []string{
+			x.CSRFTokenName,
+			"identifier",
+			"password",
+		}))
 
 		var names []string
 		for _, f := range f.Nodes {
