@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_login_flows" ALTER COLUMN "ui" TYPE jsonb, ALTER COLUMN "ui" DROP NOT NULL;

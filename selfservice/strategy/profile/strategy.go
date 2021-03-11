@@ -110,7 +110,11 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	f.UpdateNodesFromJSON(json.RawMessage(id.Traits), "traits", node.DefaultGroup)
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	if err := f.SortNodes(traitsSchema.URL); err != nil {
+	if err := f.SortNodes(traitsSchema.URL, "", []string{
+		x.CSRFTokenName,
+		"identifier",
+		"password",
+	}); err != nil {
 		return err
 	}
 
@@ -294,7 +298,11 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 		return err
 	}
 
-	if err = ar.Methods[settings.StrategyProfile].Config.SortNodes(traitsSchema.URL); err != nil {
+	if err = ar.Methods[settings.StrategyProfile].Config.SortNodes(traitsSchema.URL, "", []string{
+		x.CSRFTokenName,
+		"identifier",
+		"password",
+	}); err != nil {
 		return err
 	}
 

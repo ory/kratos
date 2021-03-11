@@ -28,7 +28,6 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 
 		new(login.Flow).TableName(ctx),
 
-		new(registration.FlowMethods).TableName(ctx),
 		new(registration.Flow).TableName(ctx),
 
 		new(settings.FlowMethods).TableName(ctx),

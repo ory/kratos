@@ -4,6 +4,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/schema"
+
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -21,6 +27,8 @@ const (
 	RouteInitAPIFlow     = "/self-service/registration/api"
 
 	RouteGetFlow = "/self-service/registration/flows"
+
+	RouteSubmitFlow = "/self-service/registration"
 )
 
 type (
@@ -35,6 +43,7 @@ type (
 		StrategyProvider
 		HookExecutorProvider
 		FlowPersistenceProvider
+		ErrorHandlerProvider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler
@@ -50,12 +59,25 @@ func NewHandler(d handlerDependencies) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
+	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, session.RedirectOnAuthenticated(h.d)))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initApiFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn))))
 
 	public.GET(RouteGetFlow, h.fetchFlow)
+
+	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, h.onAuthenticated))
+	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, h.onAuthenticated))
+}
+
+func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	handler := session.RedirectOnAuthenticated(h.d)
+	if x.IsJSONRequest(r) {
+		handler = session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)
+	}
+
+	handler(w, r, ps)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -63,7 +85,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
-	a := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
+	a := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
 	for _, s := range h.d.RegistrationStrategies(r.Context()) {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return nil, err
@@ -110,7 +132,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 //       200: registrationFlow
 //       400: genericError
 //       500: genericError
-func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -209,4 +231,105 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	h.d.Writer().Write(w, r, ar)
+}
+
+// nolint:deadcode,unused
+// swagger:parameters submitSelfServiceRegistrationFlow
+type submitSelfServiceRegistrationFlow struct {
+	// The Registration Flow ID
+	//
+	// The value for this parameter comes from `flow` URL Query parameter sent to your
+	// application (e.g. `/login?flow=abcde`).
+	//
+	// required: true
+	// in: query
+	Flow string `json:"flow"`
+}
+
+// swagger:route POST /self-service/registration public submitSelfServiceRegistrationFlow
+//
+// Submit a Registration Flow
+//
+// Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
+// behaves differently for API and browser flows.
+//
+// API flows expect `application/json` to be sent in the body and respond with
+//   - HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
+//     `session` and `session_token` will also be included;
+//   - HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 400 on form validation errors.
+//
+// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+//   - a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+//   - a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+//
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+//
+//     Schemes: http, https
+//
+//     Consumes:
+//     - application/json
+//     - application/x-www-form-urlencoded
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: registrationViaApiResponse
+//       302: emptyResponse
+//       400: registrationFlow
+//       500: genericError
+func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	rid := x.ParseUUID(r.URL.Query().Get("flow"))
+	if x.IsZeroUUID(rid) {
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing or invalid.")))
+		return
+	}
+
+	f, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid)
+	if err != nil {
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
+		return
+	}
+
+	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		if f.Type == flow.TypeBrowser {
+			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			return
+		}
+
+		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+		return
+	}
+
+	if err := f.Valid(); err != nil {
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		return
+	}
+
+	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	var found bool
+	var s identity.CredentialsType
+	for _, ss := range h.d.RegistrationStrategies(r.Context()) {
+		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {
+			continue
+		} else if err != nil {
+			h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
+			return
+		}
+
+		s = ss.ID()
+		found = true
+		break
+	}
+
+	if !found {
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
+		return
+	}
+
+	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s, f, i); err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
 }
