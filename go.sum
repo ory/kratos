@@ -1000,6 +1000,7 @@ github.com/ory/analytics-go/v4 v4.0.0 h1:KQ2P00j9dbj4lDC/Albw/zn/scK67041RhqeW5p
 github.com/ory/analytics-go/v4 v4.0.0/go.mod h1:FMx9cLRD9xN+XevPvZ5FDMfignpmcqPP6FUKnJ9/MmE=
 github.com/ory/dockertest/v3 v3.6.3 h1:L8JWiGgR+fnj90AEOkTFIEp4j5uWAK72P3IUsYgn2cs=
 github.com/ory/dockertest/v3 v3.6.3/go.mod h1:EFLcVUOl8qCwp9NyDAcCDtq/QviLtYswW/VbWzUnTNE=
+github.com/ory/go-acc v0.0.0-20181118080137-ddc355013f90/go.mod h1:sxnvPCxChFuSmTJGj8FdMupeq1BezCiEpDjTUXQ4hf4=
 github.com/ory/go-acc v0.2.6 h1:YfI+L9dxI7QCtWn2RbawqO0vXhiThdXu/RgizJBbaq0=
 github.com/ory/go-acc v0.2.6/go.mod h1:4Kb/UnPcT8qRAk3IAxta+hvVapdxTLWtrr7bFLlEgpw=
 github.com/ory/go-convenience v0.1.0 h1:zouLKfF2GoSGnJwGq+PE/nJAE6dj2Zj5QlTgmMTsTS8=
@@ -1008,6 +1009,14 @@ github.com/ory/gochimp3 v0.0.0-20200417124117-ccd242db3655 h1:H/zV2+eEGc4KZC4c2z
 github.com/ory/gochimp3 v0.0.0-20200417124117-ccd242db3655/go.mod h1:UkHph/q1UfWxoWtS2mT8Hb4PrCHJxjTdBjT9RkJoMnk=
 github.com/ory/graceful v0.1.1 h1:zx+8tDObLPrG+7Tc8jKYlXsqWnLtOQA1IZ/FAAKHMXU=
 github.com/ory/graceful v0.1.1/go.mod h1:zqu70l95WrKHF4AZ6tXHvAqAvpY6M7g6ttaAVcMm7KU=
+github.com/ory/herodot v0.9.0/go.mod h1:GYF7mp8/WFRYDYJBR989lipjgx3NTjjdVdUC+hpB8mc=
+github.com/ory/herodot v0.9.2/go.mod h1:Da2HXR8mpwPbPrH+Gv9qV8mM5gI3v+PoJ69BA4l2RAk=
+github.com/ory/herodot v0.9.3 h1:vfhidpS1fafk8FzQh7lEhImkp72UUU7x0G3gM1Un5CE=
+github.com/ory/herodot v0.9.3/go.mod h1:g3yAI/d6wPdGnOt3dbYUj5JGTZBNuUVLuuDqHnfc1lM=
+github.com/ory/jsonschema/v3 v3.0.1/go.mod h1:jgLHekkFk0uiGdEWGleC+tOm6JSSP8cbf17PnBuGXlw=
+github.com/ory/jsonschema/v3 v3.0.2/go.mod h1:BPH8eu7Ws2kxeu4NRA0Pqrm15+fOJDPfQxb55v2sRXA=
+github.com/ory/jsonschema/v3 v3.0.3 h1:Y7KT4n84ROq8pJ3IMf9JDAulXqYKSU5xUtHjdQFbCLI=
+github.com/ory/jsonschema/v3 v3.0.3/go.mod h1:JvXwbx7IxAkIAo7Qo5OSC1lea+w12DtYGV8h+MTAfnA=
 github.com/ory/kratos v0.5.5-alpha.1.0.20210225142555-c4c6ed9619fa/go.mod h1:Nll0yxPurpLyLTJIaz1UQep2H+FGwBk6aW7M+Iv6H9g=
 github.com/ory/mail v2.3.1+incompatible h1:vHntHDHtQXamt2T+iwTTlCoBkDvILUeujE9Ocwe9md4=
 github.com/ory/mail v2.3.1+incompatible/go.mod h1:87D9/1gB6ewElQoN0lXJ0ayfqcj3cW3qCTXh+5E9mfU=
@@ -1093,6 +1102,7 @@ github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/santhosh-tekuri/jsonschema v1.2.4 h1:hNhW8e7t+H1vgY+1QeEQpveR6D4+OwKPXCfD2aieJis=
 github.com/santhosh-tekuri/jsonschema v1.2.4/go.mod h1:TEAUOeZSmIxTTuHatJzrvARHiuO9LYd+cIxzgEHCQI4=
+github.com/santhosh-tekuri/jsonschema/v2 v2.1.0/go.mod h1:yzJzKUGV4RbWqWIBBP4wSOBqavX5saE02yirLS0OTyg=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 h1:nn5Wsu0esKSJiIVhscUtVbo7ada43DJhG55ua/hjS5I=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=

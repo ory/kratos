@@ -12,3 +12,11 @@ drop_column("selfservice_registration_flows", "messages")
 add_column("selfservice_registration_flows", "ui", "json", { "null": true })
 sql("UPDATE selfservice_registration_flows SET ui='{}'")
 change_column("selfservice_registration_flows", "ui", "json", { "null": false })
+
+
+drop_table("selfservice_settings_flow_methods")
+drop_column("selfservice_settings_flows", "messages")
+
+add_column("selfservice_settings_flows", "ui", "json", { "null": true })
+sql("UPDATE selfservice_settings_flows SET ui='{}'")
+change_column("selfservice_settings_flows", "ui", "json", { "null": false })

@@ -26,29 +26,27 @@ type SettingsFlow struct {
 	Identity  Identity  `json:"identity"`
 	// IssuedAt is the time (UTC) when the flow occurred.
 	IssuedAt time.Time `json:"issued_at"`
-	Messages []UiText  `json:"messages,omitempty"`
-	// Methods contains context for all enabled registration methods. If a settings flow has been processed, but for example the first name is empty, this will contain error messages.
-	Methods map[string]SettingsFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
 	State      string `json:"state"`
 	// The flow type can either be `api` or `browser`.
-	Type *string `json:"type,omitempty"`
+	Type *string     `json:"type,omitempty"`
+	Ui   UiContainer `json:"ui"`
 }
 
 // NewSettingsFlow instantiates a new SettingsFlow object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSettingsFlow(expiresAt time.Time, id string, identity Identity, issuedAt time.Time, methods map[string]SettingsFlowMethod, requestUrl string, state string) *SettingsFlow {
+func NewSettingsFlow(expiresAt time.Time, id string, identity Identity, issuedAt time.Time, requestUrl string, state string, ui UiContainer) *SettingsFlow {
 	this := SettingsFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
 	this.Identity = identity
 	this.IssuedAt = issuedAt
-	this.Methods = methods
 	this.RequestUrl = requestUrl
 	this.State = state
+	this.Ui = ui
 	return &this
 }
 
@@ -188,62 +186,6 @@ func (o *SettingsFlow) SetIssuedAt(v time.Time) {
 	o.IssuedAt = v
 }
 
-// GetMessages returns the Messages field value if set, zero value otherwise.
-func (o *SettingsFlow) GetMessages() []UiText {
-	if o == nil || o.Messages == nil {
-		var ret []UiText
-		return ret
-	}
-	return o.Messages
-}
-
-// GetMessagesOk returns a tuple with the Messages field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SettingsFlow) GetMessagesOk() ([]UiText, bool) {
-	if o == nil || o.Messages == nil {
-		return nil, false
-	}
-	return o.Messages, true
-}
-
-// HasMessages returns a boolean if a field has been set.
-func (o *SettingsFlow) HasMessages() bool {
-	if o != nil && o.Messages != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetMessages gets a reference to the given []UiText and assigns it to the Messages field.
-func (o *SettingsFlow) SetMessages(v []UiText) {
-	o.Messages = v
-}
-
-// GetMethods returns the Methods field value
-func (o *SettingsFlow) GetMethods() map[string]SettingsFlowMethod {
-	if o == nil {
-		var ret map[string]SettingsFlowMethod
-		return ret
-	}
-
-	return o.Methods
-}
-
-// GetMethodsOk returns a tuple with the Methods field value
-// and a boolean to check if the value has been set.
-func (o *SettingsFlow) GetMethodsOk() (*map[string]SettingsFlowMethod, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Methods, true
-}
-
-// SetMethods sets field value
-func (o *SettingsFlow) SetMethods(v map[string]SettingsFlowMethod) {
-	o.Methods = v
-}
-
 // GetRequestUrl returns the RequestUrl field value
 func (o *SettingsFlow) GetRequestUrl() string {
 	if o == nil {
@@ -324,6 +266,30 @@ func (o *SettingsFlow) SetType(v string) {
 	o.Type = &v
 }
 
+// GetUi returns the Ui field value
+func (o *SettingsFlow) GetUi() UiContainer {
+	if o == nil {
+		var ret UiContainer
+		return ret
+	}
+
+	return o.Ui
+}
+
+// GetUiOk returns a tuple with the Ui field value
+// and a boolean to check if the value has been set.
+func (o *SettingsFlow) GetUiOk() (*UiContainer, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Ui, true
+}
+
+// SetUi sets field value
+func (o *SettingsFlow) SetUi(v UiContainer) {
+	o.Ui = v
+}
+
 func (o SettingsFlow) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Active != nil {
@@ -341,12 +307,6 @@ func (o SettingsFlow) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["issued_at"] = o.IssuedAt
 	}
-	if o.Messages != nil {
-		toSerialize["messages"] = o.Messages
-	}
-	if true {
-		toSerialize["methods"] = o.Methods
-	}
 	if true {
 		toSerialize["request_url"] = o.RequestUrl
 	}
@@ -355,6 +315,9 @@ func (o SettingsFlow) MarshalJSON() ([]byte, error) {
 	}
 	if o.Type != nil {
 		toSerialize["type"] = o.Type
+	}
+	if true {
+		toSerialize["ui"] = o.Ui
 	}
 	return json.Marshal(toSerialize)
 }

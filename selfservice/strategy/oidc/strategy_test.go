@@ -90,9 +90,7 @@ func TestStrategy(t *testing.T) {
 		var config *container.Container
 		if req, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
-			method := req.Methods[identity.CredentialsTypeOIDC]
-			require.NotNil(t, method)
-			config = method.Config.FlowMethodConfigurator.(*container.Container)
+			config = req.UI
 			require.NotNil(t, config)
 		} else if req, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
@@ -199,7 +197,7 @@ func TestStrategy(t *testing.T) {
 		// sanity check
 		got, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), req.ID)
 		require.NoError(t, err)
-		require.Len(t, got.Methods, len(req.Methods), "%+v", req)
+		require.Len(t, got.UI.Nodes, len(req.UI.Nodes), "%+v", req)
 
 		return req
 	}
@@ -414,28 +412,30 @@ func TestStrategy(t *testing.T) {
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
-		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
+		sr := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
-		expected := &registration.FlowMethod{
-			Method: identity.CredentialsTypeOIDC,
-			Config: &registration.FlowMethodConfig{
-				FlowMethodConfigurator: &oidc.FlowMethod{
-					Container: &container.Container{
-						Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
-						Method: "POST",
-						Nodes: node.Nodes{
-							node.NewCSRFNode(x.FakeCSRFToken),
-							oidc.NewSubmitNode("valid"),
-							oidc.NewSubmitNode("invalid-issuer"),
-						},
-					},
-				},
-			},
-		}
+		//expected := &registration.FlowMethod{
+		//	Method: identity.CredentialsTypeOIDC,
+		//	Config: &registration.FlowMethodConfig{
+		//		FlowMethodConfigurator: &oidc.FlowMethod{
+		//			Container: &container.Container{
+		//				Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
+		//				Method: "POST",
+		//				Nodes: node.Nodes{
+		//					node.NewCSRFNode(x.FakeCSRFToken),
+		//					oidc.NewSubmitNode("valid"),
+		//					oidc.NewSubmitNode("invalid-issuer"),
+		//				},
+		//			},
+		//		},
+		//	},
+		//}
+		//
+		panic("actual := sr.Methods[identity.CredentialsTypeOIDC]")
 
-		actual := sr.Methods[identity.CredentialsTypeOIDC]
-		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container)
+		//actual := sr.Methods[identity.CredentialsTypeOIDC]
+		//assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container)
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {

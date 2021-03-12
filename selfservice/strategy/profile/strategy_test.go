@@ -96,8 +96,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should fail to post data if CSRF is invalid/type=browser", func(t *testing.T) {
-		rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-		f := testhelpers.GetSettingsFlowMethodConfig(t, rs, settings.StrategyProfile)
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
 
 		actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser1,
 			url.Values{"traits.foo": {"bar"}, "csrf_token": {"invalid"}}.Encode())
@@ -106,8 +105,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should not fail if CSRF token is invalid/type=api", func(t *testing.T) {
-		rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-		f := testhelpers.GetSettingsFlowMethodConfig(t, rs, settings.StrategyProfile)
+		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 
 		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, `{"traits":{},"csrf_token":"invalid"}`)
 		assert.Len(t, res.Cookies(), 0)
@@ -135,9 +133,8 @@ func TestStrategyTraits(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-				c := testhelpers.GetSettingsFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-				req := testhelpers.NewRequest(t, true, "POST", c.Action, bytes.NewBufferString(`{"traits":{},"csrf_token":"invalid"}`))
+				req := testhelpers.NewRequest(t, true, "POST", f.Ui.Action, bytes.NewBufferString(`{"traits":{},"csrf_token":"invalid"}`))
 				tc.mod(req.Header)
 
 				res, err := apiUser1.Do(req)
@@ -158,8 +155,6 @@ func TestStrategyTraits(t *testing.T) {
 			assert.JSONEq(t, string(id.Traits), x.MustEncodeJSON(t, payload.Identity.Traits))
 			assert.Equal(t, id.SchemaID, payload.Identity.SchemaId)
 			assert.Equal(t, publicTS.URL+route, payload.RequestUrl)
-
-			f := testhelpers.GetSettingsFlowMethodConfig(t, payload, settings.StrategyProfile)
 
 			assertx.EqualAsJSON(t, &kratos.SettingsFlowMethodConfig{
 				Action: publicTS.URL + profile.RouteSettings + "?flow=" + string(payload.Id),
@@ -233,7 +228,7 @@ func TestStrategyTraits(t *testing.T) {
 						}),
 					},
 				},
-			}, f)
+			}, payload)
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -289,18 +284,18 @@ func TestStrategyTraits(t *testing.T) {
 
 	t.Run("description=should not be able to make requests for another user", func(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-			f := testhelpers.GetSettingsFlowMethodConfig(t, rs, identity.CredentialsTypePassword.String())
-			values := testhelpers.SDKFormFieldsToURLValues(f.Nodes)
+			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
+
+			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser2, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assert.Contains(t, gjson.Get(actual, "error.reason").String(), "initiated by another person", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-			f := testhelpers.GetSettingsFlowMethodConfig(t, rs, identity.CredentialsTypePassword.String())
-			values := testhelpers.SDKFormFieldsToURLValues(f.Nodes)
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
+
+			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser2, values.Encode())
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, gjson.Get(actual, "0.reason").String(), "initiated by another person", "%s", actual)
@@ -308,12 +303,12 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should end up at the login endpoint if trying to update protected field without sudo mode", func(t *testing.T) {
-		var run = func(t *testing.T, config *kratos.SettingsFlowMethodConfig, isAPI bool, c *http.Client) *http.Response {
+		var run = func(t *testing.T, config *kratos.SettingsFlow, isAPI bool, c *http.Client) *http.Response {
 			time.Sleep(time.Millisecond)
 
-			values := testhelpers.SDKFormFieldsToURLValues(config.Nodes)
+			values := testhelpers.SDKFormFieldsToURLValues(config.Ui.Nodes)
 			values.Set("traits.email", "not-john-doe@foo.bar")
-			res, err := c.PostForm(config.Action, values)
+			res, err := c.PostForm(config.Ui.Action, values)
 			require.NoError(t, err)
 			defer res.Body.Close()
 
@@ -321,17 +316,15 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-			config := testhelpers.GetSettingsFlowMethodConfig(t, rs, settings.StrategyProfile)
-			res := run(t, config, true, apiUser1)
+			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
+			res := run(t, f, true, apiUser1)
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+profile.RouteSettings)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-			c := testhelpers.GetSettingsFlowMethodConfig(t, rs, settings.StrategyProfile)
-			res := run(t, c, false, browserUser1)
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
+			res := run(t, f, false, browserUser1)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
 		})
@@ -462,11 +455,11 @@ func TestStrategyTraits(t *testing.T) {
 		testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, rts.URL+"/return-ts")
 		t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
-		f := testhelpers.GetSettingsFlowMethodConfigDeprecated(t, browserUser1, publicTS, settings.StrategyProfile)
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
 
-		values := testhelpers.SDKFormFieldsToURLValues(f.Nodes)
+		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("traits.should_big_number", "9001")
-		res, err := browserUser1.PostForm(f.Action, values)
+		res, err := browserUser1.PostForm(f.Ui.Action, values)
 
 		require.NoError(t, err)
 		defer res.Body.Close()

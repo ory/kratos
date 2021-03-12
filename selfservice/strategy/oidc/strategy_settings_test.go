@@ -123,7 +123,7 @@ func TestSettingsStrategy(t *testing.T) {
 		// sanity check
 		got, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), req.ID)
 		require.NoError(t, err)
-		require.Len(t, got.Methods, len(req.Methods))
+		require.Len(t, got.UI.Nodes, len(req.UI.Nodes))
 
 		return req
 	}
@@ -184,10 +184,10 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.EqualValues(t, req.Identity.ID.String(), rs.Identity.Id)
 		assert.EqualValues(t, req.IssuedAt, rs.IssuedAt)
 
-		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Methods[identity.CredentialsTypeOIDC.String()])
-		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), rs.Methods[identity.CredentialsTypeOIDC.String()].Method)
+		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Ui)
+		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), rs.Ui.Method)
 		require.EqualValues(t, publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(),
-			rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Action)
+			rs.Ui.Action)
 	})
 
 	expectedOryerFields := []kratos.UiNode{
@@ -216,13 +216,13 @@ func TestSettingsStrategy(t *testing.T) {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
 				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
 				assert.EqualValues(t, append([]kratos.UiNode{*csrfField}, tc.expected...),
-					rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Nodes)
+					rs.Ui.Nodes)
 			})
 		}
 	})
 
 	var action = func(req *kratos.SettingsFlow) string {
-		return req.Methods[identity.CredentialsTypeOIDC.String()].Config.Action
+		return req.Ui.Action
 	}
 
 	var checkCredentials = func(t *testing.T, shouldExist bool, iid uuid.UUID, provider, subject string) {
@@ -437,7 +437,7 @@ func TestSettingsStrategy(t *testing.T) {
 				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
 				*testhelpers.NewSDKOIDCNode("unlink", "github"),
 				*testhelpers.NewSDKOIDCNode("unlink", "google"),
-			}...), rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Nodes)
+			}...), rs.Ui.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
@@ -460,7 +460,7 @@ func TestSettingsStrategy(t *testing.T) {
 				*testhelpers.NewSDKOIDCNode("link", "ory"),
 				*testhelpers.NewSDKOIDCNode("link", "github"),
 				*testhelpers.NewSDKOIDCNode("unlink", "google"),
-			}...), rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Nodes)
+			}...), rs.Ui.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
@@ -529,20 +529,18 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	}
 
 	nr := func() *settings.Flow {
-		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
+		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), UI: container.New("")}
 	}
 
 	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *container.Container {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
-		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
-		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config)
-		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator)
-		require.Equal(t, identity.CredentialsTypeOIDC.String(), req.Methods[identity.CredentialsTypeOIDC.String()].Method)
-		f := req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container
-		assert.Equal(t, "https://www.ory.sh"+oidc.SettingsPath+"?flow="+req.ID.String(), f.Action)
-		assert.Equal(t, "POST", f.Method)
-		return f
+		require.NotNil(t, req.UI)
+		require.NotNil(t, req.UI.Nodes)
+		require.Equal(t, identity.CredentialsTypeOIDC.String(), req.UI.Method)
+		assert.Equal(t, "https://www.ory.sh"+oidc.SettingsPath+"?flow="+req.ID.String(), req.UI.Action)
+		assert.Equal(t, "POST", req.UI.Method)
+		return req.UI
 	}
 
 	defaultConfig := []oidc.Configuration{
@@ -555,9 +553,9 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		reg := nreg(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
 		i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`)}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
+		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), UI: container.New("")}
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
-		require.Nil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
+		require.Nil(t, req.UI.Nodes)
 	})
 
 	for k, tc := range []struct {

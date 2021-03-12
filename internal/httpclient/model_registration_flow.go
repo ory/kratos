@@ -25,7 +25,6 @@ type RegistrationFlow struct {
 	Id        string    `json:"id"`
 	// IssuedAt is the time (UTC) when the flow occurred.
 	IssuedAt time.Time `json:"issued_at"`
-	Messages []UiText  `json:"messages,omitempty"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
 	// The flow type can either be `api` or `browser`.
@@ -159,38 +158,6 @@ func (o *RegistrationFlow) SetIssuedAt(v time.Time) {
 	o.IssuedAt = v
 }
 
-// GetMessages returns the Messages field value if set, zero value otherwise.
-func (o *RegistrationFlow) GetMessages() []UiText {
-	if o == nil || o.Messages == nil {
-		var ret []UiText
-		return ret
-	}
-	return o.Messages
-}
-
-// GetMessagesOk returns a tuple with the Messages field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *RegistrationFlow) GetMessagesOk() ([]UiText, bool) {
-	if o == nil || o.Messages == nil {
-		return nil, false
-	}
-	return o.Messages, true
-}
-
-// HasMessages returns a boolean if a field has been set.
-func (o *RegistrationFlow) HasMessages() bool {
-	if o != nil && o.Messages != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetMessages gets a reference to the given []UiText and assigns it to the Messages field.
-func (o *RegistrationFlow) SetMessages(v []UiText) {
-	o.Messages = v
-}
-
 // GetRequestUrl returns the RequestUrl field value
 func (o *RegistrationFlow) GetRequestUrl() string {
 	if o == nil {
@@ -284,9 +251,6 @@ func (o RegistrationFlow) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["issued_at"] = o.IssuedAt
-	}
-	if o.Messages != nil {
-		toSerialize["messages"] = o.Messages
 	}
 	if true {
 		toSerialize["request_url"] = o.RequestUrl

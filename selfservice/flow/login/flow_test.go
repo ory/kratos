@@ -30,6 +30,7 @@ func TestFakeFlow(t *testing.T) {
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)
 	assert.NotEmpty(t, r.Active)
+	assert.NotNil(t, r.UI)
 	assert.NotEmpty(t, r.UI.Nodes)
 }
 

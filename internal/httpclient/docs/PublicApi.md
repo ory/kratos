@@ -4,10 +4,8 @@ All URIs are relative to *https://demo.tenants.oryapis.com/api/kratos/public*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**CompleteSelfServiceBrowserSettingsOIDCSettingsFlow**](PublicApi.md#CompleteSelfServiceBrowserSettingsOIDCSettingsFlow) | **Post** /self-service/browser/flows/registration/strategies/oidc/settings/connections | Complete the Browser-Based Settings Flow for the OpenID Connect Strategy
 [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](PublicApi.md#CompleteSelfServiceRecoveryFlowWithLinkMethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
-[**CompleteSelfServiceSettingsFlowWithPasswordMethod**](PublicApi.md#CompleteSelfServiceSettingsFlowWithPasswordMethod) | **Post** /self-service/settings/methods/password | Complete Settings Flow with Username/Email Password Method
-[**CompleteSelfServiceSettingsFlowWithProfileMethod**](PublicApi.md#CompleteSelfServiceSettingsFlowWithProfileMethod) | **Post** /self-service/settings/methods/profile | Complete Settings Flow with Profile Method
+[**CompleteSelfServiceSettingsFlow**](PublicApi.md#CompleteSelfServiceSettingsFlow) | **Post** /self-service/settings | Complete Settings Flow
 [**CompleteSelfServiceVerificationFlowWithLinkMethod**](PublicApi.md#CompleteSelfServiceVerificationFlowWithLinkMethod) | **Post** /self-service/verification/methods/link | Complete Verification Flow with Link Method
 [**GetSchema**](PublicApi.md#GetSchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](PublicApi.md#GetSelfServiceError) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
@@ -32,65 +30,6 @@ Method | HTTP request | Description
 [**SubmitSelfServiceRegistrationFlow**](PublicApi.md#SubmitSelfServiceRegistrationFlow) | **Post** /self-service/registration | Submit a Registration Flow
 [**Whoami**](PublicApi.md#Whoami) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
-
-
-## CompleteSelfServiceBrowserSettingsOIDCSettingsFlow
-
-> CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(ctx).Execute()
-
-Complete the Browser-Based Settings Flow for the OpenID Connect Strategy
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(context.Background()).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceBrowserSettingsOIDCSettingsFlow``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-}
-```
-
-### Path Parameters
-
-This endpoint does not need any parameter.
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiCompleteSelfServiceBrowserSettingsOIDCSettingsFlowRequest struct via the builder pattern
-
-
-### Return type
-
- (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
 
 
 ## CompleteSelfServiceRecoveryFlowWithLinkMethod
@@ -161,11 +100,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## CompleteSelfServiceSettingsFlowWithPasswordMethod
+## CompleteSelfServiceSettingsFlow
 
-> SettingsViaApiResponse CompleteSelfServiceSettingsFlowWithPasswordMethod(ctx).Flow(flow).CompleteSelfServiceSettingsFlowWithPasswordMethod(completeSelfServiceSettingsFlowWithPasswordMethod).Execute()
+> SettingsViaApiResponse CompleteSelfServiceSettingsFlow(ctx).Flow(flow).Execute()
 
-Complete Settings Flow with Username/Email Password Method
+Complete Settings Flow
 
 
 
@@ -182,18 +121,17 @@ import (
 )
 
 func main() {
-    flow := "flow_example" // string | Flow is flow ID. (optional)
-    completeSelfServiceSettingsFlowWithPasswordMethod := *openapiclient.NewCompleteSelfServiceSettingsFlowWithPasswordMethod("Password_example") // CompleteSelfServiceSettingsFlowWithPasswordMethod |  (optional)
+    flow := "flow_example" // string | The Settings Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/settings?flow=abcde`).
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CompleteSelfServiceSettingsFlowWithPasswordMethod(context.Background()).Flow(flow).CompleteSelfServiceSettingsFlowWithPasswordMethod(completeSelfServiceSettingsFlowWithPasswordMethod).Execute()
+    resp, r, err := apiClient.PublicApi.CompleteSelfServiceSettingsFlow(context.Background()).Flow(flow).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceSettingsFlowWithPasswordMethod``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceSettingsFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `CompleteSelfServiceSettingsFlowWithPasswordMethod`: SettingsViaApiResponse
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.CompleteSelfServiceSettingsFlowWithPasswordMethod`: %v\n", resp)
+    // response from `CompleteSelfServiceSettingsFlow`: SettingsViaApiResponse
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.CompleteSelfServiceSettingsFlow`: %v\n", resp)
 }
 ```
 
@@ -203,13 +141,12 @@ func main() {
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiCompleteSelfServiceSettingsFlowWithPasswordMethodRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiCompleteSelfServiceSettingsFlowRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **flow** | **string** | Flow is flow ID. | 
- **completeSelfServiceSettingsFlowWithPasswordMethod** | [**CompleteSelfServiceSettingsFlowWithPasswordMethod**](CompleteSelfServiceSettingsFlowWithPasswordMethod.md) |  | 
+ **flow** | **string** | The Settings Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/settings?flow&#x3D;abcde&#x60;). | 
 
 ### Return type
 
@@ -221,75 +158,7 @@ Name | Type | Description  | Notes
 
 ### HTTP request headers
 
-- **Content-Type**: application/json, application/x-www-form-urlencoded
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## CompleteSelfServiceSettingsFlowWithProfileMethod
-
-> SettingsFlow CompleteSelfServiceSettingsFlowWithProfileMethod(ctx).Flow(flow).Body(body).Execute()
-
-Complete Settings Flow with Profile Method
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-    flow := "flow_example" // string | Flow is flow ID. (optional)
-    body := map[string]interface{}(Object) // map[string]interface{} |  (optional)
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CompleteSelfServiceSettingsFlowWithProfileMethod(context.Background()).Flow(flow).Body(body).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceSettingsFlowWithProfileMethod``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-    // response from `CompleteSelfServiceSettingsFlowWithProfileMethod`: SettingsFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.CompleteSelfServiceSettingsFlowWithProfileMethod`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiCompleteSelfServiceSettingsFlowWithProfileMethodRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **flow** | **string** | Flow is flow ID. | 
- **body** | **map[string]interface{}** |  | 
-
-### Return type
-
-[**SettingsFlow**](settingsFlow.md)
-
-### Authorization
-
-[sessionToken](../README.md#sessionToken)
-
-### HTTP request headers
-
-- **Content-Type**: application/json, application/x-www-form-urlencoded
+- **Content-Type**: Not defined
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
@@ -1646,7 +1515,7 @@ import (
 )
 
 func main() {
-    flow := "flow_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/login?flow=abcde`).
+    flow := "flow_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/registration?flow=abcde`).
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -1671,7 +1540,7 @@ Other parameters are passed through a pointer to a apiSubmitSelfServiceRegistrat
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **flow** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/login?flow&#x3D;abcde&#x60;). | 
+ **flow** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?flow&#x3D;abcde&#x60;). | 
 
 ### Return type
 

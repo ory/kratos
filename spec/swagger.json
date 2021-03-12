@@ -465,35 +465,6 @@
         }
       }
     },
-    "/self-service/browser/flows/registration/strategies/oidc/settings/connections": {
-      "post": {
-        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Complete the Browser-Based Settings Flow for the OpenID Connect Strategy",
-        "operationId": "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
-        "responses": {
-          "302": {
-            "$ref": "#/responses/emptyResponse"
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
     "/self-service/errors": {
       "get": {
         "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nThis endpoint supports stub values to help you implement the error UI:\n\n`?error=stub:500` - returns a stub 500 (Internal Server Error) error.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
@@ -916,7 +887,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/login?flow=abcde`).",
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
             "name": "flow",
             "in": "query",
             "required": true
@@ -1065,6 +1036,76 @@
         }
       }
     },
+    "/self-service/settings": {
+      "post": {
+        "security": [
+          {
+            "sessionToken": []
+          }
+        ],
+        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.\nImplies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete Settings Flow",
+        "operationId": "completeSelfServiceSettingsFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Settings Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/settings?flow=abcde`).",
+            "name": "flow",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "settingsViaApiResponse",
+            "schema": {
+              "$ref": "#/definitions/settingsViaApiResponse"
+            }
+          },
+          "302": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "settingsFlow",
+            "schema": {
+              "$ref": "#/definitions/settingsFlow"
+            }
+          },
+          "401": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/settings/api": {
       "get": {
         "security": [
@@ -1184,158 +1225,6 @@
             }
           },
           "410": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/settings/methods/password": {
-      "post": {
-        "security": [
-          {
-            "sessionToken": []
-          }
-        ],
-        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.\nImplies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Complete Settings Flow with Username/Email Password Method",
-        "operationId": "completeSelfServiceSettingsFlowWithPasswordMethod",
-        "parameters": [
-          {
-            "name": "Body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/CompleteSelfServiceSettingsFlowWithPasswordMethod"
-            }
-          },
-          {
-            "type": "string",
-            "description": "Flow is flow ID.",
-            "name": "flow",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "settingsViaApiResponse",
-            "schema": {
-              "$ref": "#/definitions/settingsViaApiResponse"
-            }
-          },
-          "302": {
-            "$ref": "#/responses/emptyResponse"
-          },
-          "400": {
-            "description": "settingsFlow",
-            "schema": {
-              "$ref": "#/definitions/settingsFlow"
-            }
-          },
-          "401": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "403": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/settings/methods/profile": {
-      "post": {
-        "security": [
-          {
-            "sessionToken": []
-          }
-        ],
-        "description": "Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was\nupdated (e.g. recovery email). Implies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Complete Settings Flow with Profile Method",
-        "operationId": "completeSelfServiceSettingsFlowWithProfileMethod",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Flow is flow ID.",
-            "name": "flow",
-            "in": "query"
-          },
-          {
-            "name": "Payload",
-            "in": "body",
-            "schema": {
-              "type": "object"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "settingsFlow",
-            "schema": {
-              "$ref": "#/definitions/settingsFlow"
-            }
-          },
-          "302": {
-            "$ref": "#/responses/emptyResponse"
-          },
-          "400": {
-            "description": "settingsFlow",
-            "schema": {
-              "$ref": "#/definitions/settingsFlow"
-            }
-          },
-          "401": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "403": {
             "description": "genericError",
             "schema": {
               "$ref": "#/definitions/genericError"
@@ -3031,9 +2920,6 @@
           "type": "string",
           "format": "date-time"
         },
-        "messages": {
-          "$ref": "#/definitions/uiTexts"
-        },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
@@ -3120,7 +3006,7 @@
         "expires_at",
         "issued_at",
         "request_url",
-        "methods",
+        "ui",
         "identity",
         "state"
       ],
@@ -3145,16 +3031,6 @@
           "type": "string",
           "format": "date-time"
         },
-        "messages": {
-          "$ref": "#/definitions/uiTexts"
-        },
-        "methods": {
-          "description": "Methods contains context for all enabled registration methods. If a settings flow has been\nprocessed, but for example the first name is empty, this will contain error messages.",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/settingsFlowMethod"
-          }
-        },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
@@ -3164,70 +3040,9 @@
         },
         "type": {
           "$ref": "#/definitions/Type"
-        }
-      }
-    },
-    "settingsFlowMethod": {
-      "type": "object",
-      "required": [
-        "method",
-        "config"
-      ],
-      "properties": {
-        "config": {
-          "$ref": "#/definitions/settingsFlowMethodConfig"
         },
-        "method": {
-          "description": "Method is the name of this flow method.",
-          "type": "string"
-        }
-      }
-    },
-    "settingsFlowMethodConfig": {
-      "type": "object",
-      "required": [
-        "action",
-        "method",
-        "nodes"
-      ],
-      "properties": {
-        "action": {
-          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-          "type": "string"
-        },
-        "messages": {
-          "$ref": "#/definitions/uiTexts"
-        },
-        "method": {
-          "description": "Method is the form method (e.g. POST)",
-          "type": "string"
-        },
-        "nodes": {
-          "$ref": "#/definitions/uiNodes"
-        }
-      }
-    },
-    "settingsFlowMethodConfigPayload": {
-      "type": "object",
-      "required": [
-        "action",
-        "method",
-        "nodes"
-      ],
-      "properties": {
-        "action": {
-          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-          "type": "string"
-        },
-        "messages": {
-          "$ref": "#/definitions/uiTexts"
-        },
-        "method": {
-          "description": "Method is the form method (e.g. POST)",
-          "type": "string"
-        },
-        "nodes": {
-          "$ref": "#/definitions/uiNodes"
+        "ui": {
+          "$ref": "#/definitions/uiContainer"
         }
       }
     },
