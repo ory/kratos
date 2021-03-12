@@ -100,10 +100,8 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**ListIdentities**](docs/AdminApi.md#listidentities) | **Get** /identities | List Identities
 *AdminApi* | [**Prometheus**](docs/AdminApi.md#prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Hydra service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 *AdminApi* | [**UpdateIdentity**](docs/AdminApi.md#updateidentity) | **Put** /identities/{id} | Update an Identity
-*PublicApi* | [**CompleteSelfServiceBrowserSettingsOIDCSettingsFlow**](docs/PublicApi.md#completeselfservicebrowsersettingsoidcsettingsflow) | **Post** /self-service/browser/flows/registration/strategies/oidc/settings/connections | Complete the Browser-Based Settings Flow for the OpenID Connect Strategy
 *PublicApi* | [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#completeselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
-*PublicApi* | [**CompleteSelfServiceSettingsFlowWithPasswordMethod**](docs/PublicApi.md#completeselfservicesettingsflowwithpasswordmethod) | **Post** /self-service/settings/methods/password | Complete Settings Flow with Username/Email Password Method
-*PublicApi* | [**CompleteSelfServiceSettingsFlowWithProfileMethod**](docs/PublicApi.md#completeselfservicesettingsflowwithprofilemethod) | **Post** /self-service/settings/methods/profile | Complete Settings Flow with Profile Method
+*PublicApi* | [**CompleteSelfServiceSettingsFlow**](docs/PublicApi.md#completeselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
 *PublicApi* | [**CompleteSelfServiceVerificationFlowWithLinkMethod**](docs/PublicApi.md#completeselfserviceverificationflowwithlinkmethod) | **Post** /self-service/verification/methods/link | Complete Verification Flow with Link Method
 *PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} | 
 *PublicApi* | [**GetSelfServiceError**](docs/PublicApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
@@ -189,9 +187,6 @@ Class | Method | HTTP request | Description
  - [ServiceUpdateResponse](docs/ServiceUpdateResponse.md)
  - [Session](docs/Session.md)
  - [SettingsFlow](docs/SettingsFlow.md)
- - [SettingsFlowMethod](docs/SettingsFlowMethod.md)
- - [SettingsFlowMethodConfig](docs/SettingsFlowMethodConfig.md)
- - [SettingsFlowMethodConfigPayload](docs/SettingsFlowMethodConfigPayload.md)
  - [SettingsProfileFormConfig](docs/SettingsProfileFormConfig.md)
  - [SettingsViaApiResponse](docs/SettingsViaApiResponse.md)
  - [UiContainer](docs/UiContainer.md)

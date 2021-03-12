@@ -1422,9 +1422,6 @@
             "format": "date-time",
             "type": "string"
           },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
             "type": "string"
@@ -1533,16 +1530,6 @@
             "format": "date-time",
             "type": "string"
           },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "methods": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/settingsFlowMethod"
-            },
-            "description": "Methods contains context for all enabled registration methods. If a settings flow has been\nprocessed, but for example the first name is empty, this will contain error messages.",
-            "type": "object"
-          },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
             "type": "string"
@@ -1552,6 +1539,9 @@
           },
           "type": {
             "$ref": "#/components/schemas/Type"
+          },
+          "ui": {
+            "$ref": "#/components/schemas/uiContainer"
           }
         },
         "required": [
@@ -1559,75 +1549,11 @@
           "expires_at",
           "issued_at",
           "request_url",
-          "methods",
+          "ui",
           "identity",
           "state"
         ],
         "title": "Flow represents a Settings Flow",
-        "type": "object"
-      },
-      "settingsFlowMethod": {
-        "properties": {
-          "config": {
-            "$ref": "#/components/schemas/settingsFlowMethodConfig"
-          },
-          "method": {
-            "description": "Method is the name of this flow method.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "method",
-          "config"
-        ],
-        "type": "object"
-      },
-      "settingsFlowMethodConfig": {
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
-        "type": "object"
-      },
-      "settingsFlowMethodConfigPayload": {
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
         "type": "object"
       },
       "settingsProfileFormConfig": {
@@ -2544,31 +2470,6 @@
         ]
       }
     },
-    "/self-service/browser/flows/registration/strategies/oidc/settings/connections": {
-      "post": {
-        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "operationId": "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
-        "responses": {
-          "302": {
-            "$ref": "#/components/responses/emptyResponse"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          }
-        },
-        "summary": "Complete the Browser-Based Settings Flow for the OpenID Connect Strategy",
-        "tags": [
-          "public"
-        ]
-      }
-    },
     "/self-service/errors": {
       "get": {
         "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nThis endpoint supports stub values to help you implement the error UI:\n\n`?error=stub:500` - returns a stub 500 (Internal Server Error) error.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
@@ -3036,7 +2937,7 @@
         "operationId": "submitSelfServiceRegistrationFlow",
         "parameters": [
           {
-            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/login?flow=abcde`).",
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
             "in": "query",
             "name": "flow",
             "required": true,
@@ -3227,6 +3128,87 @@
         ]
       }
     },
+    "/self-service/settings": {
+      "post": {
+        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.\nImplies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "operationId": "completeSelfServiceSettingsFlow",
+        "parameters": [
+          {
+            "description": "The Settings Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/settings?flow=abcde`).",
+            "in": "query",
+            "name": "flow",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsViaApiResponse"
+                }
+              }
+            },
+            "description": "settingsViaApiResponse"
+          },
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settingsFlow"
+                }
+              }
+            },
+            "description": "settingsFlow"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "security": [
+          {
+            "sessionToken": []
+          }
+        ],
+        "summary": "Complete Settings Flow",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/self-service/settings/api": {
       "get": {
         "description": "This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.\nYou must provide a valid ORY Kratos Session Token for this endpoint to respond with HTTP 200 OK.\n\nTo fetch an existing settings flow call `/self-service/settings/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
@@ -3380,196 +3362,6 @@
         "tags": [
           "public",
           "admin"
-        ]
-      }
-    },
-    "/self-service/settings/methods/password": {
-      "post": {
-        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.\nImplies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "operationId": "completeSelfServiceSettingsFlowWithPasswordMethod",
-        "parameters": [
-          {
-            "description": "Flow is flow ID.",
-            "in": "query",
-            "name": "flow",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompleteSelfServiceSettingsFlowWithPasswordMethod"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/CompleteSelfServiceSettingsFlowWithPasswordMethod"
-              }
-            }
-          },
-          "x-originalParamName": "Body"
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/settingsViaApiResponse"
-                }
-              }
-            },
-            "description": "settingsViaApiResponse"
-          },
-          "302": {
-            "$ref": "#/components/responses/emptyResponse"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/settingsFlow"
-                }
-              }
-            },
-            "description": "settingsFlow"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          }
-        },
-        "security": [
-          {
-            "sessionToken": []
-          }
-        ],
-        "summary": "Complete Settings Flow with Username/Email Password Method",
-        "tags": [
-          "public"
-        ]
-      }
-    },
-    "/self-service/settings/methods/profile": {
-      "post": {
-        "description": "Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was\nupdated (e.g. recovery email). Implies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "operationId": "completeSelfServiceSettingsFlowWithProfileMethod",
-        "parameters": [
-          {
-            "description": "Flow is flow ID.",
-            "in": "query",
-            "name": "flow",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object"
-              }
-            }
-          },
-          "x-originalParamName": "Payload"
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/settingsFlow"
-                }
-              }
-            },
-            "description": "settingsFlow"
-          },
-          "302": {
-            "$ref": "#/components/responses/emptyResponse"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/settingsFlow"
-                }
-              }
-            },
-            "description": "settingsFlow"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          }
-        },
-        "security": [
-          {
-            "sessionToken": []
-          }
-        ],
-        "summary": "Complete Settings Flow with Profile Method",
-        "tags": [
-          "public"
         ]
       }
     },

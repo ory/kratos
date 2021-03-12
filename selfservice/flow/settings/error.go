@@ -52,19 +52,6 @@ type (
 	}
 )
 
-func MethodToNodeGroup(method string) node.Group {
-	switch method {
-	case StrategyProfile:
-		return node.DefaultGroup
-	case string(identity.CredentialsTypePassword):
-		return node.PasswordGroup
-	case string(identity.CredentialsTypeOIDC):
-		return node.OpenIDConnectGroup
-	default:
-		return node.DefaultGroup
-	}
-}
-
 func NewFlowNeedsReAuth() *FlowNeedsReAuth {
 	return &FlowNeedsReAuth{DefaultError: herodot.ErrForbidden.
 		WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate.")}
@@ -105,7 +92,7 @@ func (s *ErrorHandler) reauthenticate(
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
-	method string,
+	group node.Group,
 	f *Flow,
 	id *identity.Identity,
 	err error,
@@ -126,11 +113,11 @@ func (s *ErrorHandler) WriteFlowError(
 		a, err := s.d.SettingsHandler().NewFlow(w, r, id, f.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
-			s.WriteFlowError(w, r, method, f, id, err)
+			s.WriteFlowError(w, r, group, f, id, err)
 			return
 		}
 
-		a.Messages.Add(text.NewErrorValidationSettingsFlowExpired(e.ago))
+		a.UI.Messages.Add(text.NewErrorValidationSettingsFlowExpired(e.ago))
 		if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return
@@ -150,18 +137,12 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if _, ok := f.Methods[method]; !ok {
-		s.forward(w, r, f, errors.WithStack(herodot.ErrInternalServerError.
-			WithErrorf(`Expected settings method "%s" to exist in flow. This is a bug in the code and should be reported on GitHub.`, method)))
-		return
-	}
-
-	if err := f.Methods[method].Config.ParseError(MethodToNodeGroup(method), err); err != nil {
+	if err := f.UI.ParseError(group, err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
 
-	if err := s.d.SettingsFlowPersister().UpdateSettingsFlowMethod(r.Context(), f.ID, method, f.Methods[method]); err != nil {
+	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

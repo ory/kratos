@@ -15,10 +15,6 @@ replace github.com/ory/cli => ../cli
 
 replace github.com/ory/x => ../x
 
-replace github.com/ory/jsonschema/v3 => ../jsonschema
-
-replace github.com/ory/herodot => ../herodot
-
 replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
 require (
@@ -71,7 +67,7 @@ require (
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
-	github.com/ory/herodot v0.9.2
+	github.com/ory/herodot v0.9.3
 	github.com/ory/jsonschema/v3 v3.0.3
 	github.com/ory/kratos-client-go v0.5.4-alpha.1.0.20210308170950-06c2c1c071a8
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000

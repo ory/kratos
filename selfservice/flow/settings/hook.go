@@ -152,9 +152,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
-	if method, ok := ctxUpdate.Flow.Methods[settingsType]; ok {
-		method.Config.ResetMessages()
-	}
+	ctxUpdate.Flow.UI.ResetMessages()
 
 	if err := e.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), ctxUpdate.Flow); err != nil {
 		return err

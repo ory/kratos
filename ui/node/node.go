@@ -25,6 +25,7 @@ const (
 	DefaultGroup          Group = "default"
 	PasswordGroup         Group = "authenticator_password"
 	OpenIDConnectGroup    Group = "authenticator_oidc"
+	ProfileGroup          Group = "profile"
 	RecoveryLinkGroup     Group = "recovery_link"
 	VerificationLinkGroup Group = "verification_link"
 
