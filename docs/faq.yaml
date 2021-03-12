@@ -4,12 +4,14 @@
   q: We want to seperate our customers and employees, so we store them in different
     databases. But we would like to have them use the same login dialog for our portal.
     How can I achieve that with Ory Kratos?
-  a: You can deploy Ory Kratos two times, and use the same login/registration endpoints.
-    So you define the same login/registration UI URLs in both of the Kratos configurations.
+  a: You can deploy Ory Kratos two times, and use the same login UI pointing to two
+    different Kratos login endpoints - `/login/customer` or `/login/employee`, either
+    by having two different login routes, or by adding some logic to your login UI
+    that reroutes customers to `/login/customer` and employees to `/login/employee`.
+    So you define the same login or registration UI URLs in both of the Kratos configurations.
     You may need to tell your login/registration UI which Kratos it is supposed to
     talk to. The instances are cheap to deploy and the databases are completely isolated
-    from each other.  For example you can have something like `/login/customer` and
-    `/login/employee`.
+    from each other.  For example    something like `/login/customer` and `/login/employee`.
 - tags:
   - kratos
   - ecosystem
@@ -98,5 +100,6 @@
   q: I want to implement a single-page-app (SPA). Is this possible with Ory Kratos?
   a: 'Yes, definitely. We do not have an example-app (yet). around some page-reloads,
     as it is not possible to use the API flows in the browser. This is important to
-    prevent CSRF attacks. So hopefully you are not too strict with your SPA. A sample
-    app is being worked on here: [Implement React SPA sample app](https://github.com/ory/kratos/issues/668).'
+    prevent [CSRF attacks](https://en.wikipedia.org/wiki/Cross-site_request_forgery).
+    So hopefully you are not too strict with your SPA. A sample app is being worked
+    on here: [Implement React SPA sample app](https://github.com/ory/kratos/issues/668).'
