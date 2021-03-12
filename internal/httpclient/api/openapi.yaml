@@ -432,29 +432,6 @@ paths:
       summary: Initialize Browser-Based Logout User Flow
       tags:
       - public
-  /self-service/browser/flows/registration/strategies/oidc/settings/connections:
-    post:
-      description: |-
-        This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
-        endpoint.
-
-        > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
-
-        More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: completeSelfServiceBrowserSettingsOIDCSettingsFlow
-      responses:
-        "302":
-          description: Empty responses are sent when, for example, resources are deleted.
-            The HTTP status code for empty responses is typically 201.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      summary: Complete the Browser-Based Settings Flow for the OpenID Connect Strategy
-      tags:
-      - public
   /self-service/errors:
     get:
       description: |-
@@ -907,7 +884,7 @@ paths:
           The Registration Flow ID
 
           The value for this parameter comes from `flow` URL Query parameter sent to your
-          application (e.g. `/login?flow=abcde`).
+          application (e.g. `/registration?flow=abcde`).
         explode: true
         in: query
         name: flow
@@ -1068,6 +1045,79 @@ paths:
       tags:
       - public
       - admin
+  /self-service/settings:
+    post:
+      description: |-
+        Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
+        behaves differently for API and browser flows.
+
+        API-initiated flows expect `application/json` to be sent in the body and respond with
+        HTTP 200 and an application/json body with the session token on success;
+        HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+        HTTP 400 on form validation errors.
+        HTTP 401 when the endpoint is called without a valid session token.
+        HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
+        Implies that the user needs to re-authenticate.
+
+        Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+        a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+        a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+        a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+
+        More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+      operationId: completeSelfServiceSettingsFlow
+      parameters:
+      - description: |-
+          The Settings Flow ID
+
+          The value for this parameter comes from `flow` URL Query parameter sent to your
+          application (e.g. `/settings?flow=abcde`).
+        explode: true
+        in: query
+        name: flow
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/settingsViaApiResponse'
+          description: settingsViaApiResponse
+        "302":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/settingsFlow'
+          description: settingsFlow
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genericError'
+          description: genericError
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genericError'
+          description: genericError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genericError'
+          description: genericError
+      security:
+      - sessionToken: []
+      summary: Complete Settings Flow
+      tags:
+      - public
   /self-service/settings/api:
     get:
       description: |-
@@ -1203,162 +1253,6 @@ paths:
       tags:
       - public
       - admin
-  /self-service/settings/methods/password:
-    post:
-      description: |-
-        Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
-        behaves differently for API and browser flows.
-
-        API-initiated flows expect `application/json` to be sent in the body and respond with
-        HTTP 200 and an application/json body with the session token on success;
-        HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
-        HTTP 400 on form validation errors.
-        HTTP 401 when the endpoint is called without a valid session token.
-        HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
-        Implies that the user needs to re-authenticate.
-
-        Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-        a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-        a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-        a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
-
-        More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: completeSelfServiceSettingsFlowWithPasswordMethod
-      parameters:
-      - description: Flow is flow ID.
-        explode: true
-        in: query
-        name: flow
-        required: false
-        schema:
-          type: string
-        style: form
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompleteSelfServiceSettingsFlowWithPasswordMethod'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CompleteSelfServiceSettingsFlowWithPasswordMethod'
-        x-originalParamName: Body
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/settingsViaApiResponse'
-          description: settingsViaApiResponse
-        "302":
-          description: Empty responses are sent when, for example, resources are deleted.
-            The HTTP status code for empty responses is typically 201.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/settingsFlow'
-          description: settingsFlow
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      security:
-      - sessionToken: []
-      summary: Complete Settings Flow with Username/Email Password Method
-      tags:
-      - public
-  /self-service/settings/methods/profile:
-    post:
-      description: |-
-        Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint
-        behaves differently for API and browser flows.
-
-        API-initiated flows expect `application/json` to be sent in the body and respond with
-        HTTP 200 and an application/json body with the session token on success;
-        HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
-        HTTP 400 on form validation errors.
-        HTTP 401 when the endpoint is called without a valid session token.
-        HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was
-        updated (e.g. recovery email). Implies that the user needs to re-authenticate.
-
-        Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-        a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-        a HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.
-        a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
-
-        More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: completeSelfServiceSettingsFlowWithProfileMethod
-      parameters:
-      - description: Flow is flow ID.
-        explode: true
-        in: query
-        name: flow
-        required: false
-        schema:
-          type: string
-        style: form
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-        x-originalParamName: Payload
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/settingsFlow'
-          description: settingsFlow
-        "302":
-          description: Empty responses are sent when, for example, resources are deleted.
-            The HTTP status code for empty responses is typically 201.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/settingsFlow'
-          description: settingsFlow
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      security:
-      - sessionToken: []
-      summary: Complete Settings Flow with Profile Method
-      tags:
-      - public
   /self-service/verification/api:
     get:
       description: |-
@@ -1725,9 +1619,6 @@ components:
           type: string
       type: object
     CompleteSelfServiceSettingsFlowWithPasswordMethod:
-      example:
-        password: password
-        csrf_token: csrf_token
       properties:
         csrf_token:
           description: |-
@@ -3111,15 +3002,6 @@ components:
             text: text
             type: type
         active: active
-        messages:
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
         id: id
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
@@ -3143,10 +3025,6 @@ components:
           description: IssuedAt is the time (UTC) when the flow occurred.
           format: date-time
           type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
         request_url:
           description: |-
             RequestURL is the initial URL that was requested from ORY Kratos. It can be used
@@ -3322,141 +3200,7 @@ components:
         We recommend reading the [User Settings Documentation](../self-service/flows/user-settings)
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
-        identity:
-          recovery_addresses:
-          - id: id
-            value: value
-            via: via
-          - id: id
-            value: value
-            via: via
-          traits: '{}'
-          verifiable_addresses:
-          - verified_at: 2000-01-23T04:56:07.000+00:00
-            verified: true
-            id: id
-            value: value
-            status: status
-            via: via
-          - verified_at: 2000-01-23T04:56:07.000+00:00
-            verified: true
-            id: id
-            value: value
-            status: status
-            via: via
-          schema_id: schema_id
-          schema_url: schema_url
-          id: id
-        methods:
-          key:
-            method: method
-            config:
-              nodes:
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              method: method
-              action: action
-              messages:
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-        active: active
-        messages:
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        id: id
-        state: state
-        type: type
-        issued_at: 2000-01-23T04:56:07.000+00:00
-        request_url: request_url
-      properties:
-        active:
-          description: |-
-            Active, if set, contains the registration method that is being used. It is initially
-            not set.
-          type: string
-        expires_at:
-          description: |-
-            ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to update the setting,
-            a new flow has to be initiated.
-          format: date-time
-          type: string
-        id:
-          format: uuid4
-          type: string
-        identity:
-          $ref: '#/components/schemas/Identity'
-        issued_at:
-          description: IssuedAt is the time (UTC) when the flow occurred.
-          format: date-time
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        methods:
-          additionalProperties:
-            $ref: '#/components/schemas/settingsFlowMethod'
-          description: |-
-            Methods contains context for all enabled registration methods. If a settings flow has been
-            processed, but for example the first name is empty, this will contain error messages.
-          type: object
-        request_url:
-          description: |-
-            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
-            to forward information contained in the URL's path or query for example.
-          type: string
-        state:
-          type: string
-        type:
-          description: The flow type can either be `api` or `browser`.
-          title: Type is the flow type.
-          type: string
-      required:
-      - expires_at
-      - id
-      - identity
-      - issued_at
-      - methods
-      - request_url
-      - state
-      title: Flow represents a Settings Flow
-      type: object
-    settingsFlowMethod:
-      example:
-        method: method
-        config:
+        ui:
           nodes:
           - messages:
             - context: '{}'
@@ -3491,94 +3235,80 @@ components:
             id: 0
             text: text
             type: type
+        identity:
+          recovery_addresses:
+          - id: id
+            value: value
+            via: via
+          - id: id
+            value: value
+            via: via
+          traits: '{}'
+          verifiable_addresses:
+          - verified_at: 2000-01-23T04:56:07.000+00:00
+            verified: true
+            id: id
+            value: value
+            status: status
+            via: via
+          - verified_at: 2000-01-23T04:56:07.000+00:00
+            verified: true
+            id: id
+            value: value
+            status: status
+            via: via
+          schema_id: schema_id
+          schema_url: schema_url
+          id: id
+        active: active
+        id: id
+        state: state
+        type: type
+        issued_at: 2000-01-23T04:56:07.000+00:00
+        request_url: request_url
       properties:
-        config:
-          $ref: '#/components/schemas/settingsFlowMethodConfig'
-        method:
-          description: Method is the name of this flow method.
+        active:
+          description: |-
+            Active, if set, contains the registration method that is being used. It is initially
+            not set.
           type: string
+        expires_at:
+          description: |-
+            ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to update the setting,
+            a new flow has to be initiated.
+          format: date-time
+          type: string
+        id:
+          format: uuid4
+          type: string
+        identity:
+          $ref: '#/components/schemas/Identity'
+        issued_at:
+          description: IssuedAt is the time (UTC) when the flow occurred.
+          format: date-time
+          type: string
+        request_url:
+          description: |-
+            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+            to forward information contained in the URL's path or query for example.
+          type: string
+        state:
+          type: string
+        type:
+          description: The flow type can either be `api` or `browser`.
+          title: Type is the flow type.
+          type: string
+        ui:
+          $ref: '#/components/schemas/uiContainer'
       required:
-      - config
-      - method
-      type: object
-    settingsFlowMethodConfig:
-      example:
-        nodes:
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        method: method
-        action: action
-        messages:
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-      properties:
-        action:
-          description: Action should be used as the form action URL `<form action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the form method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
-      type: object
-    settingsFlowMethodConfigPayload:
-      properties:
-        action:
-          description: Action should be used as the form action URL `<form action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the form method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
+      - expires_at
+      - id
+      - identity
+      - issued_at
+      - request_url
+      - state
+      - ui
+      title: Flow represents a Settings Flow
       type: object
     settingsProfileFormConfig:
       properties:
@@ -3632,6 +3362,41 @@ components:
           id: id
         flow:
           expires_at: 2000-01-23T04:56:07.000+00:00
+          ui:
+            nodes:
+            - messages:
+              - context: '{}'
+                id: 0
+                text: text
+                type: type
+              - context: '{}'
+                id: 0
+                text: text
+                type: type
+              type: type
+              group: group
+            - messages:
+              - context: '{}'
+                id: 0
+                text: text
+                type: type
+              - context: '{}'
+                id: 0
+                text: text
+                type: type
+              type: type
+              group: group
+            method: method
+            action: action
+            messages:
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
           identity:
             recovery_addresses:
             - id: id
@@ -3657,54 +3422,7 @@ components:
             schema_id: schema_id
             schema_url: schema_url
             id: id
-          methods:
-            key:
-              method: method
-              config:
-                nodes:
-                - messages:
-                  - context: '{}'
-                    id: 0
-                    text: text
-                    type: type
-                  - context: '{}'
-                    id: 0
-                    text: text
-                    type: type
-                  type: type
-                  group: group
-                - messages:
-                  - context: '{}'
-                    id: 0
-                    text: text
-                    type: type
-                  - context: '{}'
-                    id: 0
-                    text: text
-                    type: type
-                  type: type
-                  group: group
-                method: method
-                action: action
-                messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
           active: active
-          messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
           id: id
           state: state
           type: type

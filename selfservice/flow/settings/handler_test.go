@@ -3,7 +3,6 @@ package settings_test
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"testing"
 	"time"
 
@@ -50,7 +49,7 @@ func TestHandler(t *testing.T) {
 
 	primaryUser, otherUser := clients["primary"], clients["secondary"]
 	newExpiredFlow := func() *settings.Flow {
-		return settings.NewFlow(-time.Minute,
+		return settings.NewFlow(conf, -time.Minute,
 			&http.Request{URL: urlx.ParseOrPanic(publicTS.URL + login.RouteInitBrowserFlow)},
 			primaryIdentity, flow.TypeBrowser)
 	}
@@ -133,16 +132,6 @@ func TestHandler(t *testing.T) {
 				require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 				assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int(), "should return a 403 error because the identities from the cookies do not match")
 			})
-		})
-
-		t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {
-			f := testhelpers.GetSettingsFlowMethodConfigDeprecated(t, primaryUser, publicTS, settings.StrategyProfile)
-			res, err := primaryUser.PostForm(f.Action, url.Values{"foo": {"bar"}})
-			require.NoError(t, err)
-			defer res.Body.Close()
-			body := ioutilx.MustReadAll(res.Body)
-			assert.EqualValues(t, 200, res.StatusCode, "should return a 400 error because CSRF token is not set: %s", body)
-			assert.Contains(t, string(body), "A request failed due to a missing or invalid csrf_token value.")
 		})
 	})
 }

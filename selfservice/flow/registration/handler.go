@@ -6,7 +6,6 @@ import (
 
 	"github.com/ory/kratos/schema"
 
-	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
 
@@ -239,7 +238,7 @@ type submitSelfServiceRegistrationFlow struct {
 	// The Registration Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
-	// application (e.g. `/login?flow=abcde`).
+	// application (e.g. `/registration?flow=abcde`).
 	//
 	// required: true
 	// in: query
@@ -280,9 +279,9 @@ type submitSelfServiceRegistrationFlow struct {
 //       400: registrationFlow
 //       500: genericError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	rid := x.ParseUUID(r.URL.Query().Get("flow"))
-	if x.IsZeroUUID(rid) {
-		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing or invalid.")))
+	rid, err := flow.GetFlowID(r)
+	if err != nil {
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
 		return
 	}
 
@@ -310,7 +309,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	var found bool
 	var s identity.CredentialsType
-	for _, ss := range h.d.RegistrationStrategies(r.Context()) {
+	for _, ss := range h.d.AllRegistrationStrategies() {
 		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
 		} else if err != nil {

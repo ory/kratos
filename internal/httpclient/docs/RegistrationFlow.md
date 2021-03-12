@@ -8,7 +8,6 @@ Name | Type | Description | Notes
 **ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
 **Id** | **string** |  | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow occurred. | 
-**Messages** | Pointer to [**[]UiText**](UiText.md) |  | [optional] 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
 **Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
 **Ui** | [**UiContainer**](uiContainer.md) |  | 
@@ -116,31 +115,6 @@ and a boolean to check if the value has been set.
 
 SetIssuedAt sets IssuedAt field to given value.
 
-
-### GetMessages
-
-`func (o *RegistrationFlow) GetMessages() []UiText`
-
-GetMessages returns the Messages field if non-nil, zero value otherwise.
-
-### GetMessagesOk
-
-`func (o *RegistrationFlow) GetMessagesOk() (*[]UiText, bool)`
-
-GetMessagesOk returns a tuple with the Messages field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetMessages
-
-`func (o *RegistrationFlow) SetMessages(v []UiText)`
-
-SetMessages sets Messages field to given value.
-
-### HasMessages
-
-`func (o *RegistrationFlow) HasMessages() bool`
-
-HasMessages returns a boolean if a field has been set.
 
 ### GetRequestUrl
 

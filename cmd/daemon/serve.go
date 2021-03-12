@@ -35,7 +35,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -167,8 +166,6 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				healthx.ReadyCheckPath,
 				healthx.VersionPath,
 
-				password.RouteSettings,
-
 				oidc.RouteBase,
 
 				login.RouteInitBrowserFlow,
@@ -181,6 +178,7 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				registration.RouteInitBrowserFlow,
 				registration.RouteInitAPIFlow,
 				registration.RouteGetFlow,
+				registration.RouteSubmitFlow,
 
 				session.RouteWhoami,
 				identity.RouteBase,
@@ -188,6 +186,7 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				settings.RouteInitBrowserFlow,
 				settings.RouteInitAPIFlow,
 				settings.RouteGetFlow,
+				settings.RouteSubmitFlow,
 
 				verification.RouteInitAPIFlow,
 				verification.RouteInitBrowserFlow,

@@ -126,7 +126,7 @@ func TestHandleError(t *testing.T) {
 
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(gjson.GetBytes(body, "messages.0.id").Int()))
+			assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()))
 			assert.NotEqual(t, loginFlow.ID.String(), gjson.GetBytes(body, "id").String())
 		})
 
@@ -144,7 +144,7 @@ func TestHandleError(t *testing.T) {
 
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "methods.password.config.messages.0.id").Int()), "%s", body)
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
 			assert.Equal(t, loginFlow.ID.String(), gjson.GetBytes(body, "id").String())
 		})
 
@@ -163,23 +163,6 @@ func TestHandleError(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
 			assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
-		})
-
-		t.Run("case=method is unknown", func(t *testing.T) {
-			t.Cleanup(reset)
-
-			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = "invalid-method"
-
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.Equal(t, http.StatusInternalServerError, res.StatusCode)
-
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.Contains(t, gjson.GetBytes(body, "error.message").String(), "invalid-method", "%s", body)
 		})
 	})
 
@@ -229,18 +212,6 @@ func TestHandleError(t *testing.T) {
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
-		})
-
-		t.Run("case=method is unknown", func(t *testing.T) {
-			t.Cleanup(reset)
-
-			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
-			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = "invalid-method"
-
-			sse, _ := expectErrorUI(t)
-			body := x.MustEncodeJSON(t, sse)
-			assert.Contains(t, gjson.Get(body, "0.message").String(), "invalid-method", "%s", body)
 		})
 	})
 }
