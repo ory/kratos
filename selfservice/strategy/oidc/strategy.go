@@ -440,7 +440,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 			return
 		}
 
-		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), sr, sess.Identity, err)
+		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.NodeGroup(), sr, sess.Identity, err)
 		return
 	} else if rr, rerr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid); rerr == nil {
 		rr.UI.UnsetNode("oidc.provider")

@@ -91,25 +91,6 @@ func ExpectURL(isAPI bool, api, browser string) string {
 	return browser
 }
 
-func GetSettingsFlowMethodConfig(t *testing.T, rs *kratos.SettingsFlow, id string) *kratos.SettingsFlowMethodConfig {
-	require.NotEmpty(t, rs.Methods[id])
-	require.NotEmpty(t, rs.Methods[id].Config)
-	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	c := rs.Methods[id].Config
-	return &c
-}
-
-func GetSettingsFlowMethodConfigDeprecated(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *kratos.SettingsFlowMethodConfig {
-	rs := InitializeSettingsFlowViaBrowser(t, primaryUser, ts)
-
-	require.NotEmpty(t, rs.Methods[id])
-	require.NotEmpty(t, rs.Methods[id].Config)
-	require.NotEmpty(t, rs.Methods[id].Config.Action)
-
-	c := rs.Methods[id].Config
-	return &c
-}
-
 func NewSettingsUITestServer(t *testing.T, conf *config.Config) *httptest.Server {
 	router := httprouter.New()
 	router.GET("/settings", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -223,13 +204,13 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 func SettingsMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *kratos.SettingsFlowMethodConfig,
+	f *kratos.SettingsFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
-	require.NotEmpty(t, f.Action)
+	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Action, bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -244,7 +225,6 @@ func SubmitSettingsForm(
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
-	method string,
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
@@ -265,13 +245,10 @@ func SubmitSettingsForm(
 
 	time.Sleep(time.Millisecond * 10) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetSettingsFlowMethodConfig(t, payload, method)
-	values := SDKFormFieldsToURLValues(config.Nodes)
+	values := SDKFormFieldsToURLValues(payload.Ui.Nodes)
 	withValues(values)
 
-	t.Logf("%+v", values)
-
-	b, res := SettingsMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, values))
+	b, res := SettingsMakeRequest(t, isAPI, payload, hc, EncodeFormAsJSON(t, isAPI, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

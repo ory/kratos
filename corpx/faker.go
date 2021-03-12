@@ -17,7 +17,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 
 	"github.com/ory/kratos/x"
@@ -86,23 +85,6 @@ func RegisterFakes() {
 
 	if err := faker.AddProvider("time_type", func(v reflect.Value) (interface{}, error) {
 		return time.Now().Add(time.Duration(rand.Int())).Round(time.Second).UTC(), nil
-	}); err != nil {
-		panic(err)
-	}
-
-	if err := faker.AddProvider("settings_flow_methods", func(v reflect.Value) (interface{}, error) {
-		var methods = make(map[string]*settings.FlowMethod)
-		for _, ct := range []string{settings.StrategyProfile, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
-			var f container.Container
-			if err := faker.FakeData(&f); err != nil {
-				return nil, err
-			}
-			methods[ct] = &settings.FlowMethod{
-				Method: ct,
-				Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &f},
-			}
-		}
-		return methods, nil
 	}); err != nil {
 		panic(err)
 	}

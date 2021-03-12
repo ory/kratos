@@ -66,9 +66,6 @@ docs/RevokeSession.md
 docs/ServiceUpdateResponse.md
 docs/Session.md
 docs/SettingsFlow.md
-docs/SettingsFlowMethod.md
-docs/SettingsFlowMethodConfig.md
-docs/SettingsFlowMethodConfigPayload.md
 docs/SettingsProfileFormConfig.md
 docs/SettingsViaApiResponse.md
 docs/UiContainer.md
@@ -150,9 +147,6 @@ model_revoke_session.go
 model_service_update_response.go
 model_session.go
 model_settings_flow.go
-model_settings_flow_method.go
-model_settings_flow_method_config.go
-model_settings_flow_method_config_payload.go
 model_settings_profile_form_config.go
 model_settings_via_api_response.go
 model_ui_container.go

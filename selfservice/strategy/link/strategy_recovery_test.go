@@ -125,8 +125,8 @@ func TestAdminStrategy(t *testing.T) {
 		sr, _, err := adminSDK.PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err, "%s", res.Request.URL.String())
 
-		require.Len(t, sr.Messages, 1)
-		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Messages[0].Text)
+		require.Len(t, sr.Ui.Messages, 1)
+		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Ui.Messages[0].Text)
 	})
 }
 

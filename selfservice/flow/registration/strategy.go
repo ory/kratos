@@ -50,4 +50,5 @@ func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 
 type StrategyProvider interface {
 	RegistrationStrategies(ctx context.Context) Strategies
+	AllRegistrationStrategies() Strategies
 }

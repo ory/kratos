@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
@@ -316,9 +315,9 @@ type submitSelfServiceLoginFlow struct {
 //       400: loginFlow
 //       500: genericError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	rid := x.ParseUUID(r.URL.Query().Get("flow"))
-	if x.IsZeroUUID(rid) {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing or invalid.")))
+	rid, err := flow.GetFlowID(r)
+	if err != nil {
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
 		return
 	}
 
@@ -345,7 +344,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 
 	var i *identity.Identity
 	var s identity.CredentialsType
-	for _, ss := range h.d.LoginStrategies(r.Context()) {
+	for _, ss := range h.d.AllLoginStrategies() {
 		interim, err := ss.Login(w, r, f)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue

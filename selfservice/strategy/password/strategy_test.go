@@ -3,14 +3,11 @@ package password_test
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
-
-	"github.com/ory/kratos/selfservice/flow/registration"
-
-	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
@@ -121,44 +118,55 @@ func TestDisabledEndpoint(t *testing.T) {
 
 	c := testhelpers.NewClientWithCookies(t)
 	t.Run("case=should not login when password method is disabled", func(t *testing.T) {
-		res, err := c.PostForm(publicTS.URL+login.RouteSubmitFlow, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
+		f := testhelpers.InitializeLoginFlowViaAPI(t, c, publicTS, false)
+
+		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		b := make([]byte, res.ContentLength)
-		_, _ = res.Body.Read(b)
-		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		defer res.Body.Close()
+		b, err := ioutil.ReadAll(res.Body)
+		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
 	t.Run("case=should not registration when password method is disabled", func(t *testing.T) {
-		res, err := c.PostForm(publicTS.URL+registration.RouteSubmitFlow, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
+		f := testhelpers.InitializeRegistrationFlowViaAPI(t, c, publicTS)
+
+		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		b := make([]byte, res.ContentLength)
-		_, _ = res.Body.Read(b)
-		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		defer res.Body.Close()
+		b, err := ioutil.ReadAll(res.Body)
+		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
 	t.Run("case=should not settings when password method is disabled", func(t *testing.T) {
+		require.NoError(t, conf.Set(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/login.schema.json"))
+		c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+
 		t.Run("method=GET", func(t *testing.T) {
-			res, err := c.Get(publicTS.URL + password.RouteSettings)
+			t.Skip("GET is currently not supported for this endpoint.")
+
+			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
+			res, err := c.Get(f.Ui.Action)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
-			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+			defer res.Body.Close()
+			b, err := ioutil.ReadAll(res.Body)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 		})
 
 		t.Run("method=POST", func(t *testing.T) {
-			res, err := c.PostForm(publicTS.URL+password.RouteSettings, url.Values{"age": {"16"}})
+			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
+			res, err := c.PostForm(f.Ui.Action, url.Values{"traits.foo": {"bar"}})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
-			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+			defer res.Body.Close()
+			b, err := ioutil.ReadAll(res.Body)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 		})
 	})
 }

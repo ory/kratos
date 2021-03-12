@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/sqlcon"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -24,6 +27,8 @@ const (
 	RouteInitBrowserFlow = "/self-service/settings/browser"
 	RouteInitAPIFlow     = "/self-service/settings/api"
 	RouteGetFlow         = "/self-service/settings/flows"
+
+	RouteSubmitFlow = "/self-service/settings"
 
 	ContinuityPrefix = "ory_kratos_settings"
 )
@@ -54,6 +59,7 @@ type (
 		ErrorHandlerProvider
 		FlowPersistenceProvider
 		StrategyProvider
+		HookExecutorProvider
 
 		schema.IdentityTraitsProvider
 	}
@@ -72,14 +78,17 @@ func NewHandler(d handlerDependencies) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
+	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
 	}))
 
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
-
 	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFlow, OnUnauthenticated(h.d)))
+
+	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.submitSettingsFlow, OnUnauthenticated(h.d)))
+	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.submitSettingsFlow, OnUnauthenticated(h.d)))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -87,7 +96,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Identity, ft flow.Type) (*Flow, error) {
-	f := NewFlow(h.d.Config(r.Context()).SelfServiceFlowSettingsFlowLifespan(), r, i, ft)
+	f := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowSettingsFlowLifespan(), r, i, ft)
 	for _, strategy := range h.d.SettingsStrategies(r.Context()) {
 		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
 			return nil, err
@@ -287,4 +296,117 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, checkSession
 
 	h.d.Writer().Write(w, r, pr)
 	return nil
+}
+
+// nolint:deadcode,unused
+// swagger:parameters completeSelfServiceSettingsFlow
+type completeSelfServiceSettingsFlow struct {
+	// The Settings Flow ID
+	//
+	// The value for this parameter comes from `flow` URL Query parameter sent to your
+	// application (e.g. `/settings?flow=abcde`).
+	//
+	// required: true
+	// in: query
+	Flow string `json:"flow"`
+}
+
+// swagger:route POST /self-service/settings public completeSelfServiceSettingsFlow
+//
+// Complete Settings Flow
+//
+// Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
+// behaves differently for API and browser flows.
+//
+// API-initiated flows expect `application/json` to be sent in the body and respond with
+//   - HTTP 200 and an application/json body with the session token on success;
+//   - HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 400 on form validation errors.
+//   - HTTP 401 when the endpoint is called without a valid session token.
+//   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
+//     Implies that the user needs to re-authenticate.
+//
+// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+//   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+//   - a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+//   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+//
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+//
+//     Consumes:
+//     - application/json
+//     - application/x-www-form-urlencoded
+//
+//     Produces:
+//     - application/json
+//
+//     Security:
+//       sessionToken:
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: settingsViaApiResponse
+//       302: emptyResponse
+//       400: settingsFlow
+//       401: genericError
+//       403: genericError
+//       500: genericError
+func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	rid, err := GetFlowID(r)
+	if err != nil {
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
+		return
+	}
+
+	f, err := h.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("The settings request could not be found. Please restart the flow.")))
+		return
+	} else if err != nil {
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
+		return
+	}
+
+	ss, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	if err != nil {
+		if f.Type == flow.TypeBrowser {
+			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
+			return
+		}
+
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
+		return
+	}
+
+	if err := f.Valid(ss); err != nil {
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
+		return
+	}
+
+	c := &UpdateContext{Session: ss, Flow: f}
+	var found bool
+	var s string
+	for _, strat := range h.d.AllSettingsStrategies() {
+		if err := strat.Settings(w, r, f, ss); errors.Is(err, flow.ErrStrategyNotResponsible) {
+			continue
+		} else if err != nil {
+			h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, strat.NodeGroup(), f, ss.Identity, err)
+			return
+		}
+
+		s = strat.SettingsStrategyID()
+		found = true
+		break
+	}
+
+	if !found {
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
+		return
+	}
+
+	if err := h.d.SettingsHookExecutor().PostSettingsHook(w, r, s, c, ss.Identity); err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
 }
