@@ -554,6 +554,9 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 	}
 
 	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
+	if len(raw) == 0 {
+		return primary
+	}
 
 	var aliases []DomainAlias
 	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
