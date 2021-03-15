@@ -323,8 +323,30 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.
-		AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI())).String(), http.StatusFound)
+	returnTo, err := x.SecureRedirectTo(r, nil,
+		x.SecureRedirectAllowSelfServiceURLs(s.d.Config(r.Context()).SelfPublicURL(r)),
+		x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectUseReturnToKey("after_verification"),
+	)
+	if err != nil {
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+	if returnTo != nil {
+		http.Redirect(w, r, returnTo.String(), http.StatusFound)
+		return
+	}
+
+	returnTo, err = x.SecureRedirectTo(r, s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI())),
+		x.SecureRedirectAllowSelfServiceURLs(s.d.Config(r.Context()).SelfPublicURL(r)),
+		x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+	)
+	if err != nil {
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, returnTo.String(), http.StatusFound)
 }
 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) {

@@ -13,6 +13,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -23,11 +25,11 @@ func TestVerifier(t *testing.T) {
 	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity) error{
 		"settings": func(h *hook.Verifier, i *identity.Identity) error {
 			return h.ExecuteSettingsPostPersistHook(
-				httptest.NewRecorder(), new(http.Request), nil, i)
+				httptest.NewRecorder(), new(http.Request), new(settings.Flow), i)
 		},
 		"register": func(h *hook.Verifier, i *identity.Identity) error {
 			return h.ExecutePostRegistrationPostPersistHook(
-				httptest.NewRecorder(), new(http.Request), nil, &session.Session{ID: x.NewUUID(), Identity: i})
+				httptest.NewRecorder(), new(http.Request), new(registration.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
 		},
 	} {
 		t.Run("name="+k, func(t *testing.T) {

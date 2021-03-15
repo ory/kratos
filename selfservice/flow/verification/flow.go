@@ -88,6 +88,14 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 }
 
+func (f *Flow) GetType() flow.Type {
+	return f.Type
+}
+
+func (f *Flow) GetRequestURL() string {
+	return f.RequestURL
+}
+
 func (f Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_verification_flows")
 }
@@ -111,6 +119,27 @@ func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strateg
 		}
 	}
 
+	return f, nil
+}
+
+func NewPostHookFlow(exp time.Duration, original flow.Flow) (*Flow, error) {
+	now := time.Now().UTC()
+	requestURL, err := url.ParseRequestURI(original.GetRequestURL())
+	if err != nil {
+		requestURL = new(url.URL)
+	}
+	// remove "return_to" param from the original request URL so it doesn't get erroneously
+	// used when the post-hook verification flow is completed
+	requestURL.Query().Del("return_to")
+	f := &Flow{
+		ID:         x.NewUUID(),
+		ExpiresAt:  now.Add(exp),
+		IssuedAt:   now,
+		RequestURL: requestURL.String(),
+		Methods:    map[string]*FlowMethod{},
+		State:      StateChooseMethod,
+		Type:       original.GetType(),
+	}
 	return f, nil
 }
 
