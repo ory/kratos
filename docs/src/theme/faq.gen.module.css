@@ -22,6 +22,14 @@ li.selected.database ~ .question.database {
   display: inline;
 }
 
+li.selected.ecosystem {
+  color: red;
+}
+
+li.selected.ecosystem ~ .question.ecosystem {
+  display: inline;
+}
+
 li.selected.user {
   color: red;
 }
@@ -46,11 +54,27 @@ li.selected.traits ~ .question.traits {
   display: inline;
 }
 
-li.selected.KYC {
+li.selected.registration {
   color: red;
 }
 
-li.selected.KYC ~ .question.KYC {
+li.selected.registration ~ .question.registration {
+  display: inline;
+}
+
+li.selected.cors {
+  color: red;
+}
+
+li.selected.cors ~ .question.cors {
+  display: inline;
+}
+
+li.selected.feature {
+  color: red;
+}
+
+li.selected.feature ~ .question.feature {
   display: inline;
 }
 
@@ -59,14 +83,6 @@ li.selected.hooks {
 }
 
 li.selected.hooks ~ .question.hooks {
-  display: inline;
-}
-
-li.selected.registration {
-  color: red;
-}
-
-li.selected.registration ~ .question.registration {
   display: inline;
 }
 
@@ -83,14 +99,6 @@ li.selected.security {
 }
 
 li.selected.security ~ .question.security {
-  display: inline;
-}
-
-li.selected.attack {
-  color: red;
-}
-
-li.selected.attack ~ .question.attack {
   display: inline;
 }
 
