@@ -72,6 +72,8 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 		opt(o)
 	}
 
+	o.returnToKey = stringsx.Coalesce(o.returnToKey, defaultReturnToKey)
+
 	if len(o.whitelist) == 0 {
 		return o.defaultReturnTo, nil
 	}
