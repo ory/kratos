@@ -323,24 +323,22 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	returnTo, err := s.secureRedirectToNilDefault(r, x.SecureRedirectUseReturnToKey("after_verification"))
-	if err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
+	for _, returnToKey := range []string{
+		"after_verification",
+		"", // empty string will revert to default
+	} {
+		returnTo, err := s.secureRedirectToNilDefault(r, x.SecureRedirectUseReturnToKey(returnToKey))
+		if err != nil {
+			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+		if returnTo != nil {
+			http.Redirect(w, r, returnTo.String(), http.StatusFound)
+			return
+		}
 	}
 
-	if returnTo != nil {
-		http.Redirect(w, r, returnTo.String(), http.StatusFound)
-		return
-	}
-
-	returnTo, err = s.secureRedirectToNilDefault(r, x.SecureRedirectOverrideDefaultReturnTo(s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()))))
-	if err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	}
-
-	http.Redirect(w, r, returnTo.String(), http.StatusFound)
+	http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI())).String(), http.StatusFound)
 }
 
 func (s *Strategy) secureRedirectToNilDefault(r *http.Request, additionalOpts ...x.SecureRedirectOption) (*url.URL, error) {
