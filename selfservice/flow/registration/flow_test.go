@@ -2,6 +2,7 @@ package registration_test
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -83,4 +84,16 @@ func TestFlow(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestGetType(t *testing.T) {
+	for _, ft := range []flow.Type{
+		flow.TypeAPI,
+		flow.TypeBrowser,
+	} {
+		t.Run(fmt.Sprintf("case=%s", ft), func(t *testing.T) {
+			r := &registration.Flow{Type: ft}
+			assert.Equal(t, ft, r.GetType())
+		})
+	}
 }

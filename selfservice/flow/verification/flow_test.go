@@ -42,3 +42,15 @@ func TestFlow(t *testing.T) {
 	assert.EqualValues(t, StateChooseMethod,
 		must(NewFlow(time.Hour, "", u, nil, flow.TypeBrowser)).State)
 }
+
+func TestGetType(t *testing.T) {
+	for _, ft := range []flow.Type{
+		flow.TypeAPI,
+		flow.TypeBrowser,
+	} {
+		t.Run(fmt.Sprintf("case=%s", ft), func(t *testing.T) {
+			r := &Flow{Type: ft}
+			assert.Equal(t, ft, r.GetType())
+		})
+	}
+}
