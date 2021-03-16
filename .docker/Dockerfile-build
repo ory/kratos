@@ -21,7 +21,7 @@ RUN make pack && go build -tags sqlite -o /usr/bin/kratos
 FROM alpine:3.12
 
 RUN addgroup -S ory; \
-    adduser -S ory -G ory -D  -h /home/ory -s /bin/nologin; \
+    adduser -S ory -G ory -D -u 10000 -h /home/ory -s /bin/nologin; \
     chown -R ory:ory /home/ory
 
 COPY --from=builder /usr/bin/kratos /usr/bin/kratos
@@ -39,7 +39,7 @@ VOLUME /home/ory
 # Declare the standard ports used by Kratos (4433 for public service endpoint, 4434 for admin service endpoint)
 EXPOSE 4433 4434
 
-USER ory
+USER 10000
 
 ENTRYPOINT ["kratos"]
 CMD ["serve"]
