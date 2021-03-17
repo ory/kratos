@@ -218,7 +218,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	t.Run("case=should use specified return_to query key", func(t *testing.T) {
 		host := "http://host-foo"
 
-		redirectTo, err := x.SecureRedirectTo(httptest.NewRequest("GET", host+"/foo?after_verification="+host+"/bar", nil), nil, x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic(host + "/bar")}), x.SecureRedirectUseReturnToKey("after_verification"))
+		redirectTo, err := x.SecureRedirectTo(httptest.NewRequest("GET", host+"/foo?after_verification_return_to="+host+"/bar", nil), nil, x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic(host + "/bar")}), x.SecureRedirectUseReturnToKey("after_verification_return_to"))
 		require.NoError(t, err)
 		assert.Equal(t, redirectTo.String(), host+"/bar")
 	})

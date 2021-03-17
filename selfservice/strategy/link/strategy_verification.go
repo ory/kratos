@@ -333,7 +333,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	verificationRequest := http.Request{URL: verificationRequestURL}
 
 	for _, returnToKey := range []string{
-		"after_verification",
+		"after_verification_return_to",
 		"", // empty string will revert to default
 	} {
 		returnTo, err := x.SecureRedirectTo(&verificationRequest, nil,

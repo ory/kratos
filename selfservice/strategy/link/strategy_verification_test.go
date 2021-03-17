@@ -289,19 +289,13 @@ func TestVerification(t *testing.T) {
 			})
 
 			flow, token := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{returnToKey: {returnToURL}}.Encode())
-			t.Logf("%+v\n", flow)
 
 			body := fmt.Sprintf(
 				`{"csrf_token":"%s","email":"%s"}`, flow.CSRFToken, verificationEmail,
 			)
 
-			t.Log(body)
-
 			res, err := client.Post(public.URL+link.RouteVerification+"?"+url.Values{"token": {token.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
 			require.NoError(t, err)
-			updatedFlow, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), flow.ID)
-			require.NoError(t, err)
-			t.Logf("%+v\n", updatedFlow.Messages)
 			assert.Equal(t, http.StatusFound, res.StatusCode)
 			redirectURL, err := res.Location()
 			require.NoError(t, err)
@@ -313,8 +307,8 @@ func TestVerification(t *testing.T) {
 			expectRedirect(t, "return_to", returnToURL)
 		})
 
-		t.Run("case=after_verification", func(t *testing.T) {
-			expectRedirect(t, "after_verification", returnToURL)
+		t.Run("case=after_verification_return_to", func(t *testing.T) {
+			expectRedirect(t, "after_verification_return_to", returnToURL)
 		})
 
 	})
