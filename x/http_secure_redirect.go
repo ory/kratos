@@ -92,6 +92,10 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 		return nil, herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err)
 	}
 
+	if o.defaultReturnTo == nil {
+		o.defaultReturnTo = new(url.URL)
+	}
+
 	returnTo.Host = stringsx.Coalesce(returnTo.Host, o.defaultReturnTo.Host)
 	returnTo.Scheme = stringsx.Coalesce(returnTo.Scheme, o.defaultReturnTo.Scheme)
 

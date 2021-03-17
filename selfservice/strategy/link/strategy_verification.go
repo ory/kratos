@@ -323,11 +323,20 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
+	defaultRedirectURL := s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI())).String()
+
+	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
+	if err != nil {
+		http.Redirect(w, r, defaultRedirectURL, http.StatusFound)
+		return
+	}
+	verificationRequest := http.Request{URL: verificationRequestURL}
+
 	for _, returnToKey := range []string{
 		"after_verification",
 		"", // empty string will revert to default
 	} {
-		returnTo, err := x.SecureRedirectTo(r, nil,
+		returnTo, err := x.SecureRedirectTo(&verificationRequest, nil,
 			x.SecureRedirectAllowSelfServiceURLs(s.d.Config(r.Context()).SelfPublicURL(r)),
 			x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
 			x.SecureRedirectUseReturnToKey(returnToKey),
@@ -342,7 +351,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
-	http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI())).String(), http.StatusFound)
+	http.Redirect(w, r, defaultRedirectURL, http.StatusFound)
 }
 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) {

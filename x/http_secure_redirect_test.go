@@ -206,4 +206,20 @@ func TestSecureRedirectTo(t *testing.T) {
 		_, body := makeRequest(t, s, "?return_to=/original")
 		assert.Equal(t, body, s.URL+"/override")
 	})
+
+	t.Run("case=should default to return_to query key", func(t *testing.T) {
+		host := "http://host-foo"
+
+		redirectTo, err := x.SecureRedirectTo(httptest.NewRequest("GET", host+"/foo?return_to="+host+"/bar", nil), nil, x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic(host + "/bar")}), x.SecureRedirectUseReturnToKey(""))
+		require.NoError(t, err)
+		assert.Equal(t, redirectTo.String(), host+"/bar")
+	})
+
+	t.Run("case=should use specified return_to query key", func(t *testing.T) {
+		host := "http://host-foo"
+
+		redirectTo, err := x.SecureRedirectTo(httptest.NewRequest("GET", host+"/foo?after_verification="+host+"/bar", nil), nil, x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic(host + "/bar")}), x.SecureRedirectUseReturnToKey("after_verification"))
+		require.NoError(t, err)
+		assert.Equal(t, redirectTo.String(), host+"/bar")
+	})
 }
