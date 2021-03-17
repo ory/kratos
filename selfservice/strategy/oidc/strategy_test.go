@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/assertx"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -14,8 +15,6 @@ import (
 	"time"
 
 	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -94,11 +93,8 @@ func TestStrategy(t *testing.T) {
 			require.NotNil(t, config)
 		} else if req, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
-			panic("NOT IMPLEMENTED")
-			//method := req.Methods[identity.CredentialsTypeOIDC]
-			//require.NotNil(t, method)
-			//config = method.Config.FlowMethodConfigurator.(*container.Container)
-			//require.NotNil(t, config)
+			config = req.UI
+			require.NotNil(t, config)
 		} else {
 			require.NoError(t, err)
 			return
@@ -108,12 +104,12 @@ func TestStrategy(t *testing.T) {
 
 		var found bool
 		for _, field := range config.Nodes {
-			if field.ID() == string(node.OpenIDConnectGroup)+"provider" && field.GetValue() == provider {
+			if strings.Contains(field.ID(), identity.CredentialsTypeOIDC.String()+".provider") && field.GetValue() == provider {
 				found = true
 				break
 			}
 		}
-		require.True(t, found)
+		require.True(t, found, "%+v", assertx.PrettifyJSONPayload(t,config))
 
 		return config.Action
 	}
@@ -123,9 +119,10 @@ func TestStrategy(t *testing.T) {
 	}
 
 	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
-		fv.Set("provider", provider)
+		fv.Set("method", identity.CredentialsTypeOIDC.String())
+		fv.Set(identity.CredentialsTypeOIDC.String()+".provider", provider)
 		res, err := newClient(t, jar).PostForm(action, fv)
-		require.NoError(t, err)
+		require.NoError(t, err, action)
 
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
@@ -157,8 +154,8 @@ func TestStrategy(t *testing.T) {
 
 	// assert ui error (redirect to login/registration ui endpoint)
 	var aue = func(t *testing.T, res *http.Response, body []byte, reason string) {
-		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.messages.0.text").String(), reason, "%s", body)
+		require.Contains(t, res.Request.URL.String(), uiTS.URL, "body: %s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", body)
 	}
 
 	// assert identity (success)
@@ -177,10 +174,10 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), req))
 
 		// sanity check
-		_, err = reg.LoginFlowPersister().GetLoginFlow(context.Background(), req.ID)
+		got, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), req.ID)
 		require.NoError(t, err)
-		panic("NOT IMPLEMENTED")
-		//require.Len(t, got.Methods, len(req.Methods), "%+v", got)
+
+		require.Len(t, got.UI.Nodes, len(req.UI.Nodes), "%+v", got)
 
 		return
 	}
@@ -228,7 +225,7 @@ func TestStrategy(t *testing.T) {
 
 		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "messages.0.text").String(), "flow expired", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "flow expired", "%s", body)
 	})
 
 	t.Run("case=should fail because the registration flow is expired", func(t *testing.T) {
@@ -238,7 +235,7 @@ func TestStrategy(t *testing.T) {
 
 		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "messages.0.text").String(), "flow expired", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "flow expired", "%s", body)
 	})
 
 	t.Run("case=should fail registration because scope was not provided", func(t *testing.T) {
@@ -267,7 +264,7 @@ func TestStrategy(t *testing.T) {
 		res, body := makeRequest(t, "valid", action, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.nodes.#(attributes.name==traits.subject).messages.0").String(), "is not valid", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject).messages.0").String(), "is not valid", "%s", body)
 	})
 
 	t.Run("case=register and then login", func(t *testing.T) {
@@ -415,27 +412,46 @@ func TestStrategy(t *testing.T) {
 		sr := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
-		//expected := &registration.FlowMethod{
-		//	Method: identity.CredentialsTypeOIDC,
-		//	Config: &registration.FlowMethodConfig{
-		//		FlowMethodConfigurator: &oidc.FlowMethod{
-		//			Container: &container.Container{
-		//				Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
-		//				Method: "POST",
-		//				Nodes: node.Nodes{
-		//					node.NewCSRFNode(x.FakeCSRFToken),
-		//					oidc.NewSubmitNode("valid"),
-		//					oidc.NewSubmitNode("invalid-issuer"),
-		//				},
-		//			},
-		//		},
-		//	},
-		//}
-		//
-		panic("actual := sr.Methods[identity.CredentialsTypeOIDC]")
-
-		//actual := sr.Methods[identity.CredentialsTypeOIDC]
-		//assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container)
+		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
+  "action": "https://foo/self-service/registration?flow=c2b3ce54-d00c-4977-8394-18d6f09d7f2c",
+  "method": "POST",
+  "nodes": [
+	{
+	  "type": "input",
+	  "group": "default",
+	  "attributes": {
+		"name": "csrf_token",
+		"type": "hidden",
+		"value": "dG4zNzcybjdjdmxqeXFodWs0dnFnOGQzNnJzaG50MG8=",
+		"required": true,
+		"disabled": false
+	  },
+	  "messages": null
+	},
+	{
+	  "type": "input",
+	  "group": "authenticator_oidc",
+	  "attributes": {
+		"name": "oidc.provider",
+		"type": "submit",
+		"value": "valid",
+		"disabled": false
+	  },
+	  "messages": null
+	},
+	{
+	  "type": "input",
+	  "group": "authenticator_oidc",
+	  "attributes": {
+		"name": "oidc.provider",
+		"type": "submit",
+		"value": "invalid-issuer",
+		"disabled": false
+	  },
+	  "messages": null
+	}
+  ]
+}`), sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
@@ -444,26 +460,46 @@ func TestStrategy(t *testing.T) {
 		sr := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
 
-		//expected := &login.FlowMethod{
-		//	Method: identity.CredentialsTypeOIDC,
-		//	Config: &login.FlowMethodConfig{
-		//		FlowMethodConfigurator: &oidc.FlowMethod{
-		//			Container: &container.Container{
-		//				Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
-		//				Method: "POST",
-		//				Nodes: node.Nodes{
-		//					node.NewCSRFNode(x.FakeCSRFToken),
-		//					oidc.NewSubmitNode("valid"),
-		//					oidc.NewSubmitNode("invalid-issuer"),
-		//				},
-		//			},
-		//		},
-		//	},
-		//}
-
-		panic("actual := sr.Methods[identity.CredentialsTypeOIDC]")
-		//actual := sr.Methods[identity.CredentialsTypeOIDC]
-		//assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container)
+		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
+  "action": "https://foo/self-service/login?flow=3aa05629-d515-4859-b8a5-d10b5fcba418",
+  "method": "POST",
+  "nodes": [
+    {
+      "type": "input",
+      "group": "default",
+      "attributes": {
+        "name": "csrf_token",
+        "type": "hidden",
+        "value": "djU3bDg0czF5NXFibHBtOXZidzFqejZmODVmbXA3amE=",
+        "required": true,
+        "disabled": false
+      },
+      "messages": null
+    },
+    {
+      "type": "input",
+      "group": "authenticator_oidc",
+      "attributes": {
+        "name": "oidc.provider",
+        "type": "submit",
+        "value": "valid",
+        "disabled": false
+      },
+      "messages": null
+    },
+    {
+      "type": "input",
+      "group": "authenticator_oidc",
+      "attributes": {
+        "name": "oidc.provider",
+        "type": "submit",
+        "value": "invalid-issuer",
+        "disabled": false
+      },
+      "messages": null
+    }
+  ]
+}`), sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
 }
 
