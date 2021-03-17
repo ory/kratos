@@ -143,7 +143,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return err
 	}
 
-	nodes.Upsert(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
+	nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
 	nodes.Upsert(NewPasswordNode("password.password"))
 
 	for _, n := range nodes {

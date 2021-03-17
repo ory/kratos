@@ -3,7 +3,11 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/continuity"
+	"github.com/pkg/errors"
 	"net/http"
+	"time"
 
 	"github.com/google/go-jsonnet"
 	"github.com/tidwall/gjson"
@@ -37,8 +41,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return nil
 	}
 
-	panic("should not be nil")
-	return s.populateMethod(r, nil)
+	return s.populateMethod(r, f.UI)
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
@@ -46,7 +49,48 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	panic("implement me")
+	if err := r.ParseForm(); err != nil {
+		return s.handleError(w, r, f.ID, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+	}
+
+	var pid = r.Form.Get(s.SettingsStrategyID() + ".provider") // this can come from both url query and post body
+	if pid == "" {
+		return s.handleError(w, r, f.ID, pid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "%s.provider" form field`, s.SettingsStrategyID())))
+	}
+
+	provider, err := s.provider(r.Context(), r, pid)
+	if err != nil {
+		return s.handleError(w, r, f.ID, pid, nil, err)
+	}
+
+	c, err := provider.OAuth2(r.Context())
+	if err != nil {
+		return s.handleError(w, r, f.ID, pid, nil, err)
+	}
+
+	req, err := s.validateFlow(r.Context(), r, f.ID)
+	if err != nil {
+		return s.handleError(w, r, f.ID, pid, nil, err)
+	}
+
+	if s.alreadyAuthenticated(w, r, req) {
+		return errors.WithStack(registration.ErrAlreadyLoggedIn)
+	}
+
+	state := x.NewUUID().String()
+	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
+		continuity.WithPayload(&authCodeContainer{
+			State:  state,
+			FlowID: f.ID.String(),
+			Form:   r.PostForm,
+		}),
+		continuity.WithLifespan(time.Minute*30)); err != nil {
+		return s.handleError(w, r, f.ID, pid, nil, err)
+	}
+
+	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
+
+	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer) {

@@ -390,6 +390,9 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		uc, err := strat.Settings(w, r, f, ss)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
+
+			// TODO if it is a validation error do something else
+
 		} else if err != nil {
 			h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, strat.NodeGroup(), f, ss.Identity, err)
 			return
