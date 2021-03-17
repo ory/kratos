@@ -202,7 +202,7 @@ func newHydra(t *testing.T, subject *string, scope *[]string) (remoteAdmin, remo
 		require.NoError(t, err)
 		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "oryd/hydra",
-			Tag:        "v1.4.10",
+			Tag:        "v1.9.2-sqlite",
 			Env: []string{
 				"DSN=memory",
 				fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),

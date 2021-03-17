@@ -139,15 +139,15 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
 		r.GET(RouteCallback, wrappedHandleCallback)
 	}
-
-	wrappedHandleAuth := strategy.IsDisabled(s.d, s.ID().String(), s.handleAuth)
-	if handle, _, _ := r.Lookup("POST", RouteAuth); handle == nil {
-		r.POST(RouteAuth, wrappedHandleAuth)
-	}
-
-	if handle, _, _ := r.Lookup("GET", RouteAuth); handle == nil {
-		r.GET(RouteAuth, wrappedHandleAuth)
-	}
+	//
+	//wrappedHandleAuth := strategy.IsDisabled(s.d, s.ID().String(), s.handleAuth)
+	//if handle, _, _ := r.Lookup("POST", RouteAuth); handle == nil {
+	//	r.POST(RouteAuth, wrappedHandleAuth)
+	//}
+	//
+	//if handle, _, _ := r.Lookup("GET", RouteAuth); handle == nil {
+	//	r.GET(RouteAuth, wrappedHandleAuth)
+	//}
 }
 
 func NewStrategy(d dependencies) *Strategy {
@@ -169,9 +169,9 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	var pid = r.Form.Get("provider") // this can come from both url query and post body
+	var pid = r.Form.Get(s.SettingsStrategyID() + ".provider") // this can come from both url query and post body
 	if pid == "" {
-		s.handleError(w, r, rid, pid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "provider" form field`)))
+		s.handleError(w, r, rid, pid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "%s.provider" form field`, s.SettingsStrategyID())))
 		return
 	}
 
@@ -181,7 +181,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	config, err := provider.OAuth2(r.Context())
+	c, err := provider.OAuth2(r.Context())
 	if err != nil {
 		s.handleError(w, r, rid, pid, nil, err)
 		return
@@ -209,7 +209,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	http.Redirect(w, r, config.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
+	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (ider, error) {
@@ -269,29 +269,29 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (ide
 		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
 	}
 
-	var container authCodeContainer
-	if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&container)); err != nil {
+	var cntnr authCodeContainer
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&cntnr)); err != nil {
 		return nil, nil, err
 	}
 
-	if state != container.State {
-		return nil, &container, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+	if state != cntnr.State {
+		return nil, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
 	}
 
-	req, err := s.validateFlow(r.Context(), r, x.ParseUUID(container.FlowID))
+	req, err := s.validateFlow(r.Context(), r, x.ParseUUID(cntnr.FlowID))
 	if err != nil {
-		return nil, &container, err
+		return nil, &cntnr, err
 	}
 
 	if r.URL.Query().Get("error") != "" {
-		return req, &container, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+		return req, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
 	}
 
 	if code == "" {
-		return req, &container, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
+		return req, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
 	}
 
-	return req, &container, nil
+	return req, &cntnr, nil
 }
 
 func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, req interface{}) bool {
@@ -314,7 +314,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		pid  = ps.ByName("provider")
 	)
 
-	req, container, err := s.validateCallback(w, r)
+	req, cntnr, err := s.validateCallback(w, r)
 	if err != nil {
 		if req != nil {
 			s.handleError(w, r, req.GetID(), pid, nil, err)
@@ -334,13 +334,13 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	config, err := provider.OAuth2(context.Background())
+	conf, err := provider.OAuth2(context.Background())
 	if err != nil {
 		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
 	}
 
-	token, err := config.Exchange(r.Context(), code)
+	token, err := conf.Exchange(r.Context(), code)
 	if err != nil {
 		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
@@ -354,10 +354,10 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	switch a := req.(type) {
 	case *login.Flow:
-		s.processLogin(w, r, a, claims, provider, container)
+		s.processLogin(w, r, a, claims, provider, cntnr)
 		return
 	case *registration.Flow:
-		s.processRegistration(w, r, a, claims, provider, container)
+		s.processRegistration(w, r, a, claims, provider, cntnr)
 		return
 	case *settings.Flow:
 		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
@@ -395,6 +395,7 @@ func (s *Strategy) populateMethod(r *http.Request, c *container.Container) error
 
 	// does not need sorting because there is only one field
 	c.SetCSRF(s.d.GenerateCSRFToken(r))
+	c.GetNodes().Append(node.NewInputField("method", s.ID().String(), node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
 	AddProviders(c, conf.Providers)
 
 	return nil
@@ -424,59 +425,45 @@ func (s *Strategy) provider(ctx context.Context, r *http.Request, id string) (Pr
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, provider string, traits []byte, err error) {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, provider string, traits []byte, err error) error {
 	if x.IsZeroUUID(rid) {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
+		return err
 	}
 
-	if lr, rerr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), rid); rerr == nil {
-		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, lr, s.NodeGroup(), err)
-		return
-	} else if sr, rerr := s.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid); rerr == nil {
-		sess, sessErr := s.d.SessionManager().FetchFromRequest(r.Context(), r)
-		if sessErr != nil {
-			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, sessErr)
-			return
-		}
-
-		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.NodeGroup(), sr, sess.Identity, err)
-		return
+	if _, rerr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), rid); rerr == nil {
+		return err
+	} else if _, rerr := s.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid); rerr == nil {
+		return err
 	} else if rr, rerr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid); rerr == nil {
-		rr.UI.UnsetNode("oidc.provider")
+		rr.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
 		rr.UI.Reset("method")
 
 		if traits != nil {
-			rr.UI.UpdateNodesFromJSON(traits, "traits", node.OpenIDConnectGroup)
+			rr.UI.UpdateNodesFromJSON(traits, s.SettingsStrategyID()+".traits", node.OpenIDConnectGroup)
 		}
 
 		if errSec := rr.UI.ParseError(node.OpenIDConnectGroup, err); errSec != nil {
-			s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, rr, s.NodeGroup(), err)
-			return
+			return errors.Wrap(err, errSec.Error())
 		}
 		rr.UI.ResetMessages()
 
 		rr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		if errSec := rr.UI.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", []string{
 			x.CSRFTokenName,
-			"identifier",
-			"password",
 		}); errSec != nil {
-			s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, rr, s.NodeGroup(), errors.Wrap(err, errSec.Error()))
-			return
+			return errors.Wrap(err, errSec.Error())
 		}
 
-		rr.UI.UnsetNode("oidc.provider")
+		rr.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
 		rr.UI.GetNodes().Upsert(
 			// v0.5: form.Field{Name: "provider", Value: provider, Type: "submit"}
-			node.NewInputField("provider", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
+			node.NewInputField(s.SettingsStrategyID()+".provider", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
 		)
 
-		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, rr, s.NodeGroup(), err)
-		return
+		return err
 	}
 
-	s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+	return err
 }
 
 func (s *Strategy) NodeGroup() node.Group {
