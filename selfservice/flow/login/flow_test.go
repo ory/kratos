@@ -99,3 +99,9 @@ func TestGetType(t *testing.T) {
 		})
 	}
 }
+
+func TestGetRequestURL(t *testing.T) {
+	expectedURL := "http://foo/bar/baz"
+	f := &login.Flow{RequestURL: expectedURL}
+	assert.Equal(t, expectedURL, f.GetRequestURL())
+}
