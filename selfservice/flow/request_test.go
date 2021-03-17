@@ -34,7 +34,7 @@ func TestVerifyRequest(t *testing.T) {
 func TestMethodEnabledAndAllowed(t *testing.T) {
 	conf, d := internal.NewFastRegistryWithMocks(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := flow.MethodEnabledAndAllowed(r, "password", d); err != nil {
+		if err := flow.MethodEnabledAndAllowedFromRequest(r, "password", d); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -9,6 +9,9 @@
     "csrf_token": {
       "type": "string"
     },
+    "method": {
+      "type": "string"
+    },
     "password": {
       "type": "object",
       "properties": {

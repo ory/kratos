@@ -67,7 +67,7 @@ func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	if err := flow.MethodEnabledAndAllowed(r, s.ID().String(), s.d); err != nil {
+	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
 		return err
 	}
 

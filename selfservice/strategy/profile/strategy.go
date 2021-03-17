@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -24,11 +23,6 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
-	"github.com/ory/x/urlx"
-)
-
-const (
-	RouteSettings = "/self-service/settings/methods/profile"
 )
 
 var _ settings.Strategy = new(Strategy)
@@ -90,7 +84,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-	nodes, err := container.NodesFromJSONSchema(node.ProfileGroup, traitsSchema.URL, "", schemaCompiler)
+	nodes, err := container.NodesFromJSONSchema(node.ProfileGroup, traitsSchema.URL, "profile", schemaCompiler)
 	if err != nil {
 		return err
 	}
@@ -99,7 +93,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		f.UI.SetNode(n)
 	}
 
-	f.UI.UpdateNodesFromJSON(json.RawMessage(id.Traits), "traits", node.ProfileGroup)
+	f.UI.Nodes.Append(node.NewInputField("method", "profile", node.ProfileGroup, node.InputAttributeTypeSubmit))
+	f.UI.UpdateNodesFromJSON(json.RawMessage(id.Traits), "profile.traits", node.ProfileGroup)
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	if err := f.UI.SortNodes(traitsSchema.URL, "", []string{
@@ -123,55 +118,65 @@ type completeSelfServiceSettingsFlowWithProfileMethodParameters struct {
 	Payload interface{}
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (err error) {
+func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
 	var p CompleteSelfServiceBrowserSettingsProfileStrategyFlow
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return s.continueFlow(w, r, ctxUpdate, &p)
+		return ctxUpdate, s.continueFlow(w, r, ctxUpdate, &p)
 	} else if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 	}
 
-	option, err := s.newSettingsProfileDecoder(r.Context(), ctxUpdate.Session.Identity)
+	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.SettingsStrategyID(), s.d); err != nil {
+		return ctxUpdate, err
+	}
+
+	option, err := s.newSettingsProfileDecoder(r.Context(), ctxUpdate.GetSessionIdentity())
 	if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 	}
 
 	if err := s.dc.Decode(r, &p, option,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 	}
 
 	// Reset after decoding form
 	p.SetFlowID(ctxUpdate.Flow.ID)
 
-	return s.continueFlow(w, r, ctxUpdate, &p)
+	if err := s.continueFlow(w, r, ctxUpdate, &p); err != nil {
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+	}
+
+	return ctxUpdate, nil
 }
 
 func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) error {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		return err
+	}
+
 	if err := flow.EnsureCSRF(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
 
-	if len(p.Traits) == 0 {
+	if len(p.Profile.Traits) == 0 {
 		return s.handleSettingsError(w, r, ctxUpdate, nil, p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
 	}
 
-	if err := s.hydrateForm(r, ctxUpdate.Flow, ctxUpdate.Session, p.Traits); err != nil {
+	if err := s.hydrateForm(r, ctxUpdate.Flow, ctxUpdate.Session, p.Profile.Traits); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
 
-	update, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
+	update, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.GetSessionIdentity().ID)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 	}
 
-	update.Traits = identity.Traits(p.Traits)
-	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, settings.StrategyProfile, ctxUpdate, update); err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, p.Traits, p, err)
-	}
+	update.Traits = identity.Traits(p.Profile.Traits)
+	ctxUpdate.UpdateIdentity(update)
 
 	return nil
 }
@@ -195,8 +200,17 @@ type completeSelfServiceBrowserSettingsProfileStrategyFlowParameters struct {
 
 // nolint:deadcode,unused
 type CompleteSelfServiceBrowserSettingsProfileStrategyFlow struct {
-	// Traits contains all of the identity's traits.
-	Traits json.RawMessage `json:"traits"`
+	// Password contains fields for the profile method
+	//
+	// required: true
+	Profile CompleteSelfServiceBrowserSettingsProfileStrategyFlowPayload `json:"profile"`
+
+	// Method
+	//
+	// Should be set to profile when trying to update a profile.
+	//
+	// type: string
+	Method string `json:"method"`
 
 	// FlowIDRequestID is the flow ID.
 	//
@@ -208,6 +222,10 @@ type CompleteSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	// This token is only required when performing browser flows.
 	CSRFToken string `json:"csrf_token"`
 }
+type CompleteSelfServiceBrowserSettingsProfileStrategyFlowPayload struct {
+	// Traits contains all of the identity's traits.
+	Traits json.RawMessage `json:"traits"`
+}
 
 func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.FlowID)
@@ -218,14 +236,9 @@ func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uu
 }
 
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
-	action := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
-		url.Values{"flow": {ar.ID.String()}})
-
-	ar.UI.Reset()
+	ar.UI.Reset("method")
 	if traits != nil {
-		for _, field := range container.NewFromJSON(action.String(), node.DefaultGroup, traits, "traits").Nodes {
-			ar.UI.Nodes.Upsert(field)
-		}
+		ar.UI.UpdateNodesFromJSON(traits, "profile.traits", node.ProfileGroup)
 	}
 	ar.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
@@ -249,14 +262,18 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, p
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),
-			settings.ContinuityOptions(p, puc.Session.Identity)...); err != nil {
+			settings.ContinuityOptions(p, puc.GetSessionIdentity())...); err != nil {
 			return err
 		}
 	}
 
 	if puc.Flow != nil {
 		if traits == nil {
-			traits = json.RawMessage(puc.GetSessionIdentity().Traits)
+			if len(p.Profile.Traits) >= 0 {
+				traits = p.Profile.Traits
+			} else {
+				traits = json.RawMessage(puc.GetSessionIdentity().Traits)
+			}
 		}
 
 		if err := s.hydrateForm(r, puc.Flow, puc.Session, traits); err != nil {
@@ -275,7 +292,7 @@ func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Id
 		return nil, err
 	}
 	raw, err := sjson.SetBytes(settingsSchema,
-		"properties.traits.$ref", ss.URL.String()+"#/properties/traits")
+		"properties.profile.properties.traits.$ref", ss.URL.String()+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
