@@ -147,20 +147,14 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		t.Run("method=GET", func(t *testing.T) {
 			t.Skip("GET is currently not supported for this endpoint.")
-
-			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
-			res, err := c.Get(f.Ui.Action)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusNotFound, res.StatusCode)
-
-			defer res.Body.Close()
-			b, err := ioutil.ReadAll(res.Body)
-			assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 		})
 
 		t.Run("method=POST", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
-			res, err := c.PostForm(f.Ui.Action, url.Values{"traits.foo": {"bar"}})
+			res, err := c.PostForm(f.Ui.Action, url.Values{
+				"method":            {"password"},
+				"password.password": {"bar"},
+			})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 

@@ -26,7 +26,7 @@ type Strategy interface {
 	NodeGroup() node.Group
 	RegisterSettingsRoutes(*x.RouterPublic)
 	PopulateSettingsMethod(*http.Request, *identity.Identity, *Flow) error
-	Settings(w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (err error)
+	Settings(w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (*UpdateContext, error)
 }
 
 type Strategies []Strategy

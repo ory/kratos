@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"context"
 	_ "embed"
 	"net/http"
 
@@ -60,7 +61,7 @@ func EnsureCSRF(
 
 var dec = decoderx.NewHTTP()
 
-func MethodEnabledAndAllowed(r *http.Request, expected string, d interface {
+func MethodEnabledAndAllowedFromRequest(r *http.Request, expected string, d interface {
 	config.Provider
 }) error {
 	var method struct {
@@ -74,16 +75,23 @@ func MethodEnabledAndAllowed(r *http.Request, expected string, d interface {
 
 	if err := dec.Decode(r, &method, compiler,
 		decoderx.HTTPKeepRequestBody(true),
+		decoderx.HTTPDecoderAllowedMethods("POST", "PUT", "PATCH", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 		return errors.WithStack(err)
 	}
 
-	if method.Method != expected {
+	return MethodEnabledAndAllowed(r.Context(), expected, method.Method, d)
+}
+
+func MethodEnabledAndAllowed(ctx context.Context, expected, actual string, d interface {
+	config.Provider
+}) error {
+	if actual != expected {
 		return errors.WithStack(ErrStrategyNotResponsible)
 	}
 
-	if !d.Config(r.Context()).SelfServiceStrategy(expected).Enabled {
+	if !d.Config(ctx).SelfServiceStrategy(expected).Enabled {
 		return errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 
