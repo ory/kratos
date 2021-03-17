@@ -101,7 +101,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.SetNode(node.NewInputField("password.identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute))
-	sr.UI.SetNode(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
+	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
 	sr.UI.SetNode(NewPasswordNode("password.password"))
 
 	return nil

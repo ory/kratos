@@ -312,6 +312,8 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	for _, ss := range h.d.AllRegistrationStrategies() {
 		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
+		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return
 		} else if err != nil {
 			h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
