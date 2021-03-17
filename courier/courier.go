@@ -3,6 +3,7 @@ package courier
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -65,27 +66,21 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 }
 
 func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error) {
-	body, err := t.EmailBody()
+	tmpl, err := json.Marshal(t)
 	if err != nil {
 		return uuid.Nil, err
 	}
 
-	subject, err := t.EmailSubject()
-	if err != nil {
-		return uuid.Nil, err
-	}
-
-	recipient, err := t.EmailRecipient()
+	tmplType, err := GetTemplateType(t)
 	if err != nil {
 		return uuid.Nil, err
 	}
 
 	message := &Message{
-		Status:    MessageStatusQueued,
-		Type:      MessageTypeEmail,
-		Body:      body,
-		Subject:   subject,
-		Recipient: recipient,
+		Status:       MessageStatusQueued,
+		Type:         MessageTypeEmail,
+		TemplateType: tmplType,
+		TemplateData: tmpl,
 	}
 	if err := m.d.CourierPersister().AddMessage(ctx, message); err != nil {
 		return uuid.Nil, err
@@ -139,18 +134,33 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 
 		switch msg.Type {
 		case MessageTypeEmail:
-			from := m.d.Config(ctx).CourierSMTPFrom()
-			fromName := m.d.Config(ctx).CourierSMTPFromName()
-			gm := gomail.NewMessage()
-			if fromName == "" {
-				gm.SetHeader("From", from)
-			} else {
-				gm.SetAddressHeader("From", from, fromName)
+			template, err := NewEmailTemplateFromMessage(m.d.Config(ctx), msg)
+			if err != nil {
+				m.d.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to unmarshal the message's template data.`)
+
 			}
-			gm.SetHeader("To", msg.Recipient)
-			gm.SetHeader("Subject", msg.Subject)
-			gm.SetBody("text/plain", msg.Body)
-			gm.AddAlternative("text/html", msg.Body)
+
+			email, err := PopulateEmailMessage(m.d.Config(ctx), template)
+			if err != nil {
+				m.d.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to populate the message's template.`)
+
+			}
+
+			gm := gomail.NewMessage()
+			if email.FromName == "" {
+				gm.SetHeader("From", email.From)
+			} else {
+				gm.SetAddressHeader("From", email.From, email.FromName)
+			}
+			gm.SetHeader("To", email.Recipient)
+			gm.SetHeader("Subject", email.Subject)
+			gm.SetBody("text/plain", email.BodyHTML)
 
 			if err := m.Dialer.DialAndSend(ctx, gm); err != nil {
 				m.d.Logger().
@@ -158,7 +168,7 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 					WithField("smtp_server", fmt.Sprintf("%s:%d", m.Dialer.Host, m.Dialer.Port)).
 					WithField("smtp_ssl_enabled", m.Dialer.SSL).
 					// WithField("email_to", msg.Recipient).
-					WithField("message_from", from).
+					WithField("message_from", email.From).
 					Error("Unable to send email using SMTP connection.")
 				if err := m.d.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusQueued); err != nil {
 					m.d.Logger().
@@ -180,7 +190,7 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 			m.d.Logger().
 				WithField("message_id", msg.ID).
 				WithField("message_type", msg.Type).
-				WithField("message_subject", msg.Subject).
+				WithField("email_subject", email.Subject).
 				Debug("Courier sent out message.")
 		default:
 			return errors.Errorf("received unexpected message type: %d", msg.Type)
