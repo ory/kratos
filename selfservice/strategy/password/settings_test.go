@@ -120,6 +120,7 @@ func TestSettings(t *testing.T) {
 
 			var payload = func(v url.Values) {
 				v.Set("password.password", "123456")
+				v.Set("method", "password")
 			}
 
 			t.Run("type=api", func(t *testing.T) {
@@ -140,6 +141,7 @@ func TestSettings(t *testing.T) {
 			})
 
 			var payload = func(v url.Values) {
+				v.Set("method", "password")
 				v.Set("password.password", "123456")
 			}
 
@@ -159,6 +161,7 @@ func TestSettings(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			values.Set("method", "password")
 			values.Set("password.password", x.NewUUID().String())
 			actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser2, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -168,6 +171,7 @@ func TestSettings(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			values.Set("method", "password")
 			values.Set("password.password", x.NewUUID().String())
 			actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser2, values.Encode())
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -183,6 +187,7 @@ func TestSettings(t *testing.T) {
 		}
 
 		var payload = func(v url.Values) {
+			v.Set("method", "password")
 			v.Set("password.password", x.NewUUID().String())
 		}
 
@@ -199,6 +204,7 @@ func TestSettings(t *testing.T) {
 	t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		values.Set("method", "password")
 		values.Set("password.password", x.NewUUID().String())
 		values.Set("csrf_token", "invalid_token")
 
@@ -212,6 +218,7 @@ func TestSettings(t *testing.T) {
 	t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		values.Set("method", "password")
 		values.Set("password.password", x.NewUUID().String())
 		values.Set("csrf_token", "invalid_token")
 		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, testhelpers.EncodeFormAsJSON(t, true, values))
@@ -266,7 +273,7 @@ func TestSettings(t *testing.T) {
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
 		var check = func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password.password).value").String(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(name==password.password).attributes.value").String(), "%s", actual)
 
 			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
 			require.NoError(t, err)
@@ -277,6 +284,7 @@ func TestSettings(t *testing.T) {
 		}
 
 		var payload = func(v url.Values) {
+			v.Set("method", "password")
 			v.Set("password.password", randx.MustString(16, randx.AlphaNum))
 		}
 
@@ -300,6 +308,7 @@ func TestSettings(t *testing.T) {
 
 		var run = func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, id *identity.Identity) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			values.Set("method", "password")
 			values.Set("password.password", randx.MustString(16, randx.AlphaNum))
 			_, res := testhelpers.SettingsMakeRequest(t, isAPI, f, c, testhelpers.EncodeFormAsJSON(t, isAPI, values))
 			require.EqualValues(t, rts.URL+"/return-ts", res.Request.URL.String())

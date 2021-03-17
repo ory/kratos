@@ -77,7 +77,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		s := password.NewDefaultPasswordValidatorStrategy(reg)
 		fakeClient := NewFakeHTTPClient()
-		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
+		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond), httpx.ResilientClientWithMaxRetryWait(time.Millisecond))
 
 		t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
 			conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
