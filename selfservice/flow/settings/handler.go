@@ -384,11 +384,11 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	c := &UpdateContext{Session: ss, Flow: f}
-	var found bool
 	var s string
+	var updateContext *UpdateContext
 	for _, strat := range h.d.AllSettingsStrategies() {
-		if err := strat.Settings(w, r, f, ss); errors.Is(err, flow.ErrStrategyNotResponsible) {
+		uc, err := strat.Settings(w, r, f, ss)
+		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
 		} else if err != nil {
 			h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, strat.NodeGroup(), f, ss.Identity, err)
@@ -396,17 +396,18 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		}
 
 		s = strat.SettingsStrategyID()
-		found = true
+		updateContext = uc
 		break
 	}
 
-	if !found {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
+	if updateContext == nil {
+		c := &UpdateContext{Session: ss, Flow: f}
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, c.GetIdentityToUpdate(), errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 		return
 	}
 
-	if err := h.d.SettingsHookExecutor().PostSettingsHook(w, r, s, c, ss.Identity); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+	if err := h.d.SettingsHookExecutor().PostSettingsHook(w, r, s, updateContext, updateContext.GetIdentityToUpdate()); err != nil {
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
 		return
 	}
 }

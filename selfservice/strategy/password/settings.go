@@ -51,6 +51,13 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethod struct {
 	// type: string
 	CSRFToken string `json:"csrf_token"`
 
+	// Method
+	//
+	// Should be set to password when trying to update a password.
+	//
+	// type: string
+	Method string `json:"method"`
+
 	// Flow is flow ID.
 	//
 	// swagger:ignore
@@ -73,26 +80,30 @@ func (p *CompleteSelfServiceSettingsFlowWithPasswordMethod) SetFlowID(rid uuid.U
 	p.Flow = rid.String()
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (err error) {
-	if err := flow.MethodEnabledAndAllowed(r, s.SettingsStrategyID(), s.d); err != nil {
-		return err
-	}
-
+func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
 	var p CompleteSelfServiceSettingsFlowWithPasswordMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return s.continueSettingsFlow(w, r, ctxUpdate, &p)
+		return ctxUpdate, s.continueSettingsFlow(w, r, ctxUpdate, &p)
 	} else if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
+	}
+
+	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.SettingsStrategyID(), s.d); err != nil {
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
 	if err := s.decodeSettingsFlow(r, &p); err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, &p, err)
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
-	return s.continueSettingsFlow(w, r, ctxUpdate, &p)
+	if err := s.continueSettingsFlow(w, r, ctxUpdate, &p); err != nil {
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
+	}
+
+	return ctxUpdate, nil
 }
 
 func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
@@ -111,6 +122,10 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceSettingsFlowWithPasswordMethod,
 ) error {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		return err
+	}
+
 	if err := flow.EnsureCSRF(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return err
 	}
@@ -151,13 +166,13 @@ func (s *Strategy) continueSettingsFlow(
 		return err
 	}
 
-	ctxUpdate.Session.Identity = i
+	ctxUpdate.UpdateIdentity(i)
 
 	return nil
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
-	f.UI.Nodes.Upsert(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
+	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
 	f.UI.Nodes.Upsert(NewPasswordNode("password.password"))
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
@@ -167,14 +182,14 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity,
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceSettingsFlowWithPasswordMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
-		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
+		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
 			return err
 		}
 	}
 
 	// var id *identity.Identity
 	if ctxUpdate.Flow != nil {
-		ctxUpdate.Flow.UI.Reset()
+		ctxUpdate.Flow.UI.Reset("method")
 		ctxUpdate.Flow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		// id = ctxUpdate.Session.Identity
 	}

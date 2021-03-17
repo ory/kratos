@@ -444,7 +444,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 		return
 	} else if rr, rerr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid); rerr == nil {
 		rr.UI.UnsetNode("oidc.provider")
-		rr.UI.Reset()
+		rr.UI.Reset("method")
 
 		if traits != nil {
 			rr.UI.UpdateNodesFromJSON(traits, "traits", node.OpenIDConnectGroup)

@@ -193,9 +193,9 @@ func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetFlowID(rid uuid.U
 	p.FlowID = rid.String()
 }
 
-func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (err error) {
-	if err := flow.MethodEnabledAndAllowed(r, s.SettingsStrategyID(), s.d); err != nil {
-		return err
+func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
+	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.SettingsStrategyID(), s.d); err != nil {
+		return nil, err
 	}
 
 	var p completeSelfServiceBrowserSettingsOIDCFlowPayload
@@ -203,37 +203,37 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		if l := len(p.Link); l > 0 {
 			panic("s.initLinkProvider(w, r, ctxUpdate, &p)")
-			return nil
+			return nil, nil
 		} else if u := len(p.Unlink); u > 0 {
 			panic("s.unlinkProvider(w, r, ctxUpdate, &p)")
-			return nil
+			return nil, nil
 		}
 
-		return s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
+		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
 	} else if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, &p, err)
+		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
 	if err := r.ParseForm(); err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, &p, err)
+		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
 	p.Link = r.Form.Get("link")
 	p.Unlink = r.Form.Get("unlink")
 	if l, u := len(p.Link), len(p.Unlink); l > 0 && u > 0 {
-		return s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(&jsonschema.ValidationError{
+		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(&jsonschema.ValidationError{
 			Message:     "it is not possible to link and unlink providers in the same request",
 			InstancePtr: "#/",
 		}))
 	} else if l > 0 {
 		panic("s.initLinkProvider(w, r, ctxUpdate, &p)")
-		return
+		return nil, nil
 	} else if u > 0 {
 		panic("s.unlinkProvider(w, r, ctxUpdate, &p)")
-		return
+		return nil, nil
 	}
 
-	return s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(errors.WithStack(&jsonschema.ValidationError{
+	return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(errors.WithStack(&jsonschema.ValidationError{
 		Message: "missing properties: link, unlink", InstancePtr: "#/",
 		Context: &jsonschema.ValidationErrorContextRequired{Missing: []string{"link", "unlink"}}})))
 }

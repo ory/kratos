@@ -35,7 +35,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -191,8 +190,6 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				verification.RouteInitAPIFlow,
 				verification.RouteInitBrowserFlow,
 				verification.RouteGetFlow,
-
-				profile.RouteSettings,
 
 				link.RouteAdminCreateRecoveryLink,
 				link.RouteRecovery,

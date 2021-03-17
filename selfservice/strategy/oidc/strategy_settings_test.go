@@ -141,7 +141,7 @@ func TestSettingsStrategy(t *testing.T) {
 		AssertSystemError(t, errTS, res, body, 400, "malformed")
 	})
 
-	t.Run("case=should not be able to continue a flow without the request query parameter", func(t *testing.T) {
+	t.Run("case=should not be able to continue a flow without the flow query parameter", func(t *testing.T) {
 		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath, nil)
 		AssertSystemError(t, errTS, res, body, 400, "query parameter is missing")
 	})
