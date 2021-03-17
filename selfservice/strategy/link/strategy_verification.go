@@ -327,7 +327,11 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		"after_verification",
 		"", // empty string will revert to default
 	} {
-		returnTo, err := x.SecureRedirectTo(r, nil, x.SecureRedirectAllowSelfServiceURLs(s.d.Config(r.Context()).SelfPublicURL(r)), x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()), x.SecureRedirectUseReturnToKey(returnToKey))
+		returnTo, err := x.SecureRedirectTo(r, nil,
+			x.SecureRedirectAllowSelfServiceURLs(s.d.Config(r.Context()).SelfPublicURL(r)),
+			x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+			x.SecureRedirectUseReturnToKey(returnToKey),
+		)
 		if err != nil {
 			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
