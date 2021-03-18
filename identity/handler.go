@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -58,18 +59,65 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 type methodResponse struct {
-	Method string `json:"method"`
+	Method   string `json:"method"`
+	Provider string `json:"provider,omitempty"`
 }
 
 func (h *Handler) method(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	// if the credentials can be looked up directly by email address then they're type password
 	_, _, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), CredentialsTypePassword, ps.ByName("id"))
 	if err != nil {
-		_, _, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), CredentialsTypeOIDC, ps.ByName("id"))
+		// otherwise if they're OIDC credentials we have to find them by the verifiable address and then see if they are indeed OIDC
+		address, err := h.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(r.Context(), VerifiableAddressTypeEmail, ps.ByName("id"))
+
 		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-		h.r.Writer().Write(w, r, &methodResponse{Method: CredentialsTypeOIDC.String()})
+
+		id, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), address.IdentityID)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+
+		creds, ok := id.GetCredentials(CredentialsTypeOIDC)
+
+		var cfg map[string]interface{}
+		if err := json.NewDecoder(bytes.NewBuffer(creds.Config)).Decode(&cfg); err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("The oidc credentials could not be decoded properly").WithDebug(err.Error())))
+			return
+		}
+
+		if ok == false {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("The oidc credentials could not be decoded")))
+			return
+		}
+
+		providers, ok := cfg["providers"].([]interface{})
+		if ok == false {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("No providers found in oidc config").WithDebug(err.Error())))
+			return
+		}
+
+		provider, ok := providers[0].(map[string]interface{})
+
+		if ok == false {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("No provider found in array in oidc config").WithDebug(err.Error())))
+			return
+		}
+
+		ps, ok := provider["provider"].(string)
+
+		if ok == false {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("Provider in oidc config is not a string").WithDebug(err.Error())))
+			return
+		}
+
+		h.r.Writer().Write(w, r, &methodResponse{Method: CredentialsTypeOIDC.String(), Provider: ps})
+		return
+
 	}
 
 	h.r.Writer().Write(w, r, &methodResponse{Method: CredentialsTypePassword.String()})
