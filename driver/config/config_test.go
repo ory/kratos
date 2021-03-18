@@ -244,7 +244,7 @@ func TestViperProvider(t *testing.T) {
 				},
 				{
 					strategy: "profile",
-					hooks:    []SelfServiceHook{
+					hooks: []SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 					},
 				},
@@ -332,15 +332,33 @@ func TestProviderBaseURLs(t *testing.T) {
 			BasePath:    "/",
 			Scheme:      "http",
 		},
+		{
+			MatchDomain: "ory.sh:1234",
+			BasePath:    "/",
+			Scheme:      "https",
+		},
 	})
 	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
 	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(&http.Request{
+		URL:  new(url.URL),
 		Host: "www.not-google.com",
 	}).String())
 	assert.Equal(t, "https://www.GooGle.com:312/.ory/", p.SelfPublicURL(&http.Request{
+		URL:  new(url.URL),
 		Host: "www.GooGle.com:312",
 	}).String())
 	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
+		URL:  new(url.URL),
+		Host: "www.amazon.com",
+	}).String())
+
+	// Check domain aliases with alias query param
+	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
+		URL:  &url.URL{RawQuery: url.Values{"alias": {"www.amazon.com"}}.Encode()},
+		Host: "www.GooGle.com:312",
+	}).String())
+	assert.Equal(t, "https://ory.sh:1234/", p.SelfPublicURL(&http.Request{
+		URL:  &url.URL{RawQuery: url.Values{"alias": {"ory.sh:1234"}}.Encode()},
 		Host: "www.amazon.com",
 	}).String())
 }

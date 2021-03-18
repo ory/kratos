@@ -505,15 +505,22 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 		return primary
 	}
 
+	host := r.URL.Query().Get("alias")
+	if len(host) == 0 {
+		host = r.Host
+	}
+
+	hostname, _, _ := net.SplitHostPort(host)
+	if hostname == "" {
+		hostname = host
+	}
 	for _, a := range aliases {
-		hostname, _, _ := net.SplitHostPort(r.Host)
-		if strings.EqualFold(a.MatchDomain, hostname) || strings.EqualFold(a.MatchDomain, r.Host) {
+		if strings.EqualFold(a.MatchDomain, hostname) || strings.EqualFold(a.MatchDomain, host) {
 			parsed := &url.URL{
 				Scheme: a.Scheme,
-				Host:   r.Host,
+				Host:   host,
 				Path:   a.BasePath,
 			}
-
 			return parsed
 		}
 	}
