@@ -34,6 +34,10 @@ func (t *RecoveryValid) EmailBody() (string, error) {
 	return loadTextTemplate(filepath.Join(t.c.CourierTemplatesRoot(), "recovery/valid/email.body.gotmpl"), t.m)
 }
 
+func (t *RecoveryValid) EmailBodyPlaintext() (string, error) {
+	return loadTextTemplate(filepath.Join(t.c.CourierTemplatesRoot(), "recovery/valid/email.body.plaintext.gotmpl"), t.m)
+}
+
 func (t *RecoveryValid) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.m)
 }

@@ -34,6 +34,10 @@ func (t *VerificationValid) EmailBody() (string, error) {
 	return loadTextTemplate(filepath.Join(t.c.CourierTemplatesRoot(), "verification/valid/email.body.gotmpl"), t.m)
 }
 
+func (t *VerificationValid) EmailBodyPlaintext() (string, error) {
+	return loadTextTemplate(filepath.Join(t.c.CourierTemplatesRoot(), "verification/valid/email.body.plaintext.gotmpl"), t.m)
+}
+
 func (t *VerificationValid) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.m)
 }

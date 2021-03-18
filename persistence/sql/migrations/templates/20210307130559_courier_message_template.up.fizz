@@ -1,0 +1,2 @@
+add_column("courier_messages", "template_type", "string", {default: ""})
+add_column("courier_messages", "template_data", "blob", {null: true})

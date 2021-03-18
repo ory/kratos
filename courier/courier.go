@@ -66,12 +66,27 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 }
 
 func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error) {
-	tmpl, err := json.Marshal(t)
+	recipient, err := t.EmailRecipient()
 	if err != nil {
 		return uuid.Nil, err
 	}
 
-	tmplType, err := GetTemplateType(t)
+	subject, err := t.EmailSubject()
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	bodyPlaintext, err := t.EmailBodyPlaintext()
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	templateType, err := GetTemplateType(t)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	templateData, err := json.Marshal(t)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -79,8 +94,11 @@ func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 	message := &Message{
 		Status:       MessageStatusQueued,
 		Type:         MessageTypeEmail,
-		TemplateType: tmplType,
-		TemplateData: tmpl,
+		Recipient:    recipient,
+		Body:         bodyPlaintext,
+		Subject:      subject,
+		TemplateType: templateType,
+		TemplateData: templateData,
 	}
 	if err := m.d.CourierPersister().AddMessage(ctx, message); err != nil {
 		return uuid.Nil, err
@@ -134,33 +152,36 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 
 		switch msg.Type {
 		case MessageTypeEmail:
-			template, err := NewEmailTemplateFromMessage(m.d.Config(ctx), msg)
-			if err != nil {
-				m.d.Logger().
-					WithError(err).
-					WithField("message_id", msg.ID).
-					Error(`Unable to unmarshal the message's template data.`)
-
-			}
-
-			email, err := PopulateEmailMessage(m.d.Config(ctx), template)
-			if err != nil {
-				m.d.Logger().
-					WithError(err).
-					WithField("message_id", msg.ID).
-					Error(`Unable to populate the message's template.`)
-
-			}
-
+			from := m.d.Config(ctx).CourierSMTPFrom()
+			fromName := m.d.Config(ctx).CourierSMTPFromName()
 			gm := gomail.NewMessage()
-			if email.FromName == "" {
-				gm.SetHeader("From", email.From)
+			if fromName == "" {
+				gm.SetHeader("From", from)
 			} else {
-				gm.SetAddressHeader("From", email.From, email.FromName)
+				gm.SetAddressHeader("From", from, fromName)
 			}
-			gm.SetHeader("To", email.Recipient)
-			gm.SetHeader("Subject", email.Subject)
-			gm.SetBody("text/plain", email.BodyHTML)
+
+			gm.SetHeader("To", msg.Recipient)
+			gm.SetHeader("Subject", msg.Subject)
+			gm.SetBody("text/plain", msg.Body)
+
+			tmpl, err := NewEmailTemplateFromMessage(m.d.Config(ctx), msg)
+			if err != nil {
+				m.d.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to get email template from message.`)
+			} else {
+				body, err := tmpl.EmailBody()
+				if err != nil {
+					m.d.Logger().
+						WithError(err).
+						WithField("message_id", msg.ID).
+						Error(`Unable to get email body from template.`)
+
+				}
+				gm.AddAlternative("text/html", body)
+			}
 
 			if err := m.Dialer.DialAndSend(ctx, gm); err != nil {
 				m.d.Logger().
@@ -168,7 +189,7 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 					WithField("smtp_server", fmt.Sprintf("%s:%d", m.Dialer.Host, m.Dialer.Port)).
 					WithField("smtp_ssl_enabled", m.Dialer.SSL).
 					// WithField("email_to", msg.Recipient).
-					WithField("message_from", email.From).
+					WithField("message_from", from).
 					Error("Unable to send email using SMTP connection.")
 				if err := m.d.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusQueued); err != nil {
 					m.d.Logger().
@@ -190,7 +211,8 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 			m.d.Logger().
 				WithField("message_id", msg.ID).
 				WithField("message_type", msg.Type).
-				WithField("email_subject", email.Subject).
+				WithField("message_template_type", msg.TemplateType).
+				WithField("message_subject", msg.Subject).
 				Debug("Courier sent out message.")
 		default:
 			return errors.Errorf("received unexpected message type: %d", msg.Type)

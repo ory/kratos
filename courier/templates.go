@@ -15,11 +15,13 @@ const (
 	TypeRecoveryValid       TemplateType = "recovery_valid"
 	TypeVerificationInvalid TemplateType = "verification_invalid"
 	TypeVerificationValid   TemplateType = "verification_valid"
+	TypeTestStub            TemplateType = "stub"
 )
 
 type EmailTemplate interface {
 	EmailSubject() (string, error)
 	EmailBody() (string, error)
+	EmailBodyPlaintext() (string, error)
 	EmailRecipient() (string, error)
 }
 
@@ -33,6 +35,8 @@ func GetTemplateType(t EmailTemplate) (TemplateType, error) {
 		return TypeVerificationInvalid, nil
 	case *template.VerificationValid:
 		return TypeRecoveryValid, nil
+	case *template.TestStub:
+		return TypeTestStub, nil
 	default:
 		return "", errors.Errorf("unexpected template type")
 	}
