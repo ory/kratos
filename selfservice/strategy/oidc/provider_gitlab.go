@@ -34,9 +34,7 @@ func NewProviderGitLab(
 }
 
 func (g *ProviderGitLab) oauth2() (*oauth2.Config, error) {
-
 	endpoint, err := g.endpoint()
-
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
