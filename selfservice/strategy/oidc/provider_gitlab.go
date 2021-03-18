@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"golang.org/x/oauth2/gitlab"
 	"net/http"
 	"net/url"
 	"path"
@@ -31,6 +32,20 @@ func NewProviderGitLab(
 			public: public,
 		},
 	}
+}
+
+func (g *ProviderGitLab) oauth2() *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     g.config.ClientID,
+		ClientSecret: g.config.ClientSecret,
+		Endpoint:     gitlab.Endpoint,
+		Scopes:       g.config.Scope,
+		RedirectURL:  g.config.Redir(g.public),
+	}
+}
+
+func (g *ProviderGitLab) OAuth2(ctx context.Context) (*oauth2.Config, error) {
+	return g.oauth2(), nil
 }
 
 func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
