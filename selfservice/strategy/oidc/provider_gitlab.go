@@ -25,10 +25,6 @@ func NewProviderGitLab(
 	config *Configuration,
 	public *url.URL,
 ) *ProviderGitLab {
-	if len(config.IssuerURL) > 0 {
-
-	}
-
 	return &ProviderGitLab{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
