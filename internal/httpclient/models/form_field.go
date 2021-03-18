@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// FormField FormField Field represents a HTML Form Field
+// FormField FormField FormField Field represents a HTML Form Field
 //
 // swagger:model formField
 type FormField struct {
