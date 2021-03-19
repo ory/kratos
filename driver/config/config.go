@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/x/dbal"
+
 	"github.com/ory/x/stringsx"
 
 	"github.com/rs/cors"
@@ -33,7 +35,7 @@ import (
 const (
 	DefaultIdentityTraitsSchemaID                                   = "default"
 	DefaultBrowserReturnURL                                         = "default_browser_return_url"
-	DefaultSQLiteMemoryDSN                                          = "sqlite://:memory:?_fk=true"
+	DefaultSQLiteMemoryDSN                                          = dbal.SQLiteInMemory
 	UnknownVersion                                                  = "unknown version"
 	ViperKeyDSN                                                     = "dsn"
 	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
