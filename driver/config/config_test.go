@@ -244,7 +244,7 @@ func TestViperProvider(t *testing.T) {
 				},
 				{
 					strategy: "profile",
-					hooks: []SelfServiceHook{
+					hooks:    []SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 					},
 				},
@@ -360,6 +360,14 @@ func TestProviderBaseURLs(t *testing.T) {
 	assert.Equal(t, "https://ory.sh:1234/", p.SelfPublicURL(&http.Request{
 		URL:  &url.URL{RawQuery: url.Values{"alias": {"ory.sh:1234"}}.Encode()},
 		Host: "www.amazon.com",
+	}).String())
+	assert.Equal(t, "http://www.amazon.com:8181/", p.SelfPublicURL(&http.Request{
+		URL:  new(url.URL),
+		Host: "www.amazon.com:8181",
+	}).String())
+	assert.Equal(t, "http://www.amazon.com:8181/", p.SelfPublicURL(&http.Request{
+		URL:  &url.URL{RawQuery: url.Values{"alias": {"www.amazon.com:8181"}}.Encode()},
+		Host: "www.GooGle.com:312",
 	}).String())
 }
 
