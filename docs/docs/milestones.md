@@ -126,6 +126,9 @@ Something is not working.
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [ ] Recovery link doesn't log out existing users
       ([kratos#1077](https://github.com/ory/kratos/issues/1077))
+- [ ] Account Recovery API flow requires CSRF cookie
+      ([kratos#1141](https://github.com/ory/kratos/issues/1141)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [x] Password reset emails sent twice by each of the two kratos pods in my
