@@ -282,34 +282,23 @@ func TestVerification(t *testing.T) {
 			},
 		}
 
-		expectRedirect := func(t *testing.T, returnToKey string, returnToURL string) {
-			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
-			t.Cleanup(func() {
-				conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
-			})
-
-			flow, token := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{returnToKey: {returnToURL}}.Encode())
-
-			body := fmt.Sprintf(
-				`{"csrf_token":"%s","email":"%s"}`, flow.CSRFToken, verificationEmail,
-			)
-
-			res, err := client.Post(public.URL+link.RouteVerification+"?"+url.Values{"token": {token.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusFound, res.StatusCode)
-			redirectURL, err := res.Location()
-			require.NoError(t, err)
-			assert.Equal(t, returnToURL, redirectURL.String())
-
-		}
-
-		t.Run("case=return_to", func(t *testing.T) {
-			expectRedirect(t, "return_to", returnToURL)
+		conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
-		t.Run("case=after_verification_return_to", func(t *testing.T) {
-			expectRedirect(t, "after_verification_return_to", returnToURL)
-		})
+		flow, token := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
+
+		body := fmt.Sprintf(
+			`{"csrf_token":"%s","email":"%s"}`, flow.CSRFToken, verificationEmail,
+		)
+
+		res, err := client.Post(public.URL+link.RouteVerification+"?"+url.Values{"token": {token.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusFound, res.StatusCode)
+		redirectURL, err := res.Location()
+		require.NoError(t, err)
+		assert.Equal(t, returnToURL, redirectURL.String())
 
 	})
 }

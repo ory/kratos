@@ -128,9 +128,8 @@ func NewPostHookFlow(exp time.Duration, original flow.Flow) (*Flow, error) {
 	if err != nil {
 		requestURL = new(url.URL)
 	}
-	// remove "return_to" param from the original request URL so it doesn't get erroneously
-	// used when the post-hook verification flow is completed
-	requestURL.Query().Del("return_to")
+	returnTo := requestURL.Query().Get("after_verification_return_to")
+	requestURL.Query().Set("return_to", returnTo)
 	f := &Flow{
 		ID:         x.NewUUID(),
 		ExpiresAt:  now.Add(exp),

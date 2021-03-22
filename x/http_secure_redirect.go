@@ -15,13 +15,10 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-const defaultReturnToKey = "return_to"
-
 type secureRedirectOptions struct {
 	whitelist       []url.URL
 	defaultReturnTo *url.URL
 	sourceURL       string
-	returnToKey     string
 }
 
 type SecureRedirectOption func(*secureRedirectOptions)
@@ -58,21 +55,13 @@ func SecureRedirectOverrideDefaultReturnTo(defaultReturnTo *url.URL) SecureRedir
 	}
 }
 
-func SecureRedirectUseReturnToKey(key string) SecureRedirectOption {
-	return func(o *secureRedirectOptions) {
-		o.returnToKey = key
-	}
-}
-
 // SecureRedirectTo implements a HTTP redirector who mitigates open redirect vulnerabilities by
 // working with whitelisting.
 func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureRedirectOption) (returnTo *url.URL, err error) {
-	o := &secureRedirectOptions{defaultReturnTo: defaultReturnTo, returnToKey: defaultReturnToKey}
+	o := &secureRedirectOptions{defaultReturnTo: defaultReturnTo}
 	for _, opt := range opts {
 		opt(o)
 	}
-
-	o.returnToKey = stringsx.Coalesce(o.returnToKey, defaultReturnToKey)
 
 	if len(o.whitelist) == 0 {
 		return o.defaultReturnTo, nil
@@ -86,14 +75,10 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 		}
 	}
 
-	if len(source.Query().Get(o.returnToKey)) == 0 {
+	if len(source.Query().Get("return_to")) == 0 {
 		return o.defaultReturnTo, nil
-	} else if returnTo, err = url.ParseRequestURI(source.Query().Get(o.returnToKey)); err != nil {
+	} else if returnTo, err = url.ParseRequestURI(source.Query().Get("return_to")); err != nil {
 		return nil, herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err)
-	}
-
-	if o.defaultReturnTo == nil {
-		o.defaultReturnTo = new(url.URL)
 	}
 
 	returnTo.Host = stringsx.Coalesce(returnTo.Host, o.defaultReturnTo.Host)
