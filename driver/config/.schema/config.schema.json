@@ -1294,6 +1294,12 @@
       "title": "Hashing Algorithm Configuration",
       "type": "object",
       "properties": {
+        "algorithm": {
+          "title": "Password hashing algorithm",
+          "description": "One of the values: argon2, bcrypt",
+          "type": "string",
+          "default": "argon2"
+        },
         "argon2": {
           "title": "Configuration for the Argon2id hasher.",
           "type": "object",
