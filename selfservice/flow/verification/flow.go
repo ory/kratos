@@ -128,8 +128,10 @@ func NewPostHookFlow(exp time.Duration, original flow.Flow) (*Flow, error) {
 	if err != nil {
 		requestURL = new(url.URL)
 	}
-	returnTo := requestURL.Query().Get("after_verification_return_to")
-	requestURL.Query().Set("return_to", returnTo)
+	query := requestURL.Query()
+	query.Set("return_to", query.Get("after_verification_return_to"))
+	query.Del("after_verification_return_to")
+	requestURL.RawQuery = query.Encode()
 	f := &Flow{
 		ID:         x.NewUUID(),
 		ExpiresAt:  now.Add(exp),
