@@ -32,9 +32,9 @@ func NewHTTPClient(cmd *cobra.Command) *http.Client {
 	if f, ok := cmd.Context().Value(HTTPClientContextKey).(func(cmd *cobra.Command) *http.Client); ok {
 		return f(cmd)
 	} else if f != nil {
-		panic(fmt.Sprintf("ClientContextKey was expected to be *http.Client but it contained an invalid type %T ", f))
+		panic(fmt.Sprintf("ClientContextKey was expected to be *retryablehttp.Client but it contained an invalid type %T ", f))
 	}
-	return httpx.NewResilientClientLatencyToleranceMedium(http.DefaultTransport)
+	return httpx.NewResilientClient().HTTPClient
 }
 
 func NewClient(cmd *cobra.Command) *client.OryKratos {
