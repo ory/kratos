@@ -50,8 +50,7 @@ func validatePasswordLength(password []byte) error {
 	// so if password is longer than 72 bytes, function returns an error
 	// See https://en.wikipedia.org/wiki/Bcrypt#User_input
 	if len(password) > 72 {
-		return errors.New("password is too long")
+		return errors.New("passwords are limited to a maximum length of 72 characters")
 	}
 	return nil
 }
-
