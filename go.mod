@@ -35,7 +35,6 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.5.1 // indirect
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/go-jsonnet v0.16.0
 	github.com/google/uuid v1.2.0
@@ -66,7 +65,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.207
+	github.com/ory/x v0.0.210
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
@@ -79,14 +78,10 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.7.0
-	github.com/tidwall/gjson v1.6.7
-	github.com/tidwall/sjson v1.1.4
+	github.com/tidwall/gjson v1.7.1
+	github.com/tidwall/sjson v1.1.5
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
-	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4 // indirect
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
-	golang.org/x/sys v0.0.0-20210319071255-635bc2c9138d // indirect
 	golang.org/x/tools v0.1.0
-	google.golang.org/genproto v0.0.0-20210318145829-90b20ab00860 // indirect
 )
