@@ -752,11 +752,10 @@ func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 func (p *Config) HasherPasswordHashingAlgorithm() string {
 	configValue := p.p.StringF(ViperKeyHasherAlgorithm, DefaultPasswordHashingAlgorithm)
 	switch configValue {
-	case "argon2":
-		return configValue
 	case "bcrypt":
 		return configValue
+	case "argon2":
+	default:
+		return configValue
 	}
-	panic(fmt.Sprintf("Unexpected hashing algorithm value: %s", configValue))
 }
-
