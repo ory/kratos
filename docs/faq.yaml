@@ -1,79 +1,120 @@
 - tags:
   - kratos
   - database
-  q: We want to seperate our customers and employees, so we store them in different
+  q: |
+    We want to seperate our customers and employees, so we store them in different
     databases. But we would like to have them use the same login dialog for our portal.
     How can I achieve that with Ory Kratos?
-  a: You can deploy Ory Kratos two times, and use the same login/registration endpoints
-    if you like. You may need to tell you login/registration ui which Kratos it is
-    supposed to talk to.
+  a: |
+    You can deploy Ory Kratos two times, and use the same login/registration endpoints.
+    So you define the same login/registration UI URLs in both of the Kratos configurations.
+    You may need to tell your login/registration UI which Kratos it is supposed to
+    talk to. The instances are cheap to deploy and the databases are completely isolated
+    from each other.  For example you can have something like `/login/customer` and
+    `/login/employee`.
+- tags:
+  - kratos
+  - ecosystem
+  q: Is the code audited by an independent entity and is there a bug bounty program?
+  a: |
+    We will do that when the APIs and core are stable. A bug bounty program is in
+    the making but not done yet. If you are a security researcher and interested in
+    working on Kratos, please reach out to [security@ory.sh](mailto:security@ory.sh).
 - tags:
   - kratos
   - user
   - validation
   - traits
-  q: What is the correct flow to sanitize the username and make sure it satisfies
+  q: |
+    What is the correct flow to sanitize the username and make sure it satisfies
     a specific regex (e.g. only alphanumeric characters)?
-  a: 'In the identity json schema using https://json-schema.org/understanding-json-schema/reference/string.html#regular-expressions.
+  a: |
+    In the identity json schema using [Regular Expressions](https://json-schema.org/understanding-json-schema/reference/string.html#regular-expressions).
     To sanitize usernames coming from third-party OIDC providers like Google or GitHub
-    you write jsonnet code: https://jsonnet.org.'
+    you write [jsonnet code](https://jsonnet.org).
+- tags:
+  - kratos
+  - registration
+  - cors
+  q: |
+    Hey guys, I am currently trying to get the Kratos registration flow working
+    on a react app that I am creating. I am having CORS issues with the completeSelfServiceRegistrationFlowWithPasswordMethod
+    call when using the @oryd/kratos-client JS package.
+  a: |
+    You are using AJAX to submit the form. This is not supported right now. You need
+    to submit a regular HTML form. Do not use AJAX. Do not use fetch. Let the user
+    click the submit button and do not do anything. AJAX will be better supported
+    starting Kratos v0.6.
 - tags:
   - kratos
   - traits
-  - KYC
-  q: Some of our identity traits fields may be the subject to identity validation
-    (know your customer, KYC). Once they are validated we do not allow the identity
-    to be edited by the end-user. Is there anything in the roadmap to support this
-    scenario?
-  a: 'There is an open issue for this feature: https://github.com/ory/kratos/issues/47.'
+  - feature
+  q: |
+    Is the ability to freeze certain identity fields after registration anywhere
+    on the roadmap? Also I want read-only or hidden user-specific data. Can I use
+    traits for that? Example: Some of our identity traits fields may be the subject
+    to identity validation ([know your customer](https://en.wikipedia.org/wiki/Know_your_customer)).
+    Once they are validated we do not allow the identity to be edited by the end-user.
+  a: |
+    Currently traits are visible to the users and also editable by them. It makes
+    sense to have read-only and/or hidden traits for users, but we can not give an
+    exact timing when this will be available. There is an open issue for this feature:
+    [Issue](https://github.com/ory/kratos/issues/47).
 - tags:
   - kratos
   - hooks
-  q: 'Are there plans to provide hooks on registration/login/logouts/identity updates? '
-  a: 'Yes! Check these issues for more information on the current progress: https://github.com/ory/kratos/issues/271
-    and https://github.com/ory/kratos/issues/30.'
+  - feature
+  q: |
+    Are there plans to provide hooks on registration/login/logouts/identity updates?
+  a: |
+    Yes! See these issues for more information on the current progress: [Feature
+    Request: Webhooks](https://github.com/ory/kratos/issues/271) and [Implement RPC
+    After Hook](https://github.com/ory/kratos/issues/30).
 - tags:
-  - registration
   - kratos
+  - registration
   - traits
   q: How can I verify beforehand if a username is available during registration?
-  a: You can't right now. It would allow account enumeration attacks.
+  a: |
+    You can not right now. It would allow account enumeration attacks. See also the
+    [section in the documentation](https://www.ory.sh/kratos/docs/concepts/security/#account-enumeration).
 - tags:
   - kratos
   - database
   - migration
-  q: Do have plans to support user migration scenarios similar to auth0 automatic
+  - feature
+  q: |
+    Do have plans to support user migration scenarios similar to auth0 automatic
     migrations? E.g. configure a callback to the legacy system when you cannot find
     the corresponding user, and store the identity on successful legacy system response.
-  a: No plans yet, but migration is an important piece of the puzzle. We will probably
-    focus on importing existing users first though. An alternative to callback and
-    custom code is probably fronting the legacy system with ORY Hydra (OAuth2/OIDC
-    Server) and then using that as an upstream in ORY Kratos.
+  a: |
+    No plans yet, but migration is an important piece of the puzzle. We will focus
+    on importing existing users first. An alternative to callback and custom code
+    is fronting the legacy system with Ory Hydra (OAuth2/OIDC Server) and then using
+    that as an upstream in Ory Kratos.
 - tags:
   - kratos
   - security
-  - attack
-  q: Do you have protection or plans for brute force attacks i.e. repetitive login
+  q: | 
+    Do you have protection or plans for brute force attacks i.e. repetitive login
     attempts? Leaked database scans?
-  a: 'See the following document: [Ory Kratos Security Measures](https://www.ory.sh/kratos/docs/concepts/security#passwords)'
+  a: |
+    See the following document: [Ory Kratos Security Measures](https://www.ory.sh/kratos/docs/concepts/security#passwords).
 - tags:
   - kratos
   - oidc
+  - traits
   q: How do I append a random suffix e.g. a number to OIDC usernames if the username
     returned by a provider is already taken.
-  a: 'Not sure if jsonnet has a rand function built into the stdlib, but it does have
-    the md5 function. You can probably use that. '
+  a: |
+    You can use the md5 function built in the [jsonnet standart library](https://jsonnet.org/ref/stdlib.html).
+    See the following issue as well: [Add random function to the jsonnet library](https://github.com/ory/kratos/issues/988).
 - tags:
   - kratos
   - spa
-  q: I want to implement a single-page-app (SPA). Can i do that with kratos?
-  a: Yes, definitely. We don't have an example-app, though. Also you might not come
-    around some page-reloads as you definitely should avoid the API-flows and use
-    the browser-flows instead. So hopefully you're not too strict with your SPA. [Issue](https://github.com/ory/kratos/issues/668)
-- tags:
-  - kratos
-  - traits
-  q: I want read-only or hidden user-specific data. Can't i use traits for that?
-  a: Traits are currently visible to the user and also editable by him. Although it
-    make sense to have read-only and/or hidden traits for users, we can't give any
-    timing when such features will be available. [Issue](https://github.com/ory/kratos/issues/47)
+  q: I want to implement a single-page-app (SPA). Is this possible with Ory Kratos?
+  a: |
+    Yes, definitely. We do not have an example-app (yet). around some page-reloads,
+    as it is not possible to use the API flows in the browser. This is important to
+    prevent CSRF attacks. So hopefully you are not too strict with your SPA. A sample
+    app is being worked on here: [Implement React SPA sample app](https://github.com/ory/kratos/issues/668).

@@ -175,6 +175,12 @@ that your company deserves a spot here, reach out to
             <td>DataDetect</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/datadetect.svg" alt="Datadetect"></td>
             <td><a href="https://unifiedglobalarchiving.com/data-detect/">unifiedglobalarchiving.com/data-detect/</a></td>
+        </tr>        
+        <tr>
+            <td>Adopter *</td>
+            <td>Sainsbury's</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/sainsburys.svg" alt="Sainsbury's"></td>
+            <td><a href="https://www.sainsburys.co.uk/">sainsburys.co.uk</a></td>
         </tr>
         <tr>
             <td>Sponsor</td>
@@ -251,7 +257,7 @@ design:
 - Scales without effort
 - Minimize room for human and network errors
 
-ORY's architecture is designed to run best on Container Orchestration Systems
+ORY's architecture designed to run best on a Container Orchestration Systems
 such as Kubernetes, CloudFoundry, OpenShift, and similar projects. Binaries are
 small (5-15MB) and available for all popular processor types (ARM, AMD64, i386)
 and operating systems (FreeBSD, Linux, macOS, Windows) without system

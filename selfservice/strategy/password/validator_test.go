@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/go-retryablehttp"
-
 	"github.com/ory/x/httpx"
 
 	"github.com/stretchr/testify/require"
@@ -71,7 +69,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	}
 
 	fakeClient := NewFakeHTTPClient()
-	s.Client = fakeClient.Client
+	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client))
 
 	t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
@@ -164,7 +162,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 }
 
 type fakeHttpClient struct {
-	*retryablehttp.Client
+	http.Client
 
 	requestedURLs []string
 	responder     func(*http.Request) (*http.Response, error)
@@ -176,9 +174,9 @@ func NewFakeHTTPClient() *fakeHttpClient {
 			return nil, errors.New("No responder defined in fake HTTP client")
 		},
 	}
-	client.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&http.Client{
+	client.Client = http.Client{
 		Transport: &fakeRoundTripper{&client},
-	}))
+	}
 	return &client
 }
 

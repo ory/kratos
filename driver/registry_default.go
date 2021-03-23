@@ -167,6 +167,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.AllVerificationStrategies().RegisterAdminRoutes(router)
 
 	m.HealthHandler(ctx).SetHealthRoutes(router.Router, true)
+	m.HealthHandler(ctx).SetVersionRoutes(router.Router)
 	m.MetricsHandler().SetRoutes(router.Router)
 }
 
@@ -500,7 +501,7 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 			}
 
 			// if dsn is memory we have to run the migrations on every start
-			if dbal.IsMemorySQLite(m.Config(ctx).DSN()) {
+			if dbal.IsMemorySQLite(m.Config(ctx).DSN()) || m.Config(ctx).DSN() == dbal.SQLiteInMemory || m.Config(ctx).DSN() == dbal.SQLiteSharedInMemory || m.Config(ctx).DSN() == "memory" {
 				m.Logger().Infoln("ORY Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
 				if err := p.MigrateUp(ctx); err != nil {
 					m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
