@@ -755,6 +755,7 @@ func (p *Config) HasherPasswordHashingAlgorithm() string {
 	case "bcrypt":
 		return configValue
 	case "argon2":
+		fallthrough
 	default:
 		return configValue
 	}
