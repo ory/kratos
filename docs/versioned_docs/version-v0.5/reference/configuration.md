@@ -40,6 +40,8 @@ identity:
   #
   # Path to the JSON Schema which describes a default identity's traits.
   #
+  # Default schema has an id of: "default"
+  #
   # Examples:
   # - file://path/to/identity.traits.schema.json
   # - https://foo.bar.com/path/to/identity.traits.schema.json
