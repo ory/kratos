@@ -1,21 +1,35 @@
 - tags:
   - kratos
+  - secrets
+  - config
+  q: |
+    Is it possible to pass multiple system.secret values through the ENV, or do you
+    have to use a config file for that?
+  a: |
+    Yes, you can set them as environmental variable, you just have to separate them
+    using a `,`. More info on these conventions in the documentation: [Setting configuration
+    values via environmental variables](https://www.ory.sh/docs/ecosystem/configuring/#stringnumeric-arrays).'
+- tags:
+  - kratos
   - database
   q: |
     We want to seperate our customers and employees, so we store them in different
     databases. But we would like to have them use the same login dialog for our portal.
     How can I achieve that with Ory Kratos?
   a: |
-    You can deploy Ory Kratos two times, and use the same login/registration endpoints.
-    So you define the same login/registration UI URLs in both of the Kratos configurations.
+    You can deploy Ory Kratos two times, and use the same login UI pointing to two
+    different Kratos login endpoints - `/login/customer` or `/login/employee`, either
+    by having two different login routes, or by adding some logic to your login UI
+    that reroutes customers to `/login/customer` and employees to `/login/employee`.
+    So you define the same login or registration UI URLs in both of the Kratos configurations.
     You may need to tell your login/registration UI which Kratos it is supposed to
     talk to. The instances are cheap to deploy and the databases are completely isolated
-    from each other.  For example you can have something like `/login/customer` and
-    `/login/employee`.
+    from each other.  For example    something like `/login/customer` and `/login/employee`.
 - tags:
   - kratos
   - ecosystem
-  q: Is the code audited by an independent entity and is there a bug bounty program?
+  q: |
+    Is the code audited by an independent entity and is there a bug bounty program?
   a: |
     We will do that when the APIs and core are stable. A bug bounty program is in
     the making but not done yet. If you are a security researcher and interested in
@@ -37,9 +51,9 @@
   - registration
   - cors
   q: |
-    Hey guys, I am currently trying to get the Kratos registration flow working
+    I am currently trying to get the Kratos registration flow working
     on a react app that I am creating. I am having CORS issues with the completeSelfServiceRegistrationFlowWithPasswordMethod
-    call when using the @oryd/kratos-client JS package.
+    call when using the @oryd/kratos-client JS package. '
   a: |
     You are using AJAX to submit the form. This is not supported right now. You need
     to submit a regular HTML form. Do not use AJAX. Do not use fetch. Let the user
@@ -52,11 +66,11 @@
   q: |
     Is the ability to freeze certain identity fields after registration anywhere
     on the roadmap? Also I want read-only or hidden user-specific data. Can I use
-    traits for that? Example: Some of our identity traits fields may be the subject
+    traits for that? Example: Some of our identity trait fields may be the subject
     to identity validation ([know your customer](https://en.wikipedia.org/wiki/Know_your_customer)).
     Once they are validated we do not allow the identity to be edited by the end-user.
   a: |
-    Currently traits are visible to the users and also editable by them. It makes
+    Currently traits are visible to the user and also editable by them. It makes
     sense to have read-only and/or hidden traits for users, but we can not give an
     exact timing when this will be available. There is an open issue for this feature:
     [Issue](https://github.com/ory/kratos/issues/47).
@@ -65,7 +79,7 @@
   - hooks
   - feature
   q: |
-    Are there plans to provide hooks on registration/login/logouts/identity updates?
+    Are there plans to provide hooks on registration/login/logouts/identity updates? '
   a: |
     Yes! See these issues for more information on the current progress: [Feature
     Request: Webhooks](https://github.com/ory/kratos/issues/271) and [Implement RPC
@@ -74,10 +88,11 @@
   - kratos
   - registration
   - traits
-  q: How can I verify beforehand if a username is available during registration?
+  q: |
+    How can I verify beforehand if a username is available during registration?
   a: |
-    You can not right now. It would allow account enumeration attacks. See also the
-    [section in the documentation](https://www.ory.sh/kratos/docs/concepts/security/#account-enumeration).
+    You can not right now. It would allow account enumeration attacks. See also the  [section
+    in the documentation](https://www.ory.sh/kratos/docs/concepts/security/#account-enumeration).
 - tags:
   - kratos
   - database
@@ -95,16 +110,17 @@
 - tags:
   - kratos
   - security
-  q: | 
+  q: |
     Do you have protection or plans for brute force attacks i.e. repetitive login
     attempts? Leaked database scans?
   a: |
-    See the following document: [Ory Kratos Security Measures](https://www.ory.sh/kratos/docs/concepts/security#passwords).
+     'See the following document: [Ory Kratos Security Measures](https://www.ory.sh/kratos/docs/concepts/security#passwords)'
 - tags:
   - kratos
   - oidc
   - traits
-  q: How do I append a random suffix e.g. a number to OIDC usernames if the username
+  q: |
+    How do I append a random suffix e.g. a number to OIDC usernames if the username
     returned by a provider is already taken.
   a: |
     You can use the md5 function built in the [jsonnet standart library](https://jsonnet.org/ref/stdlib.html).
@@ -112,9 +128,11 @@
 - tags:
   - kratos
   - spa
-  q: I want to implement a single-page-app (SPA). Is this possible with Ory Kratos?
+  q: |
+    I want to implement a single-page-app (SPA). Is this possible with Ory Kratos?
   a: |
-    Yes, definitely. We do not have an example-app (yet). around some page-reloads,
-    as it is not possible to use the API flows in the browser. This is important to
-    prevent CSRF attacks. So hopefully you are not too strict with your SPA. A sample
-    app is being worked on here: [Implement React SPA sample app](https://github.com/ory/kratos/issues/668).
+    Yes, definitely. We do not have an example-app (yet). Also, you might not get
+    around some page-reloads as you definitely should, as it is not possible to use
+    the API flows in the browser. This is important to prevent [CSRF attacks](https://en.wikipedia.org/wiki/Cross-site_request_forgery).
+    So hopefully you are not too strict with your SPA. A sample app is being worked
+    on here: [Implement React SPA sample app](https://github.com/ory/kratos/issues/668).
