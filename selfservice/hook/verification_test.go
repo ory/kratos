@@ -13,8 +13,10 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -22,14 +24,14 @@ import (
 )
 
 func TestVerifier(t *testing.T) {
-	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity) error{
-		"settings": func(h *hook.Verifier, i *identity.Identity) error {
+	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity, flow.Flow) error{
+		"settings": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecuteSettingsPostPersistHook(
-				httptest.NewRecorder(), new(http.Request), new(settings.Flow), i)
+				httptest.NewRecorder(), new(http.Request), f.(*settings.Flow), i)
 		},
-		"register": func(h *hook.Verifier, i *identity.Identity) error {
+		"register": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecutePostRegistrationPostPersistHook(
-				httptest.NewRecorder(), new(http.Request), new(registration.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
+				httptest.NewRecorder(), new(http.Request), f.(*registration.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
 		},
 	} {
 		t.Run("name="+k, func(t *testing.T) {
@@ -61,8 +63,26 @@ func TestVerifier(t *testing.T) {
 			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID)
 			require.NoError(t, err)
 
+			var originalFlow flow.Flow
+			switch k {
+			case "settings":
+				originalFlow = &settings.Flow{RequestURL: "http://foo.com/settings?after_verification_return_to=verification_callback"}
+			case "register":
+				originalFlow = &registration.Flow{RequestURL: "http://foo.com/registration?after_verification_return_to=verification_callback"}
+			default:
+				t.FailNow()
+			}
+
 			h := hook.NewVerifier(reg)
-			require.NoError(t, hf(h, i))
+			require.NoError(t, hf(h, i, originalFlow))
+
+			expectedVerificationFlow, err := verification.NewPostHookFlow(conf.SelfServiceFlowVerificationRequestLifespan(), originalFlow)
+			require.NoError(t, err)
+
+			var verificationFlow verification.Flow
+			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow))
+
+			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow.RequestURL)
 
 			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 			require.NoError(t, err)
