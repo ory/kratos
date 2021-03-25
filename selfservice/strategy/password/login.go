@@ -3,6 +3,7 @@ package password
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/kratos/hash"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -146,7 +147,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if err := s.d.Hasher().Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
+	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
 		s.handleLoginError(w, r, ar, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 		return
 	}

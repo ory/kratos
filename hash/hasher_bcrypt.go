@@ -20,7 +20,7 @@ func NewHasherBcrypt(c BcryptConfiguration) *Bcrypt {
 }
 
 func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	if err := validatePasswordLength(password); err != nil {
+	if err := validateBcryptPasswordLength(password); err != nil {
 		return nil, err
 	}
 
@@ -32,20 +32,7 @@ func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	return hash, nil
 }
 
-func (h *Bcrypt) Compare(_ context.Context, password []byte, hash []byte) error {
-	if err := validatePasswordLength(password); err != nil {
-		return err
-	}
-
-	err := bcrypt.CompareHashAndPassword(hash, password)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func validatePasswordLength(password []byte) error {
+func validateBcryptPasswordLength(password []byte) error {
 	// Bcrypt truncates the password to the first 72 bytes, following the OpenBSD implementation,
 	// so if password is longer than 72 bytes, function returns an error
 	// See https://en.wikipedia.org/wiki/Bcrypt#User_input
