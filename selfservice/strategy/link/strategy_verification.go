@@ -337,7 +337,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
 	)
 	if err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusFound)
 		return
 	}
 
