@@ -120,7 +120,7 @@ func TestDisabledEndpoint(t *testing.T) {
 	t.Run("case=should not login when password method is disabled", func(t *testing.T) {
 		f := testhelpers.InitializeLoginFlowViaAPI(t, c, publicTS, false)
 
-		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
+		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password_identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
@@ -132,7 +132,7 @@ func TestDisabledEndpoint(t *testing.T) {
 	t.Run("case=should not registration when password method is disabled", func(t *testing.T) {
 		f := testhelpers.InitializeRegistrationFlowViaAPI(t, c, publicTS)
 
-		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password.identifier": []string{"identifier"}, "password.password": []string{"password"}})
+		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password_identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
@@ -152,8 +152,8 @@ func TestDisabledEndpoint(t *testing.T) {
 		t.Run("method=POST", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
 			res, err := c.PostForm(f.Ui.Action, url.Values{
-				"method":            {"password"},
-				"password.password": {"bar"},
+				"method":   {"password"},
+				"password": {"bar"},
 			})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
