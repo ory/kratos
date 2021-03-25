@@ -13,16 +13,8 @@
       "type": "string"
     },
     "password": {
-      "type": "object",
-      "properties": {
-        "password": {
-          "type": "string",
-          "minLength": 1
-        }
-      },
-      "required": [
-        "password"
-      ]
+      "type": "string",
+      "minLength": 1
     }
   }
 }

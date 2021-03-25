@@ -148,7 +148,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.Ro
 	m.VerificationHandler().RegisterPublicRoutes(router)
 	m.AllVerificationStrategies().RegisterPublicRoutes(router)
 
-	m.HealthHandler(ctx).SetRoutes(router.Router, false)
+	m.HealthHandler(ctx).SetHealthRoutes(router.Router, false)
 }
 
 func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.RouterAdmin) {
@@ -166,7 +166,8 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.VerificationHandler().RegisterAdminRoutes(router)
 	m.AllVerificationStrategies().RegisterAdminRoutes(router)
 
-	m.HealthHandler(ctx).SetRoutes(router.Router, true)
+	m.HealthHandler(ctx).SetHealthRoutes(router.Router, true)
+	m.HealthHandler(ctx).SetVersionRoutes(router.Router)
 	m.MetricsHandler().SetRoutes(router.Router)
 }
 

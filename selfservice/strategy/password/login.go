@@ -24,7 +24,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *CompleteSelfServiceLoginFlowWithPasswordMethod, err error) error {
 	if f != nil {
 		f.UI.Nodes.Reset()
-		f.UI.Nodes.SetValueAttribute(node.ToID(s.NodeGroup(), "password.identifier"), payload.Password.Identifier)
+		f.UI.Nodes.SetValueAttribute(node.ToID(s.NodeGroup(), "password_identifier"), payload.Identifier)
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}
@@ -63,7 +63,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Password.Identifier)
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
 		time.Sleep(x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation))
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
@@ -75,7 +75,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 		return nil, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)
 	}
 
-	if err := s.d.Hasher().Compare(r.Context(), []byte(p.Password.Password), []byte(o.HashedPassword)); err != nil {
+	if err := s.d.Hasher().Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
@@ -100,9 +100,9 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField("password.identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute))
+	sr.UI.SetNode(node.NewInputField("password_identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
-	sr.UI.SetNode(NewPasswordNode("password.password"))
+	sr.UI.SetNode(NewPasswordNode("password"))
 
 	return nil
 }

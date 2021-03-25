@@ -41,10 +41,11 @@ type completeSelfServiceSettingsFlowWithPasswordMethod struct {
 }
 
 type CompleteSelfServiceSettingsFlowWithPasswordMethod struct {
-	// Password contains fields for the password method
+	// Password is the updated password
 	//
+	// type: string
 	// required: true
-	Password CompleteSelfServiceSettingsFlowWithPasswordMethodPayload `json:"password"`
+	Password string `json:"password"`
 
 	// CSRFToken is the anti-CSRF token
 	//
@@ -62,14 +63,6 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethod struct {
 	//
 	// swagger:ignore
 	Flow string `json:"flow"`
-}
-
-type CompleteSelfServiceSettingsFlowWithPasswordMethodPayload struct {
-	// Password is the updated password
-	//
-	// type: string
-	// required: true
-	Password string `json:"password"`
 }
 
 func (p *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetFlowID() uuid.UUID {
@@ -134,11 +127,11 @@ func (s *Strategy) continueSettingsFlow(
 		return errors.WithStack(settings.NewFlowNeedsReAuth())
 	}
 
-	if len(p.Password.Password) == 0 {
-		return schema.NewRequiredError("#/password/password", "password")
+	if len(p.Password) == 0 {
+		return schema.NewRequiredError("#/password", "password")
 	}
 
-	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password.Password))
+	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))
 	if err != nil {
 		return err
 	}
@@ -162,7 +155,7 @@ func (s *Strategy) continueSettingsFlow(
 
 	c.Config = co
 	i.SetCredentials(s.ID(), *c)
-	if err := s.validateCredentials(r.Context(), i, p.Password.Password); err != nil {
+	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return err
 	}
 
@@ -173,7 +166,7 @@ func (s *Strategy) continueSettingsFlow(
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
 	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
-	f.UI.Nodes.Upsert(NewPasswordNode("password.password"))
+	f.UI.Nodes.Upsert(NewPasswordNode("password"))
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	return nil
