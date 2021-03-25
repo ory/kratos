@@ -21,13 +21,9 @@ import (
 )
 
 type RegistrationFormPayload struct {
-	Password  RegistrationFormPasswordPayload `json:"password"`
-	CSRFToken string                          `json:"csrf_token"`
-}
-
-type RegistrationFormPasswordPayload struct {
-	Password string          `json:"password"`
-	Traits   json.RawMessage `json:"traits"`
+	Password  string          `json:"password"`
+	Traits    json.RawMessage `json:"traits"`
+	CSRFToken string          `json:"csrf_token"`
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
@@ -37,7 +33,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 	if f != nil {
 		f.UI.Nodes.Reset()
 		if p != nil {
-			for _, n := range container.NewFromJSON("", node.PasswordGroup, p.Password.Traits, "password.traits").Nodes {
+			for _, n := range container.NewFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
 				// we only set the value and not the whole field because we want to keep types from the initial form generation
 				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
 			}
@@ -53,7 +49,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 
 func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
 	raw, err := sjson.SetBytes(registrationSchema,
-		"properties.password.properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -80,15 +76,15 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	if len(p.Password.Password) == 0 {
-		return s.handleRegistrationError(w, r, f, &p, schema.NewRequiredError("#/password/password", "password"))
+	if len(p.Password) == 0 {
+		return s.handleRegistrationError(w, r, f, &p, schema.NewRequiredError("#/password", "password"))
 	}
 
-	if len(p.Password.Traits) == 0 {
-		p.Password.Traits = json.RawMessage("{}")
+	if len(p.Traits) == 0 {
+		p.Traits = json.RawMessage("{}")
 	}
 
-	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password.Password))
+	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))
 	if err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
@@ -98,10 +94,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
 	}
 
-	i.Traits = identity.Traits(p.Password.Traits)
+	i.Traits = identity.Traits(p.Traits)
 	i.SetCredentials(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}, Config: co})
 
-	if err := s.validateCredentials(r.Context(), i, p.Password.Password); err != nil {
+	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
@@ -130,7 +126,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
-			return schema.NewPasswordPolicyViolationError("#/password/password", err.Error())
+			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
 		}
 	}
 
@@ -138,13 +134,13 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	nodes, err := container.NodesFromJSONSchema(node.PasswordGroup, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "password", nil)
+	nodes, err := container.NodesFromJSONSchema(node.PasswordGroup, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {
 		return err
 	}
 
 	nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
-	nodes.Upsert(NewPasswordNode("password.password"))
+	nodes.Upsert(NewPasswordNode("password"))
 
 	for _, n := range nodes {
 		f.UI.SetNode(n)
@@ -155,7 +151,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	if err := f.UI.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", []string{
 		"method",
 		x.CSRFTokenName,
-		"password.password",
+		"password",
 	}); err != nil {
 		return err
 	}

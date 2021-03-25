@@ -3,11 +3,13 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/continuity"
-	"github.com/pkg/errors"
 	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/continuity"
 
 	"github.com/google/go-jsonnet"
 	"github.com/tidwall/gjson"

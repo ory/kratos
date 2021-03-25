@@ -130,7 +130,7 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "invalid URL escape", "%s", body)
-				assert.Equal(t, "email", gjson.Get(body, "ui.nodes.#(attributes.name==\"password.traits.email\").attributes.type").String(), "%s", body)
+				assert.Equal(t, "email", gjson.Get(body, "ui.nodes.#(attributes.name==\"traits.email\").attributes.type").String(), "%s", body)
 			})
 		})
 
@@ -222,14 +222,14 @@ func TestRegistration(t *testing.T) {
 			var check = func(t *testing.T, actual string) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
-				checkFormContent(t, []byte(actual), "password.password", "csrf_token", "password.traits.username", "password.traits.foobar")
-				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password.password).messages.0").String(), "data breaches and must no longer be used.", "%s", actual)
+				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
+				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", actual)
 			}
 
 			var values = func(v url.Values) {
-				v.Set("password.traits.username", "registration-identifier-4")
-				v.Set("password.password", "password")
-				v.Set("password.traits.foobar", "bar")
+				v.Set("traits.username", "registration-identifier-4")
+				v.Set("password", "password")
+				v.Set("traits.foobar", "bar")
 			}
 
 			t.Run("type=api", func(t *testing.T) {
@@ -245,14 +245,14 @@ func TestRegistration(t *testing.T) {
 			var check = func(t *testing.T, actual string) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
-				checkFormContent(t, []byte(actual), "password.password", "csrf_token", "password.traits.username", "password.traits.foobar")
-				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password.traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
+				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
+				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 			}
 
 			var values = func(v url.Values) {
-				v.Set("password.traits.username", "registration-identifier-5")
-				v.Set("password.password", x.NewUUID().String())
-				v.Del("password.traits.foobar")
+				v.Set("traits.username", "registration-identifier-5")
+				v.Set("password", x.NewUUID().String())
+				v.Del("traits.foobar")
 			}
 
 			t.Run("type=api", func(t *testing.T) {
@@ -266,11 +266,11 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should have correct CSRF behavior", func(t *testing.T) {
 			var values = url.Values{
-				"method":                   {"password"},
-				"csrf_token":               {"invalid_token"},
-				"password.traits.username": {"registration-identifier-csrf-browser"},
-				"password.password":        {x.NewUUID().String()},
-				"password.traits.foobar":   {"bar"},
+				"method":          {"password"},
+				"csrf_token":      {"invalid_token"},
+				"traits.username": {"registration-identifier-csrf-browser"},
+				"password":        {x.NewUUID().String()},
+				"traits.foobar":   {"bar"},
 			}
 			t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
@@ -337,11 +337,11 @@ func TestRegistration(t *testing.T) {
 			}
 
 			values := url.Values{
-				"method":                   {"password"},
-				"password.traits.username": {"registration-identifier-6"},
-				"password.password":        {x.NewUUID().String()},
-				"password.traits.foobar":   {"bar"},
-				"csrf_token":               {x.FakeCSRFToken},
+				"method":          {"password"},
+				"traits.username": {"registration-identifier-6"},
+				"password":        {x.NewUUID().String()},
+				"traits.foobar":   {"bar"},
+				"csrf_token":      {x.FakeCSRFToken},
 			}
 
 			t.Run("type=api", func(t *testing.T) {
@@ -370,11 +370,11 @@ func TestRegistration(t *testing.T) {
 			}
 
 			values := url.Values{
-				"method":                   {"password"},
-				"password.traits.username": {"registration-identifier-7"},
-				"password.password":        {x.NewUUID().String()},
-				"password.traits.foobar":   {"bar"},
-				"csrf_token":               {x.FakeCSRFToken},
+				"method":          {"password"},
+				"traits.username": {"registration-identifier-7"},
+				"password":        {x.NewUUID().String()},
+				"traits.foobar":   {"bar"},
+				"csrf_token":      {x.FakeCSRFToken},
 			}
 
 			t.Run("type=api", func(t *testing.T) {
@@ -429,12 +429,12 @@ func TestRegistration(t *testing.T) {
 
 			var values = func(isAPI bool) func(v url.Values) {
 				return func(v url.Values) {
-					v.Set("password.traits.username", "registration-identifier-8-browser")
+					v.Set("traits.username", "registration-identifier-8-browser")
 					if isAPI {
-						v.Set("password.traits.username", "registration-identifier-8-api")
+						v.Set("traits.username", "registration-identifier-8-api")
 					}
-					v.Set("password.password", x.NewUUID().String())
-					v.Set("password.traits.foobar", "bar")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
 				}
 			}
 
@@ -460,12 +460,12 @@ func TestRegistration(t *testing.T) {
 
 			var values = func(isAPI bool) func(v url.Values) {
 				return func(v url.Values) {
-					v.Set("password.traits.username", "registration-identifier-8-browser-duplicate")
+					v.Set("traits.username", "registration-identifier-8-browser-duplicate")
 					if isAPI {
-						v.Set("password.traits.username", "registration-identifier-8-api-duplicate")
+						v.Set("traits.username", "registration-identifier-8-api-duplicate")
 					}
-					v.Set("password.password", x.NewUUID().String())
-					v.Set("password.traits.foobar", "bar")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
 				}
 			}
 
@@ -491,33 +491,33 @@ func TestRegistration(t *testing.T) {
 			var check = func(t *testing.T, actual string) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
-				checkFormContent(t, []byte(actual), "password.password", "csrf_token", "password.traits.username")
+				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username")
 			}
 
 			var checkFirst = func(t *testing.T, actual string) {
 				check(t, actual)
-				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password.traits.username).messages.0").String(), `Property username is missing`, "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).messages.0").String(), `Property username is missing`, "%s", actual)
 			}
 
 			var checkSecond = func(t *testing.T, actual string) {
 				check(t, actual)
-				assert.EqualValues(t, "registration-identifier-9", gjson.Get(actual, "ui.nodes.#(attributes.name==password.traits.username).attributes.value").String(), "%s", actual)
-				assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password.traits.username).attributes.error").Raw)
+				assert.EqualValues(t, "registration-identifier-9", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.error").Raw)
 				assert.Empty(t, gjson.Get(actual, "ui.nodes.error").Raw)
-				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password.traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 			}
 
 			var valuesFirst = func(v url.Values) url.Values {
-				v.Del("password.traits.username")
-				v.Set("password.password", x.NewUUID().String())
-				v.Set("password.traits.foobar", "bar")
+				v.Del("traits.username")
+				v.Set("password", x.NewUUID().String())
+				v.Set("traits.foobar", "bar")
 				return v
 			}
 
 			var valuesSecond = func(v url.Values) url.Values {
-				v.Set("password.traits.username", "registration-identifier-9")
-				v.Set("password.password", x.NewUUID().String())
-				v.Del("password.traits.foobar")
+				v.Set("traits.username", "registration-identifier-9")
+				v.Set("password", x.NewUUID().String())
+				v.Del("traits.foobar")
 				return v
 			}
 
@@ -552,12 +552,12 @@ func TestRegistration(t *testing.T) {
 
 			var values = func(isAPI bool) func(v url.Values) {
 				return func(v url.Values) {
-					v.Set("password.traits.username", "registration-identifier-10-browser")
+					v.Set("traits.username", "registration-identifier-10-browser")
 					if isAPI {
-						v.Set("password.traits.username", "registration-identifier-10-api")
+						v.Set("traits.username", "registration-identifier-10-api")
 					}
-					v.Set("password.password", x.NewUUID().String())
-					v.Set("password.traits.foobar", "bar")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
 				}
 			}
 
@@ -590,9 +590,9 @@ func TestRegistration(t *testing.T) {
 			Nodes: node.Nodes{
 				node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit),
 				node.NewCSRFNode(x.FakeCSRFToken),
-				node.NewInputField("password.password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute),
-				node.NewInputField("password.traits.foobar", nil, node.PasswordGroup, node.InputAttributeTypeText),
-				node.NewInputField("password.traits.username", nil, node.PasswordGroup, node.InputAttributeTypeText),
+				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute),
+				node.NewInputField("traits.foobar", nil, node.PasswordGroup, node.InputAttributeTypeText),
+				node.NewInputField("traits.username", nil, node.PasswordGroup, node.InputAttributeTypeText),
 			},
 		}, sr.UI)
 	})
