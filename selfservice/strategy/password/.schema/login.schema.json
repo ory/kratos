@@ -4,6 +4,7 @@
   "type": "object",
   "required": [
     "password",
+    "password_identifier",
     "method"
   ],
   "properties": {
@@ -11,21 +12,12 @@
       "type": "string"
     },
     "password": {
-      "type": "object",
-      "required": [
-        "password",
-        "identifier"
-      ],
-      "properties": {
-        "password": {
-          "type": "string",
-          "minLength": 1
-        },
-        "identifier": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
+      "type": "string",
+      "minLength": 1
+    },
+    "password_identifier": {
+      "type": "string",
+      "minLength": 1
     },
     "method": {
       "type": "string"

@@ -19,15 +19,11 @@ type (
 		// Sending the anti-csrf token is only required for browser login flows.
 		CSRFToken string `json:"csrf_token"`
 
-		Password CompleteSelfServiceLoginFlowWithPasswordMethodPayload `json:"password"`
-	}
-
-	CompleteSelfServiceLoginFlowWithPasswordMethodPayload struct {
 		// The user's password.
-		Password string `json:"password,omitempty"`
+		Password string `json:"password"`
 
 		// Identifier is the email or username of the user trying to log in.
-		Identifier string `json:"identifier,omitempty"`
+		Identifier string `json:"password_identifier"`
 	}
 )
 

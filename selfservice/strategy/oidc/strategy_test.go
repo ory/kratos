@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/assertx"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/ui/container"
 
@@ -109,7 +110,7 @@ func TestStrategy(t *testing.T) {
 				break
 			}
 		}
-		require.True(t, found, "%+v", assertx.PrettifyJSONPayload(t,config))
+		require.True(t, found, "%+v", assertx.PrettifyJSONPayload(t, config))
 
 		return config.Action
 	}
