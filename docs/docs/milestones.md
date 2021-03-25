@@ -18,10 +18,10 @@ Something is not working.
 - [ ] Refresh Sessions Without Having to Log In Again
       ([kratos#615](https://github.com/ory/kratos/issues/615)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] handle 409 error in settings flow
-      ([kratos#1107](https://github.com/ory/kratos/issues/1107))
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
+- [x] handle 409 error in settings flow
+      ([kratos#1107](https://github.com/ory/kratos/issues/1107))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
