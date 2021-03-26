@@ -1327,6 +1327,20 @@
             }
           },
           "additionalProperties": false
+        },
+        "bcrypt": {
+          "title": "Configuration for the Bcrypt hasher.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cost"],
+          "properties": {
+            "cost": {
+              "type": "integer",
+              "minimum": 12,
+              "maximum": 31,
+              "default": 12
+            }
+          }
         }
       },
       "additionalProperties": false
