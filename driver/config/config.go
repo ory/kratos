@@ -114,7 +114,7 @@ type (
 		KeyLength   uint32 `json:"key_length"`
 	}
 	Bcrypt struct {
-		Cost      uint32 `json:"cost"`
+		Cost uint32 `json:"cost"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -241,7 +241,6 @@ func (p *Config) HasherArgon2() *Argon2 {
 		KeyLength:   uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
 	}
 }
-
 
 func (p *Config) HasherBcrypt() *Bcrypt {
 	// warn about usage of default values and point to the docs

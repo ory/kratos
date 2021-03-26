@@ -2,9 +2,11 @@ package hash
 
 import (
 	"context"
-	"github.com/ory/kratos/driver/config"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/ory/kratos/driver/config"
 )
 
 type Bcrypt struct {

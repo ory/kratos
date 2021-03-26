@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 

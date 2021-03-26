@@ -5,12 +5,14 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
-	"github.com/ory/kratos/driver/config"
+	"regexp"
+	"strings"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
-	"regexp"
-	"strings"
+
+	"github.com/ory/kratos/driver/config"
 )
 
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
@@ -103,5 +105,3 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 
 	return p, salt, hash, nil
 }
-
-

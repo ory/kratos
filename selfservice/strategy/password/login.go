@@ -3,8 +3,9 @@ package password
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/kratos/hash"
 	"net/http"
+
+	"github.com/ory/kratos/hash"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
