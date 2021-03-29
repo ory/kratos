@@ -368,7 +368,7 @@ func TestDisabledEndpoint(t *testing.T) {
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%s", err)
 
 			br, _ := err.(*kratos.GenericOpenAPIError)
-			assert.Contains(t, br.Body(), "This endpoint was disabled by system administrator", "%s", br.Body())
+			assert.Contains(t, string(br.Body()), "This endpoint was disabled by system administrator", "%s", br.Body())
 		})
 	})
 

@@ -348,6 +348,8 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		interim, err := ss.Login(w, r, f)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
+		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return
 		} else if err != nil {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return

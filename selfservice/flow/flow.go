@@ -25,3 +25,7 @@ func GetFlowID(r *http.Request) (uuid.UUID, error) {
 	}
 	return rid, nil
 }
+
+type Flow interface {
+	GetID() uuid.UUID
+}
