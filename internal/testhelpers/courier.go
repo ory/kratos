@@ -28,7 +28,7 @@ func CourierExpectLinkInMessage(t *testing.T, message *courier.Message, offset i
 	if offset == 0 {
 		offset++
 	}
-	match := regexp.MustCompile(`(http[^\s]+)`).FindStringSubmatch(message.Body)
+	match := regexp.MustCompile(`<a href="([^"]+)">`).FindStringSubmatch(message.Body)
 	require.Len(t, match, offset*2)
 
 	return match[offset]
