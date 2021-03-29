@@ -69,6 +69,12 @@ func NewEmailTemplateFromMessage(c *config.Config, m Message) (EmailTemplate, er
 			return nil, err
 		}
 		return template.NewVerificationValid(c, &t), nil
+	case TypeTestStub:
+		var t template.TestStubModel
+		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return template.NewTestStub(c, &t), nil
 	default:
 		return nil, errors.Errorf("received unexpected message template type: %s", m.TemplateType)
 	}
