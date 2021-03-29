@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/ory/kratos/ui/container"
+	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -24,8 +24,6 @@ import (
 	"github.com/ory/x/fetcher"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -101,6 +99,7 @@ type Strategy struct {
 	d         dependencies
 	f         *fetcher.Fetcher
 	validator *schema.Validator
+	dec       *decoderx.HTTP
 }
 
 type authCodeContainer struct {
@@ -139,15 +138,6 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
 		r.GET(RouteCallback, wrappedHandleCallback)
 	}
-	//
-	//wrappedHandleAuth := strategy.IsDisabled(s.d, s.ID().String(), s.handleAuth)
-	//if handle, _, _ := r.Lookup("POST", RouteAuth); handle == nil {
-	//	r.POST(RouteAuth, wrappedHandleAuth)
-	//}
-	//
-	//if handle, _, _ := r.Lookup("GET", RouteAuth); handle == nil {
-	//	r.GET(RouteAuth, wrappedHandleAuth)
-	//}
 }
 
 func NewStrategy(d dependencies) *Strategy {
@@ -160,56 +150,6 @@ func NewStrategy(d dependencies) *Strategy {
 
 func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypeOIDC
-}
-
-func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	rid := x.ParseUUID(ps.ByName("flow"))
-	if err := r.ParseForm(); err != nil {
-		s.handleError(w, r, rid, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
-		return
-	}
-
-	var pid = r.Form.Get(s.SettingsStrategyID() + ".provider") // this can come from both url query and post body
-	if pid == "" {
-		s.handleError(w, r, rid, pid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "%s.provider" form field`, s.SettingsStrategyID())))
-		return
-	}
-
-	provider, err := s.provider(r.Context(), r, pid)
-	if err != nil {
-		s.handleError(w, r, rid, pid, nil, err)
-		return
-	}
-
-	c, err := provider.OAuth2(r.Context())
-	if err != nil {
-		s.handleError(w, r, rid, pid, nil, err)
-		return
-	}
-
-	req, err := s.validateFlow(r.Context(), r, rid)
-	if err != nil {
-		s.handleError(w, r, rid, pid, nil, err)
-		return
-	}
-
-	if s.alreadyAuthenticated(w, r, req) {
-		return
-	}
-
-	state := x.NewUUID().String()
-	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
-			State:  state,
-			FlowID: rid.String(),
-			Form:   r.PostForm,
-		}),
-		continuity.WithLifespan(time.Minute*30)); err != nil {
-		s.handleError(w, r, rid, pid, nil, err)
-		return
-	}
-
-	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
 }
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (ider, error) {
@@ -317,9 +257,9 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	req, cntnr, err := s.validateCallback(w, r)
 	if err != nil {
 		if req != nil {
-			s.handleError(w, r, req.GetID(), pid, nil, err)
+			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		} else {
-			s.handleError(w, r, x.EmptyUUID, pid, nil, err)
+			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, s.handleError(w, r, nil, pid, nil, err))
 		}
 		return
 	}
@@ -330,61 +270,59 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	provider, err := s.provider(r.Context(), r, pid)
 	if err != nil {
-		s.handleError(w, r, req.GetID(), pid, nil, err)
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
 	conf, err := provider.OAuth2(context.Background())
 	if err != nil {
-		s.handleError(w, r, req.GetID(), pid, nil, err)
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
 	token, err := conf.Exchange(r.Context(), code)
 	if err != nil {
-		s.handleError(w, r, req.GetID(), pid, nil, err)
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
 	claims, err := provider.Claims(r.Context(), token)
 	if err != nil {
-		s.handleError(w, r, req.GetID(), pid, nil, err)
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
 	switch a := req.(type) {
 	case *login.Flow:
-		s.processLogin(w, r, a, claims, provider, cntnr)
+		if err := s.processLogin(w, r, a, claims, provider, cntnr); err != nil {
+			s.forwardError(w, r, a, err)
+		}
 		return
 	case *registration.Flow:
-		s.processRegistration(w, r, a, claims, provider, cntnr)
+		if err := s.processRegistration(w, r, a, claims, provider, cntnr); err != nil {
+			s.forwardError(w, r, a, err)
+		}
 		return
 	case *settings.Flow:
 		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
-			s.handleError(w, r, req.GetID(), pid, nil, err)
+			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
 			return
 		}
-		s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, claims, provider)
+		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, claims, provider); err != nil {
+			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
+			return
+		}
 		return
 	default:
-		s.handleError(w, r, req.GetID(), pid, nil, errors.WithStack(x.PseudoPanic.
-			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a)))
+		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, errors.WithStack(x.PseudoPanic.
+			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a))))
 		return
 	}
 }
 
 func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
-}
-
-func (s *Strategy) authURL(ctx context.Context, r *http.Request, flowID uuid.UUID) string {
-	return urlx.AppendPaths(
-		urlx.Copy(s.d.Config(ctx).SelfPublicURL(r)),
-		strings.Replace(
-			RouteAuth, ":flow", flowID.String(), 1,
-		),
-	).String()
 }
 
 func (s *Strategy) populateMethod(r *http.Request, c *container.Container) error {
@@ -425,41 +363,54 @@ func (s *Strategy) provider(ctx context.Context, r *http.Request, id string) (Pr
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, provider string, traits []byte, err error) error {
-	if x.IsZeroUUID(rid) {
-		return err
+func (s *Strategy) forwardError(w http.ResponseWriter, r *http.Request, f flow.Flow, err error) {
+	switch ff := f.(type) {
+	case *login.Flow:
+		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, ff, s.NodeGroup(), err)
+	case *registration.Flow:
+		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, ff, s.NodeGroup(), err)
+	case *settings.Flow:
+		var i *identity.Identity
+		if sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+			i = sess.Identity
+		}
+		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.NodeGroup(), ff, i, err)
+	default:
+		panic(errors.Errorf("unexpected type: %T", ff))
 	}
+}
 
-	if _, rerr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), rid); rerr == nil {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Flow, provider string, traits []byte, err error) error {
+	switch rf := f.(type) {
+	case *login.Flow:
 		return err
-	} else if _, rerr := s.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid); rerr == nil {
-		return err
-	} else if rr, rerr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid); rerr == nil {
-		rr.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
-		rr.UI.Reset("method")
+	case *registration.Flow:
+		rf.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
+		rf.UI.Reset("method")
 
 		if traits != nil {
-			rr.UI.UpdateNodesFromJSON(traits, s.SettingsStrategyID()+".traits", node.OpenIDConnectGroup)
+			rf.UI.UpdateNodesFromJSON(traits, "traits", node.OpenIDConnectGroup)
 		}
 
-		if errSec := rr.UI.ParseError(node.OpenIDConnectGroup, err); errSec != nil {
+		if errSec := rf.UI.ParseError(node.OpenIDConnectGroup, err); errSec != nil {
 			return errors.Wrap(err, errSec.Error())
 		}
-		rr.UI.ResetMessages()
+		rf.UI.ResetMessages()
 
-		rr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		if errSec := rr.UI.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", []string{
+		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		if errSec := rf.UI.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", []string{
 			x.CSRFTokenName,
 		}); errSec != nil {
 			return errors.Wrap(err, errSec.Error())
 		}
 
-		rr.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
-		rr.UI.GetNodes().Upsert(
+		rf.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
+		rf.UI.GetNodes().Upsert(
 			// v0.5: form.Field{Name: "provider", Value: provider, Type: "submit"}
 			node.NewInputField(s.SettingsStrategyID()+".provider", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
 		)
-
+		return err
+	case *settings.Flow:
 		return err
 	}
 

@@ -196,7 +196,7 @@ func (c *Container) UpdateNodesFromJSON(raw json.RawMessage, prefix string, grou
 			k = prefix + "." + k
 		}
 
-		if n := c.Nodes.Find(group, k); n != nil {
+		if n := c.Nodes.Find(k); n != nil {
 			n.Attributes.SetValue(v)
 			continue
 		}
@@ -222,7 +222,7 @@ func (c *Container) SetNode(n *node.Node) {
 
 // SetValue sets a container's field to the provided name and value.
 func (c *Container) SetValue(id string, n *node.Node) {
-	if f := c.Nodes.Find(n.Group, id); f != nil {
+	if f := c.Nodes.Find(id); f != nil {
 		f.Attributes.SetValue(n.GetValue())
 		return
 	}
@@ -239,7 +239,7 @@ func (c *Container) AddMessage(group node.Group, err *text.Message, setForFields
 	}
 
 	for _, name := range setForFields {
-		if ff := c.Nodes.Find(group, name); ff != nil {
+		if ff := c.Nodes.Find(name); ff != nil {
 			ff.Messages = append(ff.Messages, *err)
 			continue
 		}

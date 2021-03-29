@@ -2,23 +2,22 @@ package oidc
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
-	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/selfservice/strategy"
+	"github.com/ory/x/decoderx"
 
-	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/session"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -26,9 +25,8 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const (
-	SettingsPath = RouteBase + "/settings/connections"
-)
+//go:embed .schema/settings.schema.json
+var settingsSchema []byte
 
 var _ settings.Strategy = new(Strategy)
 var UnknownConnectionValidationError = &jsonschema.ValidationError{
@@ -140,23 +138,15 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return err
 	}
 
-	f := container.New(urlx.CopyWithQuery(urlx.AppendPaths(
-		s.d.Config(r.Context()).SelfPublicURL(r), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
-	f.SetCSRF(s.d.GenerateCSRFToken(r))
-
+	sr.UI.GetNodes().Remove("unlink", "link")
+	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	for _, l := range linkable {
-		f.GetNodes().Append(NewLinkNode(l.Config().ID))
+		sr.UI.GetNodes().Append(NewLinkNode(l.Config().ID))
 	}
 
 	for _, l := range linked {
-		f.GetNodes().Append(NewUnlinkNode(l.Config().ID))
+		sr.UI.GetNodes().Append(NewUnlinkNode(l.Config().ID))
 	}
-
-	panic(`
-	sr.Methods[s.SettingsStrategyID()] = &settings.FlowMethod{
-		Method: s.SettingsStrategyID(),
-		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: NewFlowMethod(f)},
-	}`)
 
 	return nil
 }
@@ -194,19 +184,47 @@ func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetFlowID(rid uuid.U
 }
 
 func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
-	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.SettingsStrategyID(), s.d); err != nil {
-		return nil, err
+	var method struct {
+		Link   string `json:"link" form:"link"`
+		Unlink string `json:"unlink" form:"unlink"`
+	}
+
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(settingsSchema)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if err := s.dec.Decode(r, &method, compiler,
+		decoderx.HTTPKeepRequestBody(true),
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if len(method.Link+method.Unlink) == 0 {
+		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+	}
+
+	if !s.d.Config(r.Context()).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
+		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 
 	var p completeSelfServiceBrowserSettingsOIDCFlowPayload
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		if l := len(p.Link); l > 0 {
-			panic("s.initLinkProvider(w, r, ctxUpdate, &p)")
-			return nil, nil
+			if err := s.initLinkProvider(w, r, ctxUpdate, &p); err != nil {
+				return nil, err
+			}
+
+			return ctxUpdate, nil
 		} else if u := len(p.Unlink); u > 0 {
-			panic("s.unlinkProvider(w, r, ctxUpdate, &p)")
-			return nil, nil
+			if err := s.unlinkProvider(w, r, ctxUpdate, &p); err != nil {
+				return nil, err
+			}
+
+			return ctxUpdate, nil
 		}
 
 		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
@@ -226,11 +244,16 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 			InstancePtr: "#/",
 		}))
 	} else if l > 0 {
-		panic("s.initLinkProvider(w, r, ctxUpdate, &p)")
-		return nil, nil
+		if err := s.initLinkProvider(w, r, ctxUpdate, &p); err != nil {
+			return nil, err
+		}
+		return ctxUpdate, nil
 	} else if u > 0 {
-		panic("s.unlinkProvider(w, r, ctxUpdate, &p)")
-		return nil, nil
+		if err := s.unlinkProvider(w, r, ctxUpdate, &p); err != nil {
+			return nil, err
+		}
+
+		return ctxUpdate, nil
 	}
 
 	return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(errors.WithStack(&jsonschema.ValidationError{
@@ -268,36 +291,55 @@ func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext
 	return i, nil
 }
 
-func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext,
-	p *completeSelfServiceBrowserSettingsOIDCFlowPayload) {
+func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload) error {
 	if _, err := s.isLinkable(r, ctxUpdate, p.Link); err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
-		strings.Replace(RouteAuth, ":flow", p.FlowID, 1)),
-		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
+	provider, err := s.provider(r.Context(), r, p.Link)
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
+	c, err := provider.OAuth2(r.Context())
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
+	req, err := s.validateFlow(r.Context(), r, ctxUpdate.Flow.ID)
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
+	state := x.NewUUID().String()
+	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
+		continuity.WithPayload(&authCodeContainer{
+			State:  state,
+			FlowID: ctxUpdate.Flow.ID.String(),
+			Form:   r.PostForm,
+		}),
+		continuity.WithLifespan(time.Minute*30)); err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
+	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
+	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
-	ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) {
+func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) error {
 	p := &completeSelfServiceBrowserSettingsOIDCFlowPayload{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
 	i, err := s.isLinkable(r, ctxUpdate, p.Link)
 	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
 	var conf CredentialsConfig
@@ -305,20 +347,18 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
 		if creds, err = NewCredentials(provider.Config().ID, claims.Subject); err != nil {
-			s.handleSettingsError(w, r, ctxUpdate, p, err)
-			return
+			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	} else {
 		creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
 		conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
 			Subject: claims.Subject, Provider: provider.Config().ID})
+
 		creds.Config, err = json.Marshal(conf)
 		if err != nil {
-			s.handleSettingsError(w, r, ctxUpdate, p, err)
-			return
+			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	}
 
@@ -326,41 +366,36 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
 		return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
+
+	return nil
 }
 
-func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
-	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload) {
+func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload) error {
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
 	providers, err := s.Config(r.Context())
 	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
 	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
 	availableProviders, err := s.linkedProviders(r.Context(), r, providers, i)
 	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
 	var cc CredentialsConfig
 	creds, err := i.ParseCredentials(s.ID(), &cc)
 	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(UnknownConnectionValidationError))
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(UnknownConnectionValidationError))
 	}
 
 	var found bool
@@ -380,24 +415,24 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 	}
 
 	if !found {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(UnknownConnectionValidationError))
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(UnknownConnectionValidationError))
 	}
 
 	creds.Identifiers = updatedIdentifiers
 	creds.Config, err = json.Marshal(&CredentialsConfig{updatedProviders})
 	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(err))
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(err))
+
 	}
 
 	i.Credentials[s.ID()] = *creds
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
 		return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
+
+	return nil
 }
 
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload, err error) error {

@@ -9,7 +9,3 @@ func NewLinkNode(provider string) *node.Node {
 func NewUnlinkNode(provider string) *node.Node {
 	return node.NewInputField("unlink", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit)
 }
-
-func NewSubmitNode(provider string) *node.Node {
-	return node.NewInputField("provider", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit)
-}

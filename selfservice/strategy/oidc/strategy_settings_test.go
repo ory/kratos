@@ -9,6 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/pointerx"
+
 	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/kratos-client-go"
@@ -43,6 +47,31 @@ func init() {
 var (
 	csrfField = testhelpers.NewFakeCSRFNode()
 )
+
+func newFakeProfile(email string) []kratos.UiNode {
+	return []kratos.UiNode{
+		*testhelpers.NewFakeCSRFNode(),
+		{
+			Type:  "input",
+			Group: "profile",
+			Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
+				Name:  "traits.email",
+				Type:  "email",
+				Value: &kratos.UiNodeInputAttributesValue{String: pointerx.String(email)},
+			}),
+		},
+		{
+			Type:  "input",
+			Group: "profile",
+			Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
+				Name: "traits.name",
+				Type: "text",
+			}),
+		},
+		*testhelpers.NewMethodSubmit("authenticator_password", "password"),
+		*testhelpers.NewPasswordNode(),
+	}
+}
 
 func TestSettingsStrategy(t *testing.T) {
 	if testing.Short() {
@@ -130,31 +159,31 @@ func TestSettingsStrategy(t *testing.T) {
 
 	// does the same as new profile request but uses the SDK
 	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
-		req := newProfileFlow(t, client, redirectTo, exp)
-		rs, _, err := testhelpers.NewSDKCustomClient(adminTS, client).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
-		require.NoError(t, err)
-		return rs
+		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS)
 	}
 
 	t.Run("case=should not be able to continue a flow with a malformed ID", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow=i-am-not-a-uuid", nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow=i-am-not-a-uuid", nil)
 		AssertSystemError(t, errTS, res, body, 400, "malformed")
 	})
 
 	t.Run("case=should not be able to continue a flow without the flow query parameter", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath, nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow, nil)
 		AssertSystemError(t, errTS, res, body, 400, "query parameter is missing")
 	})
 
 	t.Run("case=should not be able to continue a flow with a non-existing ID", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow="+x.NewUUID().String(), nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow="+x.NewUUID().String(), nil)
 		AssertSystemError(t, errTS, res, body, 404, "not be found")
 	})
 
 	t.Run("case=should not be able to continue a flow that is expired", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", -time.Hour)
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(), nil)
-		AssertSystemError(t, errTS, res, body, 400, "expired")
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow="+req.ID.String(), nil)
+
+		require.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow=")
+		assert.NotContains(t, res.Request.URL.String(), req.ID.String(), "should initialize a new flow")
+		assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(), "expired")
 	})
 
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
@@ -185,38 +214,47 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.EqualValues(t, req.IssuedAt, rs.IssuedAt)
 
 		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Ui)
-		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), rs.Ui.Method)
-		require.EqualValues(t, publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(),
+		require.EqualValues(t, "POST", rs.Ui.Method)
+		require.EqualValues(t, publicTS.URL+settings.RouteSubmitFlow+"?flow="+req.ID.String(),
 			rs.Ui.Action)
 	})
 
-	expectedOryerFields := []kratos.UiNode{
+	expectedPasswordFields := append(newFakeProfile("john"+testID+"@doe.com"),
+		*testhelpers.NewSDKOIDCNode("link", "ory"),
 		*testhelpers.NewSDKOIDCNode("link", "google"),
-		*testhelpers.NewSDKOIDCNode("link", "github")}
-	expectedGithuberFields := []kratos.UiNode{
+		*testhelpers.NewSDKOIDCNode("link", "github"),
+		*testhelpers.NewMethodSubmit("profile", "profile"),
+	)
+	expectedOryerFields := append(newFakeProfile("hackerman+"+testID+"@ory.sh"),
+		*testhelpers.NewSDKOIDCNode("link", "google"),
+		*testhelpers.NewSDKOIDCNode("link", "github"),
+		*testhelpers.NewMethodSubmit("profile", "profile"),
+	)
+	expectedGithuberFields := append(newFakeProfile("hackerman+github+"+testID+"@ory.sh"),
 		*testhelpers.NewSDKOIDCNode("link", "google"),
 		*testhelpers.NewSDKOIDCNode("unlink", "ory"),
-		*testhelpers.NewSDKOIDCNode("unlink", "github")}
+		*testhelpers.NewSDKOIDCNode("unlink", "github"),
+		*testhelpers.NewMethodSubmit("profile", "profile"),
+	)
+
 	t.Run("case=should adjust linkable providers based on linked credentials", func(t *testing.T) {
 		for _, tc := range []struct {
 			agent    string
-			expected []kratos.UiNode
+			expected json.RawMessage
 		}{
-			{agent: "password", expected: []kratos.UiNode{
-				*testhelpers.NewSDKOIDCNode("link", "ory"),
-				*testhelpers.NewSDKOIDCNode("link", "google"),
-				*testhelpers.NewSDKOIDCNode("link", "github")}},
-			{agent: "oryer", expected: expectedOryerFields},
-			{agent: "githuber", expected: expectedGithuberFields},
-			{agent: "multiuser", expected: []kratos.UiNode{
+			{agent: "password", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedPasswordFields))},
+			{agent: "oryer", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedOryerFields))},
+			{agent: "githuber", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedGithuberFields))},
+			{agent: "multiuser", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, append(newFakeProfile("hackerman+multiuser+"+testID+"@ory.sh"),
 				*testhelpers.NewSDKOIDCNode("link", "github"),
 				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
-				*testhelpers.NewSDKOIDCNode("unlink", "google")}},
+				*testhelpers.NewSDKOIDCNode("unlink", "google"),
+				*testhelpers.NewMethodSubmit("profile", "profile"),
+			)))},
 		} {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
 				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
-				assert.EqualValues(t, append([]kratos.UiNode{*csrfField}, tc.expected...),
-					rs.Ui.Nodes)
+				assertx.EqualAsJSON(t, tc.expected, rs.Ui.Nodes)
 			})
 		}
 	})
@@ -268,16 +306,21 @@ func TestSettingsStrategy(t *testing.T) {
 		var unlinkInvalid = func(agent, provider string, expectedFields []kratos.UiNode) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
+				assertx.EqualAsJSON(t, expectedFields, req.Ui.Nodes, "%s", body)
+
+				t.Logf("%s", req.Id)
+				t.Logf("%s", body)
+
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
-				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
-				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
+				//assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
+				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
-				testhelpers.JSONEq(t, append([]kratos.UiNode{*csrfField}, expectedFields...),
-					json.RawMessage(gjson.GetBytes(body, `methods.oidc.config.fields`).Raw))
+				assertx.EqualAsJSON(t, expectedFields,
+					json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), "%s", body)
 
-				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
+				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 					"can not unlink non-existing OpenID Connect")
 			}
 		}
@@ -353,16 +396,15 @@ func TestSettingsStrategy(t *testing.T) {
 		var linkInvalid = func(agent, provider string, expectedFields []kratos.UiNode) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := link(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.Id))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
-				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
-				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
+				//assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
+				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
-				testhelpers.JSONEq(t, append([]kratos.UiNode{*csrfField}, expectedFields...),
-					json.RawMessage(gjson.GetBytes(body, `methods.oidc.config.fields`).Raw))
+				testhelpers.JSONEq(t, expectedFields, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw))
 
-				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
+				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 					"can not link unknown or already existing OpenID Connect connection")
 			}
 		}
@@ -387,7 +429,7 @@ func TestSettingsStrategy(t *testing.T) {
 			body, res, _ := link(t, agent, provider)
 
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-			assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 		})
 
 		t.Run("case=should not be able to link a connection which is missing the ID token", func(t *testing.T) {
@@ -401,7 +443,7 @@ func TestSettingsStrategy(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
 			t.Logf("%s", body)
-			assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
+			assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 				"no id_token was returned")
 		})
 
@@ -415,7 +457,7 @@ func TestSettingsStrategy(t *testing.T) {
 			body, res, _ := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
+			assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 				"no id_token was returned")
 		})
 
@@ -426,18 +468,28 @@ func TestSettingsStrategy(t *testing.T) {
 			scope = []string{"openid"}
 
 			agent, provider := "githuber", "google"
-			_, res, req := link(t, agent, provider)
+			updatedFlow, res, originalFlow := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, rs.State)
+			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
 
-			testhelpers.JSONEq(t, append([]kratos.UiNode{*csrfField}, []kratos.UiNode{
+			assertx.EqualAsJSON(t, append(newFakeProfile("hackerman+github+"+testID+"@ory.sh"),
+				*testhelpers.NewSDKOIDCNode("link", "google"),
+				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
+				*testhelpers.NewSDKOIDCNode("unlink", "github"),
+				*testhelpers.NewMethodSubmit("profile", "profile"),
+			), originalFlow.Ui.Nodes)
+
+			expected := append(newFakeProfile("hackerman+github+"+testID+"@ory.sh"),
+				*testhelpers.NewMethodSubmit("profile", "profile"),
 				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
 				*testhelpers.NewSDKOIDCNode("unlink", "github"),
 				*testhelpers.NewSDKOIDCNode("unlink", "google"),
-			}...), rs.Ui.Nodes)
+			)
+			assertx.EqualAsJSON(t, expected, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), res.Request.URL)
+			assertx.EqualAsJSON(t, expected, updatedFlowSDK.Ui.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
@@ -456,11 +508,12 @@ func TestSettingsStrategy(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.State)
 
-			testhelpers.JSONEq(t, append([]kratos.UiNode{*csrfField}, []kratos.UiNode{
+			assertx.EqualAsJSON(t, append(newFakeProfile("john"+testID+"@doe.com"),
+				*testhelpers.NewMethodSubmit("profile", "profile"),
 				*testhelpers.NewSDKOIDCNode("link", "ory"),
 				*testhelpers.NewSDKOIDCNode("link", "github"),
 				*testhelpers.NewSDKOIDCNode("unlink", "google"),
-			}...), rs.Ui.Nodes)
+			), rs.Ui.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
@@ -516,9 +569,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 
 		// Enabled per default:
 		// 		conf.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
-		c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), map[string]interface{}{
-			"enabled": true,
-			"config":  conf})
+		viperSetProviderConfig(t, c, conf.Providers...)
 		return reg
 	}
 
@@ -537,8 +588,6 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
 		require.NotNil(t, req.UI)
 		require.NotNil(t, req.UI.Nodes)
-		require.Equal(t, identity.CredentialsTypeOIDC.String(), req.UI.Method)
-		assert.Equal(t, "https://www.ory.sh"+oidc.SettingsPath+"?flow="+req.ID.String(), req.UI.Action)
 		assert.Equal(t, "POST", req.UI.Method)
 		return req.UI
 	}
@@ -555,7 +604,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), UI: container.New("")}
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
-		require.Nil(t, req.UI.Nodes)
+		require.Empty(t, req.UI.Nodes)
 	})
 
 	for k, tc := range []struct {
@@ -658,36 +707,4 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			assert.EqualValues(t, tc.e, actual.Nodes)
 		})
 	}
-}
-
-func TestDisabledSettingsEndpoint(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), false)
-
-	publicTS, _ := testhelpers.NewKratosServer(t, reg)
-
-	t.Run("case=should not complete settings oidc method is disabled", func(t *testing.T) {
-		c := testhelpers.NewClientWithCookies(t)
-
-		t.Run("method=GET", func(t *testing.T) {
-			res, err := c.Get(publicTS.URL + oidc.SettingsPath)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusNotFound, res.StatusCode)
-
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
-			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
-		})
-
-		t.Run("method=POST", func(t *testing.T) {
-			res, err := c.PostForm(publicTS.URL+oidc.SettingsPath, url.Values{"link": {"xxx"}})
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusNotFound, res.StatusCode)
-
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
-			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
-		})
-	})
-
 }
