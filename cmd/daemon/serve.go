@@ -70,10 +70,10 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	c := r.Config(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
+	n.UseFunc(NewStripPrefixMiddleware(publicURLPrefixExtractor(r)))
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
-
 	router := x.NewRouterPublic()
 	csrf := x.NewCSRFHandler(router, r)
 
@@ -116,6 +116,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	c := r.Config(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
+	n.UseFunc(NewStripPrefixMiddleware(adminURLPrefixExtractor(r)))
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}

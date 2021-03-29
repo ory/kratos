@@ -8,6 +8,7 @@ serve:
     base_url: http://public.kratos.ory.sh
     port: 1235
     host: public.kratos.ory.sh
+    domain_aliases: []
 
 dsn: sqlite://foo.db?mode=memory&_fk=true
 
