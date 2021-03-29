@@ -122,8 +122,11 @@ func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strateg
 	return f, nil
 }
 
-func NewPostHookFlow(exp time.Duration, original flow.Flow) (*Flow, error) {
-	now := time.Now().UTC()
+func NewPostHookFlow(exp time.Duration, csrf string, r *http.Request, strategies Strategies, original flow.Flow) (*Flow, error) {
+	f, err := NewFlow(exp, csrf, r, strategies, original.GetType())
+	if err != nil {
+		return nil, err
+	}
 	requestURL, err := url.ParseRequestURI(original.GetRequestURL())
 	if err != nil {
 		requestURL = new(url.URL)
@@ -132,15 +135,7 @@ func NewPostHookFlow(exp time.Duration, original flow.Flow) (*Flow, error) {
 	query.Set("return_to", query.Get("after_verification_return_to"))
 	query.Del("after_verification_return_to")
 	requestURL.RawQuery = query.Encode()
-	f := &Flow{
-		ID:         x.NewUUID(),
-		ExpiresAt:  now.Add(exp),
-		IssuedAt:   now,
-		RequestURL: requestURL.String(),
-		Methods:    map[string]*FlowMethod{},
-		State:      StateChooseMethod,
-		Type:       original.GetType(),
-	}
+	f.RequestURL = requestURL.String()
 	return f, nil
 }
 

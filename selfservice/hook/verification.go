@@ -11,6 +11,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 var _ registration.PostHookPostPersistExecutor = new(Verifier)
@@ -23,6 +24,7 @@ type (
 		config.Provider
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
+		x.CSRFTokenGeneratorProvider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -51,7 +53,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			continue
 		}
 
-		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), f)
+		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
 		if err != nil {
 			return err
 		}

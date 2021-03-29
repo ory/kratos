@@ -21,17 +21,19 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 func TestVerifier(t *testing.T) {
+	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity, flow.Flow) error{
 		"settings": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecuteSettingsPostPersistHook(
-				httptest.NewRecorder(), new(http.Request), f.(*settings.Flow), i)
+				httptest.NewRecorder(), u, f.(*settings.Flow), i)
 		},
 		"register": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecutePostRegistrationPostPersistHook(
-				httptest.NewRecorder(), new(http.Request), f.(*registration.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
+				httptest.NewRecorder(), u, f.(*registration.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
 		},
 	} {
 		t.Run("name="+k, func(t *testing.T) {
@@ -75,8 +77,7 @@ func TestVerifier(t *testing.T) {
 
 			h := hook.NewVerifier(reg)
 			require.NoError(t, hf(h, i, originalFlow))
-
-			expectedVerificationFlow, err := verification.NewPostHookFlow(conf.SelfServiceFlowVerificationRequestLifespan(), originalFlow)
+			expectedVerificationFlow, err := verification.NewPostHookFlow(conf.SelfServiceFlowVerificationRequestLifespan(), "", u, reg.VerificationStrategies(context.Background()), originalFlow)
 			require.NoError(t, err)
 
 			var verificationFlow verification.Flow

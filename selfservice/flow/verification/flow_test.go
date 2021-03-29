@@ -64,12 +64,13 @@ func TestGetRequestURL(t *testing.T) {
 }
 
 func TestNewPostHookFlow(t *testing.T) {
+	u := &http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"}
 	expectReturnTo := func(t *testing.T, originalFlowRequestQueryParams url.Values, expectedReturnTo string) {
 		originalFlow := registration.Flow{
 			RequestURL: "http://foo.com/bar?" + originalFlowRequestQueryParams.Encode(),
 		}
 		t.Log(originalFlow.RequestURL)
-		f, err := NewPostHookFlow(time.Second, &originalFlow)
+		f, err := NewPostHookFlow(time.Second, "", u, nil, &originalFlow)
 		require.NoError(t, err)
 		url, err := urlx.Parse(f.RequestURL)
 		require.NoError(t, err)
