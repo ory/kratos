@@ -10,11 +10,16 @@ linters:
     - unused
     - gosec
     - varcheck
+    - goimports
   disable:
     - ineffassign
     - dupl
     - godox
     - bodyclose # too many false negatives
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/ory
 
 run:
   skip-dirs:

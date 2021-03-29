@@ -37,7 +37,7 @@ type (
 func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 	uri := c.CourierSMTPURL()
 	password, _ := uri.User.Password()
-	port, _ := strconv.ParseInt(uri.Port(), 10, 64)
+	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
 	var ssl bool
 	var tlsConfig *tls.Config
