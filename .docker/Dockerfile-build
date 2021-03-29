@@ -16,7 +16,7 @@ RUN go mod download
 
 ADD . .
 
-RUN make pack && go build -tags sqlite -o /usr/bin/kratos
+RUN go build -tags sqlite -o /usr/bin/kratos
 
 FROM alpine:3.12
 

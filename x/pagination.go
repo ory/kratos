@@ -16,20 +16,20 @@ func ParsePagination(r *http.Request) (page, itemsPerPage int) {
 	if offsetParam := r.URL.Query().Get("page"); offsetParam == "" {
 		page = 0
 	} else {
-		if offset64, err := strconv.ParseInt(offsetParam, 10, 64); err != nil {
+		if offset, err := strconv.ParseInt(offsetParam, 10, 0); err != nil {
 			page = 0
 		} else {
-			page = int(offset64)
+			page = int(offset)
 		}
 	}
 
 	if limitParam := r.URL.Query().Get("per_page"); limitParam == "" {
 		itemsPerPage = paginationDefaultItems
 	} else {
-		if limit64, err := strconv.ParseInt(limitParam, 10, 64); err != nil {
+		if limit, err := strconv.ParseInt(limitParam, 10, 0); err != nil {
 			itemsPerPage = paginationDefaultItems
 		} else {
-			itemsPerPage = int(limit64)
+			itemsPerPage = int(limit)
 		}
 	}
 
