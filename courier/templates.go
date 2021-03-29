@@ -3,9 +3,10 @@ package courier
 import (
 	"encoding/json"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
-	"github.com/pkg/errors"
 )
 
 type TemplateType string
