@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/ioutilx"
+
 	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/ui/container"
@@ -115,8 +117,12 @@ func TestStrategy(t *testing.T) {
 		return config.Action
 	}
 
-	var requestAction = func(flowID uuid.UUID) string {
-		return ts.URL + oidc.RouteBase + "/auth/" + flowID.String()
+	var registerAction = func(flowID uuid.UUID) string {
+		return ts.URL + registration.RouteSubmitFlow + "?flow=" + flowID.String()
+	}
+
+	var loginAction = func(flowID uuid.UUID) string {
+		return ts.URL + login.RouteSubmitFlow + "?flow=" + flowID.String()
 	}
 
 	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
@@ -155,7 +161,7 @@ func TestStrategy(t *testing.T) {
 
 	// assert ui error (redirect to login/registration ui endpoint)
 	var aue = func(t *testing.T, res *http.Response, body []byte, reason string) {
-		require.Contains(t, res.Request.URL.String(), uiTS.URL, "body: %s", body)
+		require.Contains(t, res.Request.URL.String(), uiTS.URL, "status: %d, body: %s", res.StatusCode, body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), reason, "%s", body)
 	}
 
@@ -201,52 +207,66 @@ func TestStrategy(t *testing.T) {
 	}
 
 	t.Run("case=should fail because provider does not exist", func(t *testing.T) {
-		doesNotExist := x.NewUUID()
-		res, body := makeRequest(t, "provider-does-not-exist", requestAction(doesNotExist), url.Values{})
-		assertSystemError(t, res, body, http.StatusNotFound, "is unknown or has not been configured")
+		for k, v := range []string{
+			loginAction(newLoginFlow(t, returnTS.URL, time.Minute).ID),
+			registerAction(newRegistrationFlow(t, returnTS.URL, time.Minute).ID),
+		} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				res, body := makeRequest(t, "provider-does-not-exist", v, url.Values{})
+				assertSystemError(t, res, body, http.StatusNotFound, "is unknown or has not been configured")
+			})
+		}
 	})
 
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {
-		doesNotExist := x.NewUUID()
-		res, body := makeRequest(t, "invalid-issuer", requestAction(doesNotExist), url.Values{})
-		assertSystemError(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
+		for k, v := range []string{
+			loginAction(newLoginFlow(t, returnTS.URL, time.Minute).ID),
+			registerAction(newRegistrationFlow(t, returnTS.URL, time.Minute).ID),
+		} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				res, body := makeRequest(t, "invalid-issuer", v, url.Values{})
+				assertSystemError(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
+			})
+		}
 	})
 
 	t.Run("case=should fail because flow does not exist", func(t *testing.T) {
-		doesNotExist := x.NewUUID()
-		res, body := makeRequest(t, "valid", requestAction(doesNotExist), url.Values{})
-		asem(t, res, body, http.StatusNotFound, "Unable to locate the resource")
+		for k, v := range []string{loginAction(x.NewUUID()), registerAction(x.NewUUID())} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				res, body := makeRequest(t, "valid", v, url.Values{})
+				asem(t, res, body, http.StatusNotFound, "Unable to locate the resource")
+			})
+		}
 	})
 
-	t.Run("case=should fail because the login flow is expired", func(t *testing.T) {
-		r := newLoginFlow(t, returnTS.URL, -time.Minute)
-		action := afv(t, r.ID, "valid")
-		t.Logf("action: %s id: %s", action, r.ID)
-		res, body := makeRequest(t, "valid", action, url.Values{})
+	t.Run("case=should fail because the flow is expired", func(t *testing.T) {
+		for k, v := range []uuid.UUID{
+			newLoginFlow(t, returnTS.URL, -time.Minute).ID,
+			newRegistrationFlow(t, returnTS.URL, -time.Minute).ID} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				action := afv(t, v, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
 
-		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
-		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "flow expired", "%s", body)
-	})
-
-	t.Run("case=should fail because the registration flow is expired", func(t *testing.T) {
-		r := newRegistrationFlow(t, returnTS.URL, -time.Minute)
-		action := afv(t, r.ID, "valid")
-		res, body := makeRequest(t, "valid", action, url.Values{})
-
-		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
-		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "flow expired", "%s", body)
+				assert.NotEqual(t, v, gjson.GetBytes(body, "id"))
+				require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "flow expired", "%s", body)
+			})
+		}
 	})
 
 	t.Run("case=should fail registration because scope was not provided", func(t *testing.T) {
 		subject = "foo@bar.com"
 		scope = []string{}
 
-		r := newRegistrationFlow(t, returnTS.URL, time.Minute)
-		action := afv(t, r.ID, "valid")
-		res, body := makeRequest(t, "valid", action, url.Values{})
-		aue(t, res, body, "no id_token was returned")
+		for k, v := range []uuid.UUID{
+			newLoginFlow(t, returnTS.URL, time.Minute).ID,
+			newRegistrationFlow(t, returnTS.URL, time.Minute).ID} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				action := afv(t, v, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+				aue(t, res, body, "no id_token was returned")
+			})
+		}
 	})
 
 	t.Run("case=should fail login because scope was not provided", func(t *testing.T) {
@@ -265,7 +285,7 @@ func TestStrategy(t *testing.T) {
 		res, body := makeRequest(t, "valid", action, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject).messages.0").String(), "is not valid", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject).messages.0.text").String(), "is not valid", "%s\n%s", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject)").Raw, body)
 	})
 
 	t.Run("case=register and then login", func(t *testing.T) {
@@ -328,9 +348,9 @@ func TestStrategy(t *testing.T) {
 			res, body := makeRequest(t, "valid", action, url.Values{"traits.name": {"i"}})
 			require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 
-			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "methods.oidc.config.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
-			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
-			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
+			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
+			assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
+			assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
 		})
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
@@ -414,43 +434,54 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
 		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "https://foo/self-service/registration?flow=c2b3ce54-d00c-4977-8394-18d6f09d7f2c",
+  "action": "https://foo/self-service/registration?flow=869a8acf-124f-42db-88e3-096ea66bebfd",
   "method": "POST",
   "nodes": [
-	{
-	  "type": "input",
-	  "group": "default",
-	  "attributes": {
-		"name": "csrf_token",
-		"type": "hidden",
-		"value": "dG4zNzcybjdjdmxqeXFodWs0dnFnOGQzNnJzaG50MG8=",
-		"required": true,
-		"disabled": false
-	  },
-	  "messages": null
-	},
-	{
-	  "type": "input",
-	  "group": "authenticator_oidc",
-	  "attributes": {
-		"name": "oidc.provider",
-		"type": "submit",
-		"value": "valid",
-		"disabled": false
-	  },
-	  "messages": null
-	},
-	{
-	  "type": "input",
-	  "group": "authenticator_oidc",
-	  "attributes": {
-		"name": "oidc.provider",
-		"type": "submit",
-		"value": "invalid-issuer",
-		"disabled": false
-	  },
-	  "messages": null
-	}
+    {
+      "type": "input",
+      "group": "default",
+      "attributes": {
+        "name": "csrf_token",
+        "type": "hidden",
+        "value": "NHltMjg1bjFrcXo0ajV0YXJpYmxlOW54bmFnOTl2b3M=",
+        "required": true,
+        "disabled": false
+      },
+      "messages": null
+    },
+    {
+      "type": "input",
+      "group": "authenticator_oidc",
+      "attributes": {
+        "name": "method",
+        "type": "submit",
+        "value": "oidc",
+        "disabled": false
+      },
+      "messages": null
+    },
+    {
+      "type": "input",
+      "group": "authenticator_oidc",
+      "attributes": {
+        "name": "oidc.provider",
+        "type": "submit",
+        "value": "valid",
+        "disabled": false
+      },
+      "messages": null
+    },
+    {
+      "type": "input",
+      "group": "authenticator_oidc",
+      "attributes": {
+        "name": "oidc.provider",
+        "type": "submit",
+        "value": "invalid-issuer",
+        "disabled": false
+      },
+      "messages": null
+    }
   ]
 }`), sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
@@ -462,7 +493,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
 
 		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "https://foo/self-service/login?flow=3aa05629-d515-4859-b8a5-d10b5fcba418",
+  "action": "https://foo/self-service/login?flow=b72f9066-a03a-4a9c-9183-ed4f39fca92c",
   "method": "POST",
   "nodes": [
     {
@@ -471,8 +502,19 @@ func TestStrategy(t *testing.T) {
       "attributes": {
         "name": "csrf_token",
         "type": "hidden",
-        "value": "djU3bDg0czF5NXFibHBtOXZidzFqejZmODVmbXA3amE=",
+        "value": "NHltMjg1bjFrcXo0ajV0YXJpYmxlOW54bmFnOTl2b3M=",
         "required": true,
+        "disabled": false
+      },
+      "messages": null
+    },
+    {
+      "type": "input",
+      "group": "authenticator_oidc",
+      "attributes": {
+        "name": "method",
+        "type": "submit",
+        "value": "oidc",
         "disabled": false
       },
       "messages": null
@@ -612,31 +654,43 @@ func TestDisabledEndpoint(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		b := make([]byte, res.ContentLength)
-		_, _ = res.Body.Read(b)
+		b := ioutilx.MustReadAll(res.Body)
 		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 	})
 
 	t.Run("case=should not auth when oidc method is disabled", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
-		t.Run("method=GET", func(t *testing.T) {
-			res, err := c.Get(publicTS.URL + oidc.RouteAuth)
+		t.Run("flow=settings", func(t *testing.T) {
+			require.NoError(t, conf.Set(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/stub.schema.json"))
+			c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
+
+			res, err := c.PostForm(f.Ui.Action, url.Values{"link": {"oidc"}})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
+			b := ioutilx.MustReadAll(res.Body)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 
-		t.Run("method=POST", func(t *testing.T) {
-			res, err := c.PostForm(publicTS.URL+oidc.RouteAuth, url.Values{"provider": {"github"}})
+		t.Run("flow=login", func(t *testing.T) {
+			f := testhelpers.InitializeLoginFlowViaAPI(t, c, publicTS, false)
+			res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"oidc"}})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
+			b := ioutilx.MustReadAll(res.Body)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+
+		t.Run("flow=registration", func(t *testing.T) {
+			f := testhelpers.InitializeRegistrationFlowViaAPI(t, c, publicTS)
+			res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"oidc"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := ioutilx.MustReadAll(res.Body)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 	})

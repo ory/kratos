@@ -1,0 +1,13 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/oidc/.schema/settings.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "link": {
+      "type": "string"
+    },
+    "unlink": {
+      "type": "string"
+    }
+  }
+}

@@ -109,6 +109,11 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
+		if id == nil {
+			s.forward(w, r, f, err)
+			return
+		}
+
 		// create new flow because the old one is not valid
 		a, err := s.d.SettingsHandler().NewFlow(w, r, id, f.Type)
 		if err != nil {

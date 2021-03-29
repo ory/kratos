@@ -86,10 +86,36 @@ func NewSDKEmailNode(group string) *kratos.UiNode {
 
 func NewSDKOIDCNode(name, provider string) *kratos.UiNode {
 	return &kratos.UiNode{
+		Group: "authenticator_oidc",
+		Type:  "input",
 		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 			Name:  name,
 			Type:  "submit",
 			Value: &kratos.UiNodeInputAttributesValue{String: pointerx.String(provider)},
+		}),
+	}
+}
+
+func NewMethodSubmit(group, value string) *kratos.UiNode {
+	return &kratos.UiNode{
+		Type:  "input",
+		Group: group,
+		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
+			Name:  "method",
+			Type:  "submit",
+			Value: &kratos.UiNodeInputAttributesValue{String: pointerx.String(value)},
+		}),
+	}
+}
+
+func NewPasswordNode() *kratos.UiNode {
+	return &kratos.UiNode{
+		Type:  "input",
+		Group: "authenticator_password",
+		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
+			Name:     "password",
+			Type:     "password",
+			Required: pointerx.Bool(true),
 		}),
 	}
 }

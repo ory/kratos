@@ -182,7 +182,7 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 
 	// var id *identity.Identity
 	if ctxUpdate.Flow != nil {
-		ctxUpdate.Flow.UI.Reset("method")
+		ctxUpdate.Flow.UI.ResetMessages()
 		ctxUpdate.Flow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		// id = ctxUpdate.Session.Identity
 	}

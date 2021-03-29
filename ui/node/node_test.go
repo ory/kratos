@@ -81,6 +81,18 @@ func TestNodesUpsert(t *testing.T) {
 	assert.EqualValues(t, "bar", nodes[0].Attributes.GetValue())
 }
 
+func TestNodesRemove(t *testing.T) {
+	var nodes node.Nodes
+	nodes.Append(node.NewInputField("other", "foo", node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
+	nodes.Append(node.NewInputField("link", "foo", node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
+	nodes.Append(node.NewInputField("link", "bar", node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
+	nodes.Append(node.NewInputField("unlink", "baz", node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
+	require.Len(t, nodes, 4)
+
+	nodes.Remove("link", "unlink")
+	require.Len(t, nodes, 1)
+}
+
 func TestNodeJSON(t *testing.T) {
 	t.Run("idempotent decode", func(t *testing.T) {
 		nodes := make(node.Nodes, 5)

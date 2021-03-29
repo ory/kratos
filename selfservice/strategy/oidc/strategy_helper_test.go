@@ -253,8 +253,8 @@ func newOIDCProvider(
 }
 
 func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc.Configuration) {
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC),
-		map[string]interface{}{"enabled": true, "config": &oidc.ConfigurationCollection{Providers: providers}})
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config", &oidc.ConfigurationCollection{Providers: providers})
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
 }
 
 func newClient(t *testing.T, jar *cookiejar.Jar) *http.Client {
