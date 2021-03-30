@@ -47,7 +47,12 @@ const mergeFields = (form, fields) => {
 
 Cypress.Commands.add(
   'register',
-  ({ email = gen.email(), password = gen.password(), query={}, fields = {} } = {}) => {
+  ({
+    email = gen.email(),
+    password = gen.password(),
+    query = {},
+    fields = {}
+  } = {}) => {
     console.log('Creating user account: ', { email, password })
 
     // see https://github.com/cypress-io/cypress/issues/408
@@ -57,7 +62,7 @@ Cypress.Commands.add(
     cy.request({
       url: APP_URL + '/self-service/registration/browser',
       followRedirect: false,
-      qs: query,
+      qs: query
     })
       .then(({ redirectedToUrl }) => {
         expect(redirectedToUrl).to.contain(APP_URL + '/auth/registration?flow=')
@@ -341,10 +346,12 @@ Cypress.Commands.add(
       expect(link.href).to.contain(APP_URL)
 
       if (redirectTo) {
-        cy.request({url: link.href, followRedirect: false}).should((response) => {
-          expect(response.status).to.eq(302)
-          expect(response.redirectedToUrl).to.eq(redirectTo)
-        })
+        cy.request({ url: link.href, followRedirect: false }).should(
+          (response) => {
+            expect(response.status).to.eq(302)
+            expect(response.redirectedToUrl).to.eq(redirectTo)
+          }
+        )
       } else {
         cy.visit(link.href)
         cy.location('pathname').should('not.contain', 'verify')
@@ -352,10 +359,12 @@ Cypress.Commands.add(
     })
 )
 
-Cypress.Commands.add('verifyEmail', ({ expect: { email, redirectTo } = {} } = {}) =>
-  cy.performEmailVerification({ expect: { email, redirectTo } }).then(() => {
-    cy.session().should(assertVerifiableAddress({ email, isVerified: true }))
-  })
+Cypress.Commands.add(
+  'verifyEmail',
+  ({ expect: { email, redirectTo } = {} } = {}) =>
+    cy.performEmailVerification({ expect: { email, redirectTo } }).then(() => {
+      cy.session().should(assertVerifiableAddress({ email, isVerified: true }))
+    })
 )
 
 // Uses the verification email but waits so that it expires
