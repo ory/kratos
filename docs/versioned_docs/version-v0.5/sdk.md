@@ -19,7 +19,7 @@ We publish our SDKs for popular languages in their respective package
 repositories:
 
 - [Dart](https://pub.dev/packages/ory_kratos_client)
-- [.NET](https://github.com/ory/sdk/tree/master/clients/kratos/dotnet)
+- [.NET](https://www.nuget.org/packages/Ory.Kratos.Client/)
 - [Go](https://github.com/ory/kratos-client-go)
 - [Java](https://search.maven.org/artifact/sh.ory.kratos/kratos-client)
 - [JavaScript](https://www.npmjs.com/package/@ory/kratos-client) with TypeScript
@@ -29,6 +29,8 @@ repositories:
 - [Python](https://pypi.org/project/ory-kratos-client/)
 - [Ruby](https://rubygems.org/gems/ory-kratos-client)
 - [Rust](https://crates.io/crates/ory-kratos-client)
+
+Take a look at the source: [Generated SDKs for Ory Kratos](https://github.com/ory/sdk/tree/master/clients/kratos/)
 
 Missing your programming language?
 [Create an issue](https://github.com/ory/kratos/issues) and help us build, test
