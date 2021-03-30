@@ -61,6 +61,8 @@
     "reference/html-forms",
     "reference/api",
     {
+      "type": "category",
+      "label": "Command Line Interface (CLI)",
       "Command Line Interface (CLI)": [
         "cli/kratos",
         "cli/kratos-courier",
