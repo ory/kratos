@@ -63,7 +63,7 @@
     {
       "type": "category",
       "label": "Command Line Interface (CLI)",
-      "Command Line Interface (CLI)": [
+      "items": [
         "cli/kratos",
         "cli/kratos-courier",
         "cli/kratos-courier-watch",
