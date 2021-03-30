@@ -327,6 +327,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 
 	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
 	if err != nil {
+		s.d.Logger().Debugf("error parsing verification requestURL: %s\n", err)
 		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusFound)
 		return
 	}
@@ -337,6 +338,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		x.SecureRedirectAllowURLs(s.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
 	)
 	if err != nil {
+		s.d.Logger().Debugf("error parsing redirectTo from verification: %s\n", err)
 		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusFound)
 		return
 	}
