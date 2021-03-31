@@ -2,8 +2,8 @@ package hash
 
 import (
 	"context"
+	"github.com/ory/kratos/schema"
 
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ory/kratos/driver/config"
@@ -39,7 +39,10 @@ func validateBcryptPasswordLength(password []byte) error {
 	// so if password is longer than 72 bytes, function returns an error
 	// See https://en.wikipedia.org/wiki/Bcrypt#User_input
 	if len(password) > 72 {
-		return errors.New("passwords are limited to a maximum length of 72 characters")
+		return schema.NewPasswordPolicyViolationError(
+			"#/password",
+			"passwords are limited to a maximum length of 72 characters",
+			)
 	}
 	return nil
 }
