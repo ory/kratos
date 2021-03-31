@@ -260,8 +260,8 @@ func TestVerification(t *testing.T) {
 
 	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {
 		f, err := verification.NewFlow(time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), nil, flow.TypeBrowser)
-		f.State = verification.StateEmailSent
 		require.NoError(t, err)
+		f.State = verification.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 		email := identity.NewVerifiableEmailAddress(verificationEmail, identityToVerify.ID)
 		identityToVerify.VerifiableAddresses = append(identityToVerify.VerifiableAddresses, *email)
