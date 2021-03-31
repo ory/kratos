@@ -14,6 +14,22 @@ li.selected.kratos ~ .question.kratos {
   display: inline;
 }
 
+li.selected.secrets {
+  color: red;
+}
+
+li.selected.secrets ~ .question.secrets {
+  display: inline;
+}
+
+li.selected.config {
+  color: red;
+}
+
+li.selected.config ~ .question.config {
+  display: inline;
+}
+
 li.selected.database {
   color: red;
 }
