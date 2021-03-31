@@ -2,6 +2,7 @@ package hash
 
 import (
 	"context"
+
 	"github.com/ory/kratos/schema"
 
 	"golang.org/x/crypto/bcrypt"
@@ -42,7 +43,7 @@ func validateBcryptPasswordLength(password []byte) error {
 		return schema.NewPasswordPolicyViolationError(
 			"#/password",
 			"passwords are limited to a maximum length of 72 characters",
-			)
+		)
 	}
 	return nil
 }
