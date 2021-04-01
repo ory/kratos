@@ -1383,6 +1383,43 @@ hashers:
     #
     memory: 16384
 
+  ## Configuration for the Bcrypt hasher. ##
+  #
+  bcrypt:
+    ## cost ##
+    #
+    # Default value: 12
+    #
+    # Minimum value: 12
+    #
+    # Maximum value: 31
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export HASHERS_BCRYPT_COST=<value>
+    # - Windows Command Line (CMD):
+    #    > set HASHERS_BCRYPT_COST=<value>
+    #
+    cost: 12
+
+  ## Password hashing algorithm ##
+  #
+  # One of the values: argon2, bcrypt
+  #
+  # Default value: argon2
+  #
+  # One of:
+  # - argon2
+  # - bcrypt
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export HASHERS_ALGORITHM=<value>
+  # - Windows Command Line (CMD):
+  #    > set HASHERS_ALGORITHM=<value>
+  #
+  algorithm: argon2
+
 ## session ##
 #
 session:

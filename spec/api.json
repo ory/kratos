@@ -1713,7 +1713,7 @@
       }
     },
     "ContainerWaitOKBodyError": {
-      "description": "ContainerWaitOKBodyError ContainerWaitOKBodyError container waiting error, if any",
+      "description": "ContainerWaitOKBodyError container waiting error, if any",
       "type": "object",
       "properties": {
         "Message": {
@@ -1843,7 +1843,7 @@
     },
     "PluginConfig": {
       "type": "object",
-      "title": "PluginConfig The config of a plugin.",
+      "title": "PluginConfig PluginConfig The config of a plugin.",
       "required": [
         "Args",
         "Description",
@@ -1930,7 +1930,7 @@
       }
     },
     "PluginConfigArgs": {
-      "description": "PluginConfigArgs plugin config args",
+      "description": "PluginConfigArgs PluginConfigArgs PluginConfigArgs PluginConfigArgs PluginConfigArgs plugin config args",
       "type": "object",
       "required": [
         "Description",
@@ -1964,7 +1964,7 @@
       }
     },
     "PluginConfigInterface": {
-      "description": "PluginConfigInterface The interface between Docker and the plugin",
+      "description": "PluginConfigInterface PluginConfigInterface The interface between Docker and the plugin",
       "type": "object",
       "required": [
         "Socket",
@@ -2014,7 +2014,7 @@
       }
     },
     "PluginConfigNetwork": {
-      "description": "PluginConfigNetwork plugin config network",
+      "description": "PluginConfigNetwork PluginConfigNetwork plugin config network",
       "type": "object",
       "required": [
         "Type"
@@ -2027,7 +2027,7 @@
       }
     },
     "PluginConfigRootfs": {
-      "description": "PluginConfigRootfs plugin config rootfs",
+      "description": "PluginConfigRootfs PluginConfigRootfs plugin config rootfs",
       "type": "object",
       "properties": {
         "diff_ids": {
@@ -2044,7 +2044,7 @@
       }
     },
     "PluginConfigUser": {
-      "description": "PluginConfigUser PluginConfigUser PluginConfigUser PluginConfigUser PluginConfigUser plugin config user",
+      "description": "PluginConfigUser plugin config user",
       "type": "object",
       "properties": {
         "GID": {
@@ -2091,7 +2091,7 @@
       }
     },
     "PluginEnv": {
-      "description": "PluginEnv plugin env",
+      "description": "PluginEnv PluginEnv plugin env",
       "type": "object",
       "required": [
         "Description",
@@ -2433,7 +2433,7 @@
       }
     },
     "formFields": {
-      "description": "FormFields Fields contains multiple fields",
+      "description": "Fields contains multiple fields",
       "type": "array",
       "items": {
         "$ref": "#/definitions/formField"
@@ -2442,7 +2442,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "Error response",
+      "title": "GenericError GenericError GenericError Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -2512,13 +2512,13 @@
     "loginFlow": {
       "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
       "type": "object",
-      "title": "Login Flow",
+      "title": "LoginFlow LoginFlow Login Flow",
       "required": [
-        "expires_at",
         "id",
+        "expires_at",
         "issued_at",
-        "methods",
-        "request_url"
+        "request_url",
+        "methods"
       ],
       "properties": {
         "active": {
@@ -2561,11 +2561,10 @@
       }
     },
     "loginFlowMethod": {
-      "description": "LoginFlowMethod LoginFlowMethod login flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2628,13 +2627,13 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "RecoveryFlow A Recovery Flow",
+      "title": "A Recovery Flow",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
         "methods",
+        "request_url",
         "state"
       ],
       "properties": {
@@ -2678,11 +2677,10 @@
       }
     },
     "recoveryFlowMethod": {
-      "description": "RecoveryFlowMethod recovery flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2695,11 +2693,12 @@
       }
     },
     "recoveryFlowMethodConfig": {
+      "description": "RecoveryFlowMethodConfig recovery flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2737,13 +2736,14 @@
       }
     },
     "registrationFlow": {
+      "description": "RegistrationFlow RegistrationFlow RegistrationFlow registration flow",
       "type": "object",
       "required": [
-        "expires_at",
         "id",
+        "expires_at",
         "issued_at",
-        "methods",
-        "request_url"
+        "request_url",
+        "methods"
       ],
       "properties": {
         "active": {
@@ -2782,10 +2782,11 @@
       }
     },
     "registrationFlowMethod": {
+      "description": "RegistrationFlowMethod registration flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2797,11 +2798,12 @@
       }
     },
     "registrationFlowMethodConfig": {
+      "description": "RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2861,13 +2863,14 @@
       }
     },
     "session": {
+      "description": "Session Session Session Session Session Session session",
       "type": "object",
       "required": [
-        "authenticated_at",
-        "expires_at",
         "id",
-        "identity",
-        "issued_at"
+        "expires_at",
+        "authenticated_at",
+        "issued_at",
+        "identity"
       ],
       "properties": {
         "active": {
@@ -2875,10 +2878,12 @@
           "type": "boolean"
         },
         "authenticated_at": {
+          "description": "authenticated at",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
+          "description": "expires at",
           "type": "string",
           "format": "date-time"
         },
@@ -2889,6 +2894,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
+          "description": "issued at",
           "type": "string",
           "format": "date-time"
         }
@@ -2951,11 +2957,10 @@
       }
     },
     "settingsFlowMethod": {
-      "description": "SettingsFlowMethod SettingsFlowMethod settings flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2968,11 +2973,12 @@
       }
     },
     "settingsFlowMethodConfig": {
+      "description": "SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig settings flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -3056,10 +3062,11 @@
       }
     },
     "verificationFlowMethod": {
+      "description": "VerificationFlowMethod VerificationFlowMethod VerificationFlowMethod VerificationFlowMethod verification flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -3097,6 +3104,7 @@
       }
     },
     "version": {
+      "description": "Version Version version",
       "type": "object",
       "properties": {
         "version": {
