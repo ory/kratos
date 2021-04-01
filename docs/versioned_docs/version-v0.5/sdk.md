@@ -30,7 +30,8 @@ repositories:
 - [Ruby](https://rubygems.org/gems/ory-kratos-client)
 - [Rust](https://crates.io/crates/ory-kratos-client)
 
-Take a look at the source: [Generated SDKs for Ory Kratos](https://github.com/ory/sdk/tree/master/clients/kratos/)
+Take a look at the source:
+[Generated SDKs for Ory Kratos](https://github.com/ory/sdk/tree/master/clients/kratos/)
 
 Missing your programming language?
 [Create an issue](https://github.com/ory/kratos/issues) and help us build, test
