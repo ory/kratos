@@ -1713,7 +1713,7 @@
       }
     },
     "ContainerWaitOKBodyError": {
-      "description": "ContainerWaitOKBodyError container waiting error, if any",
+      "description": "ContainerWaitOKBodyError ContainerWaitOKBodyError container waiting error, if any",
       "type": "object",
       "properties": {
         "Message": {
@@ -2014,7 +2014,7 @@
       }
     },
     "PluginConfigNetwork": {
-      "description": "PluginConfigNetwork PluginConfigNetwork plugin config network",
+      "description": "PluginConfigNetwork plugin config network",
       "type": "object",
       "required": [
         "Type"
@@ -2044,7 +2044,7 @@
       }
     },
     "PluginConfigUser": {
-      "description": "PluginConfigUser plugin config user",
+      "description": "PluginConfigUser PluginConfigUser PluginConfigUser PluginConfigUser PluginConfigUser plugin config user",
       "type": "object",
       "properties": {
         "GID": {
@@ -2091,7 +2091,7 @@
       }
     },
     "PluginEnv": {
-      "description": "PluginEnv PluginEnv plugin env",
+      "description": "PluginEnv plugin env",
       "type": "object",
       "required": [
         "Description",
@@ -2145,7 +2145,7 @@
       }
     },
     "PluginMount": {
-      "description": "PluginMount PluginMount plugin mount",
+      "description": "PluginMount plugin mount",
       "type": "object",
       "required": [
         "Description",
@@ -2331,7 +2331,7 @@
       "type": "string"
     },
     "VolumeUsageData": {
-      "description": "VolumeUsageData VolumeUsageData VolumeUsageData VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
+      "description": "VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
       "type": "object",
       "required": [
         "RefCount",
@@ -2512,13 +2512,13 @@
     "loginFlow": {
       "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
       "type": "object",
-      "title": "LoginFlow LoginFlow Login Flow",
+      "title": "Login Flow",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
-        "methods"
+        "methods",
+        "request_url"
       ],
       "properties": {
         "active": {
@@ -2561,10 +2561,11 @@
       }
     },
     "loginFlowMethod": {
+      "description": "LoginFlowMethod LoginFlowMethod login flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2576,12 +2577,11 @@
       }
     },
     "loginFlowMethodConfig": {
-      "description": "LoginFlowMethodConfig LoginFlowMethodConfig login flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2627,13 +2627,13 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "A Recovery Flow",
+      "title": "RecoveryFlow A Recovery Flow",
       "required": [
-        "expires_at",
         "id",
+        "expires_at",
         "issued_at",
-        "methods",
         "request_url",
+        "methods",
         "state"
       ],
       "properties": {
@@ -2677,10 +2677,11 @@
       }
     },
     "recoveryFlowMethod": {
+      "description": "RecoveryFlowMethod recovery flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2718,14 +2719,13 @@
       }
     },
     "recoveryLink": {
-      "description": "RecoveryLink RecoveryLink recovery link",
       "type": "object",
       "required": [
         "recovery_link"
       ],
       "properties": {
         "expires_at": {
-          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.\nFormat: date-time\nFormat: date-time",
+          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
           "type": "string",
           "format": "date-time"
         },
@@ -2736,14 +2736,13 @@
       }
     },
     "registrationFlow": {
-      "description": "RegistrationFlow RegistrationFlow RegistrationFlow registration flow",
       "type": "object",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
-        "methods"
+        "methods",
+        "request_url"
       ],
       "properties": {
         "active": {
@@ -2782,11 +2781,10 @@
       }
     },
     "registrationFlowMethod": {
-      "description": "RegistrationFlowMethod registration flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2798,12 +2796,11 @@
       }
     },
     "registrationFlowMethodConfig": {
-      "description": "RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2903,14 +2900,14 @@
     "settingsFlow": {
       "description": "This flow is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nWe recommend reading the [User Settings Documentation](../self-service/flows/user-settings)",
       "type": "object",
-      "title": "Flow represents a Settings Flow",
+      "title": "SettingsFlow SettingsFlow SettingsFlow SettingsFlow SettingsFlow SettingsFlow SettingsFlow SettingsFlow Flow represents a Settings Flow",
       "required": [
-        "expires_at",
         "id",
-        "identity",
+        "expires_at",
         "issued_at",
-        "methods",
         "request_url",
+        "methods",
+        "identity",
         "state"
       ],
       "properties": {
@@ -2973,12 +2970,11 @@
       }
     },
     "settingsFlowMethodConfig": {
-      "description": "SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig settings flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2998,7 +2994,7 @@
       }
     },
     "settingsViaApiResponse": {
-      "description": "SettingsViaAPIResponse SettingsViaAPIResponse The Response for Settings Flows via API",
+      "description": "The Response for Settings Flows via API",
       "type": "object",
       "required": [
         "flow",
@@ -3016,7 +3012,7 @@
     "verificationFlow": {
       "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
       "type": "object",
-      "title": "VerificationFlow A Verification Flow",
+      "title": "A Verification Flow",
       "required": [
         "methods",
         "state"
@@ -3027,7 +3023,7 @@
           "type": "string"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -3035,7 +3031,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -3062,11 +3058,10 @@
       }
     },
     "verificationFlowMethod": {
-      "description": "VerificationFlowMethod VerificationFlowMethod VerificationFlowMethod VerificationFlowMethod verification flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -3104,7 +3099,6 @@
       }
     },
     "version": {
-      "description": "Version Version version",
       "type": "object",
       "properties": {
         "version": {
