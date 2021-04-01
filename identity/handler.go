@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
@@ -118,7 +119,11 @@ func (h *Handler) method(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	}
 
-	h.r.Writer().Write(w, r, &methodResponse{Method: CredentialsTypePassword.String()})
+	if strings.Contains(ps.ByName("id"), "@") {
+		h.r.Writer().Write(w, r, &methodResponse{Method: "need-username"})
+	} else {
+		h.r.Writer().Write(w, r, &methodResponse{Method: CredentialsTypePassword.String()})
+	}
 
 }
 
