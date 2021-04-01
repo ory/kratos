@@ -63,7 +63,8 @@ courier:
   # - Windows Command Line (CMD):
   #    > set COURIER_SMTP_FROM_ADDRESS=<value>
   #
-  from_address: no-reply@ory.kratos.sh
+  smtp:
+    from_address: no-reply@ory.kratos.sh
   ## Override message templates ##
   #
   # You can override certain or all message templates by pointing this key to the path where the templates are located.
