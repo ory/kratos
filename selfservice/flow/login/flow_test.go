@@ -2,6 +2,7 @@ package login_test
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -85,4 +86,22 @@ func TestFlow(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestGetType(t *testing.T) {
+	for _, ft := range []flow.Type{
+		flow.TypeAPI,
+		flow.TypeBrowser,
+	} {
+		t.Run(fmt.Sprintf("case=%s", ft), func(t *testing.T) {
+			r := &login.Flow{Type: ft}
+			assert.Equal(t, ft, r.GetType())
+		})
+	}
+}
+
+func TestGetRequestURL(t *testing.T) {
+	expectedURL := "http://foo/bar/baz"
+	f := &login.Flow{RequestURL: expectedURL}
+	assert.Equal(t, expectedURL, f.GetRequestURL())
 }

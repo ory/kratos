@@ -136,6 +136,14 @@ func NewFlow(exp time.Duration, r *http.Request, i *identity.Identity, ft flow.T
 	}
 }
 
+func (f *Flow) GetType() flow.Type {
+	return f.Type
+}
+
+func (f *Flow) GetRequestURL() string {
+	return f.RequestURL
+}
+
 func (r Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_settings_flows")
 }

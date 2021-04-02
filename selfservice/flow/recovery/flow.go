@@ -119,6 +119,14 @@ func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strateg
 	return req, nil
 }
 
+func (f *Flow) GetType() flow.Type {
+	return f.Type
+}
+
+func (f *Flow) GetRequestURL() string {
+	return f.RequestURL
+}
+
 func (f Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_recovery_flows")
 }
