@@ -1713,7 +1713,7 @@
       }
     },
     "ContainerWaitOKBodyError": {
-      "description": "ContainerWaitOKBodyError container waiting error, if any",
+      "description": "ContainerWaitOKBodyError ContainerWaitOKBodyError container waiting error, if any",
       "type": "object",
       "properties": {
         "Message": {
@@ -1930,7 +1930,7 @@
       }
     },
     "PluginConfigArgs": {
-      "description": "PluginConfigArgs PluginConfigArgs PluginConfigArgs PluginConfigArgs PluginConfigArgs plugin config args",
+      "description": "PluginConfigArgs plugin config args",
       "type": "object",
       "required": [
         "Description",
@@ -1964,7 +1964,7 @@
       }
     },
     "PluginConfigInterface": {
-      "description": "PluginConfigInterface The interface between Docker and the plugin",
+      "description": "PluginConfigInterface PluginConfigInterface The interface between Docker and the plugin",
       "type": "object",
       "required": [
         "Socket",
@@ -2014,7 +2014,7 @@
       }
     },
     "PluginConfigNetwork": {
-      "description": "PluginConfigNetwork plugin config network",
+      "description": "PluginConfigNetwork PluginConfigNetwork plugin config network",
       "type": "object",
       "required": [
         "Type"
@@ -2027,7 +2027,7 @@
       }
     },
     "PluginConfigRootfs": {
-      "description": "PluginConfigRootfs PluginConfigRootfs plugin config rootfs",
+      "description": "PluginConfigRootfs plugin config rootfs",
       "type": "object",
       "properties": {
         "diff_ids": {
@@ -2044,7 +2044,7 @@
       }
     },
     "PluginConfigUser": {
-      "description": "PluginConfigUser PluginConfigUser PluginConfigUser PluginConfigUser PluginConfigUser plugin config user",
+      "description": "PluginConfigUser plugin config user",
       "type": "object",
       "properties": {
         "GID": {
@@ -2060,7 +2060,7 @@
       }
     },
     "PluginDevice": {
-      "description": "PluginDevice PluginDevice PluginDevice PluginDevice plugin device",
+      "description": "PluginDevice plugin device",
       "type": "object",
       "required": [
         "Description",
@@ -2091,7 +2091,7 @@
       }
     },
     "PluginEnv": {
-      "description": "PluginEnv plugin env",
+      "description": "PluginEnv PluginEnv plugin env",
       "type": "object",
       "required": [
         "Description",
@@ -2145,7 +2145,7 @@
       }
     },
     "PluginMount": {
-      "description": "PluginMount PluginMount plugin mount",
+      "description": "PluginMount plugin mount",
       "type": "object",
       "required": [
         "Description",
@@ -2195,7 +2195,7 @@
     },
     "PluginSettings": {
       "type": "object",
-      "title": "PluginSettings Settings that can be modified by users.",
+      "title": "PluginSettings PluginSettings Settings that can be modified by users.",
       "required": [
         "Args",
         "Devices",
@@ -2433,7 +2433,7 @@
       }
     },
     "formFields": {
-      "description": "Fields contains multiple fields",
+      "description": "FormFields Fields contains multiple fields",
       "type": "array",
       "items": {
         "$ref": "#/definitions/formField"
@@ -2513,13 +2513,13 @@
     "loginFlow": {
       "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
       "type": "object",
-      "title": "LoginFlow LoginFlow Login Flow",
+      "title": "Login Flow",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
-        "methods"
+        "methods",
+        "request_url"
       ],
       "properties": {
         "active": {
@@ -2610,11 +2610,11 @@
       }
     },
     "loginViaApiResponse": {
-      "description": "LoginViaAPIResponse LoginViaAPIResponse The Response for Login Flows via API",
+      "description": "The Response for Login Flows via API",
       "type": "object",
       "required": [
-        "session_token",
-        "session"
+        "session",
+        "session_token"
       ],
       "properties": {
         "session": {
@@ -2738,13 +2738,14 @@
       }
     },
     "registrationFlow": {
+      "description": "RegistrationFlow RegistrationFlow RegistrationFlow registration flow",
       "type": "object",
       "required": [
-        "expires_at",
         "id",
+        "expires_at",
         "issued_at",
-        "methods",
-        "request_url"
+        "request_url",
+        "methods"
       ],
       "properties": {
         "active": {
@@ -2798,12 +2799,11 @@
       }
     },
     "registrationFlowMethodConfig": {
-      "description": "RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2995,7 +2995,7 @@
       }
     },
     "settingsViaApiResponse": {
-      "description": "SettingsViaAPIResponse SettingsViaAPIResponse The Response for Settings Flows via API",
+      "description": "The Response for Settings Flows via API",
       "type": "object",
       "required": [
         "flow",
@@ -3013,7 +3013,7 @@
     "verificationFlow": {
       "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
       "type": "object",
-      "title": "VerificationFlow A Verification Flow",
+      "title": "A Verification Flow",
       "required": [
         "methods",
         "state"
@@ -3024,7 +3024,7 @@
           "type": "string"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -3032,7 +3032,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -3059,10 +3059,11 @@
       }
     },
     "verificationFlowMethod": {
+      "description": "VerificationFlowMethod VerificationFlowMethod VerificationFlowMethod VerificationFlowMethod verification flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -3075,12 +3076,11 @@
       }
     },
     "verificationFlowMethodConfig": {
-      "description": "VerificationFlowMethodConfig verification flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
