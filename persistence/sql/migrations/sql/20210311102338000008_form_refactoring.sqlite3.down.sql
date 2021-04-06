@@ -1,2 +1,2 @@
 
-DROP TABLE "selfservice_registration_flows";
+DROP TABLE "selfservice_settings_flows";

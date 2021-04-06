@@ -33,7 +33,6 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(link.RecoveryToken).TableName(ctx),
 		new(link.VerificationToken).TableName(ctx),
 
-		new(recovery.FlowMethods).TableName(ctx),
 		new(recovery.Flow).TableName(ctx),
 
 		new(verification.Flow).TableName(ctx),

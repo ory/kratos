@@ -100,6 +100,7 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**ListIdentities**](docs/AdminApi.md#listidentities) | **Get** /identities | List Identities
 *AdminApi* | [**Prometheus**](docs/AdminApi.md#prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Hydra service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 *AdminApi* | [**UpdateIdentity**](docs/AdminApi.md#updateidentity) | **Put** /identities/{id} | Update an Identity
+*PublicApi* | [**CompleteSelfServiceRecoveryFlow**](docs/PublicApi.md#completeselfservicerecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
 *PublicApi* | [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#completeselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 *PublicApi* | [**CompleteSelfServiceSettingsFlow**](docs/PublicApi.md#completeselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
 *PublicApi* | [**CompleteSelfServiceVerificationFlowWithLinkMethod**](docs/PublicApi.md#completeselfserviceverificationflowwithlinkmethod) | **Post** /self-service/verification/methods/link | Complete Verification Flow with Link Method
@@ -122,7 +123,7 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**InitializeSelfServiceVerificationViaAPIFlow**](docs/PublicApi.md#initializeselfserviceverificationviaapiflow) | **Get** /self-service/verification/api | Initialize Verification Flow for API Clients
 *PublicApi* | [**InitializeSelfServiceVerificationViaBrowserFlow**](docs/PublicApi.md#initializeselfserviceverificationviabrowserflow) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 *PublicApi* | [**RevokeSession**](docs/PublicApi.md#revokesession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
-*PublicApi* | [**SubmitSelfServiceLoginFlow**](docs/PublicApi.md#submitselfserviceloginflow) | **Post** /self-service/login/flows | Submit a Login Flow
+*PublicApi* | [**SubmitSelfServiceLoginFlow**](docs/PublicApi.md#submitselfserviceloginflow) | **Post** /self-service/login | Submit a Login Flow
 *PublicApi* | [**SubmitSelfServiceRegistrationFlow**](docs/PublicApi.md#submitselfserviceregistrationflow) | **Post** /self-service/registration | Submit a Registration Flow
 *PublicApi* | [**Whoami**](docs/PublicApi.md#whoami) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
@@ -133,7 +134,6 @@ Class | Method | HTTP request | Description
  - [CompleteSelfServiceBrowserSettingsOIDCFlowPayload](docs/CompleteSelfServiceBrowserSettingsOIDCFlowPayload.md)
  - [CompleteSelfServiceBrowserSettingsProfileStrategyFlow](docs/CompleteSelfServiceBrowserSettingsProfileStrategyFlow.md)
  - [CompleteSelfServiceLoginFlowWithPasswordMethod](docs/CompleteSelfServiceLoginFlowWithPasswordMethod.md)
- - [CompleteSelfServiceLoginFlowWithPasswordMethodPayload](docs/CompleteSelfServiceLoginFlowWithPasswordMethodPayload.md)
  - [CompleteSelfServiceRecoveryFlowWithLinkMethod](docs/CompleteSelfServiceRecoveryFlowWithLinkMethod.md)
  - [CompleteSelfServiceSettingsFlowWithPasswordMethod](docs/CompleteSelfServiceSettingsFlowWithPasswordMethod.md)
  - [CompleteSelfServiceVerificationFlowWithLinkMethod](docs/CompleteSelfServiceVerificationFlowWithLinkMethod.md)
@@ -177,9 +177,6 @@ Class | Method | HTTP request | Description
  - [Port](docs/Port.md)
  - [RecoveryAddress](docs/RecoveryAddress.md)
  - [RecoveryFlow](docs/RecoveryFlow.md)
- - [RecoveryFlowMethod](docs/RecoveryFlowMethod.md)
- - [RecoveryFlowMethodConfig](docs/RecoveryFlowMethodConfig.md)
- - [RecoveryFlowMethodConfigPayload](docs/RecoveryFlowMethodConfigPayload.md)
  - [RecoveryLink](docs/RecoveryLink.md)
  - [RegistrationFlow](docs/RegistrationFlow.md)
  - [RegistrationViaApiResponse](docs/RegistrationViaApiResponse.md)

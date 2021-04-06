@@ -64,11 +64,18 @@
             "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
             "type": "string"
           },
+          "method": {
+            "description": "Method\n\nShould be set to profile when trying to update a profile.\n\ntype: string",
+            "type": "string"
+          },
           "traits": {
             "description": "Traits contains all of the identity's traits.",
             "type": "object"
           }
         },
+        "required": [
+          "traits"
+        ],
         "type": "object"
       },
       "CompleteSelfServiceLoginFlowWithPasswordMethod": {
@@ -82,19 +89,11 @@
             "type": "string"
           },
           "password": {
-            "$ref": "#/components/schemas/CompleteSelfServiceLoginFlowWithPasswordMethodPayload"
-          }
-        },
-        "type": "object"
-      },
-      "CompleteSelfServiceLoginFlowWithPasswordMethodPayload": {
-        "properties": {
-          "identifier": {
-            "description": "Identifier is the email or username of the user trying to log in.",
+            "description": "The user's password.",
             "type": "string"
           },
-          "password": {
-            "description": "The user's password.",
+          "password_identifier": {
+            "description": "Identifier is the email or username of the user trying to log in.",
             "type": "string"
           }
         },
@@ -104,6 +103,10 @@
         "properties": {
           "csrf_token": {
             "description": "CSRFToken is the anti-CSRF token\n\ntype: string",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method\n\nShould be set to password when trying to update a password.\n\ntype: string",
             "type": "string"
           },
           "password": {
@@ -1291,16 +1294,6 @@
             "format": "date-time",
             "type": "string"
           },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "methods": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/recoveryFlowMethod"
-            },
-            "description": "Methods contains context for all account recovery methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
-            "type": "object"
-          },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
             "type": "string"
@@ -1310,6 +1303,9 @@
           },
           "type": {
             "$ref": "#/components/schemas/Type"
+          },
+          "ui": {
+            "$ref": "#/components/schemas/uiContainer"
           }
         },
         "required": [
@@ -1317,74 +1313,10 @@
           "expires_at",
           "issued_at",
           "request_url",
-          "methods",
+          "ui",
           "state"
         ],
         "title": "A Recovery Flow",
-        "type": "object"
-      },
-      "recoveryFlowMethod": {
-        "properties": {
-          "config": {
-            "$ref": "#/components/schemas/recoveryFlowMethodConfig"
-          },
-          "method": {
-            "description": "Method contains the request credentials type.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "method",
-          "config"
-        ],
-        "type": "object"
-      },
-      "recoveryFlowMethodConfig": {
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
-        "type": "object"
-      },
-      "recoveryFlowMethodConfigPayload": {
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
         "type": "object"
       },
       "recoveryLink": {
@@ -2527,6 +2459,62 @@
         ]
       }
     },
+    "/self-service/login": {
+      "post": {
+        "description": "Use this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "submitSelfServiceLoginFlow",
+        "parameters": [
+          {
+            "description": "The Login Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/login?flow=abcde`).",
+            "in": "query",
+            "name": "flow",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginViaApiResponse"
+                }
+              }
+            },
+            "description": "loginViaApiResponse"
+          },
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginFlow"
+                }
+              }
+            },
+            "description": "loginFlow"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/genericError"
+                }
+              }
+            },
+            "description": "genericError"
+          }
+        },
+        "summary": "Submit a Login Flow",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/self-service/login/api": {
       "get": {
         "description": "This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing login flow call `/self-service/login/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks, including CSRF login attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
@@ -2676,32 +2664,13 @@
           "public",
           "admin"
         ]
-      },
+      }
+    },
+    "/self-service/recovery": {
       "post": {
-        "description": "Use this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
-        "operationId": "submitSelfServiceLoginFlow",
-        "parameters": [
-          {
-            "description": "The Login Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/login?flow=abcde`).",
-            "in": "query",
-            "name": "flow",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "description": "Use this endpoint to complete a recovery flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.\n`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a recovery link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with\na new Recovery Flow ID which contains an error message that the recovery link was invalid.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
+        "operationId": "completeSelfServiceRecoveryFlow",
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/loginViaApiResponse"
-                }
-              }
-            },
-            "description": "loginViaApiResponse"
-          },
           "302": {
             "$ref": "#/components/responses/emptyResponse"
           },
@@ -2709,11 +2678,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/loginFlow"
+                  "$ref": "#/components/schemas/recoveryFlow"
                 }
               }
             },
-            "description": "loginFlow"
+            "description": "recoveryFlow"
           },
           "500": {
             "content": {
@@ -2726,7 +2695,7 @@
             "description": "genericError"
           }
         },
-        "summary": "Submit a Login Flow",
+        "summary": "Complete Recovery Flow",
         "tags": [
           "public"
         ]

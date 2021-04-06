@@ -6,20 +6,15 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/bxcodec/faker/v3"
-
-	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
-
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/randx"
 )
 
 var setup bool
@@ -85,23 +80,6 @@ func RegisterFakes() {
 
 	if err := faker.AddProvider("time_type", func(v reflect.Value) (interface{}, error) {
 		return time.Now().Add(time.Duration(rand.Int())).Round(time.Second).UTC(), nil
-	}); err != nil {
-		panic(err)
-	}
-
-	if err := faker.AddProvider("recovery_flow_methods", func(v reflect.Value) (interface{}, error) {
-		var methods = make(map[string]*recovery.FlowMethod)
-		for _, ct := range []string{recovery.StrategyRecoveryLinkName} {
-			var f container.Container
-			if err := faker.FakeData(&f); err != nil {
-				return nil, err
-			}
-			methods[ct] = &recovery.FlowMethod{
-				Method: ct,
-				Config: &recovery.FlowMethodConfig{FlowMethodConfigurator: &f},
-			}
-		}
-		return methods, nil
 	}); err != nil {
 		panic(err)
 	}

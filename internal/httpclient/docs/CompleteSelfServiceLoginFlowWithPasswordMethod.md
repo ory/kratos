@@ -6,7 +6,8 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | Sending the anti-csrf token is only required for browser login flows. | [optional] 
 **Method** | Pointer to **string** | Method should be set to \&quot;password\&quot; when logging in using the identifier and password strategy. | [optional] 
-**Password** | Pointer to [**CompleteSelfServiceLoginFlowWithPasswordMethodPayload**](CompleteSelfServiceLoginFlowWithPasswordMethodPayload.md) |  | [optional] 
+**Password** | Pointer to **string** | The user&#39;s password. | [optional] 
+**PasswordIdentifier** | Pointer to **string** | Identifier is the email or username of the user trying to log in. | [optional] 
 
 ## Methods
 
@@ -79,20 +80,20 @@ HasMethod returns a boolean if a field has been set.
 
 ### GetPassword
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() CompleteSelfServiceLoginFlowWithPasswordMethodPayload`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() string`
 
 GetPassword returns the Password field if non-nil, zero value otherwise.
 
 ### GetPasswordOk
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordOk() (*CompleteSelfServiceLoginFlowWithPasswordMethodPayload, bool)`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordOk() (*string, bool)`
 
 GetPasswordOk returns a tuple with the Password field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetPassword
 
-`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPassword(v CompleteSelfServiceLoginFlowWithPasswordMethodPayload)`
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPassword(v string)`
 
 SetPassword sets Password field to given value.
 
@@ -101,6 +102,31 @@ SetPassword sets Password field to given value.
 `func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasPassword() bool`
 
 HasPassword returns a boolean if a field has been set.
+
+### GetPasswordIdentifier
+
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordIdentifier() string`
+
+GetPasswordIdentifier returns the PasswordIdentifier field if non-nil, zero value otherwise.
+
+### GetPasswordIdentifierOk
+
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordIdentifierOk() (*string, bool)`
+
+GetPasswordIdentifierOk returns a tuple with the PasswordIdentifier field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetPasswordIdentifier
+
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPasswordIdentifier(v string)`
+
+SetPasswordIdentifier sets PasswordIdentifier field to given value.
+
+### HasPasswordIdentifier
+
+`func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasPasswordIdentifier() bool`
+
+HasPasswordIdentifier returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
