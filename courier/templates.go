@@ -24,6 +24,7 @@ type EmailTemplate interface {
 	EmailBody() (string, error)
 	EmailBodyPlaintext() (string, error)
 	EmailRecipient() (string, error)
+	MarshalJSON() ([]byte, error)
 }
 
 func GetTemplateType(t EmailTemplate) (TemplateType, error) {
