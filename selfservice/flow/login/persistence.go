@@ -2,6 +2,7 @@ package login
 
 import (
 	"context"
+	"github.com/ory/x/assertx"
 	"testing"
 
 	"github.com/ory/kratos/ui/container"
@@ -43,10 +44,6 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
-
-			nodes := len(r.UI.Nodes)
-			assert.NotZero(t, nodes)
-
 			return &r
 		}
 
@@ -76,7 +73,7 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			x.AssertEqualTime(t, expected.ExpiresAt, actual.ExpiresAt)
 			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
 			assert.EqualValues(t, expected.Active, actual.Active)
-			require.Equal(t, expected.UI, actual.UI, "expected:\t%s\nactual:\t%s", expected.UI, actual.UI)
+			assertx.EqualAsJSON(t, expected.UI, actual.UI, "expected:\t%s\nactual:\t%s", expected.UI, actual.UI)
 		})
 
 		t.Run("case=should properly set the flow type", func(t *testing.T) {
@@ -102,7 +99,7 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeBrowser, actual.Type)
 			assert.True(t, actual.Forced)
-			assert.Equal(t, "not.ory-sh", actual.UI.Action)
+			assert.Equal(t, "not-ory-sh", actual.UI.Action)
 		})
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
@@ -117,7 +114,7 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 
 			actual, err = p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
-			assert.EqualValues(t, expected.UI, actual.UI)
+			assertx.EqualAsJSON(t, expected.UI, actual.UI)
 		})
 	}
 }
