@@ -2,6 +2,7 @@ package registration
 
 import (
 	"context"
+	"github.com/ory/kratos/ui/node"
 	"testing"
 
 	"github.com/ory/x/assertx"
@@ -39,10 +40,6 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
-
-			nodes := len(r.UI.Nodes)
-			assert.NotZero(t, nodes)
-
 			return &r
 		}
 
@@ -73,32 +70,50 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			x.AssertEqualTime(t, expected.ExpiresAt, actual.ExpiresAt)
 			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
 			assert.EqualValues(t, expected.Active, actual.Active)
-			require.Equal(t, expected.UI, actual.UI, "expected:\t%s\nactual:\t%s", expected.UI, actual.UI)
+			assertx.EqualAsJSON(t, expected.UI, actual.UI, "expected:\t%s\nactual:\t%s", expected.UI, actual.UI)
 		})
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
 			expected := newFlow(t)
-			expected.Active = ""
+			expected.UI.Nodes = node.Nodes{}
+			expected.UI.Nodes.Append(node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+				a.Pattern = "baz"
+			})))
+
+			expected.UI.Nodes.Append(node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+				a.Pattern = "baz"
+			})))
+
 			err := p.CreateRegistrationFlow(ctx, expected)
 			require.NoError(t, err)
 
+			expected.UI.Action = "/new-action"
+			expected.UI.Nodes.Append(
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "zab"
+				})))
+
+			expected.RequestURL = "/new-request-url"
+			require.NoError(t, p.UpdateRegistrationFlow(ctx, expected))
+
 			actual, err := p.GetRegistrationFlow(ctx, expected.ID)
 			require.NoError(t, err)
-			require.Len(t, actual.UI.Nodes, 2)
-			assertx.EqualAsJSON(t,
-				expected.UI,
-				actual.UI,
-			)
 
-			require.NoError(t, p.UpdateRegistrationFlow(ctx, actual))
-
-			actual, err = p.GetRegistrationFlow(ctx, expected.ID)
-			require.NoError(t, err)
-			require.Len(t, actual.UI.Nodes, 2)
-			assertx.EqualAsJSON(t,
-				expected.UI,
-				actual.UI,
-			)
+			assert.Equal(t, "/new-action", actual.UI.Action)
+			assert.Equal(t, "/new-request-url", actual.RequestURL)
+			assertx.EqualAsJSON(t, node.Nodes{
+				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
+				node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "baz"
+				})),
+				node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "baz"
+				})),
+				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "zab"
+				})),
+			}, actual.UI.Nodes)
 		})
 	}
 }
