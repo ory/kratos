@@ -11,7 +11,6 @@ docs/AuthenticateOKBody.md
 docs/CompleteSelfServiceBrowserSettingsOIDCFlowPayload.md
 docs/CompleteSelfServiceBrowserSettingsProfileStrategyFlow.md
 docs/CompleteSelfServiceLoginFlowWithPasswordMethod.md
-docs/CompleteSelfServiceLoginFlowWithPasswordMethodPayload.md
 docs/CompleteSelfServiceRecoveryFlowWithLinkMethod.md
 docs/CompleteSelfServiceSettingsFlowWithPasswordMethod.md
 docs/CompleteSelfServiceVerificationFlowWithLinkMethod.md
@@ -56,9 +55,6 @@ docs/Port.md
 docs/PublicApi.md
 docs/RecoveryAddress.md
 docs/RecoveryFlow.md
-docs/RecoveryFlowMethod.md
-docs/RecoveryFlowMethodConfig.md
-docs/RecoveryFlowMethodConfigPayload.md
 docs/RecoveryLink.md
 docs/RegistrationFlow.md
 docs/RegistrationViaApiResponse.md
@@ -93,7 +89,6 @@ model_authenticate_ok_body.go
 model_complete_self_service_browser_settings_oidc_flow_payload.go
 model_complete_self_service_browser_settings_profile_strategy_flow.go
 model_complete_self_service_login_flow_with_password_method.go
-model_complete_self_service_login_flow_with_password_method_payload.go
 model_complete_self_service_recovery_flow_with_link_method.go
 model_complete_self_service_settings_flow_with_password_method.go
 model_complete_self_service_verification_flow_with_link_method.go
@@ -137,9 +132,6 @@ model_plugin_settings.go
 model_port.go
 model_recovery_address.go
 model_recovery_flow.go
-model_recovery_flow_method.go
-model_recovery_flow_method_config.go
-model_recovery_flow_method_config_payload.go
 model_recovery_link.go
 model_registration_flow.go
 model_registration_via_api_response.go

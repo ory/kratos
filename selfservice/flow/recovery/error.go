@@ -5,11 +5,11 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -78,8 +78,8 @@ func MethodToNodeGroup(method string) node.Group {
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
-	methodName string,
 	f *Flow,
+	group node.Group,
 	err error,
 ) {
 	s.d.Audit().
@@ -95,14 +95,14 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := NewFlow(s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), f.Type)
+		a, err := NewFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), f.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
-			s.WriteFlowError(w, r, methodName, f, err)
+			s.WriteFlowError(w, r, f, group, err)
 			return
 		}
 
-		a.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.ago))
+		a.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.ago))
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return
@@ -117,19 +117,12 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	method, ok := f.Methods[methodName]
-	if !ok {
-		s.forward(w, r, f, errors.WithStack(herodot.ErrInternalServerError.
-			WithErrorf(`Expected recovery method "%s" to exist in flow. This is a bug in the code and should be reported on GitHub.`, methodName)))
-		return
-	}
-
-	if err := method.Config.ParseError(MethodToNodeGroup(methodName), err); err != nil {
+	if err := f.UI.ParseError(group, err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
 
-	f.Active = sqlxx.NullString(methodName)
+	f.Active = sqlxx.NullString(group)
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return

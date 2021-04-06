@@ -1,4 +1,4 @@
-CREATE TABLE "_selfservice_login_flows_tmp" (
+CREATE TABLE "_selfservice_registration_flows_tmp" (
 "id" TEXT PRIMARY KEY,
 "request_url" TEXT NOT NULL,
 "issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
@@ -7,6 +7,5 @@ CREATE TABLE "_selfservice_login_flows_tmp" (
 "csrf_token" TEXT NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
-"forced" bool NOT NULL DEFAULT 'false',
 "type" TEXT NOT NULL DEFAULT 'browser'
 );

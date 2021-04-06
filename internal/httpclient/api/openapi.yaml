@@ -481,6 +481,61 @@ paths:
       tags:
       - public
       - admin
+  /self-service/login:
+    post:
+      description: |-
+        Use this endpoint to complete a login flow. This endpoint
+        behaves differently for API and browser flows.
+
+        API flows expect `application/json` to be sent in the body and responds with
+        HTTP 200 and a application/json body with the session token on success;
+        HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 400 on form validation errors.
+
+        Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+        a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+        a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+
+        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+      operationId: submitSelfServiceLoginFlow
+      parameters:
+      - description: |-
+          The Login Flow ID
+
+          The value for this parameter comes from `flow` URL Query parameter sent to your
+          application (e.g. `/login?flow=abcde`).
+        explode: true
+        in: query
+        name: flow
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/loginViaApiResponse'
+          description: loginViaApiResponse
+        "302":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/loginFlow'
+          description: loginFlow
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/genericError'
+          description: genericError
+      summary: Submit a Login Flow
+      tags:
+      - public
   /self-service/login/api:
     get:
       description: |-
@@ -619,42 +674,27 @@ paths:
       tags:
       - public
       - admin
+  /self-service/recovery:
     post:
       description: |-
-        Use this endpoint to complete a login flow. This endpoint
-        behaves differently for API and browser flows.
+        Use this endpoint to complete a recovery flow. This endpoint
+        behaves differently for API and browser flows and has several states:
 
-        API flows expect `application/json` to be sent in the body and responds with
-        HTTP 200 and a application/json body with the session token on success;
-        HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
-        HTTP 400 on form validation errors.
+        `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+        and works with API- and Browser-initiated flows.
+        For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+        and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+        For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+        `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
+        works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+        `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
+        does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+        (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
+        a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-        Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-        a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-        a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
-
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: submitSelfServiceLoginFlow
-      parameters:
-      - description: |-
-          The Login Flow ID
-
-          The value for this parameter comes from `flow` URL Query parameter sent to your
-          application (e.g. `/login?flow=abcde`).
-        explode: true
-        in: query
-        name: flow
-        required: true
-        schema:
-          type: string
-        style: form
+        More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+      operationId: completeSelfServiceRecoveryFlow
       responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/loginViaApiResponse'
-          description: loginViaApiResponse
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -662,15 +702,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/loginFlow'
-          description: loginFlow
+                $ref: '#/components/schemas/recoveryFlow'
+          description: recoveryFlow
         "500":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/genericError'
           description: genericError
-      summary: Submit a Login Flow
+      summary: Complete Recovery Flow
       tags:
       - public
   /self-service/recovery/api:
@@ -1591,9 +1631,19 @@ components:
 
             This token is only required when performing browser flows.
           type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to profile when trying to update a profile.
+
+            type: string
+          type: string
         traits:
           description: Traits contains all of the identity's traits.
           type: object
+      required:
+      - traits
       type: object
     CompleteSelfServiceLoginFlowWithPasswordMethod:
       properties:
@@ -1606,16 +1656,11 @@ components:
             identifier and password strategy.
           type: string
         password:
-          $ref: '#/components/schemas/CompleteSelfServiceLoginFlowWithPasswordMethodPayload'
-      type: object
-    CompleteSelfServiceLoginFlowWithPasswordMethodPayload:
-      properties:
-        identifier:
+          description: The user's password.
+          type: string
+        password_identifier:
           description: Identifier is the email or username of the user trying to log
             in.
-          type: string
-        password:
-          description: The user's password.
           type: string
       type: object
     CompleteSelfServiceSettingsFlowWithPasswordMethod:
@@ -1623,6 +1668,14 @@ components:
         csrf_token:
           description: |-
             CSRFToken is the anti-CSRF token
+
+            type: string
+          type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to password when trying to update a password.
 
             type: string
           type: string
@@ -2712,113 +2765,7 @@ components:
         We recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
-        methods:
-          key:
-            method: method
-            config:
-              nodes:
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              - messages:
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                - context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-                type: type
-                group: group
-              method: method
-              action: action
-              messages:
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-        active: active
-        messages:
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        id: id
-        state: state
-        type: type
-        issued_at: 2000-01-23T04:56:07.000+00:00
-        request_url: request_url
-      properties:
-        active:
-          description: |-
-            Active, if set, contains the registration method that is being used. It is initially
-            not set.
-          type: string
-        expires_at:
-          description: |-
-            ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
-            a new request has to be initiated.
-          format: date-time
-          type: string
-        id:
-          format: uuid4
-          type: string
-        issued_at:
-          description: IssuedAt is the time (UTC) when the request occurred.
-          format: date-time
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        methods:
-          additionalProperties:
-            $ref: '#/components/schemas/recoveryFlowMethod'
-          description: |-
-            Methods contains context for all account recovery methods. If a registration request has been
-            processed, but for example the password is incorrect, this will contain error messages.
-          type: object
-        request_url:
-          description: |-
-            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
-            to forward information contained in the URL's path or query for example.
-          type: string
-        state:
-          type: string
-        type:
-          description: The flow type can either be `api` or `browser`.
-          title: Type is the flow type.
-          type: string
-      required:
-      - expires_at
-      - id
-      - issued_at
-      - methods
-      - request_url
-      - state
-      title: A Recovery Flow
-      type: object
-    recoveryFlowMethod:
-      example:
-        method: method
-        config:
+        ui:
           nodes:
           - messages:
             - context: '{}'
@@ -2853,94 +2800,52 @@ components:
             id: 0
             text: text
             type: type
+        active: active
+        id: id
+        state: state
+        type: type
+        issued_at: 2000-01-23T04:56:07.000+00:00
+        request_url: request_url
       properties:
-        config:
-          $ref: '#/components/schemas/recoveryFlowMethodConfig'
-        method:
-          description: Method contains the request credentials type.
+        active:
+          description: |-
+            Active, if set, contains the registration method that is being used. It is initially
+            not set.
           type: string
+        expires_at:
+          description: |-
+            ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
+            a new request has to be initiated.
+          format: date-time
+          type: string
+        id:
+          format: uuid4
+          type: string
+        issued_at:
+          description: IssuedAt is the time (UTC) when the request occurred.
+          format: date-time
+          type: string
+        request_url:
+          description: |-
+            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+            to forward information contained in the URL's path or query for example.
+          type: string
+        state:
+          type: string
+        type:
+          description: The flow type can either be `api` or `browser`.
+          title: Type is the flow type.
+          type: string
+        ui:
+          $ref: '#/components/schemas/uiContainer'
       required:
-      - config
-      - method
-      type: object
-    recoveryFlowMethodConfig:
-      example:
-        nodes:
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        - messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          type: type
-          group: group
-        method: method
-        action: action
-        messages:
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-        - context: '{}'
-          id: 0
-          text: text
-          type: type
-      properties:
-        action:
-          description: Action should be used as the form action URL `<form action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the form method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
-      type: object
-    recoveryFlowMethodConfigPayload:
-      properties:
-        action:
-          description: Action should be used as the form action URL `<form action="{{
-            .Action }}" method="post">`.
-          type: string
-        messages:
-          items:
-            $ref: '#/components/schemas/uiText'
-          type: array
-        method:
-          description: Method is the form method (e.g. POST)
-          type: string
-        nodes:
-          items:
-            $ref: '#/components/schemas/uiNode'
-          type: array
-      required:
-      - action
-      - method
-      - nodes
+      - expires_at
+      - id
+      - issued_at
+      - request_url
+      - state
+      - ui
+      title: A Recovery Flow
       type: object
     recoveryLink:
       example:
