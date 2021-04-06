@@ -199,8 +199,6 @@ New feature or request.
 - [ ] Add option for disabling registration
       ([kratos#882](https://github.com/ory/kratos/issues/882)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Support dynamic return_to address on verification flow
-      ([kratos#1123](https://github.com/ory/kratos/issues/1123))
 - [x] Support remote argon2 execution
       ([kratos#357](https://github.com/ory/kratos/issues/357)) -
       [@hackerman](https://github.com/aeneasr)
@@ -219,6 +217,8 @@ New feature or request.
 - [x] Replace viper with Koanf
       ([kratos#894](https://github.com/ory/kratos/issues/894)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Support dynamic return_to address on verification flow
+      ([kratos#1123](https://github.com/ory/kratos/issues/1123))
 
 #### Pull Requests
 

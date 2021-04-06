@@ -90,6 +90,14 @@ func NewFlow(exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flo
 	}
 }
 
+func (f *Flow) GetType() flow.Type {
+	return f.Type
+}
+
+func (f *Flow) GetRequestURL() string {
+	return f.RequestURL
+}
+
 func (f *Flow) BeforeSave(_ *pop.Connection) error {
 	f.MethodsRaw = make([]FlowMethod, 0, len(f.Methods))
 	for _, m := range f.Methods {

@@ -129,8 +129,6 @@ git clone https://github.com/ory/kratos.git
 cd kratos
 git checkout v0.5.5-alpha.1
 
-docker pull oryd/kratos:latest-sqlite
-docker pull oryd/kratos-selfservice-ui-node:latest
 docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 # If you have SELinux, run:
 docker-compose -f quickstart.yml -f quickstart-selinux.yml -f quickstart-standalone.yml up --build --force-recreate

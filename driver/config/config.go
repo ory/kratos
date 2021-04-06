@@ -36,6 +36,7 @@ const (
 	DefaultIdentityTraitsSchemaID                                   = "default"
 	DefaultBrowserReturnURL                                         = "default_browser_return_url"
 	DefaultSQLiteMemoryDSN                                          = dbal.SQLiteInMemory
+	DefaultPasswordHashingAlgorithm                                 = "argon2"
 	UnknownVersion                                                  = "unknown version"
 	ViperKeyDSN                                                     = "dsn"
 	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
@@ -84,11 +85,13 @@ const (
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
 	ViperKeyIdentitySchemas                                         = "identity.schemas"
+	ViperKeyHasherAlgorithm                                         = "hashers.algorithm"
 	ViperKeyHasherArgon2ConfigMemory                                = "hashers.argon2.memory"
 	ViperKeyHasherArgon2ConfigIterations                            = "hashers.argon2.iterations"
 	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
 	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
+	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
@@ -96,6 +99,7 @@ const (
 	Argon2DefaultIterations                                  uint32 = 4
 	Argon2DefaultSaltLength                                  uint32 = 16
 	Argon2DefaultKeyLength                                   uint32 = 32
+	BcryptDefaultCost                                        uint32 = 12
 )
 
 // DefaultSessionCookieName returns the default cookie name for the kratos session.
@@ -108,6 +112,9 @@ type (
 		Parallelism uint8  `json:"parallelism"`
 		SaltLength  uint32 `json:"salt_length"`
 		KeyLength   uint32 `json:"key_length"`
+	}
+	Bcrypt struct {
+		Cost uint32 `json:"cost"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -232,6 +239,14 @@ func (p *Config) HasherArgon2() *Argon2 {
 		Parallelism: uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
 		SaltLength:  uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
 		KeyLength:   uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+	}
+}
+
+func (p *Config) HasherBcrypt() *Bcrypt {
+	// warn about usage of default values and point to the docs
+	// warning will require https://github.com/ory/viper/issues/19
+	return &Bcrypt{
+		Cost: uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost))),
 	}
 }
 
@@ -730,5 +745,17 @@ func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 	return &PasswordPolicy{
 		MaxBreaches:         uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
 		IgnoreNetworkErrors: p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+	}
+}
+
+func (p *Config) HasherPasswordHashingAlgorithm() string {
+	configValue := p.p.StringF(ViperKeyHasherAlgorithm, DefaultPasswordHashingAlgorithm)
+	switch configValue {
+	case "bcrypt":
+		return configValue
+	case "argon2":
+		fallthrough
+	default:
+		return configValue
 	}
 }
