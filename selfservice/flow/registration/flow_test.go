@@ -28,7 +28,6 @@ func TestFakeFlow(t *testing.T) {
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)
 	assert.NotEmpty(t, r.Active)
-	assert.NotEmpty(t, r.UI.Nodes)
 }
 
 func TestNewFlow(t *testing.T) {
