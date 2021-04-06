@@ -4,6 +4,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/sqlcon"
+
 	"github.com/ory/herodot"
 
 	"github.com/julienschmidt/httprouter"
@@ -22,6 +26,8 @@ const (
 	RouteInitBrowserFlow = "/self-service/verification/browser"
 	RouteInitAPIFlow     = "/self-service/verification/api"
 	RouteGetFlow         = "/self-service/verification/flows"
+
+	RouteSubmitFlow = "/self-service/verification"
 )
 
 type (
@@ -57,6 +63,9 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
 	public.GET(RouteInitAPIFlow, h.initAPIFlow)
 	public.GET(RouteGetFlow, h.fetch)
+
+	public.POST(RouteSubmitFlow, h.submitFlow)
+	public.GET(RouteSubmitFlow, h.submitFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -95,7 +104,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeAPI)
+	req, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -131,7 +140,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
+	req, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -203,4 +212,96 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	}
 
 	h.d.Writer().Write(w, r, req)
+}
+
+// swagger:route POST /self-service/verification/methods/link public completeSelfServiceVerificationFlow
+//
+// Complete Verification Flow
+//
+// Use this endpoint to complete a verification flow. This endpoint
+// behaves differently for API and browser flows and has several states:
+//
+// - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+//   and works with API- and Browser-initiated flows.
+//	 - For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+//     and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+//	 - For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+// - `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
+//   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+// - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
+//   does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+//   (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
+//   a new Verification Flow ID which contains an error message that the verification link was invalid.
+//
+// More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+//
+//     Consumes:
+//     - application/json
+//     - application/x-www-form-urlencoded
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       400: verificationFlow
+//       302: emptyResponse
+//       500: genericError
+func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	rid, err := flow.GetFlowID(r)
+	if err != nil {
+		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
+		return
+	}
+
+	f, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), rid)
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrNotFound.WithReasonf("The verification request could not be found. Please restart the flow.")))
+		return
+	} else if err != nil {
+		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
+		return
+	}
+
+	if err := f.Valid(); err != nil {
+		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		return
+	}
+
+	var g node.Group
+	var found bool
+	for _, ss := range h.d.AllVerificationStrategies() {
+		err := ss.Verify(w, r, f)
+		if errors.Is(err, flow.ErrStrategyNotResponsible) {
+			continue
+		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return
+		} else if err != nil {
+			h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, ss.VerificationNodeGroup(), err)
+			return
+		}
+
+		found = true
+		g = ss.VerificationNodeGroup()
+		break
+	}
+
+	if !found {
+		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoVerificationStrategyResponsible()))
+		return
+	}
+
+	if f.Type == flow.TypeBrowser {
+		http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+		return
+	}
+
+	updatedFlow, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), f.ID)
+	if err != nil {
+		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, g, err)
+		return
+	}
+
+	h.d.Writer().Write(w, r, updatedFlow)
 }

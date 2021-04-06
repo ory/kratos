@@ -80,3 +80,7 @@ func NewStrategy(d strategyDependencies) *Strategy {
 func (s *Strategy) RecoveryNodeGroup() node.Group {
 	return node.RecoveryLinkGroup
 }
+
+func (s *Strategy) VerificationNodeGroup() node.Group {
+	return node.VerificationLinkGroup
+}

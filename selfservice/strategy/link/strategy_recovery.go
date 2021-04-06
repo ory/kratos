@@ -338,7 +338,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body *submitPayload) error {
+func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload) error {
 	token, err := s.d.RecoveryTokenPersister().UseRecoveryToken(r.Context(), body.Token)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -434,7 +434,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	return nil
 }
 
-func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *submitPayload, err error) error {
+func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *recoverySubmitPayload, err error) error {
 	if req != nil {
 		req.UI.Reset("email")
 		req.UI.SetCSRF(s.d.GenerateCSRFToken(r))
@@ -447,7 +447,7 @@ func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, r
 	return err
 }
 
-type submitPayload struct {
+type recoverySubmitPayload struct {
 	Method    string `json:"method" form:"method"`
 	Token     string `json:"token" form:"token"`
 	CSRFToken string `json:"csrf_token" form:"csrf_token"`
@@ -455,10 +455,10 @@ type submitPayload struct {
 	Email     string `json:"email" form:"email"`
 }
 
-func (s *Strategy) decodeRecovery(r *http.Request) (*submitPayload, error) {
-	var body submitPayload
+func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, error) {
+	var body recoverySubmitPayload
 
-	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(methodSchema)
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(recoveryMethodSchema)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

@@ -1,1 +1,1 @@
-ALTER TABLE `selfservice_settings_flows` DROP COLUMN `ui`;
+ALTER TABLE `selfservice_recovery_flows` DROP COLUMN `ui`;

@@ -76,9 +76,6 @@ docs/UiText.md
 docs/UpdateIdentity.md
 docs/VerifiableAddress.md
 docs/VerificationFlow.md
-docs/VerificationFlowMethod.md
-docs/VerificationFlowMethodConfig.md
-docs/VerificationFlowMethodConfigPayload.md
 docs/Version.md
 docs/Volume.md
 docs/VolumeUsageData.md
@@ -153,9 +150,6 @@ model_ui_text.go
 model_update_identity.go
 model_verifiable_address.go
 model_verification_flow.go
-model_verification_flow_method.go
-model_verification_flow_method_config.go
-model_verification_flow_method_config_payload.go
 model_version.go
 model_volume.go
 model_volume_usage_data.go

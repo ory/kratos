@@ -8,17 +8,16 @@ Name | Type | Description | Notes
 **ExpiresAt** | Pointer to **time.Time** | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated. | [optional] 
 **Id** | **string** |  | 
 **IssuedAt** | Pointer to **time.Time** | IssuedAt is the time (UTC) when the request occurred. | [optional] 
-**Messages** | Pointer to [**[]UiText**](UiText.md) |  | [optional] 
-**Methods** | [**map[string]VerificationFlowMethod**](verificationFlowMethod.md) | Methods contains context for all account verification methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. | 
 **RequestUrl** | Pointer to **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | [optional] 
 **State** | **string** |  | 
 **Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
+**Ui** | [**UiContainer**](uiContainer.md) |  | 
 
 ## Methods
 
 ### NewVerificationFlow
 
-`func NewVerificationFlow(id string, methods map[string]VerificationFlowMethod, state string, type_ string, ) *VerificationFlow`
+`func NewVerificationFlow(id string, state string, type_ string, ui UiContainer, ) *VerificationFlow`
 
 NewVerificationFlow instantiates a new VerificationFlow object
 This constructor will assign default values to properties that have it defined,
@@ -128,51 +127,6 @@ SetIssuedAt sets IssuedAt field to given value.
 
 HasIssuedAt returns a boolean if a field has been set.
 
-### GetMessages
-
-`func (o *VerificationFlow) GetMessages() []UiText`
-
-GetMessages returns the Messages field if non-nil, zero value otherwise.
-
-### GetMessagesOk
-
-`func (o *VerificationFlow) GetMessagesOk() (*[]UiText, bool)`
-
-GetMessagesOk returns a tuple with the Messages field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetMessages
-
-`func (o *VerificationFlow) SetMessages(v []UiText)`
-
-SetMessages sets Messages field to given value.
-
-### HasMessages
-
-`func (o *VerificationFlow) HasMessages() bool`
-
-HasMessages returns a boolean if a field has been set.
-
-### GetMethods
-
-`func (o *VerificationFlow) GetMethods() map[string]VerificationFlowMethod`
-
-GetMethods returns the Methods field if non-nil, zero value otherwise.
-
-### GetMethodsOk
-
-`func (o *VerificationFlow) GetMethodsOk() (*map[string]VerificationFlowMethod, bool)`
-
-GetMethodsOk returns a tuple with the Methods field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetMethods
-
-`func (o *VerificationFlow) SetMethods(v map[string]VerificationFlowMethod)`
-
-SetMethods sets Methods field to given value.
-
-
 ### GetRequestUrl
 
 `func (o *VerificationFlow) GetRequestUrl() string`
@@ -236,6 +190,26 @@ and a boolean to check if the value has been set.
 `func (o *VerificationFlow) SetType(v string)`
 
 SetType sets Type field to given value.
+
+
+### GetUi
+
+`func (o *VerificationFlow) GetUi() UiContainer`
+
+GetUi returns the Ui field if non-nil, zero value otherwise.
+
+### GetUiOk
+
+`func (o *VerificationFlow) GetUiOk() (*UiContainer, bool)`
+
+GetUiOk returns a tuple with the Ui field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUi
+
+`func (o *VerificationFlow) SetUi(v UiContainer)`
+
+SetUi sets Ui field to given value.
 
 
 

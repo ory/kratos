@@ -1756,16 +1756,6 @@
             "format": "date-time",
             "type": "string"
           },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "methods": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/verificationFlowMethod"
-            },
-            "description": "Methods contains context for all account verification methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
-            "type": "object"
-          },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
             "type": "string"
@@ -1775,79 +1765,18 @@
           },
           "type": {
             "$ref": "#/components/schemas/Type"
+          },
+          "ui": {
+            "$ref": "#/components/schemas/uiContainer"
           }
         },
         "required": [
           "id",
           "type",
-          "methods",
+          "ui",
           "state"
         ],
         "title": "A Verification Flow",
-        "type": "object"
-      },
-      "verificationFlowMethod": {
-        "properties": {
-          "config": {
-            "$ref": "#/components/schemas/verificationFlowMethodConfig"
-          },
-          "method": {
-            "description": "Method contains the request credentials type.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "method",
-          "config"
-        ],
-        "type": "object"
-      },
-      "verificationFlowMethodConfig": {
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
-        "type": "object"
-      },
-      "verificationFlowMethodConfigPayload": {
-        "properties": {
-          "action": {
-            "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-            "type": "string"
-          },
-          "messages": {
-            "$ref": "#/components/schemas/uiTexts"
-          },
-          "method": {
-            "description": "Method is the form method (e.g. POST)",
-            "type": "string"
-          },
-          "nodes": {
-            "$ref": "#/components/schemas/uiNodes"
-          }
-        },
-        "required": [
-          "action",
-          "method",
-          "nodes"
-        ],
         "type": "object"
       },
       "version": {
@@ -3467,41 +3396,8 @@
     },
     "/self-service/verification/methods/link": {
       "post": {
-        "description": "Use this endpoint to complete a verification flow using the link method. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.\n`sent_email` is the success state after `choose_method` and allows the user to request another verification email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a verification link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with\na new Verification Flow ID which contains an error message that the verification link was invalid.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
-        "operationId": "completeSelfServiceVerificationFlowWithLinkMethod",
-        "parameters": [
-          {
-            "description": "Verification Token\n\nThe verification token which completes the verification request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.",
-            "in": "query",
-            "name": "token",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "The Flow ID\n\nformat: uuid",
-            "in": "query",
-            "name": "flow",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/completeSelfServiceVerificationFlowWithLinkMethod"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/completeSelfServiceVerificationFlowWithLinkMethod"
-              }
-            }
-          },
-          "x-originalParamName": "Body"
-        },
+        "description": "Use this endpoint to complete a verification flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.\n`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a verification link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with\na new Verification Flow ID which contains an error message that the verification link was invalid.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "operationId": "completeSelfServiceVerificationFlow",
         "responses": {
           "302": {
             "$ref": "#/components/responses/emptyResponse"
@@ -3527,7 +3423,7 @@
             "description": "genericError"
           }
         },
-        "summary": "Complete Verification Flow with Link Method",
+        "summary": "Complete Verification Flow",
         "tags": [
           "public"
         ]

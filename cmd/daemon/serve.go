@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"net/http"
 	"strings"
 	"sync"
@@ -190,10 +191,14 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				verification.RouteInitAPIFlow,
 				verification.RouteInitBrowserFlow,
 				verification.RouteGetFlow,
+				verification.RouteSubmitFlow,
+
+				recovery.RouteInitAPIFlow,
+				recovery.RouteInitBrowserFlow,
+				recovery.RouteGetFlow,
+				recovery.RouteSubmitFlow,
 
 				link.RouteAdminCreateRecoveryLink,
-				link.RouteRecovery,
-				link.RouteVerification,
 
 				errorx.RouteGet,
 				prometheus.MetricsPrometheusPath,

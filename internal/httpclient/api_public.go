@@ -480,34 +480,18 @@ func (a *PublicApiService) CompleteSelfServiceSettingsFlowExecute(r PublicApiApi
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest struct {
-	ctx                                               context.Context
-	ApiService                                        *PublicApiService
-	token                                             *string
-	flow                                              *string
-	completeSelfServiceVerificationFlowWithLinkMethod *CompleteSelfServiceVerificationFlowWithLinkMethod
+type PublicApiApiCompleteSelfServiceVerificationFlowRequest struct {
+	ctx        context.Context
+	ApiService *PublicApiService
 }
 
-func (r PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest) Token(token string) PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest {
-	r.token = &token
-	return r
-}
-func (r PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest) Flow(flow string) PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest {
-	r.flow = &flow
-	return r
-}
-func (r PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest) CompleteSelfServiceVerificationFlowWithLinkMethod(completeSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod) PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest {
-	r.completeSelfServiceVerificationFlowWithLinkMethod = &completeSelfServiceVerificationFlowWithLinkMethod
-	return r
-}
-
-func (r PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest) Execute() (*http.Response, error) {
-	return r.ApiService.CompleteSelfServiceVerificationFlowWithLinkMethodExecute(r)
+func (r PublicApiApiCompleteSelfServiceVerificationFlowRequest) Execute() (*http.Response, error) {
+	return r.ApiService.CompleteSelfServiceVerificationFlowExecute(r)
 }
 
 /*
- * CompleteSelfServiceVerificationFlowWithLinkMethod Complete Verification Flow with Link Method
- * Use this endpoint to complete a verification flow using the link method. This endpoint
+ * CompleteSelfServiceVerificationFlow Complete Verification Flow
+ * Use this endpoint to complete a verification flow. This endpoint
 behaves differently for API and browser flows and has several states:
 
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
@@ -515,7 +499,7 @@ and works with API- and Browser-initiated flows.
 For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
 and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
 For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
-`sent_email` is the success state after `choose_method` and allows the user to request another verification email. It
+`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
 does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
@@ -524,10 +508,10 @@ a new Verification Flow ID which contains an error message that the verification
 
 More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest
+ * @return PublicApiApiCompleteSelfServiceVerificationFlowRequest
 */
-func (a *PublicApiService) CompleteSelfServiceVerificationFlowWithLinkMethod(ctx context.Context) PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest {
-	return PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest{
+func (a *PublicApiService) CompleteSelfServiceVerificationFlow(ctx context.Context) PublicApiApiCompleteSelfServiceVerificationFlowRequest {
+	return PublicApiApiCompleteSelfServiceVerificationFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -536,7 +520,7 @@ func (a *PublicApiService) CompleteSelfServiceVerificationFlowWithLinkMethod(ctx
 /*
  * Execute executes the request
  */
-func (a *PublicApiService) CompleteSelfServiceVerificationFlowWithLinkMethodExecute(r PublicApiApiCompleteSelfServiceVerificationFlowWithLinkMethodRequest) (*http.Response, error) {
+func (a *PublicApiService) CompleteSelfServiceVerificationFlowExecute(r PublicApiApiCompleteSelfServiceVerificationFlowRequest) (*http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -545,7 +529,7 @@ func (a *PublicApiService) CompleteSelfServiceVerificationFlowWithLinkMethodExec
 		localVarFileBytes    []byte
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.CompleteSelfServiceVerificationFlowWithLinkMethod")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.CompleteSelfServiceVerificationFlow")
 	if err != nil {
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -556,14 +540,8 @@ func (a *PublicApiService) CompleteSelfServiceVerificationFlowWithLinkMethodExec
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if r.token != nil {
-		localVarQueryParams.Add("token", parameterToString(*r.token, ""))
-	}
-	if r.flow != nil {
-		localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
-	}
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
+	localVarHTTPContentTypes := []string{}
 
 	// set Content-Type header
 	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
@@ -579,8 +557,6 @@ func (a *PublicApiService) CompleteSelfServiceVerificationFlowWithLinkMethodExec
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	// body params
-	localVarPostBody = r.completeSelfServiceVerificationFlowWithLinkMethod
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err

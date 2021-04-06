@@ -4,32 +4,10 @@
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
   "request_url": "http://kratos:4433/self-service/browser/flows/settings",
-  "messages": null,
-  "methods": {
-    "oidc": {
-      "method": "oidc",
-      "config": {
-        "action": "",
-        "method": "POST",
-        "nodes": []
-      }
-    },
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "",
-        "method": "POST",
-        "nodes": []
-      }
-    },
-    "profile": {
-      "method": "profile",
-      "config": {
-        "action": "",
-        "method": "POST",
-        "nodes": []
-      }
-    }
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
   },
   "identity": {
     "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
