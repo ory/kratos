@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_login_flows" DROP COLUMN "ui";
+ALTER TABLE "selfservice_registration_flows" DROP COLUMN "ui";

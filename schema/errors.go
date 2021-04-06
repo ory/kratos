@@ -153,3 +153,13 @@ func NewNoRecoveryStrategyResponsible() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationRecoveryNoStrategyFound()),
 	})
 }
+
+func NewNoVerificationStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to verify your account with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationVerificationNoStrategyFound()),
+	})
+}

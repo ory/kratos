@@ -81,7 +81,6 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("case=should create and update a recovery request", func(t *testing.T) {
-
 			expected := newFlow(t)
 			expected.Type = flow.TypeAPI
 			expected.UI = container.New("ory-sh")

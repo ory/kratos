@@ -25,26 +25,24 @@ type VerificationFlow struct {
 	Id        string     `json:"id"`
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt *time.Time `json:"issued_at,omitempty"`
-	Messages []UiText   `json:"messages,omitempty"`
-	// Methods contains context for all account verification methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.
-	Methods map[string]VerificationFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl *string `json:"request_url,omitempty"`
 	State      string  `json:"state"`
 	// The flow type can either be `api` or `browser`.
-	Type string `json:"type"`
+	Type string      `json:"type"`
+	Ui   UiContainer `json:"ui"`
 }
 
 // NewVerificationFlow instantiates a new VerificationFlow object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewVerificationFlow(id string, methods map[string]VerificationFlowMethod, state string, type_ string) *VerificationFlow {
+func NewVerificationFlow(id string, state string, type_ string, ui UiContainer) *VerificationFlow {
 	this := VerificationFlow{}
 	this.Id = id
-	this.Methods = methods
 	this.State = state
 	this.Type = type_
+	this.Ui = ui
 	return &this
 }
 
@@ -176,62 +174,6 @@ func (o *VerificationFlow) SetIssuedAt(v time.Time) {
 	o.IssuedAt = &v
 }
 
-// GetMessages returns the Messages field value if set, zero value otherwise.
-func (o *VerificationFlow) GetMessages() []UiText {
-	if o == nil || o.Messages == nil {
-		var ret []UiText
-		return ret
-	}
-	return o.Messages
-}
-
-// GetMessagesOk returns a tuple with the Messages field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *VerificationFlow) GetMessagesOk() ([]UiText, bool) {
-	if o == nil || o.Messages == nil {
-		return nil, false
-	}
-	return o.Messages, true
-}
-
-// HasMessages returns a boolean if a field has been set.
-func (o *VerificationFlow) HasMessages() bool {
-	if o != nil && o.Messages != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetMessages gets a reference to the given []UiText and assigns it to the Messages field.
-func (o *VerificationFlow) SetMessages(v []UiText) {
-	o.Messages = v
-}
-
-// GetMethods returns the Methods field value
-func (o *VerificationFlow) GetMethods() map[string]VerificationFlowMethod {
-	if o == nil {
-		var ret map[string]VerificationFlowMethod
-		return ret
-	}
-
-	return o.Methods
-}
-
-// GetMethodsOk returns a tuple with the Methods field value
-// and a boolean to check if the value has been set.
-func (o *VerificationFlow) GetMethodsOk() (*map[string]VerificationFlowMethod, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Methods, true
-}
-
-// SetMethods sets field value
-func (o *VerificationFlow) SetMethods(v map[string]VerificationFlowMethod) {
-	o.Methods = v
-}
-
 // GetRequestUrl returns the RequestUrl field value if set, zero value otherwise.
 func (o *VerificationFlow) GetRequestUrl() string {
 	if o == nil || o.RequestUrl == nil {
@@ -312,6 +254,30 @@ func (o *VerificationFlow) SetType(v string) {
 	o.Type = v
 }
 
+// GetUi returns the Ui field value
+func (o *VerificationFlow) GetUi() UiContainer {
+	if o == nil {
+		var ret UiContainer
+		return ret
+	}
+
+	return o.Ui
+}
+
+// GetUiOk returns a tuple with the Ui field value
+// and a boolean to check if the value has been set.
+func (o *VerificationFlow) GetUiOk() (*UiContainer, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Ui, true
+}
+
+// SetUi sets field value
+func (o *VerificationFlow) SetUi(v UiContainer) {
+	o.Ui = v
+}
+
 func (o VerificationFlow) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Active != nil {
@@ -326,12 +292,6 @@ func (o VerificationFlow) MarshalJSON() ([]byte, error) {
 	if o.IssuedAt != nil {
 		toSerialize["issued_at"] = o.IssuedAt
 	}
-	if o.Messages != nil {
-		toSerialize["messages"] = o.Messages
-	}
-	if true {
-		toSerialize["methods"] = o.Methods
-	}
 	if o.RequestUrl != nil {
 		toSerialize["request_url"] = o.RequestUrl
 	}
@@ -340,6 +300,9 @@ func (o VerificationFlow) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["type"] = o.Type
+	}
+	if true {
+		toSerialize["ui"] = o.Ui
 	}
 	return json.Marshal(toSerialize)
 }

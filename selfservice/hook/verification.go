@@ -1,6 +1,9 @@
 package hook
 
 import (
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/x"
 	"net/http"
 
 	"github.com/ory/kratos/driver/config"
@@ -22,9 +25,9 @@ type (
 		link.SenderProvider
 		link.VerificationTokenPersistenceProvider
 		config.Provider
+		x.CSRFTokenGeneratorProvider
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
-		x.CSRFTokenGeneratorProvider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -62,12 +65,17 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
+		token := link.NewVerificationToken(address, e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan())
+		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
+			return err
+		}
+
 		token := link.NewSelfServiceVerificationToken(address, verificationFlow)
 		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
 			return err
 		}
 
-		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), address, token); err != nil {
+		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, address, token); err != nil {
 			return err
 		}
 	}

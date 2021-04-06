@@ -15,7 +15,8 @@ const (
 	ErrorValidationLoginNoStrategyFound                            // 4010002
 	ErrorValidationRegistrationNoStrategyFound                     // 4010003
 	ErrorValidationSettingsNoStrategyFound                         // 4010004
-	ErrorValidationRecoveryNoStrategyFound                         // 4010004
+	ErrorValidationRecoveryNoStrategyFound                         // 4010005
+	ErrorValidationVerificationNoStrategyFound                     // 4010006
 )
 
 func NewErrorValidationLoginFlowExpired(ago time.Duration) *Message {
@@ -57,6 +58,14 @@ func NewErrorValidationRecoveryNoStrategyFound() *Message {
 	return &Message{
 		ID:   ErrorValidationRecoveryNoStrategyFound,
 		Text: "Could not find a strategy to recover your account with. Did you fill out the form correctly?",
+		Type: Error,
+	}
+}
+
+func NewErrorValidationVerificationNoStrategyFound() *Message {
+	return &Message{
+		ID:   ErrorValidationVerificationNoStrategyFound,
+		Text: "Could not find a strategy to verify your account with. Did you fill out the form correctly?",
 		Type: Error,
 	}
 }
