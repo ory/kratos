@@ -20,3 +20,11 @@ drop_column("selfservice_settings_flows", "messages")
 add_column("selfservice_settings_flows", "ui", "json", { "null": true })
 sql("UPDATE selfservice_settings_flows SET ui='{}'")
 change_column("selfservice_settings_flows", "ui", "json", { "null": false })
+
+
+drop_table("selfservice_recovery_flow_methods")
+drop_column("selfservice_recovery_flows", "messages")
+
+add_column("selfservice_recovery_flows", "ui", "json", { "null": true })
+sql("UPDATE selfservice_recovery_flows SET ui='{}'")
+change_column("selfservice_recovery_flows", "ui", "json", { "null": false })

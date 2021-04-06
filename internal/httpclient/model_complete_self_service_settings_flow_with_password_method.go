@@ -19,6 +19,8 @@ import (
 type CompleteSelfServiceSettingsFlowWithPasswordMethod struct {
 	// CSRFToken is the anti-CSRF token  type: string
 	CsrfToken *string `json:"csrf_token,omitempty"`
+	// Method  Should be set to password when trying to update a password.  type: string
+	Method *string `json:"method,omitempty"`
 	// Password is the updated password  type: string
 	Password string `json:"password"`
 }
@@ -73,6 +75,38 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) SetCsrfToken(v strin
 	o.CsrfToken = &v
 }
 
+// GetMethod returns the Method field value if set, zero value otherwise.
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetMethod() string {
+	if o == nil || o.Method == nil {
+		var ret string
+		return ret
+	}
+	return *o.Method
+}
+
+// GetMethodOk returns a tuple with the Method field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetMethodOk() (*string, bool) {
+	if o == nil || o.Method == nil {
+		return nil, false
+	}
+	return o.Method, true
+}
+
+// HasMethod returns a boolean if a field has been set.
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) HasMethod() bool {
+	if o != nil && o.Method != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMethod gets a reference to the given string and assigns it to the Method field.
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) SetMethod(v string) {
+	o.Method = &v
+}
+
 // GetPassword returns the Password field value
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetPassword() string {
 	if o == nil {
@@ -101,6 +135,9 @@ func (o CompleteSelfServiceSettingsFlowWithPasswordMethod) MarshalJSON() ([]byte
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
+	}
+	if o.Method != nil {
+		toSerialize["method"] = o.Method
 	}
 	if true {
 		toSerialize["password"] = o.Password

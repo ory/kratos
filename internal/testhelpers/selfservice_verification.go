@@ -19,7 +19,6 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
 )
@@ -73,24 +72,16 @@ func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptes
 	return rs
 }
 
-func GetRecoveryFlowMethodConfig(t *testing.T, rs *kratos.RecoveryFlow, id string) *kratos.RecoveryFlowMethodConfig {
-	require.NotEmpty(t, rs.Methods[id])
-	require.NotEmpty(t, rs.Methods[id].Config)
-	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	c := rs.Methods[id].Config
-	return &c
-}
-
 func RecoveryMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *kratos.RecoveryFlowMethodConfig,
+	f *kratos.RecoveryFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
-	require.NotEmpty(t, f.Action)
+	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Action, bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -105,7 +96,6 @@ func SubmitRecoveryForm(
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
-	method identity.CredentialsType,
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
@@ -119,11 +109,10 @@ func SubmitRecoveryForm(
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetRecoveryFlowMethodConfig(t, f, method.String())
-	formPayload := SDKFormFieldsToURLValues(config.Nodes)
+	formPayload := SDKFormFieldsToURLValues(f.Ui.Nodes)
 	withValues(formPayload)
 
-	b, res := RecoveryMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, formPayload))
+	b, res := RecoveryMakeRequest(t, isAPI, f, hc, EncodeFormAsJSON(t, isAPI, formPayload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

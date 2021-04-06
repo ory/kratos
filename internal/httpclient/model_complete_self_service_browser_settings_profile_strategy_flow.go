@@ -19,16 +19,19 @@ import (
 type CompleteSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	// The Anti-CSRF Token  This token is only required when performing browser flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
+	// Method  Should be set to profile when trying to update a profile.  type: string
+	Method *string `json:"method,omitempty"`
 	// Traits contains all of the identity's traits.
-	Traits map[string]interface{} `json:"traits,omitempty"`
+	Traits map[string]interface{} `json:"traits"`
 }
 
 // NewCompleteSelfServiceBrowserSettingsProfileStrategyFlow instantiates a new CompleteSelfServiceBrowserSettingsProfileStrategyFlow object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCompleteSelfServiceBrowserSettingsProfileStrategyFlow() *CompleteSelfServiceBrowserSettingsProfileStrategyFlow {
+func NewCompleteSelfServiceBrowserSettingsProfileStrategyFlow(traits map[string]interface{}) *CompleteSelfServiceBrowserSettingsProfileStrategyFlow {
 	this := CompleteSelfServiceBrowserSettingsProfileStrategyFlow{}
+	this.Traits = traits
 	return &this
 }
 
@@ -72,34 +75,58 @@ func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetCsrfToken(v s
 	o.CsrfToken = &v
 }
 
-// GetTraits returns the Traits field value if set, zero value otherwise.
-func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraits() map[string]interface{} {
-	if o == nil || o.Traits == nil {
-		var ret map[string]interface{}
+// GetMethod returns the Method field value if set, zero value otherwise.
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetMethod() string {
+	if o == nil || o.Method == nil {
+		var ret string
 		return ret
 	}
-	return o.Traits
+	return *o.Method
 }
 
-// GetTraitsOk returns a tuple with the Traits field value if set, nil otherwise
+// GetMethodOk returns a tuple with the Method field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraitsOk() (map[string]interface{}, bool) {
-	if o == nil || o.Traits == nil {
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetMethodOk() (*string, bool) {
+	if o == nil || o.Method == nil {
 		return nil, false
 	}
-	return o.Traits, true
+	return o.Method, true
 }
 
-// HasTraits returns a boolean if a field has been set.
-func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) HasTraits() bool {
-	if o != nil && o.Traits != nil {
+// HasMethod returns a boolean if a field has been set.
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) HasMethod() bool {
+	if o != nil && o.Method != nil {
 		return true
 	}
 
 	return false
 }
 
-// SetTraits gets a reference to the given map[string]interface{} and assigns it to the Traits field.
+// SetMethod gets a reference to the given string and assigns it to the Method field.
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetMethod(v string) {
+	o.Method = &v
+}
+
+// GetTraits returns the Traits field value
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraits() map[string]interface{} {
+	if o == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+
+	return o.Traits
+}
+
+// GetTraitsOk returns a tuple with the Traits field value
+// and a boolean to check if the value has been set.
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraitsOk() (map[string]interface{}, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Traits, true
+}
+
+// SetTraits sets field value
 func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetTraits(v map[string]interface{}) {
 	o.Traits = v
 }
@@ -109,7 +136,10 @@ func (o CompleteSelfServiceBrowserSettingsProfileStrategyFlow) MarshalJSON() ([]
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
 	}
-	if o.Traits != nil {
+	if o.Method != nil {
+		toSerialize["method"] = o.Method
+	}
+	if true {
 		toSerialize["traits"] = o.Traits
 	}
 	return json.Marshal(toSerialize)

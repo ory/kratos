@@ -19,17 +19,13 @@ var _ recovery.FlowPersister = new(Persister)
 var _ link.RecoveryTokenPersister = new(Persister)
 
 func (p Persister) CreateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
-	return p.GetConnection(ctx).Eager("MethodsRaw").Create(r)
+	return p.GetConnection(ctx).Create(r)
 }
 
 func (p Persister) GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*recovery.Flow, error) {
 	var r recovery.Flow
-	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
+	if err := p.GetConnection(ctx).Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
-	}
-
-	if err := (&r).AfterFind(p.GetConnection(ctx)); err != nil {
-		return nil, err
 	}
 
 	return &r, nil
@@ -37,27 +33,6 @@ func (p Persister) GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*recovery
 
 func (p Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-
-		rr, err := p.GetRecoveryFlow(ctx, r.ID)
-		if err != nil {
-			return err
-		}
-
-		for _, dbc := range rr.Methods {
-			if err := tx.Destroy(dbc); err != nil {
-				return sqlcon.HandleError(err)
-			}
-		}
-
-		for _, of := range r.Methods {
-			of.ID = uuid.UUID{}
-			of.Flow = rr
-			of.FlowID = rr.ID
-			if err := tx.Save(of); err != nil {
-				return sqlcon.HandleError(err)
-			}
-		}
-
 		return tx.Save(r)
 	})
 }

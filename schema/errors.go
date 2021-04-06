@@ -140,6 +140,16 @@ func NewNoSettingsStrategyResponsible() error {
 			Message:     `could not find a strategy to update settings with`,
 			InstancePtr: "#/",
 		},
-		Messages: new(text.Messages).Add(text.NewErrorValidationRegistrationNoStrategyFound()),
+		Messages: new(text.Messages).Add(text.NewErrorValidationSettingsNoStrategyFound()),
+	})
+}
+
+func NewNoRecoveryStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to recover your account with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationRecoveryNoStrategyFound()),
 	})
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 )
@@ -74,4 +75,8 @@ type (
 
 func NewStrategy(d strategyDependencies) *Strategy {
 	return &Strategy{d: d, dx: decoderx.NewHTTP()}
+}
+
+func (s *Strategy) RecoveryNodeGroup() node.Group {
+	return node.RecoveryLinkGroup
 }
