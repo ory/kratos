@@ -4,6 +4,7 @@ All URIs are relative to *https://demo.tenants.oryapis.com/api/kratos/public*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**CompleteSelfServiceRecoveryFlow**](PublicApi.md#CompleteSelfServiceRecoveryFlow) | **Post** /self-service/recovery | Complete Recovery Flow
 [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](PublicApi.md#CompleteSelfServiceRecoveryFlowWithLinkMethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 [**CompleteSelfServiceSettingsFlow**](PublicApi.md#CompleteSelfServiceSettingsFlow) | **Post** /self-service/settings | Complete Settings Flow
 [**CompleteSelfServiceVerificationFlowWithLinkMethod**](PublicApi.md#CompleteSelfServiceVerificationFlowWithLinkMethod) | **Post** /self-service/verification/methods/link | Complete Verification Flow with Link Method
@@ -26,10 +27,69 @@ Method | HTTP request | Description
 [**InitializeSelfServiceVerificationViaAPIFlow**](PublicApi.md#InitializeSelfServiceVerificationViaAPIFlow) | **Get** /self-service/verification/api | Initialize Verification Flow for API Clients
 [**InitializeSelfServiceVerificationViaBrowserFlow**](PublicApi.md#InitializeSelfServiceVerificationViaBrowserFlow) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 [**RevokeSession**](PublicApi.md#RevokeSession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
-[**SubmitSelfServiceLoginFlow**](PublicApi.md#SubmitSelfServiceLoginFlow) | **Post** /self-service/login/flows | Submit a Login Flow
+[**SubmitSelfServiceLoginFlow**](PublicApi.md#SubmitSelfServiceLoginFlow) | **Post** /self-service/login | Submit a Login Flow
 [**SubmitSelfServiceRegistrationFlow**](PublicApi.md#SubmitSelfServiceRegistrationFlow) | **Post** /self-service/registration | Submit a Registration Flow
 [**Whoami**](PublicApi.md#Whoami) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
+
+
+## CompleteSelfServiceRecoveryFlow
+
+> CompleteSelfServiceRecoveryFlow(ctx).Execute()
+
+Complete Recovery Flow
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.CompleteSelfServiceRecoveryFlow(context.Background()).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceRecoveryFlow``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
+
+### Path Parameters
+
+This endpoint does not need any parameter.
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiCompleteSelfServiceRecoveryFlowRequest struct via the builder pattern
+
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## CompleteSelfServiceRecoveryFlowWithLinkMethod

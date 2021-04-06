@@ -25,28 +25,26 @@ type RecoveryFlow struct {
 	Id        string    `json:"id"`
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt time.Time `json:"issued_at"`
-	Messages []UiText  `json:"messages,omitempty"`
-	// Methods contains context for all account recovery methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.
-	Methods map[string]RecoveryFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
 	State      string `json:"state"`
 	// The flow type can either be `api` or `browser`.
-	Type *string `json:"type,omitempty"`
+	Type *string     `json:"type,omitempty"`
+	Ui   UiContainer `json:"ui"`
 }
 
 // NewRecoveryFlow instantiates a new RecoveryFlow object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]RecoveryFlowMethod, requestUrl string, state string) *RecoveryFlow {
+func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state string, ui UiContainer) *RecoveryFlow {
 	this := RecoveryFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
 	this.IssuedAt = issuedAt
-	this.Methods = methods
 	this.RequestUrl = requestUrl
 	this.State = state
+	this.Ui = ui
 	return &this
 }
 
@@ -162,62 +160,6 @@ func (o *RecoveryFlow) SetIssuedAt(v time.Time) {
 	o.IssuedAt = v
 }
 
-// GetMessages returns the Messages field value if set, zero value otherwise.
-func (o *RecoveryFlow) GetMessages() []UiText {
-	if o == nil || o.Messages == nil {
-		var ret []UiText
-		return ret
-	}
-	return o.Messages
-}
-
-// GetMessagesOk returns a tuple with the Messages field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *RecoveryFlow) GetMessagesOk() ([]UiText, bool) {
-	if o == nil || o.Messages == nil {
-		return nil, false
-	}
-	return o.Messages, true
-}
-
-// HasMessages returns a boolean if a field has been set.
-func (o *RecoveryFlow) HasMessages() bool {
-	if o != nil && o.Messages != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetMessages gets a reference to the given []UiText and assigns it to the Messages field.
-func (o *RecoveryFlow) SetMessages(v []UiText) {
-	o.Messages = v
-}
-
-// GetMethods returns the Methods field value
-func (o *RecoveryFlow) GetMethods() map[string]RecoveryFlowMethod {
-	if o == nil {
-		var ret map[string]RecoveryFlowMethod
-		return ret
-	}
-
-	return o.Methods
-}
-
-// GetMethodsOk returns a tuple with the Methods field value
-// and a boolean to check if the value has been set.
-func (o *RecoveryFlow) GetMethodsOk() (*map[string]RecoveryFlowMethod, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Methods, true
-}
-
-// SetMethods sets field value
-func (o *RecoveryFlow) SetMethods(v map[string]RecoveryFlowMethod) {
-	o.Methods = v
-}
-
 // GetRequestUrl returns the RequestUrl field value
 func (o *RecoveryFlow) GetRequestUrl() string {
 	if o == nil {
@@ -298,6 +240,30 @@ func (o *RecoveryFlow) SetType(v string) {
 	o.Type = &v
 }
 
+// GetUi returns the Ui field value
+func (o *RecoveryFlow) GetUi() UiContainer {
+	if o == nil {
+		var ret UiContainer
+		return ret
+	}
+
+	return o.Ui
+}
+
+// GetUiOk returns a tuple with the Ui field value
+// and a boolean to check if the value has been set.
+func (o *RecoveryFlow) GetUiOk() (*UiContainer, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Ui, true
+}
+
+// SetUi sets field value
+func (o *RecoveryFlow) SetUi(v UiContainer) {
+	o.Ui = v
+}
+
 func (o RecoveryFlow) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Active != nil {
@@ -312,12 +278,6 @@ func (o RecoveryFlow) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["issued_at"] = o.IssuedAt
 	}
-	if o.Messages != nil {
-		toSerialize["messages"] = o.Messages
-	}
-	if true {
-		toSerialize["methods"] = o.Methods
-	}
 	if true {
 		toSerialize["request_url"] = o.RequestUrl
 	}
@@ -326,6 +286,9 @@ func (o RecoveryFlow) MarshalJSON() ([]byte, error) {
 	}
 	if o.Type != nil {
 		toSerialize["type"] = o.Type
+	}
+	if true {
+		toSerialize["ui"] = o.Ui
 	}
 	return json.Marshal(toSerialize)
 }

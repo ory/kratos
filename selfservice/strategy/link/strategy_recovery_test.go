@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/corpx"
@@ -31,7 +33,6 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -53,7 +54,7 @@ func TestAdminStrategy(t *testing.T) {
 	adminSDK := testhelpers.NewSDKClient(adminTS)
 
 	checkLink := func(t *testing.T, l *kratos.RecoveryLink, isBefore time.Time) {
-		require.Contains(t, l.RecoveryLink, publicTS.URL+link.RouteRecovery)
+		require.Contains(t, l.RecoveryLink, publicTS.URL+recovery.RouteSubmitFlow)
 		rl := urlx.ParseOrPanic(l.RecoveryLink)
 		assert.NotEmpty(t, rl.Query().Get("token"))
 		assert.NotEmpty(t, rl.Query().Get("flow"))
@@ -100,7 +101,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.Equal(t, http.StatusOK, res.StatusCode)
 
 		// We end up here because the link is expired.
-		assert.Contains(t, res.Request.URL.Path, "/recover")
+		assert.Contains(t, res.Request.URL.Path, "/recover", rl.RecoveryLink)
 	})
 
 	t.Run("description=should create a valid recovery link and set the expiry time as well and recover the account", func(t *testing.T) {
@@ -159,8 +160,8 @@ func TestRecovery(t *testing.T) {
 		if !isAPI {
 			hc = testhelpers.NewDebugClient(t)
 		}
-		return testhelpers.SubmitRecoveryForm(t, isAPI, hc, public, values, recovery.StrategyRecoveryLinkName, c,
-			testhelpers.ExpectURL(isAPI, public.URL+link.RouteRecovery, conf.SelfServiceFlowRecoveryUI().String()))
+		return testhelpers.SubmitRecoveryForm(t, isAPI, hc, public, values, c,
+			testhelpers.ExpectURL(isAPI, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI().String()))
 	}
 
 	var expectValidationError = func(t *testing.T, isAPI bool, values func(url.Values)) string {
@@ -174,8 +175,6 @@ func TestRecovery(t *testing.T) {
 	t.Run("description=should set all the correct recovery payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
-		assert.Contains(t, rs.Methods, recovery.StrategyRecoveryLinkName)
-		method := rs.Methods[recovery.StrategyRecoveryLinkName]
 
 		assert.EqualValues(t, []kratos.UiNode{
 			*csrfField,
@@ -188,17 +187,17 @@ func TestRecovery(t *testing.T) {
 					Type:     "email",
 				}),
 			},
-		}, method.Config.Nodes)
-		assert.EqualValues(t, public.URL+link.RouteRecovery+"?flow="+rs.Id, method.Config.Action)
-		assert.Empty(t, method.Config.Messages)
-		assert.Empty(t, rs.Messages)
+			*testhelpers.NewMethodSubmit(string(node.RecoveryLinkGroup), recovery.StrategyRecoveryLinkName),
+		}, rs.Ui.Nodes)
+		assert.EqualValues(t, public.URL+recovery.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
+		assert.Empty(t, rs.Ui.Messages)
 	})
 
 	t.Run("description=should require an email to be sent", func(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
-			assert.EqualValues(t, recovery.StrategyRecoveryLinkName, gjson.Get(actual, "active").String(), "%s", actual)
+			assert.EqualValues(t, node.RecoveryLinkGroup, gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, "Property email is missing.",
-				gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).messages.0.text").String(),
+				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
 
@@ -218,9 +217,9 @@ func TestRecovery(t *testing.T) {
 	t.Run("description=should try to recover an email that does not exist", func(t *testing.T) {
 		var email string
 		var check = func(t *testing.T, actual string) {
-			assert.EqualValues(t, recovery.StrategyRecoveryLinkName, gjson.Get(actual, "active").String(), "%s", actual)
-			assert.EqualValues(t, email, gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
-			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
+			assert.EqualValues(t, node.RecoveryLinkGroup, gjson.Get(actual, "active").String(), "%s", actual)
+			assert.EqualValues(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
+			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(t, reg, email, "Account access attempted")
 			assert.Contains(t, message.Body, "If this was you, check if you signed up using a different address.")
@@ -243,16 +242,17 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should recover an account", func(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
-			assert.EqualValues(t, recovery.StrategyRecoveryLinkName, gjson.Get(actual, "active").String(), "%s", actual)
-			assert.EqualValues(t, recoveryEmail, gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
-			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
+			assert.EqualValues(t, node.RecoveryLinkGroup, gjson.Get(actual, "active").String(), "%s", actual)
+			assert.EqualValues(t, recoveryEmail, gjson.Get(actual, "ui.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
+			require.Len(t, gjson.Get(actual, "ui.messages").Array(), 1, "%s", actual)
+			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
 			assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
 
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
-			assert.Contains(t, recoveryLink, public.URL+link.RouteRecovery)
+			assert.Contains(t, recoveryLink, public.URL+recovery.RouteSubmitFlow)
 			assert.Contains(t, recoveryLink, "token=")
 
 			cl := testhelpers.NewClientWithCookies(t)
@@ -264,7 +264,7 @@ func TestRecovery(t *testing.T) {
 
 			body := ioutilx.MustReadAll(res.Body)
 			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
-				gjson.GetBytes(body, "messages.0.text").String())
+				gjson.GetBytes(body, "ui.messages.0.text").String())
 		}
 
 		var values = func(v url.Values) {
@@ -282,16 +282,17 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		res, err := c.Get(public.URL + link.RouteRecovery + "?token=i-do-not-exist")
+		f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, public)
+		res, err := c.Get(f.Ui.Action + "&token=i-do-not-exist")
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
-		require.Len(t, sr.Messages, 1)
-		assert.Equal(t, "The recovery token is invalid or has already been used. Please retry the flow.", sr.Messages[0].Text)
+		require.Len(t, rs.Ui.Messages, 1)
+		assert.Equal(t, "The recovery token is invalid or has already been used. Please retry the flow.", rs.Ui.Messages[0].Text)
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
@@ -302,11 +303,10 @@ func TestRecovery(t *testing.T) {
 
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
-		method := rs.Methods[recovery.StrategyRecoveryLinkName].Config
 
 		time.Sleep(time.Millisecond * 201)
 
-		res, err := c.PostForm(method.Action, url.Values{"email": {recoveryEmail}})
+		res, err := c.PostForm(rs.Ui.Action, url.Values{"email": {recoveryEmail}})
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
@@ -338,11 +338,11 @@ func TestRecovery(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
-		require.Len(t, sr.Messages, 1)
-		assert.Contains(t, sr.Messages[0].Text, "The recovery flow expired")
+		require.Len(t, rs.Ui.Messages, 1)
+		assert.Contains(t, rs.Ui.Messages[0].Text, "The recovery flow expired")
 	})
 }
 
@@ -353,6 +353,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)
+	_ = testhelpers.NewErrorTestServer(t, reg)
 
 	t.Run("role=admin", func(t *testing.T) {
 		t.Run("description=can not create recovery link when link method is disabled", func(t *testing.T) {
@@ -374,25 +375,26 @@ func TestDisabledEndpoint(t *testing.T) {
 
 	t.Run("role=public", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
+
 		t.Run("description=can not recover an account by get request when link method is disabled", func(t *testing.T) {
-			u := publicTS.URL + link.RouteRecovery + "?token=endpoint-disabled"
+			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, publicTS)
+			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id + "&token=endpoint-disabled"
 			res, err := c.Get(u)
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
+			b := ioutilx.MustReadAll(res.Body)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 
 		t.Run("description=can not recover an account by post request when link method is disabled", func(t *testing.T) {
-			u := publicTS.URL + link.RouteRecovery
-			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}})
+			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, publicTS)
+			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id
+			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}, "method": {"link"}})
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
+			b := ioutilx.MustReadAll(res.Body)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 	})

@@ -279,7 +279,7 @@ type submitSelfServiceLoginFlow struct {
 	Flow string `json:"flow"`
 }
 
-// swagger:route POST /self-service/login/flows public submitSelfServiceLoginFlow
+// swagger:route POST /self-service/login public submitSelfServiceLoginFlow
 //
 // Submit a Login Flow
 //

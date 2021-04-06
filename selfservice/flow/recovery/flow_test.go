@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/internal"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -16,6 +18,7 @@ import (
 )
 
 func TestFlow(t *testing.T) {
+	conf := internal.NewConfigurationWithDefaults(t)
 	must := func(r *recovery.Flow, err error) *recovery.Flow {
 		require.NoError(t, err)
 		return r
@@ -26,8 +29,8 @@ func TestFlow(t *testing.T) {
 		r         *recovery.Flow
 		expectErr bool
 	}{
-		{r: must(recovery.NewFlow(time.Hour, "", u, nil, flow.TypeBrowser))},
-		{r: must(recovery.NewFlow(-time.Hour, "", u, nil, flow.TypeBrowser)), expectErr: true},
+		{r: must(recovery.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser))},
+		{r: must(recovery.NewFlow(conf, -time.Hour, "", u, nil, flow.TypeBrowser)), expectErr: true},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			err := tc.r.Valid()
@@ -41,5 +44,5 @@ func TestFlow(t *testing.T) {
 	}
 
 	assert.EqualValues(t, recovery.StateChooseMethod,
-		must(recovery.NewFlow(time.Hour, "", u, nil, flow.TypeBrowser)).State)
+		must(recovery.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser)).State)
 }

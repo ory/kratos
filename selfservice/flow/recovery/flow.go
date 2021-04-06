@@ -6,22 +6,16 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/kratos/corp"
-
-	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/x/sqlxx"
-
+	"github.com/ory/kratos/corp"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 // A Recovery Flow
@@ -64,20 +58,10 @@ type Flow struct {
 	// not set.
 	Active sqlxx.NullString `json:"active,omitempty" faker:"-" db:"active_method"`
 
-	// Messages contains a list of messages to be displayed in the Recovery UI. Omitting these
-	// messages makes it significantly harder for users to figure out what is going on.
-	//
-	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
-	Messages text.Messages `json:"messages" faker:"-" db:"messages"`
-
-	// Methods contains context for all account recovery methods. If a registration request has been
-	// processed, but for example the password is incorrect, this will contain error messages.
+	// UI contains data which must be shown in the user interface.
 	//
 	// required: true
-	Methods map[string]*FlowMethod `json:"methods" faker:"recovery_flow_methods" db:"-"`
-
-	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw []FlowMethod `json:"-" faker:"-" has_many:"selfservice_recovery_flow_methods" fk_id:"selfservice_recovery_flow_id"`
+	UI *container.Container `json:"ui" db:"ui"`
 
 	// State represents the state of this request:
 	//
@@ -101,15 +85,20 @@ type Flow struct {
 	RecoveredIdentityID uuid.NullUUID `json:"-" faker:"-" db:"recovered_identity_id"`
 }
 
-func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
-	req := &Flow{ID: x.NewUUID(),
+	id := x.NewUUID()
+	req := &Flow{
+		ID:        id,
 		ExpiresAt: now.Add(exp), IssuedAt: now,
 		RequestURL: x.RequestURL(r).String(),
-		Methods:    map[string]*FlowMethod{},
-		State:      StateChooseMethod,
-		CSRFToken:  csrf,
-		Type:       ft,
+		UI: &container.Container{
+			Method: "POST",
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
+		},
+		State:     StateChooseMethod,
+		CSRFToken: csrf,
+		Type:      ft,
 	}
 
 	for _, strategy := range strategies {
@@ -134,45 +123,6 @@ func (f *Flow) Valid() error {
 		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
-}
-
-func (f *Flow) BeforeSave(_ *pop.Connection) error {
-	f.MethodsRaw = make([]FlowMethod, 0, len(f.Methods))
-	for _, m := range f.Methods {
-		f.MethodsRaw = append(f.MethodsRaw, *m)
-	}
-	f.Methods = nil
-	return nil
-}
-
-func (f *Flow) AfterSave(c *pop.Connection) error {
-	return f.AfterFind(c)
-}
-
-func (f *Flow) AfterFind(_ *pop.Connection) error {
-	f.Methods = make(FlowMethods)
-	for key := range f.MethodsRaw {
-		m := f.MethodsRaw[key] // required for pointer dereference
-		f.Methods[m.Method] = &m
-	}
-	f.MethodsRaw = nil
-	return nil
-}
-
-func (f *Flow) MethodToForm(id string) (*container.Container, error) {
-	method, ok := f.Methods[id]
-	if !ok {
-		return nil, errors.WithStack(x.PseudoPanic.WithReasonf("Expected method %s to exist.", id))
-	}
-
-	config, ok := method.Config.FlowMethodConfigurator.(*container.Container)
-	if !ok {
-		return nil, errors.WithStack(x.PseudoPanic.WithReasonf(
-			"Expected method config %s to be of type *form.Container but got: %T", id,
-			method.Config.FlowMethodConfigurator))
-	}
-
-	return config, nil
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {

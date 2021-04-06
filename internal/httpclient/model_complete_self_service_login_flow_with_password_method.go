@@ -20,8 +20,11 @@ type CompleteSelfServiceLoginFlowWithPasswordMethod struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Method should be set to \"password\" when logging in using the identifier and password strategy.
-	Method   *string                                                `json:"method,omitempty"`
-	Password *CompleteSelfServiceLoginFlowWithPasswordMethodPayload `json:"password,omitempty"`
+	Method *string `json:"method,omitempty"`
+	// The user's password.
+	Password *string `json:"password,omitempty"`
+	// Identifier is the email or username of the user trying to log in.
+	PasswordIdentifier *string `json:"password_identifier,omitempty"`
 }
 
 // NewCompleteSelfServiceLoginFlowWithPasswordMethod instantiates a new CompleteSelfServiceLoginFlowWithPasswordMethod object
@@ -106,9 +109,9 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetMethod(v string) {
 }
 
 // GetPassword returns the Password field value if set, zero value otherwise.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() CompleteSelfServiceLoginFlowWithPasswordMethodPayload {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() string {
 	if o == nil || o.Password == nil {
-		var ret CompleteSelfServiceLoginFlowWithPasswordMethodPayload
+		var ret string
 		return ret
 	}
 	return *o.Password
@@ -116,7 +119,7 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() CompleteS
 
 // GetPasswordOk returns a tuple with the Password field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordOk() (*CompleteSelfServiceLoginFlowWithPasswordMethodPayload, bool) {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordOk() (*string, bool) {
 	if o == nil || o.Password == nil {
 		return nil, false
 	}
@@ -132,9 +135,41 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasPassword() bool {
 	return false
 }
 
-// SetPassword gets a reference to the given CompleteSelfServiceLoginFlowWithPasswordMethodPayload and assigns it to the Password field.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPassword(v CompleteSelfServiceLoginFlowWithPasswordMethodPayload) {
+// SetPassword gets a reference to the given string and assigns it to the Password field.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPassword(v string) {
 	o.Password = &v
+}
+
+// GetPasswordIdentifier returns the PasswordIdentifier field value if set, zero value otherwise.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordIdentifier() string {
+	if o == nil || o.PasswordIdentifier == nil {
+		var ret string
+		return ret
+	}
+	return *o.PasswordIdentifier
+}
+
+// GetPasswordIdentifierOk returns a tuple with the PasswordIdentifier field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPasswordIdentifierOk() (*string, bool) {
+	if o == nil || o.PasswordIdentifier == nil {
+		return nil, false
+	}
+	return o.PasswordIdentifier, true
+}
+
+// HasPasswordIdentifier returns a boolean if a field has been set.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) HasPasswordIdentifier() bool {
+	if o != nil && o.PasswordIdentifier != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetPasswordIdentifier gets a reference to the given string and assigns it to the PasswordIdentifier field.
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetPasswordIdentifier(v string) {
+	o.PasswordIdentifier = &v
 }
 
 func (o CompleteSelfServiceLoginFlowWithPasswordMethod) MarshalJSON() ([]byte, error) {
@@ -147,6 +182,9 @@ func (o CompleteSelfServiceLoginFlowWithPasswordMethod) MarshalJSON() ([]byte, e
 	}
 	if o.Password != nil {
 		toSerialize["password"] = o.Password
+	}
+	if o.PasswordIdentifier != nil {
+		toSerialize["password_identifier"] = o.PasswordIdentifier
 	}
 	return json.Marshal(toSerialize)
 }

@@ -5,6 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | CSRFToken is the anti-CSRF token  type: string | [optional] 
+**Method** | Pointer to **string** | Method  Should be set to password when trying to update a password.  type: string | [optional] 
 **Password** | **string** | Password is the updated password  type: string | 
 
 ## Methods
@@ -50,6 +51,31 @@ SetCsrfToken sets CsrfToken field to given value.
 `func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) HasCsrfToken() bool`
 
 HasCsrfToken returns a boolean if a field has been set.
+
+### GetMethod
+
+`func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetMethod() string`
+
+GetMethod returns the Method field if non-nil, zero value otherwise.
+
+### GetMethodOk
+
+`func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetMethodOk() (*string, bool)`
+
+GetMethodOk returns a tuple with the Method field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMethod
+
+`func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) SetMethod(v string)`
+
+SetMethod sets Method field to given value.
+
+### HasMethod
+
+`func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) HasMethod() bool`
+
+HasMethod returns a boolean if a field has been set.
 
 ### GetPassword
 
