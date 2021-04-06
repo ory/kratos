@@ -7,7 +7,7 @@ Method | HTTP request | Description
 [**CompleteSelfServiceRecoveryFlow**](PublicApi.md#CompleteSelfServiceRecoveryFlow) | **Post** /self-service/recovery | Complete Recovery Flow
 [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](PublicApi.md#CompleteSelfServiceRecoveryFlowWithLinkMethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 [**CompleteSelfServiceSettingsFlow**](PublicApi.md#CompleteSelfServiceSettingsFlow) | **Post** /self-service/settings | Complete Settings Flow
-[**CompleteSelfServiceVerificationFlowWithLinkMethod**](PublicApi.md#CompleteSelfServiceVerificationFlowWithLinkMethod) | **Post** /self-service/verification/methods/link | Complete Verification Flow with Link Method
+[**CompleteSelfServiceVerificationFlow**](PublicApi.md#CompleteSelfServiceVerificationFlow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
 [**GetSchema**](PublicApi.md#GetSchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](PublicApi.md#GetSelfServiceError) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 [**GetSelfServiceLoginFlow**](PublicApi.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | Get Login Flow
@@ -226,11 +226,11 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
-## CompleteSelfServiceVerificationFlowWithLinkMethod
+## CompleteSelfServiceVerificationFlow
 
-> CompleteSelfServiceVerificationFlowWithLinkMethod(ctx).Token(token).Flow(flow).CompleteSelfServiceVerificationFlowWithLinkMethod(completeSelfServiceVerificationFlowWithLinkMethod).Execute()
+> CompleteSelfServiceVerificationFlow(ctx).Execute()
 
-Complete Verification Flow with Link Method
+Complete Verification Flow
 
 
 
@@ -247,15 +247,12 @@ import (
 )
 
 func main() {
-    token := "token_example" // string | Verification Token  The verification token which completes the verification request. If the token is invalid (e.g. expired) an error will be shown to the end-user. (optional)
-    flow := "flow_example" // string | The Flow ID  format: uuid (optional)
-    completeSelfServiceVerificationFlowWithLinkMethod := *openapiclient.NewCompleteSelfServiceVerificationFlowWithLinkMethod() // CompleteSelfServiceVerificationFlowWithLinkMethod |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CompleteSelfServiceVerificationFlowWithLinkMethod(context.Background()).Token(token).Flow(flow).CompleteSelfServiceVerificationFlowWithLinkMethod(completeSelfServiceVerificationFlowWithLinkMethod).Execute()
+    resp, r, err := apiClient.PublicApi.CompleteSelfServiceVerificationFlow(context.Background()).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceVerificationFlowWithLinkMethod``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceVerificationFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
 }
@@ -263,18 +260,12 @@ func main() {
 
 ### Path Parameters
 
-
+This endpoint does not need any parameter.
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiCompleteSelfServiceVerificationFlowWithLinkMethodRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiCompleteSelfServiceVerificationFlowRequest struct via the builder pattern
 
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **token** | **string** | Verification Token  The verification token which completes the verification request. If the token is invalid (e.g. expired) an error will be shown to the end-user. | 
- **flow** | **string** | The Flow ID  format: uuid | 
- **completeSelfServiceVerificationFlowWithLinkMethod** | [**CompleteSelfServiceVerificationFlowWithLinkMethod**](CompleteSelfServiceVerificationFlowWithLinkMethod.md) |  | 
 
 ### Return type
 
@@ -286,7 +277,7 @@ No authorization required
 
 ### HTTP request headers
 
-- **Content-Type**: application/json, application/x-www-form-urlencoded
+- **Content-Type**: Not defined
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)

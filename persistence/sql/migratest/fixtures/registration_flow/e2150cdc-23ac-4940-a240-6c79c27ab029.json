@@ -1,0 +1,13 @@
+{
+  "id": "e2150cdc-23ac-4940-a240-6c79c27ab029",
+  "type": "api",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/registration",
+  "active": "password",
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  }
+}

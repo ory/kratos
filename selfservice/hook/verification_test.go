@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -23,11 +24,11 @@ func TestVerifier(t *testing.T) {
 	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity) error{
 		"settings": func(h *hook.Verifier, i *identity.Identity) error {
 			return h.ExecuteSettingsPostPersistHook(
-				httptest.NewRecorder(), new(http.Request), nil, i)
+				httptest.NewRecorder(), &http.Request{URL: new(url.URL)}, nil, i)
 		},
 		"register": func(h *hook.Verifier, i *identity.Identity) error {
 			return h.ExecutePostRegistrationPostPersistHook(
-				httptest.NewRecorder(), new(http.Request), nil, &session.Session{ID: x.NewUUID(), Identity: i})
+				httptest.NewRecorder(), &http.Request{URL: new(url.URL)}, nil, &session.Session{ID: x.NewUUID(), Identity: i})
 		},
 	} {
 		t.Run("name="+k, func(t *testing.T) {

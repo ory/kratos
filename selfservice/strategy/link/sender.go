@@ -105,7 +105,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	if err := s.SendVerificationTokenTo(ctx, address, token); err != nil {
+	if err := s.SendVerificationTokenTo(ctx,f, address, token); err != nil {
 		return err
 	}
 	return nil
@@ -128,7 +128,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, addr
 			}).String()}))
 }
 
-func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.VerifiableAddress, token *VerificationToken) error {
+func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Flow, address *identity.VerifiableAddress, token *VerificationToken) error {
 	s.r.Audit().
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
@@ -139,8 +139,11 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.
 
 	return s.send(ctx, string(address.Via), templates.NewVerificationValid(s.r.Config(ctx),
 		&templates.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(nil), RouteVerification),
-			url.Values{"token": {token.Token}}).String()}))
+			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(nil), verification.RouteSubmitFlow),
+			url.Values{
+				"flow": {f.ID.String()},
+				"token": {token.Token},
+				}).String()}))
 }
 
 func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {

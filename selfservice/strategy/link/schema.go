@@ -8,4 +8,7 @@ import (
 var emailSchema []byte
 
 //go:embed .schema/recovery.schema.json
-var methodSchema []byte
+var recoveryMethodSchema []byte
+
+//go:embed .schema/verification.schema.json
+var verificationMethodSchema []byte

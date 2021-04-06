@@ -4,24 +4,10 @@
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
   "request_url": "http://kratos:4433/self-service/browser/flows/login?prompt=login\u0026return_to=http%3A%2F%2F127.0.0.1%3A4455%2F.ory%2Fkratos%2Fpublic%2Fself-service%2Fbrowser%2Fflows%2Fsettings%2Fstrategies%2Fprofile%3Frequest%3D74fd6c53-7651-453e-90b8-2c5adbf911bb",
-  "messages": null,
-  "methods": {
-    "oidc": {
-      "method": "oidc",
-      "config": {
-        "action": "",
-        "method": "POST",
-        "nodes": []
-      }
-    },
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "",
-        "method": "POST",
-        "nodes": []
-      }
-    }
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
   },
   "forced": true
 }
