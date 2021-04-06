@@ -221,7 +221,7 @@ session or not:
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 # ...
-authenticators
+authenticators:
   cookie_session:
     enabled: true
     config:
@@ -245,7 +245,7 @@ is useful for endpoints that do not need login, such as the registration screen:
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 # ...
-authenticators
+authenticators:
   anonymous:
     enabled: true
     config:
@@ -263,7 +263,7 @@ will be enough.
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 # ...
-authorizers
+authorizers:
   allowed:
     enabled: true
 # ...
