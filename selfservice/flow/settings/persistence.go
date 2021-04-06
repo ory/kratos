@@ -3,6 +3,7 @@ package settings
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/assertx"
 	"testing"
 
 	"github.com/ory/kratos/ui/node"
@@ -103,6 +104,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 
 		t.Run("case=should create and update a settings request", func(t *testing.T) {
 			expected := newFlow(t)
+			expected.UI.Nodes = node.Nodes{}
 			expected.UI.Nodes.Append(node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 				a.Pattern = "baz"
 			})))
@@ -128,14 +130,17 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 
 			assert.Equal(t, "/new-action", actual.UI.Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
-			assert.EqualValues(t, node.Nodes{
+			assertx.EqualAsJSON(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
-				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
-					a.Pattern = "zab"
-				})),
-				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
 				node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "baz"
+				})),
+				node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "baz"
+				})),
+				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "zab"
 				})),
 			}, actual.UI.Nodes)
 		})

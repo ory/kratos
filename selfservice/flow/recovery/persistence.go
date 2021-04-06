@@ -2,11 +2,9 @@ package recovery
 
 import (
 	"context"
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/assertx"
 	"testing"
-
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/ory/kratos/ui/container"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -77,30 +75,50 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
 			x.AssertEqualTime(t, expected.ExpiresAt, actual.ExpiresAt)
 			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
-			require.Equal(t, expected.UI, actual.UI, "expected:\t%s\nactual:\t%s", expected.UI, actual.UI)
+			assertx.EqualAsJSON(t, expected.UI, actual.UI, "expected:\t%s\nactual:\t%s", expected.UI, actual.UI)
 		})
 
 		t.Run("case=should create and update a recovery request", func(t *testing.T) {
 			expected := newFlow(t)
-			expected.Type = flow.TypeAPI
-			expected.UI = container.New("ory-sh")
+			expected.UI.Nodes = node.Nodes{}
+			expected.UI.Nodes.Append(node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+				a.Pattern = "baz"
+			})))
+
+			expected.UI.Nodes.Append(node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+				a.Pattern = "baz"
+			})))
 
 			err := p.CreateRecoveryFlow(ctx, expected)
 			require.NoError(t, err)
 
+			expected.UI.Action = "/new-action"
+			expected.UI.Nodes.Append(
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "zab"
+				})))
+
+			expected.RequestURL = "/new-request-url"
+			require.NoError(t, p.UpdateRecoveryFlow(ctx, expected))
+
 			actual, err := p.GetRecoveryFlow(ctx, expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, flow.TypeAPI, actual.Type)
 
-			actual.UI = container.New("not-ory-sh")
-			actual.Type = flow.TypeBrowser
-
-			require.NoError(t, p.UpdateRecoveryFlow(ctx, actual))
-
-			actual, err = p.GetRecoveryFlow(ctx, actual.ID)
-			require.NoError(t, err)
-			assert.Equal(t, flow.TypeBrowser, actual.Type)
-			assert.Equal(t, "not.ory-sh", actual.UI.Action)
+			assert.Equal(t, "/new-action", actual.UI.Action)
+			assert.Equal(t, "/new-request-url", actual.RequestURL)
+			assertx.EqualAsJSON(t, node.Nodes{
+				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
+				node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "baz"
+				})),
+				node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "baz"
+				})),
+				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "zab"
+				})),
+			}, actual.UI.Nodes)
 		})
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
@@ -115,7 +133,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 
 			actual, err = p.GetRecoveryFlow(ctx, expected.ID)
 			require.NoError(t, err)
-			assert.EqualValues(t, expected.UI, actual.UI)
+			assertx.EqualAsJSON(t, expected.UI, actual.UI)
 		})
 	}
 }
