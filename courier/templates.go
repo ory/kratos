@@ -20,11 +20,11 @@ const (
 )
 
 type EmailTemplate interface {
+	json.Marshaler
 	EmailSubject() (string, error)
 	EmailBody() (string, error)
 	EmailBodyPlaintext() (string, error)
 	EmailRecipient() (string, error)
-	MarshalJSON() ([]byte, error)
 }
 
 func GetTemplateType(t EmailTemplate) (TemplateType, error) {
