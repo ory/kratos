@@ -10,6 +10,8 @@ import { Question, FaqTags } from '@theme/Faq'
 <FaqTags
   tags={[
     'kratos',
+    'secrets',
+    'config',
     'database',
     'ecosystem',
     'user',
@@ -29,6 +31,24 @@ import { Question, FaqTags } from '@theme/Faq'
 <br />
 <br />
 
+<Question tags={['kratos', 'secrets', 'config']}>
+  #kratos #secrets #config
+  <p>
+    <strong>Q</strong>: Is it possible to pass multiple system.secret values
+    through the ENV, or do you have to use a config file for that?
+  </p>
+  <p>
+    <strong>A</strong>: Yes, you can set them as environmental variable, you
+    just have to separate them using a <code>,</code>. More info on these
+    conventions in the documentation:{' '}
+    <a href="https://www.ory.sh/docs/ecosystem/configuring/#stringnumeric-arrays">
+      Setting configuration values via environmental variables
+    </a>
+    .
+  </p>
+</Question>
+
+<br />
 <Question tags={['kratos', 'database']}>
   #kratos #database
   <p>
@@ -38,12 +58,15 @@ import { Question, FaqTags } from '@theme/Faq'
   </p>
   <p>
     <strong>A</strong>: You can deploy Ory Kratos two times, and use the same
-    login/registration endpoints. So you define the same login/registration UI
-    URLs in both of the Kratos configurations. You may need to tell your
+    login UI pointing to two different Kratos login endpoints -{' '}
+    <code>/login/customer</code> or <code>/login/employee</code>, either by
+    having two different login routes, or by adding some logic to your login UI
+    that reroutes customers to <code>/login/customer</code> and employees to{' '}
+    <code>/login/employee</code>. So you define the same login or registration
+    UI URLs in both of the Kratos configurations. You may need to tell your
     login/registration UI which Kratos it is supposed to talk to. The instances
     are cheap to deploy and the databases are completely isolated from each
-    other. For example you can have something like <code>/login/customer</code>{' '}
-    and
+    other. For example something like <code>/login/customer</code> and{' '}
     <code>/login/employee</code>.
   </p>
 </Question>
@@ -84,10 +107,10 @@ import { Question, FaqTags } from '@theme/Faq'
 <Question tags={['kratos', 'registration', 'cors']}>
   #kratos #registration #cors
   <p>
-    <strong>Q</strong>: Hey guys, I am currently trying to get the Kratos
-    registration flow working on a react app that I am creating. I am having
-    CORS issues with the completeSelfServiceRegistrationFlowWithPasswordMethod
-    call when using the @oryd/kratos-client JS package.
+    <strong>Q</strong>: I am currently trying to get the Kratos registration
+    flow working on a react app that I am creating. I am having CORS issues with
+    the completeSelfServiceRegistrationFlowWithPasswordMethod call when using
+    the @oryd/kratos-client JS package.
   </p>
   <p>
     <strong>A</strong>: You are using AJAX to submit the form. This is not
@@ -104,14 +127,14 @@ import { Question, FaqTags } from '@theme/Faq'
     <strong>Q</strong>: Is the ability to freeze certain identity fields after
     registration anywhere on the roadmap? Also I want read-only or hidden
     user-specific data. Can I use traits for that? Example: Some of our identity
-    traits fields may be the subject to identity validation (
+    trait fields may be the subject to identity validation (
     <a href="https://en.wikipedia.org/wiki/Know_your_customer">
       know your customer
     </a>
     ). Once they are validated we do not allow the identity to be edited by the end-user.
   </p>
   <p>
-    <strong>A</strong>: Currently traits are visible to the users and also
+    <strong>A</strong>: Currently traits are visible to the user and also
     editable by them. It makes sense to have read-only and/or hidden traits for
     users, but we can not give an exact timing when this will be available.
     There is an open issue for this feature:
@@ -149,10 +172,11 @@ import { Question, FaqTags } from '@theme/Faq'
   </p>
   <p>
     <strong>A</strong>: You can not right now. It would allow account
-    enumeration attacks. See also the
+    enumeration attacks. See also the{' '}
     <a href="https://www.ory.sh/kratos/docs/concepts/security/#account-enumeration">
       section in the documentation
-    </a>.
+    </a>
+    .
   </p>
 </Question>
 
@@ -185,7 +209,6 @@ import { Question, FaqTags } from '@theme/Faq'
     <a href="https://www.ory.sh/kratos/docs/concepts/security#passwords">
       Ory Kratos Security Measures
     </a>
-    .
   </p>
 </Question>
 
@@ -216,13 +239,16 @@ import { Question, FaqTags } from '@theme/Faq'
   </p>
   <p>
     <strong>A</strong>: Yes, definitely. We do not have an example-app (yet).
-    around some page-reloads, as it is not possible to use the API flows in the
-    browser. This is important to prevent CSRF attacks. So hopefully you are not
-    too strict with your SPA. A sample app is being worked on here:{' '}
-    <a href="https://github.com/ory/kratos/issues/668">
-      Implement React SPA sample app
+    Also, you might not get around some page-reloads as you definitely should,
+    as it is not possible to use the API flows in the browser. This is important
+    to prevent{' '}
+    <a href="https://en.wikipedia.org/wiki/Cross-site_request_forgery">
+      CSRF attacks
     </a>
-    .
+    . So hopefully you are not too strict with your SPA. A sample app is being worked
+    on here: <a href="https://github.com/ory/kratos/issues/668">
+      Implement React SPA sample app
+    </a>.
   </p>
 </Question>
 

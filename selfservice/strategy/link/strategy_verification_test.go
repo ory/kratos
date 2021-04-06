@@ -1,9 +1,12 @@
 package link_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
@@ -24,6 +27,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/text"
@@ -252,5 +256,49 @@ func TestVerification(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			check(t, expectSuccess(t, true, values))
 		})
+	})
+
+	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {
+		f, err := verification.NewFlow(time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), nil, flow.TypeBrowser)
+		require.NoError(t, err)
+		f.State = verification.StateEmailSent
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
+		email := identity.NewVerifiableEmailAddress(verificationEmail, identityToVerify.ID)
+		identityToVerify.VerifiableAddresses = append(identityToVerify.VerifiableAddresses, *email)
+		require.NoError(t, reg.IdentityManager().Update(context.Background(), identityToVerify, identity.ManagerAllowWriteProtectedTraits))
+
+		token := link.NewSelfServiceVerificationToken(&identityToVerify.VerifiableAddresses[0], f)
+		require.NoError(t, reg.VerificationTokenPersister().CreateVerificationToken(context.Background(), token))
+		return f, token
+
+	}
+
+	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
+		returnToURL := public.URL + "/after-verification"
+		conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{returnToURL})
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+
+		conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
+		})
+
+		flow, token := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
+
+		body := fmt.Sprintf(
+			`{"csrf_token":"%s","email":"%s"}`, flow.CSRFToken, verificationEmail,
+		)
+
+		res, err := client.Post(public.URL+link.RouteVerification+"?"+url.Values{"token": {token.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusFound, res.StatusCode)
+		redirectURL, err := res.Location()
+		require.NoError(t, err)
+		assert.Equal(t, returnToURL, redirectURL.String())
+
 	})
 }

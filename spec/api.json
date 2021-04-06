@@ -1713,7 +1713,7 @@
       }
     },
     "ContainerWaitOKBodyError": {
-      "description": "ContainerWaitOKBodyError ContainerWaitOKBodyError container waiting error, if any",
+      "description": "ContainerWaitOKBodyError container waiting error, if any",
       "type": "object",
       "properties": {
         "Message": {
@@ -1843,7 +1843,7 @@
     },
     "PluginConfig": {
       "type": "object",
-      "title": "PluginConfig PluginConfig The config of a plugin.",
+      "title": "PluginConfig The config of a plugin.",
       "required": [
         "Args",
         "Description",
@@ -1964,7 +1964,7 @@
       }
     },
     "PluginConfigInterface": {
-      "description": "PluginConfigInterface The interface between Docker and the plugin",
+      "description": "PluginConfigInterface PluginConfigInterface The interface between Docker and the plugin",
       "type": "object",
       "required": [
         "Socket",
@@ -1985,7 +1985,7 @@
       }
     },
     "PluginConfigLinux": {
-      "description": "PluginConfigLinux plugin config linux",
+      "description": "PluginConfigLinux PluginConfigLinux PluginConfigLinux plugin config linux",
       "type": "object",
       "required": [
         "AllowAllDevices",
@@ -2014,7 +2014,7 @@
       }
     },
     "PluginConfigNetwork": {
-      "description": "PluginConfigNetwork plugin config network",
+      "description": "PluginConfigNetwork PluginConfigNetwork plugin config network",
       "type": "object",
       "required": [
         "Type"
@@ -2145,7 +2145,7 @@
       }
     },
     "PluginMount": {
-      "description": "PluginMount plugin mount",
+      "description": "PluginMount PluginMount plugin mount",
       "type": "object",
       "required": [
         "Description",
@@ -2195,7 +2195,7 @@
     },
     "PluginSettings": {
       "type": "object",
-      "title": "PluginSettings PluginSettings Settings that can be modified by users.",
+      "title": "PluginSettings Settings that can be modified by users.",
       "required": [
         "Args",
         "Devices",
@@ -2331,7 +2331,7 @@
       "type": "string"
     },
     "VolumeUsageData": {
-      "description": "VolumeUsageData VolumeUsageData VolumeUsageData VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
+      "description": "VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
       "type": "object",
       "required": [
         "RefCount",
@@ -2379,11 +2379,10 @@
       }
     },
     "errorContainer": {
-      "description": "ErrorContainer error container",
       "type": "object",
       "required": [
-        "id",
-        "errors"
+        "errors",
+        "id"
       ],
       "properties": {
         "errors": {
@@ -2433,7 +2432,7 @@
       }
     },
     "formFields": {
-      "description": "FormFields Fields contains multiple fields",
+      "description": "Fields contains multiple fields",
       "type": "array",
       "items": {
         "$ref": "#/definitions/formField"
@@ -2488,6 +2487,7 @@
       }
     },
     "healthNotReadyStatus": {
+      "description": "HealthNotReadyStatus HealthNotReadyStatus HealthNotReadyStatus health not ready status",
       "type": "object",
       "properties": {
         "errors": {
@@ -2500,7 +2500,6 @@
       }
     },
     "healthStatus": {
-      "description": "HealthStatus health status",
       "type": "object",
       "properties": {
         "status": {
@@ -2561,11 +2560,10 @@
       }
     },
     "loginFlowMethod": {
-      "description": "LoginFlowMethod LoginFlowMethod login flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2628,13 +2626,13 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "RecoveryFlow A Recovery Flow",
+      "title": "A Recovery Flow",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
         "methods",
+        "request_url",
         "state"
       ],
       "properties": {
@@ -2678,10 +2676,11 @@
       }
     },
     "recoveryFlowMethod": {
+      "description": "RecoveryFlowMethod recovery flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2694,11 +2693,12 @@
       }
     },
     "recoveryFlowMethodConfig": {
+      "description": "RecoveryFlowMethodConfig recovery flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2797,11 +2797,12 @@
       }
     },
     "registrationFlowMethodConfig": {
+      "description": "RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2861,13 +2862,14 @@
       }
     },
     "session": {
+      "description": "Session Session Session Session Session Session session",
       "type": "object",
       "required": [
-        "authenticated_at",
-        "expires_at",
         "id",
-        "identity",
-        "issued_at"
+        "expires_at",
+        "authenticated_at",
+        "issued_at",
+        "identity"
       ],
       "properties": {
         "active": {
@@ -2875,10 +2877,12 @@
           "type": "boolean"
         },
         "authenticated_at": {
+          "description": "authenticated at",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
+          "description": "expires at",
           "type": "string",
           "format": "date-time"
         },
@@ -2889,6 +2893,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
+          "description": "issued at",
           "type": "string",
           "format": "date-time"
         }
@@ -2951,10 +2956,11 @@
       }
     },
     "settingsFlowMethod": {
+      "description": "SettingsFlowMethod SettingsFlowMethod settings flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -3009,7 +3015,7 @@
     "verificationFlow": {
       "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
       "type": "object",
-      "title": "VerificationFlow A Verification Flow",
+      "title": "A Verification Flow",
       "required": [
         "methods",
         "state"
@@ -3020,7 +3026,7 @@
           "type": "string"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -3028,7 +3034,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },

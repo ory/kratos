@@ -1294,6 +1294,13 @@
       "title": "Hashing Algorithm Configuration",
       "type": "object",
       "properties": {
+        "algorithm": {
+          "title": "Password hashing algorithm",
+          "description": "One of the values: argon2, bcrypt",
+          "type": "string",
+          "default": "argon2",
+          "enum": ["argon2", "bcrypt"]
+        },
         "argon2": {
           "title": "Configuration for the Argon2id hasher.",
           "type": "object",
@@ -1320,6 +1327,20 @@
             }
           },
           "additionalProperties": false
+        },
+        "bcrypt": {
+          "title": "Configuration for the Bcrypt hasher.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cost"],
+          "properties": {
+            "cost": {
+              "type": "integer",
+              "minimum": 12,
+              "maximum": 31,
+              "default": 12
+            }
+          }
         }
       },
       "additionalProperties": false
