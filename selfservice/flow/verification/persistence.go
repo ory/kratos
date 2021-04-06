@@ -133,7 +133,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 
 			actual, err = p.GetVerificationFlow(ctx, expected.ID)
 			require.NoError(t, err)
-			assert.EqualValues(t, expected.UI, actual.UI)
+			assertx.EqualAsJSON(t, expected.UI, actual.UI)
 		})
 	}
 }
