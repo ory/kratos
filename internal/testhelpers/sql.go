@@ -36,7 +36,6 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(recovery.Flow).TableName(ctx),
 
 		new(verification.Flow).TableName(ctx),
-		new(verification.FlowMethods).TableName(ctx),
 
 		new(errorx.ErrorContainer).TableName(ctx),
 

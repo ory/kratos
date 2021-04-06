@@ -20,17 +20,13 @@ var _ verification.FlowPersister = new(Persister)
 func (p Persister) CreateVerificationFlow(ctx context.Context, r *verification.Flow) error {
 	// This should not create the request eagerly because otherwise we might accidentally create an address
 	// that isn't supposed to be in the database.
-	return p.GetConnection(ctx).Eager("MethodsRaw").Create(r)
+	return p.GetConnection(ctx).Create(r)
 }
 
 func (p Persister) GetVerificationFlow(ctx context.Context, id uuid.UUID) (*verification.Flow, error) {
 	var r verification.Flow
-	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
+	if err := p.GetConnection(ctx).Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
-	}
-
-	if err := (&r).AfterFind(p.GetConnection(ctx)); err != nil {
-		return nil, err
 	}
 
 	return &r, nil
@@ -38,26 +34,6 @@ func (p Persister) GetVerificationFlow(ctx context.Context, id uuid.UUID) (*veri
 
 func (p Persister) UpdateVerificationFlow(ctx context.Context, r *verification.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		rr, err := p.GetVerificationFlow(ctx, r.ID)
-		if err != nil {
-			return err
-		}
-
-		for _, dbc := range rr.Methods {
-			if err := tx.Destroy(dbc); err != nil {
-				return sqlcon.HandleError(err)
-			}
-		}
-
-		for _, of := range r.Methods {
-			of.ID = uuid.UUID{}
-			of.Flow = rr
-			of.FlowID = rr.ID
-			if err := tx.Save(of); err != nil {
-				return sqlcon.HandleError(err)
-			}
-		}
-
 		return tx.Save(r)
 	})
 }

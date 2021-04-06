@@ -103,7 +103,7 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**CompleteSelfServiceRecoveryFlow**](docs/PublicApi.md#completeselfservicerecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
 *PublicApi* | [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#completeselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 *PublicApi* | [**CompleteSelfServiceSettingsFlow**](docs/PublicApi.md#completeselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
-*PublicApi* | [**CompleteSelfServiceVerificationFlowWithLinkMethod**](docs/PublicApi.md#completeselfserviceverificationflowwithlinkmethod) | **Post** /self-service/verification/methods/link | Complete Verification Flow with Link Method
+*PublicApi* | [**CompleteSelfServiceVerificationFlow**](docs/PublicApi.md#completeselfserviceverificationflow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
 *PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} | 
 *PublicApi* | [**GetSelfServiceError**](docs/PublicApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 *PublicApi* | [**GetSelfServiceLoginFlow**](docs/PublicApi.md#getselfserviceloginflow) | **Get** /self-service/login/flows | Get Login Flow
@@ -198,9 +198,6 @@ Class | Method | HTTP request | Description
  - [UpdateIdentity](docs/UpdateIdentity.md)
  - [VerifiableAddress](docs/VerifiableAddress.md)
  - [VerificationFlow](docs/VerificationFlow.md)
- - [VerificationFlowMethod](docs/VerificationFlowMethod.md)
- - [VerificationFlowMethodConfig](docs/VerificationFlowMethodConfig.md)
- - [VerificationFlowMethodConfigPayload](docs/VerificationFlowMethodConfigPayload.md)
  - [Version](docs/Version.md)
  - [Volume](docs/Volume.md)
  - [VolumeUsageData](docs/VolumeUsageData.md)

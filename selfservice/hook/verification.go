@@ -1,6 +1,9 @@
 package hook
 
 import (
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/x"
 	"net/http"
 
 	"github.com/ory/kratos/driver/config"
@@ -67,7 +70,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
-		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), address, token); err != nil {
+		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), f, address, token); err != nil {
 			return err
 		}
 	}

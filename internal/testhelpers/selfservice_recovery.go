@@ -16,7 +16,6 @@ import (
 	"github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/ioutilx"
@@ -70,24 +69,16 @@ func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *htt
 	return rs
 }
 
-func GetVerificationFlowMethodConfig(t *testing.T, rs *kratos.VerificationFlow, id string) *kratos.VerificationFlowMethodConfig {
-	require.NotEmpty(t, rs.Methods[id])
-	require.NotEmpty(t, rs.Methods[id].Config)
-	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	c := rs.Methods[id].Config
-	return &c
-}
-
 func VerificationMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *kratos.VerificationFlowMethodConfig,
+	f *kratos.VerificationFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
-	require.NotEmpty(t, f.Action)
+	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Action, bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -102,7 +93,6 @@ func SubmitVerificationForm(
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
-	method identity.CredentialsType,
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
@@ -116,11 +106,10 @@ func SubmitVerificationForm(
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetVerificationFlowMethodConfig(t, f, method.String())
-	formPayload := SDKFormFieldsToURLValues(config.Nodes)
+	formPayload := SDKFormFieldsToURLValues(f.Ui.Nodes)
 	withValues(formPayload)
 
-	b, res := VerificationMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, formPayload))
+	b, res := VerificationMakeRequest(t, isAPI, f, hc, EncodeFormAsJSON(t, isAPI, formPayload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

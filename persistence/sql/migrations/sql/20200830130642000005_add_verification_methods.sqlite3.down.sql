@@ -6,7 +6,7 @@ CREATE TABLE "_selfservice_verification_flows_tmp" (
 "csrf_token" TEXT NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
-"messages" TEXT,
 "type" TEXT NOT NULL DEFAULT 'browser',
+"messages" TEXT,
 "form" TEXT
 );

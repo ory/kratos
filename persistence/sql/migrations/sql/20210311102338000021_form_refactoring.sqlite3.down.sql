@@ -1,1 +1,1 @@
-INSERT INTO "_selfservice_login_flows_tmp" (id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at, forced, type) SELECT id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at, forced, type FROM "selfservice_login_flows";
+INSERT INTO "_selfservice_registration_flows_tmp" (id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at, type) SELECT id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at, type FROM "selfservice_registration_flows";

@@ -44,17 +44,16 @@ func TestGetFlow(t *testing.T) {
 	assertFlowPayload := func(t *testing.T, body []byte, isApi bool) {
 		if isApi {
 			assert.Equal(t, "api", gjson.GetBytes(body, "type").String(), "%s", body)
-			assert.Empty(t, gjson.GetBytes(body, "methods.link.config.fields.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
+			assert.Empty(t, gjson.GetBytes(body, "ui.fields.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
 		} else {
 			assert.Equal(t, "browser", gjson.GetBytes(body, "type").String(), "%s", body)
-			assert.NotEmpty(t, gjson.GetBytes(body, "methods.link.config.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
+			assert.NotEmpty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
 		}
 
-		assert.Equal(t, "link", gjson.GetBytes(body, "methods.link.method").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.link.config.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.link.config.action").String(), public.URL, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), public.URL, "%s", body)
 	}
 
 	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
