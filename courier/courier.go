@@ -172,15 +172,16 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 					WithField("message_id", msg.ID).
 					Error(`Unable to get email template from message.`)
 			} else {
-				body, err := tmpl.EmailBody()
+				htmlBody, err := tmpl.EmailBody()
 				if err != nil {
 					m.d.Logger().
 						WithError(err).
 						WithField("message_id", msg.ID).
 						Error(`Unable to get email body from template.`)
 
+				} else {
+					gm.AddAlternative("text/html", htmlBody)
 				}
-				gm.AddAlternative("text/html", body)
 			}
 
 			if err := m.Dialer.DialAndSend(ctx, gm); err != nil {

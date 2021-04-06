@@ -35,7 +35,7 @@ func GetTemplateType(t EmailTemplate) (TemplateType, error) {
 	case *template.VerificationInvalid:
 		return TypeVerificationInvalid, nil
 	case *template.VerificationValid:
-		return TypeRecoveryValid, nil
+		return TypeVerificationValid, nil
 	case *template.TestStub:
 		return TypeTestStub, nil
 	default:
