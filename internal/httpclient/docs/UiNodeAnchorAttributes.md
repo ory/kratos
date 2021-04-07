@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
-**Title** | [**UiText**](uiText.md) |  | 
+**Title** | [**UiText**](UiText.md) |  | 
 
 ## Methods
 

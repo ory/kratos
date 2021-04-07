@@ -2,9 +2,10 @@ package verification
 
 import (
 	"context"
+	"testing"
+
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/assertx"
-	"testing"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"

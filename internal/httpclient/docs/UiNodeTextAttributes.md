@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Text** | [**UiText**](uiText.md) |  | 
+**Text** | [**UiText**](UiText.md) |  | 
 
 ## Methods
 

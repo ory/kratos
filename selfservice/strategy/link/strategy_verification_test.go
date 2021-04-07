@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/x/pointerx"
 
 	"github.com/ory/kratos-client-go"
@@ -86,7 +88,7 @@ func TestVerification(t *testing.T) {
 			*csrfField,
 			{
 				Type:  "input",
-				Group: "verification_link",
+				Group: node.VerificationLinkGroup.String(),
 				Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 					Name:     "email",
 					Type:     "email",

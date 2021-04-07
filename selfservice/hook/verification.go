@@ -1,10 +1,11 @@
 package hook
 
 import (
+	"net/http"
+
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
-	"net/http"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"

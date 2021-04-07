@@ -464,6 +464,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			assert.Empty(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password_identifier).attributes.error"))
 			assert.EqualValues(t, "identifier", gjson.Get(actual, "ui.nodes.#(attributes.name==password_identifier).attributes.value").String(), actual)
+			assert.EqualValues(t, "password", gjson.Get(actual, "ui.nodes.#(attributes.name==method).attributes.value").String(), actual)
 			assert.Empty(t, gjson.Get(actual, "ui.error"))
 			assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0").String(), "Property password is missing.", "%s", actual)
 		}

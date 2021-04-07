@@ -9,8 +9,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/ory/kratos/x"
-
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
@@ -318,30 +316,5 @@ func TestContainer(t *testing.T) {
 		c.GetNodes().Remove("1")
 		require.Len(t, c.Nodes, 1)
 		require.EqualValues(t, "bar", c.Nodes[0].Attributes.GetValue())
-	})
-
-	t.Run("method=SortNodes", func(t *testing.T) {
-		// use a schema compiler that disables identifiers
-		schemaCompiler := jsonschema.NewCompiler()
-		schemaPath := "stub/identity.schema.json"
-
-		f, err := NewFromJSONSchema("/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
-		require.NoError(t, err)
-
-		f.UpdateNodesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
-		f.SetCSRF("csrf_token")
-
-		require.NoError(t, f.SortNodes(schemaPath, "", []string{
-			x.CSRFTokenName,
-			"identifier",
-			"password",
-		}))
-
-		var names []string
-		for _, f := range f.Nodes {
-			names = append(names, f.Attributes.(*node.InputAttributes).Name)
-		}
-
-		assert.EqualValues(t, []string{"csrf_token", "traits.email", "traits.stringy", "traits.numby", "traits.booly", "traits.should_big_number", "traits.should_long_string"}, names, "%+v", f.Nodes)
 	})
 }

@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Error** | Pointer to [**GenericErrorPayload**](genericErrorPayload.md) |  | [optional] 
+**Error** | Pointer to [**GenericErrorPayload**](GenericErrorPayload.md) |  | [optional] 
 
 ## Methods
 
