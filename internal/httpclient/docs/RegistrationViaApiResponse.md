@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Identity** | [**Identity**](Identity.md) |  | 
-**Session** | Pointer to [**Session**](session.md) |  | [optional] 
+**Session** | Pointer to [**Session**](Session.md) |  | [optional] 
 **SessionToken** | **string** | The Session Token  This field is only set when the session hook is configured as a post-registration hook.  A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header:  Authorization: bearer ${session-token}  The session token is only issued for API flows, not for Browser flows! | 
 
 ## Methods

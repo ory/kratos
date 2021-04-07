@@ -185,7 +185,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.NotEmpty(t, gjson.Get(actual, "nodes.#(attributes.name==csrf_token).attributes.value").String(), "csrf token missing")
 
 			assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "http://127.0.0.1:50029/self-service/settings?flow=e8976a6e-01a9-429c-870a-1f1441d21bfa",
+  "action": "http://127.0.0.1:52810/self-service/settings?flow=547d7ec3-eae2-441a-a3f5-d0075c8b3797",
   "method": "POST",
   "nodes": [
     {
@@ -194,7 +194,7 @@ func TestStrategyTraits(t *testing.T) {
         "name": "csrf_token",
         "required": true,
         "type": "hidden",
-        "value": "ajYzOG5sdmFmMHVhMGxjNWZhMWM4b2YwNm5jYW52ZXM="
+        "value": "M3M4c2Uxb2M5MXFoOHY3NjJ5eXNoM213MHV5eWNmejU="
       },
       "group": "default",
       "messages": null,
@@ -205,7 +205,7 @@ func TestStrategyTraits(t *testing.T) {
         "disabled": false,
         "name": "traits.email",
         "type": "text",
-        "value": "john-api@doe.com"
+        "value": "john-browser@doe.com"
       },
       "group": "profile",
       "messages": null,
@@ -271,9 +271,9 @@ func TestStrategyTraits(t *testing.T) {
         "disabled": false,
         "name": "method",
         "type": "submit",
-        "value": "password"
+        "value": "profile"
       },
-      "group": "authenticator_password",
+      "group": "profile",
       "messages": null,
       "type": "input"
     },
@@ -284,7 +284,7 @@ func TestStrategyTraits(t *testing.T) {
         "required": true,
         "type": "password"
       },
-      "group": "authenticator_password",
+      "group": "password",
       "messages": null,
       "type": "input"
     },
@@ -293,9 +293,9 @@ func TestStrategyTraits(t *testing.T) {
         "disabled": false,
         "name": "method",
         "type": "submit",
-        "value": "profile"
+        "value": "password"
       },
-      "group": "profile",
+      "group": "password",
       "messages": null,
       "type": "input"
     }

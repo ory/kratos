@@ -107,6 +107,10 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 		}
 	}
 
+	if err := sortNodes(f.UI.Nodes, h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+		return nil, err
+	}
+
 	if err := h.d.SettingsFlowPersister().CreateSettingsFlow(r.Context(), f); err != nil {
 		return nil, err
 	}

@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Attributes** | [**UiNodeAttributes**](uiNodeAttributes.md) |  | 
+**Attributes** | [**UiNodeAttributes**](UiNodeAttributes.md) |  | 
 **Group** | **string** |  | 
 **Messages** | [**[]UiText**](UiText.md) |  | 
 **Type** | **string** |  | 

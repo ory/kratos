@@ -1,10 +1,11 @@
 package daemon
 
 import (
-	"github.com/ory/kratos/selfservice/flow/recovery"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/ory/kratos/selfservice/flow/recovery"
 
 	"github.com/ory/x/reqlog"
 

@@ -106,6 +106,11 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		return
 	}
 
+	if err := sortNodes(f.UI.Nodes); err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
 	if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return

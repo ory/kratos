@@ -16,7 +16,7 @@ import (
 
 func TestFieldFromPath(t *testing.T) {
 	t.Run("all properties are properly transferred", func(t *testing.T) {
-		schema, err := ioutil.ReadFile("./stub/all_formats.schema.json")
+		schema, err := ioutil.ReadFile("./fixtures/all_formats.schema.json")
 		require.NoError(t, err)
 
 		c := jsonschema.NewCompiler()

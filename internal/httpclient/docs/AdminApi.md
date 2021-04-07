@@ -140,7 +140,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RecoveryLink**](recoveryLink.md)
+[**RecoveryLink**](RecoveryLink.md)
 
 ### Authorization
 
@@ -414,7 +414,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**ErrorContainer**](errorContainer.md)
+[**ErrorContainer**](ErrorContainer.md)
 
 ### Authorization
 
@@ -480,7 +480,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**LoginFlow**](loginFlow.md)
+[**LoginFlow**](LoginFlow.md)
 
 ### Authorization
 
@@ -546,7 +546,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RecoveryFlow**](recoveryFlow.md)
+[**RecoveryFlow**](RecoveryFlow.md)
 
 ### Authorization
 
@@ -612,7 +612,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RegistrationFlow**](registrationFlow.md)
+[**RegistrationFlow**](RegistrationFlow.md)
 
 ### Authorization
 
@@ -678,7 +678,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**SettingsFlow**](settingsFlow.md)
+[**SettingsFlow**](SettingsFlow.md)
 
 ### Authorization
 
@@ -744,7 +744,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**VerificationFlow**](verificationFlow.md)
+[**VerificationFlow**](VerificationFlow.md)
 
 ### Authorization
 
@@ -805,7 +805,7 @@ Other parameters are passed through a pointer to a apiGetVersionRequest struct v
 
 ### Return type
 
-[**InlineResponse2001**](inline_response_200_1.md)
+[**InlineResponse2001**](InlineResponse2001.md)
 
 ### Authorization
 
@@ -866,7 +866,7 @@ Other parameters are passed through a pointer to a apiIsAliveRequest struct via 
 
 ### Return type
 
-[**InlineResponse200**](inline_response_200.md)
+[**InlineResponse200**](InlineResponse200.md)
 
 ### Authorization
 
@@ -927,7 +927,7 @@ Other parameters are passed through a pointer to a apiIsReadyRequest struct via 
 
 ### Return type
 
-[**InlineResponse200**](inline_response_200.md)
+[**InlineResponse200**](InlineResponse200.md)
 
 ### Authorization
 

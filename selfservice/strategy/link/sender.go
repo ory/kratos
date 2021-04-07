@@ -105,7 +105,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	if err := s.SendVerificationTokenTo(ctx,f, address, token); err != nil {
+	if err := s.SendVerificationTokenTo(ctx, f, address, token); err != nil {
 		return err
 	}
 	return nil
@@ -141,9 +141,9 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 		&templates.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(nil), verification.RouteSubmitFlow),
 			url.Values{
-				"flow": {f.ID.String()},
+				"flow":  {f.ID.String()},
 				"token": {token.Token},
-				}).String()}))
+			}).String()}))
 }
 
 func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
