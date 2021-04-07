@@ -398,12 +398,6 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		rf.UI.ResetMessages()
 
 		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		if errSec := rf.UI.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", []string{
-			x.CSRFTokenName,
-		}); errSec != nil {
-			return errors.Wrap(err, errSec.Error())
-		}
-
 		rf.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
 		rf.UI.GetNodes().Upsert(
 			// v0.5: form.Field{Name: "provider", Value: provider, Type: "submit"}

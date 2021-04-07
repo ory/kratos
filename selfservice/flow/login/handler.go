@@ -75,21 +75,25 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
 	conf := h.d.Config(r.Context())
-	a := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
+	f := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
 	for _, s := range h.d.LoginStrategies(r.Context()) {
-		if err := s.PopulateLoginMethod(r, a); err != nil {
+		if err := s.PopulateLoginMethod(r, f); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, a); err != nil {
+	if err := sortNodes(f.UI.Nodes); err != nil {
 		return nil, err
 	}
 
-	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), a); err != nil {
+	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
 		return nil, err
 	}
-	return a, nil
+
+	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), f); err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
 // nolint:deadcode,unused

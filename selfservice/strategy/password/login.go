@@ -38,7 +38,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *CompleteSelfServiceLoginFlowWithPasswordMethod, err error) error {
 	if f != nil {
-		f.UI.Nodes.Reset()
+		f.UI.Nodes.ResetNodes("password")
 		f.UI.Nodes.SetValueAttribute("password_identifier", payload.Identifier)
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
@@ -116,8 +116,8 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.SetNode(node.NewInputField("password_identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute))
-	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
 	sr.UI.SetNode(NewPasswordNode("password"))
+	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
 
 	return nil
 }

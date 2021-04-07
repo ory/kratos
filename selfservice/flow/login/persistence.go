@@ -2,8 +2,9 @@ package login
 
 import (
 	"context"
-	"github.com/ory/x/assertx"
 	"testing"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/ui/container"
 

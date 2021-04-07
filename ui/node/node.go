@@ -11,6 +11,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/schema"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/stringslice"
 )
@@ -21,13 +22,17 @@ type Type string
 // swagger:model uiNodeGroup
 type Group string
 
+func (g Group) String() string {
+	return string(g)
+}
+
 const (
 	DefaultGroup          Group = "default"
-	PasswordGroup         Group = "authenticator_password"
-	OpenIDConnectGroup    Group = "authenticator_oidc"
+	PasswordGroup         Group = "password"
+	OpenIDConnectGroup    Group = "oidc"
 	ProfileGroup          Group = "profile"
-	RecoveryLinkGroup     Group = "recovery_link"
-	VerificationLinkGroup Group = "verification_link"
+	RecoveryLinkGroup     Group = "link"
+	VerificationLinkGroup Group = "link"
 
 	Text   Type = "text"
 	Input  Type = "input"
@@ -83,10 +88,6 @@ func (n *Node) ID() string {
 	return n.Attributes.ID()
 }
 
-func ToID(group Group, attributeID string) string {
-	return string(group) + "/" + attributeID
-}
-
 func (n *Node) Reset() {
 	n.Messages = nil
 	n.Attributes.Reset()
@@ -109,7 +110,6 @@ func (n Nodes) Find(id string) *Node {
 func (n Nodes) Reset(exclude ...string) {
 	for k, nn := range n {
 		nn.Messages = nil
-
 		if !stringslice.Has(exclude, nn.ID()) {
 			nn.Reset()
 		}
@@ -117,33 +117,123 @@ func (n Nodes) Reset(exclude ...string) {
 	}
 }
 
-func (n Nodes) SortBySchema(schemaRef, prefix string, keysInOrder []string) error {
-	schemaKeys, err := schema.GetKeysInOrder(schemaRef)
-	if err != nil {
-		return err
-	}
-
-	for _, k := range schemaKeys {
-		if prefix != "" {
-			k = fmt.Sprintf("%s.%s", prefix, k)
+func (n Nodes) ResetNodes(reset ...string) {
+	for k, nn := range n {
+		if stringslice.Has(reset, nn.ID()) {
+			nn.Reset()
 		}
-		keysInOrder = append(keysInOrder, k)
+		n[k] = nn
+	}
+}
+
+func getStringSliceIndexOf(needle []string, haystack string) int {
+	for k := range needle {
+		if needle[k] == haystack {
+			return k
+		}
+	}
+	return -1
+}
+
+type sortOptions struct {
+	orderByGroups   []string
+	schemaRef       string
+	keysInOrder     []string
+	keysInOrderPost func([]string) []string
+}
+
+type SortOption func(*sortOptions)
+
+func SortByGroups(orderByGroups []Group) func(*sortOptions) {
+	return func(options *sortOptions) {
+		options.orderByGroups = make([]string, len(orderByGroups))
+		for k := range orderByGroups {
+			options.orderByGroups[k] = string(orderByGroups[k])
+		}
+	}
+}
+
+func SortBySchema(schemaRef string) func(*sortOptions) {
+	return func(options *sortOptions) {
+		options.schemaRef = schemaRef
+	}
+}
+
+func SortUseOrder(keysInOrder []string) func(*sortOptions) {
+	return func(options *sortOptions) {
+		options.keysInOrder = keysInOrder
+	}
+}
+
+func SortUpdateOrder(f func([]string) []string) func(*sortOptions) {
+	return func(options *sortOptions) {
+		options.keysInOrderPost = f
+	}
+}
+
+func (n Nodes) SortBySchema(opts ...SortOption) error {
+	var o sortOptions
+	for _, f := range opts {
+		f(&o)
 	}
 
-	getKeyPosition := func(name string) int {
-		lastPrefix := len(keysInOrder)
-		for i, n := range keysInOrder {
-			if strings.HasPrefix(name, n) {
+	if o.schemaRef != "" {
+		schemaKeys, err := schema.GetKeysInOrder(o.schemaRef)
+		if err != nil {
+			return err
+		}
+
+		for _, k := range schemaKeys {
+			o.keysInOrder = append(o.keysInOrder, k)
+		}
+	}
+
+	if o.keysInOrderPost != nil {
+		o.keysInOrder = o.keysInOrderPost(o.keysInOrder)
+	}
+
+	getKeyPosition := func(node *Node) int {
+		lastPrefix := len(o.keysInOrder)
+
+		// Method should always be the last element in the list
+		if node.Attributes.ID() == "method" {
+			return len(n) + 1
+		}
+
+		for i, n := range o.keysInOrder {
+			if strings.HasPrefix(node.ID(), n) {
 				return i
 			}
 		}
+
 		return lastPrefix
 	}
 
+	if len(o.orderByGroups) > 0 {
+		// Sort by groups so that default is in front, then oidc, password, ...
+		sort.Slice(n, func(i, j int) bool {
+			a := string(n[i].Group)
+			b := string(n[j].Group)
+			return getStringSliceIndexOf(o.orderByGroups, a) < getStringSliceIndexOf(o.orderByGroups, b)
+		})
+	}
+
 	sort.SliceStable(n, func(i, j int) bool {
-		a := n[i].ID()
-		b := n[j].ID()
-		return getKeyPosition(a) < getKeyPosition(b)
+		a := n[i]
+		b := n[j]
+
+		if a.Group == b.Group {
+			pa, pb := getKeyPosition(a), getKeyPosition(b)
+			if pa < pb {
+				return true
+			} else if pa > pb {
+				return false
+			}
+
+			return fmt.Sprintf("%v", a.GetValue()) < fmt.Sprintf("%v", b.GetValue())
+		}
+
+		return false
 	})
 
 	return nil

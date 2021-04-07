@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 **RequestUrl** | Pointer to **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | [optional] 
 **State** | **string** |  | 
 **Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
-**Ui** | [**UiContainer**](uiContainer.md) |  | 
+**Ui** | [**UiContainer**](UiContainer.md) |  | 
 
 ## Methods
 

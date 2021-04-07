@@ -113,6 +113,7 @@ func TestCountActiveCredentials(t *testing.T) {
 func TestDisabledEndpoint(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), false)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/sort.schema.json")
 
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 

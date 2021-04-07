@@ -5,16 +5,16 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Disabled** | **bool** | Sets the input&#39;s disabled field to true or false. | 
-**Label** | Pointer to [**UiText**](uiText.md) |  | [optional] 
+**Label** | Pointer to [**UiText**](UiText.md) |  | [optional] 
 **Name** | **string** | The input&#39;s element name. | 
 **Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
 **Type** | **string** |  | 
-**Value** | Pointer to [**UiNodeInputAttributesValue**](uiNodeInputAttributesValue.md) |  | [optional] 
-**Text** | [**UiText**](uiText.md) |  | 
+**Value** | Pointer to [**UiNodeInputAttributesValue**](UiNodeInputAttributesValue.md) |  | [optional] 
+**Text** | [**UiText**](UiText.md) |  | 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
-**Title** | [**UiText**](uiText.md) |  | 
+**Title** | [**UiText**](UiText.md) |  | 
 
 ## Methods
 

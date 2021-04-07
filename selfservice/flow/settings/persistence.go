@@ -3,8 +3,9 @@ package settings
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/x/assertx"
 	"testing"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/ui/node"
 
