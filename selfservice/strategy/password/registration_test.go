@@ -2,7 +2,6 @@ package password_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -24,16 +23,12 @@ import (
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/httpx"
 
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
 
@@ -577,23 +572,26 @@ func TestRegistration(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
-		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
-			"enabled": true})
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/sort.schema.json")
+		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
 
-		sr := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypePassword).(*password.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
+		router := x.NewRouterPublic()
+		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
 
 		assertx.EqualAsJSON(t, container.Container{
-			Action: "https://foo" + registration.RouteSubmitFlow + "?flow=" + sr.ID.String(),
+			Action: conf.SelfPublicURL(nil).String() + registration.RouteSubmitFlow + "?flow=" + f.Id,
 			Method: "POST",
 			Nodes: node.Nodes{
-				node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit),
 				node.NewCSRFNode(x.FakeCSRFToken),
-				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute),
-				node.NewInputField("traits.foobar", nil, node.PasswordGroup, node.InputAttributeTypeText),
 				node.NewInputField("traits.username", nil, node.PasswordGroup, node.InputAttributeTypeText),
+				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute),
+				node.NewInputField("traits.bar", nil, node.PasswordGroup, node.InputAttributeTypeText),
+				node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit),
 			},
-		}, sr.UI)
+		}, f.Ui)
 	})
 }

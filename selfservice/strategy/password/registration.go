@@ -147,14 +147,5 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	}
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	// TODO: check prefix only password group?
-	if err := f.UI.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", []string{
-		"method",
-		x.CSRFTokenName,
-		"password",
-	}); err != nil {
-		return err
-	}
-
 	return nil
 }

@@ -180,7 +180,7 @@ func TestRecovery(t *testing.T) {
 			*csrfField,
 			{
 				Type:  "input",
-				Group: "recovery_link",
+				Group: node.RecoveryLinkGroup.String(),
 				Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 					Name:     "email",
 					Required: pointerx.Bool(true),

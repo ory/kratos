@@ -210,7 +210,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**SettingsViaApiResponse**](settingsViaApiResponse.md)
+[**SettingsViaApiResponse**](SettingsViaApiResponse.md)
 
 ### Authorization
 
@@ -405,7 +405,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**ErrorContainer**](errorContainer.md)
+[**ErrorContainer**](ErrorContainer.md)
 
 ### Authorization
 
@@ -471,7 +471,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**LoginFlow**](loginFlow.md)
+[**LoginFlow**](LoginFlow.md)
 
 ### Authorization
 
@@ -537,7 +537,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RecoveryFlow**](recoveryFlow.md)
+[**RecoveryFlow**](RecoveryFlow.md)
 
 ### Authorization
 
@@ -603,7 +603,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RegistrationFlow**](registrationFlow.md)
+[**RegistrationFlow**](RegistrationFlow.md)
 
 ### Authorization
 
@@ -669,7 +669,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**SettingsFlow**](settingsFlow.md)
+[**SettingsFlow**](SettingsFlow.md)
 
 ### Authorization
 
@@ -735,7 +735,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**VerificationFlow**](verificationFlow.md)
+[**VerificationFlow**](VerificationFlow.md)
 
 ### Authorization
 
@@ -860,7 +860,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**LoginFlow**](loginFlow.md)
+[**LoginFlow**](LoginFlow.md)
 
 ### Authorization
 
@@ -980,7 +980,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceRecov
 
 ### Return type
 
-[**RecoveryFlow**](recoveryFlow.md)
+[**RecoveryFlow**](RecoveryFlow.md)
 
 ### Authorization
 
@@ -1100,7 +1100,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceRegis
 
 ### Return type
 
-[**RegistrationFlow**](registrationFlow.md)
+[**RegistrationFlow**](RegistrationFlow.md)
 
 ### Authorization
 
@@ -1220,7 +1220,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceSetti
 
 ### Return type
 
-[**SettingsFlow**](settingsFlow.md)
+[**SettingsFlow**](SettingsFlow.md)
 
 ### Authorization
 
@@ -1340,7 +1340,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceVerif
 
 ### Return type
 
-[**VerificationFlow**](verificationFlow.md)
+[**VerificationFlow**](VerificationFlow.md)
 
 ### Authorization
 
@@ -1529,7 +1529,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**LoginViaApiResponse**](loginViaApiResponse.md)
+[**LoginViaApiResponse**](LoginViaApiResponse.md)
 
 ### Authorization
 
@@ -1595,7 +1595,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RegistrationViaApiResponse**](registrationViaApiResponse.md)
+[**RegistrationViaApiResponse**](RegistrationViaApiResponse.md)
 
 ### Authorization
 
@@ -1663,7 +1663,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Session**](session.md)
+[**Session**](Session.md)
 
 ### Authorization
 

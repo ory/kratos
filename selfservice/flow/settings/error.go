@@ -147,6 +147,11 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
+	if err := sortNodes(f.UI.Nodes, id.SchemaURL); err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
 	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return

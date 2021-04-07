@@ -84,22 +84,26 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
-	a := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
+	f := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
 	for _, s := range h.d.RegistrationStrategies(r.Context()) {
-		if err := s.PopulateRegistrationMethod(r, a); err != nil {
+		if err := s.PopulateRegistrationMethod(r, f); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := h.d.RegistrationExecutor().PreRegistrationHook(w, r, a); err != nil {
+	if err := SortNodes(f.UI.Nodes, h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
 		return nil, err
 	}
 
-	if err := h.d.RegistrationFlowPersister().CreateRegistrationFlow(r.Context(), a); err != nil {
+	if err := h.d.RegistrationExecutor().PreRegistrationHook(w, r, f); err != nil {
 		return nil, err
 	}
 
-	return a, nil
+	if err := h.d.RegistrationFlowPersister().CreateRegistrationFlow(r.Context(), f); err != nil {
+		return nil, err
+	}
+
+	return f, nil
 }
 
 // swagger:route GET /self-service/registration/api public initializeSelfServiceRegistrationViaAPIFlow

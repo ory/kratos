@@ -3,11 +3,12 @@ package link_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/x/pointerx"
 
@@ -82,7 +83,7 @@ func TestVerification(t *testing.T) {
 			*csrfField,
 			{
 				Type:  "input",
-				Group: "verification_link",
+				Group: node.VerificationLinkGroup.String(),
 				Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 					Name:     "email",
 					Type:     "email",

@@ -2,11 +2,12 @@ package node_test
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
-	"fmt"
+	"path/filepath"
 	"testing"
 
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/corpx"
 
@@ -25,10 +26,13 @@ func init() {
 	corpx.RegisterFakes()
 }
 
+//go:embed fixtures/sort/*
+var sortFixtures embed.FS
+
 func TestNodesSort(t *testing.T) {
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-	schemaPath := "stub/identity.schema.json"
+	schemaPath := "fixtures/identity.schema.json"
 
 	f, err := container.NewFromJSONSchema("/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
 	require.NoError(t, err)
@@ -36,38 +40,61 @@ func TestNodesSort(t *testing.T) {
 	f.UpdateNodesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
 	f.SetCSRF("csrf_token")
 
-	for k, tc := range []struct {
-		p string
-		k []string
-		e []string
-	}{
-		{
-			k: []string{
-				"traits.stringy",
-				x.CSRFTokenName,
-				"traits.numby",
-			},
-			e: []string{"traits.stringy", "csrf_token", "traits.numby", "traits.email", "traits.booly", "traits.should_big_number", "traits.should_long_string"},
-		},
-		{
-			p: "traits",
-			k: []string{
-				x.CSRFTokenName,
-				"traits.stringy",
-				"traits.numby",
-			},
-			e: []string{"csrf_token", "traits.stringy", "traits.numby", "traits.email", "traits.booly", "traits.should_big_number", "traits.should_long_string"},
-		},
-	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			require.NoError(t, f.SortNodes(schemaPath, tc.p, tc.k))
+	inputs, err := sortFixtures.ReadDir("fixtures/sort/input")
+	require.NoError(t, err)
 
-			var names []string
-			for _, f := range f.Nodes {
-				names = append(names, f.Attributes.ID())
+	options := map[string][]node.SortOption{
+		"1.json": {
+			node.SortUseOrder([]string{"password_identifier"}),
+			node.SortUpdateOrder(node.PasswordLoginOrder),
+			node.SortByGroups([]node.Group{
+				node.DefaultGroup,
+				node.ProfileGroup,
+				node.OpenIDConnectGroup,
+				node.PasswordGroup,
+				node.RecoveryLinkGroup,
+				node.VerificationLinkGroup,
+			}),
+		},
+		"2.json": {
+			node.SortBySchema(filepath.Join("fixtures/sort/schema", "2.json")),
+			node.SortUpdateOrder(node.PasswordLoginOrder),
+			node.SortByGroups([]node.Group{
+				node.DefaultGroup,
+				node.OpenIDConnectGroup,
+				node.PasswordGroup,
+			}),
+		},
+		"3.json": {
+			node.SortBySchema(filepath.Join("fixtures/sort/schema", "3.json")),
+			node.SortByGroups([]node.Group{
+				node.DefaultGroup,
+				node.OpenIDConnectGroup,
+				node.PasswordGroup,
+			}),
+		},
+	}
+
+	for _, in := range inputs {
+		t.Run("file="+in.Name(), func(t *testing.T) {
+			if in.IsDir() {
+				return
 			}
 
-			assert.EqualValues(t, tc.e, names, "%+v", f.Nodes)
+			fi, err := sortFixtures.Open(filepath.Join("fixtures/sort/input", in.Name()))
+			require.NoError(t, err)
+			defer fi.Close()
+
+			var nodes node.Nodes
+			require.NoError(t, json.NewDecoder(fi).Decode(&nodes))
+			require.NotEmpty(t, nodes)
+
+			require.NoError(t, nodes.SortBySchema(options[in.Name()]...))
+
+			fe, err := sortFixtures.ReadFile(filepath.Join("fixtures/sort/expected", in.Name()))
+			require.NoError(t, err)
+
+			assertx.EqualAsJSON(t, json.RawMessage(fe), nodes)
 		})
 	}
 }

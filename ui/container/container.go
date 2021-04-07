@@ -119,8 +119,8 @@ func (c *Container) GetNodes() *node.Nodes {
 	return &c.Nodes
 }
 
-func (c *Container) SortNodes(schemaRef string, prefix string, keysInOrder []string) error {
-	return c.Nodes.SortBySchema(schemaRef, prefix, keysInOrder)
+func (c *Container) SortNodes(opts ...node.SortOption) error {
+	return c.Nodes.SortBySchema(opts...)
 }
 
 // ResetMessages resets the container's own and its node's messages.

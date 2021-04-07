@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Flow** | [**SettingsFlow**](settingsFlow.md) |  | 
+**Flow** | [**SettingsFlow**](SettingsFlow.md) |  | 
 **Identity** | [**Identity**](Identity.md) |  | 
 
 ## Methods

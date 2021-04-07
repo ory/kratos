@@ -2,8 +2,9 @@ package registration
 
 import (
 	"context"
-	"github.com/ory/kratos/ui/node"
 	"testing"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/x/assertx"
 
