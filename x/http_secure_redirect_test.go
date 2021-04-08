@@ -22,7 +22,7 @@ import (
 
 func TestSecureContentNegotiationRedirection(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
-	var jsonActual = json.RawMessage(`{"foo":"bar"}`)
+	var jsonActual = json.RawMessage(`{"foo":"bar"}` + "\n")
 	writer := herodot.NewJSONWriter(nil)
 
 	router := httprouter.New()

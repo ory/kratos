@@ -191,7 +191,8 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 			url.Values{
 				"token": {token.Token},
 				"flow":  {req.ID.String()},
-			}).String()})
+			}).String()},
+		herodot.UnescapedHTML)
 }
 
 // swagger:parameters completeSelfServiceRecoveryFlowWithLinkMethod
