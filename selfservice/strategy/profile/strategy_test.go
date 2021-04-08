@@ -379,8 +379,6 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should end up at the login endpoint if trying to update protected field without sudo mode", func(t *testing.T) {
-		setUnprivileged(t)
-
 		var run = func(t *testing.T, config *kratos.SettingsFlow, isAPI bool, c *http.Client) *http.Response {
 			time.Sleep(time.Millisecond)
 
@@ -395,6 +393,7 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
+			setUnprivileged(t)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 			res := run(t, f, true, apiUser1)
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
@@ -402,10 +401,23 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
+			setUnprivileged(t)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
 			res := run(t, f, false, browserUser1)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
+
+			t.Run("should update when signed back in", func(t *testing.T) {
+				setPrivileged(t)
+				res, err := browserUser1.Get(f.Ui.Action)
+				require.NoError(t, err)
+
+				body := ioutilx.MustReadAll(res.Body)
+				defer res.Body.Close()
+
+				assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
+				assert.EqualValues(t, settings.StateSuccess, gjson.GetBytes(body, "state").String(), "%s", body)
+			})
 		})
 	})
 

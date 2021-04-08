@@ -14,7 +14,7 @@ context('Login Flow Success', () => {
   })
 
   it('should sign up and be logged in', () => {
-    cy.get('input[name="identifier"]').type(email)
+    cy.get('input[name="password_identifier"]').type(email)
     cy.get('input[name="password"]').type(password)
     cy.get('button[type="submit"]').click()
 
@@ -29,7 +29,7 @@ context('Login Flow Success', () => {
   })
 
   it('should sign in with case insensitive identifier', () => {
-    cy.get('input[name="identifier"]').type(email.toUpperCase())
+    cy.get('input[name="password_identifier"]').type(email.toUpperCase())
     cy.get('input[name="password"]').type(password)
     cy.get('button[type="submit"]').click()
 

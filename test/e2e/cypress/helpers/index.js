@@ -65,6 +65,6 @@ module.exports = {
   pollInterval: 100, // how long to wait before retry
 
   // Adding 1+ second on top because MySQL doesn't do millisecs.
-  verifyLifespan: 5000 + 1050,
-  privilegedLifespan: 5000 + 1050
+  verifyLifespan: 5000 + 1,
+  privilegedLifespan: 2500 + 1
 }

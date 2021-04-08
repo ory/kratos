@@ -167,9 +167,9 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
-	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
-	f.UI.Nodes.Upsert(NewPasswordNode("password").WithMetaLabel(text.NewInfoNodeLabelSave()))
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.Nodes.Upsert(NewPasswordNode("password").WithMetaLabel(text.NewInfoNodeInputPassword()))
+	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSave()))
 
 	return nil
 }
@@ -182,11 +182,9 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 		}
 	}
 
-	// var id *identity.Identity
 	if ctxUpdate.Flow != nil {
 		ctxUpdate.Flow.UI.ResetMessages()
 		ctxUpdate.Flow.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		// id = ctxUpdate.Session.Identity
 	}
 
 	return err
