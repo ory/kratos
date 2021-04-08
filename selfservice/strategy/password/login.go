@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -102,9 +104,9 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(node.NewInputField("password_identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute))
+	sr.UI.SetNode(node.NewInputField("password_identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeLabelID()))
 	sr.UI.SetNode(NewPasswordNode("password"))
-	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
+	sr.UI.GetNodes().Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
 
 	return nil
 }

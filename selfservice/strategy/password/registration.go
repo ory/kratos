@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -140,7 +142,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	}
 
 	nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
-	nodes.Upsert(NewPasswordNode("password"))
+	nodes.Upsert(NewPasswordNode("password").WithMetaLabel(text.NewInfoRegistration()))
 
 	for _, n := range nodes {
 		f.UI.SetNode(n)

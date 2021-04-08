@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/kratos/continuity"
 
 	"github.com/pkg/errors"
@@ -29,7 +31,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, l *login.Flow) error {
 		return nil
 	}
 
-	return s.populateMethod(r, l.UI)
+	return s.populateMethod(r, l.UI, text.NewInfoLoginWith)
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) error {

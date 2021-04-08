@@ -6,7 +6,9 @@ import (
 )
 
 const (
-	InfoSelfServiceLogin ID = 1010000 + iota
+	InfoSelfServiceLoginRoot ID = 1010000 + iota // 1010000
+	InfoSelfServiceLogin                         // 1010001
+	InfoSelfServiceLoginWith                     // 1010002
 )
 
 const (
@@ -18,6 +20,26 @@ const (
 	ErrorValidationRecoveryNoStrategyFound                         // 4010005
 	ErrorValidationVerificationNoStrategyFound                     // 4010006
 )
+
+func NewInfoLogin() *Message {
+	return &Message{
+		ID:      InfoSelfServiceLogin,
+		Text:    "Sign in",
+		Type:    Info,
+		Context: context(map[string]interface{}{}),
+	}
+}
+
+func NewInfoLoginWith(provider string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginWith,
+		Text: fmt.Sprintf("Sign in with %s", provider),
+		Type: Info,
+		Context: context(map[string]interface{}{
+			"provider": provider,
+		}),
+	}
+}
 
 func NewErrorValidationLoginFlowExpired(ago time.Duration) *Message {
 	return &Message{

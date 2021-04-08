@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/kratos/session"
@@ -166,7 +168,7 @@ func (s *Strategy) continueSettingsFlow(
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
 	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
-	f.UI.Nodes.Upsert(NewPasswordNode("password"))
+	f.UI.Nodes.Upsert(NewPasswordNode("password").WithMetaLabel(text.NewInfoNodeLabelSave()))
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	return nil

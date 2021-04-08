@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/x/decoderx"
 
@@ -325,7 +327,7 @@ func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (s *Strategy) populateMethod(r *http.Request, c *container.Container) error {
+func (s *Strategy) populateMethod(r *http.Request, c *container.Container, message func(provider string) *text.Message) error {
 	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
@@ -333,8 +335,7 @@ func (s *Strategy) populateMethod(r *http.Request, c *container.Container) error
 
 	// does not need sorting because there is only one field
 	c.SetCSRF(s.d.GenerateCSRFToken(r))
-	c.GetNodes().Append(node.NewInputField("method", s.ID().String(), node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
-	AddProviders(c, conf.Providers)
+	AddProviders(c, conf.Providers, message)
 
 	return nil
 }
