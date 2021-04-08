@@ -141,13 +141,13 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return err
 	}
 
-	nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit))
-	nodes.Upsert(NewPasswordNode("password").WithMetaLabel(text.NewInfoRegistration()))
-
 	for _, n := range nodes {
 		f.UI.SetNode(n)
 	}
+
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.Nodes.Upsert(NewPasswordNode("password"))
+	f.UI.Nodes.Append(node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration()))
 
 	return nil
 }

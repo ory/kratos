@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -93,9 +96,9 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		f.UI.SetNode(n)
 	}
 
-	f.UI.Nodes.Append(node.NewInputField("method", "profile", node.ProfileGroup, node.InputAttributeTypeSubmit))
-	f.UI.UpdateNodesFromJSON(json.RawMessage(id.Traits), "traits", node.ProfileGroup)
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.UpdateNodesFromJSON(json.RawMessage(id.Traits), "traits", node.ProfileGroup)
+	f.UI.Nodes.Append(node.NewInputField("method", "profile", node.ProfileGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSave()))
 
 	return nil
 }
@@ -153,25 +156,28 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 	}
 
 	if err := flow.EnsureCSRF(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
+		return err
 	}
 
 	if len(p.Traits) == 0 {
-		return s.handleSettingsError(w, r, ctxUpdate, nil, p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes."))
 	}
 
 	if err := s.hydrateForm(r, ctxUpdate.Flow, ctxUpdate.Session, p.Traits); err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
+		return err
 	}
 
-	update, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.GetSessionIdentity().ID)
+	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
+	ttl := s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
+	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
+		options = append(options, identity.ManagerAllowWriteProtectedTraits)
+	}
+	update, err := s.d.IdentityManager().SetTraits(r.Context(), ctxUpdate.GetSessionIdentity().ID, identity.Traits(p.Traits),options...)
 	if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
+		return err
 	}
 
-	update.Traits = identity.Traits(p.Traits)
 	ctxUpdate.UpdateIdentity(update)
-
 	return nil
 }
 
@@ -226,7 +232,6 @@ func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uu
 }
 
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
-	ar.UI.Reset("method")
 	if traits != nil {
 		ar.UI.UpdateNodesFromJSON(traits, "traits", node.ProfileGroup)
 	}
@@ -238,7 +243,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow, err error) error {
-	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
+	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) || errors.Is(err, identity.ErrProtectedFieldModified) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),
 			settings.ContinuityOptions(p, puc.GetSessionIdentity())...); err != nil {

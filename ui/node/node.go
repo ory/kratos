@@ -346,6 +346,11 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 	}
 
 	*n = Node(d)
+
+	if n.Meta == nil {
+		n.Meta = new(Meta)
+	}
+
 	return nil
 }
 
@@ -370,6 +375,10 @@ func (n *Node) MarshalJSON() ([]byte, error) {
 		n.Type = t
 	} else if n.Type != t {
 		return nil, errors.WithStack(fmt.Errorf("node type and node attributes mismatch: %T != %s", n.Attributes, n.Type))
+	}
+
+	if n.Meta == nil {
+		n.Meta = new(Meta)
 	}
 
 	return json.Marshal((*jsonRawNode)(n))

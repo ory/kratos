@@ -1,4 +1,4 @@
-import { APP_URL, gen } from '../../../../helpers'
+import {APP_URL, gen} from '../../../../helpers'
 
 context('Registration Flow Success', () => {
   beforeEach(() => {
@@ -18,7 +18,7 @@ context('Registration Flow Success', () => {
     cy.get('.greeting').should('contain.text', 'Welcome back')
 
     cy.session().should((session) => {
-      const { identity } = session
+      const {identity} = session
       expect(identity.id).to.not.be.empty
       expect(identity.verifiable_addresses).to.be.undefined
       expect(identity.schema_id).to.equal('default')
