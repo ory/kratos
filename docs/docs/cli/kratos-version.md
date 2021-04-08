@@ -14,10 +14,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Show the build version, build time, and git hash
 
-### Synopsis
-
-Show the build version, build time, and git hash
-
 ```
 kratos version [flags]
 ```

@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -50,7 +52,6 @@ func (m *RecoveryLink) Validate(formats strfmt.Registry) error {
 }
 
 func (m *RecoveryLink) validateExpiresAt(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ExpiresAt) { // not required
 		return nil
 	}
@@ -68,6 +69,11 @@ func (m *RecoveryLink) validateRecoveryLink(formats strfmt.Registry) error {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this recovery link based on context it is used
+func (m *RecoveryLink) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

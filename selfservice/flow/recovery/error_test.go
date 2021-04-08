@@ -61,7 +61,7 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *recovery.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f, err := recovery.NewFlow(ttl, x.FakeCSRFToken, req, reg.RecoveryStrategies(), ft)
+		f, err := recovery.NewFlow(ttl, x.FakeCSRFToken, req, reg.RecoveryStrategies(context.Background()), ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 		f, err = reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), f.ID)

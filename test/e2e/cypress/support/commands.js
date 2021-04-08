@@ -33,8 +33,7 @@ import {
   MOBILE_URL,
   parseHtml,
   pollInterval,
-  privilegedLifespan,
-  website
+  privilegedLifespan
 } from '../helpers'
 
 const mergeFields = (form, fields) => {
@@ -48,7 +47,12 @@ const mergeFields = (form, fields) => {
 
 Cypress.Commands.add(
   'register',
-  ({ email = gen.email(), password = gen.password(), fields = {} } = {}) => {
+  ({
+    email = gen.email(),
+    password = gen.password(),
+    query = {},
+    fields = {}
+  } = {}) => {
     console.log('Creating user account: ', { email, password })
 
     // see https://github.com/cypress-io/cypress/issues/408
@@ -57,7 +61,8 @@ Cypress.Commands.add(
 
     cy.request({
       url: APP_URL + '/self-service/registration/browser',
-      followRedirect: false
+      followRedirect: false,
+      qs: query
     })
       .then(({ redirectedToUrl }) => {
         expect(redirectedToUrl).to.contain(APP_URL + '/auth/registration?flow=')
@@ -325,21 +330,41 @@ Cypress.Commands.add('getIdentityByEmail', ({ email }) =>
     })
 )
 
-Cypress.Commands.add('verifyEmail', ({ expect: { email } = {} } = {}) =>
-  cy.getMail().then((message) => {
-    expect(message.subject.trim()).to.equal('Please verify your email address')
-    expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
-    expect(message.toAddresses).to.have.length(1)
-    expect(message.toAddresses[0].trim()).to.equal(email)
+Cypress.Commands.add(
+  'performEmailVerification',
+  ({ expect: { email, redirectTo } = {} } = {}) =>
+    cy.getMail().then((message) => {
+      expect(message.subject.trim()).to.equal(
+        'Please verify your email address'
+      )
+      expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
+      expect(message.toAddresses).to.have.length(1)
+      expect(message.toAddresses[0].trim()).to.equal(email)
 
-    const link = parseHtml(message.body).querySelector('a')
-    expect(link).to.not.be.null
-    expect(link.href).to.contain(APP_URL)
+      const link = parseHtml(message.body).querySelector('a')
+      expect(link).to.not.be.null
+      expect(link.href).to.contain(APP_URL)
 
-    cy.visit(link.href)
-    cy.location('pathname').should('not.contain', 'verify')
-    cy.session().should(assertVerifiableAddress({ isVerified: true, email }))
-  })
+      if (redirectTo) {
+        cy.request({ url: link.href, followRedirect: false }).should(
+          (response) => {
+            expect(response.status).to.eq(302)
+            expect(response.redirectedToUrl).to.eq(redirectTo)
+          }
+        )
+      } else {
+        cy.visit(link.href)
+        cy.location('pathname').should('not.contain', 'verify')
+      }
+    })
+)
+
+Cypress.Commands.add(
+  'verifyEmail',
+  ({ expect: { email, redirectTo } = {} } = {}) =>
+    cy.performEmailVerification({ expect: { email, redirectTo } }).then(() => {
+      cy.session().should(assertVerifiableAddress({ email, isVerified: true }))
+    })
 )
 
 // Uses the verification email but waits so that it expires

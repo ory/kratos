@@ -15,10 +15,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Patch identities by ID (not yet implemented)
 
-### Synopsis
-
-Patch identities by ID (not yet implemented)
-
 ```
 kratos identities patch <file.json [file-2.json [file-3.json] ...]> [flags]
 ```
@@ -33,7 +29,7 @@ kratos identities patch <file.json [file-2.json [file-3.json] ...]> [flags]
 
 ```
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
-  -f, --format string     Set the output format. One of table, json, and json-pretty.
+  -f, --format string     Set the output format. One of table, json, and json-pretty. (default "default")
   -q, --quiet             Be quiet with output printing.
 ```
 

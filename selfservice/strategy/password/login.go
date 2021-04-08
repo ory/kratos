@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ory/x/pkgerx"
+	"github.com/ory/kratos/hash"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -21,6 +20,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/x"
 )
 
@@ -31,7 +31,8 @@ const (
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.d.CSRFHandler().IgnorePath(RouteLogin)
 
-	r.POST(RouteLogin, s.handleLogin)
+	wrappedHandleLogin := strategy.IsDisabled(s.d, s.ID().String(), s.handleLogin)
+	r.POST(RouteLogin, wrappedHandleLogin)
 }
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Flow, payload *CompleteSelfServiceLoginFlowWithPasswordMethod, err error) {
@@ -109,8 +110,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	var p CompleteSelfServiceLoginFlowWithPasswordMethod
-	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(pkgerx.MustRead(
-		pkger.Open("github.com/ory/kratos:/selfservice/strategy/password/.schema/login.schema.json")))); err != nil {
+	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema)); err != nil {
 		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}
@@ -148,7 +148,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if err := s.d.Hasher().Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
+	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
 		s.handleLoginError(w, r, ar, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 		return
 	}
@@ -177,7 +177,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 	}
 
 	f := &form.HTMLForm{
-		Action: sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteLogin)).String(),
+		Action: sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteLogin)).String(),
 		Method: "POST",
 		Fields: form.Fields{{
 			Name:     "identifier",

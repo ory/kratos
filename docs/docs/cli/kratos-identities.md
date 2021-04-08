@@ -14,15 +14,11 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Tools to interact with remote identities
 
-### Synopsis
-
-Tools to interact with remote identities
-
 ### Options
 
 ```
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
-  -f, --format string     Set the output format. One of table, json, and json-pretty.
+  -f, --format string     Set the output format. One of table, json, and json-pretty. (default "default")
   -h, --help              help for identities
   -q, --quiet             Be quiet with output printing.
 ```

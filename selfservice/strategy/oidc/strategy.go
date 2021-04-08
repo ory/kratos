@@ -32,6 +32,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -53,6 +54,7 @@ type dependencies interface {
 	x.LoggingProvider
 	x.CookieProvider
 	x.CSRFTokenGeneratorProvider
+	x.WriterProvider
 
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider
@@ -89,8 +91,8 @@ func isForced(req interface{}) bool {
 	return ok && f.IsForced()
 }
 
-// Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
-// and registration via OpenID Providers.
+// Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy and selfservice.SettingsStrategy.
+// It supports login, registration and settings via OpenID Providers.
 type Strategy struct {
 	d         dependencies
 	f         *fetcher.Fetcher
@@ -129,16 +131,18 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 }
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
+	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.handleCallback)
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
-		r.GET(RouteCallback, s.handleCallback)
+		r.GET(RouteCallback, wrappedHandleCallback)
 	}
 
+	wrappedHandleAuth := strategy.IsDisabled(s.d, s.ID().String(), s.handleAuth)
 	if handle, _, _ := r.Lookup("POST", RouteAuth); handle == nil {
-		r.POST(RouteAuth, s.handleAuth)
+		r.POST(RouteAuth, wrappedHandleAuth)
 	}
 
 	if handle, _, _ := r.Lookup("GET", RouteAuth); handle == nil {
-		r.GET(RouteAuth, s.handleAuth)
+		r.GET(RouteAuth, wrappedHandleAuth)
 	}
 }
 
@@ -167,7 +171,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	provider, err := s.provider(r.Context(), pid)
+	provider, err := s.provider(r.Context(), r, pid)
 	if err != nil {
 		s.handleError(w, r, rid, pid, nil, err)
 		return
@@ -320,7 +324,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	provider, err := s.provider(r.Context(), pid)
+	provider, err := s.provider(r.Context(), r, pid)
 	if err != nil {
 		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
@@ -370,9 +374,9 @@ func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (s *Strategy) authURL(ctx context.Context, flowID uuid.UUID) string {
+func (s *Strategy) authURL(ctx context.Context, r *http.Request, flowID uuid.UUID) string {
 	return urlx.AppendPaths(
-		urlx.Copy(s.d.Config(ctx).SelfPublicURL()),
+		urlx.Copy(s.d.Config(ctx).SelfPublicURL(r)),
 		strings.Replace(
 			RouteAuth, ":flow", flowID.String(), 1,
 		),
@@ -385,7 +389,7 @@ func (s *Strategy) populateMethod(r *http.Request, flowID uuid.UUID) (*FlowMetho
 		return nil, err
 	}
 
-	f := form.NewHTMLForm(s.authURL(r.Context(), flowID))
+	f := form.NewHTMLForm(s.authURL(r.Context(), r, flowID))
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
 
@@ -406,10 +410,10 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	return &c, nil
 }
 
-func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
+func (s *Strategy) provider(ctx context.Context, r *http.Request, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
-	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL()); err != nil {
+	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL(r)); err != nil {
 		return nil, err
 	} else {
 		return provider, nil

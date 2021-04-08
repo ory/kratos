@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/corpx"
+
 	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +38,7 @@ import (
 )
 
 func init() {
-	internal.RegisterFakes()
+	corpx.RegisterFakes()
 }
 
 func TestAdminStrategy(t *testing.T) {
@@ -60,8 +62,9 @@ func TestAdminStrategy(t *testing.T) {
 	}
 
 	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
+		uuid := models.UUID(x.NewUUID().String())
 		_, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(
-			&models.CreateRecoveryLink{IdentityID: models.UUID(x.NewUUID().String())}))
+			&models.CreateRecoveryLink{IdentityID: &uuid}))
 		require.IsType(t, err, new(admin.CreateRecoveryLinkNotFound), "%T", err)
 	})
 
@@ -69,9 +72,9 @@ func TestAdminStrategy(t *testing.T) {
 		id := identity.Identity{Traits: identity.Traits(`{}`)}
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
-
+		uuid := models.UUID(id.ID.String())
 		_, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(
-			&models.CreateRecoveryLink{IdentityID: models.UUID(id.ID.String())}))
+			&models.CreateRecoveryLink{IdentityID: &uuid}))
 		require.IsType(t, err, new(admin.CreateRecoveryLinkBadRequest), "%T", err)
 	})
 
@@ -81,9 +84,10 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
+		uuid := models.UUID(id.ID.String())
 		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
 			WithBody(&models.CreateRecoveryLink{
-				IdentityID: models.UUID(id.ID.String()),
+				IdentityID: &uuid,
 				ExpiresIn:  "100ms",
 			}))
 		require.NoError(t, err)
@@ -105,8 +109,9 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
+		uuid := models.UUID(id.ID.String())
 		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
-			WithBody(&models.CreateRecoveryLink{IdentityID: models.UUID(id.ID.String())}))
+			WithBody(&models.CreateRecoveryLink{IdentityID: &uuid}))
 		require.NoError(t, err)
 
 		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second))
@@ -125,6 +130,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.Len(t, sr.Payload.Messages, 1)
 		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Payload.Messages[0].Text)
 	})
+
 }
 
 func TestRecovery(t *testing.T) {
@@ -179,7 +185,7 @@ func TestRecovery(t *testing.T) {
 		assert.EqualValues(t, models.FormFields{csrfField,
 			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
 		}, method.Config.Fields)
-		assert.EqualValues(t, public.URL+link.RouteRecovery+"?flow="+string(rs.Payload.ID), *method.Config.Action)
+		assert.EqualValues(t, public.URL+link.RouteRecovery+"?flow="+string(*rs.Payload.ID), *method.Config.Action)
 		assert.Empty(t, method.Config.Messages)
 		assert.Empty(t, rs.Payload.Messages)
 	})
@@ -301,7 +307,7 @@ func TestRecovery(t *testing.T) {
 		res, err := c.PostForm(pointerx.StringR(method.Action), url.Values{"email": {recoveryEmail}})
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Payload.ID)
+		assert.NotContains(t, res.Request.URL.String(), "flow="+*rs.Payload.ID)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 	})
 
@@ -337,5 +343,57 @@ func TestRecovery(t *testing.T) {
 
 		require.Len(t, sr.Payload.Messages, 1)
 		assert.Contains(t, sr.Payload.Messages[0].Text, "The recovery flow expired")
+	})
+}
+
+func TestDisabledEndpoint(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	initViper(t, conf)
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", false)
+
+	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
+	adminSDK := testhelpers.NewSDKClient(adminTS)
+
+	t.Run("role=admin", func(t *testing.T) {
+		t.Run("description=can not create recovery link when link method is disabled", func(t *testing.T) {
+			id := identity.Identity{Traits: identity.Traits(`{"email":"recovery-endpoint-disabled@ory.sh"}`)}
+
+			require.NoError(t, reg.IdentityManager().Create(context.Background(),
+				&id, identity.ManagerAllowWriteProtectedTraits))
+
+			uuid := models.UUID(id.ID.String())
+			rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
+				WithBody(&models.CreateRecoveryLink{IdentityID: &uuid}))
+			assert.Nil(t, rl)
+			require.IsType(t, new(admin.CreateRecoveryLinkNotFound), err, "%s", err)
+
+			br, _ := err.(*admin.CreateRecoveryLinkNotFound)
+			assert.Contains(t, br.Payload.Error.Reason, "This endpoint was disabled by system administrator")
+		})
+	})
+
+	t.Run("role=public", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+		t.Run("description=can not recover an account by get request when link method is disabled", func(t *testing.T) {
+			u := publicTS.URL + link.RouteRecovery + "?token=endpoint-disabled"
+			res, err := c.Get(u)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+
+		t.Run("description=can not recover an account by post request when link method is disabled", func(t *testing.T) {
+			u := publicTS.URL + link.RouteRecovery
+			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
 	})
 }

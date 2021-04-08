@@ -1,6 +1,6 @@
 module github.com/ory/kratos-client-go
 
-go 1.15
+go 1.16
 
 require (
 	github.com/go-openapi/errors v0.19.9

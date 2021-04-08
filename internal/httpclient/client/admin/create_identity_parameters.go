@@ -18,56 +18,70 @@ import (
 	"github.com/ory/kratos-client-go/models"
 )
 
-// NewCreateIdentityParams creates a new CreateIdentityParams object
-// with the default values initialized.
+// NewCreateIdentityParams creates a new CreateIdentityParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewCreateIdentityParams() *CreateIdentityParams {
-	var ()
 	return &CreateIdentityParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewCreateIdentityParamsWithTimeout creates a new CreateIdentityParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewCreateIdentityParamsWithTimeout(timeout time.Duration) *CreateIdentityParams {
-	var ()
 	return &CreateIdentityParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewCreateIdentityParamsWithContext creates a new CreateIdentityParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewCreateIdentityParamsWithContext(ctx context.Context) *CreateIdentityParams {
-	var ()
 	return &CreateIdentityParams{
-
 		Context: ctx,
 	}
 }
 
 // NewCreateIdentityParamsWithHTTPClient creates a new CreateIdentityParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewCreateIdentityParamsWithHTTPClient(client *http.Client) *CreateIdentityParams {
-	var ()
 	return &CreateIdentityParams{
 		HTTPClient: client,
 	}
 }
 
-/*CreateIdentityParams contains all the parameters to send to the API endpoint
-for the create identity operation typically these are written to a http.Request
+/* CreateIdentityParams contains all the parameters to send to the API endpoint
+   for the create identity operation.
+
+   Typically these are written to a http.Request.
 */
 type CreateIdentityParams struct {
 
-	/*Body*/
+	// Body.
 	Body *models.CreateIdentity
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the create identity params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CreateIdentityParams) WithDefaults() *CreateIdentityParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the create identity params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CreateIdentityParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the create identity params
@@ -121,7 +135,6 @@ func (o *CreateIdentityParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 		return err
 	}
 	var res []error
-
 	if o.Body != nil {
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err

@@ -6,13 +6,15 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// ErrorContainer ErrorContainer error container
+// ErrorContainer error container
 //
 // swagger:model errorContainer
 type ErrorContainer struct {
@@ -24,7 +26,7 @@ type ErrorContainer struct {
 	// id
 	// Required: true
 	// Format: uuid4
-	ID UUID `json:"id"`
+	ID *UUID `json:"id"`
 }
 
 // Validate validates this error container
@@ -47,8 +49,8 @@ func (m *ErrorContainer) Validate(formats strfmt.Registry) error {
 
 func (m *ErrorContainer) validateErrors(formats strfmt.Registry) error {
 
-	if err := validate.Required("errors", "body", m.Errors); err != nil {
-		return err
+	if m.Errors == nil {
+		return errors.Required("errors", "body", nil)
 	}
 
 	return nil
@@ -56,11 +58,49 @@ func (m *ErrorContainer) validateErrors(formats strfmt.Registry) error {
 
 func (m *ErrorContainer) validateID(formats strfmt.Registry) error {
 
-	if err := m.ID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("id")
-		}
+	if err := validate.Required("id", "body", m.ID); err != nil {
 		return err
+	}
+
+	if err := validate.Required("id", "body", m.ID); err != nil {
+		return err
+	}
+
+	if m.ID != nil {
+		if err := m.ID.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("id")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this error container based on the context it is used
+func (m *ErrorContainer) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ErrorContainer) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.ID != nil {
+		if err := m.ID.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("id")
+			}
+			return err
+		}
 	}
 
 	return nil

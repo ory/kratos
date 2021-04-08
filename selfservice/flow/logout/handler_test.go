@@ -20,7 +20,6 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/nosurf"
-	"github.com/ory/x/logrusx"
 )
 
 func TestLogoutHandler(t *testing.T) {
@@ -32,7 +31,7 @@ func TestLogoutHandler(t *testing.T) {
 
 	router := x.NewRouterPublic()
 	handler.RegisterPublicRoutes(router)
-	reg.WithCSRFHandler(x.NewCSRFHandler(router, reg.Writer(), logrusx.New("", ""), "/", "", false))
+	reg.WithCSRFHandler(x.NewCSRFHandler(router, reg))
 	ts := httptest.NewServer(reg.CSRFHandler())
 	defer ts.Close()
 
@@ -79,7 +78,7 @@ func TestLogoutHandler(t *testing.T) {
 
 		var found bool
 		for _, c := range res.Cookies() {
-			if c.Name == session.DefaultSessionCookieName {
+			if c.Name == config.DefaultSessionCookieName {
 				found = true
 			}
 		}

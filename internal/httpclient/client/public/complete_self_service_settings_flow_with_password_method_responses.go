@@ -59,7 +59,6 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodReader) ReadResponse(r
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -70,7 +69,7 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodOK() *CompleteSelfServi
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodOK{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithPasswordMethodOK handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithPasswordMethodOK describes a response with status code 200, with default header values.
 
 settingsViaApiResponse
 */
@@ -81,7 +80,6 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethodOK struct {
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodOK) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodOK  %+v", 200, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodOK) GetPayload() *models.SettingsViaAPIResponse {
 	return o.Payload
 }
@@ -103,10 +101,9 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodFound() *CompleteSelfSe
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodFound{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithPasswordMethodFound handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithPasswordMethodFound describes a response with status code 302, with default header values.
 
-Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.
+Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201.
 */
 type CompleteSelfServiceSettingsFlowWithPasswordMethodFound struct {
 }
@@ -125,7 +122,7 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest() *CompleteS
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest describes a response with status code 400, with default header values.
 
 settingsFlow
 */
@@ -136,7 +133,6 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest struct {
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest) GetPayload() *models.SettingsFlow {
 	return o.Payload
 }
@@ -158,7 +154,7 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized() *Complet
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized describes a response with status code 401, with default header values.
 
 genericError
 */
@@ -169,7 +165,6 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized struct {
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -191,7 +186,7 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodForbidden() *CompleteSe
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden describes a response with status code 403, with default header values.
 
 genericError
 */
@@ -202,7 +197,6 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden struct {
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodForbidden  %+v", 403, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -224,7 +218,7 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError() *
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -235,7 +229,6 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError struct
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

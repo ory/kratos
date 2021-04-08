@@ -107,9 +107,9 @@ local claims = {
 ```
 
 Now, enable the Discord provider in the ORY Kratos config located at
-`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
-```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
 selfservice:
   methods:
@@ -203,9 +203,9 @@ local claims = {
 ```
 
 Now, enable the Slack provider in the ORY Kratos config located at
-`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
-```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
 selfservice:
   methods:
@@ -294,9 +294,9 @@ local claims = {
 ```
 
 Now, enable the GitHub provider in the ORY Kratos config located at
-`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
-```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
 selfservice:
   methods:
@@ -365,9 +365,9 @@ local claims = {
 ```
 
 Now, enable the GitLab provider in the ORY Kratos config located at
-`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
-```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
 selfservice:
   methods:
@@ -438,9 +438,9 @@ local claims = std.extVar('claims');
 ```
 
 Enable the Microsoft provider in the ORY Kratos config located at
-`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
-```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 selfservice:
   methods:
     oidc:
@@ -470,9 +470,10 @@ There are two ways to use the `microsoft` provider for authentication:
    or `contoso.onmicrosoft.com`.
 2. For authenticating any user in the Microsoft identity platform, set the
    `tenant` value to either:
-   - `organizations` to allow users with work or school accounts, or
-   - `consumers` to allow users with personal accounts, or
-   - `common` to allow both kind of accounts.
+
+- `organizations` to allow users with work or school accounts, or
+- `consumers` to allow users with personal accounts, or
+- `common` to allow both kind of accounts.
 
 ## Twitch
 
@@ -521,9 +522,9 @@ local claims = {
 ```
 
 Now, enable the Twitch provider in the ORY Kratos config located at
-`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
-```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
 selfservice:
   methods:
@@ -551,7 +552,176 @@ selfservice:
 Next, open the login endpoint of the SecureApp and you should see the Twitch
 Login option!
 
-## Google, LinkedIn, Facebook
+## Facebook
+
+**Create Facebook Application**
+
+To set up "Sign in with Facebook" you first need a
+[Facebook Developer Account](https://developers.facebook.com/docs/development/register).
+
+Create a
+[Facebook OAuth2 Application](https://developers.facebook.com/docs/development/create-an-app).
+
+Add a "Facebook Login" product to this application.
+
+Select "Settings" in the Products menu.
+
+Set the "Valid OAuth Redirect URIs" to:
+
+```
+https://127.0.0.1:4433/self-service/methods/oidc/callback/facebook
+```
+
+The pattern of this URL is:
+
+```
+https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+Facebook requires https the redirect URIs!
+
+:::note
+
+While you can use
+[Facebook as an OIDC identity provider](https://developers.facebook.com/docs/facebook-login/),
+Facebook only returns access_token and not id_token. Therefore, ORY Kratos makes
+a request to
+[Facebook's graph.facebook.com/me API](https://graph.facebook.com/me) and adds
+the user info to `std.extVar('claims')`.
+
+:::
+
+**Configuring Kratos**
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.facebook.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.facebook.jsonnet"
+local claims = std.extVar('claims');
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // It is assumed that Facebook requires a email to be verifed before accessable via Oauth (because they don't provide an email_verified field).
+      //
+      // The email might be empty if the user is not allowed to an email scope.
+      [if "email" in claims then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the Facebook provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: facebook # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: facebook
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Facebook app
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Facebook app
+            mapper_url: file:///etc/config/kratos/oidc.facebook.jsonnet
+            scope:
+              - email # required for email and email_verified claims in the near future
+                # other supported scopes: user_gender, user_birthday
+```
+
+Next, open the login endpoint of the SecureApp and you should see the Facebook
+Login option!
+
+## Google
+
+**Set up on Google Cloud Platform**
+
+1. Create an
+   [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
+2. Create
+   [OAuth 2.0 Client IDs](https://console.cloud.google.com/apis/credentials)
+
+In the new _OAuth 2.0 Client ID_, you will need the `Client ID` and
+`Client secret`.
+
+**Configuring Kratos**
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.google.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.google.jsonnet"
+local claims = {
+  email_verified: true
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+      // additional claims
+      // please also see the `Google specific claims` section
+      first_name: claims.given_name,
+      last_name: claims.family_name,
+      [if "hd" in claims && claims.email_verified then "hd" else null]: claims.hd,
+    },
+  },
+}
+```
+
+Now, enable the Google provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: google # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: google
+            client_id: .... # Replace this with the OAuth2 Client ID
+            client_secret: .... # Replace this with the OAuth2 Client secret
+            mapper_url: file:///etc/config/kratos/oidc.google.jsonnet
+            scope:
+              - email
+              - profile
+              # other supported scopes can be found in Google OAuth 2.0 dev docs
+            requested_claims:
+              id_token:
+                email:
+                  essential: true
+                email_verified:
+                  essential: true
+                given_name:
+                  essential: true
+                family_name: null
+                hd: null # If you want the G Suite domain
+```
+
+**Google specific claims**
+
+- `hd`: The hosted G Suite domain of the user. Provided only if the user belongs
+  to a hosted domain. For a given email account with custom domain
+  `example.com` - `user1@example.com` would produce `example.com` in the `hd`
+  claim.
+
+Please look at the Google developer documentation which can be found
+[here](https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload)
+.
+
+## LinkedIn
 
 Connecting with other Social Sign In providers will be very similar to the
 GitHub flow. If you've managed to do it, add to this document by writing it down

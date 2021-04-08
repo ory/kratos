@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/corpx"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,7 +38,7 @@ import (
 )
 
 func init() {
-	internal.RegisterFakes()
+	corpx.RegisterFakes()
 }
 
 func newIdentityWithPassword(email string) *identity.Identity {
@@ -154,7 +156,7 @@ func TestStrategyTraits(t *testing.T) {
 	t.Run("description=hydrate the proper fields", func(t *testing.T) {
 		var run = func(t *testing.T, id *identity.Identity, payload *models.SettingsFlow, route string) {
 			assert.NotEmpty(t, payload.Identity)
-			assert.Equal(t, id.ID.String(), string(payload.Identity.ID))
+			assert.Equal(t, id.ID.String(), string(*payload.Identity.ID))
 			assert.JSONEq(t, string(id.Traits), x.MustEncodeJSON(t, payload.Identity.Traits))
 			assert.Equal(t, id.SchemaID, pointerx.StringR(payload.Identity.SchemaID))
 			assert.Equal(t, publicTS.URL+route, pointerx.StringR(payload.RequestURL))
@@ -162,7 +164,7 @@ func TestStrategyTraits(t *testing.T) {
 			f := testhelpers.GetSettingsFlowMethodConfig(t, payload, settings.StrategyProfile)
 
 			assertx.EqualAsJSON(t, &models.SettingsFlowMethodConfig{
-				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(payload.ID)),
+				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(*payload.ID)),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
 					&models.FormField{Name: pointerx.String(form.CSRFTokenName), Required: true, Type: pointerx.String("hidden"), Value: x.FakeCSRFToken},
@@ -490,6 +492,38 @@ func TestStrategyTraits(t *testing.T) {
 			email := "not-john-doe-browser@mail.com"
 			actual := expectSuccess(t, false, browserUser1, payload(email))
 			check(t, email, actual)
+		})
+	})
+}
+func TestDisabledEndpoint(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, false)
+
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
+	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
+
+	t.Run("case=should not submit when profile method is disabled", func(t *testing.T) {
+
+		t.Run("method=GET", func(t *testing.T) {
+			res, err := browserUser1.Get(publicTS.URL + profile.RouteSettings)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, 10000)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+
+		t.Run("method=POST", func(t *testing.T) {
+			res, err := browserUser1.PostForm(publicTS.URL+profile.RouteSettings, url.Values{"age": {"16"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
 	})
 }

@@ -1,0 +1,1 @@
+add_index("courier_messages", ["status"], { "name": "courier_messages_status_idx" })

@@ -112,3 +112,21 @@ func TestFlow(t *testing.T) {
 		})
 	}
 }
+
+func TestGetType(t *testing.T) {
+	for _, ft := range []flow.Type{
+		flow.TypeAPI,
+		flow.TypeBrowser,
+	} {
+		t.Run(fmt.Sprintf("case=%s", ft), func(t *testing.T) {
+			r := &settings.Flow{Type: ft}
+			assert.Equal(t, ft, r.GetType())
+		})
+	}
+}
+
+func TestGetRequestURL(t *testing.T) {
+	expectedURL := "http://foo/bar/baz"
+	f := &settings.Flow{RequestURL: expectedURL}
+	assert.Equal(t, expectedURL, f.GetRequestURL())
+}

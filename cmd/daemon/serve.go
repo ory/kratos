@@ -1,16 +1,14 @@
 package daemon
 
 import (
-	cx "context"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/ory/x/reqlog"
 
+	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/driver/config"
-
-	"github.com/ory/x/stringsx"
 
 	"github.com/rs/cors"
 
@@ -67,6 +65,8 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	defer wg.Done()
 	modifiers := newOptions(opts)
 
+	ctx := cmd.Context()
+
 	c := r.Config(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
@@ -75,29 +75,23 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	router := x.NewRouterPublic()
-	csrf := x.NewCSRFHandler(
-		router,
-		r.Writer(),
-		l,
-		stringsx.Coalesce(c.SelfPublicURL().Path, "/"),
-		c.SelfPublicURL().Hostname(),
-		!c.IsInsecureDevMode(),
-	)
+	csrf := x.NewCSRFHandler(router, r)
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 
-	r.RegisterPublicRoutes(router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL().String()))
+	r.RegisterPublicRoutes(ctx, router)
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
 	n.Use(sqa(cmd, r))
+	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
 	var handler http.Handler = n
-	options, enabled := r.Config(cmd.Context()).CORS("public")
+	options, enabled := r.Config(ctx).CORS("public")
 	if enabled {
 		handler = cors.New(options).Handler(handler)
 	}
@@ -117,6 +111,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
 	defer wg.Done()
 	modifiers := newOptions(opts)
+	ctx := cmd.Context()
 
 	c := r.Config(cmd.Context())
 	l := r.Logger()
@@ -126,12 +121,12 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	}
 
 	router := x.NewRouterAdmin()
-	r.RegisterAdminRoutes(router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
+	r.RegisterAdminRoutes(ctx, router)
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
@@ -160,7 +155,7 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 			ClusterID: metricsx.Hash(
 				strings.Join([]string{
 					d.Config(cmd.Context()).DSN(),
-					d.Config(cmd.Context()).SelfPublicURL().String(),
+					d.Config(cmd.Context()).SelfPublicURL(nil).String(),
 					d.Config(cmd.Context()).SelfAdminURL().String(),
 				}, "|"),
 			),
@@ -221,19 +216,9 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	ctx, cancel := cx.WithCancel(cmd.Context())
-
-	d.Logger().Println("Courier worker started.")
-	if err := graceful.Graceful(func() error {
-		return d.Courier().Work(ctx)
-	}, func(_ cx.Context) error {
-		cancel()
-		return nil
-	}); err != nil {
-		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
+	if d.Config(cmd.Context()).IsBackgroundCourierEnabled() {
+		go courier.Watch(cmd.Context(), d)
 	}
-
-	d.Logger().Println("Courier worker was shutdown gracefully.")
 }
 
 func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args []string) {

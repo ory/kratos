@@ -70,8 +70,9 @@ or the [ORY Chat](https://www.ory.sh/chat).
   [How can I become a part of the community?](#communication)
 
 - I would like to know what I am agreeing to when I contribute to ORY
-  Kratos. Does ORY have
-  [a Contributors License Agreement?](https://cla-assistant.io/ory/)
+  Kratos.
+  Does ORY have
+  [a Contributors License Agreement?](https://cla-assistant.io/ory/kratos)
 
 - I would like updates about new versions of ORY Kratos.
   [How are new releases announced?](https://ory.us10.list-manage.com/subscribe?u=ffb1a878e4ec6c0ed312a3480&id=f605a41b53)
@@ -112,10 +113,8 @@ a few things you can do to help out:
 We use [Slack](https://www.ory.sh/chat). You are welcome to drop in and ask
 questions, discuss bugs and feature requests, talk to other users of ORY, etc.
 
-Check out
-[ORY Kratos Discussions](https://github.com/ory/kratos/discussions). This
-is a great place for in-depth discussions and lots of code examples, logs and
-similar data.
+Check out [ORY Kratos Discussions](https://github.com/ory/kratos/discussions). This is a great place for
+in-depth discussions and lots of code examples, logs and similar data.
 
 You can also join our community hangout, if you want to speak to the ORY team
 directly or ask some questions. You can find more info on the hangouts in
@@ -146,7 +145,7 @@ At least one review from a maintainer is required for all patches (even patches
 from maintainers).
 
 Before your contributions can be merged you need to sign our
-[Contributor License Agreement](https://cla-assistant.io/ory/).
+[Contributor License Agreement](https://cla-assistant.io/ory/kratos).
 
 This agreement defines the terms under which your code is contributed to ORY.
 More specifically it declares that you have the right to, and actually do, grant
@@ -162,8 +161,8 @@ should be merged by the submitter after review.
 
 Please provide documentation when changing, removing, or adding features.
 Documentation resides in the project's
-[docs](https://github.com/ory/kratos/tree/master/docs) folder. Generate API
-and configuration reference documentation using `cd docs; npm run gen`.
+[docs](https://github.com/ory/kratos/tree/master/docs) folder. Generate API and
+configuration reference documentation using `cd docs; npm run gen`.
 
 For further instructions please head over to
 [docs/README.md](https://github.com/ory/kratos/blob/master/README.md).
@@ -209,10 +208,10 @@ please include a note in your commit message explaining why.
 
 ```
 # First you clone the original repository
-git clone git@github.com:ory/Kratos.git
+git clone git@github.com:ory/ory/kratos.git
 
 # Next you add a git remote that is your fork:
-git remote add fork git@github.com:<YOUR-GITHUB-USERNAME-HERE>/Kratos.git
+git remote add fork git@github.com:<YOUR-GITHUB-USERNAME-HERE>/ory/kratos.git
 
 # Next you fetch the latest changes from origin for master:
 git fetch origin
@@ -248,8 +247,8 @@ community a safe place for you and we've got your back.
   marginalized groups.
 - Private harassment is also unacceptable. No matter who you are, if you feel
   you have been or are being harassed or made uncomfortable by a community
-  member, please contact one of the channel ops or a member of the ORY
-  Kratos core team immediately.
+  member, please contact one of the channel ops or a member of the ORY Kratos
+  core team immediately.
 - Likewise any spamming, trolling, flaming, baiting or other attention-stealing
   behaviour is not welcome.
 

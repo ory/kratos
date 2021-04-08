@@ -1,0 +1,51 @@
+identity:
+  default_schema_url: base64://ewogIiRpZCI6ICJodHRwczovL2V4YW1wbGUuY29tL29yeS5zY2hlbWEuanNvbiIsCiAiJHNjaGVtYSI6ICJodHRwOi8vanNvbi1zY2hlbWEub3JnL2RyYWZ0LTA3L3NjaGVtYSMiLAogImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjogZmFsc2UsCiAicHJvcGVydGllcyI6IHsKICAidHJhaXRzIjogewogICAiYWRkaXRpb25hbFByb3BlcnRpZXMiOiBmYWxzZSwKICAgInByb3BlcnRpZXMiOiB7CiAgICAiY29uc2VudCI6IHsKICAgICAiYWRkaXRpb25hbFByb3BlcnRpZXMiOiBmYWxzZSwKICAgICAicHJvcGVydGllcyI6IHsKICAgICAgIm5ld3NsZXR0ZXIiOiB7CiAgICAgICAidGl0bGUiOiAiTmV3c2xldHRlciBzdWJzY3JpcHRpb24iLAogICAgICAgInR5cGUiOiAiYm9vbGVhbiIKICAgICAgfSwKICAgICAgInRvcyI6IHsKICAgICAgICJkZXNjcmlwdGlvbiI6ICJ5eXl5bW1kZCBvZiB3aGVuIHRoaXMgd2FzIGFjY2VwdGVkIiwKICAgICAgICJmb3JtYXQiOiAiZGF0ZS10aW1lIiwKICAgICAgICJ0aXRsZSI6ICJUZXJtcyBvZiBTZXJ2aWNlIiwKICAgICAgICJ0eXBlIjogInN0cmluZyIKICAgICAgfQogICAgIH0sCiAgICAgInJlcXVpcmVkIjogWwogICAgICAidG9zIgogICAgIF0sCiAgICAgInRpdGxlIjogIkNvbnNlbnQiLAogICAgICJ0eXBlIjogIm9iamVjdCIKICAgIH0sCiAgICAiZW1haWwiOiB7CiAgICAgImZvcm1hdCI6ICJlbWFpbCIsCiAgICAgIm9yeS5zaC9rcmF0b3MiOiB7CiAgICAgICJjcmVkZW50aWFscyI6IHsKICAgICAgICJwYXNzd29yZCI6IHsKICAgICAgICAiaWRlbnRpZmllciI6IHRydWUKICAgICAgIH0KICAgICAgfSwKICAgICAgInJlY292ZXJ5IjogewogICAgICAgInZpYSI6ICJlbWFpbCIKICAgICAgfSwKICAgICAgInZlcmlmaWNhdGlvbiI6IHsKICAgICAgICJ2aWEiOiAiZW1haWwiCiAgICAgIH0KICAgICB9LAogICAgICJ0aXRsZSI6ICJFLU1haWwiLAogICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0sCiAgICAibmFtZSI6IHsKICAgICAibWluTGVuZ3RoIjogMSwKICAgICAidGl0bGUiOiAiTmFtZSIsCiAgICAgInR5cGUiOiAic3RyaW5nIgogICAgfQogICB9LAogICAicmVxdWlyZWQiOiBbCiAgICAiZW1haWwiLAogICAgImNvbnNlbnQiLAogICAgIm5hbWUiCiAgIF0sCiAgICJ0eXBlIjogIm9iamVjdCIKICB9CiB9LAogInRpdGxlIjogIlBlcnNvbiIsCiAidHlwZSI6ICJvYmplY3QiCn0=
+secrets:
+  default:
+    - 10yn1c7grc46j6zg284vtynebjpcvakj
+selfservice:
+  default_browser_return_url: "#/definitions/defaultReturnTo"
+  flows:
+    error:
+      ui_url: http://local.oryapis.localhost:8080/error/kratos
+    login:
+      ui_url: http://local.oryapis.localhost:8080/login
+    recovery:
+      enabled: true
+      ui_url: http://local.oryapis.localhost:8080/recovery
+    registration:
+      after: "#/definitions/selfServiceAfterRegistration"
+    settings:
+      privileged_session_max_age: 15m
+      ui_url: http://local.oryapis.localhost:8080/settings
+    verification:
+      enabled: true
+      ui_url: http://local.oryapis.localhost:8080/verification
+  methods:
+    link:
+      enabled: true
+    password:
+      enabled: true
+  whitelisted_return_urls:
+    - http://localhost
+    - http://localhost:4000
+serve:
+  public:
+    base_url:  "#/definitions/baseUrl"
+    domain_aliases:
+      - base_path: /.ory/kratos/public
+        match_domain: localhost
+        scheme: http
+session:
+  cookie:
+    domain: ''
+    name: ory_session_ory
+    path: /
+
+dsn: foo
+
+courier:
+  template_override_path: foo
+  smtp:
+    connection_uri: smtps://foo:bar@my-mailserver:1234/
+    from_address: no-reply@ory.kratos.sh

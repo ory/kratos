@@ -46,7 +46,7 @@ func TestSessionIssuer(t *testing.T) {
 			assert.Equal(t, sid, got.ID)
 			assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
 
-			assert.Contains(t, w.Header().Get("Set-Cookie"), session.DefaultSessionCookieName)
+			assert.Contains(t, w.Header().Get("Set-Cookie"), config.DefaultSessionCookieName)
 		})
 
 		t.Run("flow=api", func(t *testing.T) {

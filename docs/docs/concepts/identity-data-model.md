@@ -71,8 +71,8 @@ traits:
 
 Identities are
 
-- `created` - via API or self-service registration);
-- `updated` - via API or self-service settings, account recovery, ...;
+- `created` - via API or self-service registration;
+- `updated` - via API or self-service settings, account recovery, etc.;
 - `disabled` - not yet implemented, see
   [#598](https://github.com/ory/kratos/issues/598);
 - `deleted` - via API or with a self-service flow (not yet implemented see
@@ -82,7 +82,7 @@ The identity state is therefore `active` or `disabled` (not yet implemented see
 [#598](https://github.com/ory/kratos/issues/598))
 
 <Mermaid
-chart={`stateDiagram-v2 [*] --> Active: create Active --> Active: update Active --> Disabled: disable Disabled --> [*]: delete Disabled --> Active: enable`}
+chart={`stateDiagram-v2 [*] --> Active: create Active --> Active: update Active --> Disabled: disable Disabled --> [*]: delete Disabled --> Active: enable `}
 />
 
 ## Identity Traits and JSON Schemas

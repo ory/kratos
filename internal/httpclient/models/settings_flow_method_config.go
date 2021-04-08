@@ -6,13 +6,15 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// SettingsFlowMethodConfig settings flow method config
+// SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig SettingsFlowMethodConfig settings flow method config
 //
 // swagger:model settingsFlowMethodConfig
 type SettingsFlowMethodConfig struct {
@@ -85,7 +87,6 @@ func (m *SettingsFlowMethodConfig) validateFields(formats strfmt.Registry) error
 }
 
 func (m *SettingsFlowMethodConfig) validateMessages(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Messages) { // not required
 		return nil
 	}
@@ -103,6 +104,48 @@ func (m *SettingsFlowMethodConfig) validateMessages(formats strfmt.Registry) err
 func (m *SettingsFlowMethodConfig) validateMethod(formats strfmt.Registry) error {
 
 	if err := validate.Required("method", "body", m.Method); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this settings flow method config based on the context it is used
+func (m *SettingsFlowMethodConfig) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateFields(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateMessages(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *SettingsFlowMethodConfig) contextValidateFields(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Fields.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("fields")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *SettingsFlowMethodConfig) contextValidateMessages(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Messages.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("messages")
+		}
 		return err
 	}
 

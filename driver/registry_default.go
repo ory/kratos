@@ -7,6 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/luna-duclos/instrumentedsql"
+	"github.com/luna-duclos/instrumentedsql/opentracing"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/ory/kratos/metrics/prometheus"
@@ -56,7 +59,6 @@ import (
 type RegistryDefault struct {
 	rwl sync.RWMutex
 	l   *logrusx.Logger
-	a   *logrusx.Logger
 	c   *config.Config
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
@@ -68,7 +70,6 @@ type RegistryDefault struct {
 	healthxHandler *healthx.Handler
 	metricsHandler *prometheus.Handler
 
-	courier   *courier.Courier
 	persister persistence.Persister
 
 	hookVerifier         *hook.Verifier
@@ -84,7 +85,6 @@ type RegistryDefault struct {
 	schemaHandler *schema.Handler
 
 	sessionHandler *session.Handler
-	sessionsStore  *sessions.CookieStore
 	sessionManager session.Manager
 
 	passwordHasher    hash.Hasher
@@ -117,13 +117,7 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies              []interface{}
-	loginStrategies                    []login.Strategy
-	activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter
-	registrationStrategies             []registration.Strategy
-	profileStrategies                  []settings.Strategy
-	recoveryStrategies                 []recovery.Strategy
-	verificationStrategies             []verification.Strategy
+	selfserviceStrategies []interface{}
 
 	buildVersion string
 	buildHash    string
@@ -133,36 +127,31 @@ type RegistryDefault struct {
 }
 
 func (m *RegistryDefault) Audit() *logrusx.Logger {
-	if m.a == nil {
-		m.a = logrusx.NewAudit("ORY Kratos", config.Version)
-	}
-	return m.a
+	return m.Logger().WithField("audience", "audit")
 }
 
-func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
+func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.RouterPublic) {
 	m.LoginHandler().RegisterPublicRoutes(router)
 	m.RegistrationHandler().RegisterPublicRoutes(router)
 	m.LogoutHandler().RegisterPublicRoutes(router)
 	m.SettingsHandler().RegisterPublicRoutes(router)
-	m.LoginStrategies().RegisterPublicRoutes(router)
-	m.SettingsStrategies().RegisterPublicRoutes(router)
-	m.RegistrationStrategies().RegisterPublicRoutes(router)
+	m.AllLoginStrategies().RegisterPublicRoutes(router)
+	m.AllSettingsStrategies().RegisterPublicRoutes(router)
+	m.AllRegistrationStrategies().RegisterPublicRoutes(router)
 	m.SessionHandler().RegisterPublicRoutes(router)
 	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	m.SchemaHandler().RegisterPublicRoutes(router)
 
-	if m.c.SelfServiceFlowRecoveryEnabled() {
-		m.RecoveryStrategies().RegisterPublicRoutes(router)
-		m.RecoveryHandler().RegisterPublicRoutes(router)
-	}
+	m.AllRecoveryStrategies().RegisterPublicRoutes(router)
+	m.RecoveryHandler().RegisterPublicRoutes(router)
 
 	m.VerificationHandler().RegisterPublicRoutes(router)
-	m.VerificationStrategies().RegisterPublicRoutes(router)
+	m.AllVerificationStrategies().RegisterPublicRoutes(router)
 
-	m.HealthHandler().SetRoutes(router.Router, false)
+	m.HealthHandler(ctx).SetHealthRoutes(router.Router, false)
 }
 
-func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
+func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.RouterAdmin) {
 	m.RegistrationHandler().RegisterAdminRoutes(router)
 	m.LoginHandler().RegisterAdminRoutes(router)
 	m.SchemaHandler().RegisterAdminRoutes(router)
@@ -171,21 +160,20 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 	m.SessionHandler().RegisterAdminRoutes(router)
 	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
 
-	if m.c.SelfServiceFlowRecoveryEnabled() {
-		m.RecoveryHandler().RegisterAdminRoutes(router)
-		m.RecoveryStrategies().RegisterAdminRoutes(router)
-	}
+	m.RecoveryHandler().RegisterAdminRoutes(router)
+	m.AllRecoveryStrategies().RegisterAdminRoutes(router)
 
 	m.VerificationHandler().RegisterAdminRoutes(router)
-	m.VerificationStrategies().RegisterAdminRoutes(router)
+	m.AllVerificationStrategies().RegisterAdminRoutes(router)
 
-	m.HealthHandler().SetRoutes(router.Router, true)
+	m.HealthHandler(ctx).SetHealthRoutes(router.Router, true)
+	m.HealthHandler(ctx).SetVersionRoutes(router.Router)
 	m.MetricsHandler().SetRoutes(router.Router)
 }
 
-func (m *RegistryDefault) RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
-	m.RegisterAdminRoutes(admin)
-	m.RegisterPublicRoutes(public)
+func (m *RegistryDefault) RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin) {
+	m.RegisterAdminRoutes(ctx, admin)
+	m.RegisterPublicRoutes(ctx, public)
 }
 
 func NewRegistryDefault() *RegistryDefault {
@@ -199,15 +187,31 @@ func (m *RegistryDefault) WithLogger(l *logrusx.Logger) Registry {
 
 func (m *RegistryDefault) LogoutHandler() *logout.Handler {
 	if m.selfserviceLogoutHandler == nil {
-		m.selfserviceLogoutHandler = logout.NewHandler(m, m.c)
+		m.selfserviceLogoutHandler = logout.NewHandler(m)
 	}
 	return m.selfserviceLogoutHandler
 }
 
-func (m *RegistryDefault) HealthHandler() *healthx.Handler {
+func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 	if m.healthxHandler == nil {
 		m.healthxHandler = healthx.NewHandler(m.Writer(), config.Version,
-			healthx.ReadyCheckers{"database": m.Ping})
+			healthx.ReadyCheckers{
+				"database": func(_ *http.Request) error {
+					return m.Ping()
+				},
+				"migrations": func(r *http.Request) error {
+					status, err := m.Persister().MigrationStatus(r.Context())
+					if err != nil {
+						return err
+					}
+
+					if status.HasPending() {
+						return errors.Errorf("migrations have not yet been fully applied")
+					}
+
+					return nil
+				},
+			})
 	}
 
 	return m.healthxHandler
@@ -252,52 +256,56 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 	return m.selfserviceStrategies
 }
 
-func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
-	if len(m.registrationStrategies) == 0 {
-		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(registration.Strategy); ok {
-				if m.c.SelfServiceStrategy(string(s.ID())).Enabled {
-					m.registrationStrategies = append(m.registrationStrategies, s)
-				}
+func (m *RegistryDefault) RegistrationStrategies(ctx context.Context) (registrationStrategies registration.Strategies) {
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(registration.Strategy); ok {
+			if m.Config(ctx).SelfServiceStrategy(string(s.ID())).Enabled {
+				registrationStrategies = append(registrationStrategies, s)
 			}
 		}
 	}
-	return m.registrationStrategies
+	return
 }
 
-func (m *RegistryDefault) LoginStrategies() login.Strategies {
-	if len(m.loginStrategies) == 0 {
-		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(login.Strategy); ok {
-				if m.c.SelfServiceStrategy(string(s.ID())).Enabled {
-					m.loginStrategies = append(m.loginStrategies, s)
-				}
-			}
+func (m *RegistryDefault) AllRegistrationStrategies() registration.Strategies {
+	var registrationStrategies []registration.Strategy
+
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(registration.Strategy); ok {
+			registrationStrategies = append(registrationStrategies, s)
 		}
 	}
-	return m.loginStrategies
+	return registrationStrategies
 }
 
-func (m *RegistryDefault) VerificationStrategies() verification.Strategies {
-	if len(m.verificationStrategies) == 0 {
-		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(verification.Strategy); ok {
-				m.verificationStrategies = append(m.verificationStrategies, s)
+func (m *RegistryDefault) LoginStrategies(ctx context.Context) (loginStrategies login.Strategies) {
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(login.Strategy); ok {
+			if m.Config(ctx).SelfServiceStrategy(string(s.ID())).Enabled {
+				loginStrategies = append(loginStrategies, s)
 			}
 		}
 	}
-	return m.verificationStrategies
+	return
 }
 
-func (m *RegistryDefault) ActiveCredentialsCounterStrategies(ctx context.Context) []identity.ActiveCredentialsCounter {
-	if len(m.activeCredentialsCounterStrategies) == 0 {
-		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(identity.ActiveCredentialsCounter); ok {
-				m.activeCredentialsCounterStrategies = append(m.activeCredentialsCounterStrategies, s)
-			}
+func (m *RegistryDefault) AllLoginStrategies() login.Strategies {
+	var loginStrategies []login.Strategy
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(login.Strategy); ok {
+			loginStrategies = append(loginStrategies, s)
 		}
 	}
-	return m.activeCredentialsCounterStrategies
+	return loginStrategies
+}
+
+func (m *RegistryDefault) ActiveCredentialsCounterStrategies(ctx context.Context) (activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter) {
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(identity.ActiveCredentialsCounter); ok {
+			activeCredentialsCounterStrategies = append(activeCredentialsCounterStrategies, s)
+		}
+	}
+	return
 }
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {
@@ -350,7 +358,11 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 
 func (m *RegistryDefault) Hasher() hash.Hasher {
 	if m.passwordHasher == nil {
-		m.passwordHasher = hash.NewHasherArgon2(m)
+		if m.c.HasherPasswordHashingAlgorithm() == "bcrypt" {
+			m.passwordHasher = hash.NewHasherBcrypt(m)
+		} else {
+			m.passwordHasher = hash.NewHasherArgon2(m)
+		}
 	}
 	return m.passwordHasher
 }
@@ -369,30 +381,28 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 	return m.errorHandler
 }
 
-func (m *RegistryDefault) CookieManager() sessions.Store {
-	if m.sessionsStore == nil {
-		cs := sessions.NewCookieStore(m.c.SecretsSession()...)
-		cs.Options.Secure = !m.c.IsInsecureDevMode()
-		cs.Options.HttpOnly = true
-		if m.c.SessionDomain() != "" {
-			cs.Options.Domain = m.c.SessionDomain()
-		}
+func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.Store {
+	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
+	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
+	cs.Options.HttpOnly = true
 
-		if m.c.SessionPath() != "" {
-			cs.Options.Path = m.c.SessionPath()
-		}
-
-		if m.c.SessionSameSiteMode() != 0 {
-			cs.Options.SameSite = m.c.SessionSameSiteMode()
-		}
-
-		cs.Options.MaxAge = 0
-		if m.c.SessionPersistentCookie() {
-			cs.Options.MaxAge = int(m.c.SessionLifespan().Seconds())
-		}
-		m.sessionsStore = cs
+	if domain := m.Config(ctx).SessionDomain(); domain != "" {
+		cs.Options.Domain = domain
 	}
-	return m.sessionsStore
+
+	if path := m.Config(ctx).SessionPath(); path != "" {
+		cs.Options.Path = path
+	}
+
+	if sameSite := m.Config(ctx).SessionSameSiteMode(); sameSite != 0 {
+		cs.Options.SameSite = sameSite
+	}
+
+	cs.Options.MaxAge = 0
+	if m.Config(ctx).SessionPersistentCookie() {
+		cs.Options.MaxAge = int(m.Config(ctx).SessionLifespan().Seconds())
+	}
+	return cs
 }
 
 func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.Store {
@@ -454,12 +464,27 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 	bc.Reset()
 	return errors.WithStack(
 		backoff.Retry(func() error {
+			var opts []instrumentedsql.Opt
+			if m.Tracer(ctx).IsLoaded() {
+				opts = []instrumentedsql.Opt{
+					instrumentedsql.WithTracer(opentracing.NewTracer(true)),
+					instrumentedsql.WithOmitArgs(),
+				}
+			}
+
 			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
+			m.Logger().
+				WithField("pool", pool).
+				WithField("idlePool", idlePool).
+				WithField("connMaxLifetime", connMaxLifetime).
+				Debug("Connecting to SQL Database")
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
-				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
-				IdlePool:        idlePool,
-				ConnMaxLifetime: connMaxLifetime,
-				Pool:            pool,
+				URL:                       sqlcon.FinalizeDSN(m.l, cleanedDSN),
+				IdlePool:                  idlePool,
+				ConnMaxLifetime:           connMaxLifetime,
+				Pool:                      pool,
+				UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
+				InstrumentedDriverOptions: opts,
 			})
 			if err != nil {
 				m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
@@ -469,7 +494,7 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 				m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
 				return errors.WithStack(err)
 			}
-			p, err := sql.NewPersister(m, c)
+			p, err := sql.NewPersister(ctx, m, c)
 			if err != nil {
 				m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
 				return err
@@ -480,9 +505,10 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 			}
 
 			// if dsn is memory we have to run the migrations on every start
-			if dbal.InMemoryDSN == m.c.DSN() {
+			if dbal.IsMemorySQLite(m.Config(ctx).DSN()) || m.Config(ctx).DSN() == dbal.SQLiteInMemory || m.Config(ctx).DSN() == dbal.SQLiteSharedInMemory || m.Config(ctx).DSN() == "memory" {
 				m.Logger().Infoln("ORY Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
 				if err := p.MigrateUp(ctx); err != nil {
+					m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
 					return err
 				}
 			}
@@ -493,11 +519,8 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 	)
 }
 
-func (m *RegistryDefault) Courier() *courier.Courier {
-	if m.courier == nil {
-		m.courier = courier.NewSMTP(m, m.c)
-	}
-	return m.courier
+func (m *RegistryDefault) Courier(ctx context.Context) *courier.Courier {
+	return courier.NewSMTP(m, m.Config(ctx))
 }
 
 func (m *RegistryDefault) ContinuityManager() continuity.Manager {

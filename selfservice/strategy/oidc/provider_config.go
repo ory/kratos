@@ -24,6 +24,7 @@ type Configuration struct {
 	// - microsoft
 	// - discord
 	// - slack
+	// - facebook
 	Provider string `json:"provider"`
 
 	// ClientID is the application's Client ID.
@@ -102,6 +103,8 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderDiscord(&p, public), nil
 			case addProviderName("slack"):
 				return NewProviderSlack(&p, public), nil
+			case addProviderName("facebook"):
+				return NewProviderFacebook(&p, public), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}

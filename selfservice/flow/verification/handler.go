@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/herodot"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -88,7 +90,12 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       500: genericError
 //       400: genericError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(), flow.TypeAPI)
+	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
+		return
+	}
+
+	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -119,7 +126,12 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(), flow.TypeBrowser)
+	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
+		return
+	}
+
+	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -165,6 +177,11 @@ type getSelfServiceVerificationFlowParameters struct {
 //       404: genericError
 //       500: genericError
 func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
+		return
+	}
+
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	req, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), rid)
 	if err != nil {
@@ -176,12 +193,12 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		if req.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitBrowserFlow).String())))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitAPIFlow).String())))
 		return
 	}
 

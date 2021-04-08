@@ -6,11 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -27,6 +24,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -87,8 +85,9 @@ func (s *Strategy) SettingsStrategyID() string {
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
 	s.d.CSRFHandler().IgnorePath(RouteSettings)
 
-	public.POST(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.d)))
-	public.GET(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.d)))
+	wrappedHandleSubmit := strategy.IsDisabled(s.d, s.SettingsStrategyID(), s.handleSubmit)
+	public.POST(RouteSettings, s.d.SessionHandler().IsAuthenticated(wrappedHandleSubmit, settings.OnUnauthenticated(s.d)))
+	public.GET(RouteSettings, s.d.SessionHandler().IsAuthenticated(wrappedHandleSubmit, settings.OnUnauthenticated(s.d)))
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, pr *settings.Flow) error {
@@ -101,7 +100,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	schemaCompiler := jsonschema.NewCompiler()
 
 	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
-		urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
+		urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {pr.ID.String()}},
 	).String(), traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
@@ -279,7 +278,7 @@ func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uu
 }
 
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
-	action := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
+	action := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {ar.ID.String()}})
 
 	ar.Methods[settings.StrategyProfile].Config.Reset()
@@ -335,8 +334,7 @@ func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Id
 	if err != nil {
 		return nil, err
 	}
-	raw, err := sjson.SetBytes(pkgerx.MustRead(pkger.Open(
-		"github.com/ory/kratos:/selfservice/strategy/password/.schema/settings.schema.json")),
+	raw, err := sjson.SetBytes(settingsSchema,
 		"properties.traits.$ref", ss.URL.String()+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)

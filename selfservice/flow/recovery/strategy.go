@@ -1,6 +1,7 @@
 package recovery
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -25,7 +26,7 @@ type (
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {
-		RecoveryStrategies() Strategies
+		RecoveryStrategies(ctx context.Context) Strategies
 	}
 )
 

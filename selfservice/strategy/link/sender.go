@@ -2,6 +2,7 @@ package link
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -49,7 +50,7 @@ func NewSender(r senderDependencies) *Sender {
 // SendRecoveryLink sends a recovery link to the specified address. If the address does not exist in the store, an email is
 // still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
 // error.
-func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
+func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recovery.Flow, via identity.VerifiableAddressType, to string) error {
 	s.r.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -120,7 +121,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, address *identity.Reco
 		Info("Sending out recovery email with recovery link.")
 	return s.send(ctx, string(address.Via), templates.NewRecoveryValid(s.r.Config(ctx),
 		&templates.RecoveryValidModel{To: address.Value, RecoveryURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(), RouteRecovery),
+			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(nil), RouteRecovery),
 			url.Values{"token": {token.Token}}).String()}))
 }
 
@@ -135,14 +136,14 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.
 
 	return s.send(ctx, string(address.Via), templates.NewVerificationValid(s.r.Config(ctx),
 		&templates.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(), RouteVerification),
+			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(nil), RouteVerification),
 			url.Values{"token": {token.Token}}).String()}))
 }
 
 func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
 	switch via {
 	case identity.AddressTypeEmail:
-		_, err := s.r.Courier().QueueEmail(ctx, t)
+		_, err := s.r.Courier(ctx).QueueEmail(ctx, t)
 		return err
 	default:
 		return errors.Errorf("received unexpected via type: %s", via)

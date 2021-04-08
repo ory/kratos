@@ -5,11 +5,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -25,6 +22,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -41,16 +39,19 @@ func (s *Strategy) RecoveryStrategyID() string {
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnAuthenticated(s.d)
-	public.GET(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(s.handleRecovery, redirect))
-	public.POST(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(s.handleRecovery, redirect))
+
+	wrappedHandleRecovery := strategy.IsRecoveryDisabled(s.d, s.RecoveryStrategyID(), s.handleRecovery)
+	public.GET(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(wrappedHandleRecovery, redirect))
+	public.POST(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(wrappedHandleRecovery, redirect))
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
-	admin.POST(RouteAdminCreateRecoveryLink, s.createRecoveryLink)
+	wrappedCreateRecoveryLink := strategy.IsDisabled(s.d, s.RecoveryStrategyID(), s.createRecoveryLink)
+	admin.POST(RouteAdminCreateRecoveryLink, wrappedCreateRecoveryLink)
 }
 
 func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) error {
-	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery)).String())
+	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteRecovery)).String())
 
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.SetField(form.Field{Name: "email", Type: "email", Required: true})
@@ -152,7 +153,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	req, err := recovery.NewFlow(expiresIn, s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), flow.TypeBrowser)
+	req, err := recovery.NewFlow(expiresIn, s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
@@ -186,11 +187,12 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 	s.d.Writer().Write(w, r, &recoveryLink{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery),
+			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteRecovery),
 			url.Values{
 				"token": {token.Token},
 				"flow":  {req.ID.String()},
-			}).String()})
+			}).String()},
+		herodot.UnescapedHTML)
 }
 
 // swagger:parameters completeSelfServiceRecoveryFlowWithLinkMethod
@@ -358,7 +360,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 
 	var f *recovery.Flow
 	if !token.FlowID.Valid {
-		f, err = recovery.NewFlow(time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), flow.TypeBrowser)
+		f, err = recovery.NewFlow(time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 		if err != nil {
 			s.handleRecoveryError(w, r, nil, body, err)
 			return
@@ -387,7 +389,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewFlow(s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), ft)
+	req, err := recovery.NewFlow(s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), ft)
 	if err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -404,7 +406,7 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 		recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusFound)
 }
 
@@ -426,7 +428,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), req, identity.VerifiableAddressTypeEmail, body.Body.Email); err != nil {
+	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, req, identity.VerifiableAddressTypeEmail, body.Body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			s.handleRecoveryError(w, r, req, body, err)
 			return
@@ -484,12 +486,9 @@ func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, r
 
 func (s *Strategy) decodeRecovery(r *http.Request, decodeBody bool) (*completeSelfServiceRecoveryFlowWithLinkMethodParameters, error) {
 	var body completeSelfServiceRecoveryFlowWithLinkMethod
-
 	if decodeBody {
 		if err := s.dx.Decode(r, &body,
-			decoderx.MustHTTPRawJSONSchemaCompiler(
-				pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/link/.schema/email.schema.json")),
-			),
+			decoderx.MustHTTPRawJSONSchemaCompiler(emailSchema),
 			decoderx.HTTPDecoderSetValidatePayloads(false),
 			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 			return nil, err

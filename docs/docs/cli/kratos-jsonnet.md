@@ -14,10 +14,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Helpers for linting and formatting JSONNet code
 
-### Synopsis
-
-Helpers for linting and formatting JSONNet code
-
 ### Options
 
 ```

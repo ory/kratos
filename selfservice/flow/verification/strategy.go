@@ -1,6 +1,7 @@
 package verification
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -25,7 +26,7 @@ type (
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {
-		VerificationStrategies() Strategies
+		VerificationStrategies(ctx context.Context) Strategies
 	}
 )
 

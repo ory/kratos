@@ -6,13 +6,15 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// RegistrationViaAPIResponse RegistrationViaAPIResponse RegistrationViaAPIResponse The Response for Registration Flows via API
+// RegistrationViaAPIResponse RegistrationViaAPIResponse The Response for Registration Flows via API
 //
 // swagger:model registrationViaApiResponse
 type RegistrationViaAPIResponse struct {
@@ -79,7 +81,6 @@ func (m *RegistrationViaAPIResponse) validateIdentity(formats strfmt.Registry) e
 }
 
 func (m *RegistrationViaAPIResponse) validateSession(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Session) { // not required
 		return nil
 	}
@@ -100,6 +101,52 @@ func (m *RegistrationViaAPIResponse) validateSessionToken(formats strfmt.Registr
 
 	if err := validate.Required("session_token", "body", m.SessionToken); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this registration via Api response based on the context it is used
+func (m *RegistrationViaAPIResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateIdentity(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateSession(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *RegistrationViaAPIResponse) contextValidateIdentity(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Identity != nil {
+		if err := m.Identity.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("identity")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *RegistrationViaAPIResponse) contextValidateSession(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Session != nil {
+		if err := m.Session.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("session")
+			}
+			return err
+		}
 	}
 
 	return nil

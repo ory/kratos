@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/x/httpx"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
@@ -69,7 +71,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	}
 
 	fakeClient := NewFakeHTTPClient()
-	s.Client = &fakeClient.Client
+	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client))
 
 	t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)

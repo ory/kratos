@@ -2,9 +2,10 @@ package persistence
 
 import (
 	"context"
-	"io"
 
 	"github.com/gobuffalo/pop/v5"
+
+	"github.com/ory/x/popx"
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
@@ -39,9 +40,10 @@ type Persister interface {
 
 	Close(context.Context) error
 	Ping() error
-	MigrationStatus(c context.Context, b io.Writer) error
+	MigrationStatus(c context.Context) (popx.MigrationStatuses, error)
 	MigrateDown(c context.Context, steps int) error
 	MigrateUp(c context.Context) error
+	Migrator() *popx.Migrator
 	GetConnection(ctx context.Context) *pop.Connection
 	Transaction(ctx context.Context, callback func(ctx context.Context, connection *pop.Connection) error) error
 }

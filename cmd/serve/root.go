@@ -62,4 +62,5 @@ func init() {
 
 	serveCmd.PersistentFlags().Bool("sqa-opt-out", false, "Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa")
 	serveCmd.PersistentFlags().Bool("dev", false, "Disables critical security features to make development easier")
+	serveCmd.PersistentFlags().Bool("watch-courier", false, "Run the message courier as a background task, to simplify single-instance setup")
 }

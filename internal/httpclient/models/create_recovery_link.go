@@ -6,13 +6,15 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink create recovery link
+// CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink create recovery link
 //
 // swagger:model CreateRecoveryLink
 type CreateRecoveryLink struct {
@@ -27,7 +29,7 @@ type CreateRecoveryLink struct {
 	// identity id
 	// Required: true
 	// Format: uuid4
-	IdentityID UUID `json:"identity_id"`
+	IdentityID *UUID `json:"identity_id"`
 }
 
 // Validate validates this create recovery link
@@ -49,12 +51,11 @@ func (m *CreateRecoveryLink) Validate(formats strfmt.Registry) error {
 }
 
 func (m *CreateRecoveryLink) validateExpiresIn(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ExpiresIn) { // not required
 		return nil
 	}
 
-	if err := validate.Pattern("expires_in", "body", string(m.ExpiresIn), `^[0-9]+(ns|us|ms|s|m|h)$`); err != nil {
+	if err := validate.Pattern("expires_in", "body", m.ExpiresIn, `^[0-9]+(ns|us|ms|s|m|h)$`); err != nil {
 		return err
 	}
 
@@ -63,11 +64,49 @@ func (m *CreateRecoveryLink) validateExpiresIn(formats strfmt.Registry) error {
 
 func (m *CreateRecoveryLink) validateIdentityID(formats strfmt.Registry) error {
 
-	if err := m.IdentityID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("identity_id")
-		}
+	if err := validate.Required("identity_id", "body", m.IdentityID); err != nil {
 		return err
+	}
+
+	if err := validate.Required("identity_id", "body", m.IdentityID); err != nil {
+		return err
+	}
+
+	if m.IdentityID != nil {
+		if err := m.IdentityID.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("identity_id")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this create recovery link based on the context it is used
+func (m *CreateRecoveryLink) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateIdentityID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *CreateRecoveryLink) contextValidateIdentityID(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.IdentityID != nil {
+		if err := m.IdentityID.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("identity_id")
+			}
+			return err
+		}
 	}
 
 	return nil

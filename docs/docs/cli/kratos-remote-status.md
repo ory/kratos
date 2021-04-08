@@ -16,10 +16,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Print the alive and readiness status of a ORY Kratos instance
 
-### Synopsis
-
-Print the alive and readiness status of a ORY Kratos instance
-
 ```
 kratos remote status [flags]
 ```
@@ -34,7 +30,7 @@ kratos remote status [flags]
 
 ```
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
-  -f, --format string     Set the output format. One of table, json, and json-pretty.
+  -f, --format string     Set the output format. One of table, json, and json-pretty. (default "default")
   -q, --quiet             Be quiet with output printing.
 ```
 

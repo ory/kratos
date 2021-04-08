@@ -53,7 +53,6 @@ func (o *GetSelfServiceLoginFlowReader) ReadResponse(response runtime.ClientResp
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -64,7 +63,7 @@ func NewGetSelfServiceLoginFlowOK() *GetSelfServiceLoginFlowOK {
 	return &GetSelfServiceLoginFlowOK{}
 }
 
-/*GetSelfServiceLoginFlowOK handles this case with default header values.
+/* GetSelfServiceLoginFlowOK describes a response with status code 200, with default header values.
 
 loginFlow
 */
@@ -75,7 +74,6 @@ type GetSelfServiceLoginFlowOK struct {
 func (o *GetSelfServiceLoginFlowOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/flows][%d] getSelfServiceLoginFlowOK  %+v", 200, o.Payload)
 }
-
 func (o *GetSelfServiceLoginFlowOK) GetPayload() *models.LoginFlow {
 	return o.Payload
 }
@@ -97,7 +95,7 @@ func NewGetSelfServiceLoginFlowForbidden() *GetSelfServiceLoginFlowForbidden {
 	return &GetSelfServiceLoginFlowForbidden{}
 }
 
-/*GetSelfServiceLoginFlowForbidden handles this case with default header values.
+/* GetSelfServiceLoginFlowForbidden describes a response with status code 403, with default header values.
 
 genericError
 */
@@ -108,7 +106,6 @@ type GetSelfServiceLoginFlowForbidden struct {
 func (o *GetSelfServiceLoginFlowForbidden) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/flows][%d] getSelfServiceLoginFlowForbidden  %+v", 403, o.Payload)
 }
-
 func (o *GetSelfServiceLoginFlowForbidden) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -130,7 +127,7 @@ func NewGetSelfServiceLoginFlowNotFound() *GetSelfServiceLoginFlowNotFound {
 	return &GetSelfServiceLoginFlowNotFound{}
 }
 
-/*GetSelfServiceLoginFlowNotFound handles this case with default header values.
+/* GetSelfServiceLoginFlowNotFound describes a response with status code 404, with default header values.
 
 genericError
 */
@@ -141,7 +138,6 @@ type GetSelfServiceLoginFlowNotFound struct {
 func (o *GetSelfServiceLoginFlowNotFound) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/flows][%d] getSelfServiceLoginFlowNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetSelfServiceLoginFlowNotFound) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -163,7 +159,7 @@ func NewGetSelfServiceLoginFlowGone() *GetSelfServiceLoginFlowGone {
 	return &GetSelfServiceLoginFlowGone{}
 }
 
-/*GetSelfServiceLoginFlowGone handles this case with default header values.
+/* GetSelfServiceLoginFlowGone describes a response with status code 410, with default header values.
 
 genericError
 */
@@ -174,7 +170,6 @@ type GetSelfServiceLoginFlowGone struct {
 func (o *GetSelfServiceLoginFlowGone) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/flows][%d] getSelfServiceLoginFlowGone  %+v", 410, o.Payload)
 }
-
 func (o *GetSelfServiceLoginFlowGone) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -196,7 +191,7 @@ func NewGetSelfServiceLoginFlowInternalServerError() *GetSelfServiceLoginFlowInt
 	return &GetSelfServiceLoginFlowInternalServerError{}
 }
 
-/*GetSelfServiceLoginFlowInternalServerError handles this case with default header values.
+/* GetSelfServiceLoginFlowInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -207,7 +202,6 @@ type GetSelfServiceLoginFlowInternalServerError struct {
 func (o *GetSelfServiceLoginFlowInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/flows][%d] getSelfServiceLoginFlowInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetSelfServiceLoginFlowInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

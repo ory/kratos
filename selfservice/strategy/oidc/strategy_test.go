@@ -409,7 +409,7 @@ func TestStrategy(t *testing.T) {
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
+		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
 		expected := &registration.FlowMethod{
 			Method: identity.CredentialsTypeOIDC,
@@ -449,7 +449,7 @@ func TestStrategy(t *testing.T) {
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr := login.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
+		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
 
 		expected := &login.FlowMethod{
 			Method: identity.CredentialsTypeOIDC,
@@ -580,4 +580,46 @@ func TestCountActiveCredentials(t *testing.T) {
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
+}
+
+func TestDisabledEndpoint(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), false)
+
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+
+	t.Run("case=should not callback when oidc method is disabled", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+		res, err := c.Get(publicTS.URL + oidc.RouteCallback)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+		b := make([]byte, res.ContentLength)
+		_, _ = res.Body.Read(b)
+		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+	})
+
+	t.Run("case=should not auth when oidc method is disabled", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+
+		t.Run("method=GET", func(t *testing.T) {
+			res, err := c.Get(publicTS.URL + oidc.RouteAuth)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+
+		t.Run("method=POST", func(t *testing.T) {
+			res, err := c.PostForm(publicTS.URL+oidc.RouteAuth, url.Values{"provider": {"github"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+	})
 }

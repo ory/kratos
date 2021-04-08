@@ -5,14 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
-	"github.com/markbates/pkger"
+	"github.com/ory/x/dbal"
+
+	"github.com/ory/x/stringsx"
+
 	"github.com/rs/cors"
 	"github.com/tidwall/gjson"
 
@@ -31,15 +35,18 @@ import (
 const (
 	DefaultIdentityTraitsSchemaID                                   = "default"
 	DefaultBrowserReturnURL                                         = "default_browser_return_url"
-	DefaultSQLiteMemoryDSN                                          = "sqlite://:memory:?_fk=true"
+	DefaultSQLiteMemoryDSN                                          = dbal.SQLiteInMemory
+	DefaultPasswordHashingAlgorithm                                 = "argon2"
 	UnknownVersion                                                  = "unknown version"
 	ViperKeyDSN                                                     = "dsn"
 	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
 	ViperKeyCourierTemplatesPath                                    = "courier.template_override_path"
 	ViperKeyCourierSMTPFrom                                         = "courier.smtp.from_address"
+	ViperKeyCourierSMTPFromName                                     = "courier.smtp.from_name"
 	ViperKeySecretsDefault                                          = "secrets.default"
 	ViperKeySecretsCookie                                           = "secrets.cookie"
 	ViperKeyPublicBaseURL                                           = "serve.public.base_url"
+	ViperKeyPublicDomainAliases                                     = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                              = "serve.public.port"
 	ViperKeyPublicHost                                              = "serve.public.host"
 	ViperKeyAdminBaseURL                                            = "serve.admin.base_url"
@@ -48,6 +55,7 @@ const (
 	ViperKeySessionLifespan                                         = "session.lifespan"
 	ViperKeySessionSameSite                                         = "session.cookie.same_site"
 	ViperKeySessionDomain                                           = "session.cookie.domain"
+	ViperKeySessionName                                             = "session.cookie.name"
 	ViperKeySessionPath                                             = "session.cookie.path"
 	ViperKeySessionPersistentCookie                                 = "session.cookie.persistent"
 	ViperKeySelfServiceStrategyConfig                               = "selfservice.methods"
@@ -77,12 +85,14 @@ const (
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
 	ViperKeyIdentitySchemas                                         = "identity.schemas"
+	ViperKeyHasherAlgorithm                                         = "hashers.algorithm"
 	ViperKeyHasherArgon2ConfigMemory                                = "hashers.argon2.memory"
 	ViperKeyHasherArgon2ConfigIterations                            = "hashers.argon2.iterations"
 	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
 	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
+	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
@@ -90,7 +100,11 @@ const (
 	Argon2DefaultIterations                                  uint32 = 4
 	Argon2DefaultSaltLength                                  uint32 = 16
 	Argon2DefaultKeyLength                                   uint32 = 32
+	BcryptDefaultCost                                        uint32 = 12
 )
+
+// DefaultSessionCookieName returns the default cookie name for the kratos session.
+const DefaultSessionCookieName = "ory_kratos_session"
 
 type (
 	Argon2 struct {
@@ -99,6 +113,9 @@ type (
 		Parallelism uint8  `json:"parallelism"`
 		SaltLength  uint32 `json:"salt_length"`
 		KeyLength   uint32 `json:"key_length"`
+	}
+	Bcrypt struct {
+		Cost uint32 `json:"cost"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -153,16 +170,6 @@ func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 }
 
 func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
-	f, err := pkger.Open("github.com/ory/kratos:/.schema/config.schema.json")
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to open config.schema.json")
-	}
-
-	schema, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read config.schema.json")
-	}
-
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
@@ -170,7 +177,7 @@ func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 		configx.WithLogrusWatcher(l),
 	}, opts...)
 
-	p, err := configx.New(schema, opts...)
+	p, err := configx.New(ValidationSchema, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +224,10 @@ func (p *Config) SessionDomain() string {
 	return p.p.String(ViperKeySessionDomain)
 }
 
+func (p *Config) SessionName() string {
+	return stringsx.Coalesce(p.p.String(ViperKeySessionName), DefaultSessionCookieName)
+}
+
 func (p *Config) SessionPath() string {
 	return p.p.String(ViperKeySessionPath)
 }
@@ -230,6 +241,14 @@ func (p *Config) HasherArgon2() *Argon2 {
 		Parallelism: uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
 		SaltLength:  uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
 		KeyLength:   uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+	}
+}
+
+func (p *Config) HasherBcrypt() *Bcrypt {
+	// warn about usage of default values and point to the docs
+	// warning will require https://github.com/ory/viper/issues/19
+	return &Bcrypt{
+		Cost: uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost))),
 	}
 }
 
@@ -479,8 +498,53 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 	return p.guessBaseURL(keyHost, keyPort, defaultPort)
 }
 
-func (p *Config) SelfPublicURL() *url.URL {
-	return p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
+type domainAlias struct {
+	BasePath    string `json:"base_path"`
+	Scheme      string `json:"scheme"`
+	MatchDomain string `json:"match_domain"`
+}
+
+func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
+	primary := p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
+	if r == nil {
+		return primary
+	}
+
+	out, err := p.p.Marshal(kjson.Parser())
+	if err != nil {
+		p.l.WithError(err).Errorf("Unable to marshal configuration.")
+		return primary
+	}
+
+	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
+
+	var aliases []domainAlias
+	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
+		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
+		return primary
+	}
+
+	host := r.URL.Query().Get("alias")
+	if len(host) == 0 {
+		host = r.Host
+	}
+
+	hostname, _, _ := net.SplitHostPort(host)
+	if hostname == "" {
+		hostname = host
+	}
+	for _, a := range aliases {
+		if strings.EqualFold(a.MatchDomain, hostname) || strings.EqualFold(a.MatchDomain, host) {
+			parsed := &url.URL{
+				Scheme: a.Scheme,
+				Host:   host,
+				Path:   a.BasePath,
+			}
+			return parsed
+		}
+	}
+
+	return primary
 }
 
 func (p *Config) SelfAdminURL() *url.URL {
@@ -559,17 +623,38 @@ func (p *Config) CourierSMTPFrom() string {
 	return p.p.StringF(ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
 }
 
+func (p *Config) CourierSMTPFromName() string {
+	return p.p.StringF(ViperKeyCourierSMTPFromName, "")
+}
+
 func (p *Config) CourierTemplatesRoot() string {
-	return p.p.StringF(ViperKeyCourierTemplatesPath, "/courier/template/templates")
+	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
+}
+
+func splitUrlAndFragment(s string) (string, string) {
+	i := strings.IndexByte(s, '#')
+	if i < 0 {
+		return s, ""
+	}
+	return s[:i], s[i+1:]
 }
 
 func (p *Config) parseURIOrFail(key string) *url.URL {
-	u, err := url.ParseRequestURI(p.p.String(key))
+	u, frag := splitUrlAndFragment(p.p.String(key))
+	url, err := url.ParseRequestURI(u)
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	return u
+	if url.Scheme == "" {
+		p.l.WithField("reason", "expected scheme to be set").
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
+	}
+
+	if frag != "" {
+		url.Fragment = frag
+	}
+	return url
 }
 
 func (p *Config) Tracing() *tracing.Config {
@@ -578,6 +663,18 @@ func (p *Config) Tracing() *tracing.Config {
 
 func (p *Config) IsInsecureDevMode() bool {
 	return p.Source().Bool("dev")
+}
+
+func (p *Config) IsBackgroundCourierEnabled() bool {
+	return p.Source().Bool("watch-courier")
+}
+
+func (p *Config) CourierExposeMetricsPort() int {
+	return p.Source().Int("expose-metrics-port")
+}
+
+func (p *Config) MetricsListenOn() string {
+	return strings.Replace(p.AdminListenOn(), ":4434", fmt.Sprintf(":%d", p.CourierExposeMetricsPort()), 1)
 }
 
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
@@ -651,5 +748,17 @@ func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 		HaveIBeenPwnedHost:  p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
 		MaxBreaches:         uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
 		IgnoreNetworkErrors: p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+	}
+}
+
+func (p *Config) HasherPasswordHashingAlgorithm() string {
+	configValue := p.p.StringF(ViperKeyHasherAlgorithm, DefaultPasswordHashingAlgorithm)
+	switch configValue {
+	case "bcrypt":
+		return configValue
+	case "argon2":
+		fallthrough
+	default:
+		return configValue
 	}
 }
