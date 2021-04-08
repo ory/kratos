@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/sqlcon"
 
@@ -153,6 +156,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	ctxUpdate.Flow.UI.ResetMessages()
+	ctxUpdate.Flow.UI.AddMessage(node.DefaultGroup, text.NewInfoSelfServiceSettingsUpdateSuccess())
 	if err := e.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), ctxUpdate.Flow); err != nil {
 		return err
 	}
