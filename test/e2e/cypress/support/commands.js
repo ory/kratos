@@ -35,11 +35,14 @@ import {
   pollInterval,
   privilegedLifespan
 } from '../helpers'
+import dayjs from 'dayjs'
 
 const mergeFields = (form, fields) => {
   const result = {}
-  form.fields.forEach(({ name, value }) => {
-    result[name] = value
+  form.nodes.forEach(({ attributes, type }) => {
+    if (type === 'input') {
+      result[attributes.name] = attributes.value
+    }
   })
 
   return { ...result, ...fields }
@@ -70,13 +73,14 @@ Cypress.Commands.add(
       })
       .then(({ body, status }) => {
         expect(status).to.eq(200)
-        const form = body.methods.password.config
+        const form = body.ui
         return cy.request({
           method: form.method,
           body: mergeFields(form, {
             ...fields,
             'traits.email': email,
-            password
+            password,
+            method: 'password'
           }),
           url: form.action,
           followRedirect: false
@@ -99,13 +103,14 @@ Cypress.Commands.add(
         url: APP_URL + '/self-service/registration/api'
       })
       .then(({ body }) => {
-        const form = body.methods.password.config
+        const form = body.ui
         return cy.request({
           method: form.method,
           body: mergeFields(form, {
             ...fields,
             'traits.email': email,
-            password
+            password,
+            method: 'password'
           }),
           url: form.action
         })
@@ -202,16 +207,20 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
     })
     .then(({ body, status }) => {
       expect(status).to.eq(200)
-      const form = body.methods.password.config
+      const form = body.ui
       return cy.request({
         method: form.method,
-        body: mergeFields(form, { identifier: email, password }),
+        body: mergeFields(form, {
+          password_identifier: email,
+          password,
+          method: 'password'
+        }),
         url: form.action,
         followRedirect: false
       })
     })
     .then((res) => {
-      console.log('Login sequence compelted: ', { email, password })
+      console.log('Login sequence completed: ', { email, password })
       if (expectSession) {
         expect(res.redirectedToUrl).to.not.contain(
           APP_URL + '/auth/login?flow='
@@ -243,14 +252,14 @@ Cypress.Commands.add(
     type: { email: temail, password: tpassword } = {}
   }) => {
     cy.url().should('include', '/auth/login')
-    cy.get('input[name="identifier"]').should('have.value', email)
+    cy.get('input[name="password_identifier"]').should('have.value', email)
     if (temail) {
-      cy.get('input[name="identifier"]').clear().type(temail)
+      cy.get('input[name="password_identifier"]').clear().type(temail)
     }
     if (tpassword) {
       cy.get('input[name="password"]').clear().type(tpassword)
     }
-    cy.get('button[type="submit"]').click()
+    cy.get('button[value="password"]').click()
   }
 )
 
@@ -280,19 +289,13 @@ Cypress.Commands.add('deleteMail', ({ atLeast = 0 } = {}) => {
 Cypress.Commands.add('session', () =>
   cy.request('GET', `${KRATOS_PUBLIC}/sessions/whoami`).then((response) => {
     expect(response.body.id).to.not.be.empty
-    expect(Cypress.moment().isBefore(Cypress.moment(response.body.expires_at)))
-      .to.be.true
+    expect(dayjs().isBefore(dayjs(response.body.expires_at))).to.be.true
 
     // Add a grace second for MySQL which does not support millisecs.
+    expect(dayjs().isAfter(dayjs(response.body.issued_at).subtract(1, 's'))).to
+      .be.true
     expect(
-      Cypress.moment().isAfter(
-        Cypress.moment(response.body.issued_at).subtract(1, 's')
-      )
-    ).to.be.true
-    expect(
-      Cypress.moment().isAfter(
-        Cypress.moment(response.body.authenticated_at).subtract(1, 's')
-      )
+      dayjs().isAfter(dayjs(response.body.authenticated_at).subtract(1, 's'))
     ).to.be.true
     expect(response.body.identity).to.exist
     return response.body
@@ -419,9 +422,8 @@ Cypress.Commands.add('waitForPrivilegedSessionToExpire', () => {
   cy.session().should((session) => {
     expect(session.authenticated_at).to.not.be.empty
     cy.wait(
-      Cypress.moment(session.authenticated_at)
-        .add(privilegedLifespan)
-        .diff(Cypress.moment()) + 100
+      dayjs(session.authenticated_at).add(privilegedLifespan).diff(dayjs()) +
+        100
     )
   })
 })
