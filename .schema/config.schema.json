@@ -649,6 +649,12 @@
                   "title": "Password Configuration",
                   "description": "Define how passwords are validated.",
                   "properties": {
+                    "haveibeenpwned_host": {
+                      "title": "Custom haveibeenpwned host",
+                      "description": "Allows changing the default HIBP host to a self hosted version.",
+                      "type": "string",
+                      "default": "api.pwnedpasswords.com"
+                    },
                     "max_breaches": {
                       "title": "Allow Password Breaches",
                       "description": "Defines how often a password may have been breached before it is rejected.",
