@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/internal"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetTemplateType(t *testing.T) {
