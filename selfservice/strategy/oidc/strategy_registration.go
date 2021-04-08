@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -43,7 +45,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return nil
 	}
 
-	return s.populateMethod(r, f.UI)
+	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {

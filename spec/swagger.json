@@ -1961,6 +1961,16 @@
         }
       }
     },
+    "Meta": {
+      "description": "This might include a label and other information that can optionally\nbe used to render UIs.",
+      "type": "object",
+      "title": "A Node's Meta Information",
+      "properties": {
+        "label": {
+          "$ref": "#/definitions/uiText"
+        }
+      }
+    },
     "NullTime": {
       "type": "string",
       "format": "date-time",
@@ -3070,7 +3080,8 @@
         "type",
         "group",
         "attributes",
-        "messages"
+        "messages",
+        "meta"
       ],
       "properties": {
         "attributes": {
@@ -3081,6 +3092,9 @@
         },
         "messages": {
           "$ref": "#/definitions/uiTexts"
+        },
+        "meta": {
+          "$ref": "#/definitions/Meta"
         },
         "type": {
           "$ref": "#/definitions/uiNodeType"

@@ -1943,6 +1943,21 @@ components:
       - Size
       - VirtualSize
       type: object
+    Meta:
+      description: |-
+        This might include a label and other information that can optionally
+        be used to render UIs.
+      example:
+        label:
+          context: '{}'
+          id: 0
+          text: text
+          type: type
+      properties:
+        label:
+          $ref: '#/components/schemas/uiText'
+      title: A Node's Meta Information
+      type: object
     NullTime:
       format: date-time
       title: NullTime implements sql.NullTime functionality.
@@ -2591,7 +2606,13 @@ components:
         expires_at: 2000-01-23T04:56:07.000+00:00
         ui:
           nodes:
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -2602,7 +2623,13 @@ components:
               type: type
             type: type
             group: group
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -2734,7 +2761,13 @@ components:
         expires_at: 2000-01-23T04:56:07.000+00:00
         ui:
           nodes:
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -2745,7 +2778,13 @@ components:
               type: type
             type: type
             group: group
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -2840,7 +2879,13 @@ components:
         expires_at: 2000-01-23T04:56:07.000+00:00
         ui:
           nodes:
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -2851,7 +2896,13 @@ components:
               type: type
             type: type
             group: group
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -3074,7 +3125,13 @@ components:
         expires_at: 2000-01-23T04:56:07.000+00:00
         ui:
           nodes:
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -3085,7 +3142,13 @@ components:
               type: type
             type: type
             group: group
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -3236,7 +3299,13 @@ components:
           expires_at: 2000-01-23T04:56:07.000+00:00
           ui:
             nodes:
-            - messages:
+            - meta:
+                label:
+                  context: '{}'
+                  id: 0
+                  text: text
+                  type: type
+              messages:
               - context: '{}'
                 id: 0
                 text: text
@@ -3247,7 +3316,13 @@ components:
                 type: type
               type: type
               group: group
-            - messages:
+            - meta:
+                label:
+                  context: '{}'
+                  id: 0
+                  text: text
+                  type: type
+              messages:
               - context: '{}'
                 id: 0
                 text: text
@@ -3314,7 +3389,13 @@ components:
         HTTP Form and JSON requests
       example:
         nodes:
-        - messages:
+        - meta:
+            label:
+              context: '{}'
+              id: 0
+              text: text
+              type: type
+          messages:
           - context: '{}'
             id: 0
             text: text
@@ -3325,7 +3406,13 @@ components:
             type: type
           type: type
           group: group
-        - messages:
+        - meta:
+            label:
+              context: '{}'
+              id: 0
+              text: text
+              type: type
+          messages:
           - context: '{}'
             id: 0
             text: text
@@ -3373,6 +3460,12 @@ components:
         Nodes are represented as HTML elements or their native UI equivalents. For example,
         a node can be an `<img>` tag, or an `<input element>` but also `some plain text`.
       example:
+        meta:
+          label:
+            context: '{}'
+            id: 0
+            text: text
+            type: type
         messages:
         - context: '{}'
           id: 0
@@ -3393,12 +3486,15 @@ components:
           items:
             $ref: '#/components/schemas/uiText'
           type: array
+        meta:
+          $ref: '#/components/schemas/Meta'
         type:
           type: string
       required:
       - attributes
       - group
       - messages
+      - meta
       - type
       title: Node represents a flow's nodes
       type: object
@@ -3524,7 +3620,13 @@ components:
         expires_at: 2000-01-23T04:56:07.000+00:00
         ui:
           nodes:
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
@@ -3535,7 +3637,13 @@ components:
               type: type
             type: type
             group: group
-          - messages:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
             - context: '{}'
               id: 0
               text: text
