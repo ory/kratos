@@ -38,6 +38,7 @@ docs/InlineResponse2001.md
 docs/InlineResponse503.md
 docs/LoginFlow.md
 docs/LoginViaApiResponse.md
+docs/Meta.md
 docs/Plugin.md
 docs/PluginConfig.md
 docs/PluginConfigArgs.md
@@ -113,6 +114,7 @@ model_inline_response_200_1.go
 model_inline_response_503.go
 model_login_flow.go
 model_login_via_api_response.go
+model_meta.go
 model_plugin.go
 model_plugin_config.go
 model_plugin_config_args.go

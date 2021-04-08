@@ -7,13 +7,14 @@ Name | Type | Description | Notes
 **Attributes** | [**UiNodeAttributes**](UiNodeAttributes.md) |  | 
 **Group** | **string** |  | 
 **Messages** | [**[]UiText**](UiText.md) |  | 
+**Meta** | [**Meta**](Meta.md) |  | 
 **Type** | **string** |  | 
 
 ## Methods
 
 ### NewUiNode
 
-`func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, type_ string, ) *UiNode`
+`func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta Meta, type_ string, ) *UiNode`
 
 NewUiNode instantiates a new UiNode object
 This constructor will assign default values to properties that have it defined,
@@ -86,6 +87,26 @@ and a boolean to check if the value has been set.
 `func (o *UiNode) SetMessages(v []UiText)`
 
 SetMessages sets Messages field to given value.
+
+
+### GetMeta
+
+`func (o *UiNode) GetMeta() Meta`
+
+GetMeta returns the Meta field if non-nil, zero value otherwise.
+
+### GetMetaOk
+
+`func (o *UiNode) GetMetaOk() (*Meta, bool)`
+
+GetMetaOk returns a tuple with the Meta field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMeta
+
+`func (o *UiNode) SetMeta(v Meta)`
+
+SetMeta sets Meta field to given value.
 
 
 ### GetType

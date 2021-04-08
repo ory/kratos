@@ -3,6 +3,7 @@ package node
 import (
 	"encoding/json"
 
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/jsonschemax"
 )
@@ -93,5 +94,15 @@ func NewInputFieldFromSchema(name string, group Group, p jsonschemax.Path, opts 
 		}
 	}
 
-	return &Node{Type: Input, Attributes: applyInputAttributes(opts, attr), Group: group}
+	var meta Meta
+	if len(p.Title) > 0 {
+		meta.Label = text.NewInfoNodeLabelGenerated(p.Title)
+	}
+
+	return &Node{
+		Type:       Input,
+		Attributes: applyInputAttributes(opts, attr),
+		Group:      group,
+		Meta:       &meta,
+	}
 }

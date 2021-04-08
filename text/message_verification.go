@@ -6,18 +6,18 @@ import (
 )
 
 const (
-	InfoSelfServiceVerification           ID = 1070000 + iota
-	InfoSelfServiceVerificationSuccessful    // 1060001
-	InfoSelfServiceVerificationEmailSent     // 1060002
+	InfoSelfServiceVerification           ID = 1070000 + iota // 1070000
+	InfoSelfServiceVerificationSuccessful                     // 1070001
+	InfoSelfServiceVerificationEmailSent                      // 1070002
 )
 
 const (
-	ErrorValidationVerification ID = 4070000 + iota
-	ErrorValidationVerificationTokenInvalidOrAlreadyUsed
-	ErrorValidationVerificationRetrySuccess
-	ErrorValidationVerificationStateFailure
-	ErrorValidationVerificationMissingVerificationToken
-	ErrorValidationVerificationFlowExpired
+	ErrorValidationVerification                          ID = 4070000 + iota // 4070000
+	ErrorValidationVerificationTokenInvalidOrAlreadyUsed                     // 4070001
+	ErrorValidationVerificationRetrySuccess                                  // 4070002
+	ErrorValidationVerificationStateFailure                                  // 4070003
+	ErrorValidationVerificationMissingVerificationToken                      // 4070004
+	ErrorValidationVerificationFlowExpired                                   // 4070005
 )
 
 func NewErrorValidationVerificationFlowExpired(ago time.Duration) *Message {
