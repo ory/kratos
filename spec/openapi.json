@@ -446,6 +446,16 @@
         ],
         "type": "object"
       },
+      "Meta": {
+        "description": "This might include a label and other information that can optionally\nbe used to render UIs.",
+        "properties": {
+          "label": {
+            "$ref": "#/components/schemas/uiText"
+          }
+        },
+        "title": "A Node's Meta Information",
+        "type": "object"
+      },
       "NullTime": {
         "format": "date-time",
         "title": "NullTime implements sql.NullTime functionality.",
@@ -1565,6 +1575,9 @@
           "messages": {
             "$ref": "#/components/schemas/uiTexts"
           },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
           "type": {
             "$ref": "#/components/schemas/uiNodeType"
           }
@@ -1573,7 +1586,8 @@
           "type",
           "group",
           "attributes",
-          "messages"
+          "messages",
+          "meta"
         ],
         "title": "Node represents a flow's nodes",
         "type": "object"

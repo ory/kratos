@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/ory/kratos/text"
+	"github.com/ory/x/stringsx"
+
 	"github.com/ory/kratos/ui/container"
 
 	"github.com/ory/kratos/ui/node"
@@ -45,9 +48,12 @@ type FlowMethod struct {
 	*container.Container
 }
 
-func AddProviders(c *container.Container, providers []Configuration) {
+func AddProviders(c *container.Container, providers []Configuration, message func(provider string) *text.Message) {
 	for _, p := range providers {
-		c.GetNodes().Append(node.NewInputField(identity.CredentialsTypeOIDC.String()+".provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
+		c.GetNodes().Append(
+			node.NewInputField(identity.CredentialsTypeOIDC.String()+".provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit).WithMetaLabel(message(
+				stringsx.Coalesce(p.Label, p.ID))),
+		)
 	}
 }
 

@@ -161,6 +161,7 @@ Class | Method | HTTP request | Description
  - [InlineResponse503](docs/InlineResponse503.md)
  - [LoginFlow](docs/LoginFlow.md)
  - [LoginViaApiResponse](docs/LoginViaApiResponse.md)
+ - [Meta](docs/Meta.md)
  - [Plugin](docs/Plugin.md)
  - [PluginConfig](docs/PluginConfig.md)
  - [PluginConfigArgs](docs/PluginConfigArgs.md)

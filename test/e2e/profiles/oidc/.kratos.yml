@@ -6,6 +6,7 @@ selfservice:
         providers:
           -
             id: hydra
+            label: Ory
             provider: generic
             client_id: kratos-client
             client_secret: kratos-secret
