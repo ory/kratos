@@ -72,12 +72,13 @@ func createClient(t *testing.T, remote string, redir, id string) {
 	}))
 }
 
-func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[]string, addr string) (*http.Server, string) {
+func newHydraIntegration(t *testing.T, remote *string, subject, website *string, scope *[]string, addr string) (*http.Server, string) {
 	router := httprouter.New()
 
 	type p struct {
-		Subject    string   `json:"subject,omitempty"`
-		GrantScope []string `json:"grant_scope,omitempty"`
+		Subject    string          `json:"subject,omitempty"`
+		Session    json.RawMessage `json:"session,omitempty"`
+		GrantScope []string        `json:"grant_scope,omitempty"`
 	}
 
 	var do = func(w http.ResponseWriter, r *http.Request, href string, payload io.Reader) {
@@ -109,7 +110,9 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 		require.NotEmpty(t, challenge)
 
 		var b bytes.Buffer
-		require.NoError(t, json.NewEncoder(&b).Encode(&p{Subject: *subject}))
+		require.NoError(t, json.NewEncoder(&b).Encode(&p{
+			Subject: *subject,
+		}))
 		href := urlx.MustJoin(*remote, "/oauth2/auth/requests/login/accept") + "?login_challenge=" + challenge
 		do(w, r, href, &b)
 	})
@@ -122,7 +125,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 		require.NotEmpty(t, challenge)
 
 		var b bytes.Buffer
-		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope}))
+		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: json.RawMessage(`{"id_token":{"website":"` + *website + `"}}`)}))
 		href := urlx.MustJoin(*remote, "/oauth2/auth/requests/consent/accept") + "?consent_challenge=" + challenge
 		do(w, r, href, &b)
 	})
@@ -184,11 +187,11 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 	return ts
 }
 
-func newHydra(t *testing.T, subject *string, scope *[]string) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
+func newHydra(t *testing.T, subject, website *string, scope *[]string) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
 	remoteAdmin = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_ADMIN")
 	remotePublic = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC")
 
-	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, subject, scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
+	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, subject, website, scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
 	t.Cleanup(func() {
 		require.NoError(t, hydraIntegrationTS.Close())
 	})

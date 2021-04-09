@@ -198,6 +198,7 @@ func (c *Container) UpdateNodesFromJSON(raw json.RawMessage, prefix string, grou
 
 		if n := c.Nodes.Find(k); n != nil {
 			n.Attributes.SetValue(v)
+			n.Group = group
 			continue
 		}
 

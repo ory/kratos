@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow/login"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/pkg/errors"
@@ -49,17 +51,17 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
-		return err
-	}
-
 	if err := r.ParseForm(); err != nil {
 		return s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 
-	var pid = r.Form.Get(s.SettingsStrategyID() + ".provider") // this can come from both url query and post body
+	var pid = r.Form.Get("provider") // this can come from both url query and post body
 	if pid == "" {
-		return s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "%s.provider" form field`, s.SettingsStrategyID())))
+		return errors.WithStack(flow.ErrStrategyNotResponsible)
+	}
+
+	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+		return s.handleError(w, r, f, pid, nil, err)
 	}
 
 	provider, err := s.provider(r.Context(), r, pid)
@@ -97,7 +99,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer) error {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -115,20 +117,23 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		// This endpoint only handles browser flow at the moment.
 		ar, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
 		if err != nil {
-			return s.handleError(w, r, a, provider.Config().ID, nil, err)
+			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}
 
-		return s.processLogin(w, r, ar, claims, provider, container)
+		if _, err := s.processLogin(w, r, ar, claims, provider, container); err != nil {
+			return ar, err
+		}
+		return nil, nil
 	}
 
 	jn, err := s.f.Fetch(provider.Config().Mapper)
 	if err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -137,7 +142,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	vm.ExtCode("claims", jsonClaims.String())
 	evaluated, err := vm.EvaluateSnippet(provider.Config().Mapper, jn.String())
 	if err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
 		i.Traits = []byte{'{', '}'}
 		s.d.Logger().
@@ -161,28 +166,28 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 	option, err := decoderRegistration(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String())
 	if err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	i.Traits, err = merge(container.Form.Encode(), json.RawMessage(i.Traits), option)
 	if err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	creds, err := NewCredentials(provider.Config().ID, claims.Subject)
 	if err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
 	i.SetCredentials(s.ID(), *creds)
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	return nil
+	return nil, nil
 }

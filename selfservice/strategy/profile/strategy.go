@@ -172,8 +172,12 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
-	update, err := s.d.IdentityManager().SetTraits(r.Context(), ctxUpdate.GetSessionIdentity().ID, identity.Traits(p.Traits),options...)
+
+	update, err := s.d.IdentityManager().SetTraits(r.Context(), ctxUpdate.GetSessionIdentity().ID, identity.Traits(p.Traits), options...)
 	if err != nil {
+		if errors.Is(err, identity.ErrProtectedFieldModified) {
+			return settings.NewFlowNeedsReAuth()
+		}
 		return err
 	}
 
@@ -233,6 +237,7 @@ func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uu
 
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
 	if traits != nil {
+		ar.UI.Nodes.ResetNodesWithPrefix("traits.")
 		ar.UI.UpdateNodesFromJSON(traits, "traits", node.ProfileGroup)
 	}
 	ar.UI.SetCSRF(s.d.GenerateCSRFToken(r))
@@ -243,7 +248,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow, err error) error {
-	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) || errors.Is(err, identity.ErrProtectedFieldModified) {
+	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),
 			settings.ContinuityOptions(p, puc.GetSessionIdentity())...); err != nil {

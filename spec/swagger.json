@@ -1961,6 +1961,10 @@
         }
       }
     },
+    "JSONRawMessage": {
+      "type": "object",
+      "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
+    },
     "Meta": {
       "description": "This might include a label and other information that can optionally\nbe used to render UIs.",
       "type": "object",
@@ -2724,6 +2728,25 @@
         "status": {
           "description": "Status always contains \"ok\".",
           "type": "string"
+        }
+      }
+    },
+    "identityCredentials": {
+      "description": "Credentials represents a specific credential type",
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/JSONRawMessage"
+        },
+        "identifiers": {
+          "description": "Identifiers represents a list of unique identifiers this credential type matches.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "$ref": "#/definitions/CredentialsType"
         }
       }
     },

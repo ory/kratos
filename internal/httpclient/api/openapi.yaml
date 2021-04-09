@@ -1943,6 +1943,10 @@ components:
       - Size
       - VirtualSize
       type: object
+    JSONRawMessage:
+      title: JSONRawMessage represents a json.RawMessage that works well with JSON,
+        SQL, and Swagger.
+      type: object
     Meta:
       description: |-
         This might include a label and other information that can optionally
@@ -2591,6 +2595,25 @@ components:
       properties:
         status:
           description: Status always contains "ok".
+          type: string
+      type: object
+    identityCredentials:
+      description: Credentials represents a specific credential type
+      properties:
+        config:
+          title: JSONRawMessage represents a json.RawMessage that works well with
+            JSON, SQL, and Swagger.
+          type: object
+        identifiers:
+          description: Identifiers represents a list of unique identifiers this credential
+            type matches.
+          items:
+            type: string
+          type: array
+        type:
+          description: and so on.
+          title: CredentialsType  represents several different credential types, like
+            password credentials, passwordless credentials,
           type: string
       type: object
     jsonSchema:

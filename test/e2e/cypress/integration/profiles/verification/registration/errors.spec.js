@@ -23,7 +23,7 @@ context('Registration', () => {
 
       cy.get('input[name="email"]').should('be.empty')
       cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
       cy.get('.messages .message').should(
         'contain.text',
         'An email containing a verification'

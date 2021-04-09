@@ -52,6 +52,7 @@ func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...
 	return &Node{
 		Type: Input, Group: group,
 		Attributes: applyInputAttributes(opts, &InputAttributes{Name: name, Type: toFormType(name, value), FieldValue: value}),
+		Meta:       &Meta{},
 	}
 }
 
@@ -59,6 +60,7 @@ func NewInputField(name string, value interface{}, group Group, inputType InputA
 	return &Node{
 		Type: Input, Group: group,
 		Attributes: applyInputAttributes(opts, &InputAttributes{Name: name, Type: inputType, FieldValue: value}),
+		Meta:       &Meta{},
 	}
 }
 

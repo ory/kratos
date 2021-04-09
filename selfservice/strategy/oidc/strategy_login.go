@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow/registration"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/continuity"
@@ -34,7 +36,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, l *login.Flow) error {
 	return s.populateMethod(r, l.UI, text.NewInfoLoginWith)
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) error {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) {
@@ -54,44 +56,48 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// This flow only works for browsers anyways.
 			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser)
 			if err != nil {
-				return s.handleError(w, r, a, provider.Config().ID, nil, err)
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 
-			return s.processRegistration(w, r, aa, claims, provider, container)
+			if _, err := s.processRegistration(w, r, aa, claims, provider, container); err != nil {
+				return aa, err
+			}
+
+			return nil, nil
 		}
 
-		return s.handleError(w, r, a, provider.Config().ID, nil, err)
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	var o CredentialsConfig
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-		return s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 	}
 
 	for _, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-				return s.handleError(w, r, a, provider.Config().ID, nil, err)
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
-			return nil
+			return nil, nil
 		}
 	}
 
-	return s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+	return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) (i *identity.Identity, err error) {
-	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
-		return nil, err
-	}
-
 	if err := r.ParseForm(); err != nil {
 		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 
-	var pid = r.Form.Get(s.SettingsStrategyID() + ".provider") // this can come from both url query and post body
+	var pid = r.Form.Get("provider") // this can come from both url query and post body
 	if pid == "" {
-		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "%s.provider" form field`, s.SettingsStrategyID())))
+		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+	}
+
+	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
 	provider, err := s.provider(r.Context(), r, pid)

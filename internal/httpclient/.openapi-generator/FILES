@@ -31,6 +31,7 @@ docs/HealthNotReadyStatus.md
 docs/HealthStatus.md
 docs/IdResponse.md
 docs/Identity.md
+docs/IdentityCredentials.md
 docs/ImageDeleteResponseItem.md
 docs/ImageSummary.md
 docs/InlineResponse200.md
@@ -107,6 +108,7 @@ model_health_not_ready_status.go
 model_health_status.go
 model_id_response.go
 model_identity.go
+model_identity_credentials.go
 model_image_delete_response_item.go
 model_image_summary.go
 model_inline_response_200.go

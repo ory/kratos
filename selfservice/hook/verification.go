@@ -62,6 +62,10 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
+		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
+			return err
+		}
+
 		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(r.Context(), verificationFlow); err != nil {
 			return err
 		}
