@@ -19,7 +19,7 @@ List identities
 List identities (paginated)
 
 ```
-kratos identities list [<page> <per-page>] [flags]
+kratos identities list [&lt;page&gt; &lt;per-page&gt;] [flags]
 ```
 
 ### Options
@@ -31,8 +31,8 @@ kratos identities list [<page> <per-page>] [flags]
 ### Options inherited from parent commands
 
 ```
-  -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
-  -f, --format string     Set the output format. One of table, json, and json-pretty. (default "default")
+  -e, --endpoint string   The URL of ORY Kratos&#39; Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
+  -f, --format string     Set the output format. One of table, json, and json-pretty. (default &#34;default&#34;)
   -q, --quiet             Be quiet with output printing.
 ```
 

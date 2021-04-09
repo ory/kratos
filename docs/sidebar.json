@@ -68,6 +68,8 @@
         "cli/kratos-hashers",
         "cli/kratos-hashers-argon2",
         "cli/kratos-hashers-argon2-calibrate",
+        "cli/kratos-hashers-argon2-hash",
+        "cli/kratos-hashers-argon2-load-test",
         "cli/kratos-identities",
         "cli/kratos-identities-delete",
         "cli/kratos-identities-get",

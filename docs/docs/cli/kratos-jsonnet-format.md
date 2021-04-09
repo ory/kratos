@@ -24,23 +24,23 @@ Glob Syntax:
         { term }
 
     term:
-        '*'         matches any sequence of non-separator characters
-        '**'        matches any sequence of characters
-        '?'         matches any single non-separator character
-        '[' [ '!' ] { character-range } ']'
+        &#39;*&#39;         matches any sequence of non-separator characters
+        &#39;**&#39;        matches any sequence of characters
+        &#39;?&#39;         matches any single non-separator character
+        &#39;[&#39; [ &#39;!&#39; ] { character-range } &#39;]&#39;
                     character class (must be non-empty)
-        '{' pattern-list '}'
+        &#39;{&#39; pattern-list &#39;}&#39;
                     pattern alternatives
-        c           matches character c (c != '*', '**', '?', '\', '[', '{', '}')
-        '\' c       matches character c
+        c           matches character c (c != &#39;*&#39;, &#39;**&#39;, &#39;?&#39;, &#39;\&#39;, &#39;[&#39;, &#39;{&#39;, &#39;}&#39;)
+        &#39;\&#39; c       matches character c
 
     character-range:
-        c           matches character c (c != '\\', '-', ']')
-        '\' c       matches character c
-        lo '-' hi   matches character c for lo <= c <= hi
+        c           matches character c (c != &#39;\\&#39;, &#39;-&#39;, &#39;]&#39;)
+        &#39;\&#39; c       matches character c
+        lo &#39;-&#39; hi   matches character c for lo &lt;= c &lt;= hi
 
     pattern-list:
-        pattern { ',' pattern }
+        pattern { &#39;,&#39; pattern }
                     comma-separated (without spaces) patterns
 
 ```
