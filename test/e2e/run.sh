@@ -152,7 +152,7 @@ run() {
   if [[ $dev = "yes" ]]; then
     npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
   else
-    npm run test -- --record --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
+    npm run test -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
   fi
 }
 
