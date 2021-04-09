@@ -9113,7 +9113,8 @@ _PluginConfigRootfs PluginConfigRootfs plugin config rootfs_
 }
 ```
 
-_PluginConfigUser plugin config user_
+_PluginConfigUser PluginConfigUser PluginConfigUser PluginConfigUser
+PluginConfigUser plugin config user_
 
 #### Properties
 
@@ -9960,7 +9961,7 @@ _HealthStatus health status_
 }
 ```
 
-_LoginFlow LoginFlow Login Flow_
+_Login Flow_
 
 #### Properties
 
@@ -10535,7 +10536,7 @@ _RegistrationFlow RegistrationFlow RegistrationFlow registration flow_
 | issued_at                  | string(date-time)                                       | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                                                                               |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages Messages messages |
 | methods                    | object                                                  | true     | none         | Methods contains context for all enabled registration methods. If a registration flow has been<br/>processed, but for example the password is incorrect, this will contain error messages.                                       |
-| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | RegistrationFlowMethod registration flow method                                                                                                                                                                                  |
+| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | none                                                                                                                                                                                                                             |
 | request_url                | string                                                  | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                                                                    |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                                                                  |
 
@@ -10598,8 +10599,6 @@ _RegistrationFlow RegistrationFlow RegistrationFlow registration flow_
   "method": "string"
 }
 ```
-
-_RegistrationFlowMethod registration flow method_
 
 #### Properties
 
@@ -11372,10 +11371,10 @@ _A Verification Flow_
 
 #### Properties
 
-| Name   | Type                                                                | Required | Restrictions | Description                                   |
-| ------ | ------------------------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
-| config | [verificationFlowMethodConfig](#schemaverificationflowmethodconfig) | true     | none         | none                                          |
-| method | string                                                              | true     | none         | Method contains the request credentials type. |
+| Name   | Type                                                                | Required | Restrictions | Description                                                  |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------ |
+| config | [verificationFlowMethodConfig](#schemaverificationflowmethodconfig) | true     | none         | VerificationFlowMethodConfig verification flow method config |
+| method | string                                                              | true     | none         | Method contains the request credentials type.                |
 
 <a id="tocSverificationflowmethodconfig"></a>
 
@@ -11415,6 +11414,8 @@ _A Verification Flow_
   "method": "string"
 }
 ```
+
+_VerificationFlowMethodConfig verification flow method config_
 
 #### Properties
 

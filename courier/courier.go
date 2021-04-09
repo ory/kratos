@@ -3,6 +3,7 @@ package courier
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -65,7 +66,7 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 }
 
 func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error) {
-	body, err := t.EmailBody()
+	recipient, err := t.EmailRecipient()
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -75,17 +76,29 @@ func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 		return uuid.Nil, err
 	}
 
-	recipient, err := t.EmailRecipient()
+	bodyPlaintext, err := t.EmailBodyPlaintext()
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	templateType, err := GetTemplateType(t)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	templateData, err := json.Marshal(t)
 	if err != nil {
 		return uuid.Nil, err
 	}
 
 	message := &Message{
-		Status:    MessageStatusQueued,
-		Type:      MessageTypeEmail,
-		Body:      body,
-		Subject:   subject,
-		Recipient: recipient,
+		Status:       MessageStatusQueued,
+		Type:         MessageTypeEmail,
+		Recipient:    recipient,
+		Body:         bodyPlaintext,
+		Subject:      subject,
+		TemplateType: templateType,
+		TemplateData: templateData,
 	}
 	if err := m.d.CourierPersister().AddMessage(ctx, message); err != nil {
 		return uuid.Nil, err
@@ -147,10 +160,29 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 			} else {
 				gm.SetAddressHeader("From", from, fromName)
 			}
+
 			gm.SetHeader("To", msg.Recipient)
 			gm.SetHeader("Subject", msg.Subject)
 			gm.SetBody("text/plain", msg.Body)
-			gm.AddAlternative("text/html", msg.Body)
+
+			tmpl, err := NewEmailTemplateFromMessage(m.d.Config(ctx), msg)
+			if err != nil {
+				m.d.Logger().
+					WithError(err).
+					WithField("message_id", msg.ID).
+					Error(`Unable to get email template from message.`)
+			} else {
+				htmlBody, err := tmpl.EmailBody()
+				if err != nil {
+					m.d.Logger().
+						WithError(err).
+						WithField("message_id", msg.ID).
+						Error(`Unable to get email body from template.`)
+
+				} else {
+					gm.AddAlternative("text/html", htmlBody)
+				}
+			}
 
 			if err := m.Dialer.DialAndSend(ctx, gm); err != nil {
 				m.d.Logger().
@@ -180,6 +212,7 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 			m.d.Logger().
 				WithField("message_id", msg.ID).
 				WithField("message_type", msg.Type).
+				WithField("message_template_type", msg.TemplateType).
 				WithField("message_subject", msg.Subject).
 				Debug("Courier sent out message.")
 		default:

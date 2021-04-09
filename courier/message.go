@@ -24,12 +24,14 @@ const (
 )
 
 type Message struct {
-	ID        uuid.UUID     `json:"-" faker:"-" db:"id"`
-	Status    MessageStatus `json:"-" db:"status"`
-	Type      MessageType   `json:"-" db:"type"`
-	Recipient string        `json:"-" db:"recipient"`
-	Body      string        `json:"-" db:"body"`
-	Subject   string        `json:"-" db:"subject"`
+	ID           uuid.UUID     `json:"-" faker:"-" db:"id"`
+	Status       MessageStatus `json:"-" db:"status"`
+	Type         MessageType   `json:"-" db:"type"`
+	Recipient    string        `json:"-" db:"recipient"`
+	Body         string        `json:"-" db:"body"`
+	Subject      string        `json:"-" db:"subject"`
+	TemplateType TemplateType  `json:"-" db:"template_type"`
+	TemplateData []byte        `json:"-" db:"template_data"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
