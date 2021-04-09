@@ -161,18 +161,18 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - sdk/generate:
-          appname: Ory_Kratos
-          specignorepgks: github.com/ory/kratos-client-go
-          swagpath: spec/api.json
-          requires:
-            - test
-            - test-e2e
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /master/
+#      - sdk/generate:
+#          appname: Ory_Kratos
+#          specignorepgks: github.com/ory/kratos-client-go
+#          swagpath: spec/api.json
+#          requires:
+#            - test
+#            - test-e2e
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore: /master/
       - docs/cli
       - docs/build:
           swag-spec-location: spec/api.json
@@ -186,7 +186,7 @@ workflows:
           requires:
             - test
             - test-e2e
-            - sdk/generate
+#            - sdk/generate
             - goreleaser/release
           filters:
             tags:
