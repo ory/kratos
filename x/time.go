@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// #nosec G404
 var rnd = rand.New(rand.NewSource(time.Now().Unix()))
 
 func AssertEqualTime(t *testing.T, expected, actual time.Time) {
