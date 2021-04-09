@@ -221,9 +221,7 @@ func (n Nodes) SortBySchema(opts ...SortOption) error {
 			return err
 		}
 
-		for _, k := range schemaKeys {
-			o.keysInOrder = append(o.keysInOrder, k)
-		}
+		o.keysInOrder = append(o.keysInOrder, schemaKeys...)
 	}
 
 	if o.keysInOrderPost != nil {

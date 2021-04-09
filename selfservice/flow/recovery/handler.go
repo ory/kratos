@@ -238,6 +238,7 @@ type submitSelfServiceRegistrationFlow struct {
 }
 
 // swagger:model submitSelfServiceRecoveryFlow
+// nolint:deadcode,unused
 type submitSelfServiceRecoveryFlowBody struct{}
 
 // swagger:route POST /self-service/recovery public submitSelfServiceRecoveryFlow

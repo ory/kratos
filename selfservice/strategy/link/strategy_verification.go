@@ -84,6 +84,7 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 }
 
 // swagger:parameters submitSelfServiceVerificationFlowWithLinkMethod
+// nolint:deadcode,unused
 type submitSelfServiceVerificationFlowWithLinkMethodParameters struct {
 	// in: body
 	Body submitSelfServiceVerificationFlowWithLinkMethod
@@ -107,6 +108,7 @@ func (m *verificationSubmitPayload) GetFlow() uuid.UUID {
 	return x.ParseUUID(m.Flow)
 }
 
+// nolint:deadcode,unused
 type submitSelfServiceVerificationFlowWithLinkMethod struct {
 	// Email to Verify
 	//

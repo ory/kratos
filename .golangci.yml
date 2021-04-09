@@ -10,7 +10,7 @@ linters:
     - unused
     - gosec
     - varcheck
-    - golint
+#    - golint
     - goimports
   disable:
     - ineffassign

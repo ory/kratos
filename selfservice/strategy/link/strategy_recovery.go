@@ -191,6 +191,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 }
 
 // swagger:parameters submitSelfServiceRecoveryFlowWithLinkMethod
+// nolint:deadcode,unused
 type submitSelfServiceRecoveryFlowWithLinkMethodParameters struct {
 	// in: body
 	Body submitSelfServiceRecoveryFlowWithLinkMethod
@@ -215,6 +216,7 @@ func (m *submitSelfServiceRecoveryFlowWithLinkMethodParameters) GetFlow() uuid.U
 }
 
 // swagger:model submitSelfServiceRecoveryFlowWithLinkMethod
+// nolint:deadcode,unused
 type submitSelfServiceRecoveryFlowWithLinkMethod struct {
 	// Email to Recover
 	//

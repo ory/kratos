@@ -3485,6 +3485,7 @@ components:
       - traits
       type: object
     submitSelfServiceVerificationFlowWithLinkMethod:
+      description: nolint:deadcode,unused
       properties:
         csrf_token:
           description: Sending the anti-csrf token is only required for browser login
