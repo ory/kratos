@@ -543,6 +543,13 @@
             "name": "flow",
             "in": "query",
             "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/submitSelfServiceLoginFlow"
+            }
           }
         ],
         "responses": {
@@ -714,7 +721,23 @@
           "public"
         ],
         "summary": "Complete Recovery Flow",
-        "operationId": "completeSelfServiceRecoveryFlow",
+        "operationId": "submitSelfServiceRecoveryFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
+            "name": "flow",
+            "in": "query",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/submitSelfServiceRecoveryFlow"
+            }
+          }
+        ],
         "responses": {
           "302": {
             "$ref": "#/responses/emptyResponse"
@@ -864,13 +887,13 @@
           "public"
         ],
         "summary": "Complete Recovery Flow with Link Method",
-        "operationId": "completeSelfServiceRecoveryFlowWithLinkMethod",
+        "operationId": "submitSelfServiceRecoveryFlowWithLinkMethod",
         "parameters": [
           {
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/completeSelfServiceRecoveryFlowWithLinkMethod"
+              "$ref": "#/definitions/submitSelfServiceRecoveryFlowWithLinkMethod"
             }
           },
           {
@@ -931,6 +954,13 @@
             "name": "flow",
             "in": "query",
             "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/submitSelfServiceRegistrationFlow"
+            }
           }
         ],
         "responses": {
@@ -1099,7 +1129,7 @@
           "public"
         ],
         "summary": "Complete Settings Flow",
-        "operationId": "completeSelfServiceSettingsFlow",
+        "operationId": "submitSelfServiceSettingsFlow",
         "parameters": [
           {
             "type": "string",
@@ -1107,6 +1137,13 @@
             "name": "flow",
             "in": "query",
             "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/submitSelfServiceSettingsFlow"
+            }
           }
         ],
         "responses": {
@@ -1409,7 +1446,23 @@
           "public"
         ],
         "summary": "Complete Verification Flow",
-        "operationId": "completeSelfServiceVerificationFlow",
+        "operationId": "submitSelfServiceVerificationFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
+            "name": "flow",
+            "in": "query",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/submitSelfServiceRecoveryFlow"
+            }
+          }
+        ],
         "responses": {
           "302": {
             "$ref": "#/responses/emptyResponse"
@@ -1568,68 +1621,6 @@
         },
         "Status": {
           "description": "The status of the authentication",
-          "type": "string"
-        }
-      }
-    },
-    "CompleteSelfServiceBrowserSettingsProfileStrategyFlow": {
-      "description": "nolint:deadcode,unused",
-      "type": "object",
-      "required": [
-        "traits"
-      ],
-      "properties": {
-        "csrf_token": {
-          "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
-          "type": "string"
-        },
-        "method": {
-          "description": "Method\n\nShould be set to profile when trying to update a profile.\n\ntype: string",
-          "type": "string"
-        },
-        "traits": {
-          "description": "Traits contains all of the identity's traits.",
-          "type": "object"
-        }
-      }
-    },
-    "CompleteSelfServiceLoginFlowWithPasswordMethod": {
-      "type": "object",
-      "properties": {
-        "csrf_token": {
-          "description": "Sending the anti-csrf token is only required for browser login flows.",
-          "type": "string"
-        },
-        "method": {
-          "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
-          "type": "string"
-        },
-        "password": {
-          "description": "The user's password.",
-          "type": "string"
-        },
-        "password_identifier": {
-          "description": "Identifier is the email or username of the user trying to log in.",
-          "type": "string"
-        }
-      }
-    },
-    "CompleteSelfServiceSettingsFlowWithPasswordMethod": {
-      "type": "object",
-      "required": [
-        "password"
-      ],
-      "properties": {
-        "csrf_token": {
-          "description": "CSRFToken is the anti-CSRF token\n\ntype: string",
-          "type": "string"
-        },
-        "method": {
-          "description": "Method\n\nShould be set to password when trying to update a password.\n\ntype: string",
-          "type": "string"
-        },
-        "password": {
-          "description": "Password is the updated password\n\ntype: string",
           "type": "string"
         }
       }
@@ -2609,49 +2600,6 @@
         }
       }
     },
-    "completeSelfServiceBrowserSettingsOIDCFlowPayload": {
-      "type": "object",
-      "properties": {
-        "flow": {
-          "description": "Flow ID is the flow's ID.\n\nin: query",
-          "type": "string"
-        },
-        "link": {
-          "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
-          "type": "string"
-        },
-        "unlink": {
-          "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
-          "type": "string"
-        }
-      }
-    },
-    "completeSelfServiceRecoveryFlowWithLinkMethod": {
-      "type": "object",
-      "properties": {
-        "csrf_token": {
-          "description": "Sending the anti-csrf token is only required for browser login flows.",
-          "type": "string"
-        },
-        "email": {
-          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
-          "type": "string"
-        }
-      }
-    },
-    "completeSelfServiceVerificationFlowWithLinkMethod": {
-      "type": "object",
-      "properties": {
-        "csrf_token": {
-          "description": "Sending the anti-csrf token is only required for browser login flows.",
-          "type": "string"
-        },
-        "email": {
-          "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
-          "type": "string"
-        }
-      }
-    },
     "errorContainer": {
       "type": "object",
       "required": [
@@ -3067,6 +3015,139 @@
         },
         "identity": {
           "$ref": "#/definitions/Identity"
+        }
+      }
+    },
+    "submitSelfServiceBrowserSettingsOIDCFlowPayload": {
+      "type": "object",
+      "properties": {
+        "flow": {
+          "description": "Flow ID is the flow's ID.\n\nin: query",
+          "type": "string"
+        },
+        "link": {
+          "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+          "type": "string"
+        },
+        "unlink": {
+          "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+          "type": "string"
+        }
+      }
+    },
+    "submitSelfServiceLoginFlow": {
+      "type": "object"
+    },
+    "submitSelfServiceLoginFlowWithPasswordMethod": {
+      "type": "object",
+      "title": "submitSelfServiceLoginFlowWithPasswordMethod is used to decode the login form payload.",
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
+          "type": "string"
+        },
+        "password": {
+          "description": "The user's password.",
+          "type": "string"
+        },
+        "password_identifier": {
+          "description": "Identifier is the email or username of the user trying to log in.",
+          "type": "string"
+        }
+      }
+    },
+    "submitSelfServiceRecoveryFlow": {
+      "type": "object"
+    },
+    "submitSelfServiceRecoveryFlowWithLinkMethod": {
+      "type": "object",
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "email": {
+          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+          "type": "string"
+        }
+      }
+    },
+    "submitSelfServiceRegistrationFlow": {
+      "type": "object"
+    },
+    "submitSelfServiceRegistrationFlowWithPasswordMethod": {
+      "type": "object",
+      "title": "RegistrationFormPayload is used to decode the registration form payload.",
+      "properties": {
+        "csrf_token": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "traits": {
+          "type": "object"
+        }
+      }
+    },
+    "submitSelfServiceSettingsFlow": {
+      "type": "object"
+    },
+    "submitSelfServiceSettingsFlowWithPasswordMethod": {
+      "type": "object",
+      "required": [
+        "password"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token\n\ntype: string",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to password when trying to update a password.\n\ntype: string",
+          "type": "string"
+        },
+        "password": {
+          "description": "Password is the updated password\n\ntype: string",
+          "type": "string"
+        }
+      }
+    },
+    "submitSelfServiceSettingsFlowWithProfileMethod": {
+      "description": "nolint:deadcode,unused",
+      "type": "object",
+      "required": [
+        "traits"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to profile when trying to update a profile.\n\ntype: string",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits contains all of the identity's traits.",
+          "type": "object"
+        }
+      }
+    },
+    "submitSelfServiceVerificationFlowWithLinkMethod": {
+      "type": "object",
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "email": {
+          "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+          "type": "string"
         }
       }
     },

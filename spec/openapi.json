@@ -57,68 +57,6 @@
         ],
         "type": "object"
       },
-      "CompleteSelfServiceBrowserSettingsProfileStrategyFlow": {
-        "description": "nolint:deadcode,unused",
-        "properties": {
-          "csrf_token": {
-            "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
-            "type": "string"
-          },
-          "method": {
-            "description": "Method\n\nShould be set to profile when trying to update a profile.\n\ntype: string",
-            "type": "string"
-          },
-          "traits": {
-            "description": "Traits contains all of the identity's traits.",
-            "type": "object"
-          }
-        },
-        "required": [
-          "traits"
-        ],
-        "type": "object"
-      },
-      "CompleteSelfServiceLoginFlowWithPasswordMethod": {
-        "properties": {
-          "csrf_token": {
-            "description": "Sending the anti-csrf token is only required for browser login flows.",
-            "type": "string"
-          },
-          "method": {
-            "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
-            "type": "string"
-          },
-          "password": {
-            "description": "The user's password.",
-            "type": "string"
-          },
-          "password_identifier": {
-            "description": "Identifier is the email or username of the user trying to log in.",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "CompleteSelfServiceSettingsFlowWithPasswordMethod": {
-        "properties": {
-          "csrf_token": {
-            "description": "CSRFToken is the anti-CSRF token\n\ntype: string",
-            "type": "string"
-          },
-          "method": {
-            "description": "Method\n\nShould be set to password when trying to update a password.\n\ntype: string",
-            "type": "string"
-          },
-          "password": {
-            "description": "Password is the updated password\n\ntype: string",
-            "type": "string"
-          }
-        },
-        "required": [
-          "password"
-        ],
-        "type": "object"
-      },
       "ContainerChangeResponseItem": {
         "description": "ContainerChangeResponseItem change item in response to ContainerChanges operation",
         "properties": {
@@ -1097,49 +1035,6 @@
         ],
         "type": "object"
       },
-      "completeSelfServiceBrowserSettingsOIDCFlowPayload": {
-        "properties": {
-          "flow": {
-            "description": "Flow ID is the flow's ID.\n\nin: query",
-            "type": "string"
-          },
-          "link": {
-            "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
-            "type": "string"
-          },
-          "unlink": {
-            "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "completeSelfServiceRecoveryFlowWithLinkMethod": {
-        "properties": {
-          "csrf_token": {
-            "description": "Sending the anti-csrf token is only required for browser login flows.",
-            "type": "string"
-          },
-          "email": {
-            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "completeSelfServiceVerificationFlowWithLinkMethod": {
-        "properties": {
-          "csrf_token": {
-            "description": "Sending the anti-csrf token is only required for browser login flows.",
-            "type": "string"
-          },
-          "email": {
-            "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "errorContainer": {
         "properties": {
           "errors": {
@@ -1559,6 +1454,154 @@
           "flow",
           "identity"
         ],
+        "type": "object"
+      },
+      "submitSelfServiceBrowserSettingsOIDCFlowPayload": {
+        "properties": {
+          "flow": {
+            "description": "Flow ID is the flow's ID.\n\nin: query",
+            "type": "string"
+          },
+          "link": {
+            "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+            "type": "string"
+          },
+          "unlink": {
+            "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "submitSelfServiceLoginFlow": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethod"
+          }
+        ]
+      },
+      "submitSelfServiceLoginFlowWithPasswordMethod": {
+        "properties": {
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
+            "type": "string"
+          },
+          "password": {
+            "description": "The user's password.",
+            "type": "string"
+          },
+          "password_identifier": {
+            "description": "Identifier is the email or username of the user trying to log in.",
+            "type": "string"
+          }
+        },
+        "title": "submitSelfServiceLoginFlowWithPasswordMethod is used to decode the login form payload.",
+        "type": "object"
+      },
+      "submitSelfServiceRecoveryFlow": {
+        "type": "object"
+      },
+      "submitSelfServiceRecoveryFlowWithLinkMethod": {
+        "properties": {
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "submitSelfServiceRegistrationFlow": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethod"
+          }
+        ]
+      },
+      "submitSelfServiceRegistrationFlowWithPasswordMethod": {
+        "properties": {
+          "csrf_token": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "traits": {
+            "type": "object"
+          }
+        },
+        "title": "RegistrationFormPayload is used to decode the registration form payload.",
+        "type": "object"
+      },
+      "submitSelfServiceSettingsFlow": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethod"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethod"
+          }
+        ]
+      },
+      "submitSelfServiceSettingsFlowWithPasswordMethod": {
+        "properties": {
+          "csrf_token": {
+            "description": "CSRFToken is the anti-CSRF token\n\ntype: string",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method\n\nShould be set to password when trying to update a password.\n\ntype: string",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password is the updated password\n\ntype: string",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "type": "object"
+      },
+      "submitSelfServiceSettingsFlowWithProfileMethod": {
+        "description": "nolint:deadcode,unused",
+        "properties": {
+          "csrf_token": {
+            "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
+            "type": "string"
+          },
+          "method": {
+            "description": "Method\n\nShould be set to profile when trying to update a profile.\n\ntype: string",
+            "type": "string"
+          },
+          "traits": {
+            "description": "Traits contains all of the identity's traits.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "traits"
+        ],
+        "type": "object"
+      },
+      "submitSelfServiceVerificationFlowWithLinkMethod": {
+        "properties": {
+          "csrf_token": {
+            "description": "Sending the anti-csrf token is only required for browser login flows.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "uiContainer": {
@@ -2440,6 +2483,21 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceLoginFlow"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceLoginFlow"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
         "responses": {
           "200": {
             "content": {
@@ -2635,7 +2693,33 @@
     "/self-service/recovery": {
       "post": {
         "description": "Use this endpoint to complete a recovery flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.\n`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a recovery link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with\na new Recovery Flow ID which contains an error message that the recovery link was invalid.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
-        "operationId": "completeSelfServiceRecoveryFlow",
+        "operationId": "submitSelfServiceRecoveryFlow",
+        "parameters": [
+          {
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
+            "in": "query",
+            "name": "flow",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceRecoveryFlow"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceRecoveryFlow"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
         "responses": {
           "302": {
             "$ref": "#/components/responses/emptyResponse"
@@ -2801,7 +2885,7 @@
     "/self-service/recovery/methods/link": {
       "post": {
         "description": "Use this endpoint to complete a recovery flow using the link method. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.\n`sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a recovery link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with\na new Recovery Flow ID which contains an error message that the recovery link was invalid.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
-        "operationId": "completeSelfServiceRecoveryFlowWithLinkMethod",
+        "operationId": "submitSelfServiceRecoveryFlowWithLinkMethod",
         "parameters": [
           {
             "description": "Recovery Token\n\nThe recovery token which completes the recovery request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.",
@@ -2824,12 +2908,12 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/completeSelfServiceRecoveryFlowWithLinkMethod"
+                "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethod"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/completeSelfServiceRecoveryFlowWithLinkMethod"
+                "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethod"
               }
             }
           },
@@ -2881,6 +2965,21 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceRegistrationFlow"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceRegistrationFlow"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
         "responses": {
           "200": {
             "content": {
@@ -3066,7 +3165,7 @@
     "/self-service/settings": {
       "post": {
         "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.\nImplies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "operationId": "completeSelfServiceSettingsFlow",
+        "operationId": "submitSelfServiceSettingsFlow",
         "parameters": [
           {
             "description": "The Settings Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/settings?flow=abcde`).",
@@ -3078,6 +3177,21 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceSettingsFlow"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceSettingsFlow"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
         "responses": {
           "200": {
             "content": {
@@ -3434,7 +3548,33 @@
     "/self-service/verification/methods/link": {
       "post": {
         "description": "Use this endpoint to complete a verification flow. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.\n`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a verification link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with\na new Verification Flow ID which contains an error message that the verification link was invalid.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
-        "operationId": "completeSelfServiceVerificationFlow",
+        "operationId": "submitSelfServiceVerificationFlow",
+        "parameters": [
+          {
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
+            "in": "query",
+            "name": "flow",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceRecoveryFlow"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceRecoveryFlow"
+              }
+            }
+          },
+          "x-originalParamName": "Body"
+        },
         "responses": {
           "302": {
             "$ref": "#/components/responses/emptyResponse"

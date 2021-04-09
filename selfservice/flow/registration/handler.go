@@ -247,7 +247,13 @@ type submitSelfServiceRegistrationFlow struct {
 	// required: true
 	// in: query
 	Flow string `json:"flow"`
+
+	// in: body
+	Body submitSelfServiceRegistrationFlowBody
 }
+
+// swagger:model submitSelfServiceRegistrationFlow
+type submitSelfServiceRegistrationFlowBody struct{}
 
 // swagger:route POST /self-service/registration public submitSelfServiceRegistrationFlow
 //

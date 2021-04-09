@@ -511,6 +511,15 @@ paths:
         schema:
           type: string
         style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceLoginFlow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceLoginFlow'
+        x-originalParamName: Body
       responses:
         "200":
           content:
@@ -693,7 +702,29 @@ paths:
         a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
         More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-      operationId: completeSelfServiceRecoveryFlow
+      operationId: submitSelfServiceRecoveryFlow
+      parameters:
+      - description: |-
+          The Registration Flow ID
+
+          The value for this parameter comes from `flow` URL Query parameter sent to your
+          application (e.g. `/registration?flow=abcde`).
+        explode: true
+        in: query
+        name: flow
+        required: true
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceRecoveryFlow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceRecoveryFlow'
+        x-originalParamName: Body
       responses:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
@@ -848,7 +879,7 @@ paths:
         a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
         More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-      operationId: completeSelfServiceRecoveryFlowWithLinkMethod
+      operationId: submitSelfServiceRecoveryFlowWithLinkMethod
       parameters:
       - description: |-
           Recovery Token
@@ -877,10 +908,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/completeSelfServiceRecoveryFlowWithLinkMethod'
+              $ref: '#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethod'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/completeSelfServiceRecoveryFlowWithLinkMethod'
+              $ref: '#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethod'
         x-originalParamName: Body
       responses:
         "302":
@@ -932,6 +963,15 @@ paths:
         schema:
           type: string
         style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceRegistrationFlow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceRegistrationFlow'
+        x-originalParamName: Body
       responses:
         "200":
           content:
@@ -1105,7 +1145,7 @@ paths:
         a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 
         More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: completeSelfServiceSettingsFlow
+      operationId: submitSelfServiceSettingsFlow
       parameters:
       - description: |-
           The Settings Flow ID
@@ -1119,6 +1159,15 @@ paths:
         schema:
           type: string
         style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceSettingsFlow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceSettingsFlow'
+        x-originalParamName: Body
       responses:
         "200":
           content:
@@ -1425,7 +1474,29 @@ paths:
         a new Verification Flow ID which contains an error message that the verification link was invalid.
 
         More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-      operationId: completeSelfServiceVerificationFlow
+      operationId: submitSelfServiceVerificationFlow
+      parameters:
+      - description: |-
+          The Registration Flow ID
+
+          The value for this parameter comes from `flow` URL Query parameter sent to your
+          application (e.g. `/registration?flow=abcde`).
+        explode: true
+        in: query
+        name: flow
+        required: true
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceRecoveryFlow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/submitSelfServiceRecoveryFlow'
+        x-originalParamName: Body
       responses:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
@@ -1588,72 +1659,6 @@ components:
       required:
       - IdentityToken
       - Status
-      type: object
-    CompleteSelfServiceBrowserSettingsProfileStrategyFlow:
-      description: nolint:deadcode,unused
-      properties:
-        csrf_token:
-          description: |-
-            The Anti-CSRF Token
-
-            This token is only required when performing browser flows.
-          type: string
-        method:
-          description: |-
-            Method
-
-            Should be set to profile when trying to update a profile.
-
-            type: string
-          type: string
-        traits:
-          description: Traits contains all of the identity's traits.
-          type: object
-      required:
-      - traits
-      type: object
-    CompleteSelfServiceLoginFlowWithPasswordMethod:
-      properties:
-        csrf_token:
-          description: Sending the anti-csrf token is only required for browser login
-            flows.
-          type: string
-        method:
-          description: Method should be set to "password" when logging in using the
-            identifier and password strategy.
-          type: string
-        password:
-          description: The user's password.
-          type: string
-        password_identifier:
-          description: Identifier is the email or username of the user trying to log
-            in.
-          type: string
-      type: object
-    CompleteSelfServiceSettingsFlowWithPasswordMethod:
-      properties:
-        csrf_token:
-          description: |-
-            CSRFToken is the anti-CSRF token
-
-            type: string
-          type: string
-        method:
-          description: |-
-            Method
-
-            Should be set to password when trying to update a password.
-
-            type: string
-          type: string
-        password:
-          description: |-
-            Password is the updated password
-
-            type: string
-          type: string
-      required:
-      - password
       type: object
     ContainerChangeResponseItem:
       description: ContainerChangeResponseItem change item in response to ContainerChanges
@@ -2467,69 +2472,6 @@ components:
       required:
       - RefCount
       - Size
-      type: object
-    completeSelfServiceBrowserSettingsOIDCFlowPayload:
-      properties:
-        flow:
-          description: |-
-            Flow ID is the flow's ID.
-
-            in: query
-          type: string
-        link:
-          description: |-
-            Link this provider
-
-            Either this or `unlink` must be set.
-
-            type: string
-            in: body
-          type: string
-        unlink:
-          description: |-
-            Unlink this provider
-
-            Either this or `link` must be set.
-
-            type: string
-            in: body
-          type: string
-      type: object
-    completeSelfServiceRecoveryFlowWithLinkMethod:
-      properties:
-        csrf_token:
-          description: Sending the anti-csrf token is only required for browser login
-            flows.
-          type: string
-        email:
-          description: |-
-            Email to Recover
-
-            Needs to be set when initiating the flow. If the email is a registered
-            recovery email, a recovery link will be sent. If the email is not known,
-            a email with details on what happened will be sent instead.
-
-            format: email
-            in: body
-          type: string
-      type: object
-    completeSelfServiceVerificationFlowWithLinkMethod:
-      properties:
-        csrf_token:
-          description: Sending the anti-csrf token is only required for browser login
-            flows.
-          type: string
-        email:
-          description: |-
-            Email to Verify
-
-            Needs to be set when initiating the flow. If the email is a registered
-            verification email, a verification link will be sent. If the email is not known,
-            a email with details on what happened will be sent instead.
-
-            format: email
-            in: body
-          type: string
       type: object
     errorContainer:
       example:
@@ -3406,6 +3348,159 @@ components:
       required:
       - flow
       - identity
+      type: object
+    submitSelfServiceBrowserSettingsOIDCFlowPayload:
+      properties:
+        flow:
+          description: |-
+            Flow ID is the flow's ID.
+
+            in: query
+          type: string
+        link:
+          description: |-
+            Link this provider
+
+            Either this or `unlink` must be set.
+
+            type: string
+            in: body
+          type: string
+        unlink:
+          description: |-
+            Unlink this provider
+
+            Either this or `link` must be set.
+
+            type: string
+            in: body
+          type: string
+      type: object
+    submitSelfServiceLoginFlow:
+      oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethod'
+    submitSelfServiceLoginFlowWithPasswordMethod:
+      properties:
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        method:
+          description: Method should be set to "password" when logging in using the
+            identifier and password strategy.
+          type: string
+        password:
+          description: The user's password.
+          type: string
+        password_identifier:
+          description: Identifier is the email or username of the user trying to log
+            in.
+          type: string
+      title: submitSelfServiceLoginFlowWithPasswordMethod is used to decode the login
+        form payload.
+      type: object
+    submitSelfServiceRecoveryFlow:
+      type: object
+    submitSelfServiceRecoveryFlowWithLinkMethod:
+      properties:
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        email:
+          description: |-
+            Email to Recover
+
+            Needs to be set when initiating the flow. If the email is a registered
+            recovery email, a recovery link will be sent. If the email is not known,
+            a email with details on what happened will be sent instead.
+
+            format: email
+            in: body
+          type: string
+      type: object
+    submitSelfServiceRegistrationFlow:
+      oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethod'
+    submitSelfServiceRegistrationFlowWithPasswordMethod:
+      properties:
+        csrf_token:
+          type: string
+        password:
+          type: string
+        traits:
+          type: object
+      title: RegistrationFormPayload is used to decode the registration form payload.
+      type: object
+    submitSelfServiceSettingsFlow:
+      oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethod'
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethod'
+    submitSelfServiceSettingsFlowWithPasswordMethod:
+      properties:
+        csrf_token:
+          description: |-
+            CSRFToken is the anti-CSRF token
+
+            type: string
+          type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to password when trying to update a password.
+
+            type: string
+          type: string
+        password:
+          description: |-
+            Password is the updated password
+
+            type: string
+          type: string
+      required:
+      - password
+      type: object
+    submitSelfServiceSettingsFlowWithProfileMethod:
+      description: nolint:deadcode,unused
+      properties:
+        csrf_token:
+          description: |-
+            The Anti-CSRF Token
+
+            This token is only required when performing browser flows.
+          type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to profile when trying to update a profile.
+
+            type: string
+          type: string
+        traits:
+          description: Traits contains all of the identity's traits.
+          type: object
+      required:
+      - traits
+      type: object
+    submitSelfServiceVerificationFlowWithLinkMethod:
+      properties:
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        email:
+          description: |-
+            Email to Verify
+
+            Needs to be set when initiating the flow. If the email is a registered
+            verification email, a verification link will be sent. If the email is not known,
+            a email with details on what happened will be sent instead.
+
+            format: email
+            in: body
+          type: string
       type: object
     uiContainer:
       description: Container represents a HTML Form. The container can work with both

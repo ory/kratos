@@ -22,6 +22,9 @@ import (
 	"github.com/ory/x/errorsx"
 )
 
+// RegistrationFormPayload is used to decode the registration form payload.
+//
+// swagger:model submitSelfServiceRegistrationFlowWithPasswordMethod
 type RegistrationFormPayload struct {
 	Password  string          `json:"password"`
 	Traits    json.RawMessage `json:"traits"`
