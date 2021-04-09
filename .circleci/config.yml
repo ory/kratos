@@ -163,7 +163,7 @@ workflows:
               only: /.*/
       - sdk/generate:
           appname: Ory_Kratos
-          specignorepkgs: github.com/ory/kratos-client-go
+          specignorepgks: github.com/ory/kratos-client-go
           swagpath: spec/api.json
           requires:
             - test
