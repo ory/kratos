@@ -303,8 +303,8 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, checkSession
 }
 
 // nolint:deadcode,unused
-// swagger:parameters completeSelfServiceSettingsFlow
-type completeSelfServiceSettingsFlow struct {
+// swagger:parameters submitSelfServiceSettingsFlow
+type submitSelfServiceSettingsFlow struct {
 	// The Settings Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -313,9 +313,15 @@ type completeSelfServiceSettingsFlow struct {
 	// required: true
 	// in: query
 	Flow string `json:"flow"`
+
+	// in: body
+	Body submitSelfServiceSettingsFlowBody
 }
 
-// swagger:route POST /self-service/settings public completeSelfServiceSettingsFlow
+// swagger:model submitSelfServiceSettingsFlow
+type submitSelfServiceSettingsFlowBody struct{}
+
+// swagger:route POST /self-service/settings public submitSelfServiceSettingsFlow
 //
 // Complete Settings Flow
 //

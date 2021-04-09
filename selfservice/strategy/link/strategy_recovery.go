@@ -190,10 +190,10 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		herodot.UnescapedHTML)
 }
 
-// swagger:parameters completeSelfServiceRecoveryFlowWithLinkMethod
-type completeSelfServiceRecoveryFlowWithLinkMethodParameters struct {
+// swagger:parameters submitSelfServiceRecoveryFlowWithLinkMethod
+type submitSelfServiceRecoveryFlowWithLinkMethodParameters struct {
 	// in: body
-	Body completeSelfServiceRecoveryFlowWithLinkMethod
+	Body submitSelfServiceRecoveryFlowWithLinkMethod
 
 	// Recovery Token
 	//
@@ -210,11 +210,12 @@ type completeSelfServiceRecoveryFlowWithLinkMethodParameters struct {
 	Flow string `json:"flow" form:"flow"`
 }
 
-func (m *completeSelfServiceRecoveryFlowWithLinkMethodParameters) GetFlow() uuid.UUID {
+func (m *submitSelfServiceRecoveryFlowWithLinkMethodParameters) GetFlow() uuid.UUID {
 	return x.ParseUUID(m.Flow)
 }
 
-type completeSelfServiceRecoveryFlowWithLinkMethod struct {
+// swagger:model submitSelfServiceRecoveryFlowWithLinkMethod
+type submitSelfServiceRecoveryFlowWithLinkMethod struct {
 	// Email to Recover
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -229,7 +230,7 @@ type completeSelfServiceRecoveryFlowWithLinkMethod struct {
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 }
 
-// swagger:route POST /self-service/recovery/methods/link public completeSelfServiceRecoveryFlowWithLinkMethod
+// swagger:route POST /self-service/recovery/methods/link public submitSelfServiceRecoveryFlowWithLinkMethod
 //
 // Complete Recovery Flow with Link Method
 //

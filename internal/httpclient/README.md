@@ -100,10 +100,6 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**ListIdentities**](docs/AdminApi.md#listidentities) | **Get** /identities | List Identities
 *AdminApi* | [**Prometheus**](docs/AdminApi.md#prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Hydra service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 *AdminApi* | [**UpdateIdentity**](docs/AdminApi.md#updateidentity) | **Put** /identities/{id} | Update an Identity
-*PublicApi* | [**CompleteSelfServiceRecoveryFlow**](docs/PublicApi.md#completeselfservicerecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
-*PublicApi* | [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#completeselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
-*PublicApi* | [**CompleteSelfServiceSettingsFlow**](docs/PublicApi.md#completeselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
-*PublicApi* | [**CompleteSelfServiceVerificationFlow**](docs/PublicApi.md#completeselfserviceverificationflow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
 *PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} | 
 *PublicApi* | [**GetSelfServiceError**](docs/PublicApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 *PublicApi* | [**GetSelfServiceLoginFlow**](docs/PublicApi.md#getselfserviceloginflow) | **Get** /self-service/login/flows | Get Login Flow
@@ -124,19 +120,17 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**InitializeSelfServiceVerificationViaBrowserFlow**](docs/PublicApi.md#initializeselfserviceverificationviabrowserflow) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 *PublicApi* | [**RevokeSession**](docs/PublicApi.md#revokesession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
 *PublicApi* | [**SubmitSelfServiceLoginFlow**](docs/PublicApi.md#submitselfserviceloginflow) | **Post** /self-service/login | Submit a Login Flow
+*PublicApi* | [**SubmitSelfServiceRecoveryFlow**](docs/PublicApi.md#submitselfservicerecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
+*PublicApi* | [**SubmitSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#submitselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 *PublicApi* | [**SubmitSelfServiceRegistrationFlow**](docs/PublicApi.md#submitselfserviceregistrationflow) | **Post** /self-service/registration | Submit a Registration Flow
+*PublicApi* | [**SubmitSelfServiceSettingsFlow**](docs/PublicApi.md#submitselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
+*PublicApi* | [**SubmitSelfServiceVerificationFlow**](docs/PublicApi.md#submitselfserviceverificationflow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
 *PublicApi* | [**Whoami**](docs/PublicApi.md#whoami) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
 
 ## Documentation For Models
 
  - [AuthenticateOKBody](docs/AuthenticateOKBody.md)
- - [CompleteSelfServiceBrowserSettingsOIDCFlowPayload](docs/CompleteSelfServiceBrowserSettingsOIDCFlowPayload.md)
- - [CompleteSelfServiceBrowserSettingsProfileStrategyFlow](docs/CompleteSelfServiceBrowserSettingsProfileStrategyFlow.md)
- - [CompleteSelfServiceLoginFlowWithPasswordMethod](docs/CompleteSelfServiceLoginFlowWithPasswordMethod.md)
- - [CompleteSelfServiceRecoveryFlowWithLinkMethod](docs/CompleteSelfServiceRecoveryFlowWithLinkMethod.md)
- - [CompleteSelfServiceSettingsFlowWithPasswordMethod](docs/CompleteSelfServiceSettingsFlowWithPasswordMethod.md)
- - [CompleteSelfServiceVerificationFlowWithLinkMethod](docs/CompleteSelfServiceVerificationFlowWithLinkMethod.md)
  - [ContainerChangeResponseItem](docs/ContainerChangeResponseItem.md)
  - [ContainerCreateCreatedBody](docs/ContainerCreateCreatedBody.md)
  - [ContainerTopOKBody](docs/ContainerTopOKBody.md)
@@ -188,6 +182,16 @@ Class | Method | HTTP request | Description
  - [SettingsFlow](docs/SettingsFlow.md)
  - [SettingsProfileFormConfig](docs/SettingsProfileFormConfig.md)
  - [SettingsViaApiResponse](docs/SettingsViaApiResponse.md)
+ - [SubmitSelfServiceBrowserSettingsOIDCFlowPayload](docs/SubmitSelfServiceBrowserSettingsOIDCFlowPayload.md)
+ - [SubmitSelfServiceLoginFlow](docs/SubmitSelfServiceLoginFlow.md)
+ - [SubmitSelfServiceLoginFlowWithPasswordMethod](docs/SubmitSelfServiceLoginFlowWithPasswordMethod.md)
+ - [SubmitSelfServiceRecoveryFlowWithLinkMethod](docs/SubmitSelfServiceRecoveryFlowWithLinkMethod.md)
+ - [SubmitSelfServiceRegistrationFlow](docs/SubmitSelfServiceRegistrationFlow.md)
+ - [SubmitSelfServiceRegistrationFlowWithPasswordMethod](docs/SubmitSelfServiceRegistrationFlowWithPasswordMethod.md)
+ - [SubmitSelfServiceSettingsFlow](docs/SubmitSelfServiceSettingsFlow.md)
+ - [SubmitSelfServiceSettingsFlowWithPasswordMethod](docs/SubmitSelfServiceSettingsFlowWithPasswordMethod.md)
+ - [SubmitSelfServiceSettingsFlowWithProfileMethod](docs/SubmitSelfServiceSettingsFlowWithProfileMethod.md)
+ - [SubmitSelfServiceVerificationFlowWithLinkMethod](docs/SubmitSelfServiceVerificationFlowWithLinkMethod.md)
  - [UiContainer](docs/UiContainer.md)
  - [UiNode](docs/UiNode.md)
  - [UiNodeAnchorAttributes](docs/UiNodeAnchorAttributes.md)

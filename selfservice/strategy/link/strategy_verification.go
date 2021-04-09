@@ -83,10 +83,10 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 	return err
 }
 
-// swagger:parameters completeSelfServiceVerificationFlowWithLinkMethod
-type completeSelfServiceVerificationFlowWithLinkMethodParameters struct {
+// swagger:parameters submitSelfServiceVerificationFlowWithLinkMethod
+type submitSelfServiceVerificationFlowWithLinkMethodParameters struct {
 	// in: body
-	Body completeSelfServiceVerificationFlowWithLinkMethod
+	Body submitSelfServiceVerificationFlowWithLinkMethod
 
 	// Verification Token
 	//
@@ -107,7 +107,7 @@ func (m *verificationSubmitPayload) GetFlow() uuid.UUID {
 	return x.ParseUUID(m.Flow)
 }
 
-type completeSelfServiceVerificationFlowWithLinkMethod struct {
+type submitSelfServiceVerificationFlowWithLinkMethod struct {
 	// Email to Verify
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
