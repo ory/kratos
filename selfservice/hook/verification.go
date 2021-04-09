@@ -25,6 +25,7 @@ type (
 		config.Provider
 		x.CSRFTokenGeneratorProvider
 		verification.StrategyProvider
+		verification.FlowPersistenceProvider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -56,6 +57,10 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity) error {
 		f, err := verification.NewFlow(e.r.Config(r.Context()), e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
 			e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), flow.TypeBrowser)
 		if err != nil {
+			return err
+		}
+
+		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
 			return err
 		}
 

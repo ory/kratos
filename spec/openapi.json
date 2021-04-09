@@ -446,6 +446,10 @@
         ],
         "type": "object"
       },
+      "JSONRawMessage": {
+        "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger.",
+        "type": "object"
+      },
       "Meta": {
         "description": "This might include a label and other information that can optionally\nbe used to render UIs.",
         "properties": {
@@ -1214,6 +1218,25 @@
           "status": {
             "description": "Status always contains \"ok\".",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "identityCredentials": {
+        "description": "Credentials represents a specific credential type",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/JSONRawMessage"
+          },
+          "identifiers": {
+            "description": "Identifiers represents a list of unique identifiers this credential type matches.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CredentialsType"
           }
         },
         "type": "object"

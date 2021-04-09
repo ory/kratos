@@ -127,7 +127,7 @@ func TestContainer(t *testing.T) {
 				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputFieldFromJSON("meal.chef", "aeneas", node.DefaultGroup),
-						&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "meal.name", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorRequired("name")}},
+						&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "meal.name", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorRequired("name")}, Meta: &node.Meta{}},
 					},
 				},
 			},
@@ -211,7 +211,7 @@ func TestContainer(t *testing.T) {
 			{err: herodot.ErrBadRequest.WithReason("tests"), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("tests")}}},
 			{err: schema.NewInvalidCredentialsError(), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewErrorValidationInvalidCredentials()}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: Container{Nodes: node.Nodes{
-				&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "foo.bar.baz", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}},
+				&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "foo.bar.baz", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}, Meta: new(node.Meta)},
 			}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}}},
 		} {

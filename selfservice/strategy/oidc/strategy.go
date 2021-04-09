@@ -296,12 +296,20 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	switch a := req.(type) {
 	case *login.Flow:
-		if err := s.processLogin(w, r, a, claims, provider, cntnr); err != nil {
+		if ff, err := s.processLogin(w, r, a, claims, provider, cntnr); err != nil {
+			if ff != nil {
+				s.forwardError(w, r, ff, err)
+				return
+			}
 			s.forwardError(w, r, a, err)
 		}
 		return
 	case *registration.Flow:
-		if err := s.processRegistration(w, r, a, claims, provider, cntnr); err != nil {
+		if ff, err := s.processRegistration(w, r, a, claims, provider, cntnr); err != nil {
+			if ff != nil {
+				s.forwardError(w, r, ff, err)
+				return
+			}
 			s.forwardError(w, r, a, err)
 		}
 		return
@@ -386,24 +394,21 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 	case *login.Flow:
 		return err
 	case *registration.Flow:
-		rf.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
-		rf.UI.Reset("method")
+		// Reset all nodes to not confuse users.
+		// This is kinda hacky and will probably need to be updated at some point.
+		var nodes node.Nodes
+		for _, n := range rf.UI.Nodes {
+			if n.Group != node.DefaultGroup && n.Group != node.OpenIDConnectGroup {
+				continue
+			}
 
+			nodes = append(nodes, n)
+		}
+
+		rf.UI.Nodes = nodes
 		if traits != nil {
 			rf.UI.UpdateNodesFromJSON(traits, "traits", node.OpenIDConnectGroup)
 		}
-
-		if errSec := rf.UI.ParseError(node.OpenIDConnectGroup, err); errSec != nil {
-			return errors.Wrap(err, errSec.Error())
-		}
-		rf.UI.ResetMessages()
-
-		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-		rf.UI.UnsetNode(s.SettingsStrategyID() + ".provider")
-		rf.UI.GetNodes().Upsert(
-			// v0.5: form.Field{Name: "provider", Value: provider, Type: "submit"}
-			node.NewInputField(s.SettingsStrategyID()+".provider", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
-		)
 		return err
 	case *settings.Flow:
 		return err

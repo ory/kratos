@@ -119,7 +119,7 @@ func TestStrategyTraits(t *testing.T) {
 		actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser1,
 			url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}.Encode())
 		assert.EqualValues(t, http.StatusOK, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "0").Raw), actual)
+		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
 	})
 
 	t.Run("description=should not fail because of CSRF token but because of unprivileged/type=api", func(t *testing.T) {
@@ -127,8 +127,9 @@ func TestStrategyTraits(t *testing.T) {
 
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 
-		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, `{"traits.booly":true,"method":"profile","csrf_token":"invalid"}`)
-		assert.Len(t, res.Cookies(), 0)
+		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, `{"traits.booly":true,"method":"profile","csrf_token":"`+x.FakeCSRFToken+`"}`)
+		assert.Len(t, res.Cookies(), 1)
+		assert.Equal(t, "ory_kratos_continuity", res.Cookies()[0].Name)
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
 		assert.Contains(t, gjson.Get(actual, "error.reason").String(), "login session is too old", actual)
 	})
@@ -185,7 +186,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.NotEmpty(t, gjson.Get(actual, "nodes.#(attributes.name==csrf_token).attributes.value").String(), "csrf token missing")
 
 			assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "http://127.0.0.1:52810/self-service/settings?flow=547d7ec3-eae2-441a-a3f5-d0075c8b3797",
+  "action": "http://127.0.0.1:56924/self-service/settings?flow=35b466af-a256-47b8-9949-4b72ee6b3247",
   "method": "POST",
   "nodes": [
     {
@@ -194,10 +195,11 @@ func TestStrategyTraits(t *testing.T) {
         "name": "csrf_token",
         "required": true,
         "type": "hidden",
-        "value": "M3M4c2Uxb2M5MXFoOHY3NjJ5eXNoM213MHV5eWNmejU="
+        "value": "a3F2b3l2bzUzeDd2cHR2aTI0aXAxNmRqcm5rN3poM20="
       },
       "group": "default",
       "messages": null,
+      "meta": {},
       "type": "input"
     },
     {
@@ -205,10 +207,11 @@ func TestStrategyTraits(t *testing.T) {
         "disabled": false,
         "name": "traits.email",
         "type": "text",
-        "value": "john-browser@doe.com"
+        "value": "john-api@doe.com"
       },
       "group": "profile",
       "messages": null,
+      "meta": {},
       "type": "input"
     },
     {
@@ -220,6 +223,7 @@ func TestStrategyTraits(t *testing.T) {
       },
       "group": "profile",
       "messages": null,
+      "meta": {},
       "type": "input"
     },
     {
@@ -231,6 +235,7 @@ func TestStrategyTraits(t *testing.T) {
       },
       "group": "profile",
       "messages": null,
+      "meta": {},
       "type": "input"
     },
     {
@@ -242,6 +247,7 @@ func TestStrategyTraits(t *testing.T) {
       },
       "group": "profile",
       "messages": null,
+      "meta": {},
       "type": "input"
     },
     {
@@ -253,6 +259,7 @@ func TestStrategyTraits(t *testing.T) {
       },
       "group": "profile",
       "messages": null,
+      "meta": {},
       "type": "input"
     },
     {
@@ -264,6 +271,7 @@ func TestStrategyTraits(t *testing.T) {
       },
       "group": "profile",
       "messages": null,
+      "meta": {},
       "type": "input"
     },
     {
@@ -275,6 +283,13 @@ func TestStrategyTraits(t *testing.T) {
       },
       "group": "profile",
       "messages": null,
+      "meta": {
+        "label": {
+          "id": 1070003,
+          "text": "Save",
+          "type": "info"
+        }
+      },
       "type": "input"
     },
     {
@@ -286,6 +301,13 @@ func TestStrategyTraits(t *testing.T) {
       },
       "group": "password",
       "messages": null,
+      "meta": {
+        "label": {
+          "id": 1070001,
+          "text": "Password",
+          "type": "info"
+        }
+      },
       "type": "input"
     },
     {
@@ -297,6 +319,13 @@ func TestStrategyTraits(t *testing.T) {
       },
       "group": "password",
       "messages": null,
+      "meta": {
+        "label": {
+          "id": 1070003,
+          "text": "Save",
+          "type": "info"
+        }
+      },
       "type": "input"
     }
   ]

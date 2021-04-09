@@ -19,7 +19,7 @@ context('Verify', () => {
 
     it('should request verification and receive an email and verify it', () => {
       cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
 
       cy.get('.messages .message').should(
         'contain.text',
@@ -34,7 +34,7 @@ context('Verify', () => {
     it('should request verification for an email that does not exist yet', () => {
       const email = `not-${identity.email}`
       cy.get('input[name="email"]').type(email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
 
       cy.get('.messages .message').should(
         'contain.text',
@@ -57,7 +57,7 @@ context('Verify', () => {
 
     it('should not verify email when clicking on link received on different address', () => {
       cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
 
       cy.verifyEmail({ expect: { email: identity.email } })
 
@@ -78,7 +78,7 @@ context('Verify', () => {
 
       // request verification link for identity
       cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
 
       cy.performEmailVerification({ expect: { email: identity.email } })
 
