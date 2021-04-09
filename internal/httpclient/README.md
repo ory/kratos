@@ -154,6 +154,7 @@ Class | Method | HTTP request | Description
  - [HealthStatus](docs/HealthStatus.md)
  - [IdResponse](docs/IdResponse.md)
  - [Identity](docs/Identity.md)
+ - [IdentityCredentials](docs/IdentityCredentials.md)
  - [ImageDeleteResponseItem](docs/ImageDeleteResponseItem.md)
  - [ImageSummary](docs/ImageSummary.md)
  - [InlineResponse200](docs/InlineResponse200.md)

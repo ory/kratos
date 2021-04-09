@@ -81,10 +81,11 @@ func TestSettingsStrategy(t *testing.T) {
 	var (
 		conf, reg = internal.NewFastRegistryWithMocks(t)
 		subject   string
+		website   string
 		scope     []string
 	)
 
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &scope)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
@@ -219,23 +220,378 @@ func TestSettingsStrategy(t *testing.T) {
 			rs.Ui.Action)
 	})
 
-	expectedPasswordFields := append(newFakeProfile("john"+testID+"@doe.com"),
-		*testhelpers.NewSDKOIDCNode("link", "ory"),
-		*testhelpers.NewSDKOIDCNode("link", "google"),
-		*testhelpers.NewSDKOIDCNode("link", "github"),
-		*testhelpers.NewMethodSubmit("profile", "profile"),
-	)
-	expectedOryerFields := append(newFakeProfile("hackerman+"+testID+"@ory.sh"),
-		*testhelpers.NewSDKOIDCNode("link", "google"),
-		*testhelpers.NewSDKOIDCNode("link", "github"),
-		*testhelpers.NewMethodSubmit("profile", "profile"),
-	)
-	expectedGithuberFields := append(newFakeProfile("hackerman+github+"+testID+"@ory.sh"),
-		*testhelpers.NewSDKOIDCNode("link", "google"),
-		*testhelpers.NewSDKOIDCNode("unlink", "ory"),
-		*testhelpers.NewSDKOIDCNode("unlink", "github"),
-		*testhelpers.NewMethodSubmit("profile", "profile"),
-	)
+	expectedPasswordFields := json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "john` + testID + `@doe.com"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  }
+]`)
+	expectedOryerFields := json.RawMessage(`[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+` + testID + `@ory.sh",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.name",
+      "type": "text",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "profile",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "password",
+      "type": "password",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "password",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "link",
+      "type": "submit",
+      "value": "github",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "link",
+      "type": "submit",
+      "value": "google",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  }
+]`)
+	expectedGithuberFields := json.RawMessage(`[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+github+` + testID + `@ory.sh",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.name",
+      "type": "text",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "profile",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "password",
+      "type": "password",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "password",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "unlink",
+      "type": "submit",
+      "value": "github",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "link",
+      "type": "submit",
+      "value": "google",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  }
+]`)
 
 	t.Run("case=should adjust linkable providers based on linked credentials", func(t *testing.T) {
 		for _, tc := range []struct {
@@ -245,12 +601,134 @@ func TestSettingsStrategy(t *testing.T) {
 			{agent: "password", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedPasswordFields))},
 			{agent: "oryer", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedOryerFields))},
 			{agent: "githuber", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedGithuberFields))},
-			{agent: "multiuser", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, append(newFakeProfile("hackerman+multiuser+"+testID+"@ory.sh"),
-				*testhelpers.NewSDKOIDCNode("link", "github"),
-				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
-				*testhelpers.NewSDKOIDCNode("unlink", "google"),
-				*testhelpers.NewMethodSubmit("profile", "profile"),
-			)))},
+			{agent: "multiuser", expected: json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+multiuser+` + testID + `@ory.sh"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  }
+]`)},
 		} {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
 				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
@@ -303,7 +781,7 @@ func TestSettingsStrategy(t *testing.T) {
 			return
 		}
 
-		var unlinkInvalid = func(agent, provider string, expectedFields []kratos.UiNode) func(t *testing.T) {
+		var unlinkInvalid = func(agent, provider string, expectedFields json.RawMessage) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
 				assertx.EqualAsJSON(t, expectedFields, req.Ui.Nodes, "%s", body)
@@ -393,7 +871,7 @@ func TestSettingsStrategy(t *testing.T) {
 			return
 		}
 
-		var linkInvalid = func(agent, provider string, expectedFields []kratos.UiNode) func(t *testing.T) {
+		var linkInvalid = func(agent, provider string, expectedFields json.RawMessage) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
@@ -402,7 +880,7 @@ func TestSettingsStrategy(t *testing.T) {
 				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
-				testhelpers.JSONEq(t, expectedFields, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw))
+				assertx.EqualAsJSON(t, expectedFields, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw))
 
 				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 					"can not link unknown or already existing OpenID Connect connection")
@@ -475,19 +953,263 @@ func TestSettingsStrategy(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
 
-			assertx.EqualAsJSON(t, append(newFakeProfile("hackerman+github+"+testID+"@ory.sh"),
-				*testhelpers.NewSDKOIDCNode("link", "google"),
-				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
-				*testhelpers.NewSDKOIDCNode("unlink", "github"),
-				*testhelpers.NewMethodSubmit("profile", "profile"),
-			), originalFlow.Ui.Nodes)
+			assertx.EqualAsJSON(t, json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "`+x.FakeCSRFToken+`"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+github+`+testID+`@ory.sh"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  }
+]`), originalFlow.Ui.Nodes)
 
-			expected := append(newFakeProfile("hackerman+github+"+testID+"@ory.sh"),
-				*testhelpers.NewMethodSubmit("profile", "profile"),
-				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
-				*testhelpers.NewSDKOIDCNode("unlink", "github"),
-				*testhelpers.NewSDKOIDCNode("unlink", "google"),
-			)
+			expected := json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+github+` + testID + `@ory.sh"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  }
+]`)
 			assertx.EqualAsJSON(t, expected, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), res.Request.URL)
 			assertx.EqualAsJSON(t, expected, updatedFlowSDK.Ui.Nodes)
 
@@ -508,12 +1230,135 @@ func TestSettingsStrategy(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.State)
 
-			assertx.EqualAsJSON(t, append(newFakeProfile("john"+testID+"@doe.com"),
-				*testhelpers.NewMethodSubmit("profile", "profile"),
-				*testhelpers.NewSDKOIDCNode("link", "ory"),
-				*testhelpers.NewSDKOIDCNode("link", "github"),
-				*testhelpers.NewSDKOIDCNode("unlink", "google"),
-			), rs.Ui.Nodes)
+			assertx.EqualAsJSON(t, json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "`+x.FakeCSRFToken+`"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "john`+testID+`@doe.com"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  }
+]
+`), rs.Ui.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})

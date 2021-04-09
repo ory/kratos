@@ -21,11 +21,11 @@ context('Register', () => {
     cy.registerOidc({ email, expectSession: false })
 
     cy.get('#registration-password').should('not.exist')
-    cy.get('#registration-oidc input[name="traits.email"]').should(
+    cy.get('input[name="traits.email"]').should(
       'have.value',
       email
     )
-    cy.get('#registration-oidc form > *:last-child').should(
+    cy.get('form > *:last-child').should(
       'have.attr',
       'name',
       'provider'
@@ -34,23 +34,23 @@ context('Register', () => {
       'contain.text',
       'Property website is missing'
     )
-    cy.get('button[name="provider"]').should('have.length', 1)
-    cy.get('#registration-oidc input[name="traits.website"]').type('http://s')
+    cy.get('button[name="provider"]').should('have.length', 3)
+    cy.get('input[name="traits.website"]').type('http://s')
 
     cy.get('button[value="hydra"]').click()
 
     cy.get('#registration-password').should('not.exist')
-    cy.get('#registration-oidc input[name="traits.email"]').should(
+    cy.get('input[name="traits.email"]').should(
       'have.value',
       email
     )
-    cy.get('#registration-oidc form > *:last-child').should(
+    cy.get('form > *:last-child').should(
       'have.attr',
       'name',
       'provider'
     )
     cy.get('.messages .message').should('contain.text', 'length must be >= 10')
-    cy.get('#registration-oidc input[name="traits.website"]')
+    cy.get('input[name="traits.website"]')
       .should('have.value', 'http://s')
       .clear()
       .type(website)
@@ -93,11 +93,11 @@ context('Register', () => {
       'contain.text',
       'Property website is missing'
     )
-    cy.get('#registration-oidc input[name="traits.website"]').type('http://s')
+    cy.get('input[name="traits.website"]').type('http://s')
     cy.get('button[value="hydra"]').click()
 
     cy.get('.messages .message').should('contain.text', 'length must be >= 10')
-    cy.get('#registration-oidc input[name="traits.website"]')
+    cy.get('input[name="traits.website"]')
       .should('have.value', 'http://s')
       .clear()
       .type(website)

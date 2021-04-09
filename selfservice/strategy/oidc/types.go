@@ -51,7 +51,7 @@ type FlowMethod struct {
 func AddProviders(c *container.Container, providers []Configuration, message func(provider string) *text.Message) {
 	for _, p := range providers {
 		c.GetNodes().Append(
-			node.NewInputField(identity.CredentialsTypeOIDC.String()+".provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit).WithMetaLabel(message(
+			node.NewInputField("provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit).WithMetaLabel(message(
 				stringsx.Coalesce(p.Label, p.ID))),
 		)
 	}
