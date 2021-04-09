@@ -235,7 +235,7 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
 
 Cypress.Commands.add('loginMobile', ({ email, password }) => {
   cy.visit(MOBILE_URL)
-  cy.get('input[data-testid="identifier"]').type(email)
+  cy.get('input[data-testid="password_identifier"]').type(email)
   cy.get('input[data-testid="password"]').type(password)
   cy.get('div[data-testid="submit-form"]').click()
 })

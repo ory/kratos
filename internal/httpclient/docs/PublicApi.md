@@ -4,10 +4,6 @@ All URIs are relative to *https://demo.tenants.oryapis.com/api/kratos/public*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**CompleteSelfServiceRecoveryFlow**](PublicApi.md#CompleteSelfServiceRecoveryFlow) | **Post** /self-service/recovery | Complete Recovery Flow
-[**CompleteSelfServiceRecoveryFlowWithLinkMethod**](PublicApi.md#CompleteSelfServiceRecoveryFlowWithLinkMethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
-[**CompleteSelfServiceSettingsFlow**](PublicApi.md#CompleteSelfServiceSettingsFlow) | **Post** /self-service/settings | Complete Settings Flow
-[**CompleteSelfServiceVerificationFlow**](PublicApi.md#CompleteSelfServiceVerificationFlow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
 [**GetSchema**](PublicApi.md#GetSchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](PublicApi.md#GetSelfServiceError) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 [**GetSelfServiceLoginFlow**](PublicApi.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | Get Login Flow
@@ -28,261 +24,13 @@ Method | HTTP request | Description
 [**InitializeSelfServiceVerificationViaBrowserFlow**](PublicApi.md#InitializeSelfServiceVerificationViaBrowserFlow) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 [**RevokeSession**](PublicApi.md#RevokeSession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
 [**SubmitSelfServiceLoginFlow**](PublicApi.md#SubmitSelfServiceLoginFlow) | **Post** /self-service/login | Submit a Login Flow
+[**SubmitSelfServiceRecoveryFlow**](PublicApi.md#SubmitSelfServiceRecoveryFlow) | **Post** /self-service/recovery | Complete Recovery Flow
+[**SubmitSelfServiceRecoveryFlowWithLinkMethod**](PublicApi.md#SubmitSelfServiceRecoveryFlowWithLinkMethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 [**SubmitSelfServiceRegistrationFlow**](PublicApi.md#SubmitSelfServiceRegistrationFlow) | **Post** /self-service/registration | Submit a Registration Flow
+[**SubmitSelfServiceSettingsFlow**](PublicApi.md#SubmitSelfServiceSettingsFlow) | **Post** /self-service/settings | Complete Settings Flow
+[**SubmitSelfServiceVerificationFlow**](PublicApi.md#SubmitSelfServiceVerificationFlow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
 [**Whoami**](PublicApi.md#Whoami) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
-
-
-## CompleteSelfServiceRecoveryFlow
-
-> CompleteSelfServiceRecoveryFlow(ctx).Execute()
-
-Complete Recovery Flow
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CompleteSelfServiceRecoveryFlow(context.Background()).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceRecoveryFlow``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-}
-```
-
-### Path Parameters
-
-This endpoint does not need any parameter.
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiCompleteSelfServiceRecoveryFlowRequest struct via the builder pattern
-
-
-### Return type
-
- (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## CompleteSelfServiceRecoveryFlowWithLinkMethod
-
-> CompleteSelfServiceRecoveryFlowWithLinkMethod(ctx).Token(token).Flow(flow).CompleteSelfServiceRecoveryFlowWithLinkMethod(completeSelfServiceRecoveryFlowWithLinkMethod).Execute()
-
-Complete Recovery Flow with Link Method
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-    token := "token_example" // string | Recovery Token  The recovery token which completes the recovery request. If the token is invalid (e.g. expired) an error will be shown to the end-user. (optional)
-    flow := "flow_example" // string | The Flow ID  format: uuid (optional)
-    completeSelfServiceRecoveryFlowWithLinkMethod := *openapiclient.NewCompleteSelfServiceRecoveryFlowWithLinkMethod() // CompleteSelfServiceRecoveryFlowWithLinkMethod |  (optional)
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CompleteSelfServiceRecoveryFlowWithLinkMethod(context.Background()).Token(token).Flow(flow).CompleteSelfServiceRecoveryFlowWithLinkMethod(completeSelfServiceRecoveryFlowWithLinkMethod).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceRecoveryFlowWithLinkMethod``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **token** | **string** | Recovery Token  The recovery token which completes the recovery request. If the token is invalid (e.g. expired) an error will be shown to the end-user. | 
- **flow** | **string** | The Flow ID  format: uuid | 
- **completeSelfServiceRecoveryFlowWithLinkMethod** | [**CompleteSelfServiceRecoveryFlowWithLinkMethod**](CompleteSelfServiceRecoveryFlowWithLinkMethod.md) |  | 
-
-### Return type
-
- (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json, application/x-www-form-urlencoded
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## CompleteSelfServiceSettingsFlow
-
-> SettingsViaApiResponse CompleteSelfServiceSettingsFlow(ctx).Flow(flow).Execute()
-
-Complete Settings Flow
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-    flow := "flow_example" // string | The Settings Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/settings?flow=abcde`).
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CompleteSelfServiceSettingsFlow(context.Background()).Flow(flow).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceSettingsFlow``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-    // response from `CompleteSelfServiceSettingsFlow`: SettingsViaApiResponse
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.CompleteSelfServiceSettingsFlow`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiCompleteSelfServiceSettingsFlowRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **flow** | **string** | The Settings Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/settings?flow&#x3D;abcde&#x60;). | 
-
-### Return type
-
-[**SettingsViaApiResponse**](SettingsViaApiResponse.md)
-
-### Authorization
-
-[sessionToken](../README.md#sessionToken)
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## CompleteSelfServiceVerificationFlow
-
-> CompleteSelfServiceVerificationFlow(ctx).Execute()
-
-Complete Verification Flow
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CompleteSelfServiceVerificationFlow(context.Background()).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CompleteSelfServiceVerificationFlow``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-}
-```
-
-### Path Parameters
-
-This endpoint does not need any parameter.
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiCompleteSelfServiceVerificationFlowRequest struct via the builder pattern
-
-
-### Return type
-
- (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
 
 
 ## GetSchema
@@ -1481,7 +1229,7 @@ No authorization required
 
 ## SubmitSelfServiceLoginFlow
 
-> LoginViaApiResponse SubmitSelfServiceLoginFlow(ctx).Flow(flow).Execute()
+> LoginViaApiResponse SubmitSelfServiceLoginFlow(ctx).Flow(flow).SubmitSelfServiceLoginFlow(submitSelfServiceLoginFlow).Execute()
 
 Submit a Login Flow
 
@@ -1501,10 +1249,11 @@ import (
 
 func main() {
     flow := "flow_example" // string | The Login Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/login?flow=abcde`).
+    submitSelfServiceLoginFlow := openapiclient.submitSelfServiceLoginFlow{SubmitSelfServiceLoginFlowWithPasswordMethod: openapiclient.NewSubmitSelfServiceLoginFlowWithPasswordMethod()} // SubmitSelfServiceLoginFlow |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.SubmitSelfServiceLoginFlow(context.Background()).Flow(flow).Execute()
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceLoginFlow(context.Background()).Flow(flow).SubmitSelfServiceLoginFlow(submitSelfServiceLoginFlow).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceLoginFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1526,6 +1275,7 @@ Other parameters are passed through a pointer to a apiSubmitSelfServiceLoginFlow
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **flow** | **string** | The Login Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/login?flow&#x3D;abcde&#x60;). | 
+ **submitSelfServiceLoginFlow** | [**SubmitSelfServiceLoginFlow**](SubmitSelfServiceLoginFlow.md) |  | 
 
 ### Return type
 
@@ -1537,7 +1287,141 @@ No authorization required
 
 ### HTTP request headers
 
-- **Content-Type**: Not defined
+- **Content-Type**: application/json, application/x-www-form-urlencoded
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## SubmitSelfServiceRecoveryFlow
+
+> SubmitSelfServiceRecoveryFlow(ctx).Flow(flow).Body(body).Execute()
+
+Complete Recovery Flow
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    flow := "flow_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/registration?flow=abcde`).
+    body := map[string]interface{}(Object) // map[string]interface{} |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceRecoveryFlow(context.Background()).Flow(flow).Body(body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceRecoveryFlow``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiSubmitSelfServiceRecoveryFlowRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **flow** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?flow&#x3D;abcde&#x60;). | 
+ **body** | **map[string]interface{}** |  | 
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json, application/x-www-form-urlencoded
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## SubmitSelfServiceRecoveryFlowWithLinkMethod
+
+> SubmitSelfServiceRecoveryFlowWithLinkMethod(ctx).Token(token).Flow(flow).SubmitSelfServiceRecoveryFlowWithLinkMethod(submitSelfServiceRecoveryFlowWithLinkMethod).Execute()
+
+Complete Recovery Flow with Link Method
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    token := "token_example" // string | Recovery Token  The recovery token which completes the recovery request. If the token is invalid (e.g. expired) an error will be shown to the end-user. (optional)
+    flow := "flow_example" // string | The Flow ID  format: uuid (optional)
+    submitSelfServiceRecoveryFlowWithLinkMethod := *openapiclient.NewSubmitSelfServiceRecoveryFlowWithLinkMethod() // SubmitSelfServiceRecoveryFlowWithLinkMethod |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceRecoveryFlowWithLinkMethod(context.Background()).Token(token).Flow(flow).SubmitSelfServiceRecoveryFlowWithLinkMethod(submitSelfServiceRecoveryFlowWithLinkMethod).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceRecoveryFlowWithLinkMethod``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **token** | **string** | Recovery Token  The recovery token which completes the recovery request. If the token is invalid (e.g. expired) an error will be shown to the end-user. | 
+ **flow** | **string** | The Flow ID  format: uuid | 
+ **submitSelfServiceRecoveryFlowWithLinkMethod** | [**SubmitSelfServiceRecoveryFlowWithLinkMethod**](SubmitSelfServiceRecoveryFlowWithLinkMethod.md) |  | 
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json, application/x-www-form-urlencoded
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
@@ -1547,7 +1431,7 @@ No authorization required
 
 ## SubmitSelfServiceRegistrationFlow
 
-> RegistrationViaApiResponse SubmitSelfServiceRegistrationFlow(ctx).Flow(flow).Execute()
+> RegistrationViaApiResponse SubmitSelfServiceRegistrationFlow(ctx).Flow(flow).SubmitSelfServiceRegistrationFlow(submitSelfServiceRegistrationFlow).Execute()
 
 Submit a Registration Flow
 
@@ -1567,10 +1451,11 @@ import (
 
 func main() {
     flow := "flow_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/registration?flow=abcde`).
+    submitSelfServiceRegistrationFlow := openapiclient.submitSelfServiceRegistrationFlow{SubmitSelfServiceRegistrationFlowWithPasswordMethod: openapiclient.NewSubmitSelfServiceRegistrationFlowWithPasswordMethod()} // SubmitSelfServiceRegistrationFlow |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.SubmitSelfServiceRegistrationFlow(context.Background()).Flow(flow).Execute()
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceRegistrationFlow(context.Background()).Flow(flow).SubmitSelfServiceRegistrationFlow(submitSelfServiceRegistrationFlow).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceRegistrationFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1592,6 +1477,7 @@ Other parameters are passed through a pointer to a apiSubmitSelfServiceRegistrat
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **flow** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?flow&#x3D;abcde&#x60;). | 
+ **submitSelfServiceRegistrationFlow** | [**SubmitSelfServiceRegistrationFlow**](SubmitSelfServiceRegistrationFlow.md) |  | 
 
 ### Return type
 
@@ -1603,7 +1489,141 @@ No authorization required
 
 ### HTTP request headers
 
-- **Content-Type**: Not defined
+- **Content-Type**: application/json, application/x-www-form-urlencoded
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## SubmitSelfServiceSettingsFlow
+
+> SettingsViaApiResponse SubmitSelfServiceSettingsFlow(ctx).Flow(flow).SubmitSelfServiceSettingsFlow(submitSelfServiceSettingsFlow).Execute()
+
+Complete Settings Flow
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    flow := "flow_example" // string | The Settings Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/settings?flow=abcde`).
+    submitSelfServiceSettingsFlow := openapiclient.submitSelfServiceSettingsFlow{SubmitSelfServiceSettingsFlowWithPasswordMethod: openapiclient.NewSubmitSelfServiceSettingsFlowWithPasswordMethod("Password_example")} // SubmitSelfServiceSettingsFlow |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceSettingsFlow(context.Background()).Flow(flow).SubmitSelfServiceSettingsFlow(submitSelfServiceSettingsFlow).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceSettingsFlow``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `SubmitSelfServiceSettingsFlow`: SettingsViaApiResponse
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.SubmitSelfServiceSettingsFlow`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiSubmitSelfServiceSettingsFlowRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **flow** | **string** | The Settings Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/settings?flow&#x3D;abcde&#x60;). | 
+ **submitSelfServiceSettingsFlow** | [**SubmitSelfServiceSettingsFlow**](SubmitSelfServiceSettingsFlow.md) |  | 
+
+### Return type
+
+[**SettingsViaApiResponse**](SettingsViaApiResponse.md)
+
+### Authorization
+
+[sessionToken](../README.md#sessionToken)
+
+### HTTP request headers
+
+- **Content-Type**: application/json, application/x-www-form-urlencoded
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## SubmitSelfServiceVerificationFlow
+
+> SubmitSelfServiceVerificationFlow(ctx).Flow(flow).Body(body).Execute()
+
+Complete Verification Flow
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    flow := "flow_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/registration?flow=abcde`).
+    body := map[string]interface{}(Object) // map[string]interface{} |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceVerificationFlow(context.Background()).Flow(flow).Body(body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceVerificationFlow``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiSubmitSelfServiceVerificationFlowRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **flow** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?flow&#x3D;abcde&#x60;). | 
+ **body** | **map[string]interface{}** |  | 
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json, application/x-www-form-urlencoded
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
