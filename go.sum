@@ -1104,8 +1104,8 @@ github.com/ory/herodot v0.7.0/go.mod h1:YXKOfAXYdQojDP5sD8m0ajowq3+QXNdtxA+QiUXB
 github.com/ory/herodot v0.8.3/go.mod h1:rvLjxOAlU5omtmgjCfazQX2N82EpMfl3BytBWc1jjsk=
 github.com/ory/herodot v0.9.0/go.mod h1:GYF7mp8/WFRYDYJBR989lipjgx3NTjjdVdUC+hpB8mc=
 github.com/ory/herodot v0.9.2/go.mod h1:Da2HXR8mpwPbPrH+Gv9qV8mM5gI3v+PoJ69BA4l2RAk=
-github.com/ory/herodot v0.9.3 h1:vfhidpS1fafk8FzQh7lEhImkp72UUU7x0G3gM1Un5CE=
-github.com/ory/herodot v0.9.3/go.mod h1:g3yAI/d6wPdGnOt3dbYUj5JGTZBNuUVLuuDqHnfc1lM=
+github.com/ory/herodot v0.9.5 h1:CkLzuip0Xc+qqOMYfu6JPEffDWGXDxk71U+/1fcDPiw=
+github.com/ory/herodot v0.9.5/go.mod h1:g3yAI/d6wPdGnOt3dbYUj5JGTZBNuUVLuuDqHnfc1lM=
 github.com/ory/jsonschema/v3 v3.0.1/go.mod h1:jgLHekkFk0uiGdEWGleC+tOm6JSSP8cbf17PnBuGXlw=
 github.com/ory/jsonschema/v3 v3.0.2/go.mod h1:BPH8eu7Ws2kxeu4NRA0Pqrm15+fOJDPfQxb55v2sRXA=
 github.com/ory/jsonschema/v3 v3.0.3 h1:Y7KT4n84ROq8pJ3IMf9JDAulXqYKSU5xUtHjdQFbCLI=

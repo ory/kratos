@@ -2,7 +2,6 @@ package login_test
 
 import (
 	"crypto/tls"
-	"github.com/ory/kratos/internal"
 	"fmt"
 	"net/http"
 	"testing"

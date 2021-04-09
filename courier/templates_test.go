@@ -31,7 +31,7 @@ func TestGetTemplateType(t *testing.T) {
 }
 
 func TestNewEmailTemplateFromMessage(t *testing.T) {
-	conf := internal.NewConfigurationWithDefaults()
+	conf := internal.NewConfigurationWithDefaults(t)
 	for tmplType, expectedTmpl := range map[courier.TemplateType]courier.EmailTemplate{
 		courier.TypeRecoveryInvalid:     template.NewRecoveryInvalid(conf, &template.RecoveryInvalidModel{To: "foo"}),
 		courier.TypeRecoveryValid:       template.NewRecoveryValid(conf, &template.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),

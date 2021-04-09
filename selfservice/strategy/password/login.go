@@ -6,30 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/text"
-
 	"github.com/pkg/errors"
-
-	"net/http"
-
-	"github.com/ory/kratos/ui/container"
-
-	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/x/pkgerx"
-
-	"github.com/ory/kratos/hash"
-
-	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
-	"github.com/ory/x/decoderx"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
