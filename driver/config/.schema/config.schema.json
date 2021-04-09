@@ -1193,7 +1193,7 @@
       "properties": {
         "default_schema_url": {
           "title": "JSON Schema URL for default identity traits",
-          "description": "URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string.",
+          "description": "URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string. Will have ID: \"default\"",
           "type": "string",
           "format": "uri",
           "examples": [
