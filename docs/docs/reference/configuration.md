@@ -770,6 +770,7 @@ selfservice:
             client_id: ''
             client_secret: ''
             mapper_url: file://path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
@@ -779,7 +780,7 @@ selfservice:
               id_token:
                 email:
                 email_verified:
-            issuer_url: https://accounts.google.com
+            label: ''
 
       ## Enables OpenID Connect Method ##
       #
