@@ -6,6 +6,9 @@ import (
 	"net/http/httptest"
 	"net/url"
 
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/pointerx"
 
@@ -58,7 +61,7 @@ func SDKFormFieldsToURLValues(ff []kratos.UiNode) url.Values {
 
 func NewFakeCSRFNode() *kratos.UiNode {
 	return &kratos.UiNode{
-		Group: "default",
+		Group: node.DefaultGroup.String(),
 		Type:  "input",
 		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 			Name:     "csrf_token",
@@ -85,14 +88,22 @@ func NewSDKEmailNode(group string) *kratos.UiNode {
 }
 
 func NewSDKOIDCNode(name, provider string) *kratos.UiNode {
+	t := text.NewInfoRegistrationWith(provider)
 	return &kratos.UiNode{
-		Group: "authenticator_oidc",
+		Group: node.OpenIDConnectGroup.String(),
 		Type:  "input",
 		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 			Name:  name,
 			Type:  "submit",
 			Value: &kratos.UiNodeInputAttributesValue{String: pointerx.String(provider)},
 		}),
+		Meta: kratos.Meta{
+			Label: &kratos.UiText{
+				Id:   int64(t.ID),
+				Text: t.Text,
+				Type: string(t.Type),
+			},
+		},
 	}
 }
 
@@ -111,7 +122,7 @@ func NewMethodSubmit(group, value string) *kratos.UiNode {
 func NewPasswordNode() *kratos.UiNode {
 	return &kratos.UiNode{
 		Type:  "input",
-		Group: "authenticator_password",
+		Group: node.PasswordGroup.String(),
 		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 			Name:     "password",
 			Type:     "password",

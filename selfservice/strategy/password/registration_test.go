@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 
@@ -588,9 +590,9 @@ func TestRegistration(t *testing.T) {
 			Nodes: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
 				node.NewInputField("traits.username", nil, node.PasswordGroup, node.InputAttributeTypeText),
-				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute),
+				node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputPassword()),
 				node.NewInputField("traits.bar", nil, node.PasswordGroup, node.InputAttributeTypeText),
-				node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit),
+				node.NewInputField("method", "password", node.PasswordGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoRegistration()),
 			},
 		}, f.Ui)
 	})

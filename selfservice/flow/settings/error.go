@@ -137,7 +137,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if e := new(FlowNeedsReAuth); errors.As(err, &e) || errors.Is(err, identity.ErrProtectedFieldModified) {
+	if e := new(FlowNeedsReAuth); errors.As(err, &e) {
 		s.reauthenticate(w, r, f, err)
 		return
 	}

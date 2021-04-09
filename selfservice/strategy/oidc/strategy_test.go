@@ -48,12 +48,12 @@ func TestStrategy(t *testing.T) {
 	}
 
 	var (
-		conf, reg = internal.NewFastRegistryWithMocks(t)
-		subject   string
-		scope     []string
+		conf, reg        = internal.NewFastRegistryWithMocks(t)
+		subject, website string
+		scope            []string
 	)
 
-	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &scope)
+	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &website, &scope)
 	returnTS := newReturnTs(t, reg)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
@@ -107,7 +107,7 @@ func TestStrategy(t *testing.T) {
 
 		var found bool
 		for _, field := range config.Nodes {
-			if strings.Contains(field.ID(), identity.CredentialsTypeOIDC.String()+".provider") && field.GetValue() == provider {
+			if strings.Contains(field.ID(), "provider") && field.GetValue() == provider {
 				found = true
 				break
 			}
@@ -126,8 +126,7 @@ func TestStrategy(t *testing.T) {
 	}
 
 	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
-		fv.Set("method", identity.CredentialsTypeOIDC.String())
-		fv.Set(identity.CredentialsTypeOIDC.String()+".provider", provider)
+		fv.Set("provider", provider)
 		res, err := newClient(t, jar).PostForm(action, fv)
 		require.NoError(t, err, action)
 
@@ -338,9 +337,10 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
-	t.Run("case=register and complete data", func(t *testing.T) {
+	t.Run("case=register, merge, and complete data", func(t *testing.T) {
 		subject = "incomplete-data@ory.sh"
 		scope = []string{"openid"}
+		website = "https://www.ory.sh/kratos"
 
 		t.Run("case=should fail registration on first attempt", func(t *testing.T) {
 			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
@@ -351,6 +351,7 @@ func TestStrategy(t *testing.T) {
 			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
 			assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
 			assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
+			assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body)  // make sure the field is being echoed
 		})
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
@@ -358,6 +359,8 @@ func TestStrategy(t *testing.T) {
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{"traits.name": {"valid-name"}})
 			ai(t, res, body)
+			assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+			assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
 		})
 	})
 
@@ -434,7 +437,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
 		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "https://foo/self-service/registration?flow=869a8acf-124f-42db-88e3-096ea66bebfd",
+  "action": "https://foo/self-service/registration?flow=86c92228-005a-4c44-8280-d1df266e59e8",
   "method": "POST",
   "nodes": [
     {
@@ -443,44 +446,54 @@ func TestStrategy(t *testing.T) {
       "attributes": {
         "name": "csrf_token",
         "type": "hidden",
-        "value": "NHltMjg1bjFrcXo0ajV0YXJpYmxlOW54bmFnOTl2b3M=",
+        "value": "OWl2Yjl2enlvY3dkeXJ0bzgzcHpvZnZmaHgxeHQwczc=",
         "required": true,
         "disabled": false
       },
-      "messages": null
+      "messages": null,
+      "meta": {}
     },
     {
       "type": "input",
-      "group": "authenticator_oidc",
+      "group": "oidc",
       "attributes": {
-        "name": "method",
-        "type": "submit",
-        "value": "oidc",
-        "disabled": false
-      },
-      "messages": null
-    },
-    {
-      "type": "input",
-      "group": "authenticator_oidc",
-      "attributes": {
-        "name": "oidc.provider",
+        "name": "provider",
         "type": "submit",
         "value": "valid",
         "disabled": false
       },
-      "messages": null
+      "messages": null,
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with valid",
+          "type": "info",
+          "context": {
+            "provider": "valid"
+          }
+        }
+      }
     },
     {
       "type": "input",
-      "group": "authenticator_oidc",
+      "group": "oidc",
       "attributes": {
-        "name": "oidc.provider",
+        "name": "provider",
         "type": "submit",
         "value": "invalid-issuer",
         "disabled": false
       },
-      "messages": null
+      "messages": null,
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with invalid-issuer",
+          "type": "info",
+          "context": {
+            "provider": "invalid-issuer"
+          }
+        }
+      }
     }
   ]
 }`), sr.UI, []string{"action", "nodes.0.attributes.value"})
@@ -493,7 +506,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
 
 		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "https://foo/self-service/login?flow=b72f9066-a03a-4a9c-9183-ed4f39fca92c",
+  "action": "https://foo/self-service/login?flow=117b721a-8b4a-4e0c-83d0-5879ffbd3608",
   "method": "POST",
   "nodes": [
     {
@@ -502,44 +515,54 @@ func TestStrategy(t *testing.T) {
       "attributes": {
         "name": "csrf_token",
         "type": "hidden",
-        "value": "NHltMjg1bjFrcXo0ajV0YXJpYmxlOW54bmFnOTl2b3M=",
+        "value": "NzdjN3JkdGNzdXVkMGJmanZzZTRocHljenk4Z2Vwem8=",
         "required": true,
         "disabled": false
       },
-      "messages": null
+      "messages": null,
+      "meta": {}
     },
     {
       "type": "input",
-      "group": "authenticator_oidc",
+      "group": "oidc",
       "attributes": {
-        "name": "method",
-        "type": "submit",
-        "value": "oidc",
-        "disabled": false
-      },
-      "messages": null
-    },
-    {
-      "type": "input",
-      "group": "authenticator_oidc",
-      "attributes": {
-        "name": "oidc.provider",
+        "name": "provider",
         "type": "submit",
         "value": "valid",
         "disabled": false
       },
-      "messages": null
+      "messages": null,
+      "meta": {
+        "label": {
+          "id": 1010002,
+          "text": "Sign in with valid",
+          "type": "info",
+          "context": {
+            "provider": "valid"
+          }
+        }
+      }
     },
     {
       "type": "input",
-      "group": "authenticator_oidc",
+      "group": "oidc",
       "attributes": {
-        "name": "oidc.provider",
+        "name": "provider",
         "type": "submit",
         "value": "invalid-issuer",
         "disabled": false
       },
-      "messages": null
+      "messages": null,
+      "meta": {
+        "label": {
+          "id": 1010002,
+          "text": "Sign in with invalid-issuer",
+          "type": "info",
+          "context": {
+            "provider": "invalid-issuer"
+          }
+        }
+      }
     }
   ]
 }`), sr.UI, []string{"action", "nodes.0.attributes.value"})
@@ -676,7 +699,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		t.Run("flow=login", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, c, publicTS, false)
-			res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"oidc"}})
+			res, err := c.PostForm(f.Ui.Action, url.Values{"provider": {"oidc"}})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
@@ -686,7 +709,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		t.Run("flow=registration", func(t *testing.T) {
 			f := testhelpers.InitializeRegistrationFlowViaAPI(t, c, publicTS)
-			res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"oidc"}})
+			res, err := c.PostForm(f.Ui.Action, url.Values{"provider": {"oidc"}})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 

@@ -1,4 +1,4 @@
-import { APP_URL, gen, website } from '../../../../helpers'
+import {APP_URL, gen, website} from '../../../../helpers'
 
 context('Settings', () => {
   let email
@@ -27,37 +27,37 @@ context('Settings', () => {
     cy.clearCookies()
     email = gen.email()
 
-    cy.registerOidc({ email, expectSession: true, website })
+    cy.registerOidc({email, expectSession: true, website})
     cy.visit(APP_URL + '/settings')
   })
 
   describe('oidc', () => {
     it('should show the correct options', () => {
-      cy.get('#user-oidc button[value="hydra"]').should('not.exist')
+      cy.get('button[value="hydra"]').should('not.exist')
 
-      cy.get('#user-oidc button[value="google"]')
+      cy.get('button[value="google"]')
         .should('have.attr', 'name', 'link')
         .should('contain.text', 'Link google')
 
-      cy.get('#user-oidc button[value="github"]')
+      cy.get('button[value="github"]')
         .should('have.attr', 'name', 'link')
         .should('contain.text', 'Link github')
     })
 
     it('should show the unlink once password is set', () => {
-      cy.get('#user-oidc button[value="hydra"]').should('not.exist')
+      cy.get('button[value="hydra"]').should('not.exist')
 
-      cy.get('#user-password input[name="password"]').type(gen.password())
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').type(gen.password())
+      cy.get('button[value="password"]').click()
       cy.visit(APP_URL + '/settings')
 
-      cy.get('#user-oidc button[value="hydra"]')
+      cy.get('button[value="hydra"]')
         .should('have.attr', 'name', 'unlink')
         .should('contain.text', 'Unlink hydra')
     })
 
     it('should link google', () => {
-      cy.get('#user-oidc button[value="google"]').click()
+      cy.get('button[value="google"]').click()
 
       cy.get('input[name="scope"]').each(($el) => cy.wrap($el).click())
       cy.get('#remember').click()
@@ -65,7 +65,7 @@ context('Settings', () => {
 
       cy.visit(APP_URL + '/settings')
 
-      cy.get('#user-oidc button[value="google"]')
+      cy.get('button[value="google"]')
         .should('have.attr', 'name', 'unlink')
         .should('contain.text', 'Unlink google')
 
@@ -78,7 +78,7 @@ context('Settings', () => {
 
     it('should link google after re-auth', () => {
       cy.waitForPrivilegedSessionToExpire()
-      cy.get('#user-oidc button[value="google"]').click()
+      cy.get('button[value="google"]').click()
       cy.location('pathname').should('equal', '/auth/login')
       cy.get('button[value="hydra"]').click()
 
@@ -97,25 +97,25 @@ context('Settings', () => {
         'Your changes have been saved!'
       )
 
-      cy.get('#user-oidc button[value="google"]')
+      cy.get('button[value="google"]')
         .should('have.attr', 'name', 'unlink')
         .should('contain.text', 'Unlink google')
 
       cy.visit(APP_URL + '/settings')
 
-      cy.get('#user-oidc button[value="google"]')
+      cy.get('button[value="google"]')
         .should('have.attr', 'name', 'unlink')
         .should('contain.text', 'Unlink google')
     })
 
     it('should unlink hydra and no longer be able to sign in', () => {
-      cy.get('#user-oidc button[value="hydra"]').should('not.exist')
+      cy.get('button[value="hydra"]').should('not.exist')
 
-      cy.get('#user-password input[name="password"]').type(gen.password())
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').type(gen.password())
+      cy.get('button[value="password"]').click()
       cy.visit(APP_URL + '/settings')
 
-      cy.get('#user-oidc button[value="hydra"]').click()
+      cy.get('button[value="hydra"]').click()
 
       // It will no longer be possible to sign up with this provider because of a UNIQUE key violation
       // because of the email verification table.
@@ -125,14 +125,14 @@ context('Settings', () => {
     })
 
     it('should unlink hydra after reauth', () => {
-      cy.get('#user-oidc button[value="hydra"]').should('not.exist')
+      cy.get('button[value="hydra"]').should('not.exist')
 
-      cy.get('#user-password input[name="password"]').type(gen.password())
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').type(gen.password())
+      cy.get('button[value="password"]').click()
       cy.visit(APP_URL + '/settings')
 
       cy.waitForPrivilegedSessionToExpire()
-      cy.get('#user-oidc button[value="hydra"]').click()
+      cy.get('button[value="hydra"]').click()
       cy.location('pathname').should('equal', '/auth/login')
       cy.get('button[value="hydra"]').click()
 

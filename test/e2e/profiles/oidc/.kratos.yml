@@ -35,7 +35,7 @@ selfservice:
 
   flows:
     settings:
-      privileged_session_max_age: 5000ms
+      privileged_session_max_age: 2500ms
 
     logout:
       after:

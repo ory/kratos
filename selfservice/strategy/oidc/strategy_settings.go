@@ -202,17 +202,13 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return nil, errors.WithStack(err)
 	}
 
-	if len(method.Link+method.Unlink) == 0 {
-		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
-	}
-
-	if !s.d.Config(r.Context()).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
-		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
-	}
-
 	var p completeSelfServiceBrowserSettingsOIDCFlowPayload
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
+		if !s.d.Config(r.Context()).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
+			return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
+		}
+
 		if l := len(p.Link); l > 0 {
 			if err := s.initLinkProvider(w, r, ctxUpdate, &p); err != nil {
 				return nil, err
@@ -232,12 +228,16 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
-	if err := r.ParseForm(); err != nil {
-		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, err)
+	if len(method.Link+method.Unlink) == 0 {
+		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+	}
+	p.Link = method.Link
+	p.Unlink = method.Unlink
+
+	if !s.d.Config(r.Context()).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
+		return nil, errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
 	}
 
-	p.Link = r.Form.Get("link")
-	p.Unlink = r.Form.Get("unlink")
 	if l, u := len(p.Link), len(p.Unlink); l > 0 && u > 0 {
 		return nil, s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(&jsonschema.ValidationError{
 			Message:     "it is not possible to link and unlink providers in the same request",
