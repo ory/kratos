@@ -10,7 +10,8 @@
     "test": "cypress run",
     "test:watch": "cypress open",
     "openapi-generator-cli": "openapi-generator-cli",
-    "wait-on": "wait-on"
+    "wait-on": "wait-on",
+    "text-run": "exit 0"
   },
   "devDependencies": {
     "cypress": "7.0.0",
