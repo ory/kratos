@@ -28,582 +28,6 @@ var (
 // PublicApiService PublicApi service
 type PublicApiService service
 
-type PublicApiApiCompleteSelfServiceRecoveryFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-}
-
-func (r PublicApiApiCompleteSelfServiceRecoveryFlowRequest) Execute() (*http.Response, error) {
-	return r.ApiService.CompleteSelfServiceRecoveryFlowExecute(r)
-}
-
-/*
- * CompleteSelfServiceRecoveryFlow Complete Recovery Flow
- * Use this endpoint to complete a recovery flow. This endpoint
-behaves differently for API and browser flows and has several states:
-
-`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
-`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
-works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
-(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
-a new Recovery Flow ID which contains an error message that the recovery link was invalid.
-
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiCompleteSelfServiceRecoveryFlowRequest
-*/
-func (a *PublicApiService) CompleteSelfServiceRecoveryFlow(ctx context.Context) PublicApiApiCompleteSelfServiceRecoveryFlowRequest {
-	return PublicApiApiCompleteSelfServiceRecoveryFlowRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *PublicApiService) CompleteSelfServiceRecoveryFlowExecute(r PublicApiApiCompleteSelfServiceRecoveryFlowRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.CompleteSelfServiceRecoveryFlow")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/self-service/recovery"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v RecoveryFlow
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
-}
-
-type PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest struct {
-	ctx                                           context.Context
-	ApiService                                    *PublicApiService
-	token                                         *string
-	flow                                          *string
-	completeSelfServiceRecoveryFlowWithLinkMethod *CompleteSelfServiceRecoveryFlowWithLinkMethod
-}
-
-func (r PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest) Token(token string) PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest {
-	r.token = &token
-	return r
-}
-func (r PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest) Flow(flow string) PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest {
-	r.flow = &flow
-	return r
-}
-func (r PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest) CompleteSelfServiceRecoveryFlowWithLinkMethod(completeSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod) PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest {
-	r.completeSelfServiceRecoveryFlowWithLinkMethod = &completeSelfServiceRecoveryFlowWithLinkMethod
-	return r
-}
-
-func (r PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest) Execute() (*http.Response, error) {
-	return r.ApiService.CompleteSelfServiceRecoveryFlowWithLinkMethodExecute(r)
-}
-
-/*
- * CompleteSelfServiceRecoveryFlowWithLinkMethod Complete Recovery Flow with Link Method
- * Use this endpoint to complete a recovery flow using the link method. This endpoint
-behaves differently for API and browser flows and has several states:
-
-`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
-`sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It
-works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
-(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
-a new Recovery Flow ID which contains an error message that the recovery link was invalid.
-
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest
-*/
-func (a *PublicApiService) CompleteSelfServiceRecoveryFlowWithLinkMethod(ctx context.Context) PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest {
-	return PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *PublicApiService) CompleteSelfServiceRecoveryFlowWithLinkMethodExecute(r PublicApiApiCompleteSelfServiceRecoveryFlowWithLinkMethodRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.CompleteSelfServiceRecoveryFlowWithLinkMethod")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/self-service/recovery/methods/link"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	if r.token != nil {
-		localVarQueryParams.Add("token", parameterToString(*r.token, ""))
-	}
-	if r.flow != nil {
-		localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
-	}
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	localVarPostBody = r.completeSelfServiceRecoveryFlowWithLinkMethod
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v RecoveryFlow
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
-}
-
-type PublicApiApiCompleteSelfServiceSettingsFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-	flow       *string
-}
-
-func (r PublicApiApiCompleteSelfServiceSettingsFlowRequest) Flow(flow string) PublicApiApiCompleteSelfServiceSettingsFlowRequest {
-	r.flow = &flow
-	return r
-}
-
-func (r PublicApiApiCompleteSelfServiceSettingsFlowRequest) Execute() (*SettingsViaApiResponse, *http.Response, error) {
-	return r.ApiService.CompleteSelfServiceSettingsFlowExecute(r)
-}
-
-/*
- * CompleteSelfServiceSettingsFlow Complete Settings Flow
- * Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
-behaves differently for API and browser flows.
-
-API-initiated flows expect `application/json` to be sent in the body and respond with
-HTTP 200 and an application/json body with the session token on success;
-HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
-HTTP 400 on form validation errors.
-HTTP 401 when the endpoint is called without a valid session token.
-HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
-Implies that the user needs to re-authenticate.
-
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
-
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiCompleteSelfServiceSettingsFlowRequest
-*/
-func (a *PublicApiService) CompleteSelfServiceSettingsFlow(ctx context.Context) PublicApiApiCompleteSelfServiceSettingsFlowRequest {
-	return PublicApiApiCompleteSelfServiceSettingsFlowRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- * @return SettingsViaApiResponse
- */
-func (a *PublicApiService) CompleteSelfServiceSettingsFlowExecute(r PublicApiApiCompleteSelfServiceSettingsFlowRequest) (*SettingsViaApiResponse, *http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-		localVarReturnValue  *SettingsViaApiResponse
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.CompleteSelfServiceSettingsFlow")
-	if err != nil {
-		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/self-service/settings"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-	if r.flow == nil {
-		return localVarReturnValue, nil, reportError("flow is required and must be specified")
-	}
-
-	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["sessionToken"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["X-Session-Token"] = key
-			}
-		}
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v SettingsFlow
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 401 {
-			var v GenericError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 403 {
-			var v GenericError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
-type PublicApiApiCompleteSelfServiceVerificationFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-}
-
-func (r PublicApiApiCompleteSelfServiceVerificationFlowRequest) Execute() (*http.Response, error) {
-	return r.ApiService.CompleteSelfServiceVerificationFlowExecute(r)
-}
-
-/*
- * CompleteSelfServiceVerificationFlow Complete Verification Flow
- * Use this endpoint to complete a verification flow. This endpoint
-behaves differently for API and browser flows and has several states:
-
-`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
-`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
-works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
-(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
-a new Verification Flow ID which contains an error message that the verification link was invalid.
-
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiCompleteSelfServiceVerificationFlowRequest
-*/
-func (a *PublicApiService) CompleteSelfServiceVerificationFlow(ctx context.Context) PublicApiApiCompleteSelfServiceVerificationFlowRequest {
-	return PublicApiApiCompleteSelfServiceVerificationFlowRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *PublicApiService) CompleteSelfServiceVerificationFlowExecute(r PublicApiApiCompleteSelfServiceVerificationFlowRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.CompleteSelfServiceVerificationFlow")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/self-service/verification/methods/link"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v VerificationFlow
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
-}
-
 type PublicApiApiGetSchemaRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
@@ -3113,13 +2537,18 @@ func (a *PublicApiService) RevokeSessionExecute(r PublicApiApiRevokeSessionReque
 }
 
 type PublicApiApiSubmitSelfServiceLoginFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-	flow       *string
+	ctx                        context.Context
+	ApiService                 *PublicApiService
+	flow                       *string
+	submitSelfServiceLoginFlow *SubmitSelfServiceLoginFlow
 }
 
 func (r PublicApiApiSubmitSelfServiceLoginFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceLoginFlowRequest {
 	r.flow = &flow
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceLoginFlowRequest) SubmitSelfServiceLoginFlow(submitSelfServiceLoginFlow SubmitSelfServiceLoginFlow) PublicApiApiSubmitSelfServiceLoginFlowRequest {
+	r.submitSelfServiceLoginFlow = &submitSelfServiceLoginFlow
 	return r
 }
 
@@ -3182,7 +2611,7 @@ func (a *PublicApiService) SubmitSelfServiceLoginFlowExecute(r PublicApiApiSubmi
 
 	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
 
 	// set Content-Type header
 	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
@@ -3198,6 +2627,8 @@ func (a *PublicApiService) SubmitSelfServiceLoginFlowExecute(r PublicApiApiSubmi
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
+	// body params
+	localVarPostBody = r.submitSelfServiceLoginFlow
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -3254,14 +2685,308 @@ func (a *PublicApiService) SubmitSelfServiceLoginFlowExecute(r PublicApiApiSubmi
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiSubmitSelfServiceRegistrationFlowRequest struct {
+type PublicApiApiSubmitSelfServiceRecoveryFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	flow       *string
+	body       *map[string]interface{}
+}
+
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
+	r.flow = &flow
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Body(body map[string]interface{}) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
+	r.body = &body
+	return r
+}
+
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Execute() (*http.Response, error) {
+	return r.ApiService.SubmitSelfServiceRecoveryFlowExecute(r)
+}
+
+/*
+ * SubmitSelfServiceRecoveryFlow Complete Recovery Flow
+ * Use this endpoint to complete a recovery flow. This endpoint
+behaves differently for API and browser flows and has several states:
+
+`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+and works with API- and Browser-initiated flows.
+For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
+works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
+does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
+a new Recovery Flow ID which contains an error message that the recovery link was invalid.
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiSubmitSelfServiceRecoveryFlowRequest
+*/
+func (a *PublicApiService) SubmitSelfServiceRecoveryFlow(ctx context.Context) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
+	return PublicApiApiSubmitSelfServiceRecoveryFlowRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPost
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceRecoveryFlow")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/recovery"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.flow == nil {
+		return nil, reportError("flow is required and must be specified")
+	}
+
+	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.body
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v RecoveryFlow
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v GenericError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
+}
+
+type PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest struct {
+	ctx                                         context.Context
+	ApiService                                  *PublicApiService
+	token                                       *string
+	flow                                        *string
+	submitSelfServiceRecoveryFlowWithLinkMethod *SubmitSelfServiceRecoveryFlowWithLinkMethod
+}
+
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest) Token(token string) PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest {
+	r.token = &token
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest) Flow(flow string) PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest {
+	r.flow = &flow
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest) SubmitSelfServiceRecoveryFlowWithLinkMethod(submitSelfServiceRecoveryFlowWithLinkMethod SubmitSelfServiceRecoveryFlowWithLinkMethod) PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest {
+	r.submitSelfServiceRecoveryFlowWithLinkMethod = &submitSelfServiceRecoveryFlowWithLinkMethod
+	return r
+}
+
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest) Execute() (*http.Response, error) {
+	return r.ApiService.SubmitSelfServiceRecoveryFlowWithLinkMethodExecute(r)
+}
+
+/*
+ * SubmitSelfServiceRecoveryFlowWithLinkMethod Complete Recovery Flow with Link Method
+ * Use this endpoint to complete a recovery flow using the link method. This endpoint
+behaves differently for API and browser flows and has several states:
+
+`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+and works with API- and Browser-initiated flows.
+For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+`sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It
+works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
+does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
+a new Recovery Flow ID which contains an error message that the recovery link was invalid.
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest
+*/
+func (a *PublicApiService) SubmitSelfServiceRecoveryFlowWithLinkMethod(ctx context.Context) PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest {
+	return PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *PublicApiService) SubmitSelfServiceRecoveryFlowWithLinkMethodExecute(r PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPost
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceRecoveryFlowWithLinkMethod")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/recovery/methods/link"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	if r.token != nil {
+		localVarQueryParams.Add("token", parameterToString(*r.token, ""))
+	}
+	if r.flow != nil {
+		localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
+	}
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.submitSelfServiceRecoveryFlowWithLinkMethod
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v RecoveryFlow
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v GenericError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
+}
+
+type PublicApiApiSubmitSelfServiceRegistrationFlowRequest struct {
+	ctx                               context.Context
+	ApiService                        *PublicApiService
+	flow                              *string
+	submitSelfServiceRegistrationFlow *SubmitSelfServiceRegistrationFlow
 }
 
 func (r PublicApiApiSubmitSelfServiceRegistrationFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceRegistrationFlowRequest {
 	r.flow = &flow
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceRegistrationFlowRequest) SubmitSelfServiceRegistrationFlow(submitSelfServiceRegistrationFlow SubmitSelfServiceRegistrationFlow) PublicApiApiSubmitSelfServiceRegistrationFlowRequest {
+	r.submitSelfServiceRegistrationFlow = &submitSelfServiceRegistrationFlow
 	return r
 }
 
@@ -3325,7 +3050,7 @@ func (a *PublicApiService) SubmitSelfServiceRegistrationFlowExecute(r PublicApiA
 
 	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
+	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
 
 	// set Content-Type header
 	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
@@ -3341,6 +3066,8 @@ func (a *PublicApiService) SubmitSelfServiceRegistrationFlowExecute(r PublicApiA
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
+	// body params
+	localVarPostBody = r.submitSelfServiceRegistrationFlow
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -3395,6 +3122,334 @@ func (a *PublicApiService) SubmitSelfServiceRegistrationFlowExecute(r PublicApiA
 	}
 
 	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type PublicApiApiSubmitSelfServiceSettingsFlowRequest struct {
+	ctx                           context.Context
+	ApiService                    *PublicApiService
+	flow                          *string
+	submitSelfServiceSettingsFlow *SubmitSelfServiceSettingsFlow
+}
+
+func (r PublicApiApiSubmitSelfServiceSettingsFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceSettingsFlowRequest {
+	r.flow = &flow
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceSettingsFlowRequest) SubmitSelfServiceSettingsFlow(submitSelfServiceSettingsFlow SubmitSelfServiceSettingsFlow) PublicApiApiSubmitSelfServiceSettingsFlowRequest {
+	r.submitSelfServiceSettingsFlow = &submitSelfServiceSettingsFlow
+	return r
+}
+
+func (r PublicApiApiSubmitSelfServiceSettingsFlowRequest) Execute() (*SettingsViaApiResponse, *http.Response, error) {
+	return r.ApiService.SubmitSelfServiceSettingsFlowExecute(r)
+}
+
+/*
+ * SubmitSelfServiceSettingsFlow Complete Settings Flow
+ * Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
+behaves differently for API and browser flows.
+
+API-initiated flows expect `application/json` to be sent in the body and respond with
+HTTP 200 and an application/json body with the session token on success;
+HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
+HTTP 401 when the endpoint is called without a valid session token.
+HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
+Implies that the user needs to re-authenticate.
+
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiSubmitSelfServiceSettingsFlowRequest
+*/
+func (a *PublicApiService) SubmitSelfServiceSettingsFlow(ctx context.Context) PublicApiApiSubmitSelfServiceSettingsFlowRequest {
+	return PublicApiApiSubmitSelfServiceSettingsFlowRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return SettingsViaApiResponse
+ */
+func (a *PublicApiService) SubmitSelfServiceSettingsFlowExecute(r PublicApiApiSubmitSelfServiceSettingsFlowRequest) (*SettingsViaApiResponse, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPost
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *SettingsViaApiResponse
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceSettingsFlow")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/settings"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.flow == nil {
+		return localVarReturnValue, nil, reportError("flow is required and must be specified")
+	}
+
+	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.submitSelfServiceSettingsFlow
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["sessionToken"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["X-Session-Token"] = key
+			}
+		}
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v SettingsFlow
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
+			var v GenericError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v GenericError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v GenericError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type PublicApiApiSubmitSelfServiceVerificationFlowRequest struct {
+	ctx        context.Context
+	ApiService *PublicApiService
+	flow       *string
+	body       *map[string]interface{}
+}
+
+func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
+	r.flow = &flow
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Body(body map[string]interface{}) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
+	r.body = &body
+	return r
+}
+
+func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*http.Response, error) {
+	return r.ApiService.SubmitSelfServiceVerificationFlowExecute(r)
+}
+
+/*
+ * SubmitSelfServiceVerificationFlow Complete Verification Flow
+ * Use this endpoint to complete a verification flow. This endpoint
+behaves differently for API and browser flows and has several states:
+
+`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+and works with API- and Browser-initiated flows.
+For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+`sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
+works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
+does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
+a new Verification Flow ID which contains an error message that the verification link was invalid.
+
+More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiSubmitSelfServiceVerificationFlowRequest
+*/
+func (a *PublicApiService) SubmitSelfServiceVerificationFlow(ctx context.Context) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
+	return PublicApiApiSubmitSelfServiceVerificationFlowRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiApiSubmitSelfServiceVerificationFlowRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPost
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceVerificationFlow")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/verification/methods/link"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.flow == nil {
+		return nil, reportError("flow is required and must be specified")
+	}
+
+	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.body
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v VerificationFlow
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v GenericError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
 }
 
 type PublicApiApiWhoamiRequest struct {

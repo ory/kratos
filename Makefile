@@ -94,6 +94,7 @@ sdk: .bin/swagger .bin/cli node_modules
 					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
 					-p file://.schema/openapi/patches/meta.yaml \
 					-p file://.schema/openapi/patches/schema.yaml \
+					-p file://.schema/openapi/patches/selfservice.yaml \
 					spec/swagger.json spec/openapi.json
 
 		rm -rf internal/httpclient/models internal/httpclient/clients

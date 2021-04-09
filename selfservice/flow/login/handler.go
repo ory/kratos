@@ -281,7 +281,13 @@ type submitSelfServiceLoginFlow struct {
 	// required: true
 	// in: query
 	Flow string `json:"flow"`
+
+	// in: body
+	Body submitSelfServiceLoginFlowBody
 }
+
+// swagger:model submitSelfServiceLoginFlow
+type submitSelfServiceLoginFlowBody struct{}
 
 // swagger:route POST /self-service/login public submitSelfServiceLoginFlow
 //
