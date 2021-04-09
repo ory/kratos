@@ -320,7 +320,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -332,7 +341,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -344,7 +362,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050002,
+        "text": "Link ory",
+        "type": "info"
+      }
+    },
     "type": "input"
   }
 ]`)
@@ -449,7 +476,16 @@ func TestSettingsStrategy(t *testing.T) {
       "disabled": false
     },
     "messages": null,
-    "meta": {}
+    "meta": {
+      "label": {
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info",
+        "context": {
+          "provider": "github"
+        }
+      }
+    }
   },
   {
     "type": "input",
@@ -461,7 +497,16 @@ func TestSettingsStrategy(t *testing.T) {
       "disabled": false
     },
     "messages": null,
-    "meta": {}
+    "meta": {
+      "label": {
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info",
+        "context": {
+          "provider": "google"
+        }
+      }
+    }
   }
 ]`)
 	expectedGithuberFields := json.RawMessage(`[
@@ -565,7 +610,16 @@ func TestSettingsStrategy(t *testing.T) {
       "disabled": false
     },
     "messages": null,
-    "meta": {}
+    "meta": {
+      "label": {
+        "id": 1050003,
+        "text": "Unlink github",
+        "type": "info",
+        "context": {
+          "provider": "github"
+        }
+      }
+    }
   },
   {
     "type": "input",
@@ -577,7 +631,16 @@ func TestSettingsStrategy(t *testing.T) {
       "disabled": false
     },
     "messages": null,
-    "meta": {}
+    "meta": {
+      "label": {
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info",
+        "context": {
+          "provider": "google"
+        }
+      }
+    }
   },
   {
     "type": "input",
@@ -589,9 +652,19 @@ func TestSettingsStrategy(t *testing.T) {
       "disabled": false
     },
     "messages": null,
-    "meta": {}
+    "meta": {
+      "label": {
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info",
+        "context": {
+          "provider": "ory"
+        }
+      }
+    }
   }
-]`)
+]
+`)
 
 	t.Run("case=should adjust linkable providers based on linked credentials", func(t *testing.T) {
 		for _, tc := range []struct {
@@ -701,7 +774,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -713,7 +795,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050003,
+        "text": "Unlink google",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -725,7 +816,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info"
+      }
+    },
     "type": "input"
   }
 ]`)},
@@ -1053,7 +1153,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050003,
+        "text": "Unlink github",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -1065,7 +1174,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -1077,10 +1195,20 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info"
+      }
+    },
     "type": "input"
   }
-]`), originalFlow.Ui.Nodes)
+]
+`), originalFlow.Ui.Nodes)
 
 			expected := json.RawMessage(`[
   {
@@ -1182,7 +1310,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -1194,7 +1331,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050003,
+        "text": "Unlink github",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -1206,7 +1352,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050003,
+        "text": "Unlink google",
+        "type": "info"
+      }
+    },
     "type": "input"
   }
 ]`)
@@ -1330,7 +1485,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050002,
+        "text": "Link ory",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -1342,7 +1506,16 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -1354,11 +1527,19 @@ func TestSettingsStrategy(t *testing.T) {
     },
     "group": "oidc",
     "messages": null,
-    "meta": {},
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050003,
+        "text": "Unlink google",
+        "type": "info"
+      }
+    },
     "type": "input"
   }
-]
-`), rs.Ui.Nodes)
+]`), rs.Ui.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
