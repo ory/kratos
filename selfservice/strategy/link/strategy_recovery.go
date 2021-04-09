@@ -211,6 +211,7 @@ type submitSelfServiceRecoveryFlowWithLinkMethodParameters struct {
 	Flow string `json:"flow" form:"flow"`
 }
 
+// nolint:deadcode,unused
 func (m *submitSelfServiceRecoveryFlowWithLinkMethodParameters) GetFlow() uuid.UUID {
 	return x.ParseUUID(m.Flow)
 }
