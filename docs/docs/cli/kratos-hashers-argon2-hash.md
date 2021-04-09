@@ -16,12 +16,8 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 Hash a list of passwords for benchmarking the hashing parameters
 
-### Synopsis
-
-Hash a list of passwords for benchmarking the hashing parameters
-
 ```
-kratos hashers argon2 hash <password1> [<password2> ...] [flags]
+kratos hashers argon2 hash &lt;password1&gt; [&lt;password2&gt; ...] [flags]
 ```
 
 ### Options
