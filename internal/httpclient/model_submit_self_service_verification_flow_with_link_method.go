@@ -15,7 +15,7 @@ import (
 	"encoding/json"
 )
 
-// SubmitSelfServiceVerificationFlowWithLinkMethod struct for SubmitSelfServiceVerificationFlowWithLinkMethod
+// SubmitSelfServiceVerificationFlowWithLinkMethod nolint:deadcode,unused
 type SubmitSelfServiceVerificationFlowWithLinkMethod struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`

@@ -3139,6 +3139,7 @@
       }
     },
     "submitSelfServiceVerificationFlowWithLinkMethod": {
+      "description": "nolint:deadcode,unused",
       "type": "object",
       "properties": {
         "csrf_token": {
