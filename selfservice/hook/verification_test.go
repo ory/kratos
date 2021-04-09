@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 	"time"
 
@@ -78,7 +77,7 @@ func TestVerifier(t *testing.T) {
 
 			h := hook.NewVerifier(reg)
 			require.NoError(t, hf(h, i, originalFlow))
-			expectedVerificationFlow, err := verification.NewPostHookFlow(conf.SelfServiceFlowVerificationRequestLifespan(), "", u, reg.VerificationStrategies(context.Background()), originalFlow)
+			expectedVerificationFlow, err := verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(), "", u, reg.VerificationStrategies(context.Background()), originalFlow)
 			require.NoError(t, err)
 
 			var verificationFlow verification.Flow

@@ -114,8 +114,8 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	return f, nil
 }
 
-func NewPostHookFlow(exp time.Duration, csrf string, r *http.Request, strategies Strategies, original flow.Flow) (*Flow, error) {
-	f, err := NewFlow(exp, csrf, r, strategies, original.GetType())
+func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, original flow.Flow) (*Flow, error) {
+	f, err := NewFlow(conf, exp, csrf, r, strategies, original.GetType())
 	if err != nil {
 		return nil, err
 	}

@@ -154,7 +154,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypeOIDC
 }
 
-func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (ider, error) {
+func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (flow.Flow, error) {
 	if x.IsZeroUUID(rid) {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
 	}
@@ -201,7 +201,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (ider, *authCodeContainer, error) {
+func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
 	var (
 		code  = r.URL.Query().Get("code")
 		state = r.URL.Query().Get("state")

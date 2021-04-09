@@ -49,7 +49,7 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
+	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
 
 	// Check that the contents of the hashed passwords are identical. Note
 	// that we are using the subtle.ConstantTimeCompare() function for this

@@ -508,7 +508,8 @@ func TestCompleteLogin(t *testing.T) {
 		browserClient := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
 
-		values := url.Values{"method": {"password"}, "password_identifier": {identifier}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+		values := url.Values{"method": {"password"}, "password_identifier": {identifier},
+			"password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
 		body1, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)

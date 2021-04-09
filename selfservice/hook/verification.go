@@ -3,10 +3,6 @@ package hook
 import (
 	"net/http"
 
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/x"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
@@ -57,17 +53,14 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			continue
 		}
 
-		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
+		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()),
+			e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
+			e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
 		if err != nil {
 			return err
 		}
 
 		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(r.Context(), verificationFlow); err != nil {
-			return err
-		}
-
-		token := link.NewVerificationToken(address, e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan())
-		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
 			return err
 		}
 

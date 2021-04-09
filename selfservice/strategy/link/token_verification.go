@@ -63,17 +63,6 @@ func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *ver
 		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true}}
 }
 
-func NewVerificationToken(address *identity.VerifiableAddress, expiresIn time.Duration) *VerificationToken {
-	now := time.Now().UTC()
-	return &VerificationToken{
-		ID:                x.NewUUID(),
-		Token:             randx.MustString(32, randx.AlphaNum),
-		VerifiableAddress: address,
-		ExpiresAt:         now.Add(expiresIn),
-		IssuedAt:          now,
-	}
-}
-
 func (f *VerificationToken) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(verification.NewFlowExpiredError(f.ExpiresAt))
