@@ -38,7 +38,7 @@ section.
 identity:
   ## JSON Schema URL for default identity traits ##
   #
-  # URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string.
+  # URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string. Will have ID: "default"
   #
   # Examples:
   # - file://path/to/identity.traits.schema.json
