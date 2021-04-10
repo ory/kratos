@@ -18,6 +18,8 @@ Something is not working.
 - [ ] Refresh Sessions Without Having to Log In Again
       ([kratos#615](https://github.com/ory/kratos/issues/615)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Receive the verification email every time when I update my password
+      ([kratos#1221](https://github.com/ory/kratos/issues/1221))
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] handle 409 error in settings flow
@@ -151,12 +153,12 @@ Something is not working.
 
 #### Pull Requests
 
-- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
-      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] Implement FIDO2/MFA and refactor flow payloads and identity credentials
       and authenticators
       ([kratos#921](https://github.com/ory/kratos/pull/921)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
@@ -222,14 +224,14 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
-      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] docs: Initial set of documentation tests
       ([kratos#567](https://github.com/ory/kratos/pull/567)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] feat: add selinux compatible quickstart config
       ([kratos#889](https://github.com/ory/kratos/pull/889)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
@@ -276,8 +278,14 @@ A request for comments to discuss and share ideas.
 
 Blocks milestones or other issues or pulls.
 
+#### Issues
+
+- [ ] Ory Kratos v0.6 pre-release list
+      ([kratos#1222](https://github.com/ory/kratos/issues/1222)) -
+      [@hackerman](https://github.com/aeneasr)
+
 #### Pull Requests
 
-- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+- [x] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
       ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
       [@hackerman](https://github.com/aeneasr)
