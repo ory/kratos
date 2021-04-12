@@ -3,6 +3,8 @@ package sql
 import (
 	"context"
 
+	"github.com/ory/kratos/corp"
+
 	"github.com/gobuffalo/pop/v5"
 
 	"github.com/gofrs/uuid"
@@ -15,19 +17,21 @@ import (
 var _ login.FlowPersister = new(Persister)
 
 func (p *Persister) CreateLoginFlow(ctx context.Context, r *login.Flow) error {
-	return p.GetConnection(ctx).Eager().Create(r)
+	r.NID = corp.ContextualizeNID(ctx, p.nid)
+	return p.GetConnection(ctx).Create(r)
 }
 
 func (p *Persister) UpdateLoginFlow(ctx context.Context, r *login.Flow) error {
-	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		return tx.Save(r)
-	})
+	cp := *r
+	cp.NID = corp.ContextualizeNID(ctx, p.nid)
+	return p.update(ctx, cp)
 }
 
 func (p *Persister) GetLoginFlow(ctx context.Context, id uuid.UUID) (*login.Flow, error) {
 	conn := p.GetConnection(ctx)
+
 	var r login.Flow
-	if err := conn.Eager().Find(&r, id); err != nil {
+	if err := conn.Where("id = ? AND nid = ?", id, corp.ContextualizeNID(ctx, p.nid)).First(&r); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -42,6 +46,6 @@ func (p *Persister) ForceLoginFlow(ctx context.Context, id uuid.UUID) error {
 		}
 
 		lr.Forced = true
-		return tx.Save(lr)
+		return tx.Save(lr, "nid")
 	})
 }

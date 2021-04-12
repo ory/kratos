@@ -3,7 +3,8 @@ package sql
 import (
 	"context"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/ory/kratos/corp"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/sqlcon"
@@ -12,18 +13,20 @@ import (
 )
 
 func (p *Persister) CreateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
-	return p.GetConnection(ctx).Eager().Create(r)
+	r.NID = corp.ContextualizeNID(ctx, p.nid)
+	return p.GetConnection(ctx).Create(r)
 }
 
 func (p *Persister) UpdateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
-	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		return tx.Save(r)
-	})
+	cp := *r
+	cp.NID = corp.ContextualizeNID(ctx, p.nid)
+	return p.update(ctx, cp)
 }
 
 func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*registration.Flow, error) {
 	var r registration.Flow
-	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
+	if err := p.GetConnection(ctx).Where("id = ? AND nid = ?",
+		id, corp.ContextualizeNID(ctx, p.nid)).First(&r); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 

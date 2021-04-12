@@ -1,1 +1,15 @@
-INSERT INTO "_selfservice_settings_requests_tmp" (id, request_url, issued_at, expires_at, identity_id, created_at, updated_at, active_method, state, messages) SELECT id, request_url, issued_at, expires_at, identity_id, created_at, updated_at, active_method, state, messages FROM "selfservice_settings_requests";
+CREATE TABLE "_selfservice_recovery_requests_tmp" (
+"id" TEXT PRIMARY KEY,
+"request_url" TEXT NOT NULL,
+"issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
+"expires_at" DATETIME NOT NULL,
+"active_method" TEXT,
+"csrf_token" TEXT NOT NULL,
+"state" TEXT NOT NULL,
+"recovered_identity_id" char(36),
+"created_at" DATETIME NOT NULL,
+"updated_at" DATETIME NOT NULL,
+"nid" char(36),
+"messages" TEXT,
+FOREIGN KEY (recovered_identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
+);

@@ -50,6 +50,7 @@ type (
 		CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
+		NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 	}
 )
 
@@ -73,4 +74,12 @@ func NewVerifiableEmailAddress(value string, identity uuid.UUID) *VerifiableAddr
 		Via:        VerifiableAddressTypeEmail,
 		IdentityID: identity,
 	}
+}
+
+func (a VerifiableAddress) GetID() uuid.UUID {
+	return a.ID
+}
+
+func (a VerifiableAddress) GetNID() uuid.UUID {
+	return a.NID
 }

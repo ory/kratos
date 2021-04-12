@@ -1,2 +1,2 @@
 
-DROP TABLE "selfservice_registration_requests";
+DROP TABLE "selfservice_settings_requests";

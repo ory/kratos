@@ -1,0 +1,1 @@
+ALTER TABLE "identity_credential_identifiers" RENAME COLUMN "nid" TO "_nid_tmp";

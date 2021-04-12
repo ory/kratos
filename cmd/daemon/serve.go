@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -152,13 +151,7 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 		d.Config(cmd.Context()).Source(),
 		&metricsx.Options{
 			Service: "ory-kratos",
-			ClusterID: metricsx.Hash(
-				strings.Join([]string{
-					d.Config(cmd.Context()).DSN(),
-					d.Config(cmd.Context()).SelfPublicURL(nil).String(),
-					d.Config(cmd.Context()).SelfAdminURL().String(),
-				}, "|"),
-			),
+			ClusterID: metricsx.Hash(d.Persister().NetworkID().String()),
 			IsDevelopment: d.Config(cmd.Context()).IsInsecureDevMode(),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{

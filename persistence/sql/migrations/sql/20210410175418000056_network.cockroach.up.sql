@@ -1,0 +1,1 @@
+UPDATE "courier_messages" SET "nid" = "_nid_tmp";

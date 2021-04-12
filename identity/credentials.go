@@ -44,14 +44,14 @@ type Credentials struct {
 	// for passwordless authentication.
 	Config sqlxx.JSONRawMessage `json:"config" db:"config"`
 
-	IdentityID                     uuid.UUID                      `json:"-" faker:"-" db:"identity_id"`
-	CredentialIdentifierCollection CredentialIdentifierCollection `json:"-" faker:"-" has_many:"identity_credential_identifiers" fk_id:"identity_credential_id"`
+	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" db:"updated_at"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 type (
@@ -65,6 +65,7 @@ type (
 		CreatedAt time.Time `json:"-" db:"created_at"`
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" db:"updated_at"`
+		NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 	}
 
 	// swagger:ignore

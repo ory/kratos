@@ -1,2 +1,1 @@
-
-DROP TABLE "selfservice_settings_flows";
+DROP INDEX IF EXISTS "selfservice_recovery_flows_nid_idx";

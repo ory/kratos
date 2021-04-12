@@ -499,8 +499,15 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 				m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
 				return err
 			}
+
 			if err := p.Ping(); err != nil {
 				m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
+				return err
+			}
+
+			net, err := p.DetermineNetwork(ctx)
+			if err != nil {
+				m.Logger().WithError(err).Warnf("Unable to determine network, retrying.")
 				return err
 			}
 
@@ -513,7 +520,7 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 				}
 			}
 
-			m.persister = p
+			m.persister = p.WithNetworkID(net.ID)
 			return nil
 		}, bc),
 	)

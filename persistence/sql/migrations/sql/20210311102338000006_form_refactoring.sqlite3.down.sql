@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_recovery_flows" ADD COLUMN "messages" TEXT;
+DROP INDEX IF EXISTS "selfservice_verification_flows_nid_idx";

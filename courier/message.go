@@ -25,6 +25,7 @@ const (
 
 type Message struct {
 	ID           uuid.UUID     `json:"-" faker:"-" db:"id"`
+	NID          uuid.UUID     `json:"-"  faker:"-" db:"nid"`
 	Status       MessageStatus `json:"-" db:"status"`
 	Type         MessageType   `json:"-" db:"type"`
 	Recipient    string        `json:"-" db:"recipient"`

@@ -47,6 +47,7 @@ type VerificationToken struct {
 	VerifiableAddressID uuid.UUID `json:"-" faker:"-" db:"identity_verifiable_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
 	FlowID uuid.NullUUID `json:"-" faker:"-" db:"selfservice_verification_flow_id"`
+	NID    uuid.UUID     `json:"-"  faker:"-" db:"nid"`
 }
 
 func (VerificationToken) TableName(ctx context.Context) string {

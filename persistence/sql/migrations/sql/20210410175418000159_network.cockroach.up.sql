@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" DROP COLUMN "_nid_tmp";

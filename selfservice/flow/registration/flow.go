@@ -65,7 +65,8 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
-	CSRFToken string `json:"-" db:"csrf_token"`
+	CSRFToken string    `json:"-" db:"csrf_token"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flow {
@@ -89,8 +90,12 @@ func (f Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_registration_flows")
 }
 
-func (f *Flow) GetID() uuid.UUID {
+func (f Flow) GetID() uuid.UUID {
 	return f.ID
+}
+
+func (f Flow) GetNID() uuid.UUID {
+	return f.NID
 }
 
 func (f *Flow) Valid() error {
