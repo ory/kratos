@@ -1,2 +1,1 @@
-
-DROP TABLE "selfservice_recovery_flows";
+ALTER TABLE "selfservice_recovery_flows" ADD COLUMN "messages" TEXT;

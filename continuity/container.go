@@ -16,7 +16,8 @@ import (
 )
 
 type Container struct {
-	ID         uuid.UUID  `json:"id" db:"id"`
+	ID         uuid.UUID  `json:"id" db:"id" rw:"r"`
+	NID        uuid.UUID  `json:"-" db:"nid"`
 	Name       string     `json:"name" db:"name"`
 	IdentityID *uuid.UUID `json:"identity_id" db:"identity_id"`
 

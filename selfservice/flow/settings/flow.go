@@ -92,6 +92,7 @@ type Flow struct {
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 // The Response for Settings Flows via API
@@ -138,24 +139,28 @@ func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
 }
 
-func (r Flow) TableName(ctx context.Context) string {
+func (f Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_settings_flows")
 }
 
-func (r *Flow) GetID() uuid.UUID {
-	return r.ID
+func (f Flow) GetID() uuid.UUID {
+	return f.ID
 }
 
-func (r *Flow) AppendTo(src *url.URL) *url.URL {
-	return flow.AppendFlowTo(src, r.ID)
+func (f Flow) GetNID() uuid.UUID {
+	return f.NID
 }
 
-func (r *Flow) Valid(s *session.Session) error {
-	if r.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(NewFlowExpiredError(r.ExpiresAt))
+func (f *Flow) AppendTo(src *url.URL) *url.URL {
+	return flow.AppendFlowTo(src, f.ID)
+}
+
+func (f *Flow) Valid(s *session.Session) error {
+	if f.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
 	}
 
-	if r.IdentityID != s.Identity.ID {
+	if f.IdentityID != s.Identity.ID {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf(
 			"You must restart the flow because the resumable session was initiated by another person."))
 	}

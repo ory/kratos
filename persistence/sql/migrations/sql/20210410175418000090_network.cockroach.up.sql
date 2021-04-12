@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "identity_credential_identifiers_identifier_idx";

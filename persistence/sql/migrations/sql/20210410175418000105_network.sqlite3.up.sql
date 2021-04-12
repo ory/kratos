@@ -1,0 +1,1 @@
+INSERT INTO "_identity_recovery_addresses_tmp" (id, via, value, identity_id, created_at, updated_at, nid) SELECT id, via, value, identity_id, created_at, updated_at, nid FROM "identity_recovery_addresses";

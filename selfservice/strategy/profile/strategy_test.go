@@ -128,7 +128,7 @@ func TestStrategyTraits(t *testing.T) {
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 
 		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, `{"traits.booly":true,"method":"profile","csrf_token":"`+x.FakeCSRFToken+`"}`)
-		assert.Len(t, res.Cookies(), 1)
+		require.Len(t, res.Cookies(), 1)
 		assert.Equal(t, "ory_kratos_continuity", res.Cookies()[0].Name)
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
 		assert.Contains(t, gjson.Get(actual, "error.reason").String(), "login session is too old", actual)

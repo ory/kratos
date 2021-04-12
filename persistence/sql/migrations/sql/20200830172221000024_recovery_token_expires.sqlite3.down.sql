@@ -1,1 +1,1 @@
-DELETE FROM identity_recovery_tokens WHERE selfservice_recovery_flow_id IS NULL;
+CREATE INDEX "identity_recovery_addresses_code_idx" ON "_identity_recovery_tokens_tmp" (token);

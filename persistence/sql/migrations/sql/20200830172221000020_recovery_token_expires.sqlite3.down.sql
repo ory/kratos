@@ -1,1 +1,1 @@
-CREATE UNIQUE INDEX "identity_recovery_addresses_code_uq_idx" ON "_identity_recovery_tokens_tmp" (token);
+ALTER TABLE "_identity_recovery_tokens_tmp" RENAME TO "identity_recovery_tokens";

@@ -83,6 +83,7 @@ type Flow struct {
 
 	// RecoveredIdentityID is a helper struct field for gobuffalo.pop.
 	RecoveredIdentityID uuid.NullUUID `json:"-" faker:"-" db:"recovered_identity_id"`
+	NID        uuid.UUID  `json:"-"  faker:"-" db:"nid"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
@@ -122,8 +123,12 @@ func (f Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_recovery_flows")
 }
 
-func (f *Flow) GetID() uuid.UUID {
+func (f Flow) GetID() uuid.UUID {
 	return f.ID
+}
+
+func (f Flow) GetNID() uuid.UUID {
+	return f.NID
 }
 
 func (f *Flow) Valid() error {

@@ -1,0 +1,1 @@
+UPDATE "selfservice_errors" SET "nid" = "_nid_tmp";
