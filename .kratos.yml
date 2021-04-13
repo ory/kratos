@@ -65,7 +65,7 @@ secrets:
 hashers:
   argon2:
     parallelism: 1
-    memory: 128MB
+    memory: 64MB
     iterations: 2
     salt_length: 16
     key_length: 16
