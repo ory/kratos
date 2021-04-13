@@ -150,7 +150,7 @@ func (p *Persister) update(ctx context.Context, v node, columnNames ...string) e
 	stmt := fmt.Sprintf("SELECT COUNT(id) FROM %s AS %s WHERE %s.id = ? AND %s.id = ?",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
-		model.WhereNamedID(),
+		model.Alias(),
 		model.Alias(),
 	)
 
