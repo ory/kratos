@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ory/kratos/internal/testhelpers"
 	"testing"
+	"time"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -112,7 +113,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			nid, p := testhelpers.NewNetwork(t, p)
 
 			t.Run("sets id on creation", func(t *testing.T) {
-				expected := &login.Flow{ID: id}
+				expected := &login.Flow{ID: id,IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
 				require.NoError(t, p.CreateLoginFlow(ctx, expected))
 				assert.EqualValues(t, id, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)
@@ -138,7 +139,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				expected, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 
-				_,other := testhelpers.NewNetwork(t,p)
+				_, other := testhelpers.NewNetwork(t, p)
 
 				expected.RequestURL = "updated"
 				require.Error(t, other.ForceLoginFlow(ctx, expected.ID))
@@ -155,7 +156,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				expected, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 
-				_,other := testhelpers.NewNetwork(t,p)
+				_, other := testhelpers.NewNetwork(t, p)
 
 				expected.RequestURL = "updated"
 				require.Error(t, other.UpdateLoginFlow(ctx, expected))
@@ -169,7 +170,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_,p := testhelpers.NewNetwork(t,p)
+				_, p := testhelpers.NewNetwork(t, p)
 				_, err := p.GetLoginFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
