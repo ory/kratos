@@ -62,9 +62,7 @@ identity:
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: "postgres://user:
-  password@postgresd:5432/database?sslmode=disable&max_conns=20&max_idle_conns=\
-  4"
+dsn: "admin:Wdxewsm37GBpAHg1MGGC@upbond-ciam-poc.cy5wxwv196bs.ap-northeast-1.rds.amazonaws.com:3306/upbond?sslmode=disable&max_conns=20&max_idle_conns=4"
 
 ## selfservice ##
 #
