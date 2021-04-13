@@ -1,6 +1,6 @@
 
 version: v0.4.6-alpha.1
-dsn: "mysql://admin:Wdxewsm37GBpAHg1MGGC@upbond-ciam-poc.cy5wxwv196bs.ap-northeast-1.rds.amazonaws.com:3306/upbond?max_conns=20&max_idle_conns=4"
+dsn: "mysql://admin:Wdxewsm37GBpAHg1MGGC@tcp(upbond-ciam-poc.cy5wxwv196bs.ap-northeast-1.rds.amazonaws.com:3306)/upbond?max_conns=20&max_idle_conns=4"
 serve:
   public:
     base_url: http://127.0.0.1:4433/
