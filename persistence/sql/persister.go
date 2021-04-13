@@ -125,8 +125,8 @@ type quotable interface {
 }
 
 type node interface {
-	GetID () uuid.UUID
-	GetNID () uuid.UUID
+	GetID() uuid.UUID
+	GetNID() uuid.UUID
 }
 
 func (p *Persister) update(ctx context.Context, v node, columnNames ...string) error {
@@ -147,7 +147,7 @@ func (p *Persister) update(ctx context.Context, v node, columnNames ...string) e
 		cols = columns.ForStructWithAlias(v, tn, model.As, model.IDField())
 	}
 
-	stmt := fmt.Sprintf("SELECT COUNT(id) FROM %s AS %s WHERE %s.id = ? AND %s.id = ?",
+	stmt := fmt.Sprintf("SELECT COUNT(id) FROM %s AS %s WHERE %s.id = ? AND %s.nid = ?",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
 		model.Alias(),
@@ -155,7 +155,7 @@ func (p *Persister) update(ctx context.Context, v node, columnNames ...string) e
 	)
 
 	var count int
-	if err := c.Store.GetContext(ctx, &count, stmt, v.GetID(), v.GetNID()); err != nil {
+	if err := c.Store.GetContext(ctx, &count, c.Dialect.TranslateSQL(stmt), v.GetID(), v.GetNID()); err != nil {
 		return sqlcon.HandleError(err)
 	} else if count == 0 {
 		return errors.WithStack(sqlcon.ErrNoRows)

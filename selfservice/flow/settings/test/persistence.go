@@ -162,7 +162,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			require.NoError(t, p.CreateIdentity(ctx, &identity.Identity{ID: iid}))
 
 			t.Run("sets id on creation", func(t *testing.T) {
-				expected := &settings.Flow{ID: id, IdentityID: iid}
+				expected := &settings.Flow{ID: id, IdentityID: iid, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
 				require.NoError(t, p.CreateSettingsFlow(ctx, expected))
 				assert.EqualValues(t, id, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)
