@@ -3,6 +3,7 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/sqlcon"
 	"net/http"
 	"time"
 
@@ -39,7 +40,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, l *login.Flow) error {
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
-		if errors.Is(err, herodot.ErrNotFound) {
+		if errors.Is(err, sqlcon.ErrNoRows) {
 			// If no account was found we're "manually" creating a new registration flow and redirecting the browser
 			// to that endpoint.
 

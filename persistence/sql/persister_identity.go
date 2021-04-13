@@ -182,7 +182,7 @@ func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Ide
 
 func (p *Persister) findVerifiableAddresses(ctx context.Context, i *identity.Identity) error {
 	var addresses []identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", i.ID, corp.ContextualizeNID(ctx, p.nid)).All(&addresses); err != nil {
+	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", i.ID, corp.ContextualizeNID(ctx, p.nid)).Order("id ASC").All(&addresses); err != nil {
 		return err
 	}
 	i.VerifiableAddresses = addresses
@@ -191,7 +191,7 @@ func (p *Persister) findVerifiableAddresses(ctx context.Context, i *identity.Ide
 
 func (p *Persister) findRecoveryAddresses(ctx context.Context, i *identity.Identity) error {
 	var addresses []identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", i.ID, corp.ContextualizeNID(ctx, p.nid)).All(&addresses); err != nil {
+	if err := p.GetConnection(ctx).Where("identity_id = ? AND nid = ?", i.ID, corp.ContextualizeNID(ctx, p.nid)).Order("id ASC").All(&addresses); err != nil {
 		return err
 	}
 	i.RecoveryAddresses = addresses
@@ -374,6 +374,13 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 		}
 
 		i.Credentials[cred.Type] = *cred
+	}
+
+	if err := p.findRecoveryAddresses(ctx,&i); err != nil {
+		return nil,err
+	}
+	if err := p.findVerifiableAddresses(ctx,&i); err != nil {
+		return nil,err
 	}
 
 	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
