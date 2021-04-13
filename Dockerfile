@@ -35,6 +35,8 @@ VOLUME /var/lib/sqlite
 # Exposing the ory home directory to simplify passing in Kratos configuration (e.g. if the file $HOME/.kratos.yaml
 # exists, it will be automatically used as the configuration file).
 VOLUME /home/ory
+COPY .kratos.yml /home/ory/.kratos.yml
+COPY identity.schema.json /home/ory/identity.schema.json
 
 # Declare the standard ports used by Kratos (4433 for public service endpoint, 4434 for admin service endpoint)
 EXPOSE 4433 4434
@@ -42,4 +44,4 @@ EXPOSE 4433 4434
 USER 10000
 
 ENTRYPOINT ["kratos"]
-CMD ["serve"]
+CMD ["serve", "-c", "/home/ory/.kratos.yml"]
