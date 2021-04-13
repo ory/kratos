@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"github.com/gofrs/uuid"
 	"testing"
 
 	"github.com/ory/x/configx"
@@ -58,6 +59,7 @@ func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDef
 	})
 
 	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
+	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID())
 	return conf, reg
 }
 
@@ -70,5 +72,11 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *drive
 	require.NoError(t, err)
 	reg.Config(context.Background()).MustSet("dev", true)
 	require.NoError(t, reg.Init(context.Background()))
+
+	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID())
+	actual, err := reg.Persister().DetermineNetwork(context.Background())
+	require.NoError(t, err)
+	require.EqualValues(t, reg.Persister().NetworkID(), actual.ID)
+
 	return c, reg.(*driver.RegistryDefault)
 }
