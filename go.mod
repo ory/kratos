@@ -19,6 +19,9 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.2021
 
 replace github.com/ory/x => github.com/ory/x v0.0.216-0.20210412214444-0f146ba971fe
 
+// See https://github.com/mattn/go-sqlite3/issues/927
+// See https://github.com/mattn/go-sqlite3/pull/929
+// See https://github.com/mattn/go-sqlite3/pull/926
 replace github.com/mattn/go-sqlite3 => github.com/realPy/go-sqlite3 v1.14.7-0.20210321100449-976f046ff4fa
 
 require (
