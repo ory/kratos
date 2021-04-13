@@ -1,0 +1,65 @@
+name: upbond_push_docker_and_deploy_eks
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-deploy:
+    # 実行するインスタンス
+    runs-on: ubuntu-latest
+
+    # 変数を定義
+    strategy:
+      matrix:
+        java: ['11.0.3']
+
+    # 各ステップの実行
+    steps:
+      # チェックアウト
+      - uses: actions/checkout@v2
+      # docker build and push to ECR
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ORG_AWS_ADMIN_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ORG_AWS_ADMIN_SECRET_KEY }}
+          aws-region: ap-northeast-1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: upbond/kratos-service
+          RUN_NUMBER: ${{github.run_number}}
+        run: |
+          IMAGE_TAG=dev-$RUN_NUMBER
+          docker build --build-arg profile='dev' -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+  control-eks:
+    # run UPBOND/upbonddeployment yml
+    name: deploy to cluster
+    needs: build-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'UPBOND/upbonddeployment'
+          token: ${{ secrets.ORG_GITHUB_ACCESS_TOKEN }}
+      - name: replace docker images tag in deployment.yaml
+        env:
+          RUN_NUMBER: ${{github.run_number}}
+        run: |
+          sed -i -e "s/upbond\/kratos-service:master/upbond\/kratos-service:dev-$RUN_NUMBER/g" src/main/script/deployment-kratos-service.yml
+          sed -i -e 's/replicas:\ [0-9]*/replicas: 1/g' src/main/script/deployment-kratos-service.yml
+          sed -i -e 's/minReplicas:\ [0-9]*/minReplicas: 1/g' src/main/script/deployment-kratos-service.yml
+      - name: Build and push CONTAINER_NAME
+        uses: ianbelcher/eks-kubectl-action@master
+        with:
+          aws_access_key_id: ${{ secrets.ORG_AWS_ADMIN_ACCESS_KEY }}
+          aws_secret_access_key: ${{ secrets.ORG_AWS_ADMIN_SECRET_KEY }}
+          aws_region: ap-northeast-1
+          cluster_name: upbond
+          args: apply -f ./src/main/script/deployment-kratos-service.yml
