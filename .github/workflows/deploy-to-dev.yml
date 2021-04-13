@@ -23,8 +23,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.ORG_AWS_ADMIN_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.ORG_AWS_ADMIN_SECRET_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ADMIN_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_ADMIN_SECRET_KEY }}
           aws-region: ap-northeast-1
       - name: Login to Amazon ECR
         id: login-ecr
@@ -47,7 +47,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: 'UPBOND/upbonddeployment'
-          token: ${{ secrets.ORG_GITHUB_ACCESS_TOKEN }}
+          token: ${{ secrets.githubtoken }}
       - name: replace docker images tag in deployment.yaml
         env:
           RUN_NUMBER: ${{github.run_number}}
@@ -58,8 +58,8 @@ jobs:
       - name: Build and push CONTAINER_NAME
         uses: ianbelcher/eks-kubectl-action@master
         with:
-          aws_access_key_id: ${{ secrets.ORG_AWS_ADMIN_ACCESS_KEY }}
-          aws_secret_access_key: ${{ secrets.ORG_AWS_ADMIN_SECRET_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ADMIN_ACCESS_KEY }}
+          aws_secret_access_key: ${{ secrets.AWS_ADMIN_SECRET_KEY }}
           aws_region: ap-northeast-1
           cluster_name: upbond
           args: apply -f ./src/main/script/deployment-kratos-service.yml
