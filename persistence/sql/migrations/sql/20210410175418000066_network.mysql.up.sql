@@ -1,1 +1,1 @@
-CREATE INDEX `selfservice_verification_flows_nid_idx` ON `selfservice_verification_flows` (`id`, `nid`);
+ALTER TABLE `selfservice_verification_flows` ADD COLUMN `nid` char(36);

@@ -1,1 +1,1 @@
-UPDATE "identity_recovery_tokens" SET "nid" = "_nid_tmp";
+UPDATE identity_recovery_tokens SET nid = (SELECT id FROM networks LIMIT 1);

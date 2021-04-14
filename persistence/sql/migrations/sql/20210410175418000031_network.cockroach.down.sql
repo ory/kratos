@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_login_flows" DROP CONSTRAINT "selfservice_login_flows_nid_fk_idx";
+ALTER TABLE "identity_credential_identifiers" DROP CONSTRAINT "identity_credential_identifiers_nid_fk_idx";

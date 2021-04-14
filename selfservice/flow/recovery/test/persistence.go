@@ -27,8 +27,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 	}
 
 	return func(t *testing.T) {
-
-		nid, p := testhelpers.NewNetwork(t, p)
+		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
@@ -51,7 +50,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 			require.Equal(t, nid, r.NID)
 
 			t.Run("fail to find on other network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRecoveryFlow(ctx, r.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
@@ -64,7 +63,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 			require.Equal(t, nid, r.NID)
 
 			t.Run("fail to find on other network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRecoveryFlow(ctx, r.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
@@ -77,7 +76,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 			require.Equal(t, nid, expected.NID)
 
 			t.Run("fail to find on other network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRecoveryFlow(ctx, expected.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
@@ -115,7 +114,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 			expected.RequestURL = "/new-request-url"
 
 			t.Run("fail to find on other network", func(t *testing.T) {
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 				require.ErrorIs(t, other.UpdateRecoveryFlow(ctx, expected), sqlcon.ErrNoRows)
 
 				actual, err := p.GetRecoveryFlow(ctx, expected.ID)

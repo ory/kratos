@@ -1,1 +1,1 @@
-UPDATE selfservice_verification_flows SET nid = (SELECT id FROM networks LIMIT 1);
+ALTER TABLE "identity_recovery_tokens" ALTER COLUMN "nid" TYPE UUID, ALTER COLUMN "nid" DROP NOT NULL;

@@ -1,1 +1,1 @@
-ALTER TABLE `identities` DROP FOREIGN KEY `identities_nid_fk_idx`;
+DROP INDEX `selfservice_errors_nid_idx` ON `selfservice_errors`;

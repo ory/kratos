@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "continuity_containers_nid_idx";
+DROP INDEX IF EXISTS "identity_verifiable_addresses_nid_idx";

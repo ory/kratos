@@ -1,1 +1,1 @@
-ALTER TABLE sessions ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT;
+CREATE INDEX "identity_verification_tokens_token_idx" ON "_identity_verification_tokens_tmp" (token);

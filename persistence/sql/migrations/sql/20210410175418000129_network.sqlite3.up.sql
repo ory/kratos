@@ -1,1 +1,1 @@
-ALTER TABLE "_selfservice_verification_flows_tmp" RENAME TO "selfservice_verification_flows";
+UPDATE selfservice_verification_flows SET nid = (SELECT id FROM networks LIMIT 1);

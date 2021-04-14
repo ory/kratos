@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" DROP COLUMN "_nid_tmp";
+ALTER TABLE "selfservice_verification_flows" DROP CONSTRAINT "selfservice_verification_flows_nid_fk_idx";

@@ -1,1 +1,1 @@
-UPDATE "selfservice_verification_flows" SET "nid" = "_nid_tmp";
+UPDATE selfservice_verification_flows SET nid = (SELECT id FROM networks LIMIT 1);

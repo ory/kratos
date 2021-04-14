@@ -1,1 +1,1 @@
-CREATE INDEX "identity_verifiable_addresses_nid_idx" ON "identity_verifiable_addresses" (id, nid);
+CREATE INDEX "identity_verifiable_addresses_status_via_idx" ON "_identity_verifiable_addresses_tmp" (via, value);

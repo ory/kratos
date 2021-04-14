@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_verification_flows" DROP CONSTRAINT "selfservice_verification_flows_nid_fk_idx";
+CREATE INDEX "identity_recovery_tokens_nid_idx" ON "identity_recovery_tokens" (id, nid);

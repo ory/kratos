@@ -1,13 +1,1 @@
-CREATE TABLE "_identity_verifiable_addresses_tmp" (
-"id" TEXT PRIMARY KEY,
-"status" TEXT NOT NULL,
-"via" TEXT NOT NULL,
-"verified" bool NOT NULL,
-"value" TEXT NOT NULL,
-"verified_at" DATETIME,
-"identity_id" char(36) NOT NULL,
-"created_at" DATETIME NOT NULL,
-"updated_at" DATETIME NOT NULL,
-"nid" char(36),
-FOREIGN KEY (identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
-);
+ALTER TABLE identity_verifiable_addresses ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT;

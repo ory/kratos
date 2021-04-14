@@ -1,0 +1,1 @@
+ALTER TABLE "identity_recovery_addresses" DROP CONSTRAINT "identity_recovery_addresses_nid_fk_idx";

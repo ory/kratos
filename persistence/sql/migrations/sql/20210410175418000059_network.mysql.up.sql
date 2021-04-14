@@ -1,1 +1,1 @@
-UPDATE identity_recovery_tokens SET nid = (SELECT id FROM networks LIMIT 1);
+CREATE UNIQUE INDEX `identity_recovery_addresses_status_via_uq_idx` ON `identity_recovery_addresses` (`nid`, `via`, `value`);

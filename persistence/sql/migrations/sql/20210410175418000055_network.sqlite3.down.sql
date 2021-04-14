@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "selfservice_settings_flows_nid_idx";
+DROP INDEX IF EXISTS "identity_credentials_nid_idx";

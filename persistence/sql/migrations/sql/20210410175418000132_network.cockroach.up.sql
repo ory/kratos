@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verifiable_addresses" ADD COLUMN "nid" UUID;
+UPDATE "selfservice_verification_flows" SET "nid" = "_nid_tmp";

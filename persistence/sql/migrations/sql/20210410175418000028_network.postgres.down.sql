@@ -1,1 +1,1 @@
-ALTER TABLE "continuity_containers" DROP CONSTRAINT "continuity_containers_nid_fk_idx";
+DROP INDEX "selfservice_settings_flows_nid_idx";

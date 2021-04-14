@@ -1,1 +1,1 @@
-UPDATE identity_verification_tokens SET nid = (SELECT id FROM networks LIMIT 1);
+CREATE INDEX "identity_verifiable_addresses_nid_idx" ON "identity_verifiable_addresses" (id, nid);

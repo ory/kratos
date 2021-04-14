@@ -1,1 +1,1 @@
-ALTER TABLE "identity_recovery_tokens" DROP CONSTRAINT "identity_recovery_tokens_nid_fk_idx";
+CREATE INDEX "identity_recovery_addresses_status_via_idx" ON "identity_recovery_addresses" (nid, via, value);

@@ -1,1 +1,1 @@
-ALTER TABLE `selfservice_login_flows` DROP FOREIGN KEY `selfservice_login_flows_nid_fk_idx`;
+ALTER TABLE `identity_credential_identifiers` DROP FOREIGN KEY `identity_credential_identifiers_nid_fk_idx`;

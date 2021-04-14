@@ -1,1 +1,1 @@
-ALTER TABLE selfservice_verification_flows ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT;
+ALTER TABLE "_identity_recovery_tokens_tmp" RENAME TO "identity_recovery_tokens";

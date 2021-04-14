@@ -1,1 +1,1 @@
-ALTER TABLE `identity_verifiable_addresses` DROP FOREIGN KEY `identity_verifiable_addresses_nid_fk_idx`;
+DROP INDEX `identity_credentials_nid_idx` ON `identity_credentials`;

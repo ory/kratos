@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" RENAME COLUMN "nid" TO "_nid_tmp";
+UPDATE "identity_verification_tokens" SET "nid" = "_nid_tmp";

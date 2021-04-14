@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verifiable_addresses" ALTER COLUMN "nid" TYPE UUID, ALTER COLUMN "nid" DROP NOT NULL;
+CREATE INDEX "selfservice_verification_flows_nid_idx" ON "selfservice_verification_flows" (id, nid);

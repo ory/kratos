@@ -36,7 +36,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 	}
 
 	return func(t *testing.T) {
-		_, p := testhelpers.NewNetwork(t, p)
+		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
@@ -59,7 +59,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			require.NoError(t, err, "%#v", err)
 
 			t.Run("can not fetch on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, r.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
@@ -73,7 +73,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 
 			require.NotEmpty(t, r.Identity)
 			t.Run("can not fetch on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, r.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
@@ -158,7 +158,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 		t.Run("case=network", func(t *testing.T) {
 			id := x.NewUUID()
 			iid := x.NewUUID()
-			nid, p := testhelpers.NewNetwork(t, p)
+			nid, p := testhelpers.NewNetwork(t, ctx, p)
 
 			require.NoError(t, p.CreateIdentity(ctx, &identity.Identity{ID: iid}))
 
@@ -181,7 +181,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 				expected, err := p.GetSettingsFlow(ctx, id)
 				require.NoError(t, err)
 
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 
 				expected.RequestURL = "updated"
 				require.ErrorIs(t, other.UpdateSettingsFlow(ctx, expected), sqlcon.ErrNoRows)
@@ -194,14 +194,14 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 
 			t.Run("network isolation", func(t *testing.T) {
-				nid2, _ := testhelpers.NewNetwork(t, p)
-				nid1, p := testhelpers.NewNetwork(t, p)
+				nid2, _ := testhelpers.NewNetwork(t, ctx, p)
+				nid1, p := testhelpers.NewNetwork(t, ctx, p)
 
 				iid1, iid2 := x.NewUUID(), x.NewUUID()
 				require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at) VALUES (?, ?, 'default', '{}', ?, ?)", iid1, nid1, time.Now(), time.Now()).Exec())

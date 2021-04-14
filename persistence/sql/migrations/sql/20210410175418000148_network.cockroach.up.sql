@@ -1,1 +1,1 @@
-UPDATE "identity_verification_tokens" SET "nid" = "_nid_tmp";
+CREATE UNIQUE INDEX "identity_verifiable_addresses_status_via_uq_idx" ON "identity_verifiable_addresses" (nid, via, value);

@@ -1,1 +1,1 @@
-ALTER TABLE `courier_messages` DROP FOREIGN KEY `courier_messages_nid_fk_idx`;
+DROP INDEX `continuity_containers_nid_idx` ON `continuity_containers`;

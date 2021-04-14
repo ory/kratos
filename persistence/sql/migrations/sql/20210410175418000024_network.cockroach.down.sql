@@ -1,1 +1,1 @@
-ALTER TABLE "identity_credentials" DROP CONSTRAINT "identity_credentials_nid_fk_idx";
+DROP INDEX IF EXISTS "identities_nid_idx";

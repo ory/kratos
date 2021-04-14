@@ -1,1 +1,1 @@
-ALTER TABLE `identity_recovery_tokens` ADD COLUMN `nid` char(36);
+DROP INDEX `identity_recovery_addresses_status_via_uq_idx` ON `identity_recovery_addresses`;

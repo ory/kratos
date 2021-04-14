@@ -1,1 +1,1 @@
-UPDATE selfservice_verification_flows SET nid = (SELECT id FROM networks LIMIT 1);
+CREATE INDEX "identity_recovery_tokens_nid_idx" ON "identity_recovery_tokens" (id, nid);

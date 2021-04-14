@@ -1,1 +1,1 @@
-UPDATE sessions SET nid = (SELECT id FROM networks LIMIT 1);
+CREATE UNIQUE INDEX "identity_verification_tokens_token_uq_idx" ON "_identity_verification_tokens_tmp" (token);

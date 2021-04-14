@@ -1,1 +1,1 @@
-DROP INDEX `identities_nid_idx` ON `identities`;
+ALTER TABLE `selfservice_login_flows` DROP COLUMN `nid`;

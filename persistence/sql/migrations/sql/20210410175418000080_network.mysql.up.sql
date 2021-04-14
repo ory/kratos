@@ -1,1 +1,1 @@
-ALTER TABLE `sessions` MODIFY `nid` char(36);
+ALTER TABLE `identity_verification_tokens` ADD COLUMN `nid` char(36);

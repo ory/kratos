@@ -1,1 +1,1 @@
-DROP TABLE "selfservice_verification_flows";
+ALTER TABLE selfservice_verification_flows ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT;

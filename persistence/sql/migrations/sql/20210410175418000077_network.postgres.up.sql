@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" ADD COLUMN "nid" UUID;
+DROP INDEX "identity_verifiable_addresses_status_via_idx";

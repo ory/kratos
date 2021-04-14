@@ -1,1 +1,1 @@
-ALTER TABLE identity_verification_tokens DROP COLUMN nid;
+DROP TABLE "identity_verifiable_addresses";

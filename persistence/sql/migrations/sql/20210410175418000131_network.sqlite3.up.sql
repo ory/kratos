@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verifiable_addresses" ADD COLUMN "nid" char(36);
+INSERT INTO "_selfservice_verification_flows_tmp" (id, request_url, issued_at, expires_at, csrf_token, created_at, updated_at, type, state, active_method, ui, nid) SELECT id, request_url, issued_at, expires_at, csrf_token, created_at, updated_at, type, state, active_method, ui, nid FROM "selfservice_verification_flows";

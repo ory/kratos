@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verification_tokens" RENAME COLUMN "nid" TO "_nid_tmp";
+DROP INDEX IF EXISTS "identity_verifiable_addresses_status_via_uq_idx";

@@ -35,7 +35,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 	persistence.Persister
 }) func(t *testing.T) {
 	return func(t *testing.T) {
-		nid, p := testhelpers.NewNetwork(t, p)
+		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
 		conf.MustSet(config.ViperKeyPublicBaseURL, exampleServerURL.String())
@@ -98,7 +98,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			assert.EqualValues(t, int64(1), count)
 
 			t.Run("different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				count, err := p.CountIdentities(ctx)
 				require.NoError(t, err)
 				assert.EqualValues(t, int64(0), count)
@@ -123,7 +123,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			assert.EqualValues(t, 2, count)
 
 			t.Run("different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetIdentity(ctx, expected.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
@@ -171,7 +171,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			}
 
 			t.Run("different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetIdentity(ctx, expected.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
@@ -194,7 +194,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				require.Error(t, err)
 
 				t.Run("succeeds on different network/id="+ids, func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					expected := passwordIdentity("", ids)
 					err := p.CreateIdentity(ctx, expected)
 					require.NoError(t, err)
@@ -221,7 +221,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			createdIDs = append(createdIDs, second.ID)
 
 			t.Run("succeeds on different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				expected := oidcIdentity("", "oidc-1")
 				require.NoError(t, p.CreateIdentity(ctx, expected))
 
@@ -253,7 +253,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			require.NotEmpty(t, initial.Credentials)
 
 			t.Run("fails on different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetIdentityConfidential(ctx, initial.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
@@ -287,7 +287,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			assert.Equal(t, expected.Credentials[identity.CredentialsTypeOIDC], actual.Credentials[identity.CredentialsTypeOIDC])
 
 			t.Run("fails on different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				require.ErrorIs(t, p.UpdateIdentity(ctx, expected), sqlcon.ErrNoRows)
 			})
 		})
@@ -314,7 +314,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			require.Error(t, p.CreateIdentity(ctx, second))
 
 			t.Run("passes on different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				require.NoError(t, p.CreateIdentity(ctx, second))
 			})
 
@@ -330,7 +330,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				require.Error(t, p.UpdateIdentity(ctx, first))
 
 				t.Run("passes on different network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					first := passwordIdentity("", x.NewUUID().String())
 					first.Traits = identity.Traits(`{}`)
 					require.NoError(t, p.CreateIdentity(ctx, first))
@@ -362,7 +362,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected))
 
 			t.Run("fails on different network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				require.ErrorIs(t, p.DeleteIdentity(ctx, expected.ID), sqlcon.ErrNoRows)
 
 				p = testhelpers.ExistingNetwork(t, p, nid)
@@ -404,7 +404,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			}
 
 			t.Run("no results on other network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				is, err := p.ListIdentities(ctx, 0, 25)
 				require.NoError(t, err)
 				assert.Len(t, is, 0)
@@ -431,7 +431,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			assertEqual(t, expected, actual)
 
 			t.Run("not if on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "find-credentials-identifier@ory.sh")
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
@@ -456,7 +456,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			assertEqual(t, expected, actual)
 
 			t.Run("not if on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
@@ -502,7 +502,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 							compare(t, expected, *actual)
 
 							t.Run("not if on another network", func(t *testing.T) {
-								_, p := testhelpers.NewNetwork(t, p)
+								_, p := testhelpers.NewNetwork(t, ctx, p)
 								_, err := p.FindVerifiableAddressByValue(ctx, expected.Via, expected.Value)
 								require.ErrorIs(t, err, sqlcon.ErrNoRows)
 							})
@@ -518,7 +518,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, p.UpdateVerifiableAddress(ctx, &address))
 
 				t.Run("not if on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					require.ErrorIs(t, p.UpdateVerifiableAddress(ctx, &address), sqlcon.ErrNoRows)
 				})
 
@@ -539,7 +539,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, err)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -552,7 +552,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
 				t.Run("can not find if on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -563,7 +563,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, "verification.TestPersister.Update-Identity-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -609,7 +609,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 							compare(t, expected, *actual)
 
 							t.Run("not if on another network", func(t *testing.T) {
-								_, p := testhelpers.NewNetwork(t, p)
+								_, p := testhelpers.NewNetwork(t, ctx, p)
 								_, err := p.FindRecoveryAddressByValue(ctx, expected.Via, expected.Value)
 								require.ErrorIs(t, err, sqlcon.ErrNoRows)
 							})
@@ -625,7 +625,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, err)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -637,7 +637,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
 				t.Run("can not find if on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -648,7 +648,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				assert.Equal(t, "recovery.TestPersister.Update-next@ory.sh", actual.Value)
 
 				t.Run("can not find if on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -656,8 +656,8 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("network reference isolation", func(t *testing.T) {
-			nid1, p := testhelpers.NewNetwork(t, p)
-			nid2, _ := testhelpers.NewNetwork(t, p)
+			nid1, p := testhelpers.NewNetwork(t, ctx, p)
+			nid2, _ := testhelpers.NewNetwork(t, ctx, p)
 
 			var m []identity.CredentialsTypeTable
 			require.NoError(t, p.GetConnection(ctx).All(&m))

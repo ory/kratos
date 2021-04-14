@@ -1,1 +1,1 @@
-ALTER TABLE selfservice_verification_flows DROP COLUMN nid;
+DROP TABLE "identity_recovery_tokens";

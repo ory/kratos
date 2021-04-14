@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" DROP CONSTRAINT "sessions_nid_fk_idx";
+ALTER TABLE "identity_verification_tokens" ADD COLUMN "nid" UUID;

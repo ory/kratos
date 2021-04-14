@@ -1,1 +1,1 @@
-ALTER TABLE "identities" DROP COLUMN "nid";
+ALTER TABLE "identity_credential_identifiers" DROP COLUMN "nid";

@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verification_tokens" DROP CONSTRAINT "identity_verification_tokens_nid_fk_idx";
+CREATE INDEX "identity_verifiable_addresses_nid_idx" ON "identity_verifiable_addresses" (id, nid);

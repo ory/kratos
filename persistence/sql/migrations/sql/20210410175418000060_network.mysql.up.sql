@@ -1,1 +1,1 @@
-ALTER TABLE `identity_recovery_tokens` MODIFY `nid` char(36);
+CREATE INDEX `identity_recovery_addresses_status_via_idx` ON `identity_recovery_addresses` (`nid`, `via`, `value`);

@@ -1,1 +1,1 @@
-ALTER TABLE sessions DROP COLUMN nid;
+CREATE INDEX "identity_verification_tokens_verifiable_address_id_idx" ON "_identity_verification_tokens_tmp" (identity_verifiable_address_id);

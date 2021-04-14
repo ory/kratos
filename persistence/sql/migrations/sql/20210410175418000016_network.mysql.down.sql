@@ -1,1 +1,1 @@
-DROP INDEX `selfservice_errors_nid_idx` ON `selfservice_errors`;
+DROP INDEX `identity_recovery_addresses_status_via_idx` ON `identity_recovery_addresses`;

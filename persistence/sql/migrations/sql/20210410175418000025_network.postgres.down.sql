@@ -1,1 +1,1 @@
-ALTER TABLE "identities" DROP CONSTRAINT "identities_nid_fk_idx";
+DROP INDEX "selfservice_errors_nid_idx";

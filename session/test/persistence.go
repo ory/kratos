@@ -23,9 +23,9 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	persistence.Persister
 }) func(t *testing.T) {
 	return func(t *testing.T) {
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		_, p := testhelpers.NewNetwork(t, p)
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.GetSession(ctx, x.NewUUID())
@@ -59,7 +59,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				check(p.GetSession(ctx, expected.ID))
 
 				t.Run("on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.GetSession(ctx, expected.ID)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -69,7 +69,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				check(p.GetSessionByToken(ctx, expected.Token))
 
 				t.Run("on another network", func(t *testing.T) {
-					_, p := testhelpers.NewNetwork(t, p)
+					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.GetSessionByToken(ctx, expected.Token)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -83,7 +83,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateSession(ctx, &expected))
 
 			t.Run("on another network", func(t *testing.T) {
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.DeleteSession(ctx, expected.ID)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
@@ -103,7 +103,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateSession(ctx, &expected))
 
 			t.Run("on another network", func(t *testing.T) {
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.DeleteSessionByToken(ctx, expected.Token)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
@@ -128,7 +128,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			assert.True(t, actual.Active)
 
 			t.Run("on another network", func(t *testing.T) {
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.RevokeSessionByToken(ctx, expected.Token)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
@@ -158,7 +158,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateSession(ctx, &expected2))
 
 			t.Run("on another network", func(t *testing.T) {
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.DeleteSessionsByIdentity(ctx, expected2.IdentityID)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 
@@ -174,8 +174,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("network isolation", func(t *testing.T) {
-			nid1, p := testhelpers.NewNetwork(t, p)
-			nid2, _ := testhelpers.NewNetwork(t, p)
+			nid1, p := testhelpers.NewNetwork(t, ctx, p)
+			nid2, _ := testhelpers.NewNetwork(t, ctx, p)
 
 			iid1, iid2 := x.NewUUID(), x.NewUUID()
 			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at) VALUES (?, ?, 'default', '{}', ?, ?)", iid1, nid1, time.Now(), time.Now()).Exec())

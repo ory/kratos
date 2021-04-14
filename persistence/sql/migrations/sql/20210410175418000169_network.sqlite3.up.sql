@@ -1,1 +1,1 @@
-CREATE UNIQUE INDEX "sessions_token_uq_idx" ON "_sessions_tmp" (token);
+ALTER TABLE "sessions" ADD COLUMN "nid" char(36);

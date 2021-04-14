@@ -1,1 +1,1 @@
-DROP INDEX `selfservice_login_flows_nid_idx` ON `selfservice_login_flows`;
+DROP INDEX `identity_recovery_addresses_nid_idx` ON `identity_recovery_addresses`;

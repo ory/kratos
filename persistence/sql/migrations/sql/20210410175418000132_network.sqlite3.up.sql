@@ -1,1 +1,1 @@
-ALTER TABLE identity_verifiable_addresses DROP COLUMN nid;
+DROP TABLE "selfservice_verification_flows";

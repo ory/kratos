@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "identity_credential_identifiers_nid_idx";
+DROP INDEX IF EXISTS "identity_recovery_addresses_status_via_idx";

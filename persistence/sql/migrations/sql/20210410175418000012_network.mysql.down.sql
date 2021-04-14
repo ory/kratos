@@ -1,1 +1,1 @@
-DROP INDEX `identity_credential_identifiers_nid_idx` ON `identity_credential_identifiers`;
+ALTER TABLE `continuity_containers` DROP COLUMN `nid`;

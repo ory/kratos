@@ -1,1 +1,1 @@
-INSERT INTO "_identity_verifiable_addresses_tmp" (id, status, via, verified, value, verified_at, identity_id, created_at, updated_at, nid) SELECT id, status, via, verified, value, verified_at, identity_id, created_at, updated_at, nid FROM "identity_verifiable_addresses";
+DROP INDEX IF EXISTS "identity_verifiable_addresses_status_via_idx";
