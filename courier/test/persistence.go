@@ -109,9 +109,8 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 
 			t.Run("can not get on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				_, err := p.GetLoginFlow(ctx, id)
 
-				_, err = p.LatestQueuedMessage(ctx)
+				_, err := p.LatestQueuedMessage(ctx)
 				require.ErrorIs(t, err, courier.ErrQueueEmpty)
 
 				_, err = p.NextMessages(ctx, 255)

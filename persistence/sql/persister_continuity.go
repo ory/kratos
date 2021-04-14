@@ -32,6 +32,7 @@ func (p *Persister) GetContinuitySession(ctx context.Context, id uuid.UUID) (*co
 
 func (p *Persister) DeleteContinuitySession(ctx context.Context, id uuid.UUID) error {
 	if count, err := p.GetConnection(ctx).RawQuery(
+		// #nosec
 		fmt.Sprintf("DELETE FROM %s WHERE id=? AND nid=?",
 			new(continuity.Container).TableName(ctx)), id, corp.ContextualizeNID(ctx, p.nid)).ExecWithCount(); err != nil {
 		return sqlcon.HandleError(err)

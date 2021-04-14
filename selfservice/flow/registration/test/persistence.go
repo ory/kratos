@@ -152,10 +152,10 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				expected.RequestURL = "updated"
 				require.Error(t, other.UpdateRegistrationFlow(ctx, expected))
 
-				actual, err := other.GetRegistrationFlow(ctx, id)
+				_, err = other.GetRegistrationFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				actual, err = p.GetRegistrationFlow(ctx, id)
+				actual, err := p.GetRegistrationFlow(ctx, id)
 				require.NoError(t, err)
 				require.NotEqual(t, "updated", actual.RequestURL)
 			})

@@ -147,10 +147,10 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				expected.RequestURL = "updated"
 				require.Error(t, other.ForceLoginFlow(ctx, expected.ID))
 
-				actual, err := other.GetLoginFlow(ctx, id)
+				_, err = other.GetLoginFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				actual, err = p.GetLoginFlow(ctx, id)
+				actual, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 				require.False(t, actual.Forced)
 			})
@@ -164,10 +164,10 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				expected.RequestURL = "updated"
 				require.Error(t, other.UpdateLoginFlow(ctx, expected))
 
-				actual, err := other.GetLoginFlow(ctx, id)
+				_, err = other.GetLoginFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
-				actual, err = p.GetLoginFlow(ctx, id)
+				actual, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 				require.NotEqual(t, "updated", actual.RequestURL)
 			})
