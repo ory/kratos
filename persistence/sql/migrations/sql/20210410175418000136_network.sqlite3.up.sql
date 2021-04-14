@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "identity_verifiable_addresses_status_via_idx";
+ALTER TABLE identity_verifiable_addresses DROP COLUMN nid;

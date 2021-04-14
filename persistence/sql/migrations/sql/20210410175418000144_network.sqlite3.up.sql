@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verification_tokens" ADD COLUMN "nid" char(36);
+INSERT INTO "_identity_verifiable_addresses_tmp" (id, status, via, verified, value, verified_at, identity_id, created_at, updated_at, nid) SELECT id, status, via, verified, value, verified_at, identity_id, created_at, updated_at, nid FROM "identity_verifiable_addresses";

@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verification_tokens" ALTER COLUMN "nid" TYPE UUID, ALTER COLUMN "nid" DROP NOT NULL;
+CREATE INDEX "identity_verifiable_addresses_nid_idx" ON "identity_verifiable_addresses" (id, nid);

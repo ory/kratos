@@ -1,13 +1,1 @@
-CREATE TABLE "_sessions_tmp" (
-"id" TEXT PRIMARY KEY,
-"issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
-"expires_at" DATETIME NOT NULL,
-"authenticated_at" DATETIME NOT NULL,
-"identity_id" char(36) NOT NULL,
-"created_at" DATETIME NOT NULL,
-"updated_at" DATETIME NOT NULL,
-"token" TEXT,
-"active" NUMERIC DEFAULT 'false',
-"nid" char(36),
-FOREIGN KEY (identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
-);
+ALTER TABLE "_identity_verification_tokens_tmp" RENAME TO "identity_verification_tokens";

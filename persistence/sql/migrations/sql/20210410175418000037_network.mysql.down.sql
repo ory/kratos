@@ -1,0 +1,1 @@
+ALTER TABLE `courier_messages` DROP FOREIGN KEY `courier_messages_nid_fk_idx`;

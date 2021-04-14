@@ -1,1 +1,1 @@
-CREATE UNIQUE INDEX "identity_verification_tokens_token_uq_idx" ON "_identity_verification_tokens_tmp" (token);
+DROP INDEX IF EXISTS "identity_verification_tokens_verification_flow_id_idx";

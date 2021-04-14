@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "selfservice_registration_flows_nid_idx";
+DROP INDEX IF EXISTS "identities_nid_idx";

@@ -1,1 +1,1 @@
-ALTER TABLE "identity_credential_identifiers" DROP CONSTRAINT "identity_credential_identifiers_nid_fk_idx";
+DROP INDEX "identity_verifiable_addresses_nid_idx";

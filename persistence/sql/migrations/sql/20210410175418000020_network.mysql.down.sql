@@ -1,1 +1,1 @@
-DROP INDEX `selfservice_registration_flows_nid_idx` ON `selfservice_registration_flows`;
+DROP INDEX `identity_credential_identifiers_nid_idx` ON `identity_credential_identifiers`;

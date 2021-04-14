@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "identity_credential_identifiers_identifier_nid_idx";
+ALTER TABLE "_identity_credential_identifiers_tmp" RENAME TO "identity_credential_identifiers";

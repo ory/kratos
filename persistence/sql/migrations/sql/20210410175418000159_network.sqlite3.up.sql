@@ -1,1 +1,1 @@
-ALTER TABLE "_identity_verification_tokens_tmp" RENAME TO "identity_verification_tokens";
+DROP INDEX IF EXISTS "identity_verification_tokens_token_uq_idx";

@@ -28,7 +28,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 	}
 
 	return func(t *testing.T) {
-		_, p := testhelpers.NewNetwork(t, p)
+		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.Read(ctx, x.NewUUID())
@@ -67,12 +67,12 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 
 				time.Sleep(time.Second + time.Millisecond*500)
 
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 				_, err = other.Read(ctx, created)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 
 				t.Run("can not clear another network", func(t *testing.T) {
-					_, other := testhelpers.NewNetwork(t, p)
+					_, other := testhelpers.NewNetwork(t, ctx, p)
 					require.NoError(t, other.Clear(ctx, time.Second, true))
 
 					c, err := p.Read(ctx, created)

@@ -1,1 +1,1 @@
-UPDATE identity_verifiable_addresses SET nid = (SELECT id FROM networks LIMIT 1);
+ALTER TABLE `selfservice_verification_flows` MODIFY `nid` char(36);

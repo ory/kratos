@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "selfservice_errors_nid_idx";
+DROP INDEX IF EXISTS "identity_recovery_addresses_status_via_idx";

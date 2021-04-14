@@ -1,1 +1,1 @@
-CREATE INDEX "identity_verifiable_addresses_nid_idx" ON "identity_verifiable_addresses" (id, nid);
+ALTER TABLE "identity_verifiable_addresses" ADD COLUMN "nid" UUID;

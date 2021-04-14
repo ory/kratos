@@ -1,1 +1,1 @@
-CREATE INDEX "sessions_nid_idx" ON "sessions" (id, nid);
+DROP INDEX IF EXISTS "sessions_token_idx";

@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "identities_nid_idx";
+ALTER TABLE "selfservice_login_flows" DROP COLUMN "nid";

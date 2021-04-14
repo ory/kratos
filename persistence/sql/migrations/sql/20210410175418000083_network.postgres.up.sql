@@ -1,0 +1,1 @@
+ALTER TABLE "identity_verification_tokens" ALTER COLUMN "nid" TYPE UUID, ALTER COLUMN "nid" DROP NOT NULL;

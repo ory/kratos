@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verification_tokens" ADD COLUMN "nid" UUID;
+DROP INDEX IF EXISTS "identity_verifiable_addresses_status_via_idx";

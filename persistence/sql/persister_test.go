@@ -147,7 +147,7 @@ func TestPersister(t *testing.T) {
 
 	for name, reg := range conns {
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
-			_, p := testhelpers.NewNetwork(t, reg.Persister())
+			_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 			conf := reg.Config(context.Background())
 
 			t.Logf("DSN: %s", conf.DSN())

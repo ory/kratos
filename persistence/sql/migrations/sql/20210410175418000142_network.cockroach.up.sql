@@ -1,1 +1,1 @@
-ALTER TABLE "identity_verification_tokens" ADD COLUMN "nid" UUID;
+UPDATE "identity_verifiable_addresses" SET "nid" = "_nid_tmp";

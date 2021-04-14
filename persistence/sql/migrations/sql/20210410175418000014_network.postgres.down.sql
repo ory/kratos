@@ -1,1 +1,1 @@
-DROP INDEX "identity_credentials_nid_idx";
+ALTER TABLE "selfservice_registration_flows" DROP COLUMN "nid";

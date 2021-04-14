@@ -1,1 +1,1 @@
-ALTER TABLE `selfservice_registration_flows` DROP FOREIGN KEY `selfservice_registration_flows_nid_fk_idx`;
+DROP INDEX `selfservice_login_flows_nid_idx` ON `selfservice_login_flows`;

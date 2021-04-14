@@ -27,6 +27,8 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 	}
 
 	return func(t *testing.T) {
+		_, p := testhelpers.NewNetworkUnlessExisting(t,ctx,p)
+
 		t.Run("case=should error when the login flow does not exist", func(t *testing.T) {
 			_, err := p.GetLoginFlow(ctx, x.NewUUID())
 			require.Error(t, err)
@@ -111,7 +113,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 
 		t.Run("case=network", func(t *testing.T) {
 			id := x.NewUUID()
-			nid, p := testhelpers.NewNetwork(t, p)
+			nid, p := testhelpers.NewNetwork(t, ctx, p)
 
 			t.Run("sets id on creation", func(t *testing.T) {
 				expected := &login.Flow{ID: id, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
@@ -140,7 +142,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				expected, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 
 				expected.RequestURL = "updated"
 				require.Error(t, other.ForceLoginFlow(ctx, expected.ID))
@@ -157,7 +159,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				expected, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
 
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 
 				expected.RequestURL = "updated"
 				require.Error(t, other.UpdateLoginFlow(ctx, expected))
@@ -171,7 +173,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetLoginFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})

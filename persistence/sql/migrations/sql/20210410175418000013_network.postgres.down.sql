@@ -1,1 +1,1 @@
-DROP INDEX "identity_verifiable_addresses_nid_idx";
+ALTER TABLE "selfservice_settings_flows" DROP COLUMN "nid";

@@ -1,1 +1,1 @@
-ALTER TABLE "courier_messages" DROP COLUMN "nid";
+ALTER TABLE "identity_verifiable_addresses" DROP COLUMN "nid";

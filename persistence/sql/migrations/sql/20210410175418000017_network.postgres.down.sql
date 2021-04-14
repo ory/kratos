@@ -1,1 +1,1 @@
-DROP INDEX "courier_messages_nid_idx";
+DROP INDEX "identity_recovery_addresses_status_via_uq_idx";

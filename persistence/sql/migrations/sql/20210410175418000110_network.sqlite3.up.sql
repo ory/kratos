@@ -1,1 +1,1 @@
-ALTER TABLE identity_recovery_tokens DROP COLUMN nid;
+DROP INDEX IF EXISTS "identity_recovery_addresses_status_via_idx";

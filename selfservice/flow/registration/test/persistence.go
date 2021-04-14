@@ -28,7 +28,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 	}
 
 	return func(t *testing.T) {
-		_, p := testhelpers.NewNetwork(t, p)
+		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		t.Run("case=should error when the registration flow does not exist", func(t *testing.T) {
 			_, err := p.GetRegistrationFlow(ctx, x.NewUUID())
@@ -117,7 +117,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 
 		t.Run("case=network", func(t *testing.T) {
 			id := x.NewUUID()
-			nid, p := testhelpers.NewNetwork(t, p)
+			nid, p := testhelpers.NewNetwork(t, ctx, p)
 
 			t.Run("sets id on creation", func(t *testing.T) {
 				now := time.Now()
@@ -147,7 +147,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				expected, err := p.GetRegistrationFlow(ctx, id)
 				require.NoError(t, err)
 
-				_, other := testhelpers.NewNetwork(t, p)
+				_, other := testhelpers.NewNetwork(t, ctx, p)
 
 				expected.RequestURL = "updated"
 				require.Error(t, other.UpdateRegistrationFlow(ctx, expected))
@@ -161,7 +161,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, p)
+				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRegistrationFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})

@@ -1,1 +1,1 @@
-ALTER TABLE `identity_recovery_tokens` ADD CONSTRAINT `identity_recovery_tokens_nid_fk_idx` FOREIGN KEY (`nid`) REFERENCES `networks` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE;
+DROP INDEX `identity_recovery_addresses_status_via_idx` ON `identity_recovery_addresses`;

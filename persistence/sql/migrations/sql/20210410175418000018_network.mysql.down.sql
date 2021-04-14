@@ -1,1 +1,1 @@
-DROP INDEX `continuity_containers_nid_idx` ON `continuity_containers`;
+DROP INDEX `identity_verifiable_addresses_status_via_idx` ON `identity_verifiable_addresses`;

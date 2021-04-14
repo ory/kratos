@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "identity_credential_identifiers_identifier_nid_idx";
+CREATE INDEX "identity_recovery_addresses_status_via_idx" ON "identity_recovery_addresses" (via, value);

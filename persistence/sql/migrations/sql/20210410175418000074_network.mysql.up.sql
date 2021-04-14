@@ -1,1 +1,1 @@
-UPDATE identity_verification_tokens SET nid = (SELECT id FROM networks LIMIT 1);
+ALTER TABLE `identity_verifiable_addresses` MODIFY `nid` char(36);

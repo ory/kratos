@@ -1,1 +1,1 @@
-CREATE UNIQUE INDEX "identity_credential_identifiers_identifier_idx" ON "identity_credential_identifiers" (identifier);
+CREATE INDEX "identity_verifiable_addresses_status_via_idx" ON "identity_verifiable_addresses" (via, value);

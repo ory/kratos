@@ -1,1 +1,1 @@
-DROP INDEX `selfservice_settings_flows_nid_idx` ON `selfservice_settings_flows`;
+DROP INDEX `identity_verifiable_addresses_status_via_uq_idx` ON `identity_verifiable_addresses`;

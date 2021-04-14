@@ -1,1 +1,1 @@
-DROP TABLE "identity_verification_tokens";
+DROP INDEX IF EXISTS "identity_verification_tokens_token_idx";

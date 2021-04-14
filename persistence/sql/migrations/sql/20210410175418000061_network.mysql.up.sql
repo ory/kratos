@@ -1,1 +1,1 @@
-CREATE INDEX `identity_recovery_tokens_nid_idx` ON `identity_recovery_tokens` (`id`, `nid`);
+ALTER TABLE `identity_recovery_tokens` ADD COLUMN `nid` char(36);

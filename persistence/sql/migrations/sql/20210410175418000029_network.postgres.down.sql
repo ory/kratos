@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_settings_flows" DROP CONSTRAINT "selfservice_settings_flows_nid_fk_idx";
+DROP INDEX "selfservice_registration_flows_nid_idx";

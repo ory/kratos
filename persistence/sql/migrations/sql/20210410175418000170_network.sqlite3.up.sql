@@ -1,1 +1,1 @@
-INSERT INTO "_sessions_tmp" (id, issued_at, expires_at, authenticated_at, identity_id, created_at, updated_at, token, active, nid) SELECT id, issued_at, expires_at, authenticated_at, identity_id, created_at, updated_at, token, active, nid FROM "sessions";
+ALTER TABLE sessions DROP COLUMN nid;

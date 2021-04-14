@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" ALTER COLUMN "nid" TYPE UUID, ALTER COLUMN "nid" DROP NOT NULL;
+ALTER TABLE "identity_verification_tokens" ADD COLUMN "nid" UUID;

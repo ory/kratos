@@ -1,1 +1,1 @@
-UPDATE identity_verifiable_addresses SET nid = (SELECT id FROM networks LIMIT 1);
+CREATE INDEX "selfservice_verification_flows_nid_idx" ON "selfservice_verification_flows" (id, nid);

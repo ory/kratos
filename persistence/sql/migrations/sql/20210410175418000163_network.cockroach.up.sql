@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" DROP CONSTRAINT "sessions_nid_fk_idx";

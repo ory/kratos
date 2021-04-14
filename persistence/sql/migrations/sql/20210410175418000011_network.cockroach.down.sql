@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_login_flows" DROP COLUMN "nid";
+ALTER TABLE "courier_messages" DROP COLUMN "nid";

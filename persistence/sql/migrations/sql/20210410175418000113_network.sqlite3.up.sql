@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "identity_recovery_addresses_code_uq_idx";
+ALTER TABLE "identity_recovery_tokens" ADD COLUMN "nid" char(36);

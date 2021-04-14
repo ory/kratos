@@ -1,1 +1,1 @@
-ALTER TABLE "courier_messages" DROP CONSTRAINT "courier_messages_nid_fk_idx";
+DROP INDEX "continuity_containers_nid_idx";

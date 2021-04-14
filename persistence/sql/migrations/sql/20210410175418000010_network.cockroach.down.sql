@@ -1,1 +1,1 @@
-ALTER TABLE "selfservice_registration_flows" DROP COLUMN "nid";
+ALTER TABLE "selfservice_errors" DROP COLUMN "nid";

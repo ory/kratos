@@ -133,7 +133,7 @@ sql("UPDATE identity_credential_identifiers SET nid = (SELECT id FROM networks L
 change_column("identity_credential_identifiers", "nid", "uuid", { "null": false })
 add_index("identity_credential_identifiers", ["id", "nid"], {"name":  "identity_credential_identifiers_nid_idx"})
 drop_index("identity_credential_identifiers", "identity_credential_identifiers_identifier_idx")
-add_index("identity_credential_identifiers", ["identifier", "nid"], {"unique": true, "name": "identity_credential_identifiers_identifier_nid_idx"})
+add_index("identity_credential_identifiers", ["nid", "identifier"], {"unique": true, "name": "identity_credential_identifiers_identifier_nid_uq_idx"})
 
 add_column("selfservice_recovery_flows", "nid", "uuid", { "null": true })
 {{ if .IsSQLite }}
@@ -164,6 +164,10 @@ add_column("identity_recovery_addresses", "nid", "uuid", { "null": true })
 sql("UPDATE identity_recovery_addresses SET nid = (SELECT id FROM networks LIMIT 1)")
 change_column("identity_recovery_addresses", "nid", "uuid", { "null": false })
 add_index("identity_recovery_addresses", ["id", "nid"], {"name":  "identity_recovery_addresses_nid_idx"})
+drop_index("identity_recovery_addresses", "identity_recovery_addresses_status_via_uq_idx")
+drop_index("identity_recovery_addresses", "identity_recovery_addresses_status_via_idx")
+add_index("identity_recovery_addresses", ["nid", "via", "value"], { "unique": true, "name": "identity_recovery_addresses_status_via_uq_idx" })
+add_index("identity_recovery_addresses", ["nid", "via", "value"], { "name": "identity_recovery_addresses_status_via_idx" })
 
 add_column("identity_recovery_tokens", "nid", "uuid", { "null": true })
 {{ if .IsSQLite }}
@@ -209,6 +213,10 @@ add_column("identity_verifiable_addresses", "nid", "uuid", { "null": true })
 sql("UPDATE identity_verifiable_addresses SET nid = (SELECT id FROM networks LIMIT 1)")
 change_column("identity_verifiable_addresses", "nid", "uuid", { "null": false })
 add_index("identity_verifiable_addresses", ["id", "nid"], {"name":  "identity_verifiable_addresses_nid_idx"})
+drop_index("identity_verifiable_addresses", "identity_verifiable_addresses_status_via_uq_idx")
+drop_index("identity_verifiable_addresses", "identity_verifiable_addresses_status_via_idx")
+add_index("identity_verifiable_addresses", ["nid", "via", "value"], { "unique": true, "name": "identity_verifiable_addresses_status_via_uq_idx" })
+add_index("identity_verifiable_addresses", ["nid", "via", "value"], { "name": "identity_verifiable_addresses_status_via_idx" })
 
 add_column("identity_verification_tokens", "nid", "uuid", { "null": true })
 {{ if .IsSQLite }}

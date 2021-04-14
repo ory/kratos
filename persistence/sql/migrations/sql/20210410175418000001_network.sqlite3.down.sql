@@ -1,1 +1,1 @@
-ALTER TABLE "_identity_credential_identifiers_tmp" RENAME TO "identity_credential_identifiers";
+CREATE UNIQUE INDEX "identity_verifiable_addresses_status_via_uq_idx" ON "identity_verifiable_addresses" (via, value);
