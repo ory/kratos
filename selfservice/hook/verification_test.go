@@ -89,8 +89,14 @@ func TestVerifier(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
-			assert.EqualValues(t, "foo@ory.sh", messages[0].Recipient)
-			assert.EqualValues(t, "bar@ory.sh", messages[1].Recipient)
+			recipients := make([]string, len(messages))
+			for k, m := range messages {
+				recipients[k] = m.Recipient
+			}
+
+			assert.Contains(t, recipients, "foo@ory.sh")
+			assert.Contains(t, recipients, "bar@ory.sh")
+			assert.NotContains(t, recipients, "baz@ory.sh")
 			// Email to baz@ory.sh is skipped because it is verified already.
 		})
 	}
