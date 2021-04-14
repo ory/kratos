@@ -2,11 +2,13 @@ package testhelpers
 
 import (
 	"context"
+	"testing"
+
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/x/networkx"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func NewNetwork(t *testing.T, p persistence.Persister) (uuid.UUID, persistence.Persister) {

@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+
 	"github.com/ory/x/networkx"
 
 	"github.com/gofrs/uuid"

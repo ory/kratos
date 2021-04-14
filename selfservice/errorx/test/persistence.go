@@ -3,9 +3,10 @@ package errorx
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/internal/testhelpers"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/x/sqlcon"

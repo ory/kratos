@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"

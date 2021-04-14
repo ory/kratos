@@ -2,8 +2,9 @@ package driver_test
 
 import (
 	"context"
-	"github.com/gofrs/uuid"
 	"testing"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/configx"
 

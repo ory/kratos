@@ -2,6 +2,7 @@ package verification
 
 import (
 	"context"
+
 	"github.com/gofrs/uuid"
 )
 

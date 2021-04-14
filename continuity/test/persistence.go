@@ -2,9 +2,10 @@ package test
 
 import (
 	"context"
-	"github.com/ory/kratos/internal/testhelpers"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,7 @@ func TestPersister(ctx context.Context, p interface {
 	}
 
 	return func(t *testing.T) {
-		nid,p := testhelpers.NewNetwork(t,p)
+		nid, p := testhelpers.NewNetwork(t, p)
 
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.GetContinuitySession(ctx, x.NewUUID())
@@ -82,13 +83,13 @@ func TestPersister(ctx context.Context, p interface {
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_,p := testhelpers.NewNetwork(t,p)
+				_, p := testhelpers.NewNetwork(t, p)
 				_, err := p.GetLoginFlow(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
 
 			t.Run("can not delete on another network", func(t *testing.T) {
-				_,p := testhelpers.NewNetwork(t,p)
+				_, p := testhelpers.NewNetwork(t, p)
 				err := p.DeleteContinuitySession(ctx, id)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})

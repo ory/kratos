@@ -2,12 +2,13 @@ package link
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/x/sqlcon"
-	"testing"
-	"time"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -27,7 +28,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	persistence.Persister
 }) func(t *testing.T) {
 	return func(t *testing.T) {
-		nid,p := testhelpers.NewNetwork(t,p)
+		nid, p := testhelpers.NewNetwork(t, p)
 
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 		conf.MustSet(config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
@@ -73,7 +74,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, p.CreateRecoveryToken(ctx, expected))
 
 				t.Run("not work on another network", func(t *testing.T) {
-					_,p := testhelpers.NewNetwork(t,p)
+					_, p := testhelpers.NewNetwork(t, p)
 					_, err := p.UseRecoveryToken(ctx, expected.Token)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
@@ -134,7 +135,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, p.CreateVerificationToken(ctx, expected))
 
 				t.Run("not work on another network", func(t *testing.T) {
-					_,p := testhelpers.NewNetwork(t,p)
+					_, p := testhelpers.NewNetwork(t, p)
 					_, err := p.UseVerificationToken(ctx, expected.Token)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})

@@ -2,8 +2,14 @@ package test
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
@@ -11,10 +17,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlcon"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestPersister(ctx context.Context, conf *config.Config, p interface {

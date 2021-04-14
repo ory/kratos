@@ -182,7 +182,6 @@ func NewIdentity(traitsSchemaID string) *Identity {
 	}
 }
 
-
 func (i Identity) GetID() uuid.UUID {
 	return i.ID
 }

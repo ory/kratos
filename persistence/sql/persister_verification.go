@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/identity"
-	"time"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"

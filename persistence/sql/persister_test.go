@@ -4,10 +4,18 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sync"
+	"testing"
+
 	"github.com/go-errors/errors"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/pop/v5/logging"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	continuity "github.com/ory/kratos/continuity/test"
 	"github.com/ory/kratos/corpx"
 	courier "github.com/ory/kratos/courier/test"
@@ -29,12 +37,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"sync"
-	"testing"
 )
 
 var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(os.TempDir(), uuid.New().String()))
@@ -145,7 +147,7 @@ func TestPersister(t *testing.T) {
 
 	for name, reg := range conns {
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
-			_,p := testhelpers.NewNetwork(t,reg.Persister())
+			_, p := testhelpers.NewNetwork(t, reg.Persister())
 			conf := reg.Config(context.Background())
 
 			t.Logf("DSN: %s", conf.DSN())
