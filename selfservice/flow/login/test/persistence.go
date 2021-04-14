@@ -27,7 +27,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 	}
 
 	return func(t *testing.T) {
-		_, p := testhelpers.NewNetworkUnlessExisting(t,ctx,p)
+		_, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
 		t.Run("case=should error when the login flow does not exist", func(t *testing.T) {
 			_, err := p.GetLoginFlow(ctx, x.NewUUID())

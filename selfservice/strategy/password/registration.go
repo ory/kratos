@@ -36,7 +36,6 @@ func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
 
 func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *RegistrationFormPayload, err error) error {
 	if f != nil {
-		f.UI.Nodes.Reset()
 		if p != nil {
 			for _, n := range container.NewFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
 				// we only set the value and not the whole field because we want to keep types from the initial form generation
