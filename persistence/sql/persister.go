@@ -148,6 +148,7 @@ func (p *Persister) update(ctx context.Context, v node, columnNames ...string) e
 		cols = columns.ForStructWithAlias(v, tn, model.As, model.IDField())
 	}
 
+	// #nosec
 	stmt := fmt.Sprintf("SELECT COUNT(id) FROM %s AS %s WHERE %s.id = ? AND %s.nid = ?",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
@@ -162,6 +163,7 @@ func (p *Persister) update(ctx context.Context, v node, columnNames ...string) e
 		return errors.WithStack(sqlcon.ErrNoRows)
 	}
 
+	// #nosec
 	stmt = fmt.Sprintf("UPDATE %s AS %s SET %s WHERE %s AND %s.nid = :nid",
 		quoter.Quote(model.TableName()),
 		model.Alias(),
