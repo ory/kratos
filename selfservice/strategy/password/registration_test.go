@@ -221,6 +221,9 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
 				assert.Contains(t, gjson.Get(actual, "ui.nodes.#(attributes.name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", actual)
+
+				// but the method is still set
+				assert.Equal(t, "password", gjson.Get(actual, "ui.nodes.#(attributes.name==method).attributes.value").String(), "%s", actual)
 			}
 
 			var values = func(v url.Values) {
