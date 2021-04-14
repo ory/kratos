@@ -91,6 +91,10 @@ run() {
 
   npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive
 
+  hydra clients delete \
+    --endpoint http://127.0.0.1:4445 \
+    kratos-client google-client github-client || true
+
   hydra clients create \
     --endpoint http://127.0.0.1:4445 \
     --id kratos-client \
