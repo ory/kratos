@@ -78,6 +78,8 @@ selfservice:
       ui_url: http://test.kratos.ory.sh/verification
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
+        web_hooks:
+          - https://test.kratos.ory.sh/after_verification_hook
 
     settings:
       ui_url:  http://test.kratos.ory.sh/settings
@@ -110,6 +112,9 @@ selfservice:
           hooks:
             -
               hook: session
+        web_hooks:
+          - https://test.kratos.ory.sh/after_registration_hook
+
         oidc:
           default_browser_return_url: https://self-service/registration/oidc/return_to
           hooks:

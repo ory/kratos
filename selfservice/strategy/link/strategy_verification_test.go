@@ -297,6 +297,78 @@ func TestVerification(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			check(t, expectSuccess(t, true, values))
 		})
+
+		// HOOK TEST
+
+		t.Run("description=test verification hook error", func(t *testing.T) {
+			var check = func(t *testing.T, actual string) {
+
+				assert.EqualValues(t, verification.StrategyVerificationLinkName, gjson.Get(actual, "active").String(), "%s", actual)
+				assert.EqualValues(t, verificationEmail, gjson.Get(actual, "methods.link.config.fields.#(name==email).value").String(), "%s", actual)
+				assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
+
+				message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+				assert.Contains(t, message.Body, "please verify your account by clicking the following link")
+
+				verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+				assert.Contains(t, verificationLink, public.URL+link.RouteVerification)
+				assert.Contains(t, verificationLink, "token=")
+
+				cl := testhelpers.NewClientWithCookies(t)
+				res, err := cl.Get(verificationLink)
+				require.NoError(t, err)
+				defer res.Body.Close()
+
+				assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+				// TODO: assert retry verification after webhook failure
+				// 2nd Try
+
+				assert.EqualValues(t, verification.StrategyVerificationLinkName, gjson.Get(actual, "active").String(), "%s", actual)
+				assert.EqualValues(t, verificationEmail, gjson.Get(actual, "methods.link.config.fields.#(name==email).value").String(), "%s", actual)
+				assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
+
+				message = testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+				assert.Contains(t, message.Body, "please verify your account by clicking the following link")
+
+				verificationLink = testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+				assert.Contains(t, verificationLink, public.URL+link.RouteVerification)
+				assert.Contains(t, verificationLink, "token=")
+
+				cl = testhelpers.NewClientWithCookies(t)
+				res, err = cl.Get(verificationLink)
+				require.NoError(t, err)
+				defer res.Body.Close()
+
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
+				body := string(ioutilx.MustReadAll(res.Body))
+				assert.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String())
+
+				id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), identityToVerify.ID)
+				require.NoError(t, err)
+				require.Len(t, id.VerifiableAddresses, 1)
+
+				address := id.VerifiableAddresses[0]
+				assert.EqualValues(t, verificationEmail, address.Value)
+				assert.True(t, address.Verified)
+				assert.EqualValues(t, identity.VerifiableAddressStatusCompleted, address.Status)
+				assert.True(t, time.Time(address.VerifiedAt).Add(time.Second*5).After(time.Now()))
+			}
+			var values = func(v url.Values) {
+				v.Set("email", verificationEmail)
+			}
+
+			t.Run("type=browser", func(t *testing.T) {
+				check(t, expectSuccess(t, false, values))
+			})
+
+			t.Run("type=api", func(t *testing.T) {
+				check(t, expectSuccess(t, true, values))
+			})
+
+		})
 	})
 
 	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {

@@ -109,6 +109,7 @@ type RegistryDefault struct {
 	selfserviceVerifyErrorHandler *verification.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
 	selfserviceVerifyHandler      *verification.Handler
+	selfserviceVerificationExecutor *verification.HookExecutor
 
 	selfserviceLinkSender *link.Sender
 

@@ -242,6 +242,17 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
+	i, err := s.d.IdentityPool().GetIdentity(r.Context(), token.VerifiableAddress.IdentityID)
+	if err != nil {
+		s.handleVerificationError(w, r, f, body, err)
+		return
+	}
+
+	if err := s.d.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
+		s.handleVerificationError(w, r, f, body, err)
+		return
+	}
+
 	address := token.VerifiableAddress
 	address.Verified = true
 	address.VerifiedAt = sqlxx.NullTime(time.Now().UTC())

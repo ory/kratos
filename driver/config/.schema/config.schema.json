@@ -60,6 +60,14 @@
         "hook"
       ]
     },
+    "selfServiceWebHooks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri-reference"
+      },
+      "uniqueItems": true
+    },
     "OIDCClaims": {
       "title": "OpenID Connect claims",
       "description": "The OpenID Connect claims and optionally their properties which should be included in the id_token or returned from the UserInfo Endpoint.",
@@ -370,6 +378,21 @@
         },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "web_hooks": {
+          "ref": "#/definitions/selfServiceWebHooks"
+        }
+      }
+    },
+    "selfServiceAfterVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "web_hooks": {
+          "$ref": "#/definitions/selfServiceWebHooks"
         }
       }
     }
@@ -540,13 +563,7 @@
                   "default": "https://www.ory.sh/kratos/docs/fallback/verification"
                 },
                 "after": {
-                  "type": "object",
-                  "properties": {
-                    "default_browser_return_url": {
-                      "$ref": "#/definitions/defaultReturnTo"
-                    }
-                  },
-                  "additionalProperties": false
+                  "$ref": "#/definitions/selfServiceAfterVerification"
                 },
                 "lifespan": {
                   "title": "Self-Service Verification Request Lifespan",
