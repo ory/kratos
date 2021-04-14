@@ -36,6 +36,7 @@ func (f PostHookExecutorFunc) ExecutePostVerificationHook(w http.ResponseWriter,
 
 type (
 	executorDependencies interface {
+		config.Provider
 		identity.ManagementProvider
 		identity.ValidationProvider
 		session.PersistenceProvider
@@ -45,7 +46,6 @@ type (
 	}
 	HookExecutor struct {
 		d executorDependencies
-		c config.Provider
 	}
 	HookExecutorProvider interface {
 		VerificationExecutor() *HookExecutor
@@ -59,7 +59,7 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 }
 
 func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
-	s := session.NewActiveSession(i, e.c.Config(r.Context()), time.Now().UTC())
+	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC())
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
