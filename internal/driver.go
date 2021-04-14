@@ -2,8 +2,9 @@ package internal
 
 import (
 	"context"
-	"github.com/gofrs/uuid"
 	"testing"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/configx"
 	"github.com/ory/x/dbal"

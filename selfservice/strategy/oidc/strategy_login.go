@@ -3,9 +3,10 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/sqlcon"
 	"net/http"
 	"time"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
 

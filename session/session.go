@@ -39,8 +39,8 @@ type Session struct {
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-	Token string `json:"-" db:"token"`
-	NID        uuid.UUID  `json:"-"  faker:"-" db:"nid"`
+	Token     string    `json:"-" db:"token"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 func (s Session) TableName(ctx context.Context) string {

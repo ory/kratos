@@ -3,9 +3,10 @@ package test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/internal/testhelpers"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ import (
 
 func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing.T) {
 	return func(t *testing.T) {
-		nid,p := testhelpers.NewNetwork(t,p)
+		nid, p := testhelpers.NewNetwork(t, p)
 
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)
@@ -107,7 +108,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_,p := testhelpers.NewNetwork(t,p)
+				_, p := testhelpers.NewNetwork(t, p)
 				_, err := p.GetLoginFlow(ctx, id)
 
 				_, err = p.LatestQueuedMessage(ctx)
@@ -118,7 +119,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 			})
 
 			t.Run("can not update on another network", func(t *testing.T) {
-				_,p := testhelpers.NewNetwork(t,p)
+				_, p := testhelpers.NewNetwork(t, p)
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})

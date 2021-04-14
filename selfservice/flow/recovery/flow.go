@@ -83,7 +83,7 @@ type Flow struct {
 
 	// RecoveredIdentityID is a helper struct field for gobuffalo.pop.
 	RecoveredIdentityID uuid.NullUUID `json:"-" faker:"-" db:"recovered_identity_id"`
-	NID        uuid.UUID  `json:"-"  faker:"-" db:"nid"`
+	NID                 uuid.UUID     `json:"-"  faker:"-" db:"nid"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {

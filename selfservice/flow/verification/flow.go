@@ -75,7 +75,7 @@ type Flow struct {
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-	NID        uuid.UUID  `json:"-"  faker:"-" db:"nid"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 func (f *Flow) GetType() flow.Type {

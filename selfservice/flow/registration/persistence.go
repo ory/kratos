@@ -2,6 +2,7 @@ package registration
 
 import (
 	"context"
+
 	"github.com/gofrs/uuid"
 )
 

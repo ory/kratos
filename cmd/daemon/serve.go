@@ -150,8 +150,8 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 		d.Logger(),
 		d.Config(cmd.Context()).Source(),
 		&metricsx.Options{
-			Service: "ory-kratos",
-			ClusterID: metricsx.Hash(d.Persister().NetworkID().String()),
+			Service:       "ory-kratos",
+			ClusterID:     metricsx.Hash(d.Persister().NetworkID().String()),
 			IsDevelopment: d.Config(cmd.Context()).IsInsecureDevMode(),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{

@@ -376,11 +376,11 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 		i.Credentials[cred.Type] = *cred
 	}
 
-	if err := p.findRecoveryAddresses(ctx,&i); err != nil {
-		return nil,err
+	if err := p.findRecoveryAddresses(ctx, &i); err != nil {
+		return nil, err
 	}
-	if err := p.findVerifiableAddresses(ctx,&i); err != nil {
-		return nil,err
+	if err := p.findVerifiableAddresses(ctx, &i); err != nil {
+		return nil, err
 	}
 
 	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {

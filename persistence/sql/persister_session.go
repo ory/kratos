@@ -3,8 +3,10 @@ package sql
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/corp"
+
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 

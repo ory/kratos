@@ -2,9 +2,10 @@ package test
 
 import (
 	"context"
-	"github.com/ory/kratos/internal/testhelpers"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -113,7 +114,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			nid, p := testhelpers.NewNetwork(t, p)
 
 			t.Run("sets id on creation", func(t *testing.T) {
-				expected := &login.Flow{ID: id,IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
+				expected := &login.Flow{ID: id, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Hour)}
 				require.NoError(t, p.CreateLoginFlow(ctx, expected))
 				assert.EqualValues(t, id, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)
