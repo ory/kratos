@@ -164,7 +164,6 @@ func (m *Courier) DispatchMessage(ctx context.Context, msg Message) error {
 					WithError(err).
 					WithField("message_id", msg.ID).
 					Error(`Unable to get email body from template.`)
-
 			} else {
 				gm.AddAlternative("text/html", htmlBody)
 			}
@@ -178,13 +177,7 @@ func (m *Courier) DispatchMessage(ctx context.Context, msg Message) error {
 				// WithField("email_to", msg.Recipient).
 				WithField("message_from", from).
 				Error("Unable to send email using SMTP connection.")
-			if err := m.d.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusQueued); err != nil {
-				m.d.Logger().
-					WithError(err).
-					WithField("message_id", msg.ID).
-					Error(`Unable to reset the failed message's status to "queued".`)
-			}
-			return nil
+			return errors.WithStack(err)
 		}
 
 		if err := m.d.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusSent); err != nil {
@@ -201,6 +194,7 @@ func (m *Courier) DispatchMessage(ctx context.Context, msg Message) error {
 			WithField("message_template_type", msg.TemplateType).
 			WithField("message_subject", msg.Subject).
 			Debug("Courier sent out message.")
+		return nil
 	}
 	return errors.Errorf("received unexpected message type: %d", msg.Type)
 }
@@ -221,6 +215,15 @@ func (m *Courier) DispatchQueue(ctx context.Context) error {
 	for k := range messages {
 		var msg = messages[k]
 		if err := m.DispatchMessage(ctx, msg); err != nil {
+			for _, replace := range messages[k:] {
+				if err := m.d.CourierPersister().SetMessageStatus(ctx, replace.ID, MessageStatusQueued); err != nil {
+					m.d.Logger().
+						WithError(err).
+						WithField("message_id", replace.ID).
+						Error(`Unable to reset the failed message's status to "queued".`)
+				}
+			}
+
 			return err
 		}
 	}

@@ -6,9 +6,8 @@ import (
 )
 
 const (
-	InfoSelfServiceVerification           ID = 1070000 + iota // 1070000
-	InfoSelfServiceVerificationSuccessful                     // 1070001
-	InfoSelfServiceVerificationEmailSent                      // 1070002
+	InfoSelfServiceVerification          ID = 1070000 + iota // 1070000
+	InfoSelfServiceVerificationEmailSent                     // 1070002
 )
 
 const (

@@ -6,6 +6,7 @@ const (
 	InfoNodeLabelGenerated                         // 1070002
 	InfoNodeLabelSave                              // 1070003
 	InfoNodeLabelID                                // 1070004
+	InfoNodeLabelSubmit                            // 1070005
 )
 
 func NewInfoNodeInputPassword() *Message {
@@ -28,6 +29,14 @@ func NewInfoNodeLabelSave() *Message {
 	return &Message{
 		ID:   InfoNodeLabelSave,
 		Text: "Save",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeLabelSubmit() *Message {
+	return &Message{
+		ID:   InfoNodeLabelSubmit,
+		Text: "Submit",
 		Type: Info,
 	}
 }
