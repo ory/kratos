@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -29,7 +28,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -57,8 +55,6 @@ func TestVerification(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToVerify,
 		identity.ManagerAllowWriteProtectedTraits))
 
-	var csrfField = testhelpers.NewFakeCSRFNode()
-
 	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
 		hc := testhelpers.NewDebugClient(t)
 		if !isAPI {
@@ -80,19 +76,51 @@ func TestVerification(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		assert.EqualValues(t, []kratos.UiNode{
-			*csrfField,
-			{
-				Type:  "input",
-				Group: node.VerificationLinkGroup.String(),
-				Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-					Name:     "email",
-					Type:     "email",
-					Required: pointerx.Bool(true),
-				}),
-			},
-			*testhelpers.NewMethodSubmit(string(node.VerificationLinkGroup), verification.StrategyVerificationLinkName),
-		}, rs.Ui.Nodes)
+		assertx.EqualAsJSON(t, json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "`+x.FakeCSRFToken+`"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "email",
+      "required": true,
+      "type": "email"
+    },
+    "group": "link",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "link"
+    },
+    "group": "link",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070005,
+        "text": "Submit",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]`), rs.Ui.Nodes)
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
