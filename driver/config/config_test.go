@@ -298,6 +298,17 @@ func (l InterceptHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
+func TestBcrypt(t *testing.T) {
+	p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
+
+	require.NoError(t, p.Set(config.ViperKeyHasherBcryptCost, 4))
+	require.NoError(t, p.Set("dev", false))
+	assert.EqualValues(t, uint32(12), p.HasherBcrypt().Cost)
+
+	require.NoError(t, p.Set("dev", true))
+	assert.EqualValues(t, uint32(4), p.HasherBcrypt().Cost)
+}
+
 func TestProviderBaseURLs(t *testing.T) {
 	machineHostname, err := os.Hostname()
 	if err != nil {
