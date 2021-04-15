@@ -37,7 +37,7 @@ func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.F
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true}
 		node.NewInputField("email", nil, node.VerificationLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 	)
-	f.UI.GetNodes().Append(node.NewInputField("method", s.VerificationStrategyID(), node.VerificationLinkGroup, node.InputAttributeTypeSubmit))
+	f.UI.GetNodes().Append(node.NewInputField("method", s.VerificationStrategyID(), node.VerificationLinkGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSubmit()))
 	return nil
 }
 

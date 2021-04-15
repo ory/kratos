@@ -43,3 +43,11 @@ type Message struct {
 func (m Message) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "courier_messages")
 }
+
+func (m *Message) GetID() uuid.UUID {
+	return m.ID
+}
+
+func (m *Message) GetNID() uuid.UUID {
+	return m.NID
+}
