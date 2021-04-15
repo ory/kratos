@@ -429,8 +429,8 @@ func (p *Config) SelfServiceFlowRegistrationAfterHooks(strategy string) []SelfSe
 	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRegistrationAfter, strategy))
 }
 
-func (p *Config) SelfServiceFlowRegistrationAfterWebHooks() []string  {
-	return p.p.Strings(ViperKeySelfServiceRegistrationAfterWebHooks)
+func (p *Config) SelfServiceFlowRegistrationAfterWebHooks() []SelfServiceHook  {
+	return p.selfServiceHooks(ViperKeySelfServiceRegistrationAfterWebHooks)
 }
 
 func (p *Config) SelfServiceStrategy(strategy string) *SelfServiceStrategy {
@@ -738,8 +738,8 @@ func (p *Config) SelfServiceFlowVerificationReturnTo(defaultReturnTo *url.URL) *
 	return p.p.RequestURIF(ViperKeySelfServiceVerificationBrowserDefaultReturnTo, defaultReturnTo)
 }
 
-func (p *Config) SelfServiceFlowVerificationAfterWebHooks() []string {
-	return p.p.Strings(ViperKeySelfServiceVerificationAfterWebHooks)
+func (p *Config) SelfServiceFlowVerificationAfterWebHooks() []SelfServiceHook {
+	return p.selfServiceHooks(ViperKeySelfServiceVerificationAfterWebHooks)
 }
 
 func (p *Config) SelfServiceFlowRecoveryReturnTo() *url.URL {

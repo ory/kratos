@@ -1,6 +1,7 @@
 package verification
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -18,7 +19,7 @@ type (
 	PostHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 
 	HooksProvider interface {
-		PostVerificationHooks() []PostHookExecutor
+		PostVerificationHooks(ctx context.Context) []PostHookExecutor
 	}
 )
 
@@ -44,9 +45,11 @@ type (
 		x.LoggingProvider
 		x.WriterProvider
 	}
+
 	HookExecutor struct {
 		d executorDependencies
 	}
+
 	HookExecutorProvider interface {
 		VerificationExecutor() *HookExecutor
 	}
@@ -64,7 +67,7 @@ func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Reque
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Debug("Running ExecutePostVerificationHooks.")
-	for k, executor := range e.d.PostVerificationHooks() {
+	for k, executor := range e.d.PostVerificationHooks(r.Context()) {
 		if err := executor.ExecutePostVerificationHook(w, r, a, s); err != nil {
 			return err
 		}
@@ -72,7 +75,7 @@ func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Reque
 		e.d.Logger().WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookVerificationExecutorNames(e.d.PostVerificationHooks())).
+			WithField("executors", PostHookVerificationExecutorNames(e.d.PostVerificationHooks(r.Context()))).
 			WithField("identity_id", i.ID).
 			Debug("ExecutePostVerificationHook completed successfully.")
 	}

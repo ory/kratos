@@ -163,6 +163,15 @@ func TestViperProvider(t *testing.T) {
 				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
+			// TODO: web-hook config
+			t.Run("hook=after/web-hooks", func(t *testing.T) {
+				hooks := p.SelfServiceFlowRegistrationAfterWebHooks()
+				require.Len(t, hooks, 1)
+				require.Equal(t, hooks[0].Name, "json-rpc")
+				require.NotZero(t, hooks[0].Config)
+				require.Equal(t, hooks[0].Config, json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/after_verification_hook"}`))
+			})
+
 			for _, tc := range []struct {
 				strategy string
 				hooks    []config.SelfServiceHook

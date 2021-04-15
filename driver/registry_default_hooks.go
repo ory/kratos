@@ -30,13 +30,6 @@ func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook
 	m.injectedSelfserviceHooks = hooks
 }
 
-func (m *RegistryDefault) createWebHooks(hooks []string) (i []interface{}) {
-	for _, h := range hooks {
-		i = append(i, hook.NewWebHook(m, h))
-	}
-	return i
-}
-
 func (m *RegistryDefault) getHooks(credentialsType string, configs []config.SelfServiceHook) (i []interface{}) {
 	for _, h := range configs {
 		switch h.Name {
@@ -44,6 +37,8 @@ func (m *RegistryDefault) getHooks(credentialsType string, configs []config.Self
 			i = append(i, m.HookSessionIssuer())
 		case hook.KeySessionDestroyer:
 			i = append(i, m.HookSessionDestroyer())
+		case hook.KeyJsonRpc:
+			i = append(i, hook.NewWebHook(m, h.Config))
 		default:
 			var found bool
 			for name, m := range m.injectedSelfserviceHooks {

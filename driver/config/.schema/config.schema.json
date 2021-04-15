@@ -63,8 +63,15 @@
     "selfServiceWebHooks": {
       "type": "array",
       "items": {
-        "type": "string",
-        "format": "uri-reference"
+        "type": "object",
+        "properties": {
+          "hook": {
+            "const": "json-rpc"
+          },
+          "config": {
+            "type": "object"
+          }
+        }
       },
       "uniqueItems": true
     },

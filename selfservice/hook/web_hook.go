@@ -18,14 +18,20 @@ type (
 	webHookDependencies interface {
 		x.LoggingProvider
 	}
+
+	webHookConfig struct {
+		method string
+		url    string
+	}
+
 	WebHook struct {
-		r   webHookDependencies
-		url string
+		r webHookDependencies
+		c json.RawMessage
 	}
 )
 
-func NewWebHook(r webHookDependencies, url string) *WebHook {
-	return &WebHook{r: r, url: url}
+func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
+	return &WebHook{r: r, c: c}
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, _ *http.Request, _ *verification.Flow, s *session.Session) error {
@@ -37,18 +43,22 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 }
 
 func (e *WebHook) executeWebHook(s *session.Session) error {
-	payloadBuf := new(bytes.Buffer)
-	err := json.NewEncoder(payloadBuf).Encode(s.Identity)
-	if err != nil {
-		e.r.Logger().WithError(err).Error("Error while marshalling web_hook content json")
-	}
-
-	response, err := http.Post(e.url, "application/json", payloadBuf)
-	if err != nil {
-		e.r.Logger().WithError(err).Warn("Web hook failed")
+	var conf webHookConfig
+	if err := json.Unmarshal(e.c, &conf); err != nil {
+		e.r.Logger().WithError(err).Error("Error while unmarshalling web_hook config json")
 		return err
 	}
-	if response.StatusCode >= 400 {
+
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(s.Identity); err != nil {
+		e.r.Logger().WithError(err).Error("Error while marshalling web_hook payload json")
+		return err
+	}
+
+	if response, err := http.Post(conf.url, "application/json", payloadBuf); err != nil {
+		e.r.Logger().WithError(err).Warn("Web hook failed")
+		return err
+	} else if response.StatusCode >= 400 {
 		return fmt.Errorf("web hook failed with status code %v", response.StatusCode)
 	}
 

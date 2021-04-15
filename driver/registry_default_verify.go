@@ -73,9 +73,9 @@ func (m *RegistryDefault) VerificationExecutor() *verification.HookExecutor {
 	return m.selfserviceVerificationExecutor
 }
 
-func (m *RegistryDefault) PostVerificationHooks() (b []verification.PostHookExecutor) {
+func (m *RegistryDefault) PostVerificationHooks(ctx context.Context) (b []verification.PostHookExecutor) {
 
-	for _, v := range m.createWebHooks(m.c.SelfServiceFlowVerificationAfterWebHooks()) {
+	for _, v := range m.getHooks("none", m.Config(ctx).SelfServiceFlowVerificationAfterWebHooks()) {
 		if hook, ok := v.(verification.PostHookExecutor); ok {
 			b = append(b, hook)
 		}
