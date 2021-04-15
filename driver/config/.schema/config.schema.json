@@ -1356,14 +1356,14 @@
           "additionalProperties": false
         },
         "bcrypt": {
-          "title": "Configuration for the Bcrypt hasher.",
+          "title": "Configuration for the Bcrypt hasher. Minimum is 4 when --dev flag is used and 12 otherwise.",
           "type": "object",
           "additionalProperties": false,
           "required": ["cost"],
           "properties": {
             "cost": {
               "type": "integer",
-              "minimum": 12,
+              "minimum": 4,
               "maximum": 31,
               "default": 12
             }

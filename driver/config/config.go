@@ -283,9 +283,12 @@ func (p *Config) HasherArgon2() *Argon2 {
 func (p *Config) HasherBcrypt() *Bcrypt {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
-	return &Bcrypt{
-		Cost: uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost))),
+	cost := uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
+	if !p.IsInsecureDevMode() && cost < BcryptDefaultCost {
+		cost = BcryptDefaultCost
 	}
+
+	return &Bcrypt{Cost: cost}
 }
 
 func (p *Config) listenOn(key string) string {
