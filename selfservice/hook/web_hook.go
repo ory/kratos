@@ -10,6 +10,7 @@ import (
 	"github.com/ory/kratos/x"
 	"io"
 	"net/http"
+	"github.com/google/go-jsonnet"
 )
 
 var _ registration.PostHookPostPersistExecutor = new(WebHook)
@@ -44,31 +45,47 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	return e.executeWebHook(f, s)
 }
 
-func (e *WebHook) executeWebHook(f interface{}, s *session.Session) error {
+func (e *WebHook) executeWebHook(f interface{}, s interface{}) error {
 	var conf webHookConfig
 	if err := json.Unmarshal(e.c, &conf); err != nil {
-		e.r.Logger().WithError(err).Error("Error while unmarshalling web_hook config json")
 		return err
 	}
 
-	if body, err := e.createBody(conf, f, s); err != nil {
+	if body, err := e.createBody(conf.Body, f, s); err != nil {
+		e.r.Logger().WithError(err).Warn("Failed to create web hook payload")
 		return err
 	} else if err = e.doHttpCall(conf, body); err != nil {
+		e.r.Logger().WithError(err).Warn("Failed to call the web hook")
 		return err
 	}
 
 	return nil
 }
 
-func (e *WebHook) createBody(_ webHookConfig, _ interface{}, s *session.Session) (io.Reader, error) {
-	// TODO: make use of JSONNet
-	payloadBuf := new(bytes.Buffer)
-	if err := json.NewEncoder(payloadBuf).Encode(s.Identity); err != nil {
-		e.r.Logger().WithError(err).Error("Error while marshalling web_hook payload json")
+func (e *WebHook) createBody(jsonnetFile string, f interface{}, s interface{}) (io.Reader, error) {
+	vm := jsonnet.MakeVM()
+
+	buf := new(bytes.Buffer)
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "")
+
+	if err := enc.Encode(f); err != nil {
 		return nil, err
 	}
+	vm.TLACode("flow", buf.String())
 
-	return payloadBuf, nil
+	buf.Reset()
+	if err := enc.Encode(s); err != nil {
+		return nil, err
+	}
+	vm.TLACode("session", buf.String())
+
+	if res, err := vm.EvaluateFile(jsonnetFile); err != nil {
+		return nil, err
+	} else {
+		return bytes.NewReader([]byte(res)), nil
+	}
 }
 
 func (e *WebHook) doHttpCall(conf webHookConfig, body io.Reader) error {
@@ -82,7 +99,6 @@ func (e *WebHook) doHttpCall(conf webHookConfig, body io.Reader) error {
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		e.r.Logger().WithError(err).Warn("Web hook failed")
 		return err
 	} else if resp.StatusCode >= 400 {
 		return fmt.Errorf("web hook failed with status code %v", resp.StatusCode)
