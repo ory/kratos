@@ -153,8 +153,6 @@ func TestRecovery(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToRecover,
 		identity.ManagerAllowWriteProtectedTraits))
 
-	var csrfField = testhelpers.NewFakeCSRFNode()
-
 	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
 		hc := testhelpers.NewDebugClient(t)
 		if !isAPI {
@@ -176,19 +174,51 @@ func TestRecovery(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
 
-		assert.EqualValues(t, []kratos.UiNode{
-			*csrfField,
-			{
-				Type:  "input",
-				Group: node.RecoveryLinkGroup.String(),
-				Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-					Name:     "email",
-					Required: pointerx.Bool(true),
-					Type:     "email",
-				}),
-			},
-			*testhelpers.NewMethodSubmit(string(node.RecoveryLinkGroup), recovery.StrategyRecoveryLinkName),
-		}, rs.Ui.Nodes)
+		assertx.EqualAsJSON(t, json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "`+x.FakeCSRFToken+`"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "email",
+      "required": true,
+      "type": "email"
+    },
+    "group": "link",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "link"
+    },
+    "group": "link",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070005,
+        "text": "Submit",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]`), rs.Ui.Nodes)
 		assert.EqualValues(t, public.URL+recovery.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
