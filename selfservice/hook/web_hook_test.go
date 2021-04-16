@@ -17,7 +17,7 @@ type testData struct {
 	Foo string    `json:"foo"`
 }
 
-func TestJsonNet(t *testing.T) {
+func TestJsonNetSupport(t *testing.T) {
 	id, _ := uuid.NewV1()
 	td := testData{id, "Bar"}
 	h := NewWebHook(nil, json.RawMessage{})
@@ -31,6 +31,29 @@ func TestJsonNet(t *testing.T) {
 	expected := fmt.Sprintf("{\n   \"flow_id\": \"%s\",\n   \"session_id\": \"%s\"\n}\n", td.ID, td.Foo)
 
 	require.Equal(t, expected, buf.String())
+}
+
+func TestParseConfigWithoutAuthPart(t *testing.T) {
+	var rawConfig = `{
+		  "url": "https://test.kratos.ory.sh/after_registration_hook",
+		  "method": "POST"
+		}
+	`
+	var conf = webHookConfig{}
+	conf.Unmarshal([]byte(rawConfig))
+
+	assert.Equal(t, "https://test.kratos.ory.sh/after_registration_hook", conf.Url)
+	assert.Equal(t, "POST", conf.Method)
+	assert.NotNil(t, conf.Auth)
+	assert.Empty(t, conf.Auth.Type)
+	assert.Empty(t, conf.Auth.RawConfig)
+
+	assert.IsTypef(t, &emptyAuthConfig{}, conf.Auth.AuthConfig, "Auth should be a dummy implementation!")
+
+	req := http.Request{Header: map[string][]string{}}
+	conf.Auth.AuthConfig.apply(&req)
+
+	assert.Empty(t, req.Header)
 }
 
 func TestParseConfigWithBasicAuth(t *testing.T) {
@@ -47,14 +70,14 @@ func TestParseConfigWithBasicAuth(t *testing.T) {
 		}
 	`
 	var conf = &webHookConfig{}
-	json.Unmarshal([]byte(rawConfig), conf)
+	conf.Unmarshal([]byte(rawConfig))
 
 	assert.Equal(t, "https://test.kratos.ory.sh/after_registration_hook", conf.Url)
 	assert.Equal(t, "POST", conf.Method)
 	assert.NotNil(t, conf.Auth)
 	assert.Equal(t, "basic-auth", conf.Auth.Type)
 
-	assert.IsTypef(t, &basicAuthConfig{}, conf.Auth.AuthConfig, "Auth should be an Basic Auth!")
+	assert.IsTypef(t, &basicAuthConfig{}, conf.Auth.AuthConfig, "Auth should be Basic Auth!")
 
 	req := http.Request{Header: map[string][]string{}}
 	conf.Auth.AuthConfig.apply(&req)
@@ -80,7 +103,7 @@ func TestParseConfigWithApiKeyInHeader(t *testing.T) {
 }
 	`
 	var conf = &webHookConfig{}
-	json.Unmarshal([]byte(rawConfig), conf)
+	conf.Unmarshal([]byte(rawConfig))
 
 	assert.Equal(t, "https://test.kratos.ory.sh/after_registration_hook", conf.Url)
 	assert.Equal(t, "POST", conf.Method)

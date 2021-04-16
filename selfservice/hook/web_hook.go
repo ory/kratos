@@ -21,6 +21,8 @@ type (
 		x.LoggingProvider
 	}
 
+	emptyAuthConfig struct {}
+
 	basicAuthConfig struct {
 		User     string
 		Password string
@@ -55,6 +57,19 @@ type (
 	}
 )
 
+func (c *emptyAuthConfig) apply(req *http.Request) {}
+
+func (c *webHookConfig) Unmarshal(bytes []byte) error {
+	if err := json.Unmarshal(bytes, c); err != nil {
+		return err
+	}
+
+	if len(c.Auth.Type) == 0 {
+		c.Auth.AuthConfig = &emptyAuthConfig{}
+	}
+	return nil
+}
+
 func (c *basicAuthConfig) apply(req *http.Request) {
 	req.SetBasicAuth(c.User, c.Password)
 }
@@ -74,7 +89,6 @@ func (a *Auth) UnmarshalJSON(bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	println("type: " + a.Type)
 	switch a.Type {
 	case "basic-auth":
 		var authConfig basicAuthConfig
