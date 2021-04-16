@@ -27,6 +27,12 @@ type (
 		Password string
 	}
 
+	apiKeyConfig struct {
+		Name  string
+		Value string
+		In    string
+	}
+
 	AuthConfig interface {
 		apply(req *http.Request)
 	}
@@ -52,7 +58,16 @@ type (
 
 func (c *basicAuthConfig) apply(req *http.Request) {
 	credentials := base64.RawStdEncoding.EncodeToString([]byte(c.User + ":" + c.Password))
-	req.Header.Set("Authorization", "Basic " + credentials)
+	req.Header.Set("Authorization", "Basic "+credentials)
+}
+
+func (c *apiKeyConfig) apply(req *http.Request) {
+	switch c.In {
+	case "cookie":
+		req.Header.Add("Cookie", c.Name + "=" + c.Value)
+	default:
+		req.Header.Set(c.Name, c.Value)
+	}
 }
 
 func (a *Auth) UnmarshalJSON(bytes []byte) error {
@@ -65,7 +80,11 @@ func (a *Auth) UnmarshalJSON(bytes []byte) error {
 	switch a.Type {
 	case "basic-auth":
 		var authConfig basicAuthConfig
-		json.Unmarshal(a.RawConfig ,&authConfig)
+		json.Unmarshal(a.RawConfig, &authConfig)
+		a.AuthConfig = &authConfig
+	case "api-key":
+		var authConfig apiKeyConfig
+		json.Unmarshal(a.RawConfig, &authConfig)
 		a.AuthConfig = &authConfig
 	default:
 		return fmt.Errorf("unknown auth type %v", a.Type)
@@ -136,8 +155,8 @@ func (e *WebHook) doHttpCall(conf webHookConfig, body io.Reader) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	//conf.Auth.apply(req)
-	// TODO: Make use of authentication/authorization
+	conf.Auth.AuthConfig.apply(req)
+
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {

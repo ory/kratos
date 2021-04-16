@@ -35,7 +35,7 @@ func TestJsonNet(t *testing.T) {
 }
 
 func TestParseConfigWithBasicAuth(t *testing.T) {
-	var rawJsonBasicAuth = `{
+	var rawConfig = `{
 		  "url": "https://test.kratos.ory.sh/after_registration_hook",
 		  "method": "POST",
 		  "auth": {
@@ -48,7 +48,7 @@ func TestParseConfigWithBasicAuth(t *testing.T) {
 		}
 	`
 	var conf = &webHookConfig{}
-	json.Unmarshal([]byte(rawJsonBasicAuth), conf)
+	json.Unmarshal([]byte(rawConfig), conf)
 
 	assert.Equal(t, "https://test.kratos.ory.sh/after_registration_hook", conf.Url)
 	assert.Equal(t, "POST", conf.Method)
@@ -61,4 +61,33 @@ func TestParseConfigWithBasicAuth(t *testing.T) {
 	actualValue := req.Header.Get("Authorization")
 	expectedValue := "Basic " + base64.RawStdEncoding.EncodeToString([]byte("test-api-user:secret"))
 	assert.Equal(t, expectedValue, actualValue)
+}
+
+func TestParseConfigWithApiKeyInHeader(t *testing.T) {
+	var rawConfig = `{
+		  "url": "https://test.kratos.ory.sh/after_registration_hook",
+		  "method": "POST",
+		  "auth": {
+			"type": "api-key",
+			"config": {
+              "in": "header"
+			  "name": "my-api-key",
+			  "value": "secret"
+			}
+		  }
+		}
+	`
+	var conf = &webHookConfig{}
+	json.Unmarshal([]byte(rawConfig), conf)
+
+	assert.Equal(t, "https://test.kratos.ory.sh/after_registration_hook", conf.Url)
+	assert.Equal(t, "POST", conf.Method)
+	assert.NotNil(t, conf.Auth)
+	assert.Equal(t, "api-key", conf.Auth.Type)
+	assert.IsTypef(t, &apiKeyConfig{}, conf.Auth.AuthConfig, "Auth should be an api key config!")
+
+	req := http.Request{Header: map[string][]string{}}
+	conf.Auth.AuthConfig.apply(&req)
+	actualValue := req.Header.Get("my-api-key")
+	assert.Equal(t, "secret", actualValue)
 }
