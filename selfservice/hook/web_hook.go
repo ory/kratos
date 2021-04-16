@@ -123,8 +123,8 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 }
 
 func (e *WebHook) executeWebHook(f interface{}, s interface{}) (err error) {
-	var conf webHookConfig
-	if err := json.Unmarshal(e.c, &conf); err != nil {
+	conf := &webHookConfig{}
+	if err := conf.Unmarshal(e.c); err != nil {
 		return err
 	}
 	var body io.Reader
@@ -166,7 +166,7 @@ func (e *WebHook) createBody(jsonnetFile string, f interface{}, s interface{}) (
 	}
 }
 
-func (e *WebHook) doHttpCall(conf webHookConfig, body io.Reader) error {
+func (e *WebHook) doHttpCall(conf *webHookConfig, body io.Reader) error {
 	req, err := http.NewRequest(conf.Method, conf.Url, body)
 	if err != nil {
 		return err
