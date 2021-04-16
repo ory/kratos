@@ -27,8 +27,11 @@ func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []courier.Message, err error) {
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		var m []courier.Message
+		query := "SELECT * FROM %s WHERE status = ? ORDER BY created_at ASC LIMIT ?"
+		if !p.isSQLite {
+			query += " FOR UPDATE SKIP LOCKED"
+		}
 		if err := tx.
-			Eager().
 			RawQuery(
 				fmt.Sprintf("SELECT * FROM %s WHERE nid = ? AND status = ? ORDER BY created_at ASC LIMIT ? FOR UPDATE", corp.ContextualizeTableName(ctx, "courier_messages")),
 				corp.ContextualizeNID(ctx, p.nid),
