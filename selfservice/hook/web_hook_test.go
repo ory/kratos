@@ -1,7 +1,6 @@
 package hook
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/gofrs/uuid"
@@ -54,28 +53,31 @@ func TestParseConfigWithBasicAuth(t *testing.T) {
 	assert.Equal(t, "POST", conf.Method)
 	assert.NotNil(t, conf.Auth)
 	assert.Equal(t, "basic-auth", conf.Auth.Type)
+
 	assert.IsTypef(t, &basicAuthConfig{}, conf.Auth.AuthConfig, "Auth should be an Basic Auth!")
 
 	req := http.Request{Header: map[string][]string{}}
 	conf.Auth.AuthConfig.apply(&req)
-	actualValue := req.Header.Get("Authorization")
-	expectedValue := "Basic " + base64.RawStdEncoding.EncodeToString([]byte("test-api-user:secret"))
-	assert.Equal(t, expectedValue, actualValue)
+
+	user, pass, _ := req.BasicAuth()
+
+	assert.Equal(t, "test-api-user", user)
+	assert.Equal(t, "secret", pass)
 }
 
 func TestParseConfigWithApiKeyInHeader(t *testing.T) {
 	var rawConfig = `{
-		  "url": "https://test.kratos.ory.sh/after_registration_hook",
-		  "method": "POST",
-		  "auth": {
-			"type": "api-key",
-			"config": {
-              "in": "header"
-			  "name": "my-api-key",
-			  "value": "secret"
-			}
-		  }
+	"url": "https://test.kratos.ory.sh/after_registration_hook",
+	"method": "POST",
+	"auth": {
+		"type": "api-key",
+		"config": {
+			"in": "header",
+			"name": "my-api-key",
+			"value": "secret"
 		}
+	}
+}
 	`
 	var conf = &webHookConfig{}
 	json.Unmarshal([]byte(rawConfig), conf)
