@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/google/go-jsonnet"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"io"
 	"net/http"
-	"github.com/google/go-jsonnet"
 )
 
 var _ registration.PostHookPostPersistExecutor = new(WebHook)
@@ -21,10 +21,27 @@ type (
 		x.LoggingProvider
 	}
 
+	basicAuthConfig struct {
+		User     string
+		Password string
+	}
+
+	AuthConfig interface {
+		// TODO: 
+		//func apply
+	}
+
+	Auth struct {
+		Type       string
+		AuthConfig AuthConfig      `json:"-"`
+		RawConfig  json.RawMessage `json:"config"`
+	}
+
 	webHookConfig struct {
 		Method string
 		Url    string
 		Body   string
+		Auth   Auth
 	}
 
 	WebHook struct {
@@ -32,6 +49,24 @@ type (
 		c json.RawMessage
 	}
 )
+
+func (a *Auth) UnmarshalJSON(bytes []byte) error {
+	type auth Auth
+	err := json.Unmarshal(bytes, (*auth)(a))
+	if err != nil {
+		return err
+	}
+	println("type: " + a.Type)
+	switch a.Type {
+	case "basic-auth":
+		var authConfig basicAuthConfig
+		json.Unmarshal(a.RawConfig ,&authConfig)
+		a.AuthConfig = authConfig
+	default:
+		return fmt.Errorf("unknown auth type %v", a.Type)
+	}
+	return nil
+}
 
 func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 	return &WebHook{r: r, c: c}
@@ -45,20 +80,21 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 	return e.executeWebHook(f, s)
 }
 
-func (e *WebHook) executeWebHook(f interface{}, s interface{}) error {
+func (e *WebHook) executeWebHook(f interface{}, s interface{}) (err error) {
 	var conf webHookConfig
 	if err := json.Unmarshal(e.c, &conf); err != nil {
 		return err
 	}
-
-	if body, err := e.createBody(conf.Body, f, s); err != nil {
-		e.r.Logger().WithError(err).Warn("Failed to create web hook payload")
-		return err
-	} else if err = e.doHttpCall(conf, body); err != nil {
-		e.r.Logger().WithError(err).Warn("Failed to call the web hook")
-		return err
+	var body io.Reader
+	if len(conf.Body) != 0 {
+		body, err = e.createBody(conf.Body, f, s)
+		if err != nil {
+			return fmt.Errorf("failed to create web hook %w", err)
+		}
 	}
-
+	if err = e.doHttpCall(conf, body); err != nil {
+		return fmt.Errorf("failed to call web hook %w", err)
+	}
 	return nil
 }
 
@@ -95,6 +131,7 @@ func (e *WebHook) doHttpCall(conf webHookConfig, body io.Reader) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	//conf.Auth.apply(req)
 	// TODO: Make use of authentication/authorization
 	resp, err := http.DefaultClient.Do(req)
 

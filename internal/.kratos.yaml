@@ -120,6 +120,11 @@ selfservice:
             config:
               url: https://test.kratos.ory.sh/after_registration_hook
               method: POST
+              auth:
+                type: basic-auth
+                config:
+                  user: My-API-User
+                  password: /path/to/my/password
 
         oidc:
           default_browser_return_url: https://self-service/registration/oidc/return_to
