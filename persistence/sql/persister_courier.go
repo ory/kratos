@@ -28,12 +28,13 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []c
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		var m []courier.Message
 		if err := tx.
-			Where("nid = ? AND status = ?",
+			Eager().
+			RawQuery(
+				fmt.Sprintf("SELECT * FROM %s WHERE nid = ? AND status = ? ORDER BY created_at ASC LIMIT ? FOR UPDATE", corp.ContextualizeTableName(ctx, "courier_messages")),
 				corp.ContextualizeNID(ctx, p.nid),
 				courier.MessageStatusQueued,
+				int(limit),
 			).
-			Order("created_at ASC").
-			Limit(int(limit)).
 			All(&m); err != nil {
 			return err
 		}
