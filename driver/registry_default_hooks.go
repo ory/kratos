@@ -37,7 +37,7 @@ func (m *RegistryDefault) getHooks(credentialsType string, configs []config.Self
 			i = append(i, m.HookSessionIssuer())
 		case hook.KeySessionDestroyer:
 			i = append(i, m.HookSessionDestroyer())
-		case hook.KeyJsonRpc:
+		case hook.KeyWebHook:
 			i = append(i, hook.NewWebHook(m, h.Config))
 		default:
 			var found bool
