@@ -62,7 +62,7 @@ module.exports = {
   verifyHrefPattern: /^http:.*\/self-service\/verification\?(((&|)token|(&|)flow)=([\-a-zA-Z0-9]+)){2}$/,
 
   // intervals define how long to wait for something,
-  pollInterval: 1000, // how long to wait before retry
+  pollInterval: 250, // how long to wait before retry
 
   // Adding 1+ second on top because MySQL doesn't do millisecs.
   verifyLifespan: 5000 + 1000,
