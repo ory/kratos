@@ -57,7 +57,7 @@ type (
 	}
 )
 
-func (c *emptyAuthConfig) apply(req *http.Request) {}
+func (c *emptyAuthConfig) apply(_ *http.Request) {}
 
 func (c *webHookConfig) Unmarshal(bytes []byte) error {
 	if err := json.Unmarshal(bytes, c); err != nil {
