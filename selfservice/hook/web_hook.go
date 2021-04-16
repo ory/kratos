@@ -117,7 +117,7 @@ func (e *WebHook) executeWebHook(f interface{}, s interface{}) (err error) {
 	if len(conf.Body) != 0 {
 		body, err = e.createBody(conf.Body, f, s)
 		if err != nil {
-			return fmt.Errorf("failed to create web hook %w", err)
+			return fmt.Errorf("failed to create web hook body: %w", err)
 		}
 	}
 	if err = e.doHttpCall(conf, body); err != nil {
