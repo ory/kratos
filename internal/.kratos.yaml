@@ -124,7 +124,7 @@ selfservice:
                 type: basic-auth
                 config:
                   user: My-API-User
-                  password: /path/to/my/password
+                  password: secret
 
         oidc:
           default_browser_return_url: https://self-service/registration/oidc/return_to

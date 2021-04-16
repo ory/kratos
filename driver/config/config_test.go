@@ -169,7 +169,7 @@ func TestViperProvider(t *testing.T) {
 				require.Len(t, hooks, 1)
 				require.Equal(t, hooks[0].Name, "json-rpc")
 				require.NotZero(t, hooks[0].Config)
-				require.Equal(t, hooks[0].Config, json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/after_verification_hook"}`))
+				require.Equal(t, string(json.RawMessage(`{"auth":{"config":{"password":"secret","user":"My-API-User"},"type":"basic-auth"},"method":"POST","url":"https://test.kratos.ory.sh/after_registration_hook"}`)),  string(hooks[0].Config))
 			})
 
 			for _, tc := range []struct {
