@@ -2,6 +2,7 @@ package hook
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-jsonnet"
@@ -27,8 +28,7 @@ type (
 	}
 
 	AuthConfig interface {
-		// TODO: 
-		//func apply
+		apply(req *http.Request)
 	}
 
 	Auth struct {
@@ -50,6 +50,11 @@ type (
 	}
 )
 
+func (c *basicAuthConfig) apply(req *http.Request) {
+	credentials := base64.RawStdEncoding.EncodeToString([]byte(c.User + ":" + c.Password))
+	req.Header.Set("Authorization", "Basic " + credentials)
+}
+
 func (a *Auth) UnmarshalJSON(bytes []byte) error {
 	type auth Auth
 	err := json.Unmarshal(bytes, (*auth)(a))
@@ -61,7 +66,7 @@ func (a *Auth) UnmarshalJSON(bytes []byte) error {
 	case "basic-auth":
 		var authConfig basicAuthConfig
 		json.Unmarshal(a.RawConfig ,&authConfig)
-		a.AuthConfig = authConfig
+		a.AuthConfig = &authConfig
 	default:
 		return fmt.Errorf("unknown auth type %v", a.Type)
 	}

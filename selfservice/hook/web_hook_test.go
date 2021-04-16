@@ -1,12 +1,14 @@
 package hook
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"net/http"
 	"strings"
 	"testing"
 )
@@ -32,7 +34,7 @@ func TestJsonNet(t *testing.T) {
 	require.Equal(t, expected, buf.String())
 }
 
-func TestParseConfig(t *testing.T) {
+func TestParseConfigWithBasicAuth(t *testing.T) {
 	var rawJsonBasicAuth = `{
 		  "url": "https://test.kratos.ory.sh/after_registration_hook",
 		  "method": "POST",
@@ -52,9 +54,11 @@ func TestParseConfig(t *testing.T) {
 	assert.Equal(t, "POST", conf.Method)
 	assert.NotNil(t, conf.Auth)
 	assert.Equal(t, "basic-auth", conf.Auth.Type)
-	assert.IsTypef(t, basicAuthConfig{}, conf.Auth.AuthConfig, "Auth should be an Basic Auth!")
+	assert.IsTypef(t, &basicAuthConfig{}, conf.Auth.AuthConfig, "Auth should be an Basic Auth!")
 
-	var basicAuthConfig basicAuthConfig = conf.Auth.AuthConfig.(basicAuthConfig)
-	assert.Equal(t, "test-api-user", basicAuthConfig.User)
-	assert.Equal(t, "secret", basicAuthConfig.Password)
+	req := http.Request{Header: map[string][]string{}}
+	conf.Auth.AuthConfig.apply(&req)
+	actualValue := req.Header.Get("Authorization")
+	expectedValue := "Basic " + base64.RawStdEncoding.EncodeToString([]byte("test-api-user:secret"))
+	assert.Equal(t, expectedValue, actualValue)
 }
