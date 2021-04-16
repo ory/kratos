@@ -167,7 +167,7 @@ func TestViperProvider(t *testing.T) {
 			t.Run("hook=after/web-hooks", func(t *testing.T) {
 				hooks := p.SelfServiceFlowRegistrationAfterWebHooks()
 				require.Len(t, hooks, 1)
-				require.Equal(t, hooks[0].Name, "json-rpc")
+				require.Equal(t, hooks[0].Name, "web-hook")
 				require.NotZero(t, hooks[0].Config)
 				require.Equal(t, string(json.RawMessage(`{"auth":{"config":{"password":"secret","user":"My-API-User"},"type":"basic-auth"},"method":"POST","url":"https://test.kratos.ory.sh/after_registration_hook"}`)),  string(hooks[0].Config))
 			})

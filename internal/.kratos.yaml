@@ -79,7 +79,7 @@ selfservice:
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
         web_hooks:
-          - hook: json-rpc
+          - hook: web-hook
             config:
               url: https://test.kratos.ory.sh/after_verification_hook
               method: POST
@@ -116,7 +116,7 @@ selfservice:
             -
               hook: session
         web_hooks:
-          - hook: json-rpc
+          - hook: web-hook
             config:
               url: https://test.kratos.ory.sh/after_registration_hook
               method: POST
