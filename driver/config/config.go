@@ -85,7 +85,7 @@ const (
 	ViperKeySelfServiceVerificationUI                               = "selfservice.flows.verification.ui_url"
 	ViperKeySelfServiceVerificationRequestLifespan                  = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
-	ViperKeySelfServiceVerificationAfter                            = "selfservice.flows.verification.after."
+	ViperKeySelfServiceVerificationAfter                            = "selfservice.flows.verification.after"
 	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
 	ViperKeyIdentitySchemas                                         = "identity.schemas"
 	ViperKeyHasherAlgorithm                                         = "hashers.algorithm"
