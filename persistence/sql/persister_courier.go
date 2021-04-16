@@ -29,7 +29,7 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []c
 		var m []courier.Message
 		query := "SELECT * FROM %s WHERE status = ? ORDER BY created_at ASC LIMIT ?"
 		if !p.isSQLite {
-			query += " FOR UPDATE SKIP LOCKED"
+			query += " FOR UPDATE"
 		}
 		if err := tx.
 			RawQuery(
