@@ -28,7 +28,7 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, 
 		}
 	}
 
-	for _, v := range m.getHooks("none", m.Config(ctx).SelfServiceFlowRegistrationAfterWebHooks()) {
+	for _, v := range m.getHooks("global", m.Config(ctx).SelfServiceFlowRegistrationAfterHooks("global")) {
 		if hook, ok := v.(registration.PostHookPostPersistExecutor); ok {
 			b = append(b, hook)
 		}

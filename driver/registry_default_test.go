@@ -43,10 +43,11 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				hook.NewSessionIssuer(reg),
 			}, h)
 
-			conf.MustSet(config.ViperKeySelfServiceRegistrationAfterWebHooks,
+			conf.MustSet(config.ViperKeySelfServiceRegistrationAfter + ".password.hooks",
 				[]map[string]interface{}{
+					{"hook": "session"},
 					{
-						"hook": "json-rpc",
+						"hook": "web-hook",
 						"config": map[string]interface{}{
 							"url": "foo",
 							"method": "POST",
@@ -54,7 +55,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 						},
 					},
 				})
-
 			h = reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
 			require.Len(t, h, 3)
 			assert.Equal(t, []registration.PostHookPostPersistExecutor{
