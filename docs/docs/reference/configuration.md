@@ -1434,14 +1434,14 @@ hashers:
     #
     memory: 0B
 
-  ## Configuration for the Bcrypt hasher. ##
+  ## Configuration for the Bcrypt hasher. Minimum is 4 when --dev flag is used and 12 otherwise. ##
   #
   bcrypt:
     ## cost ##
     #
     # Default value: 12
     #
-    # Minimum value: 12
+    # Minimum value: 4
     #
     # Maximum value: 31
     #
@@ -1451,7 +1451,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_BCRYPT_COST=<value>
     #
-    cost: 12
+    cost: 4
 
   ## Password hashing algorithm ##
   #
