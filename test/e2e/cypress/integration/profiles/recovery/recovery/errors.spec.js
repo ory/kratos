@@ -53,7 +53,7 @@ context('Recovery', () => {
       cy.get('input[name="email"]').type(identity.email)
       cy.get('button[value="link"]').click()
 
-      cy.wait(1500)
+      cy.wait(4000)
 
       cy.recoverEmailButExpired({ expect: { email: identity.email } })
 

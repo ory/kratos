@@ -36,7 +36,7 @@ context('Verify', () => {
         'An email containing a verification'
       )
 
-      cy.wait(1500)
+      cy.wait(4000)
       cy.verifyEmailButExpired({ expect: { email: identity.email } })
     })
 
