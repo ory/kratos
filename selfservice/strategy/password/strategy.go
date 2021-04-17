@@ -2,7 +2,6 @@ package password
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -88,7 +87,7 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 			}
 
 			if len(c.Identifiers) > 0 && len(c.Identifiers[0]) > 0 &&
-				strings.HasPrefix(conf.HashedPassword, "$argon2id$") {
+				(hash.IsBcryptHash([]byte(conf.HashedPassword)) || hash.IsArgon2idHash([]byte(conf.HashedPassword))) {
 				count++
 			}
 		}
