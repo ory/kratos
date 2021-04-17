@@ -23,9 +23,14 @@ context('Settings', () => {
     })
 
     it('is unable to verify the email address if the code is no longer valid', () => {
+      cy.shortVerificationLifespan()
+      cy.visit(APP_URL + '/settings')
+
       const email = `not-${identity.email}`
       cy.get('input[name="traits.email"]').clear().type(email)
       cy.get('button[value="profile"]').click()
+      cy.wait(1500)
+
       cy.verifyEmailButExpired({ expect: { email } })
     })
 
