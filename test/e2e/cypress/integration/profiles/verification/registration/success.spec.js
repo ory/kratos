@@ -3,6 +3,7 @@ import { APP_URL, assertVerifiableAddress, gen } from '../../../../helpers'
 context('Registration', () => {
   describe('successful flow', () => {
     beforeEach(() => {
+      cy.longVerificationLifespan()
       cy.visit(APP_URL + '/auth/registration')
       cy.deleteMail()
     })

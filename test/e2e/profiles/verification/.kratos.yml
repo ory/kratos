@@ -11,7 +11,7 @@ selfservice:
 
     verification:
       enabled: true
-      lifespan: 5000ms
+      lifespan: 5m
       after:
         default_browser_return_url: http://127.0.0.1:4455/
 
