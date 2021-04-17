@@ -18,9 +18,9 @@ import (
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
 
 func Compare(ctx context.Context, password []byte, hash []byte) error {
-	if isBcryptHash(hash) {
+	if IsBcryptHash(hash) {
 		return CompareBcrypt(ctx, password, hash)
-	} else if isArgon2idHash(hash) {
+	} else if IsArgon2idHash(hash) {
 		return CompareArgon2id(ctx, password, hash)
 	} else {
 		return ErrUnknownHashAlgorithm
@@ -60,12 +60,12 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	return ErrMismatchedHashAndPassword
 }
 
-func isBcryptHash(hash []byte) bool {
+func IsBcryptHash(hash []byte) bool {
 	res, _ := regexp.Match("^\\$2[abzy]?\\$", hash)
 	return res
 }
 
-func isArgon2idHash(hash []byte) bool {
+func IsArgon2idHash(hash []byte) bool {
 	res, _ := regexp.Match("^\\$argon2id\\$", hash)
 	return res
 }

@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"testing"
 
+	hash2 "github.com/ory/kratos/hash"
+
 	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
@@ -41,7 +43,9 @@ func TestCountActiveCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := password.NewStrategy(reg)
 
-	hash, err := reg.Hasher().Generate(context.Background(), []byte("a password"))
+	h1, err := hash2.NewHasherBcrypt(reg).Generate(context.Background(), []byte("a password"))
+	require.NoError(t, err)
+	h2, err := reg.Hasher().Generate(context.Background(), []byte("a password"))
 	require.NoError(t, err)
 
 	for k, tc := range []struct {
@@ -58,7 +62,7 @@ func TestCountActiveCredentials(t *testing.T) {
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: []byte(`{"hashed_password": "` + string(hash) + `"}`),
+				Config: []byte(`{"hashed_password": "` + string(h1) + `"}`),
 			}},
 			expected: 0,
 		},
@@ -66,7 +70,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
-				Config:      []byte(`{"hashed_password": "` + string(hash) + `"}`),
+				Config:      []byte(`{"hashed_password": "` + string(h1) + `"}`),
 			}},
 			expected: 0,
 		},
@@ -74,7 +78,15 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
-				Config:      []byte(`{"hashed_password": "` + string(hash) + `"}`),
+				Config:      []byte(`{"hashed_password": "` + string(h1) + `"}`),
+			}},
+			expected: 1,
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"foo"},
+				Config:      []byte(`{"hashed_password": "` + string(h2) + `"}`),
 			}},
 			expected: 1,
 		},

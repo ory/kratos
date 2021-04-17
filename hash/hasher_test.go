@@ -79,7 +79,7 @@ func TestBcryptHasherGeneratesHash(t *testing.T) {
 
 			// Valid format: $2a$12$[22 character salt][31 character hash]
 			assert.Equal(t, 60, len(string(res)), "invalid bcrypt hash length")
-			assert.Equal(t, "$2a$12$", string(res)[:7], "invalid bcrypt identifier")
+			assert.Equal(t, "$2a$04$", string(res)[:7], "invalid bcrypt identifier")
 		})
 	}
 }
