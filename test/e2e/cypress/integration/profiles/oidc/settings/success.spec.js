@@ -32,6 +32,12 @@ context('Settings', () => {
   })
 
   describe('oidc', () => {
+    beforeEach(() => {
+      cy.longRecoveryLifespan()
+      cy.longVerificationLifespan()
+      cy.longPrivilegedSessionTime()
+    })
+
     it('should show the correct options', () => {
       cy.get('button[value="hydra"]').should('not.exist')
 
@@ -77,9 +83,11 @@ context('Settings', () => {
     })
 
     it('should link google after re-auth', () => {
-      cy.waitForPrivilegedSessionToExpire()
+      cy.shortPrivilegedSessionTime()
       cy.get('button[value="google"]').click()
       cy.location('pathname').should('equal', '/auth/login')
+
+      cy.longPrivilegedSessionTime()
       cy.get('button[value="hydra"]').click()
 
       // prompt=login means that we need to re-auth!
@@ -131,8 +139,10 @@ context('Settings', () => {
       cy.get('button[value="password"]').click()
       cy.visit(APP_URL + '/settings')
 
-      cy.waitForPrivilegedSessionToExpire()
+      cy.shortPrivilegedSessionTime()
       cy.get('button[value="hydra"]').click()
+
+      cy.longPrivilegedSessionTime()
       cy.location('pathname').should('equal', '/auth/login')
       cy.get('button[value="hydra"]').click()
 

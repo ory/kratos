@@ -35,8 +35,11 @@ context('Settings Flow Errors', () => {
     cy.login({ email, password })
     cy.visit(APP_URL + '/settings')
   })
-
   describe('profile', () => {
+    beforeEach(() => {
+      cy.longPrivilegedSessionTime()
+    })
+
     it('fails with validation errors', () => {
       cy.get('input[name="traits.website"]')
         .clear()
@@ -50,7 +53,7 @@ context('Settings Flow Errors', () => {
 
     it('fails because reauth is another person', () => {
       cy.get('input[name="traits.email"]').clear().type(up(email))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime()
       cy.get('button[value="profile"]').click()
 
       cy.reauth({
@@ -70,7 +73,7 @@ context('Settings Flow Errors', () => {
 
     it('does not update data because resumable session was removed', () => {
       cy.get('input[name="traits.email"]').clear().type(up(email))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime()
       cy.get('button[value="profile"]').click()
 
       cy.clearCookies()
@@ -84,7 +87,7 @@ context('Settings Flow Errors', () => {
 
     it('does not update without re-auth', () => {
       cy.get('input[name="traits.email"]').clear().type(up(email))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
       cy.get('button[value="profile"]').click()
 
       cy.visit(APP_URL + '/')
@@ -98,7 +101,7 @@ context('Settings Flow Errors', () => {
     it('does not resume another failed request', () => {
       // checks here that we're checking settingsRequest.id == cookie.stored.id
       cy.get('input[name="traits.email"]').clear().type(up(email))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
       cy.get('button[value="profile"]').click()
 
       cy.visit(APP_URL + '/settings')
@@ -116,6 +119,13 @@ context('Settings Flow Errors', () => {
   })
 
   describe('password', () => {
+    beforeEach(() => {
+      cy.longPrivilegedSessionTime()
+    })
+    afterEach(() => {
+      cy.longPrivilegedSessionTime()
+    })
+
     it('fails if password policy is violated', () => {
       cy.get('input[name="password"]').clear().type('123456')
       cy.get('button[value="password"]').click()
@@ -127,7 +137,7 @@ context('Settings Flow Errors', () => {
 
     it('fails because reauth is another person', () => {
       cy.get('input[name="password"]').clear().type(up(password))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
       cy.get('button[value="password"]').click()
 
       cy.reauth({
@@ -147,7 +157,7 @@ context('Settings Flow Errors', () => {
 
     it('does not update without re-auth', () => {
       cy.get('input[name="password"]').clear().type(up(password))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
       cy.get('button[value="password"]').click()
 
       cy.visit(APP_URL + '/')
@@ -157,7 +167,7 @@ context('Settings Flow Errors', () => {
 
     it('does not update data because resumable session was removed', () => {
       cy.get('input[name="password"]').clear().type(up(password))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
       cy.get('button[value="password"]').click()
 
       cy.clearCookies()
@@ -171,7 +181,7 @@ context('Settings Flow Errors', () => {
       cy.get('input[name="password"]')
         .clear()
         .type(up(up(password)))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
       cy.get('button[value="password"]').click()
 
       password = up(password)

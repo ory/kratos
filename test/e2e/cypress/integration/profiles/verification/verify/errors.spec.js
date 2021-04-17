@@ -14,6 +14,8 @@ context('Verify', () => {
     })
 
     beforeEach(() => {
+      cy.longVerificationLifespan()
+
       identity = gen.identity()
       cy.register(identity)
       cy.deleteMail({ atLeast: 1 }) // clean up registration email
@@ -23,6 +25,9 @@ context('Verify', () => {
     })
 
     it('is unable to verify the email address if the code is expired', () => {
+      cy.shortVerificationLifespan()
+
+      cy.visit(APP_URL + '/verify')
       cy.get('input[name="email"]').type(identity.email)
       cy.get('button[value="link"]').click()
 
@@ -31,6 +36,7 @@ context('Verify', () => {
         'An email containing a verification'
       )
 
+      cy.wait(1500)
       cy.verifyEmailButExpired({ expect: { email: identity.email } })
     })
 

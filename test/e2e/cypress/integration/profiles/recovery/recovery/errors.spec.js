@@ -9,6 +9,7 @@ context('Recovery', () => {
     })
 
     beforeEach(() => {
+      cy.longRecoveryLifespan()
       cy.visit(APP_URL + '/recovery')
     })
 
@@ -44,12 +45,15 @@ context('Recovery', () => {
     })
 
     it('is unable to recover the email address if the code is expired', () => {
+      cy.shortRecoveryLifespan()
       identity = gen.identity()
       cy.register(identity)
       cy.visit(APP_URL + '/recovery')
 
       cy.get('input[name="email"]').type(identity.email)
       cy.get('button[value="link"]').click()
+
+      cy.wait(1500)
 
       cy.recoverEmailButExpired({ expect: { email: identity.email } })
 

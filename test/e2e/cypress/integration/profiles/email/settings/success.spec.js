@@ -73,7 +73,7 @@ context('Settings Flow Success', () => {
     it('modifies the password with an unprivileged session', () => {
       password = up(password)
       cy.get('input[name="password"]').clear().type(password)
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
       cy.get('button[value="password"]').click()
 
       cy.reauth({ expect: { email }, type: { password: down(password) } })
@@ -126,7 +126,7 @@ context('Settings Flow Success', () => {
     it('modifies a protected trait with unprivileged session', () => {
       email = up(email)
       cy.get('input[name="traits.email"]').clear().type(email)
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
       cy.get('button[value="profile"]').click()
 
       cy.reauth({ expect: { email: down(email) }, type: { password } })

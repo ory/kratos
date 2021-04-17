@@ -10,6 +10,7 @@ context('Registration', () => {
   describe('error flow', () => {
     let identity
     beforeEach(() => {
+      cy.shortVerificationLifespan()
       cy.visit(APP_URL + '/')
       cy.deleteMail()
 
@@ -19,6 +20,7 @@ context('Registration', () => {
     })
 
     it('is unable to verify the email address if the code is no longer valid and resend the code', () => {
+      cy.wait(1500)
       cy.verifyEmailButExpired({ expect: { email: identity.email } })
 
       cy.get('input[name="email"]').should('be.empty')
@@ -29,6 +31,7 @@ context('Registration', () => {
         'An email containing a verification'
       )
 
+      cy.longVerificationLifespan()
       cy.verifyEmail({ expect: { email: identity.email } })
     })
 

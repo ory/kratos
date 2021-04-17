@@ -37,6 +37,10 @@ import {
 } from '../helpers'
 import dayjs from 'dayjs'
 
+const YAML = require('yamljs')
+
+const configFile = 'test/e2e/kratos.generated.yml'
+
 const mergeFields = (form, fields) => {
   const result = {}
   form.nodes.forEach(({ attributes, type }) => {
@@ -47,6 +51,54 @@ const mergeFields = (form, fields) => {
 
   return { ...result, ...fields }
 }
+
+const updateConfigFile = (cb) => {
+  cy.readFile(configFile).then((contents) => {
+    let config = YAML.parse(contents)
+    config = cb(config)
+    cy.writeFile(configFile, YAML.stringify(config))
+  })
+  cy.wait(100)
+}
+
+Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.settings.privileged_session_max_age = '1ms'
+    return config
+  })
+})
+
+Cypress.Commands.add('longPrivilegedSessionTime', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.settings.privileged_session_max_age = '1m'
+    return config
+  })
+})
+Cypress.Commands.add('longVerificationLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.verification.lifespan = '1m'
+    return config
+  })
+})
+Cypress.Commands.add('shortVerificationLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.verification.lifespan = '1500ms'
+    return config
+  })
+})
+Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.recovery.lifespan = '1m'
+    return config
+  })
+})
+
+Cypress.Commands.add('shortRecoveryLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.recovery.lifespan = '1500ms'
+    return config
+  })
+})
 
 Cypress.Commands.add(
   'register',
@@ -202,6 +254,7 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
   cy.visit(APP_URL)
   cy.clearCookies()
 
+  cy.longPrivilegedSessionTime()
   cy.request({
     url: APP_URL + '/self-service/login/browser',
     followRedirect: false
@@ -265,6 +318,7 @@ Cypress.Commands.add(
     if (tpassword) {
       cy.get('input[name="password"]').clear().type(tpassword)
     }
+    cy.longPrivilegedSessionTime()
     cy.get('button[value="password"]').click()
   }
 )
@@ -382,7 +436,7 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
-      cy.wait(5000)
+      cy.longRecoveryLifespan()
       cy.visit(link.href)
     })
 )
@@ -417,9 +471,10 @@ Cypress.Commands.add(
       const link = parseHtml(message.body).querySelector('a')
       cy.session().should((session) => {
         assertVerifiableAddress({ isVerified: false, email: email })(session)
-        cy.wait(5000) // specified in base...
+        // specified in base...
       })
 
+      cy.longVerificationLifespan()
       cy.visit(link.href)
       cy.location('pathname').should('include', 'verify')
       cy.location('search').should('not.be.empty', 'request')
