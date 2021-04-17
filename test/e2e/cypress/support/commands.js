@@ -82,7 +82,7 @@ Cypress.Commands.add('longVerificationLifespan', ({} = {}) => {
 })
 Cypress.Commands.add('shortVerificationLifespan', ({} = {}) => {
   updateConfigFile((config) => {
-    config.selfservice.flows.verification.lifespan = '1500ms'
+    config.selfservice.flows.verification.lifespan = '4s'
     return config
   })
 })
@@ -95,7 +95,7 @@ Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
 
 Cypress.Commands.add('shortRecoveryLifespan', ({} = {}) => {
   updateConfigFile((config) => {
-    config.selfservice.flows.recovery.lifespan = '1500ms'
+    config.selfservice.flows.recovery.lifespan = '4s'
     return config
   })
 })

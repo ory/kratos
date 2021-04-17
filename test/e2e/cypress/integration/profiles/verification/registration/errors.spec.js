@@ -20,7 +20,7 @@ context('Registration', () => {
     })
 
     it('is unable to verify the email address if the code is no longer valid and resend the code', () => {
-      cy.wait(1500)
+      cy.wait(4000)
       cy.verifyEmailButExpired({ expect: { email: identity.email } })
 
       cy.get('input[name="email"]').should('be.empty')

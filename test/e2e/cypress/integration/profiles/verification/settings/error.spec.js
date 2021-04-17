@@ -29,7 +29,7 @@ context('Settings', () => {
       const email = `not-${identity.email}`
       cy.get('input[name="traits.email"]').clear().type(email)
       cy.get('button[value="profile"]').click()
-      cy.wait(1500)
+      cy.wait(4000)
 
       cy.verifyEmailButExpired({ expect: { email } })
     })
