@@ -1557,9 +1557,8 @@
           },
           {
             "type": "string",
-            "description": "in: authorization",
             "name": "Authorization",
-            "in": "query"
+            "in": "header"
           }
         ],
         "responses": {
