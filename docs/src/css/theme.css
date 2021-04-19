@@ -16,3 +16,7 @@
   --ifm-color-primary-lightest: rgb(146, 224, 208);
   --ifm-code-font-size: 95%;
 }
+
+.menu__link[href*="https://"]:after {
+  display: none !important;
+}
