@@ -3,13 +3,14 @@ package hook
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gofrs/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testData struct {

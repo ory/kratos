@@ -65,7 +65,6 @@ func (m *RegistryDefault) AllVerificationStrategies() (recoveryStrategies verifi
 	return
 }
 
-
 func (m *RegistryDefault) VerificationExecutor() *verification.HookExecutor {
 	if m.selfserviceVerificationExecutor == nil {
 		m.selfserviceVerificationExecutor = verification.NewHookExecutor(m)

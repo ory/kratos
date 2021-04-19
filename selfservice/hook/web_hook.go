@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/google/go-jsonnet"
+
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
-	"io"
-	"net/http"
 )
 
 var _ registration.PostHookPostPersistExecutor = new(WebHook)
@@ -21,7 +23,7 @@ type (
 		x.LoggingProvider
 	}
 
-	emptyAuthConfig struct {}
+	emptyAuthConfig struct{}
 
 	basicAuthConfig struct {
 		User     string
@@ -77,7 +79,7 @@ func (c *basicAuthConfig) apply(req *http.Request) {
 func (c *apiKeyConfig) apply(req *http.Request) {
 	switch c.In {
 	case "cookie":
-		req.AddCookie(&http.Cookie{ Name: c.Name, Value: c.Value })
+		req.AddCookie(&http.Cookie{Name: c.Name, Value: c.Value})
 	default:
 		req.Header.Set(c.Name, c.Value)
 	}
