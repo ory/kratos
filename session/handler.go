@@ -125,7 +125,7 @@ type whoamiParameters struct {
 	// in: header
 	Cookie string `json:"Cookie"`
 
-	// in: authorization
+	// in: header
 	Authorization string `json:"Authorization"`
 }
 
