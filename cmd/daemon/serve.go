@@ -18,6 +18,7 @@ import (
 	"github.com/ory/analytics-go/v4"
 
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/networkx"
 
 	"github.com/gorilla/context"
 	"github.com/spf13/cobra"
@@ -95,14 +96,19 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		handler = cors.New(options).Handler(handler)
 	}
 
-	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.PublicListenOn(),
-		Handler: context.ClearHandler(handler),
-	})
+	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(handler)})
+	addr := c.PublicListenOn()
 
-	l.Printf("Starting the public httpd on: %s", server.Addr)
-	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
-		l.Fatalln("Failed to gracefully shutdown public httpd")
+	l.Printf("Starting the public httpd on: %s", addr)
+	if err := graceful.Graceful(func() error {
+		listener, err := networkx.MakeListener(addr, c.PublicSocketPermission())
+		if err != nil {
+			return err
+		}
+
+		return server.Serve(listener)
+	}, server.Shutdown); err != nil {
+		l.Fatalf("Failed to gracefully shutdown public httpd: %s", err)
 	}
 	l.Println("Public httpd was shutdown gracefully")
 }
@@ -130,14 +136,19 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	}
 
 	n.UseHandler(router)
-	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.AdminListenOn(),
-		Handler: context.ClearHandler(n),
-	})
+	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(n)})
+	addr := c.AdminListenOn()
 
-	l.Printf("Starting the admin httpd on: %s", server.Addr)
-	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
-		l.Fatalln("Failed to gracefully shutdown admin httpd")
+	l.Printf("Starting the admin httpd on: %s", addr)
+	if err := graceful.Graceful(func() error {
+		listener, err := networkx.MakeListener(addr, c.AdminSocketPermission())
+		if err != nil {
+			return err
+		}
+
+		return server.Serve(listener)
+	}, server.Shutdown); err != nil {
+		l.Fatalf("Failed to gracefully shutdown admin httpd: %s", err)
 	}
 	l.Println("Admin httpd was shutdown gracefully")
 }

@@ -868,7 +868,7 @@ serve:
 
     ## Public Host ##
     #
-    # The host (interface) kratos' public endpoint listens on.
+    # The host (interface) or unix socket kratos' public endpoint listens on. Use the prefix "unix:" to specify a path to a unix socket.
     #
     # Default value: 0.0.0.0
     #
@@ -900,6 +900,53 @@ serve:
     #    > set SERVE_PUBLIC_PORT=<value>
     #
     port: 4433
+
+    ## socket ##
+    #
+    # Sets the permissions of the unix socket
+    #
+    socket:
+      ## group ##
+      #
+      # Group of unix socket. If empty, the group will be the primary group of the user running kratos.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_GROUP=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_GROUP=<value>
+      #
+      group: ''
+
+      ## mode ##
+      #
+      # Mode of unix socket in numeric form
+      #
+      # Default value: 493
+      #
+      # Minimum value: 0
+      #
+      # Maximum value: 511
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_MODE=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_MODE=<value>
+      #
+      mode: 0
+
+      ## owner ##
+      #
+      # Owner of unix socket. If empty, the owner will be the user running kratos.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_OWNER=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_OWNER=<value>
+      #
+      owner: ''
 
     ## cors ##
     #
@@ -1048,7 +1095,7 @@ serve:
   admin:
     ## Admin Host ##
     #
-    # The host (interface) kratos' admin endpoint listens on.
+    # The host (interface) or unix socket kratos' admin endpoint listens on. Use the prefix "unix:" to specify a path to a unix socket.
     #
     # Default value: 0.0.0.0
     #
@@ -1080,6 +1127,53 @@ serve:
     #    > set SERVE_ADMIN_PORT=<value>
     #
     port: 4434
+
+    ## socket ##
+    #
+    # Sets the permissions of the unix socket
+    #
+    socket:
+      ## group ##
+      #
+      # Group of unix socket. If empty, the group will be the primary group of the user running kratos.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_GROUP=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_GROUP=<value>
+      #
+      group: ''
+
+      ## mode ##
+      #
+      # Mode of unix socket in numeric form
+      #
+      # Default value: 493
+      #
+      # Minimum value: 0
+      #
+      # Maximum value: 511
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_MODE=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_MODE=<value>
+      #
+      mode: 0
+
+      ## owner ##
+      #
+      # Owner of unix socket. If empty, the owner will be the user running kratos.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_OWNER=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_OWNER=<value>
+      #
+      owner: ''
 
     ## Admin Base URL ##
     #
