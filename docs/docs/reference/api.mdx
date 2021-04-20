@@ -7251,6 +7251,7 @@ p JSON.parse(result)
 GET /sessions/whoami HTTP/1.1
 Accept: application/json
 Cookie: string
+Authorization: string
 
 ```
 
@@ -7266,10 +7267,10 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 #### Parameters
 
-| Parameter     | In     | Type   | Required | Description       |
-| ------------- | ------ | ------ | -------- | ----------------- |
-| Cookie        | header | string | false    | none              |
-| Authorization | query  | string | false    | in: authorization |
+| Parameter     | In     | Type   | Required | Description |
+| ------------- | ------ | ------ | -------- | ----------- |
+| Cookie        | header | string | false    | none        |
+| Authorization | header | string | false    | none        |
 
 #### Responses
 
@@ -7334,7 +7335,7 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 ```shell
 curl -X GET /sessions/whoami \
-  -H 'Accept: application/json' \  -H 'Cookie: string' \  -H 'X-Session-Token: API_KEY'
+  -H 'Accept: application/json' \  -H 'Cookie: string' \  -H 'Authorization: string' \  -H 'X-Session-Token: API_KEY'
 ```
 
 </TabItem>
@@ -7352,6 +7353,7 @@ func main() {
     headers := map[string][]string{
         "Accept": []string{"application/json"},
         "Cookie": []string{"string"},
+        "Authorization": []string{"string"},
         "X-Session-Token": []string{"API_KEY"},
     }
 
@@ -7376,6 +7378,7 @@ const fetch = require('node-fetch')
 const headers = {
   Accept: 'application/json',
   Cookie: 'string',
+  Authorization: 'string',
   'X-Session-Token': 'API_KEY'
 }
 
@@ -7424,6 +7427,7 @@ import requests
 headers = {
   'Accept': 'application/json',
   'Cookie': 'string',
+  'Authorization': 'string',
   'X-Session-Token': 'API_KEY'
 }
 
@@ -7445,6 +7449,7 @@ require 'json'
 headers = {
   'Accept' => 'application/json',
   'Cookie' => 'string',
+  'Authorization' => 'string',
   'X-Session-Token' => 'API_KEY'
 }
 
