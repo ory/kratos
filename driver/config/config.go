@@ -567,8 +567,7 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 
 	var aliases []DomainAlias
 	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
-		// this is happening too often to log it
-		// p.l.WithError(err).WithField("config", raw).Warnf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
+		p.l.WithError(err).WithField("config", raw).Warnf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
 		return primary
 	}
 
