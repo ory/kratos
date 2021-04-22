@@ -77,16 +77,46 @@ func TestJsonNetSupport(t *testing.T) {
 		ID  uuid.UUID `json:"id"`
 		Foo string    `json:"foo"`
 	}{id, "Bar"}
+	headers := http.Header{}
+	headers.Add("Some-Header", "Some-Value")
+	headers.Add("Cookie", "c1=v1")
+	headers.Add("Cookie", "c2=v2")
+	data := &templateContext{
+		Flow:           &td,
+		RequestHeaders: headers,
+		RequestMethod:  "POST",
+		RequestUrl:     "https://test.kratos.ory.sh/some-test-path",
+		Session:        &td,
+	}
 
-	b, err := createBody("test_body.jsonnet", &td, &td)
+	b, err := createBody("test_body.jsonnet", data)
 	assert.NoError(t, err)
 
 	buf := new(strings.Builder)
 	io.Copy(buf, b)
 
-	expected := fmt.Sprintf("{\n   \"flow_id\": \"%s\",\n   \"session_id\": \"%s\"\n}\n", td.ID, td.Foo)
+	fmt.Println(buf.String())
 
-	assert.Equal(t, expected, buf.String())
+	expected := fmt.Sprintf(`
+		{
+			"flow_id": "%s",
+			"session_id": "%s",
+			"headers": {
+				"Cookie": ["%s", "%s"],
+				"Some-Header": ["%s"]
+			},
+			"method": "%s",
+			"url": "%s"
+		}`,
+		td.ID,
+		td.Foo,
+		data.RequestHeaders.Values("Cookie")[0],
+		data.RequestHeaders.Values("Cookie")[1],
+		data.RequestHeaders.Get("Some-Header"),
+		data.RequestMethod,
+		data.RequestUrl)
+
+	assert.JSONEq(t, expected, buf.String())
 }
 
 func TestWebHookConfig(t *testing.T) {

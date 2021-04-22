@@ -49,6 +49,14 @@ type (
 		x.LoggingProvider
 	}
 
+	templateContext struct {
+		Flow           interface{} `json:"flow"`
+		RequestHeaders http.Header `json:"request_headers"`
+		RequestMethod  string      `json:"request_method"`
+		RequestUrl     string      `json:"request_url"`
+		Session        interface{} `json:"session"`
+	}
+
 	WebHook struct {
 		r webHookDependencies
 		c json.RawMessage
@@ -159,21 +167,33 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 	return &WebHook{r: r, c: c}
 }
 
-func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, _ *http.Request, f *verification.Flow, s *session.Session) error {
-	return e.execute(f, s)
+func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, session *session.Session) error {
+	return e.execute(&templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestUrl:     req.URL.String(),
+		Session:        session,
+	})
 }
 
-func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, _ *http.Request, f *registration.Flow, s *session.Session) error {
-	return e.execute(f, s)
+func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
+	return e.execute(&templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestUrl:     req.URL.String(),
+		Session:        session,
+	})
 }
 
-func (e *WebHook) execute(f interface{}, s interface{}) error {
+func (e *WebHook) execute(data *templateContext) error {
 	conf, err := newWebHookConfig(e.c)
 	if err != nil {
 		return err
 	}
 
-	body, err := createBody(conf.templatePath, f, s)
+	body, err := createBody(conf.templatePath, data)
 	if err != nil {
 		return fmt.Errorf("failed to create web hook body: %w", err)
 	}
@@ -184,7 +204,7 @@ func (e *WebHook) execute(f interface{}, s interface{}) error {
 	return nil
 }
 
-func createBody(templatePath string, f, s interface{}) (io.Reader, error) {
+func createBody(templatePath string, data *templateContext) (io.Reader, error) {
 	var body io.Reader
 	if len(templatePath) == 0 {
 		return body, nil
@@ -197,16 +217,10 @@ func createBody(templatePath string, f, s interface{}) (io.Reader, error) {
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "")
 
-	if err := enc.Encode(f); err != nil {
+	if err := enc.Encode(data); err != nil {
 		return nil, err
 	}
-	vm.TLACode("flow", buf.String())
-
-	buf.Reset()
-	if err := enc.Encode(s); err != nil {
-		return nil, err
-	}
-	vm.TLACode("session", buf.String())
+	vm.TLACode("ctx", buf.String())
 
 	if res, err := vm.EvaluateFile(templatePath); err != nil {
 		return nil, err
