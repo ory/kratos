@@ -22,9 +22,6 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.2021
 // See https://github.com/mattn/go-sqlite3/pull/926
 replace github.com/mattn/go-sqlite3 => github.com/realPy/go-sqlite3 v1.14.7-0.20210321100449-976f046ff4fa
 
-// See https://github.com/ory/kratos/issues/1250
-replace github.com/dgrijalva/jwt-go => github.com/form3tech-oss/jwt-go v3.2.2+incompatible
-
 require (
 	github.com/DataDog/datadog-go v4.5.1+incompatible // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
@@ -36,8 +33,8 @@ require (
 	github.com/containerd/containerd v1.4.4 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fatih/color v1.9.0
+	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.0
