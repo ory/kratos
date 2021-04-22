@@ -23,6 +23,8 @@ type (
 		apply(req *http.Request)
 	}
 
+	authStrategyFactory func(c json.RawMessage) (AuthStrategy, error)
+
 	noopAuthStrategy struct{}
 
 	basicAuthStrategy struct {
@@ -53,50 +55,28 @@ type (
 	}
 )
 
-func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
-	type rawWebHookConfig struct {
-		Method string
-		Url    string
-		Body   string
-		Auth   struct {
-			Type   string
-			Config json.RawMessage
-		}
-	}
+var strategyFactories = map[string]authStrategyFactory{
+	"":           newNoopAuthStrategy,
+	"api-key":    newApiKeyStrategy,
+	"basic-auth": newBasicAuthStrategy,
+}
 
-	var rc rawWebHookConfig
-	err := json.Unmarshal(r, &rc)
-	if err != nil {
-		return nil, err
+func newAuthStrategy(name string, c json.RawMessage) (as AuthStrategy, err error) {
+	if f, ok := strategyFactories[name]; ok {
+		as, err = f(c)
+	} else {
+		err = fmt.Errorf("unsupported auth type: %s", name)
 	}
+	return
+}
 
-	var as AuthStrategy
-	switch rc.Auth.Type {
-	case "":
-		as = &noopAuthStrategy{}
-	case "api-key":
-		as, err = newApiKeyStrategy(rc.Auth.Config)
-	case "basic-auth":
-		as, err = newBasicAuthStrategy(rc.Auth.Config)
-	default:
-		err = fmt.Errorf("unsupported auth type: %s", rc.Auth.Type)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to create web hook auth strategy: %w", err)
-	}
-
-	return &webHookConfig{
-		method:       rc.Method,
-		url:          rc.Url,
-		templatePath: rc.Body,
-		auth:         as,
-	}, nil
+func newNoopAuthStrategy(_ json.RawMessage) (AuthStrategy, error) {
+	return &noopAuthStrategy{}, nil
 }
 
 func (c *noopAuthStrategy) apply(_ *http.Request) {}
 
-func newBasicAuthStrategy(raw json.RawMessage) (*basicAuthStrategy, error) {
+func newBasicAuthStrategy(raw json.RawMessage) (AuthStrategy, error) {
 	type config struct {
 		User     string
 		Password string
@@ -117,7 +97,7 @@ func (c *basicAuthStrategy) apply(req *http.Request) {
 	req.SetBasicAuth(c.user, c.password)
 }
 
-func newApiKeyStrategy(raw json.RawMessage) (*apiKeyStrategy, error) {
+func newApiKeyStrategy(raw json.RawMessage) (AuthStrategy, error) {
 	type config struct {
 		In    string
 		Name  string
@@ -143,6 +123,36 @@ func (c *apiKeyStrategy) apply(req *http.Request) {
 	default:
 		req.Header.Set(c.name, c.value)
 	}
+}
+
+func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
+	type rawWebHookConfig struct {
+		Method string
+		Url    string
+		Body   string
+		Auth   struct {
+			Type   string
+			Config json.RawMessage
+		}
+	}
+
+	var rc rawWebHookConfig
+	err := json.Unmarshal(r, &rc)
+	if err != nil {
+		return nil, err
+	}
+
+	as, err := newAuthStrategy(rc.Auth.Type, rc.Auth.Config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create web hook auth strategy: %w", err)
+	}
+
+	return &webHookConfig{
+		method:       rc.Method,
+		url:          rc.Url,
+		templatePath: rc.Body,
+		auth:         as,
+	}, nil
 }
 
 func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
