@@ -95,8 +95,6 @@ func TestJsonNetSupport(t *testing.T) {
 	buf := new(strings.Builder)
 	io.Copy(buf, b)
 
-	fmt.Println(buf.String())
-
 	expected := fmt.Sprintf(`
 		{
 			"flow_id": "%s",

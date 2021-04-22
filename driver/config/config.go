@@ -182,7 +182,7 @@ func (c *Argon2) MarshalJSON() ([]byte, error) {
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
 func HookStrategyKey(key, strategy string) string {
-	if strategy == "none" {
+	if strategy == "global" {
 		return fmt.Sprintf("%s.hooks", key)
 	} else {
 		return fmt.Sprintf("%s.%s.hooks", key, strategy)
