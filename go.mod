@@ -22,6 +22,9 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.2021
 // See https://github.com/mattn/go-sqlite3/pull/926
 replace github.com/mattn/go-sqlite3 => github.com/realPy/go-sqlite3 v1.14.7-0.20210321100449-976f046ff4fa
 
+// See https://github.com/ory/kratos/issues/1250
+replace github.com/dgrijalva/jwt-go => github.com/form3tech-oss/jwt-go v3.2.2+incompatible
+
 require (
 	github.com/DataDog/datadog-go v4.5.1+incompatible // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
