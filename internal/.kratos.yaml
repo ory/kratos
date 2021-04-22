@@ -78,12 +78,11 @@ selfservice:
       ui_url: http://test.kratos.ory.sh/verification
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
-        global:
-          hooks:
-            - hook: web-hook
-              config:
-                url: https://test.kratos.ory.sh/after_verification_hook
-                method: GET
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/after_verification_hook
+              method: GET
 
     settings:
       ui_url:  http://test.kratos.ory.sh/settings
@@ -126,17 +125,16 @@ selfservice:
                     name: My-API-Key
                     value: secret
                     in: header
-        global:
-          hooks:
-            - hook: web-hook
-              config:
-                url: https://test.kratos.ory.sh/after_registration_hook
-                method: POST
-                auth:
-                  type: basic-auth
-                  config:
-                    user: My-API-User
-                    password: secret
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/after_registration_hook
+              method: POST
+              auth:
+                type: basic-auth
+                config:
+                  user: My-API-User
+                  password: secret
 
         oidc:
           default_browser_return_url: https://self-service/registration/oidc/return_to

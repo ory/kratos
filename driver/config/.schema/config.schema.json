@@ -281,22 +281,16 @@
       }
     },
     "selfServiceGlobalHooks": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "hooks": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/selfServiceWebHook"
-              }
-            ]
-          },
-          "uniqueItems": true,
-          "additionalItems": false
-        }
-      }
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceWebHook"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "additionalItems": false
     },
     "selfServiceAfterSettingsMethod": {
       "type": "object",
@@ -407,8 +401,8 @@
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
-        "global": {
-          "ref": "#/definitions/selfServiceGlobalHooks"
+        "hooks": {
+          "$ref": "#/definitions/selfServiceGlobalHooks"
         }
       }
     },
@@ -419,7 +413,7 @@
         "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
-        "global": {
+        "hooks": {
           "$ref": "#/definitions/selfServiceGlobalHooks"
         }
       }
