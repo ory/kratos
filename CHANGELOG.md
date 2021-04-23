@@ -136,7 +136,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.5-alpha.1...f2ed424289cdd2a0edc1736888dd15be6df65f11) (2021-04-23)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.5-alpha.1...3803c8ce43e35c51a9c1d7ab55bc662c398cf0d8) (2021-04-23)
 
 
 ### Bug Fixes
@@ -198,6 +198,7 @@
 * Remove stray non-ctx configs ([#1053](https://github.com/ory/kratos/issues/1053)) ([1fe137e](https://github.com/ory/kratos/commit/1fe137e0d6314bd0af47a29c00e2f72564e71cef))
 * Remove unused sql migration ([1445d1d](https://github.com/ory/kratos/commit/1445d1d1b4b0b5e8ef3426a98ced9573063d8646))
 * Remove unused var ([30a8cee](https://github.com/ory/kratos/commit/30a8cee22238d9f400e6d315a9bc99f710945f81))
+* Replace jwt module ([#1254](https://github.com/ory/kratos/issues/1254)) ([3803c8c](https://github.com/ory/kratos/commit/3803c8ce43e35c51a9c1d7ab55bc662c398cf0d8)), closes [#1250](https://github.com/ory/kratos/issues/1250)
 * Resolve compile issues ([63063c1](https://github.com/ory/kratos/commit/63063c15c17f4d3aca96b106275a3478a8ed717e))
 * Resolve contextualized table issues ([5a4f0d9](https://github.com/ory/kratos/commit/5a4f0d92800df7fb5ca0df18203a6d73416814e1))
 * Resolve crdb migration issue ([9f6edfd](https://github.com/ory/kratos/commit/9f6edfd1f544d5f85e5f5558a08672f40e928136))
