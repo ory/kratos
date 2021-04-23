@@ -17,6 +17,7 @@
   --ifm-code-font-size: 95%;
 }
 
-.menu__link[href*="https://"]:after {
+.menu__link[href*="https://"]:after
+{
   display: none !important;
 }
