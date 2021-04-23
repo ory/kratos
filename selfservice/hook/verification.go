@@ -25,6 +25,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
+		identity.PrivilegedPoolProvider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -46,13 +47,11 @@ func (e *Verifier) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http
 func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error {
 	// Ths is called after the identity has been created so we can safely assume that all addresses are available
 	// already.
-
 	for k := range i.VerifiableAddresses {
 		address := &i.VerifiableAddresses[k]
-		if address.Verified {
+		if address.EmailInitiated || address.Verified {
 			continue
 		}
-
 		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()),
 			e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
 			e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
@@ -71,6 +70,12 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 
 		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, address, token); err != nil {
 			return err
+		}
+		if !address.EmailInitiated{
+			address.EmailInitiated = true
+			if err := e.r.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
+				return err
+			}
 		}
 	}
 

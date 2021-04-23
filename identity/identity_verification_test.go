@@ -17,6 +17,7 @@ func TestNewVerifiableEmailAddress(t *testing.T) {
 	assert.Equal(t, a.Via, VerifiableAddressTypeEmail)
 	assert.Equal(t, a.Status, VerifiableAddressStatusPending)
 	assert.Equal(t, a.Verified, false)
+	assert.Equal(t, a.EmailInitiated, false)
 	assert.EqualValues(t, time.Time{}, a.VerifiedAt)
 	assert.NotEmpty(t, a.ID)
 }

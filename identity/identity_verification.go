@@ -37,6 +37,9 @@ type (
 		Verified bool `json:"verified" db:"verified"`
 
 		// required: true
+		EmailInitiated bool `json:"email_initiated" db:"email_initiated"`
+
+		// required: true
 		Via VerifiableAddressType `json:"via" db:"via"`
 
 		// required: true
