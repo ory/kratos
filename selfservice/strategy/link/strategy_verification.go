@@ -244,13 +244,11 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 
 	i, err := s.d.IdentityPool().GetIdentity(r.Context(), token.VerifiableAddress.IdentityID)
 	if err != nil {
-		s.handleVerificationError(w, r, f, body, err)
-		return
+		return s.handleVerificationError(w, r, f, body, err)
 	}
 
 	if err := s.d.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
-		s.handleVerificationError(w, r, f, body, err)
-		return
+		return s.handleVerificationError(w, r, f, body, err)
 	}
 
 	address := token.VerifiableAddress
