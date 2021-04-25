@@ -46,9 +46,7 @@
     ]
   },
   {
-    "Administration": [
-      "admin/managing-users-identities"
-    ]
+    "Administration": ["admin/managing-users-identities"]
   },
   {
     "Guides": [
@@ -111,14 +109,10 @@
     ]
   },
   {
-    "SDKs": [
-      "sdk"
-    ]
+    "SDKs": ["sdk"]
   },
   {
-    "Development": [
-      "milestones"
-    ]
+    "Development": ["milestones"]
   },
   {
     "Further Reading": [
