@@ -51,9 +51,15 @@ const (
 	ViperKeyPublicDomainAliases                                     = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                              = "serve.public.port"
 	ViperKeyPublicHost                                              = "serve.public.host"
+	ViperKeyPublicSocketOwner                                       = "serve.public.socket.owner"
+	ViperKeyPublicSocketGroup                                       = "serve.public.socket.group"
+	ViperKeyPublicSocketMode                                        = "serve.public.socket.mode"
 	ViperKeyAdminBaseURL                                            = "serve.admin.base_url"
 	ViperKeyAdminPort                                               = "serve.admin.port"
 	ViperKeyAdminHost                                               = "serve.admin.host"
+	ViperKeyAdminSocketOwner                                        = "serve.admin.socket.owner"
+	ViperKeyAdminSocketGroup                                        = "serve.admin.socket.group"
+	ViperKeyAdminSocketMode                                         = "serve.admin.socket.mode"
 	ViperKeySessionLifespan                                         = "session.lifespan"
 	ViperKeySessionSameSite                                         = "session.cookie.same_site"
 	ViperKeySessionDomain                                           = "session.cookie.domain"
@@ -302,7 +308,7 @@ func (p *Config) listenOn(key string) string {
 		p.l.Fatalf("serve.%s.port can not be zero or negative", key)
 	}
 
-	return fmt.Sprintf("%s:%d", p.p.String("serve."+key+".host"), port)
+	return configx.GetAddress(p.p.String("serve."+key+".host"), port)
 }
 
 func (p *Config) DefaultIdentityTraitsSchemaURL() *url.URL {
@@ -345,6 +351,22 @@ func (p *Config) AdminListenOn() string {
 
 func (p *Config) PublicListenOn() string {
 	return p.listenOn("public")
+}
+
+func (p *Config) PublicSocketPermission() *configx.UnixPermission {
+	return &configx.UnixPermission{
+		Owner: p.p.String(ViperKeyPublicSocketOwner),
+		Group: p.p.String(ViperKeyPublicSocketGroup),
+		Mode:  os.FileMode(p.p.IntF(ViperKeyPublicSocketMode, 0755)),
+	}
+}
+
+func (p *Config) AdminSocketPermission() *configx.UnixPermission {
+	return &configx.UnixPermission{
+		Owner: p.p.String(ViperKeyAdminSocketOwner),
+		Group: p.p.String(ViperKeyAdminSocketGroup),
+		Mode:  os.FileMode(p.p.IntF(ViperKeyAdminSocketMode, 0755)),
+	}
 }
 
 func (p *Config) DSN() string {
