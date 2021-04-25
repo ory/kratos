@@ -868,7 +868,7 @@ serve:
 
     ## Public Host ##
     #
-    # The host (interface) or unix socket kratos' public endpoint listens on. Use the prefix "unix:" to specify a path to a unix socket.
+    # The host (interface) kratos' public endpoint listens on.
     #
     # Default value: 0.0.0.0
     #
@@ -908,7 +908,7 @@ serve:
     socket:
       ## group ##
       #
-      # Group of unix socket. If empty, the group will be the primary group of the user running kratos.
+      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -938,7 +938,7 @@ serve:
 
       ## owner ##
       #
-      # Owner of unix socket. If empty, the owner will be the user running kratos.
+      # Owner of unix socket. If empty, the owner will be the user running hydra.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -1095,7 +1095,7 @@ serve:
   admin:
     ## Admin Host ##
     #
-    # The host (interface) or unix socket kratos' admin endpoint listens on. Use the prefix "unix:" to specify a path to a unix socket.
+    # The host (interface) kratos' admin endpoint listens on.
     #
     # Default value: 0.0.0.0
     #
@@ -1135,7 +1135,7 @@ serve:
     socket:
       ## group ##
       #
-      # Group of unix socket. If empty, the group will be the primary group of the user running kratos.
+      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -1165,7 +1165,7 @@ serve:
 
       ## owner ##
       #
-      # Owner of unix socket. If empty, the owner will be the user running kratos.
+      # Owner of unix socket. If empty, the owner will be the user running hydra.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
