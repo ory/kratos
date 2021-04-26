@@ -64,7 +64,7 @@ func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error
 }
 
 func setup(t *testing.T, cmd *cobra.Command) driver.Registry {
-	conf, reg := internal.NewRegistryDefaultWithDSN(t, config.DefaultSQLiteMemoryDSN)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	_, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stubs/identity.schema.json")
 	// setup command

@@ -53,7 +53,7 @@ context('Registration Flow Errors', () => {
       cy.get('input[name="traits.email"]').type(identity)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.messages .message').should('contain.text', 'missing')
+      cy.get('.messages .message').should('contain.text', 'length must be')
     })
 
     it('should show an error when the email is empty', () => {
@@ -74,7 +74,7 @@ context('Registration Flow Errors', () => {
 
     it('should show a missing indicator if no fields are set', () => {
       cy.get('button[type="submit"]').click()
-      cy.get('.messages .message').should('contain.text', 'Property')
+      cy.get('.messages .message').should('contain.text', 'but got 0')
     })
 
     it('should show an error when the website is not a valid URI', () => {

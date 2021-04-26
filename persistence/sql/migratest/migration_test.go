@@ -12,20 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sirupsen/logrus"
-
-	"github.com/ory/x/logrusx"
-
-	"github.com/ory/x/configx"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/x/popx"
-	"github.com/ory/x/sqlcon/dockertest"
-
 	"github.com/gobuffalo/pop/v5"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver"
@@ -39,6 +28,11 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/popx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlcon/dockertest"
 )
 
 func containsExpectedIds(t *testing.T, path string, ids []string) {
@@ -94,8 +88,8 @@ func TestMigrations(t *testing.T) {
 			testhelpers.CleanSQL(t, c)
 
 			t.Cleanup(func() {
-				//t.Logf("Cleaning up after migrations")
-				//testhelpers.CleanSQL(t, c)
+				t.Logf("Cleaning up after migrations")
+				testhelpers.CleanSQL(t, c)
 				require.NoError(t, c.Close())
 			})
 
@@ -279,8 +273,6 @@ func TestMigrations(t *testing.T) {
 					require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 				})
 			})
-
-			return
 
 			t.Run("suite=down", func(t *testing.T) {
 				tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata", l)

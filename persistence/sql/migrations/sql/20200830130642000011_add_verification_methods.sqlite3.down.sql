@@ -1,1 +1,1 @@
-ALTER TABLE "_selfservice_verification_flows_tmp" RENAME TO "selfservice_verification_flows";
+CREATE INDEX "selfservice_verification_flows_nid_idx" ON "_selfservice_verification_flows_tmp" (id, nid);

@@ -2,8 +2,13 @@
   "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/profile/settings.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["traits"],
+  "required": [
+    "traits"
+  ],
   "properties": {
+    "method": {
+      "type": "string"
+    },
     "traits": {},
     "csrf_token": {
       "type": "string",

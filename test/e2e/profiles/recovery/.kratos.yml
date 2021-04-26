@@ -11,7 +11,7 @@ selfservice:
 
     recovery:
       enabled: true
-      lifespan: 5s
+      lifespan: 5m
 
     logout:
       after:

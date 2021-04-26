@@ -4,6 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/schema"
+
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/sqlcon"
+
 	"github.com/ory/herodot"
 
 	"github.com/julienschmidt/httprouter"
@@ -23,6 +28,8 @@ const (
 	RouteInitBrowserFlow = "/self-service/recovery/browser"
 	RouteInitAPIFlow     = "/self-service/recovery/api"
 	RouteGetFlow         = "/self-service/recovery/flows"
+
+	RouteSubmitFlow = "/self-service/recovery"
 )
 
 type (
@@ -40,6 +47,7 @@ type (
 		x.WriterProvider
 		x.CSRFProvider
 		config.Provider
+		ErrorHandlerProvider
 	}
 	Handler struct {
 		d handlerDependencies
@@ -57,7 +65,11 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, redirect))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initAPIFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)))
+
 	public.GET(RouteGetFlow, h.fetch)
+
+	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, redirect))
+	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsNotAuthenticated(h.submitFlow, redirect))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -98,7 +110,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeAPI)
+	req, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -135,18 +147,18 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 		return
 	}
 
-	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
+	f, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	if err := h.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
+	if err := h.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), f); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, req.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
+	http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused
@@ -187,14 +199,14 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	}
 
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
-	req, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), rid)
+	f, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), rid)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	if req.ExpiresAt.Before(time.Now().UTC()) {
-		if req.Type == flow.TypeBrowser {
+	if f.ExpiresAt.Before(time.Now().UTC()) {
+		if f.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The recovery flow has expired. Redirect the user to the recovery flow init endpoint to initialize a new recovery flow.").
 				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitBrowserFlow).String())))
@@ -206,5 +218,117 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		return
 	}
 
-	h.d.Writer().Write(w, r, req)
+	h.d.Writer().Write(w, r, f)
+}
+
+// nolint:deadcode,unused
+// swagger:parameters submitSelfServiceRecoveryFlow
+type submitSelfServiceRegistrationFlow struct {
+	// The Registration Flow ID
+	//
+	// The value for this parameter comes from `flow` URL Query parameter sent to your
+	// application (e.g. `/registration?flow=abcde`).
+	//
+	// required: true
+	// in: query
+	Flow string `json:"flow"`
+
+	// in: body
+	Body submitSelfServiceRecoveryFlowBody
+}
+
+// swagger:model submitSelfServiceRecoveryFlow
+// nolint:deadcode,unused
+type submitSelfServiceRecoveryFlowBody struct{}
+
+// swagger:route POST /self-service/recovery public submitSelfServiceRecoveryFlow
+//
+// Complete Recovery Flow
+//
+// Use this endpoint to complete a recovery flow. This endpoint
+// behaves differently for API and browser flows and has several states:
+//
+// - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+//   and works with API- and Browser-initiated flows.
+//	 - For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+//     and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+//	 - For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+// - `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
+//   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+// - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
+//   does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+//   (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
+//   a new Recovery Flow ID which contains an error message that the recovery link was invalid.
+//
+// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+//
+//     Consumes:
+//     - application/json
+//     - application/x-www-form-urlencoded
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       400: recoveryFlow
+//       302: emptyResponse
+//       500: genericError
+func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	rid, err := flow.GetFlowID(r)
+	if err != nil {
+		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
+		return
+	}
+
+	f, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), rid)
+	if errors.Is(err, sqlcon.ErrNoRows) {
+		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrNotFound.WithReasonf("The recovery request could not be found. Please restart the flow.")))
+		return
+	} else if err != nil {
+		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
+		return
+	}
+
+	if err := f.Valid(); err != nil {
+		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		return
+	}
+
+	var g node.Group
+	var found bool
+	for _, ss := range h.d.AllRecoveryStrategies() {
+		err := ss.Recover(w, r, f)
+		if errors.Is(err, flow.ErrStrategyNotResponsible) {
+			continue
+		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return
+		} else if err != nil {
+			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.RecoveryNodeGroup(), err)
+			return
+		}
+
+		found = true
+		g = ss.RecoveryNodeGroup()
+		break
+	}
+
+	if !found {
+		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoRecoveryStrategyResponsible()))
+		return
+	}
+
+	if f.Type == flow.TypeBrowser {
+		http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
+		return
+	}
+
+	updatedFlow, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), f.ID)
+	if err != nil {
+		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, g, err)
+		return
+	}
+
+	h.d.Writer().Write(w, r, updatedFlow)
 }

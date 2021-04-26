@@ -3,6 +3,10 @@ package persistence
 import (
 	"context"
 
+	"github.com/ory/x/networkx"
+
+	"github.com/gofrs/uuid"
+
 	"github.com/gobuffalo/pop/v5"
 
 	"github.com/ory/x/popx"
@@ -46,4 +50,11 @@ type Persister interface {
 	Migrator() *popx.Migrator
 	GetConnection(ctx context.Context) *pop.Connection
 	Transaction(ctx context.Context, callback func(ctx context.Context, connection *pop.Connection) error) error
+	Networker
+}
+
+type Networker interface {
+	WithNetworkID(sid uuid.UUID) Persister
+	NetworkID() uuid.UUID
+	DetermineNetwork(ctx context.Context) (*networkx.Network, error)
 }

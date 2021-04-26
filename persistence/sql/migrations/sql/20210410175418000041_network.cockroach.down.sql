@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_login_flows" DROP CONSTRAINT "selfservice_login_flows_nid_fk_idx";

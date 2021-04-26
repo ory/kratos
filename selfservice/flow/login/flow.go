@@ -2,13 +2,17 @@ package login
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/driver/config"
+
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/corp"
 
-	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -16,7 +20,6 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -33,9 +36,12 @@ type Flow struct {
 	// represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>
 	//
 	// required: true
-	ID uuid.UUID `json:"id" faker:"-" db:"id"`
+	ID  uuid.UUID `json:"id" faker:"-" db:"id" rw:"r"`
+	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
 
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	//
+	// required: true
 	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,
@@ -60,22 +66,10 @@ type Flow struct {
 	// If set contains the login method used. If the flow is new, it is unset.
 	Active identity.CredentialsType `json:"active,omitempty" db:"active_method"`
 
-	// Messages contains a list of messages to be displayed in the Login UI. Omitting these
-	// messages makes it significantly harder for users to figure out what is going on.
-	//
-	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
-	Messages text.Messages `json:"messages" db:"messages" faker:"-"`
-
-	// List of login methods
-	//
-	// This is the list of available login methods with their required form fields, such as `identifier` and `password`
-	// for the password login method. This will also contain error messages such as "password can not be empty".
+	// UI contains data which must be shown in the user interface.
 	//
 	// required: true
-	Methods map[identity.CredentialsType]*FlowMethod `json:"methods" faker:"login_flow_methods" db:"-"`
-
-	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw []FlowMethod `json:"-" faker:"-" has_many:"selfservice_login_flow_methods" fk_id:"selfservice_login_flow_id"`
+	UI *container.Container `json:"ui" db:"ui"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" db:"created_at"`
@@ -90,14 +84,18 @@ type Flow struct {
 	Forced bool `json:"forced" db:"forced"`
 }
 
-func NewFlow(exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
 	now := time.Now().UTC()
+	id := x.NewUUID()
 	return &Flow{
-		ID:         x.NewUUID(),
-		ExpiresAt:  now.Add(exp),
-		IssuedAt:   now,
+		ID:        id,
+		ExpiresAt: now.Add(exp),
+		IssuedAt:  now,
+		UI: &container.Container{
+			Method: "POST",
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
+		},
 		RequestURL: x.RequestURL(r).String(),
-		Methods:    map[identity.CredentialsType]*FlowMethod{},
 		CSRFToken:  csrf,
 		Type:       flowType,
 		Forced:     r.URL.Query().Get("refresh") == "true",
@@ -112,35 +110,12 @@ func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
 }
 
-func (f *Flow) BeforeSave(_ *pop.Connection) error {
-	f.MethodsRaw = make([]FlowMethod, 0, len(f.Methods))
-	for _, m := range f.Methods {
-		f.MethodsRaw = append(f.MethodsRaw, *m)
-	}
-	f.Methods = nil
-	return nil
-}
-
-func (f *Flow) AfterCreate(c *pop.Connection) error {
-	return f.AfterFind(c)
-}
-
-func (f *Flow) AfterUpdate(c *pop.Connection) error {
-	return f.AfterFind(c)
-}
-
-func (f *Flow) AfterFind(_ *pop.Connection) error {
-	f.Methods = make(FlowMethods)
-	for key := range f.MethodsRaw {
-		m := f.MethodsRaw[key] // required for pointer dereference
-		f.Methods[m.Method] = &m
-	}
-	f.MethodsRaw = nil
-	return nil
-}
-
 func (f Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_login_flows")
+}
+
+func (f Flow) WhereID(ctx context.Context, alias string) string {
+	return fmt.Sprintf("%s.%s = ? AND %s.%s = ?", alias, "id", alias, "nid")
 }
 
 func (f *Flow) Valid() error {
@@ -150,7 +125,7 @@ func (f *Flow) Valid() error {
 	return nil
 }
 
-func (f *Flow) GetID() uuid.UUID {
+func (f Flow) GetID() uuid.UUID {
 	return f.ID
 }
 
@@ -159,5 +134,9 @@ func (f *Flow) IsForced() bool {
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
+	return flow.AppendFlowTo(src, f.ID)
+}
+
+func (f Flow) GetNID() uuid.UUID {
+	return f.NID
 }

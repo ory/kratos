@@ -9,40 +9,34 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ory/kratos/corpx"
-
-	"github.com/ory/kratos/driver"
-
 	"github.com/go-errors/errors"
-	"github.com/stretchr/testify/assert"
-
-	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/persistence/sql"
-	"github.com/ory/kratos/selfservice/errorx"
-	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/link"
-	"github.com/ory/kratos/x"
-
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/pop/v5/logging"
 	"github.com/google/uuid"
-
-	"github.com/ory/x/sqlcon/dockertest"
-
-	// "github.com/ory/x/sqlcon/dockertest"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/identity"
+	continuity "github.com/ory/kratos/continuity/test"
+	"github.com/ory/kratos/corpx"
+	courier "github.com/ory/kratos/courier/test"
+	"github.com/ory/kratos/driver"
+	ri "github.com/ory/kratos/identity"
+	identity "github.com/ory/kratos/identity/test"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/persistence/sql"
+	errorx "github.com/ory/kratos/selfservice/errorx/test"
+	lf "github.com/ory/kratos/selfservice/flow/login"
+	login "github.com/ory/kratos/selfservice/flow/login/test"
+	recovery "github.com/ory/kratos/selfservice/flow/recovery/test"
+	registration "github.com/ory/kratos/selfservice/flow/registration/test"
+	settings "github.com/ory/kratos/selfservice/flow/settings/test"
+	verification "github.com/ory/kratos/selfservice/flow/verification/test"
+	link "github.com/ory/kratos/selfservice/strategy/link/test"
+	session "github.com/ory/kratos/session/test"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlcon/dockertest"
 )
 
 var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(os.TempDir(), uuid.New().String()))
@@ -153,7 +147,7 @@ func TestPersister(t *testing.T) {
 
 	for name, reg := range conns {
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
-			p := reg.Persister()
+			_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 			conf := reg.Config(context.Background())
 
 			t.Logf("DSN: %s", conf.DSN())
@@ -221,9 +215,9 @@ func TestPersister_Transaction(t *testing.T) {
 	p := reg.Persister()
 
 	t.Run("case=should not create identity because callback returned error", func(t *testing.T) {
-		i := &identity.Identity{
+		i := &ri.Identity{
 			ID:     x.NewUUID(),
-			Traits: identity.Traits(`{}`),
+			Traits: ri.Traits(`{}`),
 		}
 		errMessage := "failing because why not"
 		err := p.Transaction(context.Background(), func(ctx context.Context, connection *pop.Connection) error {
@@ -240,13 +234,12 @@ func TestPersister_Transaction(t *testing.T) {
 	t.Run("case=functions should use the context connection", func(t *testing.T) {
 		c := p.GetConnection(context.Background())
 		errMessage := "some stupid error you can't debug"
-		lr := &login.Flow{
+		lr := &lf.Flow{
 			ID: x.NewUUID(),
 		}
 		err := c.Transaction(func(tx *pop.Connection) error {
 			ctx := sql.WithTransaction(context.Background(), tx)
 			require.NoError(t, p.CreateLoginFlow(ctx, lr), "%+v", lr)
-			require.NoError(t, p.UpdateLoginFlowMethod(ctx, lr.ID, identity.CredentialsTypePassword, &login.FlowMethod{}))
 			require.NoError(t, getErr(p.GetLoginFlow(ctx, lr.ID)), "%+v", lr)
 			return errors.Errorf(errMessage)
 		})

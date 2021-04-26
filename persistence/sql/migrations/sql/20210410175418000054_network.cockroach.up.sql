@@ -1,0 +1,1 @@
+ALTER TABLE "courier_messages" RENAME COLUMN "nid" TO "_nid_tmp";

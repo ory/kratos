@@ -10,8 +10,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/sqlcon"
-
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/continuity"
@@ -32,8 +30,21 @@ type UpdatePayload interface {
 }
 
 type UpdateContext struct {
-	Session *session.Session
-	Flow    *Flow
+	Session  *session.Session
+	Flow     *Flow
+	toUpdate *identity.Identity
+}
+
+func (c *UpdateContext) UpdateIdentity(i *identity.Identity) {
+	c.toUpdate = i
+}
+
+func (c *UpdateContext) GetIdentityToUpdate() *identity.Identity {
+	if c.toUpdate == nil {
+		return c.GetSessionIdentity()
+	}
+
+	return c.toUpdate
 }
 
 func (c UpdateContext) GetSessionIdentity() *identity.Identity {
@@ -46,45 +57,22 @@ func (c UpdateContext) GetSessionIdentity() *identity.Identity {
 func PrepareUpdate(d interface {
 	x.LoggingProvider
 	continuity.ManagementProvider
-	session.ManagementProvider
-	FlowPersistenceProvider
-}, w http.ResponseWriter, r *http.Request, name string, payload UpdatePayload) (*UpdateContext, error) {
-	ss, err := d.SessionManager().FetchFromRequest(r.Context(), r)
-	if err != nil {
-		return new(UpdateContext), err
-	}
-
-	rid, err := GetFlowID(r)
-	if err != nil {
-		return new(UpdateContext), err
-	}
-
-	payload.SetFlowID(rid)
-	req, err := d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)
-	if errors.Is(err, sqlcon.ErrNoRows) {
-		return new(UpdateContext), errors.WithStack(herodot.ErrNotFound.WithReasonf("The settings request could not be found. Please restart the flow."))
-	} else if err != nil {
-		return new(UpdateContext), err
-	}
-
-	if err := req.Valid(ss); err != nil {
-		return new(UpdateContext), err
-	}
-
-	c := &UpdateContext{Session: ss, Flow: req}
-	if req.Type == flow.TypeAPI {
+}, w http.ResponseWriter, r *http.Request, f *Flow, ss *session.Session, name string, payload UpdatePayload) (*UpdateContext, error) {
+	payload.SetFlowID(f.ID)
+	c := &UpdateContext{Session: ss, Flow: f}
+	if f.Type == flow.TypeAPI {
 		return c, nil
 	}
 
 	if _, err := d.ContinuityManager().Continue(r.Context(), w, r, name, ContinuityOptions(payload, ss.Identity)...); err == nil {
-		if payload.GetFlowID() == rid {
+		if payload.GetFlowID() == f.ID {
 			return c, ErrContinuePreviousAction
 		}
 		d.Logger().
 			WithField("package", pkgName).
 			WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
 			WithField("expected_request_id", payload.GetFlowID()).
-			WithField("actual_request_id", rid).
+			WithField("actual_request_id", f.ID).
 			Debug("Flow ID from continuity manager does not match Flow ID from request.")
 		return c, nil
 	} else if !errors.Is(err, &continuity.ErrNotResumable) {
@@ -105,7 +93,7 @@ func ContinuityOptions(p interface{}, i *identity.Identity) []continuity.Manager
 func GetFlowID(r *http.Request) (uuid.UUID, error) {
 	rid := x.ParseUUID(r.URL.Query().Get("flow"))
 	if rid == uuid.Nil {
-		return rid, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing or malformed."))
+		return rid, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing or malformed."))
 	}
 	return rid, nil
 }

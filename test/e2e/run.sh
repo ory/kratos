@@ -91,6 +91,10 @@ run() {
 
   npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive
 
+  hydra clients delete \
+    --endpoint http://127.0.0.1:4445 \
+    kratos-client google-client github-client || true
+
   hydra clients create \
     --endpoint http://127.0.0.1:4445 \
     --id kratos-client \
@@ -152,7 +156,11 @@ run() {
   if [[ $dev = "yes" ]]; then
     npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
   else
-    npm run test -- --record --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
+    if [ -z ${CYPRESS_RECORD_KEY+x} ]; then
+      npm run test -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
+    else
+      npm run test -- --record --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
+    fi
   fi
 }
 

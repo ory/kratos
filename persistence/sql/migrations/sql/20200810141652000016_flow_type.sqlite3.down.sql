@@ -1,1 +1,1 @@
-ALTER TABLE "_selfservice_login_requests_tmp" RENAME TO "selfservice_login_requests";
+ALTER TABLE "_selfservice_registration_requests_tmp" RENAME TO "selfservice_registration_requests";

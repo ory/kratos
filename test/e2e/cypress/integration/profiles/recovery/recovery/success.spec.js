@@ -20,15 +20,15 @@ context('Recovery', () => {
     })
 
     it('should perform a recovery flow', () => {
-      cy.get('#recovery-token input[name="email"]').type(identity.email)
-      cy.get('button[type="submit"]').click()
+      cy.get('input[name="email"]').type(identity.email)
+      cy.get('button[value="link"]').click()
 
       cy.location('pathname').should('eq', '/recovery')
-      cy.get('.messages.global .info').should(
+      cy.get('.messages .message').should(
         'have.text',
         'An email containing a recovery link has been sent to the email address you provided.'
       )
-      cy.get('#recovery-token input[name="email"]').should(
+      cy.get('input[name="email"]').should(
         'have.value',
         identity.email
       )
@@ -39,13 +39,13 @@ context('Recovery', () => {
       cy.location('pathname').should('eq', '/settings')
 
       const newPassword = gen.password()
-      cy.get('#user-password input[name="password"]').clear().type(newPassword)
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').clear().type(newPassword)
+      cy.get('button[value="password"]').click()
       cy.get('.container').should(
         'contain.text',
         'Your changes have been saved!'
       )
-      cy.get('#user-password input[name="password"]').should('be.empty')
+      cy.get('input[name="password"]').should('be.empty')
 
       cy.logout()
       cy.login({ email: identity.email, password: newPassword })

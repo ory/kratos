@@ -21,8 +21,11 @@
         "name": {
           "type": "string",
           "minLength": 2
+        },
+        "website": {
+          "type": "string",
+          "format": "uri"
         }
-
       },
       "required": [
         "subject"

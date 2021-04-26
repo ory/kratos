@@ -31,7 +31,7 @@ kratos migrate sql -e
 Before running this command on an existing database, create a back up!
 
 ```
-kratos migrate sql <database-url> [flags]
+kratos migrate sql &lt;database-url&gt; [flags]
 ```
 
 ### Options

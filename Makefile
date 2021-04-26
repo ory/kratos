@@ -85,15 +85,29 @@ test-coverage: .bin/go-acc .bin/goveralls
 
 # Generates the SDK
 .PHONY: sdk
-sdk: .bin/swagger .bin/cli
-		swagger generate spec -m -o spec/api.json -x internal/httpclient
-		cli dev swagger sanitize ./spec/api.json
-		swagger validate ./spec/api.json
-		swagger flatten --with-flatten=remove-unused -o ./spec/api.json ./spec/api.json
-		swagger validate ./spec/api.json
-		rm -rf internal/httpclient/models/* internal/httpclient/clients/*
+sdk: .bin/swagger .bin/cli node_modules
+		swagger generate spec -m -o spec/swagger.json -x github.com/ory/kratos-client-go
+		cli dev swagger sanitize ./spec/swagger.json
+		swagger validate ./spec/swagger.json
+		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
+				cli dev openapi migrate \
+					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
+					-p file://.schema/openapi/patches/meta.yaml \
+					-p file://.schema/openapi/patches/schema.yaml \
+					-p file://.schema/openapi/patches/selfservice.yaml \
+					spec/swagger.json spec/openapi.json
+
+		rm -rf internal/httpclient/models internal/httpclient/clients
 		mkdir -p internal/httpclient/
-		swagger generate client -f ./spec/api.json -t internal/httpclient/ -A Ory_Kratos
+		npm run openapi-generator-cli -- generate -i "spec/openapi.json" \
+				-g go \
+				-o "internal/httpclient" \
+				--git-user-id ory \
+				--git-repo-id kratos-client-go \
+				--git-host github.com \
+				-t .schema/openapi/templates/go \
+				-c .schema/openapi/gen.go.yml
+
 		make format
 
 .PHONY: quickstart

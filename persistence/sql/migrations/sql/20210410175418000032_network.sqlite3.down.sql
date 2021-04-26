@@ -1,0 +1,1 @@
+ALTER TABLE "_continuity_containers_tmp" RENAME TO "continuity_containers";

@@ -9,8 +9,9 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 )
@@ -26,7 +27,7 @@ var _ verification.PublicHandler = new(Strategy)
 type (
 	// FlowMethod contains the configuration for this selfservice strategy.
 	FlowMethod struct {
-		*form.HTMLForm
+		*container.Container
 	}
 
 	strategyDependencies interface {
@@ -74,4 +75,12 @@ type (
 
 func NewStrategy(d strategyDependencies) *Strategy {
 	return &Strategy{d: d, dx: decoderx.NewHTTP()}
+}
+
+func (s *Strategy) RecoveryNodeGroup() node.Group {
+	return node.RecoveryLinkGroup
+}
+
+func (s *Strategy) VerificationNodeGroup() node.Group {
+	return node.VerificationLinkGroup
 }

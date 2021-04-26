@@ -31,12 +31,9 @@ serve:
     base_url: http://kratos:4434/
 
 hashers:
-  argon2:
-    parallelism: 1
-    memory: 16384
-    iterations: 1
-    salt_length: 16
-    key_length: 16
+  algorithm: bcrypt
+  bcrypt:
+    cost: 4
 
 courier:
   smtp:

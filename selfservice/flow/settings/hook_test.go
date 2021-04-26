@@ -48,7 +48,7 @@ func TestSettingsExecutor(t *testing.T) {
 					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					sess := session.NewActiveSession(i, conf, time.Now().UTC())
 
-					a := settings.NewFlow(time.Minute, r, sess.Identity, ft)
+					a := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
 					a.RequestURL = x.RequestURL(r).String()
 					require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(r.Context(), a))
 					_ = handleErr(t, w, r, reg.SettingsHookExecutor().

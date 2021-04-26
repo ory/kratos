@@ -7,6 +7,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/inhies/go-bytesize"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 
@@ -31,6 +33,10 @@ func NewHasherArgon2(c Argon2Configuration) *Argon2 {
 	return &Argon2{c: c}
 }
 
+func toKB(mem bytesize.ByteSize) uint32 {
+	return uint32(mem / bytesize.KB)
+}
+
 func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
 	p := h.c.Config(ctx).HasherArgon2()
 
@@ -42,13 +48,13 @@ func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	// Pass the plaintext password, salt and parameters to the argon2.IDKey
 	// function. This will generate a hash of the password using the Argon2id
 	// variant.
-	hash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
+	hash := argon2.IDKey([]byte(password), salt, p.Iterations, toKB(p.Memory), p.Parallelism, p.KeyLength)
 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
 		&b,
 		"$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
-		argon2.Version, p.Memory, p.Iterations, p.Parallelism,
+		argon2.Version, toKB(p.Memory), p.Iterations, p.Parallelism,
 		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(hash),
 	); err != nil {

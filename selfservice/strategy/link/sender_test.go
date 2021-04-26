@@ -32,7 +32,7 @@ func TestManager(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
-		f, err := recovery.NewFlow(time.Hour, "", u, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
+		f, err := recovery.NewFlow(conf, time.Hour, "", u, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
@@ -46,15 +46,19 @@ func TestManager(t *testing.T) {
 
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Recover access to your account")
-		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), link.RouteRecovery).String()+"?token=")
+		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), recovery.RouteSubmitFlow).String()+"?")
+		assert.Contains(t, messages[0].Body, "token=")
+		assert.Contains(t, messages[0].Body, "flow=")
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "Account access attempted")
-		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), link.RouteRecovery).String()+"?token=")
+		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), recovery.RouteSubmitFlow).String()+"?")
+		assert.NotContains(t, messages[1].Body, "token=")
+		assert.NotContains(t, messages[1].Body, "flow=")
 	})
 
 	t.Run("method=SendVerificationLink", func(t *testing.T) {
-		f, err := verification.NewFlow(time.Hour, "", u, reg.VerificationStrategies(context.Background()), flow.TypeBrowser)
+		f, err := verification.NewFlow(conf, time.Hour, "", u, reg.VerificationStrategies(context.Background()), flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
@@ -68,10 +72,12 @@ func TestManager(t *testing.T) {
 
 		assert.EqualValues(t, "tracked@ory.sh", messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Please verify")
-		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), link.RouteVerification).String()+"?token=")
+		assert.Contains(t, messages[0].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), verification.RouteSubmitFlow).String()+"?")
+		assert.Contains(t, messages[0].Body, "token=")
+		assert.Contains(t, messages[0].Body, "flow=")
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "tried to verify")
-		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), link.RouteVerification).String()+"?token=")
+		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), verification.RouteSubmitFlow).String()+"?")
 	})
 }

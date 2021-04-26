@@ -18,8 +18,8 @@ Helpers and management for remote ORY Kratos instances
 ### Options
 
 ```
-  -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
-  -f, --format string     Set the output format. One of table, json, and json-pretty. (default "default")
+  -e, --endpoint string   The URL of ORY Kratos&#39; Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
+  -f, --format string     Set the output format. One of table, json, and json-pretty. (default &#34;default&#34;)
   -h, --help              help for remote
   -q, --quiet             Be quiet with output printing.
 ```

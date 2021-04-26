@@ -15,12 +15,12 @@ export const initBrowserFlow = {
     code: require('raw-loader!./samples/browser/init.jsx.txt').default
   },
   node: {
-    label: 'Angular',
+    label: 'ExpressJS',
     language: 'html',
     code: require('raw-loader!./samples/browser/init.js.txt').default
   },
   angular: {
-    label: 'ExpressJS',
+    label: 'Angular',
     language: 'js',
     code: require('raw-loader!./samples/browser/init.ng.html.txt').default
   }

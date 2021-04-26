@@ -6,6 +6,7 @@ selfservice:
         providers:
           -
             id: hydra
+            label: Ory
             provider: generic
             client_id: kratos-client
             client_secret: kratos-secret
@@ -34,7 +35,7 @@ selfservice:
 
   flows:
     settings:
-      privileged_session_max_age: 5000ms
+      privileged_session_max_age: 5m
 
     logout:
       after:

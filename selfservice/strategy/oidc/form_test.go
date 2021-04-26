@@ -27,6 +27,16 @@ func TestMerge(t *testing.T) {
 			op:     json.RawMessage(`{"baz":"bar","opv":"bla"}`),
 			expect: json.RawMessage(`{"foo":"bar","baz":"bar","bool":true,"opv":"blubb"}`),
 		},
+		{
+			form:   url.Values{"traits.foo": {}, "traits.bool": {"false", "true"}, "traits.opv": {"blubb"}}.Encode(),
+			op:     json.RawMessage(`{"foo":"bar","baz":"bar","opv":"bla"}`),
+			expect: json.RawMessage(`{"foo":"bar","baz":"bar","bool":true,"opv":"blubb"}`),
+		},
+		{
+			form:   url.Values{"traits.foo": {""}, "traits.bool": {"false", "true"}, "traits.opv": {"blubb"}}.Encode(),
+			op:     json.RawMessage(`{"foo":"bar","baz":"bar","opv":"bla"}`),
+			expect: json.RawMessage(`{"foo":"bar","baz":"bar","bool":true,"opv":"blubb"}`),
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			option, err := decoderRegistration(fmt.Sprintf("file://stub/merge/%d.schema.json", k))

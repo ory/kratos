@@ -2,7 +2,8 @@ package password
 
 import (
 	"encoding/json"
-	"strings"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
@@ -69,6 +70,14 @@ type Strategy struct {
 	hd *decoderx.HTTP
 }
 
+func NewStrategy(d registrationStrategyDependencies) *Strategy {
+	return &Strategy{
+		d:  d,
+		v:  validator.New(),
+		hd: decoderx.NewHTTP(),
+	}
+}
+
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 {
@@ -78,7 +87,7 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 			}
 
 			if len(c.Identifiers) > 0 && len(c.Identifiers[0]) > 0 &&
-				strings.HasPrefix(conf.HashedPassword, "$argon2id$") {
+				(hash.IsBcryptHash([]byte(conf.HashedPassword)) || hash.IsArgon2idHash([]byte(conf.HashedPassword))) {
 				count++
 			}
 		}
@@ -86,14 +95,10 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 	return
 }
 
-func NewStrategy(d registrationStrategyDependencies) *Strategy {
-	return &Strategy{
-		d:  d,
-		v:  validator.New(),
-		hd: decoderx.NewHTTP(),
-	}
-}
-
 func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypePassword
+}
+
+func (s *Strategy) NodeGroup() node.Group {
+	return node.PasswordGroup
 }

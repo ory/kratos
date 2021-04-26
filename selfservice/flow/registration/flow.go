@@ -6,9 +6,11 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/corp"
 
-	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -16,7 +18,6 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -52,20 +53,10 @@ type Flow struct {
 	// not set.
 	Active identity.CredentialsType `json:"active,omitempty" faker:"identity_credentials_type" db:"active_method"`
 
-	// Messages contains a list of messages to be displayed in the Registration UI. Omitting these
-	// messages makes it significantly harder for users to figure out what is going on.
-	//
-	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
-	Messages text.Messages `json:"messages" db:"messages" faker:"-"`
-
-	// Methods contains context for all enabled registration methods. If a registration flow has been
-	// processed, but for example the password is incorrect, this will contain error messages.
+	// UI contains data which must be shown in the user interface.
 	//
 	// required: true
-	Methods map[identity.CredentialsType]*FlowMethod `json:"methods" faker:"registration_flow_methods" db:"-"`
-
-	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw []FlowMethod `json:"-" faker:"-" has_many:"selfservice_registration_flow_methods" fk_id:"selfservice_registration_flow_id"`
+	UI *container.Container `json:"ui" db:"ui"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
@@ -74,63 +65,37 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
-	CSRFToken string `json:"-" db:"csrf_token"`
+	CSRFToken string    `json:"-" db:"csrf_token"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func NewFlow(exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flow {
 	now := time.Now().UTC()
+	id := x.NewUUID()
 	return &Flow{
-		ID:         x.NewUUID(),
+		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
 		RequestURL: x.RequestURL(r).String(),
-		Methods:    map[identity.CredentialsType]*FlowMethod{},
-		CSRFToken:  csrf,
-		Type:       ft,
+		UI: &container.Container{
+			Method: "POST",
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
+		},
+		CSRFToken: csrf,
+		Type:      ft,
 	}
-}
-
-func (f *Flow) GetType() flow.Type {
-	return f.Type
-}
-
-func (f *Flow) GetRequestURL() string {
-	return f.RequestURL
-}
-
-func (f *Flow) BeforeSave(_ *pop.Connection) error {
-	f.MethodsRaw = make([]FlowMethod, 0, len(f.Methods))
-	for _, m := range f.Methods {
-		f.MethodsRaw = append(f.MethodsRaw, *m)
-	}
-	f.Methods = nil
-	return nil
-}
-
-func (f *Flow) AfterCreate(c *pop.Connection) error {
-	return f.AfterFind(c)
-}
-
-func (f *Flow) AfterUpdate(c *pop.Connection) error {
-	return f.AfterFind(c)
-}
-
-func (f *Flow) AfterFind(_ *pop.Connection) error {
-	f.Methods = make(FlowMethods)
-	for key := range f.MethodsRaw {
-		m := f.MethodsRaw[key] // required for pointer dereference
-		f.Methods[m.Method] = &m
-	}
-	f.MethodsRaw = nil
-	return nil
 }
 
 func (f Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_registration_flows")
 }
 
-func (f *Flow) GetID() uuid.UUID {
+func (f Flow) GetID() uuid.UUID {
 	return f.ID
+}
+
+func (f Flow) GetNID() uuid.UUID {
+	return f.NID
 }
 
 func (f *Flow) Valid() error {
@@ -141,5 +106,13 @@ func (f *Flow) Valid() error {
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
-	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
+	return flow.AppendFlowTo(src, f.ID)
+}
+
+func (f *Flow) GetType() flow.Type {
+	return f.Type
+}
+
+func (f *Flow) GetRequestURL() string {
+	return f.RequestURL
 }

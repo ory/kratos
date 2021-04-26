@@ -19,13 +19,13 @@ context('Recovery', () => {
 
     it('should update the recovery address when updating the email', () => {
       const email = up(identity.email)
-      cy.get('#user-profile input[name="traits.email"]').clear().type(email)
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(email)
+      cy.get('button[value="profile"]').click()
       cy.get('.container').should(
         'contain.text',
         'Your changes have been saved!'
       )
-      cy.get('#user-profile input[name="traits.email"]').should(
+      cy.get('input[name="traits.email"]').should(
         'contain.value',
         email
       )

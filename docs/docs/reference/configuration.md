@@ -38,7 +38,7 @@ section.
 identity:
   ## JSON Schema URL for default identity traits ##
   #
-  # URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string.
+  # URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string. Will have ID: "default"
   #
   # Examples:
   # - file://path/to/identity.traits.schema.json
@@ -770,6 +770,7 @@ selfservice:
             client_id: ''
             client_secret: ''
             mapper_url: file://path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
@@ -779,7 +780,7 @@ selfservice:
               id_token:
                 email:
                 email_verified:
-            issuer_url: https://accounts.google.com
+            label: ''
 
       ## Enables OpenID Connect Method ##
       #
@@ -899,6 +900,53 @@ serve:
     #    > set SERVE_PUBLIC_PORT=<value>
     #
     port: 4433
+
+    ## socket ##
+    #
+    # Sets the permissions of the unix socket
+    #
+    socket:
+      ## group ##
+      #
+      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_GROUP=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_GROUP=<value>
+      #
+      group: ''
+
+      ## mode ##
+      #
+      # Mode of unix socket in numeric form
+      #
+      # Default value: 493
+      #
+      # Minimum value: 0
+      #
+      # Maximum value: 511
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_MODE=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_MODE=<value>
+      #
+      mode: 0
+
+      ## owner ##
+      #
+      # Owner of unix socket. If empty, the owner will be the user running hydra.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_OWNER=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_OWNER=<value>
+      #
+      owner: ''
 
     ## cors ##
     #
@@ -1079,6 +1127,53 @@ serve:
     #    > set SERVE_ADMIN_PORT=<value>
     #
     port: 4434
+
+    ## socket ##
+    #
+    # Sets the permissions of the unix socket
+    #
+    socket:
+      ## group ##
+      #
+      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_GROUP=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_GROUP=<value>
+      #
+      group: ''
+
+      ## mode ##
+      #
+      # Mode of unix socket in numeric form
+      #
+      # Default value: 493
+      #
+      # Minimum value: 0
+      #
+      # Maximum value: 511
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_MODE=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_MODE=<value>
+      #
+      mode: 0
+
+      ## owner ##
+      #
+      # Owner of unix socket. If empty, the owner will be the user running hydra.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_OWNER=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_OWNER=<value>
+      #
+      owner: ''
 
     ## Admin Base URL ##
     #
@@ -1325,6 +1420,8 @@ hashers:
   argon2:
     ## iterations ##
     #
+    # Default value: 1
+    #
     # Minimum value: 1
     #
     # Set this value using environment variables on
@@ -1336,6 +1433,8 @@ hashers:
     iterations: 1
 
     ## parallelism ##
+    #
+    # Number of parallel workers, defaults to 2*runtime.NumCPU().
     #
     # Minimum value: 1
     #
@@ -1349,6 +1448,8 @@ hashers:
 
     ## salt_length ##
     #
+    # Default value: 16
+    #
     # Minimum value: 16
     #
     # Set this value using environment variables on
@@ -1361,6 +1462,8 @@ hashers:
 
     ## key_length ##
     #
+    # Default value: 32
+    #
     # Minimum value: 16
     #
     # Set this value using environment variables on
@@ -1371,9 +1474,51 @@ hashers:
     #
     key_length: 16
 
+    ## expected_duration ##
+    #
+    # The time a hashing operation (~login latency) should take.
+    #
+    # Default value: 500ms
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export HASHERS_ARGON2_EXPECTED_DURATION=<value>
+    # - Windows Command Line (CMD):
+    #    > set HASHERS_ARGON2_EXPECTED_DURATION=<value>
+    #
+    expected_duration: 0ns
+
+    ## expected_deviation ##
+    #
+    # The standard deviation expected for hashing operations. If this value is exceeded you will be warned in the logs to adjust the parameters.
+    #
+    # Default value: 500ms
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export HASHERS_ARGON2_EXPECTED_DEVIATION=<value>
+    # - Windows Command Line (CMD):
+    #    > set HASHERS_ARGON2_EXPECTED_DEVIATION=<value>
+    #
+    expected_deviation: 0ns
+
+    ## dedicated_memory ##
+    #
+    # The memory dedicated for Kratos. As password hashing is very resource intense, Kratos will monitor the memory consumption and warn about high values.
+    #
+    # Default value: 1GB
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export HASHERS_ARGON2_DEDICATED_MEMORY=<value>
+    # - Windows Command Line (CMD):
+    #    > set HASHERS_ARGON2_DEDICATED_MEMORY=<value>
+    #
+    dedicated_memory: 0B
+
     ## memory ##
     #
-    # Minimum value: 16384
+    # Default value: 128MB
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -1381,16 +1526,16 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 16384
+    memory: 0B
 
-  ## Configuration for the Bcrypt hasher. ##
+  ## Configuration for the Bcrypt hasher. Minimum is 4 when --dev flag is used and 12 otherwise. ##
   #
   bcrypt:
     ## cost ##
     #
     # Default value: 12
     #
-    # Minimum value: 12
+    # Minimum value: 4
     #
     # Maximum value: 31
     #
@@ -1400,7 +1545,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_BCRYPT_COST=<value>
     #
-    cost: 12
+    cost: 4
 
   ## Password hashing algorithm ##
   #

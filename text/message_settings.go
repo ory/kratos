@@ -8,6 +8,8 @@ import (
 const (
 	InfoSelfServiceSettings ID = 1050000 + iota
 	InfoSelfServiceSettingsUpdateSuccess
+	InfoSelfServiceSettingsUpdateLinkOidc
+	InfoSelfServiceSettingsUpdateUnlinkOidc
 )
 
 const (
@@ -22,6 +24,36 @@ func NewErrorValidationSettingsFlowExpired(ago time.Duration) *Message {
 		Type: Error,
 		Context: context(map[string]interface{}{
 			"expired_at": time.Now().Add(ago),
+		}),
+	}
+}
+
+func NewInfoSelfServiceSettingsUpdateSuccess() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsUpdateSuccess,
+		Text: "Your changes have been saved!",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceSettingsUpdateLinkOIDC(provider string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsUpdateLinkOidc,
+		Text: fmt.Sprintf("Link %s", provider),
+		Type: Info,
+		Context: context(map[string]interface{}{
+			"provider": provider,
+		}),
+	}
+}
+
+func NewInfoSelfServiceSettingsUpdateUnlinkOIDC(provider string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsUpdateUnlinkOidc,
+		Text: fmt.Sprintf("Unlink %s", provider),
+		Type: Info,
+		Context: context(map[string]interface{}{
+			"provider": provider,
 		}),
 	}
 }

@@ -15,11 +15,11 @@ context('Settings', () => {
 
   describe('oidc', () => {
     it('should fail to link google because id token is missing', () => {
-      cy.get('#user-oidc button[value="google"]').click()
+      cy.get('button[value="google"]').click()
       cy.get('#remember').click()
       cy.get('#accept').click()
 
-      cy.get('#user-oidc').should(
+      cy.get('.messages .message').should(
         'contain.text',
         'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
       )

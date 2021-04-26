@@ -6,13 +6,14 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/corp"
 
-	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/urlx"
 
 	"github.com/ory/x/sqlxx"
 
@@ -21,7 +22,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -66,20 +66,10 @@ type Flow struct {
 	// not set.
 	Active sqlxx.NullString `json:"active,omitempty" db:"active_method"`
 
-	// Messages contains a list of messages to be displayed in the Settings UI. Omitting these
-	// messages makes it significantly harder for users to figure out what is going on.
-	//
-	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
-	Messages text.Messages `json:"messages" db:"messages" faker:"-"`
-
-	// Methods contains context for all enabled registration methods. If a settings flow has been
-	// processed, but for example the first name is empty, this will contain error messages.
+	// UI contains data which must be shown in the user interface.
 	//
 	// required: true
-	Methods map[string]*FlowMethod `json:"methods" faker:"settings_flow_methods" db:"-"`
-
-	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw []FlowMethod `json:"-" faker:"-" has_many:"selfservice_settings_flow_methods" fk_id:"selfservice_settings_flow_id"`
+	UI *container.Container `json:"ui" db:"ui"`
 
 	// Identity contains all of the identity's data in raw form.
 	//
@@ -102,6 +92,7 @@ type Flow struct {
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 // The Response for Settings Flows via API
@@ -121,10 +112,11 @@ type APIFlowResponse struct {
 	Identity *identity.Identity `json:"identity"`
 }
 
-func NewFlow(exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
 	now := time.Now().UTC()
+	id := x.NewUUID()
 	return &Flow{
-		ID:         x.NewUUID(),
+		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
 		RequestURL: x.RequestURL(r).String(),
@@ -132,7 +124,10 @@ func NewFlow(exp time.Duration, r *http.Request, i *identity.Identity, ft flow.T
 		Identity:   i,
 		Type:       ft,
 		State:      StateShowForm,
-		Methods:    map[string]*FlowMethod{},
+		UI: &container.Container{
+			Method: "POST",
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
+		},
 	}
 }
 
@@ -144,50 +139,31 @@ func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
 }
 
-func (r Flow) TableName(ctx context.Context) string {
+func (f Flow) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "selfservice_settings_flows")
 }
 
-func (r *Flow) GetID() uuid.UUID {
-	return r.ID
+func (f Flow) GetID() uuid.UUID {
+	return f.ID
 }
 
-func (r *Flow) AppendTo(settingsURL *url.URL) *url.URL {
-	return urlx.CopyWithQuery(settingsURL, url.Values{"flow": {r.ID.String()}})
+func (f Flow) GetNID() uuid.UUID {
+	return f.NID
 }
 
-func (r *Flow) Valid(s *session.Session) error {
-	if r.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(NewFlowExpiredError(r.ExpiresAt))
+func (f *Flow) AppendTo(src *url.URL) *url.URL {
+	return flow.AppendFlowTo(src, f.ID)
+}
+
+func (f *Flow) Valid(s *session.Session) error {
+	if f.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
 	}
 
-	if r.IdentityID != s.Identity.ID {
+	if f.IdentityID != s.Identity.ID {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf(
 			"You must restart the flow because the resumable session was initiated by another person."))
 	}
 
-	return nil
-}
-
-func (r *Flow) BeforeSave(_ *pop.Connection) error {
-	r.MethodsRaw = make([]FlowMethod, 0, len(r.Methods))
-	for _, m := range r.Methods {
-		r.MethodsRaw = append(r.MethodsRaw, *m)
-	}
-	r.Methods = nil
-	return nil
-}
-
-func (r *Flow) AfterSave(c *pop.Connection) error {
-	return r.AfterFind(c)
-}
-
-func (r *Flow) AfterFind(_ *pop.Connection) error {
-	r.Methods = make(FlowMethods)
-	for key := range r.MethodsRaw {
-		m := r.MethodsRaw[key] // required for pointer dereference
-		r.Methods[m.Method] = &m
-	}
-	r.MethodsRaw = nil
 	return nil
 }

@@ -27,6 +27,9 @@ type Configuration struct {
 	// - facebook
 	Provider string `json:"provider"`
 
+	// Label represents an optional label which can be used in the UI generation.
+	Label string `json:"label"`
+
 	// ClientID is the application's Client ID.
 	ClientID string `json:"client_id"`
 

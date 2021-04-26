@@ -1,9 +1,13 @@
-local subject = {sub: ''} + std.extVar('claims').sub;
+local claims = std.extVar('claims');
 
-{
-  identity: {
-    traits: {
-      subject: std.extVar('claims').sub,
+if std.length(claims.sub) == 0 then
+  error 'claim sub not set'
+else
+  {
+    identity: {
+      traits: {
+        subject: claims.sub,
+        [if "website" in claims then "website" else null]: claims.website,
+      },
     },
-  },
-}
+  }

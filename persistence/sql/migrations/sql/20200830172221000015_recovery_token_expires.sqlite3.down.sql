@@ -1,1 +1,1 @@
-DROP INDEX IF EXISTS "identity_recovery_addresses_code_uq_idx";
+CREATE INDEX "identity_recovery_tokens_nid_idx" ON "_identity_recovery_tokens_tmp" (id, nid);

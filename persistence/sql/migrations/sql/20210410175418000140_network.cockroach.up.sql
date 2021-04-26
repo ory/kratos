@@ -1,0 +1,1 @@
+ALTER TABLE "identity_verifiable_addresses" RENAME COLUMN "nid" TO "_nid_tmp";

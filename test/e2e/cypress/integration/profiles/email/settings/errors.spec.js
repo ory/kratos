@@ -35,30 +35,33 @@ context('Settings Flow Errors', () => {
     cy.login({ email, password })
     cy.visit(APP_URL + '/settings')
   })
-
   describe('profile', () => {
+    beforeEach(() => {
+      cy.longPrivilegedSessionTime()
+    })
+
     it('fails with validation errors', () => {
-      cy.get('#user-profile input[name="traits.website"]')
+      cy.get('input[name="traits.website"]')
         .clear()
         .type('http://s')
-      cy.get('#user-profile button[type="submit"]').click()
-      cy.get('#user-profile .messages .message').should(
+      cy.get('button[value="profile"]').click()
+      cy.get('.messages .message').should(
         'contain.text',
         'length must be >= 10'
       )
     })
 
     it('fails because reauth is another person', () => {
-      cy.get('#user-profile input[name="traits.email"]').clear().type(up(email))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(up(email))
+      cy.shortPrivilegedSessionTime()
+      cy.get('button[value="profile"]').click()
 
       cy.reauth({
         expect: { email },
         type: { email: emailSecond, password: passwordSecond },
       })
 
-      cy.get('pre code').should(
+      cy.get('.messages .message').should(
         'contain.text',
         'You must restart the flow because the resumable session was initiated by another person.'
       )
@@ -69,9 +72,9 @@ context('Settings Flow Errors', () => {
     })
 
     it('does not update data because resumable session was removed', () => {
-      cy.get('#user-profile input[name="traits.email"]').clear().type(up(email))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(up(email))
+      cy.shortPrivilegedSessionTime()
+      cy.get('button[value="profile"]').click()
 
       cy.clearCookies()
       cy.login({ email, password })
@@ -83,9 +86,9 @@ context('Settings Flow Errors', () => {
     })
 
     it('does not update without re-auth', () => {
-      cy.get('#user-profile input[name="traits.email"]').clear().type(up(email))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(up(email))
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
+      cy.get('button[value="profile"]').click()
 
       cy.visit(APP_URL + '/')
 
@@ -97,15 +100,15 @@ context('Settings Flow Errors', () => {
 
     it('does not resume another failed request', () => {
       // checks here that we're checking settingsRequest.id == cookie.stored.id
-      cy.get('#user-profile input[name="traits.email"]').clear().type(up(email))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(up(email))
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
+      cy.get('button[value="profile"]').click()
 
       cy.visit(APP_URL + '/settings')
-      cy.get('#user-profile input[name="traits.website"]')
+      cy.get('input[name="traits.website"]')
         .clear()
         .type('http://github.com/aeneasr')
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('button[value="profile"]').click()
 
       cy.session().should((session) => {
         const { identity } = session
@@ -116,26 +119,33 @@ context('Settings Flow Errors', () => {
   })
 
   describe('password', () => {
+    beforeEach(() => {
+      cy.longPrivilegedSessionTime()
+    })
+    afterEach(() => {
+      cy.longPrivilegedSessionTime()
+    })
+
     it('fails if password policy is violated', () => {
-      cy.get('#user-password input[name="password"]').clear().type('123456')
-      cy.get('#user-password button[type="submit"]').click()
-      cy.get('#user-password .messages .message').should(
+      cy.get('input[name="password"]').clear().type('123456')
+      cy.get('button[value="password"]').click()
+      cy.get('.messages .message').should(
         'contain.text',
         'data breaches'
       )
     })
 
     it('fails because reauth is another person', () => {
-      cy.get('#user-password input[name="password"]').clear().type(up(password))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').clear().type(up(password))
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
+      cy.get('button[value="password"]').click()
 
       cy.reauth({
         expect: { email },
         type: { email: emailSecond, password: passwordSecond },
       })
 
-      cy.get('pre code').should(
+      cy.get('.messages .message').should(
         'contain.text',
         'You must restart the flow because the resumable session was initiated by another person.'
       )
@@ -146,9 +156,9 @@ context('Settings Flow Errors', () => {
     })
 
     it('does not update without re-auth', () => {
-      cy.get('#user-password input[name="password"]').clear().type(up(password))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').clear().type(up(password))
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
+      cy.get('button[value="password"]').click()
 
       cy.visit(APP_URL + '/')
       cy.clearCookies()
@@ -156,9 +166,9 @@ context('Settings Flow Errors', () => {
     })
 
     it('does not update data because resumable session was removed', () => {
-      cy.get('#user-password input[name="password"]').clear().type(up(password))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').clear().type(up(password))
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
+      cy.get('button[value="password"]').click()
 
       cy.clearCookies()
       cy.login({ email, password })
@@ -168,16 +178,16 @@ context('Settings Flow Errors', () => {
 
     it('does not resume another queued request', () => {
       // checks here that we're checking settingsRequest.id == cookie.stored.id
-      cy.get('#user-password input[name="password"]')
+      cy.get('input[name="password"]')
         .clear()
         .type(up(up(password)))
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-password button[type="submit"]').click()
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
+      cy.get('button[value="password"]').click()
 
       password = up(password)
       cy.visit(APP_URL + '/settings')
-      cy.get('#user-password input[name="password"]').clear().type(password)
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').clear().type(password)
+      cy.get('button[value="password"]').click()
 
       cy.reauth({ expect: { email }, type: { password: down(password) } })
 

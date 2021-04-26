@@ -1,0 +1,24 @@
+# Makes submitSelfServiceLoginFlowPayload polymorph
+- op: remove
+  path: /components/schemas/submitSelfServiceLoginFlow/type
+- op: add
+  path: /components/schemas/submitSelfServiceLoginFlow/oneOf
+  value:
+    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethod"
+
+# Makes submitSelfServiceRegistrationFlowPayload polymorph
+- op: remove
+  path: /components/schemas/submitSelfServiceRegistrationFlow/type
+- op: add
+  path: /components/schemas/submitSelfServiceRegistrationFlow/oneOf
+  value:
+    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethod"
+
+# Makes submitSelfServiceSettingsFlow polymorph
+- op: remove
+  path: /components/schemas/submitSelfServiceSettingsFlow/type
+- op: add
+  path: /components/schemas/submitSelfServiceSettingsFlow/oneOf
+  value:
+    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethod"
+    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethod"

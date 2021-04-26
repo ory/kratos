@@ -3,10 +3,13 @@ package password_test
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	hash2 "github.com/ory/kratos/hash"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
@@ -40,7 +43,9 @@ func TestCountActiveCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := password.NewStrategy(reg)
 
-	hash, err := reg.Hasher().Generate(context.Background(), []byte("a password"))
+	h1, err := hash2.NewHasherBcrypt(reg).Generate(context.Background(), []byte("a password"))
+	require.NoError(t, err)
+	h2, err := reg.Hasher().Generate(context.Background(), []byte("a password"))
 	require.NoError(t, err)
 
 	for k, tc := range []struct {
@@ -57,7 +62,7 @@ func TestCountActiveCredentials(t *testing.T) {
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: []byte(`{"hashed_password": "` + string(hash) + `"}`),
+				Config: []byte(`{"hashed_password": "` + string(h1) + `"}`),
 			}},
 			expected: 0,
 		},
@@ -65,7 +70,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
-				Config:      []byte(`{"hashed_password": "` + string(hash) + `"}`),
+				Config:      []byte(`{"hashed_password": "` + string(h1) + `"}`),
 			}},
 			expected: 0,
 		},
@@ -73,7 +78,15 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
-				Config:      []byte(`{"hashed_password": "` + string(hash) + `"}`),
+				Config:      []byte(`{"hashed_password": "` + string(h1) + `"}`),
+			}},
+			expected: 1,
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"foo"},
+				Config:      []byte(`{"hashed_password": "` + string(h2) + `"}`),
 			}},
 			expected: 1,
 		},
@@ -112,51 +125,55 @@ func TestCountActiveCredentials(t *testing.T) {
 func TestDisabledEndpoint(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), false)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/sort.schema.json")
 
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	c := testhelpers.NewClientWithCookies(t)
 	t.Run("case=should not login when password method is disabled", func(t *testing.T) {
-		res, err := c.PostForm(publicTS.URL+password.RouteLogin, url.Values{"identifier": []string{"identifier"}, "password": []string{"password"}})
+		f := testhelpers.InitializeLoginFlowViaAPI(t, c, publicTS, false)
+
+		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password_identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		b := make([]byte, res.ContentLength)
-		_, _ = res.Body.Read(b)
-		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		defer res.Body.Close()
+		b, err := ioutil.ReadAll(res.Body)
+		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
 	t.Run("case=should not registration when password method is disabled", func(t *testing.T) {
+		f := testhelpers.InitializeRegistrationFlowViaAPI(t, c, publicTS)
 
-		res, err := c.PostForm(publicTS.URL+password.RouteRegistration, url.Values{"identifier": []string{"identifier"}, "password": []string{"password"}})
+		res, err := c.PostForm(f.Ui.Action, url.Values{"method": {"password"}, "password_identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		b := make([]byte, res.ContentLength)
-		_, _ = res.Body.Read(b)
-		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		defer res.Body.Close()
+		b, err := ioutil.ReadAll(res.Body)
+		assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 	})
 
 	t.Run("case=should not settings when password method is disabled", func(t *testing.T) {
+		require.NoError(t, conf.Set(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/login.schema.json"))
+		c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 
 		t.Run("method=GET", func(t *testing.T) {
-			res, err := c.Get(publicTS.URL + password.RouteSettings)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusNotFound, res.StatusCode)
-
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
-			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+			t.Skip("GET is currently not supported for this endpoint.")
 		})
 
 		t.Run("method=POST", func(t *testing.T) {
-			res, err := c.PostForm(publicTS.URL+password.RouteSettings, url.Values{"age": {"16"}})
+			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
+			res, err := c.PostForm(f.Ui.Action, url.Values{
+				"method":   {"password"},
+				"password": {"bar"},
+			})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-			b := make([]byte, res.ContentLength)
-			_, _ = res.Body.Read(b)
-			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+			defer res.Body.Close()
+			b, err := ioutil.ReadAll(res.Body)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator", "%s", b)
 		})
 	})
 }

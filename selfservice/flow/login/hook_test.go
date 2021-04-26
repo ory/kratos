@@ -34,13 +34,13 @@ func TestLoginExecutor(t *testing.T) {
 				router := httprouter.New()
 
 				router.GET("/login/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().PreLoginHook(w, r, login.NewFlow(time.Minute, "", r, ft))) {
+					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().PreLoginHook(w, r, login.NewFlow(conf, time.Minute, "", r, ft))) {
 						_, _ = w.Write([]byte("ok"))
 					}
 				})
 
 				router.GET("/login/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					a := login.NewFlow(time.Minute, "", r, ft)
+					a := login.NewFlow(conf, time.Minute, "", r, ft)
 					a.RequestURL = x.RequestURL(r).String()
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
 						reg.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsType(strategy), a, testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)))

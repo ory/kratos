@@ -26,23 +26,16 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(continuity.Container).TableName(ctx),
 		new(courier.Message).TableName(ctx),
 
-		new(login.FlowMethods).TableName(ctx),
 		new(login.Flow).TableName(ctx),
-
-		new(registration.FlowMethods).TableName(ctx),
 		new(registration.Flow).TableName(ctx),
-
-		new(settings.FlowMethods).TableName(ctx),
 		new(settings.Flow).TableName(ctx),
 
 		new(link.RecoveryToken).TableName(ctx),
 		new(link.VerificationToken).TableName(ctx),
 
-		new(recovery.FlowMethods).TableName(ctx),
 		new(recovery.Flow).TableName(ctx),
 
 		new(verification.Flow).TableName(ctx),
-		new(verification.FlowMethods).TableName(ctx),
 
 		new(errorx.ErrorContainer).TableName(ctx),
 
@@ -53,6 +46,7 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(identity.RecoveryAddress).TableName(ctx),
 		new(identity.Identity).TableName(ctx),
 		new(identity.CredentialsTypeTable).TableName(ctx),
+		"networks",
 		"schema_migration",
 	} {
 		if err := c.RawQuery("DROP TABLE IF EXISTS " + table).Exec(); err != nil {

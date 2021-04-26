@@ -2,15 +2,9 @@ package identities
 
 import (
 	"fmt"
-	"time"
-
-	"github.com/pkg/errors"
-
-	"github.com/ory/x/swaggerx"
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos-client-go/client/admin"
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/x/cmdx"
@@ -36,9 +30,11 @@ var DeleteCmd = &cobra.Command{
 		)
 
 		for _, a := range args {
-			_, err := c.Admin.DeleteIdentity(admin.NewDeleteIdentityParams().WithID(a).WithTimeout(time.Second).WithHTTPClient(cliclient.NewHTTPClient(cmd)))
+			// TODO merge
+			// _, err := c.Admin.DeleteIdentity(admin.NewDeleteIdentityParams().WithID(a).WithTimeout(time.Second).WithHTTPClient(cliclient.NewHTTPClient(cmd)))
+			_, err := c.AdminApi.DeleteIdentity(cmd.Context(), a).Execute()
 			if err != nil {
-				errs = append(errs, errors.New(swaggerx.FormatSwaggerError(err)))
+				errs = append(errs, err)
 				continue
 			}
 			deleted = append(deleted, a)

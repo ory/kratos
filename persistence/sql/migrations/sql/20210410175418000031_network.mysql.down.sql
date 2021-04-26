@@ -1,0 +1,1 @@
+ALTER TABLE `identity_credential_identifiers` DROP FOREIGN KEY `identity_credential_identifiers_nid_fk_idx`;

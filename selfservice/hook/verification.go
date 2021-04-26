@@ -22,9 +22,9 @@ type (
 		link.SenderProvider
 		link.VerificationTokenPersistenceProvider
 		config.Provider
+		x.CSRFTokenGeneratorProvider
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
-		x.CSRFTokenGeneratorProvider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -53,7 +53,9 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			continue
 		}
 
-		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
+		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()),
+			e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
+			e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
 		if err != nil {
 			return err
 		}
@@ -67,7 +69,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
-		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), address, token); err != nil {
+		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, address, token); err != nil {
 			return err
 		}
 	}

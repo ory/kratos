@@ -75,14 +75,12 @@ type (
 		// ---
 		RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
 
-		// CredentialsCollection is a helper struct field for gobuffalo.pop.
-		CredentialsCollection CredentialsCollection `json:"-" faker:"-" has_many:"identity_credentials" fk_id:"identity_id"`
-
 		// CreatedAt is a helper struct field for gobuffalo.pop.
 		CreatedAt time.Time `json:"-" db:"created_at"`
 
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" db:"updated_at"`
+		NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 	}
 	Traits json.RawMessage
 )
@@ -125,12 +123,6 @@ func (i *Identity) lock() *sync.RWMutex {
 		i.l = new(sync.RWMutex)
 	}
 	return i.l
-}
-
-func (i *Identity) SetSecurityAnswers(answers map[string]string) {
-	i.lock().Lock()
-	defer i.lock().Unlock()
-
 }
 
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
@@ -188,4 +180,12 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		VerifiableAddresses: []VerifiableAddress{},
 		l:                   new(sync.RWMutex),
 	}
+}
+
+func (i Identity) GetID() uuid.UUID {
+	return i.ID
+}
+
+func (i Identity) GetNID() uuid.UUID {
+	return i.NID
 }

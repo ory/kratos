@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ory/x/swaggerx"
-
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos-client-go/client/admin"
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
@@ -29,10 +26,12 @@ var ListCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
 
-		params := &admin.ListIdentitiesParams{
-			Context:    cmd.Context(),
-			HTTPClient: cliclient.NewHTTPClient(cmd),
-		}
+		// TODO merge
+		//params := &admin.ListIdentitiesParams{
+		//	Context:    cmd.Context(),
+		//	HTTPClient: cliclient.NewHTTPClient(cmd),
+		//}
+		req := c.AdminApi.ListIdentities(cmd.Context())
 
 		if len(args) == 2 {
 			page, err := strconv.ParseInt(args[0], 0, 64)
@@ -40,24 +39,24 @@ var ListCmd = &cobra.Command{
 				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse page argument\"%s\": %s", args[0], err)
 				return cmdx.FailSilently(cmd)
 			}
-			params.Page = &page
+			req = req.Page(page)
 
 			perPage, err := strconv.ParseInt(args[1], 0, 64)
 			if err != nil {
 				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse per-page argument\"%s\": %s", args[1], err)
 				return cmdx.FailSilently(cmd)
 			}
-			params.PerPage = &perPage
+			req = req.PerPage(perPage)
 		}
 
-		resp, err := c.Admin.ListIdentities(params)
+		identities, _, err := req.Execute()
 		if err != nil {
-			_, _ = fmt.Fprint(cmd.ErrOrStderr(), swaggerx.FormatSwaggerError(err))
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not get the identities: %+v\n", err)
 			return cmdx.FailSilently(cmd)
 		}
 
 		cmdx.PrintTable(cmd, &outputIdentityCollection{
-			identities: resp.Payload,
+			identities: identities,
 		})
 
 		return nil

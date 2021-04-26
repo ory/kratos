@@ -1,0 +1,1 @@
+ALTER TABLE "identity_recovery_addresses" ADD COLUMN "nid" UUID;

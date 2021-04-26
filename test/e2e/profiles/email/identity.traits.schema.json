@@ -10,7 +10,7 @@
         "email": {
           "type": "string",
           "format": "email",
-          "title": "E-Mail",
+          "title": "Your E-Mail",
           "minLength": 3,
           "ory.sh/kratos": {
             "credentials": {
@@ -21,6 +21,7 @@
           }
         },
         "website": {
+          "title": "Your website",
           "type": "string",
           "format": "uri",
           "minLength": 10

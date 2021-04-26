@@ -2,8 +2,9 @@ package daemon
 
 import (
 	"net/http"
-	"strings"
 	"sync"
+
+	"github.com/ory/kratos/selfservice/flow/recovery"
 
 	"github.com/ory/x/reqlog"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/ory/analytics-go/v4"
 
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/networkx"
 
 	"github.com/gorilla/context"
 	"github.com/spf13/cobra"
@@ -35,8 +37,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -96,14 +96,19 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		handler = cors.New(options).Handler(handler)
 	}
 
-	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.PublicListenOn(),
-		Handler: context.ClearHandler(handler),
-	})
+	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(handler)})
+	addr := c.PublicListenOn()
 
-	l.Printf("Starting the public httpd on: %s", server.Addr)
-	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
-		l.Fatalln("Failed to gracefully shutdown public httpd")
+	l.Printf("Starting the public httpd on: %s", addr)
+	if err := graceful.Graceful(func() error {
+		listener, err := networkx.MakeListener(addr, c.PublicSocketPermission())
+		if err != nil {
+			return err
+		}
+
+		return server.Serve(listener)
+	}, server.Shutdown); err != nil {
+		l.Fatalf("Failed to gracefully shutdown public httpd: %s", err)
 	}
 	l.Println("Public httpd was shutdown gracefully")
 }
@@ -131,14 +136,19 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	}
 
 	n.UseHandler(router)
-	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.AdminListenOn(),
-		Handler: context.ClearHandler(n),
-	})
+	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(n)})
+	addr := c.AdminListenOn()
 
-	l.Printf("Starting the admin httpd on: %s", server.Addr)
-	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
-		l.Fatalln("Failed to gracefully shutdown admin httpd")
+	l.Printf("Starting the admin httpd on: %s", addr)
+	if err := graceful.Graceful(func() error {
+		listener, err := networkx.MakeListener(addr, c.AdminSocketPermission())
+		if err != nil {
+			return err
+		}
+
+		return server.Serve(listener)
+	}, server.Shutdown); err != nil {
+		l.Fatalf("Failed to gracefully shutdown admin httpd: %s", err)
 	}
 	l.Println("Admin httpd was shutdown gracefully")
 }
@@ -151,14 +161,8 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 		d.Logger(),
 		d.Config(cmd.Context()).Source(),
 		&metricsx.Options{
-			Service: "ory-kratos",
-			ClusterID: metricsx.Hash(
-				strings.Join([]string{
-					d.Config(cmd.Context()).DSN(),
-					d.Config(cmd.Context()).SelfPublicURL(nil).String(),
-					d.Config(cmd.Context()).SelfAdminURL().String(),
-				}, "|"),
-			),
+			Service:       "ory-kratos",
+			ClusterID:     metricsx.Hash(d.Persister().NetworkID().String()),
 			IsDevelopment: d.Config(cmd.Context()).IsInsecureDevMode(),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{
@@ -167,21 +171,19 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				healthx.ReadyCheckPath,
 				healthx.VersionPath,
 
-				password.RouteRegistration,
-				password.RouteLogin,
-				password.RouteSettings,
-
 				oidc.RouteBase,
 
 				login.RouteInitBrowserFlow,
 				login.RouteInitAPIFlow,
 				login.RouteGetFlow,
+				login.RouteSubmitFlow,
 
 				logout.RouteBrowser,
 
 				registration.RouteInitBrowserFlow,
 				registration.RouteInitAPIFlow,
 				registration.RouteGetFlow,
+				registration.RouteSubmitFlow,
 
 				session.RouteWhoami,
 				identity.RouteBase,
@@ -189,16 +191,19 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				settings.RouteInitBrowserFlow,
 				settings.RouteInitAPIFlow,
 				settings.RouteGetFlow,
+				settings.RouteSubmitFlow,
 
 				verification.RouteInitAPIFlow,
 				verification.RouteInitBrowserFlow,
 				verification.RouteGetFlow,
+				verification.RouteSubmitFlow,
 
-				profile.RouteSettings,
+				recovery.RouteInitAPIFlow,
+				recovery.RouteInitBrowserFlow,
+				recovery.RouteGetFlow,
+				recovery.RouteSubmitFlow,
 
 				link.RouteAdminCreateRecoveryLink,
-				link.RouteRecovery,
-				link.RouteVerification,
 
 				errorx.RouteGet,
 				prometheus.MetricsPrometheusPath,

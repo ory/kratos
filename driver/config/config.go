@@ -11,25 +11,27 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"testing"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/ory/x/dbal"
 
 	"github.com/ory/x/stringsx"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/inhies/go-bytesize"
+	kjson "github.com/knadh/koanf/parsers/json"
+	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/configx"
 	"github.com/ory/x/jsonx"
-
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
-
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/tracing"
-
-	kjson "github.com/knadh/koanf/parsers/json"
 )
 
 const (
@@ -49,9 +51,15 @@ const (
 	ViperKeyPublicDomainAliases                                     = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                              = "serve.public.port"
 	ViperKeyPublicHost                                              = "serve.public.host"
+	ViperKeyPublicSocketOwner                                       = "serve.public.socket.owner"
+	ViperKeyPublicSocketGroup                                       = "serve.public.socket.group"
+	ViperKeyPublicSocketMode                                        = "serve.public.socket.mode"
 	ViperKeyAdminBaseURL                                            = "serve.admin.base_url"
 	ViperKeyAdminPort                                               = "serve.admin.port"
 	ViperKeyAdminHost                                               = "serve.admin.host"
+	ViperKeyAdminSocketOwner                                        = "serve.admin.socket.owner"
+	ViperKeyAdminSocketGroup                                        = "serve.admin.socket.group"
+	ViperKeyAdminSocketMode                                         = "serve.admin.socket.mode"
 	ViperKeySessionLifespan                                         = "session.lifespan"
 	ViperKeySessionSameSite                                         = "session.cookie.same_site"
 	ViperKeySessionDomain                                           = "session.cookie.domain"
@@ -91,15 +99,21 @@ const (
 	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
 	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
+	ViperKeyHasherArgon2ConfigExpectedDuration                      = "hashers.argon2.expected_duration"
+	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
+	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
-	Argon2DefaultMemory                                      uint32 = 4 * 1024 * 1024
-	Argon2DefaultIterations                                  uint32 = 4
+	Argon2DefaultMemory                                             = 128 * bytesize.MB
+	Argon2DefaultIterations                                  uint32 = 1
 	Argon2DefaultSaltLength                                  uint32 = 16
 	Argon2DefaultKeyLength                                   uint32 = 32
+	Argon2DefaultDuration                                           = 500 * time.Millisecond
+	Argon2DefaultDeviation                                          = 500 * time.Millisecond
+	Argon2DefaultDedicatedMemory                                    = 1 * bytesize.GB
 	BcryptDefaultCost                                        uint32 = 12
 )
 
@@ -108,11 +122,14 @@ const DefaultSessionCookieName = "ory_kratos_session"
 
 type (
 	Argon2 struct {
-		Memory      uint32 `json:"memory"`
-		Iterations  uint32 `json:"iterations"`
-		Parallelism uint8  `json:"parallelism"`
-		SaltLength  uint32 `json:"salt_length"`
-		KeyLength   uint32 `json:"key_length"`
+		Memory            bytesize.ByteSize `json:"memory"`
+		Iterations        uint32            `json:"iterations"`
+		Parallelism       uint8             `json:"parallelism"`
+		SaltLength        uint32            `json:"salt_length"`
+		KeyLength         uint32            `json:"key_length"`
+		ExpectedDuration  time.Duration     `json:"expected_duration"`
+		ExpectedDeviation time.Duration     `json:"expected_deviation"`
+		DedicatedMemory   bytesize.ByteSize `json:"dedicated_memory"`
 	}
 	Bcrypt struct {
 		Cost uint32 `json:"cost"`
@@ -145,6 +162,30 @@ type (
 	}
 )
 
+func (c *Argon2) MarshalJSON() ([]byte, error) {
+	type encoded struct {
+		Memory            string `json:"memory"`
+		Iterations        uint32 `json:"iterations"`
+		Parallelism       uint8  `json:"parallelism"`
+		SaltLength        uint32 `json:"salt_length"`
+		KeyLength         uint32 `json:"key_length"`
+		ExpectedDuration  string `json:"minimal_duration"`
+		ExpectedDeviation string `json:"expected_deviation"`
+		DedicatedMemory   string `json:"dedicated_memory"`
+	}
+
+	return json.Marshal(&encoded{
+		Memory:            c.Memory.String(),
+		Iterations:        c.Iterations,
+		Parallelism:       c.Parallelism,
+		SaltLength:        c.SaltLength,
+		KeyLength:         c.KeyLength,
+		ExpectedDuration:  c.ExpectedDuration.String(),
+		ExpectedDeviation: c.ExpectedDeviation.String(),
+		DedicatedMemory:   c.DedicatedMemory.String(),
+	})
+}
+
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
 func HookStrategyKey(key, strategy string) string {
@@ -161,20 +202,20 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
-	p, err := New(l, opts...)
-	if err != nil {
-		l.WithError(err).Fatalf("Unable to load config.")
-	}
+func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
+	p, err := New(context.TODO(), l, opts...)
+	require.NoError(t, err)
 	return p
 }
 
-func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
-		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
+		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
+		configx.WithLogger(l),
+		configx.WithContext(ctx),
 	}, opts...)
 
 	p, err := configx.New(ValidationSchema, opts...)
@@ -236,20 +277,26 @@ func (p *Config) HasherArgon2() *Argon2 {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
 	return &Argon2{
-		Memory:      uint32(p.p.IntF(ViperKeyHasherArgon2ConfigMemory, int(Argon2DefaultMemory))),
-		Iterations:  uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
-		Parallelism: uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
-		SaltLength:  uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
-		KeyLength:   uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+		Memory:            p.p.ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
+		Iterations:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
+		Parallelism:       uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
+		SaltLength:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
+		KeyLength:         uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+		ExpectedDuration:  p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDuration, Argon2DefaultDuration),
+		ExpectedDeviation: p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDeviation, Argon2DefaultDeviation),
+		DedicatedMemory:   p.p.ByteSizeF(ViperKeyHasherArgon2ConfigDedicatedMemory, Argon2DefaultDedicatedMemory),
 	}
 }
 
 func (p *Config) HasherBcrypt() *Bcrypt {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
-	return &Bcrypt{
-		Cost: uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost))),
+	cost := uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
+	if !p.IsInsecureDevMode() && cost < BcryptDefaultCost {
+		cost = BcryptDefaultCost
 	}
+
+	return &Bcrypt{Cost: cost}
 }
 
 func (p *Config) listenOn(key string) string {
@@ -263,11 +310,11 @@ func (p *Config) listenOn(key string) string {
 		p.l.Fatalf("serve.%s.port can not be zero or negative", key)
 	}
 
-	return fmt.Sprintf("%s:%d", p.p.String("serve."+key+".host"), port)
+	return configx.GetAddress(p.p.String("serve."+key+".host"), port)
 }
 
 func (p *Config) DefaultIdentityTraitsSchemaURL() *url.URL {
-	return p.parseURIOrFail(ViperKeyDefaultIdentitySchemaURL)
+	return p.ParseURIOrFail(ViperKeyDefaultIdentitySchemaURL)
 }
 
 func (p *Config) IdentityTraitsSchemas() Schemas {
@@ -306,6 +353,22 @@ func (p *Config) AdminListenOn() string {
 
 func (p *Config) PublicListenOn() string {
 	return p.listenOn("public")
+}
+
+func (p *Config) PublicSocketPermission() *configx.UnixPermission {
+	return &configx.UnixPermission{
+		Owner: p.p.String(ViperKeyPublicSocketOwner),
+		Group: p.p.String(ViperKeyPublicSocketGroup),
+		Mode:  os.FileMode(p.p.IntF(ViperKeyPublicSocketMode, 0755)),
+	}
+}
+
+func (p *Config) AdminSocketPermission() *configx.UnixPermission {
+	return &configx.UnixPermission{
+		Owner: p.p.String(ViperKeyAdminSocketOwner),
+		Group: p.p.String(ViperKeyAdminSocketGroup),
+		Mode:  os.FileMode(p.p.IntF(ViperKeyAdminSocketMode, 0755)),
+	}
 }
 
 func (p *Config) DSN() string {
@@ -455,7 +518,7 @@ func (p *Config) SecretsSession() [][]byte {
 }
 
 func (p *Config) SelfServiceBrowserDefaultReturnTo() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
+	return p.ParseURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
 }
 
 func (p *Config) guessBaseURL(keyHost, keyPort string, defaultPort int) *url.URL {
@@ -498,7 +561,7 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 	return p.guessBaseURL(keyHost, keyPort, defaultPort)
 }
 
-type domainAlias struct {
+type DomainAlias struct {
 	BasePath    string `json:"base_path"`
 	Scheme      string `json:"scheme"`
 	MatchDomain string `json:"match_domain"`
@@ -517,8 +580,11 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 	}
 
 	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
+	if len(raw) == 0 {
+		return primary
+	}
 
-	var aliases []domainAlias
+	var aliases []DomainAlias
 	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
 		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
 		return primary
@@ -552,27 +618,27 @@ func (p *Config) SelfAdminURL() *url.URL {
 }
 
 func (p *Config) CourierSMTPURL() *url.URL {
-	return p.parseURIOrFail(ViperKeyCourierSMTPURL)
+	return p.ParseURIOrFail(ViperKeyCourierSMTPURL)
 }
 
 func (p *Config) SelfServiceFlowLoginUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceLoginUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceLoginUI)
 }
 
 func (p *Config) SelfServiceFlowSettingsUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceSettingsURL)
+	return p.ParseURIOrFail(ViperKeySelfServiceSettingsURL)
 }
 
 func (p *Config) SelfServiceFlowErrorURL() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceErrorUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceErrorUI)
 }
 
 func (p *Config) SelfServiceFlowRegistrationUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceRegistrationUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceRegistrationUI)
 }
 
 func (p *Config) SelfServiceFlowRecoveryUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceRecoveryUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceRecoveryUI)
 }
 
 // SessionLifespan returns nil when the value is not set.
@@ -639,22 +705,22 @@ func splitUrlAndFragment(s string) (string, string) {
 	return s[:i], s[i+1:]
 }
 
-func (p *Config) parseURIOrFail(key string) *url.URL {
+func (p *Config) ParseURIOrFail(key string) *url.URL {
 	u, frag := splitUrlAndFragment(p.p.String(key))
-	url, err := url.ParseRequestURI(u)
+	parsed, err := url.ParseRequestURI(u)
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	if url.Scheme == "" {
+	if parsed.Scheme == "" {
 		p.l.WithField("reason", "expected scheme to be set").
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
 
 	if frag != "" {
-		url.Fragment = frag
+		parsed.Fragment = frag
 	}
-	return url
+	return parsed
 }
 
 func (p *Config) Tracing() *tracing.Config {
@@ -678,7 +744,7 @@ func (p *Config) MetricsListenOn() string {
 }
 
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
-	return p.parseURIOrFail(ViperKeySelfServiceVerificationUI)
+	return p.ParseURIOrFail(ViperKeySelfServiceVerificationUI)
 }
 
 func (p *Config) SelfServiceFlowVerificationRequestLifespan() time.Duration {

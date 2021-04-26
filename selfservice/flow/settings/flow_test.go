@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/internal"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,17 +31,14 @@ func TestFakeFlow(t *testing.T) {
 	assert.NotEmpty(t, r.ExpiresAt)
 	assert.NotEmpty(t, r.RequestURL)
 	assert.NotEmpty(t, r.Active)
-	assert.NotEmpty(t, r.Methods)
-	for _, m := range r.Methods {
-		assert.NotEmpty(t, m.Method)
-		assert.NotEmpty(t, m.Config)
-	}
 }
 
 func TestNewFlow(t *testing.T) {
+	conf := internal.NewConfigurationWithDefaults(t)
+
 	id := &identity.Identity{ID: x.NewUUID()}
 	t.Run("case=0", func(t *testing.T) {
-		r := settings.NewFlow(0, &http.Request{URL: urlx.ParseOrPanic("/"),
+		r := settings.NewFlow(conf, 0, &http.Request{URL: urlx.ParseOrPanic("/"),
 			Host: "ory.sh", TLS: &tls.ConnectionState{}}, id, flow.TypeBrowser)
 		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
 		assert.Equal(t, flow.TypeBrowser, r.Type)
@@ -47,7 +46,7 @@ func TestNewFlow(t *testing.T) {
 	})
 
 	t.Run("case=1", func(t *testing.T) {
-		r := settings.NewFlow(0, &http.Request{
+		r := settings.NewFlow(conf, 0, &http.Request{
 			URL:  urlx.ParseOrPanic("/?refresh=true"),
 			Host: "ory.sh"}, id, flow.TypeAPI)
 		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
@@ -56,7 +55,7 @@ func TestNewFlow(t *testing.T) {
 	})
 
 	t.Run("case=2", func(t *testing.T) {
-		r := settings.NewFlow(0, &http.Request{
+		r := settings.NewFlow(conf, 0, &http.Request{
 			URL:  urlx.ParseOrPanic("https://ory.sh/"),
 			Host: "ory.sh"}, id, flow.TypeBrowser)
 		assert.Equal(t, "https://ory.sh/", r.RequestURL)
@@ -64,6 +63,8 @@ func TestNewFlow(t *testing.T) {
 }
 
 func TestFlow(t *testing.T) {
+	conf := internal.NewConfigurationWithDefaults(t)
+
 	alice := x.NewUUID()
 	malice := x.NewUUID()
 	for k, tc := range []struct {
@@ -73,6 +74,7 @@ func TestFlow(t *testing.T) {
 	}{
 		{
 			r: settings.NewFlow(
+				conf,
 				time.Hour,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&identity.Identity{ID: alice},
@@ -82,6 +84,7 @@ func TestFlow(t *testing.T) {
 		},
 		{
 			r: settings.NewFlow(
+				conf,
 				time.Hour,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&identity.Identity{ID: alice},
@@ -92,6 +95,7 @@ func TestFlow(t *testing.T) {
 		},
 		{
 			r: settings.NewFlow(
+				conf,
 				-time.Hour,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&identity.Identity{ID: alice},
