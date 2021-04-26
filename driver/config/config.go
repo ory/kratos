@@ -209,7 +209,7 @@ func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *C
 func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
-		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
+		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
