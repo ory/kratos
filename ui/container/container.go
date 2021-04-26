@@ -76,14 +76,14 @@ func NewFromHTTPRequest(r *http.Request, group node.Group, action string, compil
 		}
 	}
 
-	c.UpdateNodesFromJSON(raw, "", group)
+	c.UpdateNodeValuesFromJSON(raw, "", group)
 	return c, nil
 }
 
 // NewFromJSON creates a UI Container based on the provided JSON struct.
 func NewFromJSON(action string, group node.Group, raw json.RawMessage, prefix string) *Container {
 	c := New(action)
-	c.UpdateNodesFromJSON(raw, prefix, group)
+	c.UpdateNodeValuesFromJSON(raw, prefix, group)
 	return c
 }
 
@@ -189,12 +189,10 @@ func (c *Container) ParseError(group node.Group, err error) error {
 	return err
 }
 
-// UpdateNodesFromJSON sets the container's fields to the provided values.
-func (c *Container) UpdateNodesFromJSON(raw json.RawMessage, prefix string, group node.Group) {
+// UpdateNodeValuesFromJSON sets the container's fields to the provided values.
+func (c *Container) UpdateNodeValuesFromJSON(raw json.RawMessage, prefix string, group node.Group) {
 	for k, v := range jsonx.Flatten(raw) {
-		if prefix != "" {
-			k = prefix + "." + k
-		}
+		k = addPrefix(k, prefix, ".")
 
 		if n := c.Nodes.Find(k); n != nil {
 			n.Attributes.SetValue(v)

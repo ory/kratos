@@ -32,6 +32,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/containerd/containerd v1.4.4 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/fatih/color v1.9.0
 	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
