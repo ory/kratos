@@ -2,6 +2,7 @@ package login
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ory/kratos/identity"
@@ -183,6 +184,10 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       500: genericError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
+
+	// fetch state query param to re-use later
+	state := r.URL.Query().Get("state")
+
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -190,7 +195,14 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 	// we assume an error means the user has no session
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		http.Redirect(w, r, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
+
+		// keep the state parameter around for the redirect
+		redir := a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI())
+		if state != "" {
+			redir = urlx.CopyWithQuery(redir, url.Values{"state": {state}})
+		}
+
+		http.Redirect(w, r, redir.String(), http.StatusFound)
 		return
 	}
 
@@ -199,7 +211,12 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
-		http.Redirect(w, r, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
+		redir := a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI())
+		if state != "" {
+			redir = urlx.CopyWithQuery(redir, url.Values{"state": {state}})
+		}
+
+		http.Redirect(w, r, redir.String(), http.StatusFound)
 		return
 	}
 
