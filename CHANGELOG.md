@@ -136,7 +136,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.5-alpha.1...bbfcbf9ce595d842a53a3ea21c286d5899eeb28f) (2021-04-26)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.5-alpha.1...f88b6abe202605739092a8230fbdebaebcd4407a) (2021-04-26)
 
 
 ### Bug Fixes
@@ -204,6 +204,7 @@
 * Resolve compile issues ([63063c1](https://github.com/ory/kratos/commit/63063c15c17f4d3aca96b106275a3478a8ed717e))
 * Resolve contextualized table issues ([5a4f0d9](https://github.com/ory/kratos/commit/5a4f0d92800df7fb5ca0df18203a6d73416814e1))
 * Resolve crdb migration issue ([9f6edfd](https://github.com/ory/kratos/commit/9f6edfd1f544d5f85e5f5558a08672f40e928136))
+* Resolve incorrect field types on oidc sign up completion ([f88b6ab](https://github.com/ory/kratos/commit/f88b6abe202605739092a8230fbdebaebcd4407a))
 * Resolve lint issues ([0348825](https://github.com/ory/kratos/commit/03488250bcdbfda6ef6a536b4de6117fa8924dc8))
 * Resolve lint issues ([75a995b](https://github.com/ory/kratos/commit/75a995b3f69778655611929b65ae22bd77c5370b))
 * Resolve linting issues and disable nancy ([c8396f6](https://github.com/ory/kratos/commit/c8396f6007831240d83f77433876c5971a2191ef))
