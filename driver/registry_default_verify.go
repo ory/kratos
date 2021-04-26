@@ -61,5 +61,24 @@ func (m *RegistryDefault) AllVerificationStrategies() (recoveryStrategies verifi
 			recoveryStrategies = append(recoveryStrategies, s)
 		}
 	}
+
+	return
+}
+
+func (m *RegistryDefault) VerificationExecutor() *verification.HookExecutor {
+	if m.selfserviceVerificationExecutor == nil {
+		m.selfserviceVerificationExecutor = verification.NewHookExecutor(m)
+	}
+	return m.selfserviceVerificationExecutor
+}
+
+func (m *RegistryDefault) PostVerificationHooks(ctx context.Context) (b []verification.PostHookExecutor) {
+
+	for _, v := range m.getHooks("global", m.Config(ctx).SelfServiceFlowVerificationAfterHooks("global")) {
+		if hook, ok := v.(verification.PostHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+
 	return
 }

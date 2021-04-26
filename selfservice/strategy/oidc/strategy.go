@@ -396,23 +396,19 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 	case *registration.Flow:
 		// Reset all nodes to not confuse users.
 		// This is kinda hacky and will probably need to be updated at some point.
-
-		rf.UI.Nodes = node.Nodes{}
-		if err := s.populateMethod(r, rf.UI, text.NewInfoRegistrationWith); err != nil {
-			return err
-		}
-
-		if traits != nil {
-			traitNodes, err := container.NodesFromJSONSchema(node.OpenIDConnectGroup,
-				s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
-			if err != nil {
-				return err
+		var nodes node.Nodes
+		for _, n := range rf.UI.Nodes {
+			if n.Group != node.DefaultGroup && n.Group != node.OpenIDConnectGroup {
+				continue
 			}
 
-			rf.UI.Nodes = append(rf.UI.Nodes, traitNodes...)
-			rf.UI.UpdateNodeValuesFromJSON(traits, "traits", node.OpenIDConnectGroup)
+			nodes = append(nodes, n)
 		}
 
+		rf.UI.Nodes = nodes
+		if traits != nil {
+			rf.UI.UpdateNodesFromJSON(traits, "traits", node.OpenIDConnectGroup)
+		}
 		return err
 	case *settings.Flow:
 		return err

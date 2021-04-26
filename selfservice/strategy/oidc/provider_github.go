@@ -73,7 +73,6 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		Subject:   fmt.Sprintf("%d", user.GetID()),
 		Issuer:    github.Endpoint.TokenURL,
 		Name:      user.GetName(),
-		Nickname:  user.GetLogin(),
 		Website:   user.GetBlog(),
 		Picture:   user.GetAvatarURL(),
 		Profile:   user.GetHTMLURL(),

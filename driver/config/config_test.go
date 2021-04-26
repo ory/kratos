@@ -171,6 +171,7 @@ func TestViperProvider(t *testing.T) {
 					strategy: "password",
 					hooks: []config.SelfServiceHook{
 						{Name: "session", Config: json.RawMessage(`{}`)},
+						{Name: "web-hook", Config: json.RawMessage(`{"auth":{"config":{"in":"header","name":"My-API-Key","value":"secret"},"type":"api-key"},"method":"POST","url":"https://test.kratos.ory.sh/after_registration_hook"}`)},
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
 					},
@@ -181,6 +182,12 @@ func TestViperProvider(t *testing.T) {
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 						{Name: "session", Config: json.RawMessage(`{}`)},
 						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
+					},
+				},
+				{
+					strategy: "global",
+					hooks: []config.SelfServiceHook{
+						{Name: "web-hook", Config: json.RawMessage(`{"auth":{"config":{"password":"secret","user":"My-API-User"},"type":"basic-auth"},"method":"POST","url":"https://test.kratos.ory.sh/after_registration_hook"}`)},
 					},
 				},
 			} {
@@ -266,6 +273,9 @@ func TestViperProvider(t *testing.T) {
 		t.Run("method=verification", func(t *testing.T) {
 			assert.Equal(t, time.Minute*97, p.SelfServiceFlowVerificationRequestLifespan())
 			assert.Equal(t, "http://test.kratos.ory.sh/verification", p.SelfServiceFlowVerificationUI().String())
+
+			hooks := p.SelfServiceFlowVerificationAfterHooks("global")
+			assert.Equal(t, []config.SelfServiceHook{{Name: "web-hook", Config: json.RawMessage(`{"method":"GET","url":"https://test.kratos.ory.sh/after_verification_hook"}`)}}, hooks)
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {

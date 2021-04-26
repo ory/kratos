@@ -901,53 +901,6 @@ serve:
     #
     port: 4433
 
-    ## socket ##
-    #
-    # Sets the permissions of the unix socket
-    #
-    socket:
-      ## group ##
-      #
-      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_SOCKET_GROUP=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_SOCKET_GROUP=<value>
-      #
-      group: ''
-
-      ## mode ##
-      #
-      # Mode of unix socket in numeric form
-      #
-      # Default value: 493
-      #
-      # Minimum value: 0
-      #
-      # Maximum value: 511
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_SOCKET_MODE=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_SOCKET_MODE=<value>
-      #
-      mode: 0
-
-      ## owner ##
-      #
-      # Owner of unix socket. If empty, the owner will be the user running hydra.
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_SOCKET_OWNER=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_SOCKET_OWNER=<value>
-      #
-      owner: ''
-
     ## cors ##
     #
     # Configures Cross Origin Resource Sharing for public endpoints.
@@ -1127,53 +1080,6 @@ serve:
     #    > set SERVE_ADMIN_PORT=<value>
     #
     port: 4434
-
-    ## socket ##
-    #
-    # Sets the permissions of the unix socket
-    #
-    socket:
-      ## group ##
-      #
-      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_ADMIN_SOCKET_GROUP=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_ADMIN_SOCKET_GROUP=<value>
-      #
-      group: ''
-
-      ## mode ##
-      #
-      # Mode of unix socket in numeric form
-      #
-      # Default value: 493
-      #
-      # Minimum value: 0
-      #
-      # Maximum value: 511
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_ADMIN_SOCKET_MODE=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_ADMIN_SOCKET_MODE=<value>
-      #
-      mode: 0
-
-      ## owner ##
-      #
-      # Owner of unix socket. If empty, the owner will be the user running hydra.
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_ADMIN_SOCKET_OWNER=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_ADMIN_SOCKET_OWNER=<value>
-      #
-      owner: ''
 
     ## Admin Base URL ##
     #

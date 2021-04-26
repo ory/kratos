@@ -51,15 +51,9 @@ const (
 	ViperKeyPublicDomainAliases                                     = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                              = "serve.public.port"
 	ViperKeyPublicHost                                              = "serve.public.host"
-	ViperKeyPublicSocketOwner                                       = "serve.public.socket.owner"
-	ViperKeyPublicSocketGroup                                       = "serve.public.socket.group"
-	ViperKeyPublicSocketMode                                        = "serve.public.socket.mode"
 	ViperKeyAdminBaseURL                                            = "serve.admin.base_url"
 	ViperKeyAdminPort                                               = "serve.admin.port"
 	ViperKeyAdminHost                                               = "serve.admin.host"
-	ViperKeyAdminSocketOwner                                        = "serve.admin.socket.owner"
-	ViperKeyAdminSocketGroup                                        = "serve.admin.socket.group"
-	ViperKeyAdminSocketMode                                         = "serve.admin.socket.mode"
 	ViperKeySessionLifespan                                         = "session.lifespan"
 	ViperKeySessionSameSite                                         = "session.cookie.same_site"
 	ViperKeySessionDomain                                           = "session.cookie.domain"
@@ -91,6 +85,7 @@ const (
 	ViperKeySelfServiceVerificationUI                               = "selfservice.flows.verification.ui_url"
 	ViperKeySelfServiceVerificationRequestLifespan                  = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
+	ViperKeySelfServiceVerificationAfter                            = "selfservice.flows.verification.after"
 	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
 	ViperKeyIdentitySchemas                                         = "identity.schemas"
 	ViperKeyHasherAlgorithm                                         = "hashers.algorithm"
@@ -187,7 +182,11 @@ func (c *Argon2) MarshalJSON() ([]byte, error) {
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
 func HookStrategyKey(key, strategy string) string {
-	return fmt.Sprintf("%s.%s.hooks", key, strategy)
+	if strategy == "global" {
+		return fmt.Sprintf("%s.hooks", key)
+	} else {
+		return fmt.Sprintf("%s.%s.hooks", key, strategy)
+	}
 }
 
 func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
@@ -209,7 +208,7 @@ func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *C
 func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
-		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "client_secret"),
+		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
@@ -308,7 +307,7 @@ func (p *Config) listenOn(key string) string {
 		p.l.Fatalf("serve.%s.port can not be zero or negative", key)
 	}
 
-	return configx.GetAddress(p.p.String("serve."+key+".host"), port)
+	return fmt.Sprintf("%s:%d", p.p.String("serve."+key+".host"), port)
 }
 
 func (p *Config) DefaultIdentityTraitsSchemaURL() *url.URL {
@@ -351,22 +350,6 @@ func (p *Config) AdminListenOn() string {
 
 func (p *Config) PublicListenOn() string {
 	return p.listenOn("public")
-}
-
-func (p *Config) PublicSocketPermission() *configx.UnixPermission {
-	return &configx.UnixPermission{
-		Owner: p.p.String(ViperKeyPublicSocketOwner),
-		Group: p.p.String(ViperKeyPublicSocketGroup),
-		Mode:  os.FileMode(p.p.IntF(ViperKeyPublicSocketMode, 0755)),
-	}
-}
-
-func (p *Config) AdminSocketPermission() *configx.UnixPermission {
-	return &configx.UnixPermission{
-		Owner: p.p.String(ViperKeyAdminSocketOwner),
-		Group: p.p.String(ViperKeyAdminSocketGroup),
-		Mode:  os.FileMode(p.p.IntF(ViperKeyAdminSocketMode, 0755)),
-	}
 }
 
 func (p *Config) DSN() string {
@@ -584,7 +567,7 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 
 	var aliases []DomainAlias
 	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
-		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
+		p.l.WithError(err).WithField("config", raw).Warnf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
 		return primary
 	}
 
@@ -751,6 +734,10 @@ func (p *Config) SelfServiceFlowVerificationRequestLifespan() time.Duration {
 
 func (p *Config) SelfServiceFlowVerificationReturnTo(defaultReturnTo *url.URL) *url.URL {
 	return p.p.RequestURIF(ViperKeySelfServiceVerificationBrowserDefaultReturnTo, defaultReturnTo)
+}
+
+func (p *Config) SelfServiceFlowVerificationAfterHooks(strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceVerificationAfter, strategy))
 }
 
 func (p *Config) SelfServiceFlowRecoveryReturnTo() *url.URL {

@@ -2,6 +2,7 @@ package driver_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -40,6 +41,26 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			assert.Equal(t, []registration.PostHookPostPersistExecutor{
 				hook.NewVerifier(reg),
 				hook.NewSessionIssuer(reg),
+			}, h)
+
+			conf.MustSet(config.ViperKeySelfServiceRegistrationAfter + ".password.hooks",
+				[]map[string]interface{}{
+					{"hook": "session"},
+					{
+						"hook": "web-hook",
+						"config": map[string]interface{}{
+							"url": "foo",
+							"method": "POST",
+							"body": "bar",
+						},
+					},
+				})
+			h = reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
+			require.Len(t, h, 3)
+			assert.Equal(t, []registration.PostHookPostPersistExecutor{
+				hook.NewVerifier(reg),
+				hook.NewSessionIssuer(reg),
+				hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
 			}, h)
 		})
 

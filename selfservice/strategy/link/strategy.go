@@ -59,6 +59,7 @@ type (
 		verification.ErrorHandlerProvider
 		verification.FlowPersistenceProvider
 		verification.StrategyProvider
+		verification.HookExecutorProvider
 
 		RecoveryTokenPersistenceProvider
 		VerificationTokenPersistenceProvider

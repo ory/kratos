@@ -97,7 +97,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.UI.UpdateNodeValuesFromJSON(json.RawMessage(id.Traits), "traits", node.ProfileGroup)
+	f.UI.UpdateNodesFromJSON(json.RawMessage(id.Traits), "traits", node.ProfileGroup)
 	f.UI.Nodes.Append(node.NewInputField("method", "profile", node.ProfileGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSave()))
 
 	return nil
@@ -227,7 +227,7 @@ func (p *submitSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uuid
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
 	if traits != nil {
 		ar.UI.Nodes.ResetNodesWithPrefix("traits.")
-		ar.UI.UpdateNodeValuesFromJSON(traits, "traits", node.ProfileGroup)
+		ar.UI.UpdateNodesFromJSON(traits, "traits", node.ProfileGroup)
 	}
 	ar.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 

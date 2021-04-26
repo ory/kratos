@@ -78,6 +78,11 @@ selfservice:
       ui_url: http://test.kratos.ory.sh/verification
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/after_verification_hook
+              method: GET
 
     settings:
       ui_url:  http://test.kratos.ory.sh/settings
@@ -101,6 +106,7 @@ selfservice:
           hooks:
             -
               hook: revoke_active_sessions
+
     registration:
       ui_url: http://test.kratos.ory.sh/register
       lifespan: 98m
@@ -108,8 +114,28 @@ selfservice:
         default_browser_return_url: https://self-service/registration/return_to
         password:
           hooks:
-            -
-              hook: session
+            - hook: session
+            - hook: web-hook
+              config:
+                url: https://test.kratos.ory.sh/after_registration_hook
+                method: POST
+                auth:
+                  type: api-key
+                  config:
+                    name: My-API-Key
+                    value: secret
+                    in: header
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/after_registration_hook
+              method: POST
+              auth:
+                type: basic-auth
+                config:
+                  user: My-API-User
+                  password: secret
+
         oidc:
           default_browser_return_url: https://self-service/registration/oidc/return_to
           hooks:

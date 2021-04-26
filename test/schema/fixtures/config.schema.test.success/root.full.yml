@@ -30,8 +30,7 @@ selfservice:
       enabled: true
       ui_url: /verification
       lifespan: 1h
-      after:
-        default_browser_return_url: "#/definitions/defaultReturnTo"
+      after: "#/definitions/selfServiceAfterVerification"
 
     recovery:
       enabled: true
