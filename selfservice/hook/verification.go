@@ -71,7 +71,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, address, token); err != nil {
 			return err
 		}
-		if !address.EmailInitiated{
+		if !address.EmailInitiated {
 			address.EmailInitiated = true
 			if err := e.r.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
 				return err

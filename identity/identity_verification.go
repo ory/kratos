@@ -71,11 +71,12 @@ func (a VerifiableAddress) TableName(ctx context.Context) string {
 
 func NewVerifiableEmailAddress(value string, identity uuid.UUID) *VerifiableAddress {
 	return &VerifiableAddress{
-		Value:      value,
-		Verified:   false,
-		Status:     VerifiableAddressStatusPending,
-		Via:        VerifiableAddressTypeEmail,
-		IdentityID: identity,
+		Value:          value,
+		Verified:       false,
+		EmailInitiated: false,
+		Status:         VerifiableAddressStatusPending,
+		Via:            VerifiableAddressTypeEmail,
+		IdentityID:     identity,
 	}
 }
 

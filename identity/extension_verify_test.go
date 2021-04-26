@@ -34,6 +34,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "foo@ory.sh",
 					Verified:   false,
+					EmailInitiated: false,
 					Status:     VerifiableAddressStatusPending,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -47,6 +48,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "foo@ory.sh",
 					Verified:   false,
+					EmailInitiated: false,
 					Status:     VerifiableAddressStatusPending,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -56,6 +58,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "bar@ory.sh",
 					Verified:   false,
+					EmailInitiated: false,
 					Status:     VerifiableAddressStatusPending,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -69,6 +72,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "foo@ory.sh",
 					Verified:   true,
+					EmailInitiated: true,
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -76,6 +80,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "baz@ory.sh",
 					Verified:   false,
+					EmailInitiated: false,
 					Status:     VerifiableAddressStatusPending,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -85,6 +90,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "foo@ory.sh",
 					Verified:   true,
+					EmailInitiated: true,
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -92,6 +98,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "bar@ory.sh",
 					Verified:   true,
+					EmailInitiated: true,
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -105,6 +112,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "foo@ory.sh",
 					Verified:   true,
+					EmailInitiated: true,
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -112,6 +120,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "baz@ory.sh",
 					Verified:   false,
+					EmailInitiated: false,
 					Status:     VerifiableAddressStatusPending,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -121,6 +130,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "foo@ory.sh",
 					Verified:   true,
+					EmailInitiated: true,
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -128,6 +138,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "bar@ory.sh",
 					Verified:   true,
+					EmailInitiated: true,
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -146,6 +157,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "foo@ory.sh",
 					Verified:   false,
+					EmailInitiated: false,
 					Status:     VerifiableAddressStatusPending,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
@@ -153,6 +165,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				{
 					Value:      "bar@ory.sh",
 					Verified:   false,
+					EmailInitiated: false,
 					Status:     VerifiableAddressStatusPending,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,

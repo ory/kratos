@@ -2493,10 +2493,14 @@
         "id",
         "value",
         "verified",
+        "email_initiated",
         "via",
         "status"
       ],
       "properties": {
+        "email_initiated": {
+          "type": "boolean"
+        },
         "id": {
           "$ref": "#/definitions/UUID"
         },

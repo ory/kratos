@@ -3514,9 +3514,6 @@ func (a *PublicApiService) WhoamiExecute(r PublicApiApiWhoamiRequest) (*Session,
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if r.authorization != nil {
-		localVarQueryParams.Add("Authorization", parameterToString(*r.authorization, ""))
-	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -3536,6 +3533,9 @@ func (a *PublicApiService) WhoamiExecute(r PublicApiApiWhoamiRequest) (*Session,
 	}
 	if r.cookie != nil {
 		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
+	}
+	if r.authorization != nil {
+		localVarHeaderParams["Authorization"] = parameterToString(*r.authorization, "")
 	}
 	if r.ctx != nil {
 		// API Key Authentication

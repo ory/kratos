@@ -925,6 +925,9 @@
       },
       "VerifiableAddress": {
         "properties": {
+          "email_initiated": {
+            "type": "boolean"
+          },
           "id": {
             "$ref": "#/components/schemas/UUID"
           },
@@ -948,6 +951,7 @@
           "id",
           "value",
           "verified",
+          "email_initiated",
           "via",
           "status"
         ],
@@ -3666,8 +3670,7 @@
             }
           },
           {
-            "description": "in: authorization",
-            "in": "query",
+            "in": "header",
             "name": "Authorization",
             "schema": {
               "type": "string"

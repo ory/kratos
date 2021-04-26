@@ -1653,7 +1653,7 @@ import (
 
 func main() {
     cookie := "cookie_example" // string |  (optional)
-    authorization := "authorization_example" // string | in: authorization (optional)
+    authorization := "authorization_example" // string |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -1679,7 +1679,7 @@ Other parameters are passed through a pointer to a apiWhoamiRequest struct via t
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **cookie** | **string** |  | 
- **authorization** | **string** | in: authorization | 
+ **authorization** | **string** |  | 
 
 ### Return type
 

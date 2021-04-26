@@ -1567,14 +1567,13 @@ paths:
         schema:
           type: string
         style: simple
-      - description: 'in: authorization'
-        explode: true
-        in: query
+      - explode: false
+        in: header
         name: Authorization
         required: false
         schema:
           type: string
-        style: form
+        style: simple
       responses:
         "200":
           content:
@@ -1835,12 +1834,14 @@ components:
           verified: true
           id: id
           value: value
+          email_initiated: true
           status: status
           via: via
         - verified_at: 2000-01-23T04:56:07.000+00:00
           verified: true
           id: id
           value: value
+          email_initiated: true
           status: status
           via: via
         schema_id: schema_id
@@ -2372,9 +2373,12 @@ components:
         verified: true
         id: id
         value: value
+        email_initiated: true
         status: status
         via: via
       properties:
+        email_initiated:
+          type: boolean
         id:
           format: uuid4
           type: string
@@ -2391,6 +2395,7 @@ components:
         via:
           type: string
       required:
+      - email_initiated
       - id
       - status
       - value
@@ -2684,12 +2689,14 @@ components:
               verified: true
               id: id
               value: value
+              email_initiated: true
               status: status
               via: via
             - verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
               id: id
               value: value
+              email_initiated: true
               status: status
               via: via
             schema_id: schema_id
@@ -2949,12 +2956,14 @@ components:
             verified: true
             id: id
             value: value
+            email_initiated: true
             status: status
             via: via
           - verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             id: id
             value: value
+            email_initiated: true
             status: status
             via: via
           schema_id: schema_id
@@ -2976,12 +2985,14 @@ components:
               verified: true
               id: id
               value: value
+              email_initiated: true
               status: status
               via: via
             - verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
               id: id
               value: value
+              email_initiated: true
               status: status
               via: via
             schema_id: schema_id
@@ -3041,12 +3052,14 @@ components:
             verified: true
             id: id
             value: value
+            email_initiated: true
             status: status
             via: via
           - verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             id: id
             value: value
+            email_initiated: true
             status: status
             via: via
           schema_id: schema_id
@@ -3149,12 +3162,14 @@ components:
             verified: true
             id: id
             value: value
+            email_initiated: true
             status: status
             via: via
           - verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             id: id
             value: value
+            email_initiated: true
             status: status
             via: via
           schema_id: schema_id
@@ -3249,12 +3264,14 @@ components:
             verified: true
             id: id
             value: value
+            email_initiated: true
             status: status
             via: via
           - verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
             id: id
             value: value
+            email_initiated: true
             status: status
             via: via
           schema_id: schema_id
@@ -3323,12 +3340,14 @@ components:
               verified: true
               id: id
               value: value
+              email_initiated: true
               status: status
               via: via
             - verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
               id: id
               value: value
+              email_initiated: true
               status: status
               via: via
             schema_id: schema_id

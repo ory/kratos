@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**EmailInitiated** | **bool** |  | 
 **Id** | **string** |  | 
 **Status** | **string** |  | 
 **Value** | **string** |  | 
@@ -15,7 +16,7 @@ Name | Type | Description | Notes
 
 ### NewVerifiableAddress
 
-`func NewVerifiableAddress(id string, status string, value string, verified bool, via string, ) *VerifiableAddress`
+`func NewVerifiableAddress(emailInitiated bool, id string, status string, value string, verified bool, via string, ) *VerifiableAddress`
 
 NewVerifiableAddress instantiates a new VerifiableAddress object
 This constructor will assign default values to properties that have it defined,
@@ -29,6 +30,26 @@ will change when the set of required properties is changed
 NewVerifiableAddressWithDefaults instantiates a new VerifiableAddress object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
+
+### GetEmailInitiated
+
+`func (o *VerifiableAddress) GetEmailInitiated() bool`
+
+GetEmailInitiated returns the EmailInitiated field if non-nil, zero value otherwise.
+
+### GetEmailInitiatedOk
+
+`func (o *VerifiableAddress) GetEmailInitiatedOk() (*bool, bool)`
+
+GetEmailInitiatedOk returns a tuple with the EmailInitiated field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetEmailInitiated
+
+`func (o *VerifiableAddress) SetEmailInitiated(v bool)`
+
+SetEmailInitiated sets EmailInitiated field to given value.
+
 
 ### GetId
 

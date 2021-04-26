@@ -18,20 +18,22 @@ import (
 
 // VerifiableAddress struct for VerifiableAddress
 type VerifiableAddress struct {
-	Id         string     `json:"id"`
-	Status     string     `json:"status"`
-	Value      string     `json:"value"`
-	Verified   bool       `json:"verified"`
-	VerifiedAt *time.Time `json:"verified_at,omitempty"`
-	Via        string     `json:"via"`
+	EmailInitiated bool       `json:"email_initiated"`
+	Id             string     `json:"id"`
+	Status         string     `json:"status"`
+	Value          string     `json:"value"`
+	Verified       bool       `json:"verified"`
+	VerifiedAt     *time.Time `json:"verified_at,omitempty"`
+	Via            string     `json:"via"`
 }
 
 // NewVerifiableAddress instantiates a new VerifiableAddress object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewVerifiableAddress(id string, status string, value string, verified bool, via string) *VerifiableAddress {
+func NewVerifiableAddress(emailInitiated bool, id string, status string, value string, verified bool, via string) *VerifiableAddress {
 	this := VerifiableAddress{}
+	this.EmailInitiated = emailInitiated
 	this.Id = id
 	this.Status = status
 	this.Value = value
@@ -46,6 +48,30 @@ func NewVerifiableAddress(id string, status string, value string, verified bool,
 func NewVerifiableAddressWithDefaults() *VerifiableAddress {
 	this := VerifiableAddress{}
 	return &this
+}
+
+// GetEmailInitiated returns the EmailInitiated field value
+func (o *VerifiableAddress) GetEmailInitiated() bool {
+	if o == nil {
+		var ret bool
+		return ret
+	}
+
+	return o.EmailInitiated
+}
+
+// GetEmailInitiatedOk returns a tuple with the EmailInitiated field value
+// and a boolean to check if the value has been set.
+func (o *VerifiableAddress) GetEmailInitiatedOk() (*bool, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.EmailInitiated, true
+}
+
+// SetEmailInitiated sets field value
+func (o *VerifiableAddress) SetEmailInitiated(v bool) {
+	o.EmailInitiated = v
 }
 
 // GetId returns the Id field value
@@ -202,6 +228,9 @@ func (o *VerifiableAddress) SetVia(v string) {
 
 func (o VerifiableAddress) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if true {
+		toSerialize["email_initiated"] = o.EmailInitiated
+	}
 	if true {
 		toSerialize["id"] = o.Id
 	}
