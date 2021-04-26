@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-04-23)](#unreleased-2021-04-23)
+- [Unreleased (2021-04-26)](#unreleased-2021-04-26)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -136,7 +136,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.5-alpha.1...3803c8ce43e35c51a9c1d7ab55bc662c398cf0d8) (2021-04-23)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.5-alpha.1...bbfcbf9ce595d842a53a3ea21c286d5899eeb28f) (2021-04-26)
 
 
 ### Bug Fixes
@@ -163,6 +163,7 @@
     > Fixes the courier message dequeuing race condition by modifying `*sql.Persister.NextMessages(ctx context.Context, limit uint8)` to retrieve only messages with status `MessageStatusQueued` and update the status of the retrieved messages to `MessageStatusProcessing` within a transaction. On message send failure, the message's status is reset to `MessageStatusQueued`, so that the message can be dequeued in a subsequent `NextMessages` call. On message send success, the status is updated to `MessageStatusSent` (no change there).
 * Define credentials types as sql template and resolve crdb issue ([a2d6eeb](https://github.com/ory/kratos/commit/a2d6eeb2928c9750741237f559197fd80494310d))
 * Dereference pointer types from new flow structures ([#1019](https://github.com/ory/kratos/issues/1019)) ([efedc92](https://github.com/ory/kratos/commit/efedc920e592bd6e963726e6b123ddc40df93a59))
+* Do not include smtp in tracing ([#1268](https://github.com/ory/kratos/issues/1268)) ([bbfcbf9](https://github.com/ory/kratos/commit/bbfcbf9ce595d842a53a3ea21c286d5899eeb28f))
 * Do not publish version at public endpoint ([3726ed4](https://github.com/ory/kratos/commit/3726ed4d145a949b25f5b5da5f58d4f448a2a90f))
 * Do not reset registration method ([554bb0b](https://github.com/ory/kratos/commit/554bb0b4e62e4ac2a321fa4dbf89ffdf37b188df))
 * Export mailhog dockertest runner ([1384148](https://github.com/ory/kratos/commit/138414873ad319c6c32c6cc64a73547540dffc74))
@@ -199,6 +200,7 @@
 * Remove unused sql migration ([1445d1d](https://github.com/ory/kratos/commit/1445d1d1b4b0b5e8ef3426a98ced9573063d8646))
 * Remove unused var ([30a8cee](https://github.com/ory/kratos/commit/30a8cee22238d9f400e6d315a9bc99f710945f81))
 * Replace jwt module ([#1254](https://github.com/ory/kratos/issues/1254)) ([3803c8c](https://github.com/ory/kratos/commit/3803c8ce43e35c51a9c1d7ab55bc662c398cf0d8)), closes [#1250](https://github.com/ory/kratos/issues/1250)
+* Resolve clidoc issues ([599e9f7](https://github.com/ory/kratos/commit/599e9f773a743f811329cc57cea2748831105e58))
 * Resolve compile issues ([63063c1](https://github.com/ory/kratos/commit/63063c15c17f4d3aca96b106275a3478a8ed717e))
 * Resolve contextualized table issues ([5a4f0d9](https://github.com/ory/kratos/commit/5a4f0d92800df7fb5ca0df18203a6d73416814e1))
 * Resolve crdb migration issue ([9f6edfd](https://github.com/ory/kratos/commit/9f6edfd1f544d5f85e5f5558a08672f40e928136))
@@ -310,8 +312,6 @@
 
 ### Features
 
-* Do not enforce bcrypt 12 for dev envs ([bbf44d8](https://github.com/ory/kratos/commit/bbf44d887ae5cdb5975516149c74b3ba10896209))
-* **courier:** Allow sending individual messages ([cbb2c0b](https://github.com/ory/kratos/commit/cbb2c0bef63323a177589e9d2a809c84b4f1acdd))
 * Add email template specification in doc ([#898](https://github.com/ory/kratos/issues/898)) ([4230d9e](https://github.com/ory/kratos/commit/4230d9e0fc35c651b0d2cbdbbf9e1f1c514743f8))
 * Add error for when no login strategy was found ([6bae66c](https://github.com/ory/kratos/commit/6bae66cde362c4e2995c9d06a0d3ffee403feb74))
 * Add facebook provider to oidc providers and documentation ([#1035](https://github.com/ory/kratos/issues/1035)) ([905bb03](https://github.com/ory/kratos/commit/905bb032520189212bd88f29641903945ae03608)), closes [#1034](https://github.com/ory/kratos/issues/1034)
@@ -359,9 +359,11 @@
     > It is still possible to have the previous behaviour which would run the worker as a background task when running `kratos serve` by using the `--watch-courier` flag.
     > 
     > To run the foreground worker, use `kratos courier watch -c your/config.yaml`.
+* Do not enforce bcrypt 12 for dev envs ([bbf44d8](https://github.com/ory/kratos/commit/bbf44d887ae5cdb5975516149c74b3ba10896209))
 * Export and add config options ([4391fe5](https://github.com/ory/kratos/commit/4391fe572eb6a766afe9808396847ca5fdca07f5))
 * Expose courier worker ([f50969e](https://github.com/ory/kratos/commit/f50969ecba757dea558e9e8b9dd142f5f564d53a))
 * Expose crdb ui ([504d518](https://github.com/ory/kratos/commit/504d5181f5e391bb8d67768b314a0348ed252c8b))
+* Global docs sidebar ([#1258](https://github.com/ory/kratos/issues/1258)) ([7108262](https://github.com/ory/kratos/commit/71082624e093b8c100e71ae59050f89b35ac20a2))
 * Implement and test domain aliasing ([1516a54](https://github.com/ory/kratos/commit/1516a54657df485627251de4e7019bc16353c956)):
 
     > This patch adds a feature called domain aliasing. For more information, head over to http://ory.sh/docs/kratos/next/guides/multi-domain-cookies
@@ -373,6 +375,10 @@
 * Make cli commands consumable in Ory Cloud ([#926](https://github.com/ory/kratos/issues/926)) ([fed790b](https://github.com/ory/kratos/commit/fed790b0f71f028f6d92e8ebceee188dbdb20770))
 * Migrate to openapi v3 ([595224b](https://github.com/ory/kratos/commit/595224b1efd5a225702ef236a87f08180a7118b8))
 * Populate email templates at delivery time, add plaintext defaults ([#1155](https://github.com/ory/kratos/issues/1155)) ([7749c7a](https://github.com/ory/kratos/commit/7749c7a75a4386c1fd53db57626355467b698c2f)), closes [#1065](https://github.com/ory/kratos/issues/1065)
+* Support domain aliasing in session cookie ([0681c12](https://github.com/ory/kratos/commit/0681c123f2d856ca27caee645dadc9e6e3731d2c))
+* Support label in oidc config ([a99cdcd](https://github.com/ory/kratos/commit/a99cdcddaa0c4bd7b679884b232c2ef8f2dcd978))
+* Unix sockets support ([#1255](https://github.com/ory/kratos/issues/1255)) ([ad010de](https://github.com/ory/kratos/commit/ad010de240ddd9219f0cfb2ca3fbb180d2d3a697))
+* **courier:** Allow sending individual messages ([cbb2c0b](https://github.com/ory/kratos/commit/cbb2c0bef63323a177589e9d2a809c84b4f1acdd))
 * Sort and label nodes with easy to use defaults ([cbec27c](https://github.com/ory/kratos/commit/cbec27c957a733411e4c1d511ed5854855b7236e)):
 
     > Ory Kratos takes a guess based on best practices for
@@ -383,12 +389,10 @@
     > - using the "title" attribute from the identity schema to label trait fields
     > 
     > This greatly simplifies front-end code on your end and makes it even easier to integrate with Ory Kratos! If you want a custom experience with e.g. translations or other things you can always adjust this in your UI integration!
-* Support base64 inline schemas ([815a248](https://github.com/ory/kratos/commit/815a24890a118f4128ac083241a93d8df27042f7))
-* Support contextual csrf cookies ([957ef38](https://github.com/ory/kratos/commit/957ef38b69fc6ab071b91262736e6c191be3a4b8))
-* Support label in oidc config ([a99cdcd](https://github.com/ory/kratos/commit/a99cdcddaa0c4bd7b679884b232c2ef8f2dcd978))
 * **oidc:** Support google hd claim ([#1097](https://github.com/ory/kratos/issues/1097)) ([1f20a5c](https://github.com/ory/kratos/commit/1f20a5ceba7682719112d24a3b18bf046fb2ac22))
 * **schema:** Add totp errors ([a61f881](https://github.com/ory/kratos/commit/a61f8814101401dbb422967e37b6c6c1ae85d113))
-* Support domain aliasing in session cookie ([0681c12](https://github.com/ory/kratos/commit/0681c123f2d856ca27caee645dadc9e6e3731d2c))
+* Support base64 inline schemas ([815a248](https://github.com/ory/kratos/commit/815a24890a118f4128ac083241a93d8df27042f7))
+* Support contextual csrf cookies ([957ef38](https://github.com/ory/kratos/commit/957ef38b69fc6ab071b91262736e6c191be3a4b8))
 
 
 ### Tests
