@@ -3,6 +3,7 @@ package link_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -270,21 +271,21 @@ func TestRecovery(t *testing.T) {
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, values1),v1)
+			check(t, expectValidationError(t, true, values1), v1)
 		})
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, values2),v2)
+			check(t, expectValidationError(t, false, values2), v2)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, values2),v2)
+			check(t, expectValidationError(t, true, values2), v2)
 		})
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, values3),v3)
+			check(t, expectValidationError(t, false, values3), v3)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, values3),v3)
+			check(t, expectValidationError(t, true, values3), v3)
 		})
 	})
 
