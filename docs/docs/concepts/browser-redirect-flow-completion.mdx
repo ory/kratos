@@ -131,6 +131,16 @@ selfservice:
         default_redirect_to: https://this-is-overridden-by-password/
 ```
 
+#### Specify Redirection URL during Registration
+
+Verification emails are usually sent in response to a successful registration
+flow. To specify the redirect URL for the verification flow after registration,
+append `after_verification_return_to` to the Browser Registration Init endpoint:
+
+```
+https://public.kratos/self-service/registration/browser?after_verification_return_to=https://my-redirect/foo
+```
+
 ## JSON
 
 This feature is currently in prototype phase and will be documented at a later
