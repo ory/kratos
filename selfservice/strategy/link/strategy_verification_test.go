@@ -160,6 +160,50 @@ func TestVerification(t *testing.T) {
 		})
 	})
 
+	t.Run("description=should require a valid email to be sent", func(t *testing.T) {
+		var check = func(t *testing.T, actual string, value string) {
+			assert.EqualValues(t, verification.StrategyVerificationLinkName, gjson.Get(actual, "active").String(), "%s", actual)
+			assert.EqualValues(t, fmt.Sprintf("%q is not valid \"email\"", value),
+				gjson.Get(actual, "methods.link.config.fields.#(name==email).messages.0.text").String(),
+				"%s", actual)
+		}
+		var v1 = "abc"
+		var v2 = "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com"
+		var v3 = "\\"
+		var values1 = func(v url.Values) {
+			v.Set("email", v1)
+		}
+
+		var values2 = func(v url.Values) {
+			v.Set("email", v2)
+		}
+
+		var values3 = func(v url.Values) {
+			v.Set("email", v3)
+		}
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectValidationError(t, false, values1), v1)
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectValidationError(t, true, values1),v1)
+		})
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectValidationError(t, false, values2),v2)
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectValidationError(t, true, values2),v2)
+		})
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectValidationError(t, false, values3),v3)
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectValidationError(t, true, values3),v3)
+		})
+	})
+
 	t.Run("description=should try to verify an email that does not exist", func(t *testing.T) {
 		var email string
 		var check = func(t *testing.T, actual string) {
