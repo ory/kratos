@@ -91,6 +91,15 @@ direct login after sign up would be ok.
 
 :::
 
+### Hash Timing Attack Mitigation
+
+A timing attack against password hashing looks as follows:
+
+1. Login to an existing account and measure time which takes, depending on the hashing configuration, between 200ms and 2s;0
+2. Try out other accounts (e.g. `alice@example.org`). If the account does not exist, password hashing does not run, hence it takes much less time for the server to answer (< 100ms).
+
+To protect against this attack, Ory Kratos adds a configurable delay with standard deviation to login flows where the account does not exist.
+
 ### Enabling Account Enumeration Defenses
 
 Assuming you wish to enable account enumeration defenses, you need to configure
