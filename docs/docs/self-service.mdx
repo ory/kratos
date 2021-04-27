@@ -4,7 +4,7 @@ title: Self-Service Flows
 sidebar_label: Concepts and Overview
 ---
 
-ORY Kratos implements flows that users perform themselves as opposed to
+Ory Kratos implements flows that users perform themselves as opposed to
 administrative intervention. Facebook and Google both provide self-service
 registration and profile management features as you are able to make changes to
 your profile and sign up yourself.
@@ -39,7 +39,7 @@ There are also many other areas you need to think about, such as:
 - Linking and unlinking social profiles (e.g. "Sign in with Google" or "Connect
   with Google") to existing accounts
 
-ORY Kratos applies best practices established by experts (National Institute of
+Ory Kratos applies best practices established by experts (National Institute of
 Sciences NIST, Internet Engineering Task Force IETF, Microsoft Research, Google
 Research, Troy Hunt, ...) and implements the following flows:
 
@@ -73,7 +73,7 @@ signed in after registration, notify another system on successful registration
 
 ## Performing Login, Registration, Settings, ... Flows
 
-There are two flow types supported in ORY Kratos:
+There are two flow types supported in Ory Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
   app, ...)
@@ -98,7 +98,7 @@ Browser-based flows make use of three core HTTP technologies:
 - HTTP Cookies to prevent CSRF and Session Hijaking attack vectors.
 
 The browser flow is the easiest and most secure to set up and integrated with.
-ORY Kratos takes care of all required session and CSRF cookies and ensures that
+Ory Kratos takes care of all required session and CSRF cookies and ensures that
 all security requirements are fulfilled.
 
 The browser flow has three stages:
@@ -167,12 +167,12 @@ The endpoint responsible for the UI URL uses the `flow` URL Query Parameter
 information endpoint (e.g.
 `http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09`)
 and fetch the flow data - so for example the login form and any validation
-errors. This endpoint is available at both ORY Kratos's Public and Admin
+errors. This endpoint is available at both Ory Kratos's Public and Admin
 Endpoints. For example, the Self-Service UI responsible for rendering the Login
 HTML Form would make a request along the lines of:
 
 ```
-# The endpoint uses ORY Kratos' REST API to fetch information about the request
+# The endpoint uses Ory Kratos' REST API to fetch information about the request
 $ curl -s -X GET \
     -H "Accept: application/json" \
     "http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq
@@ -248,12 +248,12 @@ HTML Form would look along the lines of:
 ### Form Submission and Payload Validation
 
 The user completes the flow by submitting the form. The form action always
-points to ORY Kratos directly. The business logic for the flow method will then
+points to Ory Kratos directly. The business logic for the flow method will then
 validate the form payload and return to the UI URL on validation errors. The UI
 then fetches the information about the flow again
 
 ```
-# The endpoint uses ORY Kratos' REST API to fetch information about the request
+# The endpoint uses Ory Kratos' REST API to fetch information about the request
 $ curl -s -X GET \
     -H "Accept: application/json" \
     "http://127.0.0.1:4433/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq

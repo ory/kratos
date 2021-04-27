@@ -221,7 +221,7 @@ if [[ $dev = "yes" ]]; then
 fi
 
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
-export TEST_DATABASE_MEMORY="memory"
+export TEST_DATABASE_MEMOry="memory"
 
 case "$1" in
         sqlite)

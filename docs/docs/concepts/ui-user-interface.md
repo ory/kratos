@@ -3,18 +3,18 @@ id: ui-user-interface
 title: User Interface
 ---
 
-ORY Kratos has no user interface included. Instead, it defines HTTP flows and
+Ory Kratos has no user interface included. Instead, it defines HTTP flows and
 APIs that make it simple to write your own UI in a variety of languages and
 frameworks.
 
-The following two examples are typical UIs used in connection with ORY Kratos.
+The following two examples are typical UIs used in connection with Ory Kratos.
 
 ## Administrative User Interface (Admin UI)
 
 The AUI might show all of the identities in the system and provide features to
 administrators such as editing profiles, resetting passwords, and so on.
 
-At present, there is no Open Source AUI for ORY Kratos.
+At present, there is no Open Source AUI for Ory Kratos.
 
 ## Self-service User Interface (SSUI)
 
@@ -27,7 +27,7 @@ The SSUI can be built in any programming language including Java, Node, or
 Python and can be run both a server or a end-user device for example a browser,
 or a mobile phone. Implementing a SSUI is simple and straight forward. There is
 no complex authentication mechanism required and no need to worry about possible
-attack vectors such as CSRF or Session Attacks since ORY Kratos provides the
+attack vectors such as CSRF or Session Attacks since Ory Kratos provides the
 preventive measures built in.
 
 Chapter [Self-Service Flows](../self-service) contains further information on
@@ -35,7 +35,7 @@ APIs and flows related to the SSUI, and build self service applications.
 
 ## Messages
 
-ORY Kratos helps users understand what is happening by providing messages that
+Ory Kratos helps users understand what is happening by providing messages that
 explain what went wrong or what needs to be done. Examples are "The provided
 credentials are invalid", "Missing property email" and similar.
 

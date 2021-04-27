@@ -25,7 +25,7 @@ func (v *versionValue) Interface() interface{} {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version of an ORY Kratos instance",
+	Short: "Print the version of an Ory Kratos instance",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)

@@ -25,7 +25,7 @@ type RegistrationFlow struct {
 	Id        string    `json:"id"`
 	// IssuedAt is the time (UTC) when the flow occurred.
 	IssuedAt time.Time `json:"issued_at"`
-	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
+	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
 	// The flow type can either be `api` or `browser`.
 	Type *string     `json:"type,omitempty"`

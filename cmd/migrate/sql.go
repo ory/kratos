@@ -26,7 +26,7 @@ import (
 var migrateSqlCmd = &cobra.Command{
 	Use:   "sql <database-url>",
 	Short: "Create SQL schemas and apply migration plans",
-	Long: `Run this command on a fresh SQL installation and when you upgrade ORY Kratos to a new minor version.
+	Long: `Run this command on a fresh SQL installation and when you upgrade Ory Kratos to a new minor version.
 
 It is recommended to run this command close to the SQL instance (e.g. same subnet) instead of over the public internet.
 This decreases risk of failure and decreases time required.

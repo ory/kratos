@@ -722,7 +722,7 @@ func (p *Config) ParseURIOrFail(key string) *url.URL {
 }
 
 func (p *Config) Tracing() *tracing.Config {
-	return p.p.TracingConfig("ORY Kratos")
+	return p.p.TracingConfig("Ory Kratos")
 }
 
 func (p *Config) IsInsecureDevMode() bool {

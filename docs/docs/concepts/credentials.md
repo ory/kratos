@@ -26,7 +26,7 @@ credentials:
         identifier: 83475891
 ```
 
-ORY Kratos supports several credential types:
+Ory Kratos supports several credential types:
 
 - `password`: The most common _identifier (username, email, ...) + password_
   credential.

@@ -476,11 +476,11 @@ selfservice.methods.password.config.max_breaches
 
 1. Configuration sourcing works from all sources (file, env, cli flags) with validation against the configuration schema, greatly improving developer experience when changing or updating configuration.
 2. Configuration reloading has improved significantly and works flawlessly on Kubernetes.
-3. Performance increased dramatically, completely removing the need for a cache layer between the configuration system and ORY Hydra.
+3. Performance increased dramatically, completely removing the need for a cache layer between the configuration system and Ory Hydra.
 4. It is now possible to load several config files using the `--config` flag.
 5. Configuration values are now sent to the tracer (e.g. Jaeger) if tracing is enabled.
 
-Please be aware that ORY Kratos might complain about an invalid configuration, because the validation process has improved significantly.
+Please be aware that Ory Kratos might complain about an invalid configuration, because the validation process has improved significantly.
 
 
 
@@ -1042,7 +1042,7 @@ Please be aware that ORY Kratos might complain about an invalid configuration, b
 * Support application/json in registration ([3476b97](https://github.com/ory/kratos/commit/3476b978fdaee90358cc5505e20a0526f812a460)), closes [#44](https://github.com/ory/kratos/issues/44)
 * Support custom session token header ([56bec76](https://github.com/ory/kratos/commit/56bec760fd1b94428ba296395a11358664d9e830)):
 
-    > The `/sessions/whoami` endpoint now accepts the ORY Kratos Session Token in the `X-Session-Token` HTTP header.
+    > The `/sessions/whoami` endpoint now accepts the Ory Kratos Session Token in the `X-Session-Token` HTTP header.
 * Support GitLab OIDC Provider  ([#519](https://github.com/ory/kratos/issues/519)) ([8580d96](https://github.com/ory/kratos/commit/8580d96b7e345cc85a646f2945c3931f831afebf)), closes [#518](https://github.com/ory/kratos/issues/518)
 * Support json payloads for login and password ([354e8b2](https://github.com/ory/kratos/commit/354e8b2cd63ee8feb1fd8a4ed8b033490155d90c))
 * Support JSON payloads in password login flow ([dd32c23](https://github.com/ory/kratos/commit/dd32c23121da42e7eb3294fc8cb940fb7982723b))
@@ -1517,7 +1517,7 @@ root level.
 }
 ```
 
-You also need to remove the `traits` key from your ORY Kratos config like this:
+You also need to remove the `traits` key from your Ory Kratos config like this:
 
 ```
  identity:
@@ -1821,7 +1821,7 @@ has been merged with  `selfservice.verification.request_lifespan`.
 * Dry config and oidc tests ([3e98756](https://github.com/ory/kratos/commit/3e9875612ea895f9b565d34f4d5b0f80d136868f))
 * Improve oidc flows and payloads and add e2e tests ([#381](https://github.com/ory/kratos/issues/381)) ([f9a5079](https://github.com/ory/kratos/commit/f9a50790637a848897ba275373bc538728e09f3d)), closes [#387](https://github.com/ory/kratos/issues/387):
 
-    > This patch improves the OpenID Connect login and registration user experience by simplifying the network flows and introduces e2e tests using ORY Hydra.
+    > This patch improves the OpenID Connect login and registration user experience by simplifying the network flows and introduces e2e tests using Ory Hydra.
 * Move cypress files to test/e2e ([df8e627](https://github.com/ory/kratos/commit/df8e627d81d69682e01ec5670c7088ba564df578))
 * Partition files and change creds structure ([4f1eb94](https://github.com/ory/kratos/commit/4f1eb946fe1e74e537fc2166fc000180a11c2048)):
 
@@ -1898,7 +1898,7 @@ has been merged with  `selfservice.verification.request_lifespan`.
     > Creates several docker compose examples which include various
     > scenarios of the quickstart.
     >
-    > The regular quickstart guide now works without ORY Oathkeeper
+    > The regular quickstart guide now works without Ory Oathkeeper
     > and uses the standalone mode of the example app instead.
     >
     > Additionally, the Makefile was improved and now automatically pulls
@@ -2423,7 +2423,7 @@ No significant changes have been made for this release.
 
 ### Documentation
 
-* Present ORY Hive to the world ([#107](https://github.com/ory/kratos/issues/107)) ([7883589](https://github.com/ory/kratos/commit/78835897664a5ab5564751fc9f04172f7d20d572))
+* Present Ory Hive to the world ([#107](https://github.com/ory/kratos/issues/107)) ([7883589](https://github.com/ory/kratos/commit/78835897664a5ab5564751fc9f04172f7d20d572))
 * Updates issue and pull request templates ([0441dff](https://github.com/ory/kratos/commit/0441dffe0c439cc54214bf9ee8f4a4bd25206999))
 * Updates issue and pull request templates ([#174](https://github.com/ory/kratos/issues/174)) ([ad405e9](https://github.com/ory/kratos/commit/ad405e9037e2db2910a012f414556fea672e732a))
 * Updates issue and pull request templates ([#39](https://github.com/ory/kratos/issues/39)) ([daf5aa8](https://github.com/ory/kratos/commit/daf5aa89c717de6176ee25119d2e751ae2ef6558))
@@ -2466,7 +2466,7 @@ No significant changes have been made for this release.
 * Add session destroyer hook  ([#148](https://github.com/ory/kratos/issues/148)) ([d17f002](https://github.com/ory/kratos/commit/d17f002cdfe1f11ebb6bcbb17f6976aa329eab4a)), closes [#139](https://github.com/ory/kratos/issues/139):
 
     > This patch adds a hook that destroys all active session by the identity which is being logged in. This can be useful in scenarios where only one session should be active at any given time.
-* Add ORY Kratos banner to README (#145) ([23b824f](https://github.com/ory/kratos/commit/23b824f7f99efbc23787508c03506e73a3240a2a)), closes [#145](https://github.com/ory/kratos/issues/145)
+* Add Ory Kratos banner to README (#145) ([23b824f](https://github.com/ory/kratos/commit/23b824f7f99efbc23787508c03506e73a3240a2a)), closes [#145](https://github.com/ory/kratos/issues/145)
 * Implement message templates and SMTP delivery ([#146](https://github.com/ory/kratos/issues/146)) ([dc674bf](https://github.com/ory/kratos/commit/dc674bfa7d1fa9ee94b014d09866bbdc0a97c321)), closes [#99](https://github.com/ory/kratos/issues/99):
 
     > This patch adds a message templates (with override capabilities)
@@ -2498,7 +2498,7 @@ No significant changes have been made for this release.
 * Update keyword from kratos to ory.sh/kratos ([f45cbe0](https://github.com/ory/kratos/commit/f45cbe0339db8d129522314f3099e6944e4a6ea3)), closes [#115](https://github.com/ory/kratos/issues/115)
 * Update sdk generation method ([24aa3d7](https://github.com/ory/kratos/commit/24aa3d73354d5a28f05999a09e7bbbe51a44d44e))
 * Use JSON Schema to type assert form body ([#116](https://github.com/ory/kratos/issues/116)) ([1944c7c](https://github.com/ory/kratos/commit/1944c7c6e82b5b6a3b9d47db94c8f8f45248feb7)), closes [#109](https://github.com/ory/kratos/issues/109)
-* Rebrand ORY Hive to ORY Kratos (#111) ([ceda7fb](https://github.com/ory/kratos/commit/ceda7fb3472b081f0c6066aa1f282d4ec1787f7b)), closes [#111](https://github.com/ory/kratos/issues/111)
+* Rebrand Ory Hive to Ory Kratos (#111) ([ceda7fb](https://github.com/ory/kratos/commit/ceda7fb3472b081f0c6066aa1f282d4ec1787f7b)), closes [#111](https://github.com/ory/kratos/issues/111)
 * Add SQL adapter ([#100](https://github.com/ory/kratos/issues/100)) ([9e7f998](https://github.com/ory/kratos/commit/9e7f99871e3f09e7ae9ec1c38c8b8cf94d076f45)), closes [#92](https://github.com/ory/kratos/issues/92)
 * Explicitly whitelist form parser keys ([#105](https://github.com/ory/kratos/issues/105)) ([28b056e](https://github.com/ory/kratos/commit/28b056e5bbfec645262914c52f0386d70c787a32)), closes [#98](https://github.com/ory/kratos/issues/98):
 

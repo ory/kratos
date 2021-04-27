@@ -49,7 +49,7 @@ const RenderFlow = ({ flow }) => {
           link={`https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/routes/${flow}.ts`}
           src={`https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/routes/${flow}.ts`}
         />
-        The views can be rather simple, as ORY Kratos provides you with all the
+        The views can be rather simple, as Ory Kratos provides you with all the
         information you need for rendering the forms. The following examples use
         Handlebars and a generic form generator to render the Flow:
         <Tabs

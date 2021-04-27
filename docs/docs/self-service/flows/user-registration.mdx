@@ -29,7 +29,7 @@ been generated with it.
 
 :::
 
-There are two Registration Flow types supported in ORY Kratos:
+There are two Registration Flow types supported in Ory Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
   app, ...)
@@ -67,7 +67,7 @@ Currently, two registration methods are supported:
   Facebook (check out the
   [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
-Both are dis/enabled in the ORY Kratos config:
+Both are dis/enabled in the Ory Kratos config:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
@@ -86,7 +86,7 @@ pre-registration hooks to run, set up Anti-CSRF tokens, and more.
 
 ### Registration for Browser Clients
 
-The Registration Flow for browser clients relies on HTTP redirects between ORY
+The Registration Flow for browser clients relies on HTTP redirects between Ory
 Kratos, your Registration UI, and the end-user's browser:
 
 <SelfServiceBrowserFlow
@@ -152,7 +152,7 @@ first.
 :::
 
 When the `password` method is enabled, it will be part of the `methods` payload
-in the Registration Flow. ORY Kratos uses the Identity JSON Schema defined in
+in the Registration Flow. Ory Kratos uses the Identity JSON Schema defined in
 `identity.default_schema_url` to generate a list of form fields and add it to
 the Registration Flow. Assuming we are using the Identity JSON Schema from the
 Quickstart
@@ -229,7 +229,7 @@ The Social Sign Up Method (`oidc`) enables you to use
 - [GitLab](https://docs.gitlab.com/ee/integration/openid_connect_provider.html);
 - [Google](https://developers.google.com/identity/sign-in/web/sign-in);
 - [Facebook](https://developers.facebook.com/docs/facebook-login/);
-- [ORY Hydra](https://www.ory.sh/hydra);
+- [Ory Hydra](https://www.ory.sh/hydra);
 - [Keycloak](https://www.keycloak.org);
 - and every other OpenID Connect Certified Provider
 
@@ -284,7 +284,7 @@ $ curl -H "Accept: application/json" -s \
 The Registration User Interface is a route (page / site) in your application
 (server, native app, single page app) that should render a registration form.
 
-In stark contrast to other Identity Systems, ORY Kratos does not render this
+In stark contrast to other Identity Systems, Ory Kratos does not render this
 HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
@@ -297,7 +297,7 @@ framework:
 
 ## Registration Form Validation
 
-The form payloads are then submitted to ORY Kratos which follows up with:
+The form payloads are then submitted to Ory Kratos which follows up with:
 
 - An HTTP 302 Found redirect pointing to the Registration UI for Browser
   Clients.
@@ -363,7 +363,7 @@ OpenID Connect flow which involves logging into the upstream identity provider
 :::note
 
 If the user has already sign up with the given provider before, the user will
-simply be logged in and no new ORY Kratos Identity will be created.
+simply be logged in and no new Ory Kratos Identity will be created.
 
 :::
 
@@ -371,12 +371,12 @@ A possible validation error is a missing ID Token:
 
 <CodeTabs items={getFlowMethodOidcWithErrors} />
 
-What may also happen is that the ORY Kratos Identity Schema JSON includes a
+What may also happen is that the Ory Kratos Identity Schema JSON includes a
 field which is required but was not provided by the upstream identity provider
 (e.g. Google). In those cases, the end-user's browser is returned to the
 registration screen with the form validation errors.
 
-Let's assume the ORY Kratos Identity Schema JSON requires a `website` trait
+Let's assume the Ory Kratos Identity Schema JSON requires a `website` trait
 
 ```diff
  {
@@ -414,7 +414,7 @@ Let's assume the ORY Kratos Identity Schema JSON requires a `website` trait
 ```
 
 which was not provided by the upstream identity provider. This can happen when
-the user refuses to accept a certain scope (e.g. "Allow ORY Kratos access to my
+the user refuses to accept a certain scope (e.g. "Allow Ory Kratos access to my
 website") or if the provider simply does not have this data (e.g. the upstream
 identity provider does not collect the user's website).
 
@@ -426,7 +426,7 @@ provide the missing or invalid fields:
 ## Successful Registration
 
 Completing the registration behaves differently for Browser and API Clients. The
-Registration Flow does not issue a ORY Kratos Login Session automatically which
+Registration Flow does not issue a Ory Kratos Login Session automatically which
 prevents Account Enumeration Attacks. If these types of attacks are not your
 concern, you can add the session hook which will issue a session after
 successful registration:
@@ -457,14 +457,14 @@ typically not an issue if you follow the guidelines in the
 
 ### Browser Clients
 
-When the registration is completed successfully, ORY Kratos responds with a HTTP
+When the registration is completed successfully, Ory Kratos responds with a HTTP
 302 Redirect to the
 [configured redirect URL](../../concepts/browser-redirect-flow-completion).
 
 #### With Auto-Login on Registration
 
 If the `session` after hook is enabled, a `Set-Cookie` HTTP Header is set
-alongside the HTTP 302 redirect which contains the ORY Kratos Login Session
+alongside the HTTP 302 redirect which contains the Ory Kratos Login Session
 Cookie:
 
 ```
@@ -525,7 +525,7 @@ curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQ
 
 ### API Clients
 
-For API Clients, ORY Kratos responds with a JSON payload which includes the
+For API Clients, Ory Kratos responds with a JSON payload which includes the
 signed up identity:
 
 ```shell script
@@ -572,7 +572,7 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
 
 #### With Auto-Login on Registration
 
-If the `session` after hook is enabled, the ORY Kratos Login Session and ORY
+If the `session` after hook is enabled, the Ory Kratos Login Session and Ory
 Kratos Login Session Token are included in the response:
 
 ```shell script
@@ -650,7 +650,7 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
 
 ## Hooks
 
-ORY Kratos allows you to configure hooks that run before and after a
+Ory Kratos allows you to configure hooks that run before and after a
 Registration Flow. This may be helpful if you'd like to restrict registration to
 IPs coming from your internal network or other logic.
 

@@ -25,7 +25,7 @@ type VerificationFlow struct {
 	Id        string     `json:"id"`
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt *time.Time `json:"issued_at,omitempty"`
-	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
+	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl *string `json:"request_url,omitempty"`
 	State      string  `json:"state"`
 	// The flow type can either be `api` or `browser`.

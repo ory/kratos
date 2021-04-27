@@ -28,7 +28,7 @@ kratos identities patch &lt;file.json [file-2.json [file-3.json] ...]&gt; [flags
 ### Options inherited from parent commands
 
 ```
-  -e, --endpoint string   The URL of ORY Kratos&#39; Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
+  -e, --endpoint string   The URL of Ory Kratos&#39; Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty. (default &#34;default&#34;)
   -q, --quiet             Be quiet with output printing.
 ```

@@ -60,7 +60,7 @@ func registerArgon2ConfigFlags(flags *pflag.FlagSet, c *argon2Config) {
 }
 
 func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, error) {
-	l := logrusx.New("ORY Kratos", config.Version)
+	l := logrusx.New("Ory Kratos", config.Version)
 	conf := &argon2Config{}
 	var err error
 	conf.config, err = config.New(

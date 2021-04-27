@@ -6,7 +6,7 @@ title: Threat Models and Security Profiles
 :::warning
 
 Please be aware that this chapter is still work in progress. Not all mitigation
-strategies have been implemented yet in ORY Kratos!
+strategies have been implemented yet in Ory Kratos!
 
 :::
 
@@ -17,7 +17,7 @@ threat, knowing the attack surface, the likelihood, and the impact are important
 all aspects of a threat model.
 
 This documentation can not substitute a thorough and serious threat model, yet
-it will provide some guidelines to help configure ORY Kratos in a way that makes
+it will provide some guidelines to help configure Ory Kratos in a way that makes
 it best suited for any risk assessment.
 
 ## Account Enumeration Attacks
@@ -107,7 +107,7 @@ standard deviation to login flows where the account does not exist.
 ### Enabling Account Enumeration Defenses
 
 Assuming you wish to enable account enumeration defenses, you need to configure
-ORY Kratos as follows:
+Ory Kratos as follows:
 
 - Collect one or more email addresses during sign up and enable email
   verification.
@@ -129,8 +129,8 @@ in with a password as well. An attacker is able to exploit that by creating a
 social profile on another site (e.g. Google) and use the victims email address
 to set it up (this only works when the victim does not yet have an account with
 that email at Google). The attacker can then use that "spoofed" social profile
-to try and sign up with your ORY Kratos installation. Because the victim's email
-address is already known to ORY Kratos, the attacker might be able to observe
+to try and sign up with your Ory Kratos installation. Because the victim's email
+address is already known to Ory Kratos, the attacker might be able to observe
 the behavior (e.g. seeing an error page) and come to the conclusion that the
 victim already has an account at the website.
 
@@ -201,8 +201,8 @@ Further improvements are work in progress and are tracked on
 
 ### Expensive Hashing with Argon2
 
-ORY Kratos uses Argon2 for password hashing. Argon2 is the official winner of
-the PHC 2017. You can tweak the Argon2 configuration in your ORY Kratos
+Ory Kratos uses Argon2 for password hashing. Argon2 is the official winner of
+the PHC 2017. You can tweak the Argon2 configuration in your Ory Kratos
 configuration file:
 
 ```yaml
@@ -220,15 +220,15 @@ To determine the ideal parameters, head over to the
 
 ### Password Policy
 
-To prevent weak passwords ORY Kratos implements different measures. Users often
-choose passwords similar to their traits. To prevent this ORY Kratos ensures
+To prevent weak passwords Ory Kratos implements different measures. Users often
+choose passwords similar to their traits. To prevent this Ory Kratos ensures
 there is a sufficient
 [Levenshtein-Distance](https://en.wikipedia.org/wiki/Levenshtein_distance) (aka
 "Edit-Distance") between the identifier and the password. It also makes sure
 that the identifier and password have a small enough longest common substring.
 
 Furthermore the `password` method comes with a build-in check against the
-["Have I been pwned"](https://haveibeenpwned.com) breach database. This way ORY
+["Have I been pwned"](https://haveibeenpwned.com) breach database. This way Ory
 Kratos makes sure your users cannot use passwords like "password", "123456" or
 any other commonly used one. To protect the value of the password the
 [range API](https://haveibeenpwned.com/API/v3#SearchingPwnedPasswordsByRange) is
@@ -250,7 +250,7 @@ Troy Hunt has written an
 [excellent piece on password policies](https://www.troyhunt.com/passwords-evolved-authentication-guidance-for-the-modern-era/)
 and why they recently changed and how.
 
-ORY Kratos implements a password policy that:
+Ory Kratos implements a password policy that:
 
 - Checks if a password has previously been leaked using the
   [HIBP API](https://haveibeenpwned.com/API/v2),
@@ -258,16 +258,16 @@ ORY Kratos implements a password policy that:
   release [kratos#184](https://github.com/ory/kratos/issues/184)),
 - Makes passwords not expire.
 
-This is a rundown of all the practices ORY Kratos implements and why. **Some
+This is a rundown of all the practices Ory Kratos implements and why. **Some
 things need to be implemented by yourself** as they must be implemented in the
-User Interface that interfaces with ORY Kratos. You can find these in section
+User Interface that interfaces with Ory Kratos. You can find these in section
 [User Interface Guidelines](#user-interface-guidelines).
 
 ##### Password Complexity
 
 This outline and quotes are defined in the
 [NIST Digital Identity Guidelines - 5.1.1.2 Memorized Secret Verifiers](https://pages.nist.gov/800-63-3/sp800-63b.html).
-ORY Kratos, unless explicitly advertised, implements these guidelines and best
+Ory Kratos, unless explicitly advertised, implements these guidelines and best
 practices.
 
 Passwords must have a minimum length of 8 characters and all characters
@@ -324,7 +324,7 @@ Do not require mixtures of characters types or prohibiting repeated characters:
 ##### User Interface Guidelines
 
 These best practices need to be implemented in your User Interface and can not
-be handled by ORY Kratos. All ORY-built reference and demo applications
+be handled by Ory Kratos. All Ory-built reference and demo applications
 implement these best practices:
 
 Allow pasting of passwords:
@@ -382,8 +382,8 @@ systems. The goal of such an attack is to send out so many emails or SMS, that
 your reputation worsens (spam filters) or you're faced with massive costs
 (carrier fees).
 
-CAPTCHA renders these attacks either very difficult or impossible. ORY Kratos
-has CAPTCHA support built-in. ORY Kratos will prompt the user to complete a
+CAPTCHA renders these attacks either very difficult or impossible. Ory Kratos
+has CAPTCHA support built-in. Ory Kratos will prompt the user to complete a
 CAPTCHA in the following scenarios:
 
 - The user tries to register more than one account within 72 hours.
@@ -422,10 +422,10 @@ It does not yet work as documented!
 
 ## Digital Identity Guidelines
 
-There is no one standard to digital identity. ORY Kratos closely follows
+There is no one standard to digital identity. Ory Kratos closely follows
 emerging frameworks and guidelines such as:
 [Digital Identity Guidelines established by the National Institute of Standards and Technology (NIST)](https://pages.nist.gov/800-63-3/)
 (and a follow-up [FAQ](https://pages.nist.gov/800-63-3/)) .
 
-As ORY Kratos grows, this document will continue to expand and add sections
+As Ory Kratos grows, this document will continue to expand and add sections
 covering individual security recommendations established by NIST.

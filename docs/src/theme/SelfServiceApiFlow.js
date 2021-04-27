@@ -12,7 +12,7 @@ const chart = ({
   return `
 sequenceDiagram
   participant B as API Client
-  participant K as ORY Kratos
+  participant K as Ory Kratos
 
   B->>K: REST GET /self-service/${components}/api
   K-->>K: Create and store new ${flows.join(', ')} flow

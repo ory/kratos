@@ -4,13 +4,13 @@ title: Sign in with GitHub, GitLab, Google, Facebook, LinkedIn, Microsoft ...
 ---
 
 In this document we will take a look at setting up "Sign in with GitHub" using
-ORY Kratos.
+Ory Kratos.
 
 Run the [Quickstart](../quickstart.mdx) with Docker Compose:
 
 ```shell script
-# This assumes that you have ORY Kratos checked out locally and
-# that your current directory ("pwd") is the folder where ORY Kratos
+# This assumes that you have Ory Kratos checked out locally and
+# that your current directory ("pwd") is the folder where Ory Kratos
 # is.
 
 $ make quickstart
@@ -52,13 +52,13 @@ The pattern of this URL is:
 http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
 ```
 
-The provider ID must point to the provider's ID set in the ORY Kratos
+The provider ID must point to the provider's ID set in the Ory Kratos
 configuration file (explained in further detail at
 [OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
 
 :::note
 
-Discord does not implement OpenID Connect. Therefore, ORY Kratos makes a request
+Discord does not implement OpenID Connect. Therefore, Ory Kratos makes a request
 to
 [Discord's User API](https://discord.com/developers/docs/resources/user#get-current-user)
 and adds that data to `std.extVar('claims')`. However, not all fields are
@@ -106,7 +106,7 @@ local claims = {
 }
 ```
 
-Now, enable the Discord provider in the ORY Kratos config located at
+Now, enable the Discord provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
@@ -146,13 +146,13 @@ The pattern of this URL is:
 http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
 ```
 
-The provider ID must point to the provider's ID set in the ORY Kratos
+The provider ID must point to the provider's ID set in the Ory Kratos
 configuration file (explained in further detail at
 [OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
 
 :::note
 
-Slack does not implement OpenID Connect. Therefore, ORY Kratos makes a request
+Slack does not implement OpenID Connect. Therefore, Ory Kratos makes a request
 to [Slack's Oauth2 API](https://api.slack.com/methods/users.identity) and adds
 that data to `std.extVar('claims')`. However, not all fields are supported.
 Check the list of supported fields
@@ -202,7 +202,7 @@ local claims = {
 }
 ```
 
-Now, enable the Slack provider in the ORY Kratos config located at
+Now, enable the Slack provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
@@ -250,13 +250,13 @@ The pattern of this URL is:
 http(s)://<domain-of-ory-kratos>:<public-port>//self-service/methods/oidc/callback/<provider-id>
 ```
 
-The provider ID must point to the provider's ID set in the ORY Kratos
+The provider ID must point to the provider's ID set in the Ory Kratos
 configuration file (explained in further detail at
 [OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
 
 :::note
 
-GitHub does not implement OpenID Connect. Therefore, ORY Kratos makes a request
+GitHub does not implement OpenID Connect. Therefore, Ory Kratos makes a request
 to
 [GitHub's User API](https://developer.github.com/v3/users/#get-the-authenticated-user)
 and adds that data to `std.extVar('claims')`. Check out what data is available
@@ -293,7 +293,7 @@ local claims = {
 }
 ```
 
-Now, enable the GitHub provider in the ORY Kratos config located at
+Now, enable the GitHub provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
@@ -338,7 +338,7 @@ http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callbac
 While you can use
 [GitLab as an OIDC identity provider](https://docs.gitlab.com/ee/integration/openid_connect_provider.html),
 GitLab only returns the sub and sub_legacy claims in the ID token. Therefore,
-ORY Kratos makes a request to
+Ory Kratos makes a request to
 [GitLab's /oauth/userinfo API](https://gitlab.com/oauth/userinfo) and adds the
 user info to `std.extVar('claims')`.
 
@@ -364,7 +364,7 @@ local claims = {
 }
 ```
 
-Now, enable the GitLab provider in the ORY Kratos config located at
+Now, enable the GitLab provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
@@ -437,7 +437,7 @@ local claims = std.extVar('claims');
 }
 ```
 
-Enable the Microsoft provider in the ORY Kratos config located at
+Enable the Microsoft provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
@@ -492,7 +492,7 @@ The pattern of this URL is:
 http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
 ```
 
-The provider ID must point to the provider's ID set in the ORY Kratos
+The provider ID must point to the provider's ID set in the Ory Kratos
 configuration file (explained in further detail at
 [OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
 
@@ -521,7 +521,7 @@ local claims = {
 }
 ```
 
-Now, enable the Twitch provider in the ORY Kratos config located at
+Now, enable the Twitch provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
@@ -584,7 +584,7 @@ Facebook requires https the redirect URIs!
 
 While you can use
 [Facebook as an OIDC identity provider](https://developers.facebook.com/docs/facebook-login/),
-Facebook only returns access_token and not id_token. Therefore, ORY Kratos makes
+Facebook only returns access_token and not id_token. Therefore, Ory Kratos makes
 a request to
 [Facebook's graph.facebook.com/me API](https://graph.facebook.com/me) and adds
 the user info to `std.extVar('claims')`.
@@ -616,7 +616,7 @@ local claims = std.extVar('claims');
 }
 ```
 
-Now, enable the Facebook provider in the ORY Kratos config located at
+Now, enable the Facebook provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
@@ -678,7 +678,7 @@ local claims = {
 }
 ```
 
-Now, enable the Google provider in the ORY Kratos config located at
+Now, enable the Google provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"

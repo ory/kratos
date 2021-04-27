@@ -9,7 +9,7 @@ We run integration tests for both the
 reference implementation using [Cypress](https://www.cypress.io). You can find
 the set up and source code for these tests in
 [./test/e2e/run.sh](https://github.com/ory/kratos/blob/master/test/e2e/run.sh).
-In principle, we start ORY Kratos with some configuration and an in-memory
+In principle, we start Ory Kratos with some configuration and an in-memory
 database in the background
 
 ```shell script
@@ -18,9 +18,9 @@ $ DSN=memory hydra serve -c ./path/to/config/kratos.yml --dev > "kratos.e2e.log"
 
 as well as our application in the background as well. Then, we start the Cypress
 test runner which executes the different e2e tests. This works really well to
-test compliance and integration of ORY Kratos.
+test compliance and integration of Ory Kratos.
 
-If you run ORY Kratos and your app on separate domains or ports you might want
+If you run Ory Kratos and your app on separate domains or ports you might want
 to add
 
 ```json
