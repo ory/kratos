@@ -2,10 +2,11 @@ package cliclient
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-retryablehttp"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/spf13/cobra"
 
