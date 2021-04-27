@@ -41,9 +41,9 @@ This release concludes over 50 commits and 16.000 lines of code changed.
 This is a heavy release with over hundreds of commits and files changed! Let's
 take a look at some of the highlights!
 
-### ORY Oathkeeper now optional
+### Ory Oathkeeper now optional
 
-Using ORY Oathkeeper to protect your API is now optional. The basic quickstart
+Using Ory Oathkeeper to protect your API is now optional. The basic quickstart
 now uses a much simpler set up. Go
 [check it out](https://www.ory.sh/kratos/docs/quickstart) now!
 
@@ -68,7 +68,7 @@ Flows such as changing ones profile or primary email address should not be
 possible unless the login session is fresh. This prevents your colleague or evil
 friend to take over your account while you make yourself a coffee.
 
-ORY Kratos now supports this by redirecting the user to the login screen if
+Ory Kratos now supports this by redirecting the user to the login screen if
 changes to sensitive fields are made. The changes will only be applied after
 successful reauthentication.
 

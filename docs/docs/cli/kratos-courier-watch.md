@@ -1,7 +1,7 @@
 ---
 id: kratos-courier-watch
 title: kratos courier watch
-description: kratos courier watch Starts the ORY Kratos message courier
+description: kratos courier watch Starts the Ory Kratos message courier
 ---
 
 <!--
@@ -12,7 +12,7 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos courier watch
 
-Starts the ORY Kratos message courier
+Starts the Ory Kratos message courier
 
 ```
 kratos courier watch [flags]
@@ -33,5 +33,5 @@ kratos courier watch [flags]
 
 ### SEE ALSO
 
-- [kratos courier](kratos-courier) - Commands related to the ORY Kratos message
+- [kratos courier](kratos-courier) - Commands related to the Ory Kratos message
   courier

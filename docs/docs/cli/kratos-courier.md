@@ -1,7 +1,7 @@
 ---
 id: kratos-courier
 title: kratos courier
-description: kratos courier Commands related to the ORY Kratos message courier
+description: kratos courier Commands related to the Ory Kratos message courier
 ---
 
 <!--
@@ -12,7 +12,7 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos courier
 
-Commands related to the ORY Kratos message courier
+Commands related to the Ory Kratos message courier
 
 ### Options
 
@@ -24,5 +24,5 @@ Commands related to the ORY Kratos message courier
 ### SEE ALSO
 
 - [kratos](kratos) -
-- [kratos courier watch](kratos-courier-watch) - Starts the ORY Kratos message
+- [kratos courier watch](kratos-courier-watch) - Starts the Ory Kratos message
   courier

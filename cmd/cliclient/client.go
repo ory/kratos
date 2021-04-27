@@ -58,5 +58,5 @@ func NewClient(cmd *cobra.Command) *kratos.APIClient {
 }
 
 func RegisterClientFlags(flags *pflag.FlagSet) {
-	flags.StringP(FlagEndpoint, FlagEndpoint[:1], "", fmt.Sprintf("The URL of ORY Kratos' Admin API. Alternatively set using the %s environmental variable.", envKeyEndpoint))
+	flags.StringP(FlagEndpoint, FlagEndpoint[:1], "", fmt.Sprintf("The URL of Ory Kratos' Admin API. Alternatively set using the %s environmental variable.", envKeyEndpoint))
 }

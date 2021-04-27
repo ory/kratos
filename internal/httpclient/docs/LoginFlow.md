@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **string** | and so on. | [optional] 
-**ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
-**Forced** | Pointer to **bool** | Forced stores whether this login flow should enforce re-authentication. | [optional] 
-**Id** | **string** |  | 
-**IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow started. | 
-**RequestUrl** | **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
-**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
-**Ui** | [**UiContainer**](UiContainer.md) |  | 
+**Active** | Pointer to **string** | and so on. | [optional]
+**ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. |
+**Forced** | Pointer to **bool** | Forced stores whether this login flow should enforce re-authentication. | [optional]
+**Id** | **string** |  |
+**IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow started. |
+**RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. |
+**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. |
+**Ui** | [**UiContainer**](UiContainer.md) |  |
 
 ## Methods
 

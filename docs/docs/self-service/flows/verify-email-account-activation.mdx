@@ -28,13 +28,13 @@ continuing with this document.
 
 :::
 
-ORY Kratos allows users to verify their out-of-band (email, telephone number,
+Ory Kratos allows users to verify their out-of-band (email, telephone number,
 ...) communication channels. Verification can be initiated
 
 - after registration or by performing a verification flow;
 - manually by the user.
 
-There are two Verification Flow types supported in ORY Kratos:
+There are two Verification Flow types supported in Ory Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
   app, ...)
@@ -61,7 +61,7 @@ stateDiagram
 `}
 />
 
-To enable verification flows, make the following adjustments to your ORY Kratos
+To enable verification flows, make the following adjustments to your Ory Kratos
 configuration:
 
 ```yaml title="path/to/config/kratos.yml"
@@ -77,7 +77,7 @@ selfservice:
 ## Account Activation
 
 Using this feature implements the so-called "account activation" with the
-difference that ORY Kratos does not provide a feature that prevents signing into
+difference that Ory Kratos does not provide a feature that prevents signing into
 accounts without verified addresses. The reason being that verification is
 proving that the user controls the given address, but it is not an
 authentication mechanism.
@@ -87,13 +87,13 @@ able to do in your application logic or API Gateways.
 
 ## Verification Methods
 
-Currently, ORY Kratos only supports one verification method:
+Currently, Ory Kratos only supports one verification method:
 
 - The `link` method performs verification of email addresses.
 
 ### Verification `link` Method
 
-The `link` method is dis/enabled in the ORY Kratos config:
+The `link` method is dis/enabled in the Ory Kratos config:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
@@ -106,7 +106,7 @@ selfservice:
 Enabling this method will send out verification emails on new sign ups and when
 a verified email address is updated.
 
-Before sending out a verification E-Mail, ORY Kratos will check if the email
+Before sending out a verification E-Mail, Ory Kratos will check if the email
 address is already known. Depending on the result, one of the two flows will be
 executed:
 
@@ -203,7 +203,7 @@ where
 
 ### Verification for Browser Clients
 
-The Verification Flow for browser clients relies on HTTP redirects between ORY
+The Verification Flow for browser clients relies on HTTP redirects between Ory
 Kratos, your Verification UI, and the end-user's browser:
 
 <SelfServiceBrowserFlow
@@ -299,7 +299,7 @@ $ curl -H "Accept: application/json" -s \
 The Verification User Interface is a route (page / site) in your application
 (server, native app, single page app) that should render a verification form.
 
-In stark contrast to other Identity Systems, ORY Kratos does not render this
+In stark contrast to other Identity Systems, Ory Kratos does not render this
 HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
@@ -312,7 +312,7 @@ framework:
 
 ## Verification Form Validation
 
-The form payloads are then submitted to ORY Kratos which follows up with:
+The form payloads are then submitted to Ory Kratos which follows up with:
 
 - An HTTP 302 Found redirect pointing to the Verification UI for Browser
   Clients.
@@ -345,7 +345,7 @@ invalid or expired, the user will be HTTP 302 redirected to the Verification UI.
 
 :::note
 
-When an invalid or expired challenge is used, ORY Kratos initializes a new
+When an invalid or expired challenge is used, Ory Kratos initializes a new
 Account Verification flow automatically. This flow will always be a
 Browser-based flow because the challenge is completed by clicking a link!
 

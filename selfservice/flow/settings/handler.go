@@ -123,7 +123,7 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 // Initialize Settings Flow for API Clients
 //
 // This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
-// You must provide a valid ORY Kratos Session Token for this endpoint to respond with HTTP 200 OK.
+// You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 //
 // To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
 //
@@ -137,7 +137,7 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 //
 // :::
 //
-// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+// More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Schemes: http, https
 //
@@ -170,7 +170,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 // This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
-// ORY Kratos Session Cookie is included in the request, a login flow will be initialized.
+// Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
 //
 // :::note
 //
@@ -178,7 +178,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 // :::
 //
-// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+// More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Schemes: http, https
 //
@@ -221,13 +221,13 @@ type getSelfServiceSettingsFlowParameters struct {
 //
 // Get Settings Flow
 //
-// When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie
-// or the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes
+// When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
+// or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
 // but instead 403 or 500 to improve data privacy.
 //
-// You can access this endpoint without credentials when using ORY Kratos' Admin API.
+// You can access this endpoint without credentials when using Ory Kratos' Admin API.
 //
-// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+// More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Produces:
 //     - application/json
@@ -342,7 +342,7 @@ type submitSelfServiceSettingsFlowBody struct{}
 //   - a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
 //   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 //
-// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+// More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Consumes:
 //     - application/json

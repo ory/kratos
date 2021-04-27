@@ -90,7 +90,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // :::
 //
-// More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
 //     Schemes: http, https
 //
@@ -127,7 +127,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
 //     Schemes: http, https
 //
@@ -173,7 +173,7 @@ type getSelfServiceVerificationFlowParameters struct {
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
 //
-// More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
 //     Produces:
 //     - application/json
@@ -253,7 +253,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //   (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 //   a new Verification Flow ID which contains an error message that the verification link was invalid.
 //
-// More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
 //     Consumes:
 //     - application/json

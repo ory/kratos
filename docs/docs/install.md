@@ -3,12 +3,12 @@ id: install
 title: Installation
 ---
 
-Installing ORY Kratos on any system is straight forward. We provide prebuilt
+Installing Ory Kratos on any system is straight forward. We provide prebuilt
 binaries, Docker images, and support various package managers.
 
 ## Docker
 
-We recommend using Docker to run ORY Kratos:
+We recommend using Docker to run Ory Kratos:
 
 ```shell
 $ docker pull oryd/kratos:v0.5.5-alpha.1
@@ -20,7 +20,7 @@ You can find more detailed information on the official Kratos docker images
 
 ## macOS
 
-You can install ORY Kratos using [homebrew](https://brew.sh/) on macOS:
+You can install Ory Kratos using [homebrew](https://brew.sh/) on macOS:
 
 ```shell
 $ brew tap ory/kratos
@@ -38,7 +38,7 @@ $ bash <(curl https://raw.githubusercontent.com/ory/kratos/v0.5.5-alpha.1/instal
 $ ./kratos help
 ```
 
-You may want to move ORY Kratos to your `$PATH`:
+You may want to move Ory Kratos to your `$PATH`:
 
 ```shell
 $ sudo mv ./kratos /usr/local/bin/
@@ -47,7 +47,7 @@ $ kratos help
 
 ## Windows
 
-You can install ORY Kratos using [scoop](https://scoop.sh) on Windows:
+You can install Ory Kratos using [scoop](https://scoop.sh) on Windows:
 
 ```shell
 > scoop bucket add ory-kratos https://github.com/ory/scoop-kratos.git
@@ -71,10 +71,10 @@ $ kratos help
 
 ## Building From Source
 
-If you wish to compile ORY Kratos yourself, you need to install and set up
+If you wish to compile Ory Kratos yourself, you need to install and set up
 [Go 1.12+](https://golang.org/) and add `$GOPATH/bin` to your `$PATH`.
 
-The following commands will check out the latest release tag of ORY Kratos,
+The following commands will check out the latest release tag of Ory Kratos,
 compile it, and set up flags so that `kratos version` works as expected. Please
 note that this will only work with POSIX-compliant shells like `bash` or `sh`.
 

@@ -12,7 +12,7 @@ programmatic identity such as an IoT device, application, or some other type of
 
 :::info
 
-In ORY Kratos' terminology we call all of them "identities", and it is always
+In Ory Kratos' terminology we call all of them "identities", and it is always
 exposed as `identity` in the API endpoints, requests, and response payloads. In
 the documentation however, we mix these words as "account recovery" or "account
 activation" is a widely accepted and understood terminology and user flow, while
@@ -90,14 +90,14 @@ chart={`stateDiagram-v2 [*] --> Active: create Active --> Active: update Active 
 Traits are data associated with an identity. You have to define its schema
 according to your application's needs. They are also supposed to be modified by
 the identity itself e.g. as part of the registration or profile update process
-as well as anyone having access to ORY Krato's Admin API.
+as well as anyone having access to Ory Krato's Admin API.
 
-ORY Kratos uses
+Ory Kratos uses
 [JSON Schema](https://json-schema.org/learn/getting-started-step-by-step.html)
 to validate Identity Traits.
 
-ORY Kratos defines JSON Schema extension "Vocabulary" that allows you to tell
-ORY Kratos that a specific trait adds some specific meaning to the standard JSON
+Ory Kratos defines JSON Schema extension "Vocabulary" that allows you to tell
+Ory Kratos that a specific trait adds some specific meaning to the standard JSON
 Schema (more on that later).
 
 Each identity can, theoretically, have a different JSON Schema. This is useful
@@ -122,7 +122,7 @@ There would be one JSON Schema per type of identity:
 - Grandfather Accounts: `http://mydomain.com/schemas/v1/customer.schema.json`
 - Service Accounts: `http://mydomain.com/schemas/service-account.schema.json`
 
-ORY Kratos expects the JSON Schemas in its configuration file:
+Ory Kratos expects the JSON Schemas in its configuration file:
 
 ```yaml
 identity:
@@ -139,7 +139,7 @@ identity:
       url: http://foo.bar.com/customer.schema.json
 ```
 
-ORY Kratos validates the Identity Traits against the corresponding schema on all
+Ory Kratos validates the Identity Traits against the corresponding schema on all
 writing operations (create / update). The employed business logic must be able
 to distinguish these three types of identities. You might use a switch statement
 like in the following example:
@@ -162,7 +162,7 @@ switch (session.Identity.SchemaID) {
 
 ## JSON Schema Vocabulary Extensions
 
-Because ORY Kratos does not know that a particular field has a system-relevant
+Because Ory Kratos does not know that a particular field has a system-relevant
 meaning you have to specify these in the schema. This includes for example:
 
 - The email address for recovering a lost password
@@ -170,7 +170,7 @@ meaning you have to specify these in the schema. This includes for example:
 - The phone number for enabling SMS 2FA
 - ...
 
-ORY Kratos' JSON Schema Vocabulary Extension can be used within a property:
+Ory Kratos' JSON Schema Vocabulary Extension can be used within a property:
 
 ```json
 {
@@ -187,7 +187,7 @@ ORY Kratos' JSON Schema Vocabulary Extension can be used within a property:
           "type": "string",
           "format": "email",
 
-          // This tells ORY Kratos that the field should be used as the "username" for the username+password flow.
+          // This tells Ory Kratos that the field should be used as the "username" for the username+password flow.
           // It is an extension to the regular JSON Schema vocabulary.
           "ory.sh/kratos": {
             "credentials": {
@@ -207,7 +207,7 @@ An overview of available configuration options follows in the next sections.
 
 ### Identifier for Username and Password Flows
 
-You can configure ORY Kratos to use specific fields as the _identifier_ e.g.
+You can configure Ory Kratos to use specific fields as the _identifier_ e.g.
 username, email, phone number, etc., in the Username and Password Registration
 and Login Flow:
 
@@ -254,7 +254,7 @@ password flow
           "type": "string",
           "format": "email",
 
-          // This tells ORY Kratos that the field should be used as the "username" for the Username and Password Flow.
+          // This tells Ory Kratos that the field should be used as the "username" for the Username and Password Flow.
           "ory.sh/kratos": {
             "credentials": {
               "password": {
@@ -288,7 +288,7 @@ password flow
 }
 ```
 
-In this example, ORY Kratos understands that traits:email: `office@ory.sh` is
+In this example, Ory Kratos understands that traits:email: `office@ory.sh` is
 the identity's identifier. The system expects `office@ory.sh` plus a password to
 sign in.
 

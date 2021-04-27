@@ -1,7 +1,7 @@
 /*
  * Ory Kratos
  *
- * Welcome to the ORY Kratos HTTP API documentation!
+ * Welcome to the Ory Kratos HTTP API documentation!
  *
  * API version: latest
  */

@@ -16,7 +16,7 @@ Create SQL schemas and apply migration plans
 
 ### Synopsis
 
-Run this command on a fresh SQL installation and when you upgrade ORY Kratos to
+Run this command on a fresh SQL installation and when you upgrade Ory Kratos to
 a new minor version.
 
 It is recommended to run this command close to the SQL instance (e.g. same

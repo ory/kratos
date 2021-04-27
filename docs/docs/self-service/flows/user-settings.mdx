@@ -27,7 +27,7 @@ continuing with this document.
 
 :::
 
-ORY Kratos allows users to update their own settings and profile information
+Ory Kratos allows users to update their own settings and profile information
 using two principal flows:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
@@ -74,7 +74,7 @@ Currently, three settings methods are supported:
   updated traits must be valid against the Identity JSON Schema defined for its
   [Identity Traits](../../concepts/identity-data-model.md).
 
-These methods are dis/enabled in the ORY Kratos config:
+These methods are dis/enabled in the Ory Kratos config:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
@@ -101,7 +101,7 @@ protected:
   ... which is considered a privileged action (check out the
   [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
-If any of these fields are changed, the ORY Kratos Login Session must not be
+If any of these fields are changed, the Ory Kratos Login Session must not be
 older than the configured `privileged_session_max_age` value:
 
 ```yaml title="path/to/kratos/config.yml"
@@ -113,7 +113,7 @@ selfservice:
       privileged_session_max_age: 1m
 ```
 
-If the ORY Kratos Login Session is older than the specified amount, the user is
+If the Ory Kratos Login Session is older than the specified amount, the user is
 prompted to re-authenticate similar to the
 [GitHub sudo mode](https://help.github.com/en/github/authenticating-to-github/sudo-mode):
 
@@ -125,7 +125,7 @@ prompted to re-authenticate similar to the
 
 This end-user experience currently works only for Browser-based Settings Flows.
 API-based flows will simply return a 403 Forbidden status message which require
-you to request a new ORY Kratos Login session using the
+you to request a new Ory Kratos Login session using the
 [API-based Login Flow](user-login.mdx).
 
 ## Initialize Settings Flow
@@ -144,8 +144,8 @@ stateDiagram
 `}
 />
 
-Keep in mind that initializing a Settings Flow requires a valid ORY Kratos Login
-Session Token (for API-based flows) or ORY Kratos Login Session Cookie (for
+Keep in mind that initializing a Settings Flow requires a valid Ory Kratos Login
+Session Token (for API-based flows) or Ory Kratos Login Session Cookie (for
 Browser-based flows)!
 
 Before we start with the examples below, let's create a user using the API-based
@@ -169,7 +169,7 @@ echo $sessionToken
 
 ### Profile Updates for Browser Clients
 
-The settings flow for browser clients relies on HTTP redirects between ORY
+The settings flow for browser clients relies on HTTP redirects between Ory
 Kratos, your Settings UI, and the end-user's browser:
 
 <SelfServiceBrowserFlow
@@ -356,7 +356,7 @@ a future version, which is partially tracked as
 The Settings User Interface is a route (page / site) in your application
 (server, native app, single page app) that should render a settings form.
 
-In stark contrast to other Identity Systems, ORY Kratos does not render this
+In stark contrast to other Identity Systems, Ory Kratos does not render this
 HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
@@ -369,7 +369,7 @@ framework:
 
 ## Settings Form Validation
 
-The form payloads are then submitted to ORY Kratos which follows up with:
+The form payloads are then submitted to Ory Kratos which follows up with:
 
 - An HTTP 302 Found redirect pointing to the Settings UI for Browser Clients.
 - An `application/json` response for API Clients.
@@ -415,7 +415,7 @@ Completing the settings update behaves differently for Browser and API Clients.
 
 ### Browser Clients
 
-When the profile update is completed successfully, ORY Kratos responds with a
+When the profile update is completed successfully, Ory Kratos responds with a
 HTTP 302 Redirect to the Settings UI which now contains the success state
 (`state: success`) as well as the updated identity:
 
@@ -456,7 +456,7 @@ instead which would send the end-user to that configured URL.
 
 ### API Clients
 
-For API Clients, ORY Kratos responds with a JSON payload which includes the
+For API Clients, Ory Kratos responds with a JSON payload which includes the
 updated identity:
 
 ```shell script
@@ -521,6 +521,6 @@ $ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/js
 
 ## Hooks
 
-ORY Kratos allows you to configure hooks that run before and after a profile
+Ory Kratos allows you to configure hooks that run before and after a profile
 update was successful. For more information about hooks please read the
 [Hook Documentation](../hooks.mdx).

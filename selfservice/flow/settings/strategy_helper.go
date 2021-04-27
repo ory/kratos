@@ -105,7 +105,7 @@ func OnUnauthenticated(reg interface {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		handler := session.RedirectOnUnauthenticated(reg.Config(r.Context()).SelfServiceFlowLoginUI().String())
 		if x.IsJSONRequest(r) {
-			handler = session.RespondWithJSONErrorOnAuthenticated(reg.Writer(), herodot.ErrUnauthorized.WithReasonf("A valid ORY Session Cookie or ORY Session Token is missing."))
+			handler = session.RespondWithJSONErrorOnAuthenticated(reg.Writer(), herodot.ErrUnauthorized.WithReasonf("A valid Ory Session Cookie or Ory Session Token is missing."))
 		}
 
 		handler(w, r, ps)

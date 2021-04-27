@@ -9,7 +9,7 @@ Task Force) public standard and is similar to a XML DTD but suited for JSON
 payloads.
 
 We rely on JSON Schema heavily internally, from configuration validation to
-generating OpenAPI Spec to writing documentation. By using ORY Kratos, you will
+generating OpenAPI Spec to writing documentation. By using Ory Kratos, you will
 be exposed to JSON Schema as it is used for defining Identity data models and
 other things.
 

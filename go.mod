@@ -5,7 +5,7 @@ go 1.16
 replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 
 // Use the internal httpclient which can be generated in this codebase but mark it as the
-// official SDK, allowing for the ORY CLI to consume ORY Kratos' CLI commands.
+// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 replace github.com/ory/kratos-client-go => ./internal/httpclient
 
 // Use the internal name for tablename generation

@@ -175,7 +175,7 @@ This endpoint supports stub values to help you implement the error UI:
 
 `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
 
-More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiGetSelfServiceErrorRequest
 */
@@ -317,7 +317,7 @@ func (r PublicApiApiGetSelfServiceLoginFlowRequest) Execute() (*LoginFlow, *http
  * GetSelfServiceLoginFlow Get Login Flow
  * This endpoint returns a login flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiGetSelfServiceLoginFlowRequest
 */
@@ -469,7 +469,7 @@ func (r PublicApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*RecoveryFlow,
  * GetSelfServiceRecoveryFlow Get information about a recovery flow
  * This endpoint returns a recovery flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiGetSelfServiceRecoveryFlowRequest
 */
@@ -611,7 +611,7 @@ func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*Registrat
  * GetSelfServiceRegistrationFlow Get Registration Flow
  * This endpoint returns a registration flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiGetSelfServiceRegistrationFlowRequest
 */
@@ -761,13 +761,13 @@ func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SettingsFlow,
 
 /*
  * GetSelfServiceSettingsFlow Get Settings Flow
- * When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie
-or the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes
+ * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
+or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
 but instead 403 or 500 to improve data privacy.
 
-You can access this endpoint without credentials when using ORY Kratos' Admin API.
+You can access this endpoint without credentials when using Ory Kratos' Admin API.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiGetSelfServiceSettingsFlowRequest
 */
@@ -933,7 +933,7 @@ func (r PublicApiApiGetSelfServiceVerificationFlowRequest) Execute() (*Verificat
  * GetSelfServiceVerificationFlow Get Verification Flow
  * This endpoint returns a verification flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiGetSelfServiceVerificationFlowRequest
 */
@@ -1075,7 +1075,7 @@ with browsers (Chrome, Firefox, ...).
 On successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request
 or fall back to `urls.default_return_to`.
 
-More information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest
 */
@@ -1197,7 +1197,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 :::
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceLoginViaAPIFlowRequest
 */
@@ -1327,7 +1327,7 @@ exists already, the browser will be redirected to `urls.default_redirect_url` un
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceLoginViaBrowserFlowRequest
 */
@@ -1442,7 +1442,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 :::
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceRecoveryViaAPIFlowRequest
 */
@@ -1568,7 +1568,7 @@ exists, the browser is returned to the configured return URL.
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceRecoveryViaBrowserFlowRequest
 */
@@ -1684,7 +1684,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 :::
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceRegistrationViaAPIFlowRequest
 */
@@ -1815,7 +1815,7 @@ This endpoint is NOT INTENDED for API clients and only works with browsers (Chro
 
 :::
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceRegistrationViaBrowserFlowRequest
 */
@@ -1915,7 +1915,7 @@ func (r PublicApiApiInitializeSelfServiceSettingsViaAPIFlowRequest) Execute() (*
 /*
  * InitializeSelfServiceSettingsViaAPIFlow Initialize Settings Flow for API Clients
  * This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
-You must provide a valid ORY Kratos Session Token for this endpoint to respond with HTTP 200 OK.
+You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 
 To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
 
@@ -1929,7 +1929,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 :::
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceSettingsViaAPIFlowRequest
 */
@@ -2065,7 +2065,7 @@ func (r PublicApiApiInitializeSelfServiceSettingsViaBrowserFlowRequest) Execute(
  * InitializeSelfServiceSettingsViaBrowserFlow Initialize Settings Flow for Browsers
  * This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
-ORY Kratos Session Cookie is included in the request, a login flow will be initialized.
+Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
 
 :::note
 
@@ -2073,7 +2073,7 @@ This endpoint is NOT INTENDED for API clients and only works with browsers (Chro
 
 :::
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceSettingsViaBrowserFlowRequest
 */
@@ -2200,7 +2200,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 :::
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceVerificationViaAPIFlowRequest
 */
@@ -2325,7 +2325,7 @@ func (r PublicApiApiInitializeSelfServiceVerificationViaBrowserFlowRequest) Exec
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiInitializeSelfServiceVerificationViaBrowserFlowRequest
 */
@@ -2570,7 +2570,7 @@ Browser flows expect `application/x-www-form-urlencoded` to be sent in the body 
 a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
 a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiSubmitSelfServiceLoginFlowRequest
 */
@@ -2722,7 +2722,7 @@ does not have any API capabilities. The server responds with a HTTP 302 Found re
 (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiSubmitSelfServiceRecoveryFlowRequest
 */
@@ -2868,7 +2868,7 @@ does not have any API capabilities. The server responds with a HTTP 302 Found re
 (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest
 */
@@ -3009,7 +3009,7 @@ Browser flows expect `application/x-www-form-urlencoded` to be sent in the body 
 a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
 a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiSubmitSelfServiceRegistrationFlowRequest
 */
@@ -3162,7 +3162,7 @@ a HTTP 302 redirect to the post/after settings URL or the `return_to` value if i
 a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
 a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiSubmitSelfServiceSettingsFlowRequest
 */
@@ -3348,7 +3348,7 @@ does not have any API capabilities. The server responds with a HTTP 302 Found re
 (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 a new Verification Flow ID which contains an error message that the verification link was invalid.
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiSubmitSelfServiceVerificationFlowRequest
 */

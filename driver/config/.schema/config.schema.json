@@ -1,7 +1,7 @@
 {
   "$id": "https://github.com/ory/kratos/driver/config/.schema/config.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "ORY Kratos Configuration",
+  "title": "Ory Kratos Configuration",
   "type": "object",
   "definitions": {
     "baseUrl": {
@@ -40,7 +40,7 @@
     },
     "defaultReturnTo": {
       "title": "Redirect browsers to set URL per default",
-      "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
+      "description": "Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
       "format": "uri-reference",
       "examples": [
@@ -220,7 +220,7 @@
         },
         "mapper_url": {
           "title": "Jsonnet Mapper URL",
-          "description": "The URL where the jsonnet source is located for mapping the provider's data to ORY Kratos data.",
+          "description": "The URL where the jsonnet source is located for mapping the provider's data to Ory Kratos data.",
           "type": "string",
           "format": "uri",
           "examples": [
@@ -555,7 +555,7 @@
                 },
                 "ui_url": {
                   "title": "Verify UI URL",
-                  "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "description": "URL where the Ory Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
                   "examples": [
@@ -599,7 +599,7 @@
                 },
                 "ui_url": {
                   "title": "Recovery UI URL",
-                  "description": "URL where the ORY Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "description": "URL where the Ory Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
                   "examples": [
@@ -635,8 +635,8 @@
               "additionalProperties": false,
               "properties": {
                 "ui_url": {
-                  "title": "ORY Kratos Error UI URL",
-                  "description": "URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "title": "Ory Kratos Error UI URL",
+                  "description": "URL where the Ory Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
                   "examples": [
@@ -724,7 +724,7 @@
                   "properties": {
                     "providers": {
                       "title": "OpenID Connect and OAuth2 Providers",
-                      "description": "A list and configuration of OAuth2 and OpenID Connect providers ORY Kratos should integrate with.",
+                      "description": "A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.",
                       "type": "array",
                       "items": {
                         "$ref": "#/definitions/selfServiceOIDCProvider"
@@ -1035,7 +1035,7 @@
     "tracing": {
       "type": "object",
       "additionalProperties": false,
-      "description": "ORY Hydra supports distributed tracing.",
+      "description": "Ory Hydra supports distributed tracing.",
       "properties": {
         "provider": {
           "type": "string",
@@ -1054,7 +1054,7 @@
           "type": "string",
           "description": "Specifies the service name to use on the tracer.",
           "examples": [
-            "ORY Kratos"
+            "Ory Kratos"
           ]
         },
         "providers": {

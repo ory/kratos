@@ -6,7 +6,7 @@ title: Managing Users and Identities
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 
-This document walks you through the administrative identity management in ORY
+This document walks you through the administrative identity management in Ory
 Kratos. You should already be familiar with the
 [Identity Data Model](../concepts/identity-data-model.md) before reading this
 guide.
@@ -17,13 +17,13 @@ There are three principal flows supported for creating identities as an
 administrator:
 
 1. Inviting users - e.g. inviting a new employee to your organization IT.
-2. Importing existing users - e.g. when migrating from another system to ORY
+2. Importing existing users - e.g. when migrating from another system to Ory
    Kratos.
 3. Creating machine users - e.g. creating Service Accounts.
 
 :::note
 
-Similar to other guides, we assume that ORY Kratos runs on 127.0.0.1:4433
+Similar to other guides, we assume that Ory Kratos runs on 127.0.0.1:4433
 (public endpoint) and 127.0.0.1:4434 (admin endpoint) in this guide, which is
 the default when running the quickstart.
 
@@ -124,7 +124,7 @@ func main() {
 The response contains a `recovery_link` value which is the link the user should
 use to set up his or her credentials (e.g. connect to a Social Sign In Provider,
 set up a password, ...). The user has only a limited amount of time to do so -
-the amount of time is specified in the ORY Kratos config:
+the amount of time is specified in the Ory Kratos config:
 
 ```yaml title="path/to/kratos/config.yml"
 selfservice:
@@ -153,7 +153,7 @@ This feature is not implemented yet.
 
 ### Enable recovery flows
 
-To enable recovery flows, make the following adjustments to your ORY Kratos
+To enable recovery flows, make the following adjustments to your Ory Kratos
 configuration:
 
 ```yaml title="path/to/config/kratos.yml"
