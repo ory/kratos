@@ -199,14 +199,27 @@ Further improvements are work in progress and are tracked on
 
 :::
 
-### Expensive Hashing with Argon2
+### Expensive Hashing with BCrypt
 
-Ory Kratos uses Argon2 for password hashing. Argon2 is the official winner of
-the PHC 2017. You can tweak the Argon2 configuration in your Ory Kratos
-configuration file:
+Ory Kratos supports BCrypt for password hashing per default. BCrypt is
+recommended when you want hashing to take at most one second:
 
 ```yaml
 hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 12
+```
+
+### Expensive Hashing with Argon2
+
+Ory Kratos supports Argon2 for password hashing. Argon2 is recommended when you
+want hashing to take at least 2 seconds. You can tweak the Argon2 configuration
+in your Ory Kratos configuration file:
+
+```yaml
+hashers:
+  algorithm: argon2
   argon2:
     memory: 128MB
     iterations: 2

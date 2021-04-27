@@ -3,6 +3,12 @@ id: performance-out-of-memory-password-hashing-argon2
 title: Performance Problems and Out Of Memory Panics Caused by Password Hashing
 ---
 
+:::info
+
+This page only applies to you if you use Argon2 instead of BCrypt hashing
+
+:::
+
 To securely check if passwords match, Ory Kratos stores the Argon2 hash of every
 password. This algorithm has to be tuned to match the desired security level as
 well as responsiveness. Because it is not easy to determine the exact values
