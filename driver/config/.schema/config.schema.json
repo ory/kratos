@@ -1332,7 +1332,7 @@
           "title": "Password hashing algorithm",
           "description": "One of the values: argon2, bcrypt",
           "type": "string",
-          "default": "argon2",
+          "default": "bcrypt",
           "enum": ["argon2", "bcrypt"]
         },
         "argon2": {
