@@ -25,12 +25,6 @@ var ListCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
-
-		// TODO merge
-		//params := &admin.ListIdentitiesParams{
-		//	Context:    cmd.Context(),
-		//	HTTPClient: cliclient.NewHTTPClient(cmd),
-		//}
 		req := c.AdminApi.ListIdentities(cmd.Context())
 
 		if len(args) == 2 {

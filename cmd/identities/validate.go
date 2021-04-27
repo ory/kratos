@@ -97,9 +97,6 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 
 	customSchema, ok := schemas[sid.String()]
 	if !ok {
-		// get custom identity schema
-		// TODO merge
-		// set client?
 		ts, _, err := getRemoteSchema(cmd.Context(), sid.String())
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not fetch schema with ID \"%s\": %s\n", src, sid.String(), err)
