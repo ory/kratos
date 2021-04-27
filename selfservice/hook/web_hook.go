@@ -188,6 +188,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 }
 
 func (e *WebHook) execute(data *templateContext) error {
+	// TODO: reminder for the future: move parsing of config to the web hook initialization
 	conf, err := newWebHookConfig(e.c)
 	if err != nil {
 		return err
