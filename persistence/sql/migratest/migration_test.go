@@ -2,19 +2,17 @@ package migratest
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime/debug"
-	"strings"
 	"testing"
+
+	"github.com/ory/x/migratest"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver"
@@ -35,29 +33,13 @@ import (
 	"github.com/ory/x/sqlcon/dockertest"
 )
 
-func containsExpectedIds(t *testing.T, path string, ids []string) {
-	files, err := ioutil.ReadDir(path)
-	require.NoError(t, err)
-
-	for _, f := range files {
-		if filepath.Ext(f.Name()) == ".json" {
-			expected := strings.TrimSuffix(filepath.Base(f.Name()), ".json")
-			assert.Contains(t, ids, expected)
-		}
-	}
-}
-
 func TestMigrations(t *testing.T) {
 	sqlite, err := pop.NewConnection(&pop.ConnectionDetails{
-		URL: "sqlite3://" + filepath.Join(os.TempDir(), x.NewUUID().String()) + ".sql?_fk=true",
-	})
+		URL: "sqlite3://" + filepath.Join(os.TempDir(), x.NewUUID().String()) + ".sql?_fk=true"})
 	require.NoError(t, err)
 	require.NoError(t, sqlite.Open())
 
-	connections := map[string]*pop.Connection{
-		"sqlite": sqlite,
-	}
-
+	connections := map[string]*pop.Connection{"sqlite": sqlite}
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
 			func() {
@@ -132,20 +114,20 @@ func TestMigrations(t *testing.T) {
 						require.NoError(t, err)
 
 						for _, a := range actual.VerifiableAddresses {
-							compareWithFixture(t, a, "identity_verification_address", a.ID.String())
+							migratest.CompareWithFixture(t, a, "identity_verification_address", a.ID.String())
 						}
 
 						for _, a := range actual.RecoveryAddresses {
-							compareWithFixture(t, a, "identity_recovery_address", a.ID.String())
+							migratest.CompareWithFixture(t, a, "identity_recovery_address", a.ID.String())
 						}
 
 						// Prevents ordering to get in the way.
 						actual.VerifiableAddresses = nil
 						actual.RecoveryAddresses = nil
-						compareWithFixture(t, actual, "identity", id.ID.String())
+						migratest.CompareWithFixture(t, actual, "identity", id.ID.String())
 					}
 
-					containsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
 				})
 
 				t.Run("case=verification_token", func(t *testing.T) {
@@ -155,7 +137,7 @@ func TestMigrations(t *testing.T) {
 					require.NotEmpty(t, ids)
 
 					for _, id := range ids {
-						compareWithFixture(t, id, "verification_token", id.ID.String())
+						migratest.CompareWithFixture(t, id, "verification_token", id.ID.String())
 					}
 				})
 
@@ -169,9 +151,9 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.SessionPersister().GetSession(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "session", id.ID.String())
+						migratest.CompareWithFixture(t, actual, "session", id.ID.String())
 					}
-					containsExpectedIds(t, filepath.Join("fixtures", "session"), found)
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "session"), found)
 				})
 
 				t.Run("case=login", func(t *testing.T) {
@@ -184,9 +166,9 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "login_flow", id.ID.String())
+						migratest.CompareWithFixture(t, actual, "login_flow", id.ID.String())
 					}
-					containsExpectedIds(t, filepath.Join("fixtures", "login_flow"), found)
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "login_flow"), found)
 				})
 
 				t.Run("case=registration", func(t *testing.T) {
@@ -199,9 +181,9 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "registration_flow", id.ID.String())
+						migratest.CompareWithFixture(t, actual, "registration_flow", id.ID.String())
 					}
-					containsExpectedIds(t, filepath.Join("fixtures", "registration_flow"), found)
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "registration_flow"), found)
 				})
 
 				t.Run("case=settings_flow", func(t *testing.T) {
@@ -214,9 +196,9 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "settings_flow", id.ID.String())
+						migratest.CompareWithFixture(t, actual, "settings_flow", id.ID.String())
 					}
-					containsExpectedIds(t, filepath.Join("fixtures", "settings_flow"), found)
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "settings_flow"), found)
 				})
 
 				t.Run("case=recovery_flow", func(t *testing.T) {
@@ -229,9 +211,9 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "recovery_flow", id.ID.String())
+						migratest.CompareWithFixture(t, actual, "recovery_flow", id.ID.String())
 					}
-					containsExpectedIds(t, filepath.Join("fixtures", "recovery_flow"), found)
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_flow"), found)
 				})
 
 				t.Run("case=verification_flow", func(t *testing.T) {
@@ -244,9 +226,9 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "verification_flow", id.ID.String())
+						migratest.CompareWithFixture(t, actual, "verification_flow", id.ID.String())
 					}
-					containsExpectedIds(t, filepath.Join("fixtures", "verification_flow"), found)
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "verification_flow"), found)
 				})
 
 				t.Run("case=recovery_token", func(t *testing.T) {
@@ -257,9 +239,9 @@ func TestMigrations(t *testing.T) {
 					var found []string
 					for _, id := range ids {
 						found = append(found, id.ID.String())
-						compareWithFixture(t, id, "recovery_token", id.ID.String())
+						migratest.CompareWithFixture(t, id, "recovery_token", id.ID.String())
 					}
-					containsExpectedIds(t, filepath.Join("fixtures", "recovery_token"), found)
+					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_token"), found)
 				})
 
 				t.Run("suite=constraints", func(t *testing.T) {
@@ -283,18 +265,5 @@ func TestMigrations(t *testing.T) {
 
 	for db, c := range connections {
 		t.Run(fmt.Sprintf("database=%s", db), test(db, c))
-	}
-}
-
-func compareWithFixture(t *testing.T, actual interface{}, prefix string, id string) {
-	location := filepath.Join("fixtures", prefix, id+".json")
-	expected, err := ioutil.ReadFile(location)
-	writeFixtureOnError(t, err, actual, location)
-
-	actualJSON, err := json.Marshal(actual)
-	require.NoError(t, err)
-
-	if !assert.JSONEq(t, string(expected), string(actualJSON)) {
-		writeFixtureOnError(t, nil, actual, location)
 	}
 }
