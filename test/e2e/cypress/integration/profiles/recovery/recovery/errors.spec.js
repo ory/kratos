@@ -40,7 +40,17 @@ context('Recovery', () => {
       cy.get('button[value="link"]').click()
       cy.get('.messages .message').should(
         'contain.text',
-        'Property email is missing'
+        '"" is not valid "email"'
+      )
+    })
+
+    it('should cause form errors with invalid email', () => {
+      const email = gen.email()
+      cy.get('input[name="email"]').type(email)
+      cy.get('button[value="link"]').click()
+      cy.get('.messages .message').should(
+        'contain.text',
+        `\"${email}\" is not valid "email"`
       )
     })
 

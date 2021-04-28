@@ -167,14 +167,14 @@ func TestVerification(t *testing.T) {
 				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
-		invalidEmails := []string{"abc","aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com", "\\"}
-		values := make([]func(v url.Values),0)
-		for _,email := range invalidEmails {
+		invalidEmails := []string{"abc", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com", "\\"}
+		values := make([]func(v url.Values), 0)
+		for _, email := range invalidEmails {
 			values = append(values, func(v url.Values) {
 				v.Set("email", email)
 			})
 		}
-		for i:= 0; i < 3; i++ {
+		for i := 0; i < 3; i++ {
 			t.Run("type=browser", func(t *testing.T) {
 				check(t, expectValidationError(t, false, values[i]), invalidEmails[i])
 			})
