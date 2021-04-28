@@ -1,41 +1,69 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/verification/flows?id=4eb06fb8-c7ef-4870-a842-44210b9ca15d' | jq
+    'http://127.0.0.1:4434/self-service/verification/flows?id=9040cdea-3674-4c3e-8b2d-b35b268c696e' | \
+      jq
 
 {
-  "id": "4eb06fb8-c7ef-4870-a842-44210b9ca15d",
+  "id": "9040cdea-3674-4c3e-8b2d-b35b268c696e",
   "type": "browser",
-  "expires_at": "2020-09-10T07:48:26.0939369Z",
-  "issued_at": "2020-09-10T06:48:26.0939369Z",
-  "request_url": "http://127.0.0.1:4433/self-service/verification/methods/link?token=asdf",
-  "messages": [
-    {
-      "id": 4070001,
-      "text": "The verification token is invalid or has already been used. Please retry the flow.",
-      "type": "error",
-      "context": {}
-    }
-  ],
-  "methods": {
-    "link": {
-      "method": "link",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/verification/methods/link?flow=4eb06fb8-c7ef-4870-a842-44210b9ca15d",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "Cd0dy7E6OpYE9NfSyVJQcAPMmvdHbuDbmCQUe46bCyxRt17AMbqpWGeL4wnLbB9H3lXaqbftXLHYAb3DuPkbhw=="
-          },
-          {
-            "name": "email",
-            "type": "email",
-            "required": true
+  "expires_at": "2021-04-28T13:44:02.334708332Z",
+  "issued_at": "2021-04-28T12:44:02.334708332Z",
+  "request_url": "http://127.0.0.1:4433/self-service/verification?flow=388891f2-32ed-4c79-a429-7c7fb7a92986&token=123123",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/verification?flow=9040cdea-3674-4c3e-8b2d-b35b268c696e",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "n2ny80aMGQXvIK0ywI1Bozo1dzu36mP9uF4/1qItdpt1POGCvI7hU+hH+g+qWxMPXKLV9j2nEfa3vRATGkU/DA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
           }
-        ]
+        }
       }
-    }
+    ],
+    "messages": [
+      {
+        "id": 4070001,
+        "text": "The verification token is invalid or has already been used. Please retry the flow.",
+        "type": "error",
+        "context": {}
+      }
+    ]
   },
   "state": "choose_method"
 }

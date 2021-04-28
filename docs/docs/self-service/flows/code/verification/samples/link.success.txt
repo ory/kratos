@@ -1,43 +1,71 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4433/self-service/verification/flows?id=ba0f508a-f2fb-435d-b5e2-0307db00d75d' | jq
+    'http://127.0.0.1:4433/self-service/verification/flows?id=11f6e7f4-99f9-4bcf-bcfc-208d8db942c5' | \
+      jq
 
 {
-  "id": "ba0f508a-f2fb-435d-b5e2-0307db00d75d",
+  "id": "11f6e7f4-99f9-4bcf-bcfc-208d8db942c5",
   "type": "browser",
-  "expires_at": "2020-09-10T07:42:32.3468704Z",
-  "issued_at": "2020-09-10T06:42:32.3468704Z",
+  "expires_at": "2021-04-28T13:35:42.627410804Z",
+  "issued_at": "2021-04-28T12:35:42.627410804Z",
   "request_url": "http://127.0.0.1:4433/self-service/verification/browser",
   "active": "link",
-  "messages": [
-    {
-      "id": 1070002,
-      "text": "An email containing a verification link has been sent to the email address you provided.",
-      "type": "info",
-      "context": {}
-    }
-  ],
-  "methods": {
-    "link": {
-      "method": "link",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/verification/methods/link?flow=ba0f508a-f2fb-435d-b5e2-0307db00d75d",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "47dbOMg+HHU22BQuag9GpQLPE+ZceRgilVlZgyb/SbC73RgzSL6Pu1WnIPVoMQmS31ZTuKz6pEjVfPA7EJ1ZGw=="
-          },
-          {
-            "name": "email",
-            "type": "email",
-            "required": true,
-            "value": "aeneas@ory.sh"
-          }
-        ]
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/verification?flow=11f6e7f4-99f9-4bcf-bcfc-208d8db942c5",
+    "method": "POST",
+    "messages": [
+      {
+        "id": 1070001,
+        "text": "An email containing a verification link has been sent to the email address you provided.",
+        "type": "info",
+        "context": {}
       }
-    }
+    ],
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "HiG0b2WUZpeyATykHlEGKbr/PrkfSIm5tysdMHrZGISh95/w4SlCvYrTMiIdJeVPQwZhhQvoDDDkWYeYyZ+w4w==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "value": "foo@ory.sh",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
   },
   "state": "sent_email"
 }
