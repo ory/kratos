@@ -164,7 +164,7 @@ func TestVerification(t *testing.T) {
 		var check = func(t *testing.T, actual string, value string) {
 			assert.EqualValues(t, verification.StrategyVerificationLinkName, gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, fmt.Sprintf("%q is not valid \"email\"", value),
-				gjson.Get(actual, "methods.link.config.fields.#(name==email).messages.0.text").String(),
+				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
 		var v1 = "abc"
