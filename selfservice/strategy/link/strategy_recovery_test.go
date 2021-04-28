@@ -255,9 +255,9 @@ func TestRecovery(t *testing.T) {
 
 		invalidEmails := []string{"abc", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com", "\\"}
 		values := make([]func(v url.Values), 0)
-		for _, email := range invalidEmails {
+		for i := range invalidEmails {
 			values = append(values, func(v url.Values) {
-				v.Set("email", email)
+				v.Set("email", invalidEmails[i])
 			})
 		}
 		for i := 0; i < 3; i++ {
