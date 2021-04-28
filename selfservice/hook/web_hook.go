@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/ory/kratos/selfservice/flow/recovery"
+
 	"github.com/google/go-jsonnet"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -17,6 +19,7 @@ import (
 
 var _ registration.PostHookPostPersistExecutor = new(WebHook)
 var _ verification.PostHookExecutor = new(WebHook)
+var _ recovery.PostHookExecutor = new(WebHook)
 
 type (
 	AuthStrategy interface {
@@ -168,6 +171,16 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, session *session.Session) error {
+	return e.execute(&templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestUrl:     req.URL.String(),
+		Session:        session,
+	})
+}
+
+func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,

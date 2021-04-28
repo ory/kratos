@@ -266,8 +266,12 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("method=recovery", func(t *testing.T) {
+			assert.Equal(t, true, p.SelfServiceFlowRecoveryEnabled())
 			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRecoveryRequestLifespan())
 			assert.Equal(t, "http://test.kratos.ory.sh/recovery", p.SelfServiceFlowRecoveryUI().String())
+
+			hooks := p.SelfServiceFlowRecoveryAfterHooks("global")
+			assert.Equal(t, []config.SelfServiceHook{{Name: "web-hook", Config: json.RawMessage(`{"method":"GET","url":"https://test.kratos.ory.sh/after_recovery_hook"}`)}}, hooks)
 		})
 
 		t.Run("method=verification", func(t *testing.T) {

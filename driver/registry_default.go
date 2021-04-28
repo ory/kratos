@@ -115,6 +115,7 @@ type RegistryDefault struct {
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
+	selfserviceRecoveryExecutor     *recovery.HookExecutor
 
 	selfserviceLogoutHandler *logout.Handler
 

@@ -77,6 +77,7 @@ const (
 	ViperKeySelfServiceSettingsAfter                                = "selfservice.flows.settings.after"
 	ViperKeySelfServiceSettingsRequestLifespan                      = "selfservice.flows.settings.lifespan"
 	ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter        = "selfservice.flows.settings.privileged_session_max_age"
+	ViperKeySelfServiceRecoveryAfter                                = "selfservice.flows.recovery.after"
 	ViperKeySelfServiceRecoveryEnabled                              = "selfservice.flows.recovery.enabled"
 	ViperKeySelfServiceRecoveryUI                                   = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan                      = "selfservice.flows.recovery.lifespan"
@@ -746,6 +747,10 @@ func (p *Config) SelfServiceFlowRecoveryReturnTo() *url.URL {
 
 func (p *Config) SelfServiceFlowRecoveryRequestLifespan() time.Duration {
 	return p.p.DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRecoveryAfter, strategy))
 }
 
 func (p *Config) SelfServiceFlowSettingsPrivilegedSessionMaxAge() time.Duration {

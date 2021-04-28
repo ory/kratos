@@ -41,3 +41,21 @@ func (m *RegistryDefault) AllRecoveryStrategies() (recoveryStrategies recovery.S
 	}
 	return
 }
+
+func (m *RegistryDefault) RecoveryExecutor() *recovery.HookExecutor {
+	if m.selfserviceRecoveryExecutor == nil {
+		m.selfserviceRecoveryExecutor = recovery.NewHookExecutor(m)
+	}
+	return m.selfserviceRecoveryExecutor
+}
+
+func (m *RegistryDefault) PostRecoveryHooks(ctx context.Context) (b []recovery.PostHookExecutor) {
+
+	for _, v := range m.getHooks("global", m.Config(ctx).SelfServiceFlowRecoveryAfterHooks("global")) {
+		if hook, ok := v.(recovery.PostHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+
+	return
+}

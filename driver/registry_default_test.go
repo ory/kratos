@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/kratos/selfservice/flow/recovery"
+
 	"github.com/ory/kratos/selfservice/flow/verification"
 
 	"github.com/ory/kratos/driver"
@@ -61,6 +63,48 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				tc.prep(conf)
 
 				h := reg.PostVerificationHooks(ctx)
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
+	})
+
+	t.Run("type=recovery", func(t *testing.T) {
+
+		// AFTER hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []recovery.PostHookExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []recovery.PostHookExecutor { return nil },
+			},
+			{
+				uc: "Multiple web-hooks configured",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceRecoveryAfter+".hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []recovery.PostHookExecutor {
+					return []recovery.PostHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				h := reg.PostRecoveryHooks(ctx)
 
 				expectedExecutors := tc.expect(reg)
 				require.Len(t, h, len(expectedExecutors))

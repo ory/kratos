@@ -71,6 +71,11 @@ selfservice:
       lifespan: 98m
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/after_recovery_hook
+              method: GET
 
     verification:
       enabled: true

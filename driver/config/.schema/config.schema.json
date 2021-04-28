@@ -417,6 +417,18 @@
           "$ref": "#/definitions/selfServiceGlobalHooks"
         }
       }
+    },
+    "selfServiceAfterRecovery": {
+      "type": "object",
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceGlobalHooks"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -623,13 +635,7 @@
                   "default": "https://www.ory.sh/kratos/docs/fallback/recovery"
                 },
                 "after": {
-                  "type": "object",
-                  "properties": {
-                    "default_browser_return_url": {
-                      "$ref": "#/definitions/defaultReturnTo"
-                    }
-                  },
-                  "additionalProperties": false
+                  "$ref": "#/definitions/selfServiceAfterRecovery"
                 },
                 "lifespan": {
                   "title": "Self-Service Recovery Request Lifespan",

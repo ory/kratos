@@ -55,6 +55,7 @@ type (
 		recovery.ErrorHandlerProvider
 		recovery.FlowPersistenceProvider
 		recovery.StrategyProvider
+		recovery.HookExecutorProvider
 
 		verification.ErrorHandlerProvider
 		verification.FlowPersistenceProvider
