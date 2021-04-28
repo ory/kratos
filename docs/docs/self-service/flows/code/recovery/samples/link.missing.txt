@@ -1,32 +1,44 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4433/self-service/verification/flows?id=ba0f508a-f2fb-435d-b5e2-0307db00d75d' | jq -r '.methods.link.config'
+    'http://127.0.0.1:4433/self-service/recovery/flows?id=199a2c74-08ca-4f22-b24c-3de3032682f8' | \
+      jq -r '.ui.nodes[] | select(.group=="link")'
 
 {
-  "action": "http://127.0.0.1:4433/self-service/verification/methods/link?flow=ba0f508a-f2fb-435d-b5e2-0307db00d75d",
-  "method": "POST",
-  "fields": [
+  "type": "input",
+  "group": "link",
+  "attributes": {
+    "name": "email",
+    "type": "email",
+    "required": true,
+    "disabled": false
+  },
+  "messages": [
     {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "ZmifOn0KaTicicQ0NServtpnOWPD8pga5gzG028fq/4+Atwx/Yr69v/28O83GeSJB/55PTNxJHCmKW9rWX27VQ=="
-    },
-    {
-      "name": "email",
-      "type": "email",
-      "required": true,
-      "value": "",
-      "messages": [
-        {
-          "id": 4000002,
-          "text": "Property email is missing.",
-          "type": "error",
-          "context": {
-            "property": "email"
-          }
-        }
-      ]
+      "id": 4000002,
+      "text": "Property email is missing.",
+      "type": "error",
+      "context": {
+        "property": "email"
+      }
     }
-  ]
+  ],
+  "meta": {}
 }
-foo
+{
+  "type": "input",
+  "group": "link",
+  "attributes": {
+    "name": "method",
+    "type": "submit",
+    "value": "link",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070005,
+      "text": "Submit",
+      "type": "info"
+    }
+  }
+}
+
