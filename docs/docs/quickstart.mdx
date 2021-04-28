@@ -256,44 +256,91 @@ We can use `curl` to see what Ory Kratos responds with. Try visiting
 `http://127.0.0.1:4455/auth/login`, copying the generated `<flow_id>`, and
 making the request yourself:
 
-```shell script
-# curl -s "http://127.0.0.1:4434/self-service/login/flows?id=ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b" \
+```shell-session
+$ # curl -s "http://127.0.0.1:4434/self-service/login/flows?id=07016811-917d-4788-bb9c-fc297897af6c" \
 $ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
   | jq
 
 {
-  "id": "ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b",
+  "id": "07016811-917d-4788-bb9c-fc297897af6c",
   "type": "browser",
-  "expires_at": "2020-09-13T10:49:54.8295242Z",
-  "issued_at": "2020-09-13T10:39:54.8295242Z",
+  "expires_at": "2021-04-28T08:37:53.924337873Z",
+  "issued_at": "2021-04-28T08:27:53.924337873Z",
   "request_url": "http://127.0.0.1:4433/self-service/login/browser",
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "identifier",
-            "type": "text",
-            "required": true,
-            "value": ""
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "lNrB8sW2fZY6xnnA91V7ISYrUVcJbmRCOoGHjsnsfI7MsIL5RTbuWFm5TRv1azQW+7IRCfnt2Ch6pC42/45sJQ=="
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/login?flow=07016811-917d-4788-bb9c-fc297897af6c",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "IuiHo8fajl6Nwi2CfR33bmC7ZI+geYY44oinK/npkS9gaeV6DlkzS0voYZuyGawsCruvlawFl/pY6/Ph6d9JVg==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password_identifier",
+          "type": "text",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070004,
+            "text": "ID",
+            "type": "info"
           }
-        ]
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010001,
+            "text": "Sign in",
+            "type": "info",
+            "context": {}
+          }
+        }
       }
-    }
+    ]
   },
   "forced": false
 }
@@ -320,64 +367,122 @@ will complain:
 The error message is coming directly from Ory Kratos' Admin API:
 
 ```shell script
-# curl -s "http://127.0.0.1:4433/self-service/registration/flows?id=2b1f8c5d-e830-4068-97b8-35f776df9217" \
+# curl -s "http://127.0.0.1:4433/self-service/registration/flows?id=f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c" \
 $ curl -s "http://127.0.0.1:4433/self-service/registration/flows?id=<flow_id>" \
   | jq
 
 {
-  "id": "2b1f8c5d-e830-4068-97b8-35f776df9217",
+  "id": "f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c",
   "type": "browser",
-  "expires_at": "2020-09-13T10:53:15.1774019Z",
-  "issued_at": "2020-09-13T10:43:15.1774019Z",
+  "expires_at": "2021-04-28T08:54:12.951178972Z",
+  "issued_at": "2021-04-28T08:44:12.951178972Z",
   "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
-  "active": "password",
-  "messages": null,
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/registration/methods/password?flow=2b1f8c5d-e830-4068-97b8-35f776df9217",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "1IlHWNjkAZxuYhO82WPgNTgujKsUSaW87j6og/20i2uM4wRTWGSSUg0dJ2fbXa8C5bfM9eTKGdauGwE7y9abwA=="
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true,
-            "messages": [
-              {
-                "id": 4000005,
-                "text": "The password can not be used because the password has been found in data breaches and must no longer be used..",
-                "type": "error",
-                "context": {
-                  "reason": "the password has been found in data breaches and must no longer be used."
-                }
-              }
-            ]
-          },
-          {
-            "name": "traits.email",
-            "type": "text",
-            "value": "foo@ory.sh"
-          },
-          {
-            "name": "traits.name.first",
-            "type": "text",
-            "value": "Ory"
-          },
-          {
-            "name": "traits.name.last",
-            "type": "text",
-            "value": "Corp"
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/registration?flow=f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "408SIAOvpKxW/WbcYfKue26MlLTMbON7T7JT1yhiSemhznD5yiwZuZDXKsWu9vU5BIxfrsAQ8rn10QcdOFSRkA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.email",
+          "type": "email",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "E-Mail",
+            "type": "info"
           }
-        ]
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.name.first",
+          "type": "text",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "First Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.name.last",
+          "type": "text",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "Last Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1040001,
+            "text": "Sign up",
+            "type": "info",
+            "context": {}
+          }
+        }
       }
-    }
+    ]
   }
 }
 ```
