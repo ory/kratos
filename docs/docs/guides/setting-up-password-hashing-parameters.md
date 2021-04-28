@@ -1,6 +1,6 @@
 ---
 id: setting-up-password-hashing-parameters
-title: Setting up Password Hashing Parameters
+title: Setting up Argon2 Password Hashing Parameters
 ---
 
 Currently, Ory Kratos supports password hashing using Argon2 in the Argon2id

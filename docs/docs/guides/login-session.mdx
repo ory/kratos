@@ -3,6 +3,7 @@ id: login-session
 title: Configuring And Checking for Login Sessions
 ---
 
+import CodeFromRemote from '@theme/CodeFromRemote'
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 
@@ -109,28 +110,12 @@ A typical session payload will look like this:
   ]}>
 <TabItem value="nodejs">
 
-```js
-import { PublicApi } from '@ory/kratos-client'
-
-const publicEndpoint = new PublicApi(config.kratos.public)
-const protect = (req: Request, res: Response, next: NextFunction) => {
-  req.headers['host'] = config.kratos.public.split('/')[2]
-  publicEndpoint
-    .whoami(req)
-    .then(({ body, response }) => {
-      req.user = { session: body }
-      next()
-    })
-    .catch(() => {
-      // Redirect to login if not logged in
-      res.redirect('/auth/login')
-    })
-
-// const app = express()
-// ...
-
-app.get('/', protect, dashboard)
-```
+{' '}
+<CodeFromRemote
+  lang="js"
+  link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/middleware/simple.ts"
+  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/middleware/simple.ts"
+/>
 
 </TabItem>
 </Tabs>
