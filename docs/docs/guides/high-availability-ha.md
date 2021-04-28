@@ -3,6 +3,12 @@ id: high-availability-ha
 title: High Availability
 ---
 
+This document explains how to set up Ory Kratos in for High Availability.
+
+# Horizontal Scaling
+
+Ory Kratos scales effortlessly to thousands of pods without any additional work!
+
 # Mail courier
 
 Ory Kratos processes emails by storing them in an email queue on your database
