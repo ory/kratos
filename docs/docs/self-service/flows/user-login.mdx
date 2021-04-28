@@ -151,32 +151,92 @@ in the Login Flow:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4434/self-service/login/flows?id=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3' \
-  | jq -r '.methods.password.config'
+    'http://127.0.0.1:4434/self-service/login/flows?id=42e26bc5-8014-400c-b463-dc5c3738c242' | jq
 
 {
-  "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "identifier",
-      "type": "text",
-      "required": true,
-      "value": ""
-    },
-    {
-      "name": "password",
-      "type": "password",
-      "required": true
-    },
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "Bo72oeXYFnjZj2B9Ple+GZBkn5oqQZDACcYvGeUi8J48R9+yRk1KBagov/nJ/jbfBgugsMUzYMf4VpGNThkjgw=="
-    }
-  ]
+  "id": "42e26bc5-8014-400c-b463-dc5c3738c242",
+  "type": "browser",
+  "expires_at": "2021-04-28T10:04:44.506336771Z",
+  "issued_at": "2021-04-28T09:54:44.506336771Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "8RygCHIdyMXVc3jxIAf/6uAuv/jBJLo5mt6nXdcB/JOzncLRu5510BNZNOjvA6Soii504s1Yq/sgvfOXxzck6g==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password_identifier",
+          "type": "text",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070004,
+            "text": "ID",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010001,
+            "text": "Sign in",
+            "type": "info",
+            "context": {}
+          }
+        }
+      }
+    ]
+  },
+  "forced": false
 }
+
 ```
 
 ### Login with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
@@ -213,25 +273,56 @@ providers as submit fields:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4434/self-service/login/flows?id=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3' \
-  | jq -r '.methods.oidc.config'
+    'http://127.0.0.1:4434/self-service/login/flows?id=d6340737-89f2-4b01-a848-79007de6f430' \
+    | jq
 
 {
-  "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/7430f336-0be0-47d1-b1fc-5cc6fcc3f228",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "LJ3o59zXjukFs1004vyn3QrWDrfutW2e0Iaqo/9Ck6srYAceydRr59GEZJNFY6Walnell+r10/DlXUy/Eq6sXQ=="
-    },
-    {
-      "name": "provider",
-      "type": "submit",
-      "value": "github"
-    }
-  ]
+  "id": "d6340737-89f2-4b01-a848-79007de6f430",
+  "type": "browser",
+  "expires_at": "2021-04-28T11:05:01.382156Z",
+  "issued_at": "2021-04-28T10:05:01.382156Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4455/self-service/login?flow=d6340737-89f2-4b01-a848-79007de6f430",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "7Y2PgQlka1Zjn8wVRUnvCqeSs9hzsUECnk9YjULACyMIYXbCwAVcMDpeFf33tECgowwmA3ZNTozZMKxy2jUSSA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "oidc",
+        "attributes": {
+          "name": "provider",
+          "type": "submit",
+          "value": "github",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010002,
+            "text": "Sign in with github",
+            "type": "info",
+            "context": {
+              "provider": "github"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "forced": false
 }
 ```
 
@@ -369,12 +460,12 @@ Token:
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
     "http://127.0.0.1:4433/self-service/login/api" \
-    | jq -r '.methods.password.config.action'\
+    | jq -r '.ui.action'\
 )
 
 # Complete Login Flow with password method
 $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
-    -d '{"identifier": "api@user.org", "password": "iohuasf0897zAJHf"}' \
+    -d '{"password_identifier": "api@user.org", "password": "iohuasf0897zAJHf", "method": "password"}' \
     "$actionUrl" | jq
 
 {

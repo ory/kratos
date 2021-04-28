@@ -17,10 +17,10 @@ func main() {
   flowID := "" // Usually something like: res.Request.URL.Query().Get("flow")
 
   c := NewKratosClient("http://127.0.0.1:4433/")
-  flow, _, err := NewSDKCustomClient(ts, client).PublicApi.GetSelfServiceRegistrationFlow().Id(flowID).Execute()
+  flow, _, err := c.PublicApi.GetSelfServiceRegistrationFlow().Id(flowID).Execute()
   if err != nil {
     // ...
   }
 
-  fmt.Printf("%+v", flow) //
+  fmt.Printf("%+v", flow)
 }
