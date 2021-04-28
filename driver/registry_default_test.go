@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/kratos/selfservice/flow/verification"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/logrusx"
@@ -24,63 +26,165 @@ import (
 
 func TestDriverDefault_Hooks(t *testing.T) {
 	ctx := context.Background()
-	t.Run("case=verification", func(t *testing.T) {
+
+	t.Run("type=verification", func(t *testing.T) {
+
+		// AFTER hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []verification.PostHookExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []verification.PostHookExecutor { return nil },
+			},
+			{
+				uc: "Multiple web-hooks configured",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceVerificationAfter+".hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []verification.PostHookExecutor {
+					return []verification.PostHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				h := reg.PostVerificationHooks(ctx)
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
+	})
+
+	t.Run("type=registration", func(t *testing.T) {
+
+		// AFTER hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor { return nil },
+			},
+			{
+				uc: "Only session hook configured for password strategy",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
+						{"hook": "session"},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{
+						hook.NewVerifier(reg),
+						hook.NewSessionIssuer(reg),
+					}
+				},
+			},
+			{
+				uc: "A session hook and a web-hook are configured for password strategy",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "body": "bar"}},
+						{"hook": "session"},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{
+						hook.NewVerifier(reg),
+						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
+						hook.NewSessionIssuer(reg),
+					}
+				},
+			},
+			{
+				uc: "Two web-hooks are configured on a global level",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+			{
+				uc: "Hooks are configured on a global level, as well as on a password strategy level",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "GET"}},
+						{"hook": "session"},
+					})
+					conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "bar", "method": "POST"}},
+					})
+					conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{
+						hook.NewVerifier(reg),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"foo"}`)),
+						hook.NewSessionIssuer(reg),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				h := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
+	})
+
+	t.Run("type=login", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
 
-		t.Run("type=registration", func(t *testing.T) {
-			h := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
-			require.Len(t, h, 1)
-			assert.Equal(t, []registration.PostHookPostPersistExecutor{hook.NewVerifier(reg)}, h)
+		h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
+		require.Len(t, h, 0)
 
-			conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".password.hooks",
-				[]map[string]interface{}{{"hook": "session"}})
+		conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks",
+			[]map[string]interface{}{{"hook": "revoke_active_sessions"}})
 
-			h = reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
-			require.Len(t, h, 2)
-			assert.Equal(t, []registration.PostHookPostPersistExecutor{
-				hook.NewVerifier(reg),
-				hook.NewSessionIssuer(reg),
-			}, h)
+		h = reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
+		require.Len(t, h, 1)
+		assert.Equal(t, []login.PostHookExecutor{hook.NewSessionDestroyer(reg)}, h)
+	})
 
-			conf.MustSet(config.ViperKeySelfServiceRegistrationAfter + ".password.hooks",
-				[]map[string]interface{}{
-					{"hook": "session"},
-					{
-						"hook": "web-hook",
-						"config": map[string]interface{}{
-							"url": "foo",
-							"method": "POST",
-							"body": "bar",
-						},
-					},
-				})
-			h = reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
-			require.Len(t, h, 3)
-			assert.Equal(t, []registration.PostHookPostPersistExecutor{
-				hook.NewVerifier(reg),
-				hook.NewSessionIssuer(reg),
-				hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
-			}, h)
-		})
+	t.Run("type=settings", func(t *testing.T) {
+		conf, reg := internal.NewFastRegistryWithMocks(t)
+		conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
 
-		t.Run("type=login", func(t *testing.T) {
-			h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
-			require.Len(t, h, 0)
-
-			conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks",
-				[]map[string]interface{}{{"hook": "revoke_active_sessions"}})
-
-			h = reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
-			require.Len(t, h, 1)
-			assert.Equal(t, []login.PostHookExecutor{hook.NewSessionDestroyer(reg)}, h)
-		})
-
-		t.Run("type=settings", func(t *testing.T) {
-			h := reg.PostSettingsPostPersistHooks(ctx, "profile")
-			require.Len(t, h, 1)
-			assert.Equal(t, []settings.PostHookPostPersistExecutor{hook.NewVerifier(reg)}, h)
-		})
+		h := reg.PostSettingsPostPersistHooks(ctx, "profile")
+		require.Len(t, h, 1)
+		assert.Equal(t, []settings.PostHookPostPersistExecutor{hook.NewVerifier(reg)}, h)
 	})
 }
 
