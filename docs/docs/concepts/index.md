@@ -271,7 +271,7 @@ system:
   attached to the profile.
 
 Ory Kratos implements both scenarios by using
-[JSON Schemas for Identities](./identity-data-model)
+[JSON Schemas for Identities](./identity-data-model.mdx)
 
 ### Forget passport-js, oidc-client, ...
 
