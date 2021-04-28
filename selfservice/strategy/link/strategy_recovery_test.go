@@ -254,18 +254,19 @@ func TestRecovery(t *testing.T) {
 		}
 
 		invalidEmails := []string{"abc", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com", "\\"}
-		values := make([]func(v url.Values), 0)
+		values := make([]*func(v url.Values), 0)
 		for i := range invalidEmails {
-			values = append(values, func(v url.Values) {
+			var value = func(v url.Values) {
 				v.Set("email", invalidEmails[i])
-			})
+			}
+			values = append(values, &value)
 		}
 		for i := 0; i < 3; i++ {
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, false, values[i]), invalidEmails[i])
+				check(t, expectValidationError(t, false, *values[i]), invalidEmails[i])
 			})
 			t.Run("type=api", func(t *testing.T) {
-				check(t, expectValidationError(t, true, values[i]), invalidEmails[i])
+				check(t, expectValidationError(t, true, *values[i]), invalidEmails[i])
 			})
 
 		}
