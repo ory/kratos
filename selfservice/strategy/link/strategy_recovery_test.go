@@ -246,7 +246,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should require a valid email to be sent", func(t *testing.T) {
-		var check = func(t *testing.T, actual string,value string) {
+		var check = func(t *testing.T, actual string, value string) {
 			assert.EqualValues(t, node.RecoveryLinkGroup, gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, fmt.Sprintf("%q is not valid \"email\"", value),
 				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
