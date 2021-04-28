@@ -51,7 +51,7 @@ export const initApiFlow = {
     code: require('raw-loader!./samples/api/init.curl.txt').default
   },
   js: {
-    label: 'Node',
+    label: 'JavaScript',
     language: 'js',
     code: require('raw-loader!./samples/api/init.js.txt').default
   },

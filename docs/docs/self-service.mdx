@@ -11,7 +11,7 @@ your profile and sign up yourself.
 
 import ApiWarning from '@theme/ApiWarning'
 import CodeTabs from '@theme/Code/CodeTabs'
-import {initApiFlow, initBrowserFlow} from './self-service/flows/code/login'
+import { initApiFlow, initBrowserFlow } from './self-service/flows/code/login'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
@@ -23,16 +23,16 @@ able to exploit
 
 - registration: with attack vectors such as account enumeration (), ...;
 - login: phishing, account enumeration, leaked password databases, brute-force,
-...;
+  ...;
 - user settings: account enumeration, account takeover, ...;
 - account recovery: social engineering attacks, account takeover, spoofing, and
-so on.
+  so on.
 
 There are also many other areas you need to think about, such as:
 
 - Mobile, Smart TV, ... authentication
 - Linking and unlinking social profiles (e.g. "Sign in with Google" or "Connect
-with Google") to existing accounts
+  with Google") to existing accounts
 
 Ory Kratos applies best practices established by experts (National Institute of
 Sciences NIST, Internet Engineering Task Force IETF, Microsoft Research, Google
@@ -51,15 +51,15 @@ Some flows break down into "flow methods" which implement some of the flow's
 business logic:
 
 - The `password` method implements the login and registration with "email or/and
-username and password" method, and "change your password" user settings
-method.
+  username and password" method, and "change your password" user settings
+  method.
 - The `oidc` (OpenID Connect, OAuth2, Social Sign In) method implements "Sign in
-with ..." login and registration method and "un/link another social account"
-user settings method.
+  with ..." login and registration method and "un/link another social account"
+  user settings method.
 - The `profile` method implements the "update your profile", "change your
-first/last name, ..." user settings method).
+  first/last name, ..." user settings method).
 - The `link` method implements the "click this link to reset your password"
-account recovery method.
+  account recovery method.
 
 Some flows additionally implement the ability
 [to run hooks](self-service/hooks.mdx) which allow users to be immediately
@@ -71,7 +71,7 @@ signed in after registration, notify another system on successful registration
 There are two flow types supported in Ory Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
-app, ...)
+  app, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 All Self-Service Flows ([User Login](self-service/flows/user-login.mdx),
@@ -82,7 +82,7 @@ All Self-Service Flows ([User Login](self-service/flows/user-login.mdx),
 support these two flow types and use the same data models but do use different
 API endpoints.
 
-<ApiWarning/>
+<ApiWarning />
 
 ## Browser Flows
 
@@ -110,14 +110,14 @@ so before reading this document.
 
 :::
 
-<SelfServiceBrowserFlow flows={['login', 'settings', '...']}/>
+<SelfServiceBrowserFlow flows={['login', 'settings', '...']} />
 
 ### Initialization and Redirect to UI
 
 First, the Browser opens the flow's initialization endpoint
 (e.g.`/self-service/login/browser`, `/self-service/registration/browser`, ...):
 
-<CodeTabs items={initBrowserFlow}/>
+<CodeTabs items={initBrowserFlow} />
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow
@@ -268,24 +268,28 @@ The flow UI then renders the given methods. For the example above, a suitable
 HTML Form would look along the lines of:
 
 ```html
-<form action="http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe" method="POST">
-    <input name="csrf_token" type="hidden"
-           value="pUhD8lmSNNRnX/tuy6yAM317SfdiPOwetYUKnx23iTHnySErkBGJwaF1t3cEqNtxF3uC7W5A/dwP5l5VDYFRSA==">
-    <fieldset>
-        <label>
-            <input name="password_identifier" type="text" value="" placeholder="ID">
-            <span>ID</span>
-        </label>
-    </fieldset>
-    <fieldset>
-        <label>
-            <input name="password" type="password" value="" placeholder="Password">
-            <span>Password</span>
-        </label>
-    </fieldset>
-    <button name="method" type="submit" value="password">
-        Sign in
-    </button>
+<form
+  action="http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe"
+  method="POST"
+>
+  <input
+    name="csrf_token"
+    type="hidden"
+    value="pUhD8lmSNNRnX/tuy6yAM317SfdiPOwetYUKnx23iTHnySErkBGJwaF1t3cEqNtxF3uC7W5A/dwP5l5VDYFRSA=="
+  />
+  <fieldset>
+    <label>
+      <input name="password_identifier" type="text" value="" placeholder="ID" />
+      <span>ID</span>
+    </label>
+  </fieldset>
+  <fieldset>
+    <label>
+      <input name="password" type="password" value="" placeholder="Password" />
+      <span>Password</span>
+    </label>
+  </fieldset>
+  <button name="method" type="submit" value="password">Sign in</button>
 </form>
 ```
 
@@ -307,69 +311,69 @@ which now includes validation errors and other potential messages:
 
 ```json5
 {
-  "id": "f6209031-38d5-48bc-b6a5-118e8a24d1fe",
-  "type": "browser",
-  "expires_at": "2021-04-28T09:00:57.10254633Z",
-  "issued_at": "2021-04-28T08:50:57.10254633Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
-  "ui": {
-    "action": "http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe",
-    "method": "POST",
-    "nodes": [
+  id: 'f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+  type: 'browser',
+  expires_at: '2021-04-28T09:00:57.10254633Z',
+  issued_at: '2021-04-28T08:50:57.10254633Z',
+  request_url: 'http://127.0.0.1:4433/self-service/login/browser',
+  ui: {
+    action: 'http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+    method: 'POST',
+    nodes: [
       // ...
       {
-        "type": "input",
-        "group": "password",
-        "attributes": {
-          "name": "password_identifier",
-          "type": "text",
-          "value": "",
-          "required": true,
-          "disabled": false
+        type: 'input',
+        group: 'password',
+        attributes: {
+          name: 'password_identifier',
+          type: 'text',
+          value: '',
+          required: true,
+          disabled: false
         },
-        "messages": [
+        messages: [
           {
-            "id": 4000001,
-            "text": "length must be >= 1, but got 0",
-            "type": "error"
+            id: 4000001,
+            text: 'length must be >= 1, but got 0',
+            type: 'error'
           }
         ],
-        "meta": {
-          "label": {
-            "id": 1070004,
-            "text": "ID",
-            "type": "info"
+        meta: {
+          label: {
+            id: 1070004,
+            text: 'ID',
+            type: 'info'
           }
         }
       },
       {
-        "type": "input",
-        "group": "password",
-        "attributes": {
-          "name": "password",
-          "type": "password",
-          "required": true,
-          "disabled": false
+        type: 'input',
+        group: 'password',
+        attributes: {
+          name: 'password',
+          type: 'password',
+          required: true,
+          disabled: false
         },
-        "messages": [
+        messages: [
           {
-            "id": 4000001,
-            "text": "length must be >= 1, but got 0",
-            "type": "error"
+            id: 4000001,
+            text: 'length must be >= 1, but got 0',
+            type: 'error'
           }
         ],
-        "meta": {
-          "label": {
-            "id": 1070001,
-            "text": "Password",
-            "type": "info"
+        meta: {
+          label: {
+            id: 1070001,
+            text: 'Password',
+            type: 'info'
           }
         }
-      },
+      }
       // ...
     ]
   },
-  "forced": false
+  forced: false
 }
 ```
 
@@ -384,7 +388,7 @@ and might issue a session cookie if configured to do so.
 
 ## API Flows
 
-<ApiWarning/>
+<ApiWarning />
 
 API flows have three stages:
 
@@ -394,7 +398,7 @@ API flows have three stages:
 
 The high-level sequence diagram for API flows looks as follows:
 
-<SelfServiceApiFlow/>
+<SelfServiceApiFlow />
 
 ### Initialization
 
@@ -402,7 +406,7 @@ The client (e.g. mobile application) makes a request to the flow's
 initialization endpoint (e.g.`/self-service/login/api`,
 `/self-service/registration/api`, ...):
 
-<CodeTabs items={initApiFlow}/>
+<CodeTabs items={initApiFlow} />
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow
