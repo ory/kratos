@@ -23,7 +23,7 @@ import RenderFlow from '@theme/Code/RenderFlow'
 
 :::info
 
-Please read the [Self-Service Flows](../../self-service) overview before
+Please read the [Self-Service Flows](../../self-service.mdx) overview before
 continuing with this document.
 
 :::
@@ -277,24 +277,38 @@ the Recovery Flow:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/recovery/flows?id=2183a80c-a190-4fde-95bd-a15aa3103930' | jq -r '.methods.link.config'
+    'http://127.0.0.1:4434/self-service/recovery/flows?id=199a2c74-08ca-4f22-b24c-3de3032682f8' | \
+      jq -r '.ui.nodes[] | select(.group=="link")'
 
 {
-  "action": "http://127.0.0.1:4433/self-service/recovery/methods/link?flow=2183a80c-a190-4fde-95bd-a15aa3103930",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "PsERHvmk+4Ouq3wjMAaLsATrAk7sydJjkSbZFVynvwCJRZRtOTkosFHJQy5p5fFiBv6KnxwP2oSXUvE8J5w9Lw=="
-    },
-    {
-      "name": "email",
-      "type": "email",
-      "required": true
+  "type": "input",
+  "group": "link",
+  "attributes": {
+    "name": "email",
+    "type": "email",
+    "required": true,
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {}
+}
+{
+  "type": "input",
+  "group": "link",
+  "attributes": {
+    "name": "method",
+    "type": "submit",
+    "value": "link",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070005,
+      "text": "Submit",
+      "type": "info"
     }
-  ]
+  }
 }
 ```
 
