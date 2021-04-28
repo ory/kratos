@@ -3,16 +3,21 @@ package api
 import (
   "fmt"
 
-  "github.com/ory/kratos-client-go/client/public"
-  "github.com/ory/kratos-client-go/client"
+  "github.com/ory/kratos-client-go"
 )
 
+func NewKratosClient(endpoint string) *kratos.APIClient {
+  conf := kratos.NewConfiguration()
+  conf.Servers = kratos.ServerConfigurations{{URL: endpoint}}
+  return kratos.NewAPIClient(conf)
+}
+
 func main() {
-  c := client.NewHTTPClientWithConfig(nil,
-    &client.TransportConfig{Host: "127.0.0.1:4433", BasePath: "/", Schemes: []string{"http"}})
+  c := NewKratosClient("http://127.0.0.1:4433/")
+  flow, _, err := c.PublicApi.InitializeSelfServiceLoginViaAPIFlow(context.Background()).Refresh(forced).Execute()
+  if err != nil {
+    // ...
+  }
 
-  rs, _ := c.Public.InitializeSelfServiceLoginViaAPIFlow(public.
-    NewInitializeSelfServiceLoginViaAPIFlowParams())
-
-  fmt.Printf("%+v", rs.Payload)
+  fmt.Printf("%+v", flow)
 }
