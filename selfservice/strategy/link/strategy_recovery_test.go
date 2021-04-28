@@ -252,41 +252,23 @@ func TestRecovery(t *testing.T) {
 				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
-		var v1 = "abc"
-		var v2 = "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com"
-		var v3 = "\\"
-		var values1 = func(v url.Values) {
-			v.Set("email", v1)
+
+		invalidEmails := []string{"abc","aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com", "\\"}
+		values := make([]func(v url.Values),0)
+		for _,email := range invalidEmails {
+			values = append(values, func(v url.Values) {
+				v.Set("email", email)
+			})
 		}
+		for i:= 0; i < 3; i++ {
+			t.Run("type=browser", func(t *testing.T) {
+				check(t, expectValidationError(t, false, values[i]), invalidEmails[i])
+			})
+			t.Run("type=api", func(t *testing.T) {
+				check(t, expectValidationError(t, true, values[i]), invalidEmails[i])
+			})
 
-		var values2 = func(v url.Values) {
-			v.Set("email", v2)
 		}
-
-		var values3 = func(v url.Values) {
-			v.Set("email", v3)
-		}
-		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, values1), v1)
-		})
-
-		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, values1), v1)
-		})
-		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, values2), v2)
-		})
-
-		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, values2), v2)
-		})
-		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, values3), v3)
-		})
-
-		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, values3), v3)
-		})
 	})
 
 	t.Run("description=should try to recover an email that does not exist", func(t *testing.T) {
