@@ -153,14 +153,14 @@ Registration Flow. This will yield a session token which then use to perform the
 Settings Flow on this page:
 
 ```shell script
-username=foo-user@ory.sh
+username=example.user@ory.sh
 password=sBdHzGp9hAx2Hf2m
 
 actionUrl=$(curl -s -H "Accept: application/json" \
-  'http://127.0.0.1:4433/self-service/registration/api' | jq -r '.methods.password.config.action')
+  'http://127.0.0.1:4433/self-service/registration/api' | jq -r '.ui.action')
 
 session=$(curl -s  -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
-  --data '{ "traits.email": "'$username'", "password": "'$password'" }' \
+  --data '{ "traits.email": "'$username'", "password": "'$password'", "method": "password" }' \
   "$actionUrl")
 
 sessionToken=$(echo $session | jq -r '.session_token')
@@ -230,49 +230,92 @@ When the `profile` method is enabled, it will be part of the `methods` payload
 in the Settings Flow:
 
 ```shell script
-curl -s -X GET \
-  -H "Authorization: Bearer $sessionToken"  \
-  -H "Accept: application/json"  \
-  http://127.0.0.1:4433/self-service/settings/api | jq -r '.methods.profile.config'
+$ curl -s -X GET \
+    -H "Authorization: Bearer $sessionToken"  \
+    -H "Accept: application/json"  \
+    http://127.0.0.1:4433/self-service/settings/api | jq -r '.ui.nodes[] | select(.group=="profile")'
 
 {
-  "action": "http://127.0.0.1:4433/self-service/settings/methods/profile?flow=572148bf-4774-4a0d-9e7e-881d920a1600",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "P9Wg2GLCfJqfx+o9zmaxVVs1Y/Q0f6BdkbTCJTrgpttMz4+jFDpBluBHPfWsK1GKrwmiWEgDgPnHjB1DjjbFkQ=="
-    },
-    {
-      "name": "traits.email",
-      "type": "text",
-      "value": "api@user.org"
-    },
-    {
-      "name": "traits.name.first",
-      "type": "text",
-      "value": "API"
-    },
-    {
-      "name": "traits.name.last",
-      "type": "text",
-      "value": "User"
+  "type": "input",
+  "group": "profile",
+  "attributes": {
+    "name": "traits.email",
+    "type": "email",
+    "value": "example.user@ory.sh",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070002,
+      "text": "E-Mail",
+      "type": "info"
     }
-  ]
+  }
+}
+{
+  "type": "input",
+  "group": "profile",
+  "attributes": {
+    "name": "traits.name.first",
+    "type": "text",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070002,
+      "text": "First Name",
+      "type": "info"
+    }
+  }
+}
+{
+  "type": "input",
+  "group": "profile",
+  "attributes": {
+    "name": "traits.name.last",
+    "type": "text",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070002,
+      "text": "Last Name",
+      "type": "info"
+    }
+  }
+}
+{
+  "type": "input",
+  "group": "profile",
+  "attributes": {
+    "name": "method",
+    "type": "submit",
+    "value": "profile",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070003,
+      "text": "Save",
+      "type": "info"
+    }
+  }
 }
 ```
 
 The form fields depend on the
-[Identity's Schema JSON](../../concepts/identity-data-model).
+[Identity's Schema JSON](../../concepts/identity-data-model.mdx).
 
 ### Update Password
 
 :::tip Before you start
 
 Please read the
-[Username / Email & Password Credentials Documentation](../../concepts/credentials/username-email-password)
+[Username / Email & Password Credentials Documentation](../../concepts/credentials/username-email-password.mdx)
 first.
 
 :::
@@ -282,26 +325,45 @@ in the Settings Flow:
 
 ```shell script
 $ curl -s -X GET \
-  -H "Authorization: Bearer $sessionToken"  \
-  -H "Accept: application/json"  \
-  http://127.0.0.1:4433/self-service/settings/api | jq -r '.methods.password.config'
+    -H "Authorization: Bearer $sessionToken"  \
+    -H "Accept: application/json"  \
+    http://127.0.0.1:4433/self-service/settings/api | jq -r '.ui.nodes[] | select(.group=="password")'
 
 {
-  "action": "http://127.0.0.1:4433/self-service/settings/methods/password?flow=653b0f9c-eab3-47da-b956-d2f495dde5b2",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "password",
-      "type": "password",
-      "required": true
-    },
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "bQmJ5wzYW5Qio0um7TxAirwt30SG1y/ahy8z6DjaBCBCv3PZ4HbvBBB9zypIUHA0p8Z0FFWQ8XPvy0cb3csJyQ=="
+  "type": "input",
+  "group": "password",
+  "attributes": {
+    "name": "password",
+    "type": "password",
+    "required": true,
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070001,
+      "text": "Password",
+      "type": "info"
     }
-  ]
+  }
+}
+{
+  "type": "input",
+  "group": "password",
+  "attributes": {
+    "name": "method",
+    "type": "submit",
+    "value": "password",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070003,
+      "text": "Save",
+      "type": "info"
+    }
+  }
 }
 ```
 
@@ -319,27 +381,51 @@ When the `oidc` method is enabled, it will be part of the `methods` payload in
 the Settings Flow:
 
 ```shell script
-curl -s -X GET \
+$ curl -s -X GET \
   -H "Authorization: Bearer $sessionToken"  \
   -H "Accept: application/json"  \
-  'http://127.0.0.1:4433/self-service/settings/flows?id=938da8c6-e98d-4381-87a5-b9265b1854eb' | jq -r '.methods.oidc.config'
-
+  'http://127.0.0.1:4433/self-service/settings/flows?id=14cbf9a7-0c71-46e9-b3b9-806cb7859145' | jq -r '.ui.nodes[] | select(.group=="oidc")'
 {
-  "action": "http://127.0.0.1:4433/self-service/methods/oidc/settings/connections?flow=938da8c6-e98d-4381-87a5-b9265b1854eb",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "Fj7nOKsFQtBXywzKiPaZzYUL+x6XHMU3HFL2/go94YxjnYm/UGofxKoXJX5JJ0FTJ/e04GqVfxpkJ1jCc8DF5A=="
-    },
-    {
-      "name": "link",
-      "type": "submit",
-      "value": "github"
+  "type": "input",
+  "group": "oidc",
+  "attributes": {
+    "name": "link",
+    "type": "submit",
+    "value": "github",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1050002,
+      "text": "Link github",
+      "type": "info",
+      "context": {
+        "provider": "github"
+      }
     }
-  ]
+  }
+}
+{
+  "type": "input",
+  "group": "oidc",
+  "attributes": {
+    "name": "unlink",
+    "type": "submit",
+    "value": "google",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1050003,
+      "text": "Unlink google",
+      "type": "info",
+      "context": {
+        "provider": "google"
+      }
+    }
+  }
 }
 ```
 
@@ -420,31 +506,176 @@ HTTP 302 Redirect to the Settings UI which now contains the success state
 (`state: success`) as well as the updated identity:
 
 ```shell script
-$ curl -s -X GET \
-  -H "Authorization: Bearer $sessionToken"  \
-  -H "Accept: application/json"  \
-  'http://127.0.0.1:4433/self-service/settings/flows?id=2c0e9349-3ddc-4f17-9f8e-6a6e37989c91' | jq
+curl -s -X GET \
+    -H "Authorization: Bearer $sessionToken"  \
+    -H "Accept: application/json"  \
+    'http://127.0.0.1:4433/self-service/settings/flows?id=f71743cd-700d-4a30-9275-8edc90de07cc' | \
+      jq
 
 {
-  "id": "2c0e9349-3ddc-4f17-9f8e-6a6e37989c91",
+  "id": "f71743cd-700d-4a30-9275-8edc90de07cc",
   "type": "browser",
-  "expires_at": "2020-09-08T13:21:58.8900756Z",
-  "issued_at": "2020-09-08T12:21:58.8900756Z",
+  "expires_at": "2021-04-28T12:39:36.804397011Z",
+  "issued_at": "2021-04-28T11:39:36.804397011Z",
   "request_url": "http://127.0.0.1:4433/self-service/settings/browser",
-  "methods": {
-    // ...
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/settings?flow=f71743cd-700d-4a30-9275-8edc90de07cc",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "ZujkLxomQjFczI0iVkG7E8+yGQ3ouIF2E9msj9gvHPjZPs+wnptmG2Qeg6RVNVh1NktGMfwYBP9AqzYna2m0nw==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.email",
+          "type": "email",
+          "value": "notanemail",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "E-Mail",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.name.first",
+          "type": "text",
+          "value": "",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "First Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.name.last",
+          "type": "text",
+          "value": "",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "Last Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "profile",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070003,
+            "text": "Save",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070003,
+            "text": "Save",
+            "type": "info"
+          }
+        }
+      }
+    ],
+    "messages": [
+      {
+        "id": 1050001,
+        "text": "Your changes have been saved!",
+        "type": "info"
+      }
+    ]
   },
   "identity": {
-    "id": "c4d50e89-4206-45e7-be94-7896f5b1c735",
+    "id": "5b23b651-c186-4398-8717-f15ac72cbc7e",
     "schema_id": "default",
-    "schema_url": "",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
     "traits": {
-      "name": {
-        "last": "User",
-        "first": "Foo"
-      },
-      "email": "foo-user-new@ory.sh"
-    }
+      "email": "example.user@ory.sh"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "d2214ea2-8b0e-49c0-a9e0-9998ea4527aa",
+        "value": "example.user@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "29ef1378-0f13-4f2e-a9cf-683320771d5b",
+        "value": "example.user@ory.sh",
+        "via": "email"
+      }
+    ]
   },
   "state": "success"
 }
@@ -464,44 +695,44 @@ $ password=ByS8NWuFSkDgMjbe
 
 $ actionUrl=$(curl -s -H "Accept: application/json" \
   -H "Authorization: bearer $sessionToken" \
-  'http://127.0.0.1:4433/self-service/settings/api' | jq -r '.methods.password.config.action')
+  'http://127.0.0.1:4433/self-service/settings/api' | jq -r '.ui.action')
 
 $ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
     -H "Authorization: bearer $sessionToken" \
-    -d '{"password": "'$password'"}' \
+    -d '{"password": "'$password'", "method": "password"}' \
     "$actionUrl" | jq
 
 {
-  "flow": {
-    "id": "f5924169-4295-4949-8e2b-5e3a54edb09a",
-    "type": "api",
-    "expires_at": "2020-09-08T13:28:13.8845963Z",
-    "issued_at": "2020-09-08T12:28:13.8845963Z",
-    "request_url": "http://127.0.0.1:4433/self-service/settings/api",
-    "methods": {
-      // ..
-    },
-    "identity": {
-      "id": "ce284065-5748-4da8-8fea-d79186ae0687",
-      "schema_id": "default",
-      "schema_url": "",
-      "traits": {
-        "email": "foo-user-bar@ory.sh"
+  "id": "f71743cd-700d-4a30-9275-8edc90de07cc",
+  "type": "browser",
+  "expires_at": "2021-04-28T12:39:36.804397011Z",
+  "issued_at": "2021-04-28T11:39:36.804397011Z",
+  "request_url": "http://127.0.0.1:4433/self-service/settings/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/settings?flow=f71743cd-700d-4a30-9275-8edc90de07cc",
+    "method": "POST",
+    "nodes": [
+      // ...
+    ],
+    "messages": [
+      {
+        "id": 1050001,
+        "text": "Your changes have been saved!",
+        "type": "info"
       }
-    },
-    "state": "success"
+    ]
   },
   "identity": {
-    "id": "ce284065-5748-4da8-8fea-d79186ae0687",
+    "id": "5b23b651-c186-4398-8717-f15ac72cbc7e",
     "schema_id": "default",
     "schema_url": "http://127.0.0.1:4433/schemas/default",
     "traits": {
-      "email": "foo-user@ory.sh"
+      "email": "example.user@ory.sh"
     },
     "verifiable_addresses": [
       {
-        "id": "dceccb41-f744-44d6-b7a8-94085ea8f9cb",
-        "value": "foo-user@ory.sh",
+        "id": "d2214ea2-8b0e-49c0-a9e0-9998ea4527aa",
+        "value": "example.user@ory.sh",
         "verified": false,
         "via": "email",
         "status": "pending",
@@ -510,12 +741,13 @@ $ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/js
     ],
     "recovery_addresses": [
       {
-        "id": "6300eb7a-774e-4423-9819-3588901aea2e",
-        "value": "foo-user-@ory.sh",
+        "id": "29ef1378-0f13-4f2e-a9cf-683320771d5b",
+        "value": "example.user@ory.sh",
         "via": "email"
       }
     ]
-  }
+  },
+  "state": "success"
 }
 ```
 
