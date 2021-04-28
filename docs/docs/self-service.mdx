@@ -9,14 +9,9 @@ administrative intervention. Facebook and Google both provide self-service
 registration and profile management features as you are able to make changes to
 your profile and sign up yourself.
 
-import Tabs from '@theme/Tabs'
-import TabItem from '@theme/TabItem'
-import Mermaid from '@theme/Mermaid'
 import ApiWarning from '@theme/ApiWarning'
-
 import CodeTabs from '@theme/Code/CodeTabs'
-import { initBrowserFlow, initApiFlow } from './self-service/flows/code/login'
-
+import {initApiFlow, initBrowserFlow} from './self-service/flows/code/login'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
@@ -28,16 +23,16 @@ able to exploit
 
 - registration: with attack vectors such as account enumeration (), ...;
 - login: phishing, account enumeration, leaked password databases, brute-force,
-  ...;
+...;
 - user settings: account enumeration, account takeover, ...;
 - account recovery: social engineering attacks, account takeover, spoofing, and
-  so on.
+so on.
 
 There are also many other areas you need to think about, such as:
 
 - Mobile, Smart TV, ... authentication
 - Linking and unlinking social profiles (e.g. "Sign in with Google" or "Connect
-  with Google") to existing accounts
+with Google") to existing accounts
 
 Ory Kratos applies best practices established by experts (National Institute of
 Sciences NIST, Internet Engineering Task Force IETF, Microsoft Research, Google
@@ -56,15 +51,15 @@ Some flows break down into "flow methods" which implement some of the flow's
 business logic:
 
 - The `password` method implements the login and registration with "email or/and
-  username and password" method, and "change your password" user settings
-  method.
+username and password" method, and "change your password" user settings
+method.
 - The `oidc` (OpenID Connect, OAuth2, Social Sign In) method implements "Sign in
-  with ..." login and registration method and "un/link another social account"
-  user settings method.
+with ..." login and registration method and "un/link another social account"
+user settings method.
 - The `profile` method implements the "update your profile", "change your
-  first/last name, ..." user settings method).
+first/last name, ..." user settings method).
 - The `link` method implements the "click this link to reset your password"
-  account recovery method.
+account recovery method.
 
 Some flows additionally implement the ability
 [to run hooks](self-service/hooks.mdx) which allow users to be immediately
@@ -76,7 +71,7 @@ signed in after registration, notify another system on successful registration
 There are two flow types supported in Ory Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
-  app, ...)
+app, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 All Self-Service Flows ([User Login](self-service/flows/user-login.mdx),
@@ -87,7 +82,7 @@ All Self-Service Flows ([User Login](self-service/flows/user-login.mdx),
 support these two flow types and use the same data models but do use different
 API endpoints.
 
-<ApiWarning />
+<ApiWarning/>
 
 ## Browser Flows
 
@@ -115,14 +110,14 @@ so before reading this document.
 
 :::
 
-<SelfServiceBrowserFlow flows={['login', 'settings', '...']} />
+<SelfServiceBrowserFlow flows={['login', 'settings', '...']}/>
 
 ### Initialization and Redirect to UI
 
 First, the Browser opens the flow's initialization endpoint
 (e.g.`/self-service/login/browser`, `/self-service/registration/browser`, ...):
 
-<CodeTabs items={initBrowserFlow} />
+<CodeTabs items={initBrowserFlow}/>
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow
@@ -145,7 +140,7 @@ $ curl -s -v -X GET \
 < HTTP/1.1 302 Found
 < Cache-Control: 0
 < Content-Type: text/html; charset=utf-8
-< Location: http://127.0.0.1:4455/auth/login?flow=dd5be6df-a293-4749-aab6-209348829e09
+< Location: http://127.0.0.1:4455/auth/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe
 < Set-Cookie: csrf_token=qhMCbVX6iDyw1x/701zlINVFFqfkZrq1t/Z27Z1uFDw=; Path=/.ory/kratos/public/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly
 < Vary: Cookie
 < Date: Mon, 17 Aug 2020 13:54:52 GMT
@@ -155,7 +150,7 @@ $ curl -s -v -X GET \
 ### Form Rendering
 
 The Browser opens the URL (here
-`http://127.0.0.1:4455/auth/login?flow=dd5be6df-a293-4749-aab6-209348829e09`)
+`http://127.0.0.1:4455/auth/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe`)
 which renders the HTML form which for example shows the "username and password"
 field, the "Update your email address" field, or other flow forms. This HTML
 form is rendered be the
@@ -163,9 +158,9 @@ form is rendered be the
 which you fully control.
 
 The endpoint responsible for the UI URL uses the `flow` URL Query Parameter
-(here `...?flow=dd5be6df-a293-4749-aab6-209348829e09`) to call the flow
+(here `...?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe`) to call the flow
 information endpoint (e.g.
-`http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09`)
+`http://127.0.0.1:4434/self-service/login/flows?id=f6209031-38d5-48bc-b6a5-118e8a24d1fe`)
 and fetch the flow data - so for example the login form and any validation
 errors. This endpoint is available at both Ory Kratos's Public and Admin
 Endpoints. For example, the Self-Service UI responsible for rendering the Login
@@ -175,7 +170,7 @@ HTML Form would make a request along the lines of:
 # The endpoint uses Ory Kratos' REST API to fetch information about the request
 $ curl -s -X GET \
     -H "Accept: application/json" \
-    "http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq
+    "http://127.0.0.1:4434/self-service/login/flows?id=f6209031-38d5-48bc-b6a5-118e8a24d1fe" | jq
 ```
 
 The result includes login methods, their fields, and additional information
@@ -183,39 +178,85 @@ about the flow:
 
 ```json
 {
-  "id": "dd5be6df-a293-4749-aab6-209348829e09",
+  "id": "f6209031-38d5-48bc-b6a5-118e8a24d1fe",
   "type": "browser",
-  "expires_at": "2020-08-17T14:04:52.2276396Z",
-  "issued_at": "2020-08-17T13:54:52.2276396Z",
+  "expires_at": "2021-04-28T09:00:57.10254633Z",
+  "issued_at": "2021-04-28T08:50:57.10254633Z",
   "request_url": "http://127.0.0.1:4433/self-service/login/browser",
-  "messages": null,
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "identifier",
-            "type": "text",
-            "required": true,
-            "value": ""
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "pW6qLAS39HaXruAooEa7phFCKXoFWUkzIGe4FK+BlmcPfahBUU18Sid5/9NzGl6GxAc/3eE/84aXkc75Mu+CWw=="
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "pUhD8lmSNNRnX/tuy6yAM317SfdiPOwetYUKnx23iTHnySErkBGJwaF1t3cEqNtxF3uC7W5A/dwP5l5VDYFRSA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password_identifier",
+          "type": "text",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070004,
+            "text": "ID",
+            "type": "info"
           }
-        ]
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010001,
+            "text": "Sign in",
+            "type": "info",
+            "context": {}
+          }
+        }
       }
-    }
+    ]
   },
   "forced": false
 }
@@ -227,21 +268,24 @@ The flow UI then renders the given methods. For the example above, a suitable
 HTML Form would look along the lines of:
 
 ```html
-<form
-  action="http://127.0.0.1:4433/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09"
->
-  <input
-    type="hidden"
-    name="csrf_token"
-    value="pW6qLAS39HaXruAooEa7phFCKXoFWUkzIGe4FK"
-  />
-  <input
-    type="text"
-    name="identifier"
-    placeholder="Enter your username or email address"
-  />
-  <input type="password" name="password" />
-  <input type="submit" value="Log in" />
+<form action="http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe" method="POST">
+    <input name="csrf_token" type="hidden"
+           value="pUhD8lmSNNRnX/tuy6yAM317SfdiPOwetYUKnx23iTHnySErkBGJwaF1t3cEqNtxF3uC7W5A/dwP5l5VDYFRSA==">
+    <fieldset>
+        <label>
+            <input name="password_identifier" type="text" value="" placeholder="ID">
+            <span>ID</span>
+        </label>
+    </fieldset>
+    <fieldset>
+        <label>
+            <input name="password" type="password" value="" placeholder="Password">
+            <span>Password</span>
+        </label>
+    </fieldset>
+    <button name="method" type="submit" value="password">
+        Sign in
+    </button>
 </form>
 ```
 
@@ -256,42 +300,74 @@ then fetches the information about the flow again
 # The endpoint uses Ory Kratos' REST API to fetch information about the request
 $ curl -s -X GET \
     -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq
+    "http://127.0.0.1:4433/self-service/login/flows?id=f6209031-38d5-48bc-b6a5-118e8a24d1fe" | jq
 ```
 
 which now includes validation errors and other potential messages:
 
-```json
+```json5
 {
-  "id": "dd5be6df-a293-4749-aab6-209348829e09",
+  "id": "f6209031-38d5-48bc-b6a5-118e8a24d1fe",
   "type": "browser",
-  "expires_at": "2020-08-17T14:04:52.2276396Z",
-  "issued_at": "2020-08-17T13:54:52.2276396Z",
+  "expires_at": "2021-04-28T09:00:57.10254633Z",
+  "issued_at": "2021-04-28T08:50:57.10254633Z",
   "request_url": "http://127.0.0.1:4433/self-service/login/browser",
-  "messages": null,
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09",
-        "method": "POST",
-        "fields": [
-          /* ... */
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe",
+    "method": "POST",
+    "nodes": [
+      // ...
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password_identifier",
+          "type": "text",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [
           {
-            "name": "password",
-            "type": "text",
-            "value": "",
-            "messages": [
-              {
-                /* id, type, ... */
-                "text": "password: Value can not be empty"
-              }
-            ]
+            "id": 4000001,
+            "text": "length must be >= 1, but got 0",
+            "type": "error"
           }
-          /* ... */
-        ]
-      }
-    }
+        ],
+        "meta": {
+          "label": {
+            "id": 1070004,
+            "text": "ID",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [
+          {
+            "id": 4000001,
+            "text": "length must be >= 1, but got 0",
+            "type": "error"
+          }
+        ],
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      // ...
+    ]
   },
   "forced": false
 }
@@ -308,7 +384,7 @@ and might issue a session cookie if configured to do so.
 
 ## API Flows
 
-<ApiWarning />
+<ApiWarning/>
 
 API flows have three stages:
 
@@ -318,7 +394,7 @@ API flows have three stages:
 
 The high-level sequence diagram for API flows looks as follows:
 
-<SelfServiceApiFlow />
+<SelfServiceApiFlow/>
 
 ### Initialization
 
@@ -326,7 +402,7 @@ The client (e.g. mobile application) makes a request to the flow's
 initialization endpoint (e.g.`/self-service/login/api`,
 `/self-service/registration/api`, ...):
 
-<CodeTabs items={initApiFlow} />
+<CodeTabs items={initApiFlow}/>
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow
@@ -341,21 +417,25 @@ formatted as `application/json` right away. The client would then use that
 information to render the UI. In React Native, this may look like the following
 snippet:
 
-```jsx
-// import React from ...
-import { PublicApi } from '@ory/kratos-client'
+```tsx
+import React, { useState, useEffect } from 'react'
+import { Text, TextInput, View } from 'react-native'
+import { PublicApi, LoginFlow } from '@ory/kratos-client'
 
 const kratos = new PublicApi('http://127.0.0.1:4455/.ory/kratos/public')
 
-const Login = () => {
-  const [config, setConfig] =
-    (useState < LoginRequest) | (undefined > undefined)
+export default function Login () {
+  const [flow, setFlow] = useState<LoginFlow | undefined>(undefined)
 
   useEffect(() => {
-    kratos.initializeSelfServiceAPILoginFlow().then(({ body: flow }) => {
-      setConfig(flow.methods.password.config)
+    kratos.initializeSelfServiceAPILoginFlow().then(({ data: flow }) => {
+      setFlow(flow)
     })
   }, [])
+
+  if (!flow) {
+    return null
+  }
 
   // This is a non-functional, code example. It is missing state management and so on.
   // The idea is to show how initializing such a flow would look like in an API scenario.
@@ -363,23 +443,15 @@ const Login = () => {
     <View>
       <Text>Login</Text>
 
-      <TextInput
-        value={/*...*/}
-        onChangeText={/*...*/}
-        placeholder="Email or username"
-      />
-
-      <TextInput
-        value={/*...*/}
-        onChangeText={/*...*/}
-        secureTextEntry={true}
-        autoCompleteType="password"
-        textContentType="password"
-        placeholder="Email or username"
-      />
-
-      <Button title={'Log in'} onPress={/* ... */} />
-    </View>
+      {flow.ui.nodes.map((node) => {
+        switch (node.type) {
+          case 'input':
+            return <TextInput value={node.attributes.value} /* placeholder, name, ... *//>
+          default:
+            // ...
+        }
+      })}
+    </>
   )
 }
 ```
@@ -390,11 +462,11 @@ browser flow at the Public API endpoint:
 ```shell script
 curl -s -X GET \
     -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/login/flows?id=57374fa5-336a-4381-b471-92d7de939859" | jq
+    "http://127.0.0.1:4433/self-service/login/flows?id=41ebf1e9-79f5-4b97-b643-04bfc405f8ad" | jq
 
-  {
-    "id": "57374fa5-336a-4381-b471-92d7de939859",
-    "type": "api",
+{
+  "id": "41ebf1e9-79f5-4b97-b643-04bfc405f8ad",
+  "type": "api",
   # ...
 ```
 
@@ -403,15 +475,15 @@ curl -s -X GET \
 The request is then completed by sending the form formatted as
 `application/json` to the action endpoint
 
-```shell script
+```shell
 flow=$(curl -s -X GET -H "Accept: application/json" "http://127.0.0.1:4433/self-service/login/api")
-actionUrl=$(echo $flow | jq -r '.methods.password.config.action')
+actionUrl=$(echo $flow | jq -r '.ui.action')
 
 echo $actionUrl
-# http://127.0.0.1:4433/self-service/login/methods/password?flow=d6e0dd24-f5c6-4926-a526-616a9afeed9d
+# http://127.0.0.1:4433/self-service/login?flow=6394ffa4-235f-4c1a-a200-e62f89862015
 
 curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
-    -d '{"identifier": "i-do-not-exist@user.org", "password": "the-wrong-password"}' \
+    -d '{"password_identifier": "i-do-not-exist@user.org", "password": "the-wrong-password", "method": "password"}' \
     "$actionUrl" | jq
 ```
 
@@ -419,47 +491,93 @@ which in this case fails with a 400 Bad Request error and the following payload:
 
 ```json
 {
-  "id": "f895fafb-bf76-4f13-83a2-241b2dfd09dd",
+  "id": "6394ffa4-235f-4c1a-a200-e62f89862015",
   "type": "api",
-  "expires_at": "2020-08-17T20:58:51.9056258Z",
-  "issued_at": "2020-08-17T20:48:51.9056258Z",
+  "expires_at": "2021-04-28T09:12:48.462374732Z",
+  "issued_at": "2021-04-28T09:02:48.462374732Z",
   "request_url": "http://127.0.0.1:4433/self-service/login/api",
-  "active": "password",
-  "messages": null,
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=f895fafb-bf76-4f13-83a2-241b2dfd09dd",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "identifier",
-            "type": "text",
-            "required": true,
-            "value": "i-do-not-exist@user.org"
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/login?flow=6394ffa4-235f-4c1a-a200-e62f89862015",
+    "method": "POST",
+    "messages": [
+      {
+        "id": 4000006,
+        "text": "The provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number.",
+        "type": "error",
+        "context": {}
+      }
+    ],
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password_identifier",
+          "type": "text",
+          "value": "i-do-not-exist@user.org",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070004,
+            "text": "ID",
+            "type": "info"
           }
-        ],
-        "messages": [
-          {
-            "id": 4000006,
-            "text": "The provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number.",
-            "type": "error",
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010001,
+            "text": "Sign in",
+            "type": "info",
             "context": {}
           }
-        ]
+        }
       }
-    }
+    ]
   },
   "forced": false
 }
