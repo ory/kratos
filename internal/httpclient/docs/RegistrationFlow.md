@@ -5,10 +5,12 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Active** | Pointer to **string** | and so on. | [optional]
-**ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. |
+**ExpiresAt** | **
+time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. |
 **Id** | **string** |  |
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow occurred. |
-**RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. |
+**RequestUrl** | **
+string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. |
 **Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional]
 **Ui** | [**UiContainer**](UiContainer.md) |  |
 
@@ -18,9 +20,8 @@ Name | Type | Description | Notes
 
 `func NewRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, ui UiContainer, ) *RegistrationFlow`
 
-NewRegistrationFlow instantiates a new RegistrationFlow object
-This constructor will assign default values to properties that have it defined,
-and makes sure properties required by API are set, but the set of arguments
+NewRegistrationFlow instantiates a new RegistrationFlow object This constructor will assign default values to properties
+that have it defined, and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
 ### NewRegistrationFlowWithDefaults

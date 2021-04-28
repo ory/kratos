@@ -4,11 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **string** | Active, if set, contains the registration method that is being used. It is initially not set. | [optional]
-**ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated. |
+**Active** | Pointer to **
+string** | Active, if set, contains the registration method that is being used. It is initially not set. | [optional]
+**ExpiresAt** | **
+time.Time** | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated. |
 **Id** | **string** |  |
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the request occurred. |
-**RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. |
+**RequestUrl** | **
+string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. |
 **State** | **string** |  |
 **Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional]
 **Ui** | [**UiContainer**](UiContainer.md) |  |
@@ -19,9 +22,8 @@ Name | Type | Description | Notes
 
 `func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state string, ui UiContainer, ) *RecoveryFlow`
 
-NewRecoveryFlow instantiates a new RecoveryFlow object
-This constructor will assign default values to properties that have it defined,
-and makes sure properties required by API are set, but the set of arguments
+NewRecoveryFlow instantiates a new RecoveryFlow object This constructor will assign default values to properties that
+have it defined, and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
 ### NewRecoveryFlowWithDefaults

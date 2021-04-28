@@ -1560,21 +1560,20 @@ paths:
         This endpoint is useful for reverse proxies and API Gateways.
       operationId: whoami
       parameters:
-      - explode: false
-        in: header
-        name: Cookie
-        required: false
-        schema:
-          type: string
-        style: simple
-      - description: 'in: authorization'
-        explode: true
-        in: query
-        name: Authorization
-        required: false
-        schema:
-          type: string
-        style: form
+        - explode: false
+          in: header
+          name: Cookie
+          required: false
+          schema:
+            type: string
+          style: simple
+        - explode: false
+          in: header
+          name: Authorization
+          required: false
+          schema:
+            type: string
+          style: simple
       responses:
         "200":
           content:
