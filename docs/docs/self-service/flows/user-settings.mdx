@@ -382,9 +382,11 @@ the Settings Flow:
 
 ```shell script
 $ curl -s -X GET \
-  -H "Authorization: Bearer $sessionToken"  \
-  -H "Accept: application/json"  \
-  'http://127.0.0.1:4433/self-service/settings/flows?id=14cbf9a7-0c71-46e9-b3b9-806cb7859145' | jq -r '.ui.nodes[] | select(.group=="oidc")'
+    -H "Authorization: Bearer $sessionToken"  \
+    -H "Accept: application/json"  \
+    'http://127.0.0.1:4433/self-service/settings/flows?id=14cbf9a7-0c71-46e9-b3b9-806cb7859145' | \
+      jq -r '.ui.nodes[] | select(.group=="oidc")'
+
 {
   "type": "input",
   "group": "oidc",
