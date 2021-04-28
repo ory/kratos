@@ -3,7 +3,6 @@ import Mermaid from './Mermaid'
 
 const chart = ({
   flows = ['login', 'registration', 'settings', '...'],
-  methods = ['password', 'oidc', '...'],
   interactions = ['"Log in"', '"Sign Up"', '"Update Email"', '...'],
   success = 'Perform flow-specific action (e.g. create user, set session cookie, ...)'
 }) => {
@@ -19,9 +18,7 @@ sequenceDiagram
   K->>B: HTTP 200 OK with flow as application/json payload
   B-->>B: Render form using e.g. Native iOS UI Elements
   B-->>B: User fills out forms, clicks e.g. ${interactions}
-  B->>K: REST POST to e.g. /self-service/${components}/methods/<${methods.join(
-    '|'
-  )}>
+  B->>K: REST POST to e.g. /self-service/${components}?flow=...>
   K-->>K: Validates and processes payload
   alt Form payload is valid
     K->>B: ${success}

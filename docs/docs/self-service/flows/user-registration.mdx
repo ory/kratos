@@ -167,47 +167,120 @@ the response would look as such:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4433/self-service/registration/flows?id=838895fb-bb05-4075-8a7e-1cd22ca42017' | jq
+    'http://127.0.0.1:4434/self-service/registration/flows?id=388ae8da-4c44-4765-bfa8-669963d388f5' | jq
 
 {
-  "id": "838895fb-bb05-4075-8a7e-1cd22ca42017",
+  "id": "388ae8da-4c44-4765-bfa8-669963d388f5",
   "type": "browser",
-  "expires_at": "2020-09-05T08:24:36.4797386Z",
-  "issued_at": "2020-09-05T08:14:36.4797386Z",
+  "expires_at": "2021-04-28T09:29:23.713785401Z",
+  "issued_at": "2021-04-28T09:19:23.713785401Z",
   "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/registration/methods/password?flow=838895fb-bb05-4075-8a7e-1cd22ca42017",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "GTZrak1TBiIfyyaFajmrp/A6dS4Gh3NpMPzQjJ9ChSS7d4ODojfibHcfgNTX/9ivwci/V1K6GuRY/f4b545NUA=="
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "traits.email",
-            "type": "email"
-          },
-          {
-            "name": "traits.name.first",
-            "type": "text"
-          },
-          {
-            "name": "traits.name.last",
-            "type": "text"
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/registration?flow=388ae8da-4c44-4765-bfa8-669963d388f5",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "Z9pXCAGz2oK/9Ch8x4U1ehEAKHWVngQTPFDFTlYtbK8lWzXRyDBnl3neZGUIgW44ewDjb5niFdGGM5GERhu01g==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.email",
+          "type": "email",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "E-Mail",
+            "type": "info"
           }
-        ]
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.name.first",
+          "type": "text",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "First Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.name.last",
+          "type": "text",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "Last Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1040001,
+            "text": "Sign up",
+            "type": "info",
+            "context": {}
+          }
+        }
       }
-    }
+    ]
   }
 }
 ```
@@ -246,35 +319,74 @@ providers as submit fields:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4433/self-service/registration/flows?id=838895fb-bb05-4075-8a7e-1cd22ca42017' | jq
+  'http://127.0.0.1:4433/self-service/registration/flows?id=c1f4dfd1-3559-4cd3-b6f6-4a83689a41bd' | jq
 
 {
-  "id": "838895fb-bb05-4075-8a7e-1cd22ca42017",
+  "id": "c1f4dfd1-3559-4cd3-b6f6-4a83689a41bd",
   "type": "browser",
-  "expires_at": "2020-09-05T08:24:36.4797386Z",
-  "issued_at": "2020-09-05T08:14:36.4797386Z",
+  "expires_at": "2021-04-28T10:25:35.011063Z",
+  "issued_at": "2021-04-28T09:25:35.011063Z",
   "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
-  "methods": {
-    "oidc": {
-      "method": "oidc",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/838895fb-bb05-4075-8a7e-1cd22ca42017",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "GTZrak1TBiIfyyaFajmrp/A6dS4Gh3NpMPzQjJ9ChSS7d4ODojfibHcfgNTX/9ivwci/V1K6GuRY/f4b545NUA=="
-          },
-          {
-            "name": "provider",
-            "type": "submit",
-            "value": "github"
+  "ui": {
+    "action": "http://127.0.0.1:4455/self-service/registration?flow=c1f4dfd1-3559-4cd3-b6f6-4a83689a41bd",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "PJO66RnYyYLyksS/bjlveGnmZARtqPvibgJI/0EX3DPZf0Oq0Ln+5KtTHVfcxMDSbXjx32hU9GwpfbwA2eLFWA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "oidc",
+        "attributes": {
+          "name": "provider",
+          "type": "submit",
+          "value": "github",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1040002,
+            "text": "Sign up with github",
+            "type": "info",
+            "context": {
+              "provider": "github"
+            }
           }
-        ]
+        }
+      },
+      {
+        "type": "input",
+        "group": "oidc",
+        "attributes": {
+          "name": "provider",
+          "type": "submit",
+          "value": "google",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1040002,
+            "text": "Sign up with google",
+            "type": "info",
+            "context": {
+              "provider": "google"
+            }
+          }
+        }
       }
-    }
+    ]
   }
 }
 ```
@@ -451,7 +563,7 @@ It is very important to add the "session" hook to the after `oidc` registration
 hooks. Otherwise your users need to use the login flow again to be able to get a
 session. Account Enumeration Attacks with OpenID Connect sign in flows are
 typically not an issue if you follow the guidelines in the
-[Sign in with GitHub, Google, Facebook, LinkedIn, Microsoft ... Guide](../../guides/sign-in-with-github-google-facebook-linkedin)!
+[Sign in with GitHub, Google, Facebook, LinkedIn, Microsoft ... Guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)!
 
 :::
 
@@ -459,7 +571,7 @@ typically not an issue if you follow the guidelines in the
 
 When the registration is completed successfully, Ory Kratos responds with a HTTP
 302 Redirect to the
-[configured redirect URL](../../concepts/browser-redirect-flow-completion).
+[configured redirect URL](../../concepts/browser-redirect-flow-completion.mdx).
 
 #### With Auto-Login on Registration
 
@@ -533,12 +645,12 @@ signed up identity:
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
     "http://127.0.0.1:4433/self-service/registration/api" \
-    | jq -r '.methods.password.config.action'\
+    | jq -r '.ui.action'\
 )
 
 # Complete Registration Flow with password method
 $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
-    -d '{"traits.email": "registration-api@user.org", "password": "fhAzi860a"}' \
+    -d '{"traits.email": "registration-api@user.org", "password": "fhAzi860a", "method": "password"}' \
     "$actionUrl" | jq
 
 {
@@ -579,12 +691,12 @@ Kratos Login Session Token are included in the response:
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
     "http://127.0.0.1:4433/self-service/registration/api" \
-    | jq -r '.methods.password.config.action'\
+    | jq -r '.ui.action'\
 )
 
 $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
-  -d '{"traits.email": "registration-session-api@user.org", "password": "fhAzi860a"}' \
-  "$actionUrl" | jq
+    -d '{"traits.email": "registration-api@user.org", "password": "fhAzi860a", "method": "password"}' \
+    "$actionUrl" | jq
 
 {
   "session_token": "9kmrgslvw8ZCyEtSZqOmxEtnfBJIvB31",

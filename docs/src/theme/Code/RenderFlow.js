@@ -70,15 +70,15 @@ const RenderFlow = ({ flow }) => {
           <TabItem value="generic-form">
             <CodeFromRemote
               lang="handlebars"
-              link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/views/partials/form.hbs"
-              src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/views/partials/form.hbs"
+              link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/views/partials/ui.hbs"
+              src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/views/partials/ui.hbs"
             />
           </TabItem>
           <TabItem value="input-form">
             <CodeFromRemote
               lang="handlebars"
-              link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/views/partials/form_input_default.hbs"
-              src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/views/partials/form_input_default.hbs"
+              link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/views/partials/ui_node_input_default.hbs"
+              src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/views/partials/ui_node_input_default.hbs"
             />
           </TabItem>
         </Tabs>
