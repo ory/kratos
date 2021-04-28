@@ -1,4 +1,5 @@
-const email = () => 'test@test.com'
+const email = () =>
+  Math.random().toString(36) + '@' + Math.random().toString(36) + '.com'
 const password = () => Math.random().toString(36)
 
 const assertVerifiableAddress = ({ isVerified, email }) => ({ identity }) => {
