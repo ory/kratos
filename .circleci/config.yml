@@ -183,7 +183,7 @@ workflows:
           requires:
             - test
             - test-e2e
-            - sdk/generate
+            - sdk/generate-openapi
             - goreleaser/release
           filters:
             tags:
