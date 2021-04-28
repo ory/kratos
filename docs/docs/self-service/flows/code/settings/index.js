@@ -8,7 +8,7 @@ export const getFlow = {
     code: require('raw-loader!./samples/get.curl.txt').default
   },
   js: {
-    label: 'JavaScript SDK',
+    label: 'JavaScript',
     language: 'js',
     code: require('raw-loader!./samples/get.js.txt').default
   },
