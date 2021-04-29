@@ -1,0 +1,174 @@
+---
+id: login-session
+title: Configuring And Checking for Login Sessions
+---
+
+import CodeFromRemote from '@theme/CodeFromRemote'
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
+
+A login session is created when a user signs in. The session is stored as a
+cookie or as a token, depending on the interaction type.
+
+## Login Session Configuration
+
+A session is valid for the session lifespan you specify in the Ory Kratos
+config:
+
+```yaml title="path/to/kratos/config.yml
+session:
+  lifespan: 720h # 30 days
+```
+
+Per default the session cookie has the `max-age` parameter set to the specified
+session lifespan. You may disable this behavior by setting:
+
+```yaml title="path/to/kratos/config.yml
+session:
+  cookie:
+    persistent: false
+```
+
+:::note
+
+The cookie `max-age` parameter behaves as follows:
+
+- The browser interprets the cookie to be removed when the session ends if
+  `max-age` is not set as part of the `Set-Cookie` header. A session ends if the
+  browser is terminated due to a reboot or when shutting down the browser.
+- The browser keeps the cookie until `max-age` is reached otherwise.
+
+:::
+
+Once the lifespan is reached, the user needs to sign in again.
+
+## Checking for Login Sessions
+
+### Browser Client
+
+The easiest way to check if a user is signed in is to call the
+`http(s)://<kratos-public/sessions/whoami` endpoint which will return either a
+401 Unauthorized or HTTP 200 OK with the session.
+
+:::note
+
+Make sure to include the Ory Kratos Session Cookie when calling this endpoint.
+If you are calling this endpoint from a proxy or middleware, make sure to
+forward the cookies sent to the proxy/middleware. If you are calling this
+endpoint as an AJAX call, make sure to include credentials and configure CORS
+properly.
+
+:::
+
+A typical session payload will look like this:
+
+```json
+{
+  "id": "8f660ce3-69ec-4aeb-9fda-f9230dc3243f",
+  "active": true,
+  "expires_at": "2020-08-25T13:42:15.7411522Z",
+  "authenticated_at": "2020-08-24T13:42:15.7411522Z",
+  "issued_at": "2020-08-24T13:42:15.7412042Z",
+  "identity": {
+    "id": "bf32596a-f853-47c4-91e6-a3f41cf4949d",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "api@user.org",
+      "name": {
+        "last": "User",
+        "first": "API"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "f877db6c-7dfb-45e3-bbeb-ac8349348128",
+        "value": "api@user.org",
+        "verified": false,
+        "via": "email",
+        "verified_at": null,
+        "expires_at": "2020-08-24T14:35:59.125873Z"
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "065a908c-82be-4110-bf67-9910f36242b7",
+        "value": "api@user.org",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+#### Code Examples
+
+<Tabs
+  defaultValue="nodejs"
+  values={[
+    {label: 'ExpressJS', value: 'nodejs'},
+  ]}>
+<TabItem value="nodejs">
+
+{' '}
+
+<CodeFromRemote
+  lang="js"
+  link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/middleware/simple.ts"
+  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/middleware/simple.ts"
+/>
+
+</TabItem>
+</Tabs>
+
+### API Client
+
+API clients receive and use Ory Kratos Session Tokens which can be checked by
+calling the `/sessions/whoami` endpoint and including the Ory Kratos Session
+Token as a bearer token in the HTTP Authorization Header:
+
+```shell script
+$ sessionToken=oFZzgLpsacUpUy2cvQPtrGa2046WcXCR
+$ curl -s -X POST -H  "Accept: application/json" \
+    -H "Authorization: Bearer $sessionToken" \
+    # OR: \
+    # -H "X-Session-Token: $sessionToken" \
+    http://127.0.0.1:4433/sessions/whoami | jq
+
+{
+  "id": "8f660ce3-69ec-4aeb-9fda-f9230dc3243f",
+  "active": true,
+  "expires_at": "2020-08-25T13:42:15.7411522Z",
+  "authenticated_at": "2020-08-24T13:42:15.7411522Z",
+  "issued_at": "2020-08-24T13:42:15.7412042Z",
+  "identity": {
+    "id": "bf32596a-f853-47c4-91e6-a3f41cf4949d",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "api@user.org",
+      "name": {
+        "last": "User",
+        "first": "API"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "f877db6c-7dfb-45e3-bbeb-ac8349348128",
+        "value": "api@user.org",
+        "verified": false,
+        "via": "email",
+        "verified_at": null,
+        "expires_at": "2020-08-24T14:35:59.125873Z"
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "065a908c-82be-4110-bf67-9910f36242b7",
+        "value": "api@user.org",
+        "via": "email"
+      }
+    ]
+  }
+}
+```

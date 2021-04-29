@@ -1,0 +1,155 @@
+---
+id: hooks
+title: Hooks
+---
+
+Hooks execute logic after a flow (login, registration, settings, ...):
+
+- _After login:_ is executed after a login was successful.
+- _After registration:_ is executed when a registration was successful:
+  - _Before persisting:_ runs before the identity is saved in the database.
+  - _After persisting:_ runs after the identity was saved in the database.
+- _After settings:_ is executed when a settings was successful:
+  - _Before persisting:_ runs before the identity is saved in the database.
+  - _After persisting:_ runs after the identity was saved in the database.
+
+## Login
+
+### After
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    login:
+      after:
+        password:
+          - hook: revoke_active_sessions
+```
+
+#### `revoke_active_sessions`
+
+The `revoke_active_sessions` will delete all active sessions for that user on
+successful login:
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    login:
+      after:
+        <method>:
+          - hook: revoke_active_sessions
+            # can not be configured
+```
+
+## Registration
+
+Hooks running after successful user registration are defined per Self-Service
+Registration Method in Ory Kratos' configuration file.
+
+### After
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    registration:
+      after:
+        oidc:
+          - hook: session
+        password:
+          - hook: session
+```
+
+#### `session`
+
+Adding the `session` hook signs the user immediately in once the account has
+been created. It runs after the identity has been saved to the database.
+
+:::info
+
+Using this job as part of your post-registration workflow makes your system
+vulnerable to
+[Account Enumeration Attacks](../concepts/security.mdx#account-enumeration-attacks)
+because a threat agent can distinguish between existing and non-existing
+accounts by checking if `Set-Cookie` was sent as part of the registration
+response.
+
+:::
+
+To use this hook, you must first define one or more (for secret rotation)
+secrets. You can either choose to use the "default" secrets or the more specific
+"cookie" secrets. The other required config is setting the hook in `after` work
+flows:
+
+```yaml title="path/to/my/kratos.config.yml"
+secrets:
+  cookie:
+    - something-super-secret # The first entry will be used to sign and verify session cookies
+
+    # All other entries will be used to verify session cookies that were signed before "something-super-secret" became
+    # the current signing secret.
+    - old-session-secret
+    - older-session-secret
+    - ancient-session-secret
+
+selfservice:
+  flows:
+    registration:
+      after:
+        <method>:
+          - hook: session
+            # can not be configured
+```
+
+Depending on the registration flow type the behavior changes.
+
+### Registration Flow via Browser
+
+When performing a registration flow with a Browser, this hook sends a
+`Set-Cookie` HTTP header which contains the session cookie.
+
+Therefore, the user is logged in immediately.
+
+### Registration Flow via API
+
+When performing a registration flow with an API client (e.g. mobile apo), this
+hook creates a session and returns the session token and the session itself in
+the response body as application/json:
+
+```json
+{
+  "session": {
+    "id": "..."
+    // ...
+  },
+  "session_token": "...",
+  "identity": {
+    "id": "..."
+    // ...
+  }
+}
+```
+
+:::info
+
+Because the HTTP reply is handled by the hook itself, no other hooks can be
+executed because the HTTP reply can not be modified further (e.g. HTTP Status
+Code was already sent as 200 and cannot be changed to 301). You must ensure that
+the session hook is the last hook in your configuration!
+
+:::
+
+## Settings
+
+Hooks running after successfully updating user settings and are defined per
+Self-Service Settings Method in Ory Kratos' configuration file.
+
+### After
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    settings:
+      after:
+```
+
+No hooks are available for this flow at the moment.

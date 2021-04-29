@@ -1,0 +1,180 @@
+$ curl -s -X GET \
+    -H "Authorization: Bearer $sessionToken"  \
+    -H "Accept: application/json"  \
+    'http://127.0.0.1:4433/self-service/settings/flows?id=9b527900-2199-4221-9252-7971b3362282' | \
+      jq
+
+{
+  "id": "9b527900-2199-4221-9252-7971b3362282",
+  "type": "browser",
+  "expires_at": "2021-04-28T13:55:36.046466067Z",
+  "issued_at": "2021-04-28T12:55:36.046466067Z",
+  "request_url": "http://127.0.0.1:4433/self-service/recovery?flow=199a2c74-08ca-4f22-b24c-3de3032682f8&token=XSpIPzkW4DgnJVhBG5Wjw3FZ0ORmGrrq",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/settings?flow=9b527900-2199-4221-9252-7971b3362282",
+    "method": "POST",
+    "messages": [
+      {
+        "id": 1060001,
+        "text": "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 15.00 minutes.",
+        "type": "info",
+        "context": {
+          "privilegedSessionExpiresAt": "2021-04-28T13:10:36.050848814Z"
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "U3r/lgEfT8rA1Lg0Eeo06oGO8mX6T4TKoe/z7rbInhvYeacbRg0IW9zrqnpU1wmQJXKiekNzdLnypx5naHXoPg==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.email",
+          "type": "email",
+          "value": "foo@ory.sh",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "E-Mail",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.name.first",
+          "type": "text",
+          "value": "Foo",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "First Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.name.last",
+          "type": "text",
+          "value": "Bar",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "Last Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "profile",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070003,
+            "text": "Save",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070003,
+            "text": "Save",
+            "type": "info"
+          }
+        }
+      }
+    ]
+  },
+  "identity": {
+    "id": "b0a31645-0b5f-436a-b46d-03f15e8e89d9",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "foo@ory.sh",
+      "name": {
+        "first": "Foo",
+        "last": "Bar"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "e3ea2845-0e07-4631-8955-9f4ecc5f73aa",
+        "value": "foo@ory.sh",
+        "verified": true,
+        "via": "email",
+        "status": "completed",
+        "verified_at": "2021-04-28T12:41:17.342366863Z"
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "fd66ee7e-5751-4282-bf27-414290084c19",
+        "value": "foo@ory.sh",
+        "via": "email"
+      }
+    ]
+  },
+  "state": "show_form"
+}

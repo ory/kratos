@@ -1,0 +1,84 @@
+$ curl -s -X GET \
+    -H "Authorization: Bearer $sessionToken" \
+    -H "Accept: application/json" \
+    'http://127.0.0.1:4433/self-service/settings/flows?id=f71743cd-700d-4a30-9275-8edc90de07cc' | \
+      jq -r '.ui.nodes[] | select(.group=="profile")'
+
+{
+  "type": "input",
+  "group": "profile",
+  "attributes": {
+    "name": "traits.email",
+    "type": "email",
+    "value": "notanemail",
+    "disabled": false
+  },
+  "messages": [
+    {
+      "id": 4000001,
+      "text": "\"notanemail\" is not valid \"email\"",
+      "type": "error"
+    }
+  ],
+  "meta": {
+    "label": {
+      "id": 1070002,
+      "text": "E-Mail",
+      "type": "info"
+    }
+  }
+}
+{
+  "type": "input",
+  "group": "profile",
+  "attributes": {
+    "name": "traits.name.first",
+    "type": "text",
+    "value": "",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070002,
+      "text": "First Name",
+      "type": "info"
+    }
+  }
+}
+{
+  "type": "input",
+  "group": "profile",
+  "attributes": {
+    "name": "traits.name.last",
+    "type": "text",
+    "value": "",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070002,
+      "text": "Last Name",
+      "type": "info"
+    }
+  }
+}
+{
+  "type": "input",
+  "group": "profile",
+  "attributes": {
+    "name": "method",
+    "type": "submit",
+    "value": "profile",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070003,
+      "text": "Save",
+      "type": "info"
+    }
+  }
+}

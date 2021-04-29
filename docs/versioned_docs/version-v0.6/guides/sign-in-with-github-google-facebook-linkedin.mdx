@@ -1,0 +1,728 @@
+---
+id: sign-in-with-github-google-facebook-linkedin
+title: Sign in with GitHub, GitLab, Google, Facebook, LinkedIn, Microsoft ...
+---
+
+In this document we will take a look at setting up "Sign in with GitHub" using
+Ory Kratos.
+
+Run the [Quickstart](../quickstart.mdx) with Docker Compose:
+
+```shell script
+# This assumes that you have Ory Kratos checked out locally and
+# that your current directory ("pwd") is the folder where Ory Kratos
+# is.
+
+$ make quickstart
+```
+
+:::info
+
+It is very important to add the "session" hook to the after oidc registration
+hooks. Otherwise your users need to use the login flow again to be able to get a
+session.
+
+```yaml title="path/to/my/kratos/config.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  flows:
+    registration:
+      after:
+        oidc:
+          hooks:
+            - hook: session
+```
+
+:::
+
+## Discord
+
+To set up "Sign in with Discord" you must create a
+[Discord OAuth2 Application](https://discord.com/developers/docs/topics/oauth2).
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4433/self-service/methods/oidc/callback/discord
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+The provider ID must point to the provider's ID set in the Ory Kratos
+configuration file (explained in further detail at
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
+
+:::note
+
+Discord does not implement OpenID Connect. Therefore, Ory Kratos makes a request
+to
+[Discord's User API](https://discord.com/developers/docs/resources/user#get-current-user)
+and adds that data to `std.extVar('claims')`. However, not all fields are
+supported. Check the list of supported fields
+[in Kratos' source code](https://github.com/ory/kratos/blob/v0.5.1-alpha.1/selfservice/strategy/oidc/provider_discord.go#L81-L91).
+
+The `identify` scope will add following fields:
+
+```text
+iss                 # always https://discord.com/api/v6/oauth2/
+sub                 # numeric discord user id
+name                # username + # + discriminator
+nickname            # username
+preferred_username  # username
+picture             # avatar url
+locale              # user locale
+```
+
+Additionally, the `email` scope will add:
+
+```text
+email               # user email
+email_verified      # whether email is verified
+```
+
+:::
+
+```json title="contrib/quickstart/kratos/email-password/oidc.discord.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by Discord.
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the Discord provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: discord # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: discord
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Discord
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Discord
+            mapper_url: file:///etc/config/kratos/oidc.discord.jsonnet
+            scope:
+              - identify
+              - email
+```
+
+Discord is now an option to log in via Kratos.
+
+## Slack
+
+To set up "Sign in with Slack" you must create a
+[Slack OAuth Application](https://api.slack.com/apps).
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4433/self-service/methods/oidc/callback/slack
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+The provider ID must point to the provider's ID set in the Ory Kratos
+configuration file (explained in further detail at
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
+
+:::note
+
+Slack does not implement OpenID Connect. Therefore, Ory Kratos makes a request
+to [Slack's Oauth2 API](https://api.slack.com/methods/users.identity) and adds
+that data to `std.extVar('claims')`. However, not all fields are supported.
+Check the list of supported fields
+[in Kratos' source code](https://github.com/ory/kratos/blob/master/selfservice/strategy/oidc/provider_slack.go).
+
+The `identity.basic` scope will add following fields:
+
+```text
+iss                 # always https://slack.com/oauth/
+sub                 # alphanumeric slack user id
+name                # username
+nickname            # username
+preferred_username  # username
+```
+
+Additionally, the `identity.email` scope will add:
+
+```text
+email               # user email
+email_verified      # always true
+```
+
+Additionally, the `identity.avatar` scope will add:
+
+```text
+picture             # user avatar (512x512px)
+```
+
+:::
+
+```json title="contrib/quickstart/kratos/email-password/oidc.discord.jsonnet"
+local claims = {
+  email_verified: true
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // It is assumed that Slack requires a email to be verifed before accessable via Oauth (because they don't provide a email_verified field).
+      email: claims.email
+    },
+  },
+}
+```
+
+Now, enable the Slack provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: slack # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: slack
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Slack
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Slack
+            mapper_url: file:///etc/config/kratos/oidc.slack.jsonnet
+            scope:
+              - identity.basic
+              - identity.email
+```
+
+Slack is now an option to log in via Kratos.
+
+## GitHub
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/Hz_dP5c_qvc"
+  frameborder="0"
+  allowfullscreen
+/>
+
+To set up "Sign in with GitHub" you must create a
+[GitHub OAuth2 Client](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/).
+
+Set the "Authorization callback URL" to:
+
+```
+http://127.0.0.1:4433/self-service/methods/oidc/callback/github
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>//self-service/methods/oidc/callback/<provider-id>
+```
+
+The provider ID must point to the provider's ID set in the Ory Kratos
+configuration file (explained in further detail at
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
+
+:::note
+
+GitHub does not implement OpenID Connect. Therefore, Ory Kratos makes a request
+to
+[GitHub's User API](https://developer.github.com/v3/users/#get-the-authenticated-user)
+and adds that data to `std.extVar('claims')`. Check out what data is available
+at
+[GitHub's Scope Docs](https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/).
+Not all GitHub fields are supported however. Check the list of supported fields
+[in Kratos' source code](https://github.com/ory/kratos/blob/v0.2.1-alpha.1/selfservice/strategy/oidc/provider_github.go#L72-L98).
+
+:::
+
+As explained in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx),
+you must also create a Jsonnet code snippet for the provider. Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.github.jsonnet`.
+The following JsonNet takes `email_primary` and maps it to `traits.email`:
+
+```json title="contrib/quickstart/kratos/email-password/oidc.github.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by GitHub.
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the GitHub provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: github # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: github
+            client_id: .... # Replace this with the OAuth2 Client ID provided by GitHub
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by GitHub
+            mapper_url: file:///etc/config/kratos/oidc.github.jsonnet
+            scope:
+              - user:email
+```
+
+Next, open the login endpoint of the SecureApp and you should see the GitHub
+Login option!
+
+## GitLab
+
+To set up "Sign in with GitLab" you must create a
+[GitLab OAuth2 Application](https://docs.gitlab.com/ee/integration/oauth_provider.html#adding-an-application-through-the-profile).
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4433/self-service/methods/oidc/callback/gitlab
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+:::note
+
+While you can use
+[GitLab as an OIDC identity provider](https://docs.gitlab.com/ee/integration/openid_connect_provider.html),
+GitLab only returns the sub and sub_legacy claims in the ID token. Therefore,
+Ory Kratos makes a request to
+[GitLab's /oauth/userinfo API](https://gitlab.com/oauth/userinfo) and adds the
+user info to `std.extVar('claims')`.
+
+:::
+
+```json title="contrib/quickstart/kratos/email-password/oidc.gitlab.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by GitLab.
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the GitLab provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: gitlab # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: gitlab
+            client_id: .... # Replace this with the OAuth2 Client ID provided by GitLab
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by GitLab
+            mapper_url: file:///etc/config/kratos/oidc.gitlab.jsonnet
+            scope:
+              - read_user
+              - openid
+              - profile
+              - email
+```
+
+GitLab is now an option to log in via Kratos.
+
+## Microsoft
+
+This will enable you to log in using any Azure AD directory - Multitenant and
+personal Microsoft accounts (e.g. Skype, Xbox) depending on the settings made
+when creating the application in Azure AD.
+
+#### Creating an Application in Azure AD
+
+To set up "Sign in with Microsoft" you must first
+[register an application with the Microsoft identity platform](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app).
+
+Select "Web" as the "Redirect URI" type, and set the URI to:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>//self-service/methods/oidc/callback/<provider-id>
+```
+
+After the "App Registration" is created, make note of the `Application ID` and
+`Directory ID` on top of the Overview page. To create the client secret,
+navigate to "Certificates & secrets" and click "+ New client secret". Remember
+to copy the secret value as it will only be shown once.
+
+#### Configuring Kratos
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.microsoft.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.microsoft.jsonnet"
+local claims = std.extVar('claims');
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // If connecting only to your organization (one tenant), claims.email is safe to use if you have not actively disabled e-mail verification during signup.
+      //
+      // The email might be empty if the account is not linked to an email address.
+      // For a human readable identifier, consider using the "preferred_username" claim.
+      [if "email" in claims then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Enable the Microsoft provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: microsoft # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: microsoft
+            client_id: .... # Replace this with the Application ID from the App Registration
+            client_secret: .... # Replace this with the generated Secret value from the App Registration
+            tenant: .... # Replace this with the Tenant of your choice (see below)
+            mapper_url: file:///etc/config/kratos/oidc.microsoft.jsonnet
+            scope:
+              - profile
+              - email
+```
+
+Azure AD is now an option to log in to kratos.
+
+##### Choosing Tenant
+
+There are two ways to use the `microsoft` provider for authentication:
+
+1. For authenticating users in a single Azure AD Directory (organisation), set
+   the `tenant` value to either the `Directory ID` from the "App Registration"
+   page, or the organisation domain. E.g. `8eaef023-2b34-4da1-9baa-8bc8c9d6a490`
+   or `contoso.onmicrosoft.com`.
+2. For authenticating any user in the Microsoft identity platform, set the
+   `tenant` value to either:
+
+- `organizations` to allow users with work or school accounts, or
+- `consumers` to allow users with personal accounts, or
+- `common` to allow both kind of accounts.
+
+## Twitch
+
+To set up "Sign in with Twitch" you must create a
+[Twitch OAuth2 Application](https://dev.twitch.tv/docs/authentication#registration).
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4433/self-service/methods/oidc/callback/twitch
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+The provider ID must point to the provider's ID set in the Ory Kratos
+configuration file (explained in further detail at
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
+
+As explained in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx),
+you must also create a Jsonnet code snippet for the provider. Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.twitch.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.twitch.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by Twitch.
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the Twitch provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: twitch # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: generic
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Twitch
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Twitch
+            issuer_url: https://id.twitch.tv/oauth2
+            mapper_url: file:///etc/config/kratos/oidc.twitch.jsonnet
+            scope:
+              - openid
+              - user:read:email # required for email and email_verified claims in the near future
+            requested_claims: # explicitly request email and email_verified claims because twitch doesn't add them by default
+              id_token:
+                email:
+                  essential: true
+                email_verified:
+                  essential: true
+```
+
+Next, open the login endpoint of the SecureApp and you should see the Twitch
+Login option!
+
+## Facebook
+
+**Create Facebook Application**
+
+To set up "Sign in with Facebook" you first need a
+[Facebook Developer Account](https://developers.facebook.com/docs/development/register).
+
+Create a
+[Facebook OAuth2 Application](https://developers.facebook.com/docs/development/create-an-app).
+
+Add a "Facebook Login" product to this application.
+
+Select "Settings" in the Products menu.
+
+Set the "Valid OAuth Redirect URIs" to:
+
+```
+https://127.0.0.1:4433/self-service/methods/oidc/callback/facebook
+```
+
+The pattern of this URL is:
+
+```
+https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+Facebook requires https the redirect URIs!
+
+:::note
+
+While you can use
+[Facebook as an OIDC identity provider](https://developers.facebook.com/docs/facebook-login/),
+Facebook only returns access_token and not id_token. Therefore, Ory Kratos makes
+a request to
+[Facebook's graph.facebook.com/me API](https://graph.facebook.com/me) and adds
+the user info to `std.extVar('claims')`.
+
+:::
+
+**Configuring Kratos**
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.facebook.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.facebook.jsonnet"
+local claims = std.extVar('claims');
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // It is assumed that Facebook requires a email to be verifed before accessable via Oauth (because they don't provide an email_verified field).
+      //
+      // The email might be empty if the user is not allowed to an email scope.
+      [if "email" in claims then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the Facebook provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: facebook # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: facebook
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Facebook app
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Facebook app
+            mapper_url: file:///etc/config/kratos/oidc.facebook.jsonnet
+            scope:
+              - email # required for email and email_verified claims in the near future
+                # other supported scopes: user_gender, user_birthday
+```
+
+Next, open the login endpoint of the SecureApp and you should see the Facebook
+Login option!
+
+## Google
+
+**Set up on Google Cloud Platform**
+
+1. Create an
+   [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
+2. Create
+   [OAuth 2.0 Client IDs](https://console.cloud.google.com/apis/credentials)
+
+In the new _OAuth 2.0 Client ID_, you will need the `Client ID` and
+`Client secret`.
+
+**Configuring Kratos**
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.google.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.google.jsonnet"
+local claims = {
+  email_verified: true
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+      // additional claims
+      // please also see the `Google specific claims` section
+      first_name: claims.given_name,
+      last_name: claims.family_name,
+      [if "hd" in claims && claims.email_verified then "hd" else null]: claims.hd,
+    },
+  },
+}
+```
+
+Now, enable the Google provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: google # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: google
+            client_id: .... # Replace this with the OAuth2 Client ID
+            client_secret: .... # Replace this with the OAuth2 Client secret
+            mapper_url: file:///etc/config/kratos/oidc.google.jsonnet
+            scope:
+              - email
+              - profile
+              # other supported scopes can be found in Google OAuth 2.0 dev docs
+            requested_claims:
+              id_token:
+                email:
+                  essential: true
+                email_verified:
+                  essential: true
+                given_name:
+                  essential: true
+                family_name: null
+                hd: null # If you want the G Suite domain
+```
+
+**Google specific claims**
+
+- `hd`: The hosted G Suite domain of the user. Provided only if the user belongs
+  to a hosted domain. For a given email account with custom domain
+  `example.com` - `user1@example.com` would produce `example.com` in the `hd`
+  claim.
+
+Please look at the Google developer documentation which can be found
+[here](https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload)
+.
+
+## LinkedIn
+
+Connecting with other Social Sign In providers will be very similar to the
+GitHub flow. If you've managed to do it, add to this document by writing it down
+and making a PR! :)

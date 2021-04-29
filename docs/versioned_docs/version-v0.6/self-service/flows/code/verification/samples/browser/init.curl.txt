@@ -1,0 +1,16 @@
+curl -s -v -X GET \
+  -H "Accept: text/html"  \
+  http://127.0.0.1:4433/self-service/verification/browser
+
+> GET /self-service/verification/browser HTTP/1.1
+> Host: 127.0.0.1:4433
+> User-Agent: curl/7.64.1
+> Accept: text/html
+>
+< HTTP/1.1 302 Found
+< Cache-Control: 0
+< Content-Type: text/html; charset=utf-8
+< Location: http://127.0.0.1:4455/verification?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+< Set-Cookie: csrf_token=y4Ocu6V83BapwJwbPw/pnlRHHw40DZbjq5iuDrxl0Ds=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly
+<
+<a href="http://127.0.0.1:4455/verification?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3">Found</a>.

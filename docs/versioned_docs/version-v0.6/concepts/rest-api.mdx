@@ -1,0 +1,54 @@
+---
+id: rest-api
+title: REST API Design
+---
+
+This chapter contains generally applicable information on API design. When using
+Ory services, one can expect a consistent experience when interacting with REST
+APIs.
+
+## Pagination
+
+On REST endpoints that are explicitly labeled as such, pagination information is
+available through the `Link` HTTP header.
+
+The `Link` header contains a comma-delimited list of links to the following
+pages (where applicable):
+
+- First
+- Next
+- Previous (prev)
+- Last
+
+Pages are created based on the values of `per_page` and `page` provided in the
+querystring, where `per_page` is the page size, and `page` is the current page.
+
+In most scenarios, the `per_page` should be a multiple of the `page`.
+
+Example:
+
+```
+> GET /resources?per_page=5&page=10 HTTP/1.1
+> Host: localhost:4445
+> User-Agent: curl/7.64.1
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< Content-Type: application/json
+< Link: </resources?per_page=5&page=0>; rel="first",</resources?per_page=5&page=15>; rel="next",</resources?per_page=5&page=5>; rel="prev",</resources?per_page=5&page=20>; rel="last"
+< Date: Mon, 22 Apr 2019 23:34:29 GMT
+< Transfer-Encoding: chunked
+<
+[...]
+```
+
+## Date Format
+
+Ory's APIs use [rfc3339](https://tools.ietf.org/html/rfc3339) as the date
+format:
+
+```
+{
+  "created_at": "2006-01-02T15:04:05Z07:00"
+}
+```

@@ -1,0 +1,13 @@
+import { AdminApi, Configuration } from '@ory/kratos-client';
+
+const kratos = new AdminApi(new Configuration({
+  basePath: 'http://127.0.0.1:4433/'
+  apiKey: 'the-session-token'
+}));
+
+const flowId = '' // usually something like: req.query.flow
+
+kratos.getSelfServiceSettingsFlow(flowId)
+  .then(({ data: flow }) => {
+    console.log(flow) // see the Raw HTTP tab for the payload
+  })

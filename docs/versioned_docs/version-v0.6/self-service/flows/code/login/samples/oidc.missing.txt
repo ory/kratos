@@ -1,0 +1,11 @@
+$ curl -s -H "Accept: application/json" \
+    'http://127.0.0.1:4433/self-service/login/flows?id=76cec270-1719-4c9e-b09a-4af8281d511e' \
+    | jq -r '.ui.messages'
+
+[
+  {
+    "id": 4000001,
+    "text": "Authentication failed because no id_token was returned. Please accept the \"openid\" permission and try again.",
+    "type": "error"
+  }
+]
