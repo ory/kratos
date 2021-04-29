@@ -3666,8 +3666,7 @@
             }
           },
           {
-            "description": "in: authorization",
-            "in": "query",
+            "in": "header",
             "name": "Authorization",
             "schema": {
               "type": "string"
