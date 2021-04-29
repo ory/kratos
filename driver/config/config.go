@@ -106,6 +106,8 @@ const (
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
+	ViperKeyHasherBcryptAESCost                                     = "hashers.bcryptaes.cost"
+	ViperKeyHasherBcryptAESKey                                      = "hashers.bcryptaes.key"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
@@ -135,6 +137,10 @@ type (
 	}
 	Bcrypt struct {
 		Cost uint32 `json:"cost"`
+	}
+	BcryptAES struct {
+		Cost uint32 `json:"cost"`
+		Key  string `json:"key"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -305,6 +311,20 @@ func (p *Config) HasherBcrypt() *Bcrypt {
 	}
 
 	return &Bcrypt{Cost: cost}
+}
+
+func (p *Config) HasherBcryptAES() *BcryptAES {
+	// warn about usage of default values and point to the docs
+	// warning will require https://github.com/ory/viper/issues/19
+	cost := uint32(p.p.IntF(ViperKeyHasherBcryptAESCost, int(BcryptDefaultCost)))
+	if !p.IsInsecureDevMode() && cost < BcryptDefaultCost {
+		cost = BcryptDefaultCost
+	}
+
+	return &BcryptAES{
+		Cost: cost,
+		Key:  p.p.String(ViperKeyHasherBcryptAESKey),
+	}
 }
 
 func (p *Config) listenOn(key string) string {
