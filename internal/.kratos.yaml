@@ -72,7 +72,7 @@ selfservice:
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_recovery_hook
               method: GET
@@ -84,7 +84,7 @@ selfservice:
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_verification_hook
               method: GET
@@ -98,18 +98,18 @@ selfservice:
         password:
           default_browser_return_url: https://self-service/settings/password/return_to
           hooks:
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_settings_password_hook
                 method: POST
         profile:
           hooks:
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_settings_profile_hook
                 method: POST
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_settings_global_hook
               method: POST
@@ -123,19 +123,19 @@ selfservice:
           default_browser_return_url: https://self-service/login/password/return_to
           hooks:
             - hook: revoke_active_sessions
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_login_password_hook
                 method: POST
         oidc:
           hooks:
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_login_oidc_hook
                 method: GET
             - hook: revoke_active_sessions
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_login_global_hook
               method: POST
@@ -148,19 +148,19 @@ selfservice:
         password:
           hooks:
             - hook: session
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_registration_password_hook
                 method: POST
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_registration_global_hook
               method: POST
         oidc:
           default_browser_return_url: https://self-service/registration/oidc/return_to
           hooks:
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_registration_oidc_hook
                 method: GET

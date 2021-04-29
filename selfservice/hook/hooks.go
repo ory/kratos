@@ -3,5 +3,5 @@ package hook
 const (
 	KeySessionIssuer    = "session"
 	KeySessionDestroyer = "revoke_active_sessions"
-	KeyWebHook          = "web-hook"
+	KeyWebHook          = "web_hook"
 )
