@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   kratos-migrate:
-    image: oryd/kratos:v0.6.0-alpha.1.pre.1-sqlite
+    image: oryd/kratos:v0.6.0-alpha.1.pre.2-sqlite
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
     volumes:
@@ -30,7 +30,7 @@ services:
   kratos:
     depends_on:
       - kratos-migrate
-    image: oryd/kratos:v0.6.0-alpha.1.pre.1-sqlite
+    image: oryd/kratos:v0.6.0-alpha.1.pre.2-sqlite
     ports:
       - '4433:4433' # public
       - '4434:4434' # admin
