@@ -174,7 +174,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 			},
 			{
-				uc: "Hooks are configured on a global level, as well as on a password strategy level",
+				uc: "Hooks are configured on a global level, as well as on a strategy level",
 				prep: func(conf *config.Config) {
 					conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".password.hooks", []map[string]interface{}{
 						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "GET"}},
@@ -208,18 +208,90 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	})
 
 	t.Run("type=login", func(t *testing.T) {
-		conf, reg := internal.NewFastRegistryWithMocks(t)
-		conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+		// AFTER hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []login.PostHookExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor { return nil },
+			},
+			{
+				uc: "Only revoke_active_sessions hook configured for password strategy",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+						{"hook": "revoke_active_sessions"},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
+					return []login.PostHookExecutor{
+						hook.NewSessionDestroyer(reg),
+					}
+				},
+			},
+			{
+				uc: "A revoke_active_sessions hook and a web-hook are configured for password strategy",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "body": "bar"}},
+						{"hook": "revoke_active_sessions"},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
+					return []login.PostHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
+						hook.NewSessionDestroyer(reg),
+					}
+				},
+			},
+			{
+				uc: "Two web-hooks are configured on a global level",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
+					return []login.PostHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+			{
+				uc: "Hooks are configured on a global level, as well as on a strategy level",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "GET"}},
+						{"hook": "revoke_active_sessions"},
+					})
+					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
+					return []login.PostHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"foo"}`)),
+						hook.NewSessionDestroyer(reg),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
 
-		h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
-		require.Len(t, h, 0)
+				h := reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
 
-		conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks",
-			[]map[string]interface{}{{"hook": "revoke_active_sessions"}})
-
-		h = reg.PostLoginHooks(ctx, identity.CredentialsTypePassword)
-		require.Len(t, h, 1)
-		assert.Equal(t, []login.PostHookExecutor{hook.NewSessionDestroyer(reg)}, h)
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
 	})
 
 	t.Run("type=settings", func(t *testing.T) {

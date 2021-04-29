@@ -97,6 +97,7 @@ selfservice:
         default_browser_return_url: https://self-service/settings/return_to
         password:
           default_browser_return_url: https://self-service/settings/password/return_to
+
     login:
       ui_url: http://test.kratos.ory.sh/login
       lifespan: 99m
@@ -105,12 +106,23 @@ selfservice:
         password:
           default_browser_return_url: https://self-service/login/password/return_to
           hooks:
-            -
-              hook: revoke_active_sessions
+            - hook: revoke_active_sessions
+            - hook: web-hook
+              config:
+                url: https://test.kratos.ory.sh/after_login_password_hook
+                method: POST
         oidc:
           hooks:
-            -
-              hook: revoke_active_sessions
+            - hook: web-hook
+              config:
+                url: https://test.kratos.ory.sh/after_login_oidc_hook
+                method: GET
+            - hook: revoke_active_sessions
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/after_login_global_hook
+              method: POST
 
     registration:
       ui_url: http://test.kratos.ory.sh/register

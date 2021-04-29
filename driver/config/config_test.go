@@ -216,12 +216,20 @@ func TestViperProvider(t *testing.T) {
 					strategy: "password",
 					hooks: []config.SelfServiceHook{
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+						{Name: "web-hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/after_login_password_hook"}`)},
 					},
 				},
 				{
 					strategy: "oidc",
 					hooks: []config.SelfServiceHook{
+						{Name: "web-hook", Config: json.RawMessage(`{"method":"GET","url":"https://test.kratos.ory.sh/after_login_oidc_hook"}`)},
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+					},
+				},
+				{
+					strategy: "global",
+					hooks: []config.SelfServiceHook{
+						{Name: "web-hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/after_login_global_hook"}`)},
 					},
 				},
 			} {

@@ -326,6 +326,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceSessionRevokerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
               }
             ]
           },
@@ -385,6 +388,9 @@
         },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterLoginMethod"
+        },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceGlobalHooks"
         }
       }
     },
