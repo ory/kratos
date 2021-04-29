@@ -134,27 +134,18 @@ selfservice:
             - hook: session
             - hook: web-hook
               config:
-                url: https://test.kratos.ory.sh/after_registration_hook
+                url: https://test.kratos.ory.sh/after_registration_password_hook
                 method: POST
-                auth:
-                  type: api-key
-                  config:
-                    name: My-API-Key
-                    value: secret
-                    in: header
         hooks:
           - hook: web-hook
             config:
-              url: https://test.kratos.ory.sh/after_registration_hook
+              url: https://test.kratos.ory.sh/after_registration_global_hook
               method: POST
-              auth:
-                type: basic-auth
-                config:
-                  user: My-API-User
-                  password: secret
-
         oidc:
           default_browser_return_url: https://self-service/registration/oidc/return_to
           hooks:
-            -
-              hook: session
+            - hook: web-hook
+              config:
+                url: https://test.kratos.ory.sh/after_registration_oidc_hook
+                method: GET
+            - hook: session
