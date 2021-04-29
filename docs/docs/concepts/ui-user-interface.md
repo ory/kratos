@@ -1,5 +1,6 @@
 ---
-id: ui-user-interface title: User Interface
+id: ui-user-interface
+title: User Interface
 ---
 
 Ory Kratos has no user interface included. Instead, it defines HTTP flows and
