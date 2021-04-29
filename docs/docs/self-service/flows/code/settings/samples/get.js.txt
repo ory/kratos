@@ -1,11 +1,13 @@
 import { AdminApi, Configuration } from '@ory/kratos-client';
 
-// We are using the ORY Kratos Admin API (:4434) to avoid having to set the session cookie / session token:
-const kratos = new AdminApi(new Configuration({ basePath: 'http://127.0.0.1:4434/' }));
+const kratos = new AdminApi(new Configuration({
+  basePath: 'http://127.0.0.1:4433/'
+  apiKey: 'the-session-token'
+}));
 
 const flowId = '' // usually something like: req.query.flow
 
 kratos.getSelfServiceSettingsFlow(flowId)
-  .then(({ status, data: flow, ...response }) => {
+  .then(({ data: flow }) => {
     console.log(flow) // see the Raw HTTP tab for the payload
   })

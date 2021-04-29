@@ -1,33 +1,151 @@
 $ sessionToken=...
 $ curl -s -X GET \
-  -H "Authorization: Bearer $sessionToken"  \
-  -H "Accept: application/json"  \
-  http://127.0.0.1:4433/self-service/settings/api | jq
+    -H "Authorization: Bearer $sessionToken"  \
+    -H "Accept: application/json"  \
+    http://127.0.0.1:4433/self-service/settings/api | jq
 
 {
-  "id": "cff22c09-d1a0-4d2e-b325-2c8eeaabfbdd",
+  "id": "34b4fa55-f3a3-4b16-9091-b25db5644411",
   "type": "api",
-  "expires_at": "2020-09-08T12:08:07.2667985Z",
-  "issued_at": "2020-09-08T11:08:07.2667985Z",
+  "expires_at": "2021-04-28T12:31:36.139073277Z",
+  "issued_at": "2021-04-28T11:31:36.139073277Z",
   "request_url": "http://127.0.0.1:4433/self-service/settings/api",
-  "methods": {
-    // ...
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/settings?flow=34b4fa55-f3a3-4b16-9091-b25db5644411",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.email",
+          "type": "email",
+          "value": "example.user@ory.sh",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "E-Mail",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.name.first",
+          "type": "text",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "First Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "traits.name.last",
+          "type": "text",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "Last Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "profile",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "profile",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070003,
+            "text": "Save",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070003,
+            "text": "Save",
+            "type": "info"
+          }
+        }
+      }
+    ]
   },
   "identity": {
-    "id": "9ee8fb81-9d5c-47a7-9cee-28a0f64dccbb",
+    "id": "5b23b651-c186-4398-8717-f15ac72cbc7e",
     "schema_id": "default",
     "schema_url": "http://127.0.0.1:4433/schemas/default",
     "traits": {
-      "email": "api@user.org",
-      "name": {
-        "first": "API",
-        "last": "User"
-      }
+      "email": "example.user@ory.sh"
     },
     "verifiable_addresses": [
       {
-        "id": "3ba119c6-4e9a-466c-8910-40b238229aa6",
-        "value": "api@user.org",
+        "id": "d2214ea2-8b0e-49c0-a9e0-9998ea4527aa",
+        "value": "example.user@ory.sh",
         "verified": false,
         "via": "email",
         "status": "pending",
@@ -36,8 +154,8 @@ $ curl -s -X GET \
     ],
     "recovery_addresses": [
       {
-        "id": "9dec10d0-1079-4a5d-b1be-cd15418c640a",
-        "value": "api@user.org",
+        "id": "29ef1378-0f13-4f2e-a9cf-683320771d5b",
+        "value": "example.user@ory.sh",
         "via": "email"
       }
     ]

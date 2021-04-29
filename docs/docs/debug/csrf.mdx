@@ -5,8 +5,8 @@ title: Common Cookie and CSRF Pitfalls
 
 import useBaseUrl from '@docusaurus/useBaseUrl'
 
-Because ORY Kratos is not just an API, but instead talks to your users' browsers
-directly, several security measures have been implemented in ORY Kratos. One of
+Because Ory Kratos is not just an API, but instead talks to your users' browsers
+directly, several security measures have been implemented in Ory Kratos. One of
 them is protection against CSRF:
 
 > CSRF is an attack that tricks the victim into submitting a malicious request.
@@ -24,10 +24,10 @@ To protect against CSRF, several endpoints are protected by Anti-CSRF measures.
 Typically, endpoints accepting `POST`, `DELTE`, `PUT` actions have Anti-CSRF
 measures. When rendering a form for example, a
 `<input type="hidden" name="csrf_token" value="...">` HTML Input Element is
-added. ORY Kratos compares that value to the value set in the Anti-CSRF Cookie.
+added. Ory Kratos compares that value to the value set in the Anti-CSRF Cookie.
 If the values match, the request is allowed.
 
-ORY Kratos uses HTTP Cookies to store login sessions when accessed via a
+Ory Kratos uses HTTP Cookies to store login sessions when accessed via a
 browser.
 
 ## Common Pitfalls
@@ -54,16 +54,16 @@ as well as the network tab - look for `Cookie` and `Set-Cookie` HTTP Headers:
 
 ### SameSite Attribute
 
-If you run ORY Kratos in `--dev` mode, it disables `SameSite=Lax` as Google
+If you run Ory Kratos in `--dev` mode, it disables `SameSite=Lax` as Google
 Chrome rejects all cookies that have `SameSite=Lax` but have `secure` set to
 `false`. If you require `SameSite=Lax`, you need to run Ory Kratos with HTTPS
 and not use the `--dev` flag.
 
-### ORY Kratos running over HTTP without dev-mode enabled
+### Ory Kratos running over HTTP without dev-mode enabled
 
-ORY Kratos' cookies have the `Secure` flag enabled by default. This means that
+Ory Kratos' cookies have the `Secure` flag enabled by default. This means that
 the browser will not send the cookie unless the URL is a HTTPS URL. If you want
-ORY Kratos to work with HTTP (e.g. on localhost) you can add the `--dev` flag:
+Ory Kratos to work with HTTP (e.g. on localhost) you can add the `--dev` flag:
 `kratos serve --dev`.
 
 Do not do this in production!
@@ -74,11 +74,11 @@ Cookies work best on the same domain. While it is possible to get cookies
 running on subdomains it is not possible to do that across Top Level Domains
 (TLDs).
 
-Make sure that your application (e.g. the SecureApp from the quickstart) and ORY
+Make sure that your application (e.g. the SecureApp from the quickstart) and Ory
 Krato's Public API are available on the same domain - preferably without
 subdomains. Hosting both systems and routing paths with a Reverse Proxy such as
 Nginx or Envoy or AWS API Gateway is the best solution. For example, routing
-`https://my-website/kratos/...` to ORY Kratos and `https://my-website/dashboard`
+`https://my-website/kratos/...` to Ory Kratos and `https://my-website/dashboard`
 to the SecureApp's Dashboard. Alternatively you can use piping in your app as we
 do in the Quickstart guide.
 
@@ -97,17 +97,17 @@ As already explained, make sure that the TLD stays the same. This is especially
 true for `127.0.0.1` and `localhost` which are both separate TLDs. Make sure
 that you use `127.0.0.1` or `localhost` consistently across your configuration!
 
-### Trying to access ORY Kratos Cookies from client-side JavaScript
+### Trying to access Ory Kratos Cookies from client-side JavaScript
 
-The cookies ORY Kratos sets cannot be accessed directly from Client-Side
+The cookies Ory Kratos sets cannot be accessed directly from Client-Side
 JavaScript because the `HttpOnly` flag is set. This flag cannot be modified!
 
-### Accessing ORY Kratos APIs from client-side JavaScript / AJAX
+### Accessing Ory Kratos APIs from client-side JavaScript / AJAX
 
 When implementing a Single Page App (SPA) using AngularJS or ReactJS you
-probably want to access ORY Krato's Public APIs.
+probably want to access Ory Krato's Public APIs.
 
-To prevent several attack vectors, ORY Krato's Public API is protected - even
+To prevent several attack vectors, Ory Krato's Public API is protected - even
 for some GET requests - with Anti-CSRF measures.
 
 Because AJAX does not send cookies per default, you need to configure your AJAX
@@ -116,10 +116,10 @@ set
 [`credentials: 'include'`](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)
 for example.
 
-### Accessing ORY Kratos APIs from a server-side application
+### Accessing Ory Kratos APIs from a server-side application
 
 When implementing a server-side application (e.g. in PHP, Java, Go, NodeJS, ...)
-make sure to only call ORY Kratos' APIs through the Admin Port (default `4434`),
+make sure to only call Ory Kratos' APIs through the Admin Port (default `4434`),
 **not** the Public Port (default `4433`) as the Public Port requires CSRF
 Cookies and the Admin Port doesn't! Since your server-side application does not
 use a browser to interact with Kratos, CSRF Cookies will not be available which

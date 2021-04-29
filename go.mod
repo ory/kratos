@@ -5,7 +5,7 @@ go 1.16
 replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 
 // Use the internal httpclient which can be generated in this codebase but mark it as the
-// official SDK, allowing for the ORY CLI to consume ORY Kratos' CLI commands.
+// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 replace github.com/ory/kratos-client-go => ./internal/httpclient
 
 // Use the internal name for tablename generation
@@ -17,10 +17,7 @@ replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
 replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.20210412125924-f5ad9021d6ac
 
-// See https://github.com/mattn/go-sqlite3/issues/927
-// See https://github.com/mattn/go-sqlite3/pull/929
-// See https://github.com/mattn/go-sqlite3/pull/926
-replace github.com/mattn/go-sqlite3 => github.com/realPy/go-sqlite3 v1.14.7-0.20210321100449-976f046ff4fa
+replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7
 
 require (
 	github.com/DataDog/datadog-go v4.5.1+incompatible // indirect
@@ -78,7 +75,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.216
+	github.com/ory/x v0.0.225
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/philhofer/fwd v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1
@@ -86,7 +83,6 @@ require (
 	github.com/prometheus/client_golang v1.4.0
 	github.com/prometheus/common v0.9.1
 	github.com/rs/cors v1.6.0
-	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slack-go/slack v0.7.4
 	github.com/spf13/cobra v1.1.3

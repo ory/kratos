@@ -10,7 +10,7 @@ import (
 
 var remoteCmd = &cobra.Command{
 	Use:   "remote",
-	Short: "Helpers and management for remote ORY Kratos instances",
+	Short: "Helpers and management for remote Ory Kratos instances",
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {

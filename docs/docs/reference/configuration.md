@@ -26,11 +26,11 @@ quickstart.
 
 To find out more about edge cases like setting string array values through
 environmental variables head to the
-[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring)
+[Configuring Ory services](https://www.ory.sh/docs/ecosystem/configuring)
 section.
 
 ```yaml
-## ORY Kratos Configuration
+## Ory Kratos Configuration
 #
 
 ## identity ##
@@ -104,7 +104,7 @@ dsn: "postgres://user:
 selfservice:
   ## Redirect browsers to set URL per default ##
   #
-  # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+  # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
   #
   # Examples:
   # - https://my-app.com/dashboard
@@ -129,7 +129,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+        # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -182,7 +182,7 @@ selfservice:
 
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+          # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -212,7 +212,7 @@ selfservice:
 
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+          # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -228,7 +228,7 @@ selfservice:
 
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+        # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -298,7 +298,7 @@ selfservice:
 
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+          # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -328,7 +328,7 @@ selfservice:
 
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+          # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -344,7 +344,7 @@ selfservice:
 
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+        # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -380,7 +380,7 @@ selfservice:
     verification:
       ## Verify UI URL ##
       #
-      # URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+      # URL where the Ory Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
       #
       # Default value: https://www.ory.sh/kratos/docs/fallback/verification
       #
@@ -400,7 +400,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+        # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -452,7 +452,7 @@ selfservice:
     recovery:
       ## Recovery UI URL ##
       #
-      # URL where the ORY Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+      # URL where the Ory Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
       #
       # Default value: https://www.ory.sh/kratos/docs/fallback/recovery
       #
@@ -472,7 +472,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+        # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -522,9 +522,9 @@ selfservice:
     ## error ##
     #
     error:
-      ## ORY Kratos Error UI URL ##
+      ## Ory Kratos Error UI URL ##
       #
-      # URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+      # URL where the Ory Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
       #
       # Default value: https://www.ory.sh/kratos/docs/fallback/error
       #
@@ -595,7 +595,7 @@ selfservice:
 
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+          # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -625,7 +625,7 @@ selfservice:
 
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+          # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -641,7 +641,7 @@ selfservice:
 
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+        # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -756,7 +756,7 @@ selfservice:
       config:
         ## OpenID Connect and OAuth2 Providers ##
         #
-        # A list and configuration of OAuth2 and OpenID Connect providers ORY Kratos should integrate with.
+        # A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
         #
         # Set this value using environment variables on
         # - Linux/macOS:
@@ -900,6 +900,53 @@ serve:
     #    > set SERVE_PUBLIC_PORT=<value>
     #
     port: 4433
+
+    ## socket ##
+    #
+    # Sets the permissions of the unix socket
+    #
+    socket:
+      ## group ##
+      #
+      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_GROUP=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_GROUP=<value>
+      #
+      group: ''
+
+      ## mode ##
+      #
+      # Mode of unix socket in numeric form
+      #
+      # Default value: 493
+      #
+      # Minimum value: 0
+      #
+      # Maximum value: 511
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_MODE=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_MODE=<value>
+      #
+      mode: 0
+
+      ## owner ##
+      #
+      # Owner of unix socket. If empty, the owner will be the user running hydra.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_SOCKET_OWNER=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_SOCKET_OWNER=<value>
+      #
+      owner: ''
 
     ## cors ##
     #
@@ -1081,6 +1128,53 @@ serve:
     #
     port: 4434
 
+    ## socket ##
+    #
+    # Sets the permissions of the unix socket
+    #
+    socket:
+      ## group ##
+      #
+      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_GROUP=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_GROUP=<value>
+      #
+      group: ''
+
+      ## mode ##
+      #
+      # Mode of unix socket in numeric form
+      #
+      # Default value: 493
+      #
+      # Minimum value: 0
+      #
+      # Maximum value: 511
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_MODE=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_MODE=<value>
+      #
+      mode: 0
+
+      ## owner ##
+      #
+      # Owner of unix socket. If empty, the owner will be the user running hydra.
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_SOCKET_OWNER=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_SOCKET_OWNER=<value>
+      #
+      owner: ''
+
     ## Admin Base URL ##
     #
     # The URL where the admin endpoint is exposed at.
@@ -1098,7 +1192,7 @@ serve:
 
 ## tracing ##
 #
-# ORY Hydra supports distributed tracing.
+# Ory Hydra supports distributed tracing.
 #
 tracing:
   ## service_name ##
@@ -1106,7 +1200,7 @@ tracing:
   # Specifies the service name to use on the tracer.
   #
   # Examples:
-  # - ORY Kratos
+  # - Ory Kratos
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -1114,7 +1208,7 @@ tracing:
   # - Windows Command Line (CMD):
   #    > set TRACING_SERVICE_NAME=<value>
   #
-  service_name: ORY Kratos
+  service_name: Ory Kratos
 
   ## providers ##
   #
@@ -1416,9 +1510,9 @@ hashers:
     #
     # Set this value using environment variables on
     # - Linux/macOS:
-    #    $ export HASHERS_ARGON2_DEDICATED_MEMORY=<value>
+    #    $ export HASHERS_ARGON2_DEDICATED_MEMOry=<value>
     # - Windows Command Line (CMD):
-    #    > set HASHERS_ARGON2_DEDICATED_MEMORY=<value>
+    #    > set HASHERS_ARGON2_DEDICATED_MEMOry=<value>
     #
     dedicated_memory: 0B
 
@@ -1428,9 +1522,9 @@ hashers:
     #
     # Set this value using environment variables on
     # - Linux/macOS:
-    #    $ export HASHERS_ARGON2_MEMORY=<value>
+    #    $ export HASHERS_ARGON2_MEMOry=<value>
     # - Windows Command Line (CMD):
-    #    > set HASHERS_ARGON2_MEMORY=<value>
+    #    > set HASHERS_ARGON2_MEMOry=<value>
     #
     memory: 0B
 

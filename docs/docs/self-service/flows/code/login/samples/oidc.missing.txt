@@ -1,28 +1,11 @@
 $ curl -s -H "Accept: application/json" \
-  'http://127.0.0.1:4433/self-service/login/flows?id=2e87577f-1209-407c-b523-4727d7bbdbd4' \
-  | jq -r 'methods.oidc.config'
+    'http://127.0.0.1:4433/self-service/login/flows?id=76cec270-1719-4c9e-b09a-4af8281d511e' \
+    | jq -r '.ui.messages'
 
-{
-  "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/2e87577f-1209-407c-b523-4727d7bbdbd4",
-  "method": "POST",
-  "messages": [
-    {
-      "id": 4000000,
-      "type": "error",
-      "text": "Authentication failed because no id_token was returned. Please accept the \"openid\" permission and try again."
-    }
-  ],
-  "fields": [
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "O0e8KWxx1zZeNEgUOxNFvV8dVMrK63MXoxU102lj9n0nXcsaDWXhPn0TiZG3Nk+nLi/pT1wjTUsHniLRKOpp3w=="
-    },
-    {
-      "name": "provider",
-      "type": "submit",
-      "value": "github"
-    }
-  ]
-}
+[
+  {
+    "id": 4000001,
+    "text": "Authentication failed because no id_token was returned. Please accept the \"openid\" permission and try again.",
+    "type": "error"
+  }
+]

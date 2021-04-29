@@ -6,12 +6,12 @@ title: Quickstart
 import Mermaid from '@theme/Mermaid'
 import CodeFromRemote from '@theme/CodeFromRemote'
 
-ORY Kratos has several moving parts and getting everything right from the
+Ory Kratos has several moving parts and getting everything right from the
 beginning can be challenging. This getting started guide will help you install
-ORY Kratos and some additional dependencies so that you can see how it works.
+Ory Kratos and some additional dependencies so that you can see how it works.
 
 Please be aware that this guide is not a replacement for studying the docs. You
-must understand core concepts and APIs to use ORY Kratos productively. This is
+must understand core concepts and APIs to use Ory Kratos productively. This is
 merely a guide to get you set up with some examples.
 
 <iframe
@@ -61,7 +61,7 @@ and of course:
 
 ## Setup
 
-As you might already know, ORY Kratos is API-only; it does not have a UI or HTML
+As you might already know, Ory Kratos is API-only; it does not have a UI or HTML
 templating engine. We will implement all the user-facing UIs like "dashboard",
 "login", and "registration" in our NodeJS SecureApp!
 
@@ -76,12 +76,12 @@ To ensure that no one can access the dashboard without prior authentication
 
 :::info
 
-ORY Kratos is not just an API: it uses cookies, HTTP redirects, anti-CSRF tokens
+Ory Kratos is not just an API: it uses cookies, HTTP redirects, anti-CSRF tokens
 and more so you don't have to.
 
 :::
 
-The SecureApp and ORY Kratos need to share cookies in order for anti-CSRF tokens
+The SecureApp and Ory Kratos need to share cookies in order for anti-CSRF tokens
 and login sessions to work. Because the quickstart runs on different ports on
 `127.0.0.1` there is nothing we need to do to get this all working. In
 environments where you have multiple sub-domains or reverse proxies, the set up
@@ -89,14 +89,14 @@ will be a bit more sophisticated. You can find more information about the
 different set up possibilities in the
 [Getting Cookies to Work on Multi-Domains Guide](guides/multi-domain-cookies.mdx).
 
-ORY Kratos does not ship with an administrative user interface. You must
-implement that yourself or choose the ORY Cloud offering (to be announced). In
-this quickstart we will use ORY Kratos' CLI to interact with ORY Kratos' APIs.
+Ory Kratos does not ship with an administrative user interface. You must
+implement that yourself or choose the Ory Cloud offering (to be announced). In
+this quickstart we will use Ory Kratos' CLI to interact with Ory Kratos' APIs.
 
 The quickstart also comes with [MailSlurper](https://mailslurper.com), a mock
 SMTP server the demo uses to show how email verification works.
 
-### Clone ORY Kratos and Run it in Docker
+### Clone Ory Kratos and Run it in Docker
 
 To get this example working, you will need Git,
 [Docker](https://docs.docker.com/get-docker/), and
@@ -122,7 +122,7 @@ free to [open an issue](https://github.com/ory/kratos/issues/new/choose).
 
 :::
 
-Let's clone ORY Kratos and run `docker-compose`:
+Let's clone Ory Kratos and run `docker-compose`:
 
 ```shell script
 git clone https://github.com/ory/kratos.git
@@ -155,7 +155,7 @@ There are two important factors to get a fully functional system:
 
 :::
 
-You might notice that no database is being used in this example. ORY Kratos
+You might notice that no database is being used in this example. Ory Kratos
 supports SQLite, PostgreSQL, MySQL, and CockroachDB as database backends. For
 the quickstart, we're mounting a persistent volume to store the SQLite database
 in.
@@ -166,7 +166,7 @@ Future guides will explain how to set up a production system.
 
 This demo makes use of several services:
 
-1. [ORY Kratos](https://github.com/ory/kratos)
+1. [Ory Kratos](https://github.com/ory/kratos)
    - Public ("Browser") API (port 4433)
    - Admin API (port 4434) - This is only made public so we can test via the
      CLI.
@@ -174,7 +174,7 @@ This demo makes use of several services:
    - Public (port 4455) - an example application written in NodeJS that
      implements the login, registration, logout, dashboard, and other UIs.
 3. [MailSlurper](https://github.com/mailslurper)
-   - Public (port 4436) - a development SMTP server which ORY Kratos will use to
+   - Public (port 4436) - a development SMTP server which Ory Kratos will use to
      send emails.
 
 To better understand the application architecture, let's take a look at the
@@ -191,7 +191,7 @@ subgraph hn[Host Network]
     B-->|Can access UI via 127.0.0.1:4436|SMTPUI
     OKPHN([SecureApp exposed at :4455])
     SMTPUI([MailSlurper UI exposed at :4436])
-    PAPI([ORY Kratos Public API exposed at :4433])
+    PAPI([Ory Kratos Public API exposed at :4433])
 end
 subgraph dn["Internal Docker Network (intranet)"]
     OKPHN-.->SA
@@ -199,8 +199,8 @@ subgraph dn["Internal Docker Network (intranet)"]
     PAPI-.->OK
     SA-->|Talks to and validates login sessions using|OK
     OK-->|Sends mail via|SMTP
-    OK[ORY Kratos]
-    SA["SecureApp (ORY Kratos SelfService UI Node Example)"]
+    OK[Ory Kratos]
+    SA["SecureApp (Ory Kratos SelfService UI Node Example)"]
     SMTP["SMTP Server (MailSlurper)"]
 end
 `}
@@ -223,14 +223,14 @@ Looking at the network stack, you can see two redirects happening:
 
 Here's a play-by-play of what happened:
 
-1. SecureApp used the ORY Kratos JavaScript language client to guard the
-   `/dashboard` route. The ORY Kratos client checked the cookies from the
+1. SecureApp used the Ory Kratos JavaScript language client to guard the
+   `/dashboard` route. The Ory Kratos client checked the cookies from the
    request and saw you were not logged in.
-2. The route guard redirected you from `/dashboard` to `/auth/login`. ORY
+2. The route guard redirected you from `/dashboard` to `/auth/login`. Ory
    Kratos' browser API requires a `<flow_id>` in order to log you in. It looked
    for this ID in the URL as a query parameter but couldn't find it.
 3. `/auth/login` redirected you to
-   `http://127.0.0.1:4433/self-service/login/browser`, which is one of ORY
+   `http://127.0.0.1:4433/self-service/login/browser`, which is one of Ory
    Kratos' APIs used for logging in browser-based applications.
 4. Kratos handled `/self-service/login/browser` which created and persisted a
    new flow with `csrf_token`. Kratos would check no session exists, redirected
@@ -241,8 +241,8 @@ Here's a play-by-play of what happened:
    query parameter, and used it to make an HTTP request to
    `http://kratos:4434/self-service/login/flows?id=<flow_id>`. Notice the URI is
    `kratos:4434` because SecureApp is making a server-side HTTP request via
-   Docker's private network to ORY Kratos' Admin API.
-6. ORY Kratos responded with data which SecureApp used to render the HTML login
+   Docker's private network to Ory Kratos' Admin API.
+6. Ory Kratos responded with data which SecureApp used to render the HTML login
    form.
 
 :::note
@@ -252,48 +252,95 @@ not work!
 
 :::
 
-We can use `curl` to see what ORY Kratos responds with. Try visiting
+We can use `curl` to see what Ory Kratos responds with. Try visiting
 `http://127.0.0.1:4455/auth/login`, copying the generated `<flow_id>`, and
 making the request yourself:
 
-```shell script
-# curl -s "http://127.0.0.1:4434/self-service/login/flows?id=ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b" \
+```shell-session
+$ # curl -s "http://127.0.0.1:4434/self-service/login/flows?id=07016811-917d-4788-bb9c-fc297897af6c" \
 $ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
   | jq
 
 {
-  "id": "ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b",
+  "id": "07016811-917d-4788-bb9c-fc297897af6c",
   "type": "browser",
-  "expires_at": "2020-09-13T10:49:54.8295242Z",
-  "issued_at": "2020-09-13T10:39:54.8295242Z",
+  "expires_at": "2021-04-28T08:37:53.924337873Z",
+  "issued_at": "2021-04-28T08:27:53.924337873Z",
   "request_url": "http://127.0.0.1:4433/self-service/login/browser",
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "identifier",
-            "type": "text",
-            "required": true,
-            "value": ""
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "lNrB8sW2fZY6xnnA91V7ISYrUVcJbmRCOoGHjsnsfI7MsIL5RTbuWFm5TRv1azQW+7IRCfnt2Ch6pC42/45sJQ=="
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/login?flow=07016811-917d-4788-bb9c-fc297897af6c",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "IuiHo8fajl6Nwi2CfR33bmC7ZI+geYY44oinK/npkS9gaeV6DlkzS0voYZuyGawsCruvlawFl/pY6/Ph6d9JVg==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password_identifier",
+          "type": "text",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070004,
+            "text": "ID",
+            "type": "info"
           }
-        ]
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010001,
+            "text": "Sign in",
+            "type": "info",
+            "context": {}
+          }
+        }
       }
-    }
+    ]
   },
   "forced": false
 }
@@ -317,67 +364,125 @@ will complain:
 
 ![Registration with network trace screen of your secured app](images/quickstart/secureapp-registration-pwpolicy.png)
 
-The error message is coming directly from ORY Kratos' Admin API:
+The error message is coming directly from Ory Kratos' Admin API:
 
 ```shell script
-# curl -s "http://127.0.0.1:4433/self-service/registration/flows?id=2b1f8c5d-e830-4068-97b8-35f776df9217" \
+# curl -s "http://127.0.0.1:4433/self-service/registration/flows?id=f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c" \
 $ curl -s "http://127.0.0.1:4433/self-service/registration/flows?id=<flow_id>" \
   | jq
 
 {
-  "id": "2b1f8c5d-e830-4068-97b8-35f776df9217",
+  "id": "f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c",
   "type": "browser",
-  "expires_at": "2020-09-13T10:53:15.1774019Z",
-  "issued_at": "2020-09-13T10:43:15.1774019Z",
+  "expires_at": "2021-04-28T08:54:12.951178972Z",
+  "issued_at": "2021-04-28T08:44:12.951178972Z",
   "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
-  "active": "password",
-  "messages": null,
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/registration/methods/password?flow=2b1f8c5d-e830-4068-97b8-35f776df9217",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "1IlHWNjkAZxuYhO82WPgNTgujKsUSaW87j6og/20i2uM4wRTWGSSUg0dJ2fbXa8C5bfM9eTKGdauGwE7y9abwA=="
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true,
-            "messages": [
-              {
-                "id": 4000005,
-                "text": "The password can not be used because the password has been found in data breaches and must no longer be used..",
-                "type": "error",
-                "context": {
-                  "reason": "the password has been found in data breaches and must no longer be used."
-                }
-              }
-            ]
-          },
-          {
-            "name": "traits.email",
-            "type": "text",
-            "value": "foo@ory.sh"
-          },
-          {
-            "name": "traits.name.first",
-            "type": "text",
-            "value": "Ory"
-          },
-          {
-            "name": "traits.name.last",
-            "type": "text",
-            "value": "Corp"
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/registration?flow=f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "408SIAOvpKxW/WbcYfKue26MlLTMbON7T7JT1yhiSemhznD5yiwZuZDXKsWu9vU5BIxfrsAQ8rn10QcdOFSRkA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.email",
+          "type": "email",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "E-Mail",
+            "type": "info"
           }
-        ]
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.name.first",
+          "type": "text",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "First Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.name.last",
+          "type": "text",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "Last Name",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1040001,
+            "text": "Sign up",
+            "type": "info",
+            "context": {}
+          }
+        }
       }
-    }
+    ]
   }
 }
 ```
@@ -457,7 +562,7 @@ chapters of this documentation.
 
 :::note
 
-To get a minimal version of ORY Kratos running, you need to set configuration
+To get a minimal version of Ory Kratos running, you need to set configuration
 values for
 [`identity.default_schema_url`](https://github.com/ory/kratos/blob/v0.5.5-alpha.1/contrib/quickstart/kratos/email-password/kratos.yml#L75)
 and
@@ -484,7 +589,7 @@ docker-compose -f quickstart.yml rm -fsv
 
 ## Next Steps
 
-Here is some information if you want to modify the quickstart to test ORY Kratos
+Here is some information if you want to modify the quickstart to test Ory Kratos
 in with different settings.
 
 **Using different databases**
@@ -522,6 +627,6 @@ immediately signed in after registration.
 
 **OIDC**
 
-If you want to test ORY Kratos integration with different OIDC providers, you
+If you want to test Ory Kratos integration with different OIDC providers, you
 will find more information in this document:
 [OIDC](guides/sign-in-with-github-google-facebook-linkedin.mdx)

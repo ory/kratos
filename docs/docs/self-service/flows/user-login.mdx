@@ -25,7 +25,7 @@ continuing with this document.
 
 :::
 
-There are two Login Flow types supported in ORY Kratos:
+There are two Login Flow types supported in Ory Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
   app, ...)
@@ -63,7 +63,7 @@ Currently, two login methods are supported:
   Facebook (check out the
   [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
-Both are dis/enabled in the ORY Kratos config:
+Both are dis/enabled in the Ory Kratos config:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
@@ -82,7 +82,7 @@ run, set up Anti-CSRF tokens, and more.
 
 ### Login for Browser Clients
 
-The Login Flow for browser clients relies on HTTP redirects between ORY Kratos,
+The Login Flow for browser clients relies on HTTP redirects between Ory Kratos,
 your Login UI, and the end-user's browser:
 
 <SelfServiceBrowserFlow
@@ -151,32 +151,92 @@ in the Login Flow:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4434/self-service/login/flows?id=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3' \
-  | jq -r '.methods.password.config'
+    'http://127.0.0.1:4434/self-service/login/flows?id=42e26bc5-8014-400c-b463-dc5c3738c242' | jq
 
 {
-  "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "identifier",
-      "type": "text",
-      "required": true,
-      "value": ""
-    },
-    {
-      "name": "password",
-      "type": "password",
-      "required": true
-    },
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "Bo72oeXYFnjZj2B9Ple+GZBkn5oqQZDACcYvGeUi8J48R9+yRk1KBagov/nJ/jbfBgugsMUzYMf4VpGNThkjgw=="
-    }
-  ]
+  "id": "42e26bc5-8014-400c-b463-dc5c3738c242",
+  "type": "browser",
+  "expires_at": "2021-04-28T10:04:44.506336771Z",
+  "issued_at": "2021-04-28T09:54:44.506336771Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "8RygCHIdyMXVc3jxIAf/6uAuv/jBJLo5mt6nXdcB/JOzncLRu5510BNZNOjvA6Soii504s1Yq/sgvfOXxzck6g==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password_identifier",
+          "type": "text",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070004,
+            "text": "ID",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010001,
+            "text": "Sign in",
+            "type": "info",
+            "context": {}
+          }
+        }
+      }
+    ]
+  },
+  "forced": false
 }
+
 ```
 
 ### Login with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
@@ -196,7 +256,7 @@ The Social Sign In Method (`oidc`) enables you to use
 - [GitLab](https://docs.gitlab.com/ee/integration/openid_connect_provider.html);
 - [Google](https://developers.google.com/identity/sign-in/web/sign-in);
 - [Facebook](https://developers.facebook.com/docs/facebook-login/);
-- [ORY Hydra](https://www.ory.sh/hydra);
+- [Ory Hydra](https://www.ory.sh/hydra);
 - [Keycloak](https://www.keycloak.org);
 - and every other OpenID Connect Certified Provider
 
@@ -213,25 +273,56 @@ providers as submit fields:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4434/self-service/login/flows?id=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3' \
-  | jq -r '.methods.oidc.config'
+    'http://127.0.0.1:4434/self-service/login/flows?id=d6340737-89f2-4b01-a848-79007de6f430' \
+    | jq
 
 {
-  "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/7430f336-0be0-47d1-b1fc-5cc6fcc3f228",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "LJ3o59zXjukFs1004vyn3QrWDrfutW2e0Iaqo/9Ck6srYAceydRr59GEZJNFY6Walnell+r10/DlXUy/Eq6sXQ=="
-    },
-    {
-      "name": "provider",
-      "type": "submit",
-      "value": "github"
-    }
-  ]
+  "id": "d6340737-89f2-4b01-a848-79007de6f430",
+  "type": "browser",
+  "expires_at": "2021-04-28T11:05:01.382156Z",
+  "issued_at": "2021-04-28T10:05:01.382156Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4455/self-service/login?flow=d6340737-89f2-4b01-a848-79007de6f430",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "7Y2PgQlka1Zjn8wVRUnvCqeSs9hzsUECnk9YjULACyMIYXbCwAVcMDpeFf33tECgowwmA3ZNTozZMKxy2jUSSA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "oidc",
+        "attributes": {
+          "name": "provider",
+          "type": "submit",
+          "value": "github",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010002,
+            "text": "Sign in with github",
+            "type": "info",
+            "context": {
+              "provider": "github"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "forced": false
 }
 ```
 
@@ -240,7 +331,7 @@ $ curl -H "Accept: application/json" -s \
 The Login User Interface is a route (page / site) in your application (server,
 native app, single page app) that should render a login form.
 
-In stark contrast to other Identity Systems, ORY Kratos does not render this
+In stark contrast to other Identity Systems, Ory Kratos does not render this
 HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
@@ -252,7 +343,7 @@ could looks as follows depending on your programming language and web framework:
 
 ## Login Form Validation
 
-The form payloads are then submitted to ORY Kratos which follows up with:
+The form payloads are then submitted to Ory Kratos which follows up with:
 
 - An HTTP 302 Found redirect pointing to the Login UI for Browser Clients.
 - An `application/json` response for API Clients.
@@ -282,7 +373,7 @@ OpenID Connect flow which involves logging into the upstream identity provider
 
 If the user has never signed in with the given provider before, a new account
 will be created. It is also possible to link upstream identities (e.g. Google
-profile) with an existing ORY Kratos identity.
+profile) with an existing Ory Kratos identity.
 
 :::
 
@@ -296,10 +387,10 @@ Completing the login behaves differently for Browser and API Clients.
 
 ### Browser Clients
 
-When the login is completed successfully, ORY Kratos responds with a HTTP 302
+When the login is completed successfully, Ory Kratos responds with a HTTP 302
 Redirect to the
 [configured redirect URL](../../concepts/browser-redirect-flow-completion).
-Alongside the HTTP 302 Redirect is a `Set-Cookie` header which contains the ORY
+Alongside the HTTP 302 Redirect is a `Set-Cookie` header which contains the Ory
 Kratos Login Session Cookie:
 
 ```
@@ -360,8 +451,8 @@ curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQ
 
 ### API Clients
 
-For API Clients, ORY Kratos responds with a JSON payload which includes the
-identity which just authenticated, the session, and the ORY Kratos Session
+For API Clients, Ory Kratos responds with a JSON payload which includes the
+identity which just authenticated, the session, and the Ory Kratos Session
 Token:
 
 ```shell script
@@ -369,12 +460,12 @@ Token:
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
     "http://127.0.0.1:4433/self-service/login/api" \
-    | jq -r '.methods.password.config.action'\
+    | jq -r '.ui.action'\
 )
 
 # Complete Login Flow with password method
 $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
-    -d '{"identifier": "api@user.org", "password": "iohuasf0897zAJHf"}' \
+    -d '{"password_identifier": "api@user.org", "password": "iohuasf0897zAJHf", "method": "password"}' \
     "$actionUrl" | jq
 
 {
@@ -418,7 +509,7 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
 }
 ```
 
-The ORY Kratos Session Token can be checked at the
+The Ory Kratos Session Token can be checked at the
 `http://127.0.0.1/sessions/whoami` endpoint:
 
 ```shell script
@@ -484,7 +575,7 @@ To refresh a session, append `?refresh=true` to:
 
 ## Hooks
 
-ORY Kratos allows you to configure hooks that run before and after a Login Flow.
+Ory Kratos allows you to configure hooks that run before and after a Login Flow.
 This may be helpful if you'd like to restrict logins to IPs coming from your
 internal network or other logic.
 

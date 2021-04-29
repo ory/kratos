@@ -8,8 +8,8 @@ When working with cookies, keep the following in mind:
 1. HTTP Cookies **are not port specific**. If a cookie is set on
    `https://mydomain.com:1234` it is also valid for `https://mydomain.com:4321`
    and `https://mydomain.com`.
-2. Unless `--dev` is set, ORY Kratos' cookies are only sent over HTTPS.
-3. Cookies in ORY Kratos are always `httpOnly`.
+2. Unless `--dev` is set, Ory Kratos' cookies are only sent over HTTPS.
+3. Cookies in Ory Kratos are always `httpOnly`.
 4. It is possible to set a cookie for `mydomain.com` when the original request
    was made to `subdomain.mydomain.com`. It is however not possible to set a
    cookie for `anotherdomain.com` when the original request was made to
@@ -18,7 +18,7 @@ When working with cookies, keep the following in mind:
 
 :::note
 
-ORY Kratos uses pass-by-value cookies whose values are encrypted using the
+Ory Kratos uses pass-by-value cookies whose values are encrypted using the
 `secrets.default` / `secrets.cookie` secrets. If these secrets are changed
 without doing proper [secret / key rotation](secret-key-rotation), all cookies
 will be invalid which will cause users to be signed out, and other side effects.
@@ -35,7 +35,7 @@ subdomain (e.g. `service1.myproduct.com`, `service2.myproduct.com`,
 
 If that is the case you can change the session
 [cookie domain](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies) and
-path using the following configuration keys in your ORY Kratos configuration:
+path using the following configuration keys in your Ory Kratos configuration:
 
 ```yaml title="path/to/kratos/config.yml
 session:

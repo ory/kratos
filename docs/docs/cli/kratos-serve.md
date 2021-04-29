@@ -1,7 +1,7 @@
 ---
 id: kratos-serve
 title: kratos serve
-description: kratos serve Run the ORY Kratos server
+description: kratos serve Run the Ory Kratos server
 ---
 
 <!--
@@ -12,7 +12,7 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos serve
 
-Run the ORY Kratos server
+Run the Ory Kratos server
 
 ```
 kratos serve [flags]

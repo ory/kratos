@@ -54,7 +54,7 @@ module.exports = {
     prism: {
       theme: require('prism-react-renderer/themes/github'),
       darkTheme: require('prism-react-renderer/themes/dracula'),
-      additionalLanguages: ['pug']
+      additionalLanguages: ['pug', 'shell-session']
     },
     announcementBar: {
       id: 'supportus',
@@ -99,7 +99,7 @@ module.exports = {
     },
     footer: {
       style: 'dark',
-      copyright: `Copyright © ${new Date().getFullYear()} ORY GmbH`,
+      copyright: `Copyright © ${new Date().getFullYear()} Ory GmbH`,
       links: [
         {
           title: 'Company',

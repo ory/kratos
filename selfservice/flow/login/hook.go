@@ -102,7 +102,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 			WithRequest(r).
 			WithField("session_id", s.ID).
 			WithField("identity_id", i.ID).
-			Info("Identity authenticated successfully and was issued an ORY Kratos Session Token.")
+			Info("Identity authenticated successfully and was issued an Ory Kratos Session Token.")
 
 		e.d.Writer().Write(w, r, &APIFlowResponse{Session: s, Token: s.Token})
 		return nil
@@ -116,7 +116,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		WithField("session_id", s.ID).
-		Info("Identity authenticated successfully and was issued an ORY Kratos Session Cookie.")
+		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
 		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(ct.String())))
 }

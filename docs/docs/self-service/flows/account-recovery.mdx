@@ -23,7 +23,7 @@ import RenderFlow from '@theme/Code/RenderFlow'
 
 :::info
 
-Please read the [Self-Service Flows](../../self-service) overview before
+Please read the [Self-Service Flows](../../self-service.mdx) overview before
 continuing with this document.
 
 :::
@@ -35,7 +35,7 @@ recovered. Common use cases include:
 - "Lost MFA device" flows
 - ...
 
-There are two Recovery Flow types supported in ORY Kratos:
+There are two Recovery Flow types supported in Ory Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
   app, ...)
@@ -62,7 +62,7 @@ stateDiagram
 `}
 />
 
-To enable recovery flows, make the following adjustments to your ORY Kratos
+To enable recovery flows, make the following adjustments to your Ory Kratos
 configuration:
 
 ```yaml title="path/to/config/kratos.yml"
@@ -84,7 +84,7 @@ Currently, one recovery method is supported:
 
 ### Recovery `link` Method
 
-The `link` method is dis/enabled in the ORY Kratos config:
+The `link` method is dis/enabled in the Ory Kratos config:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
@@ -207,7 +207,7 @@ where
 
 ### Recovery for Browser Clients
 
-The Recovery Flow for browser clients relies on HTTP redirects between ORY
+The Recovery Flow for browser clients relies on HTTP redirects between Ory
 Kratos, your Recovery UI, and the end-user's browser:
 
 <SelfServiceBrowserFlow
@@ -277,24 +277,38 @@ the Recovery Flow:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/recovery/flows?id=2183a80c-a190-4fde-95bd-a15aa3103930' | jq -r '.methods.link.config'
+    'http://127.0.0.1:4434/self-service/recovery/flows?id=199a2c74-08ca-4f22-b24c-3de3032682f8' | \
+      jq -r '.ui.nodes[] | select(.group=="link")'
 
 {
-  "action": "http://127.0.0.1:4433/self-service/recovery/methods/link?flow=2183a80c-a190-4fde-95bd-a15aa3103930",
-  "method": "POST",
-  "fields": [
-    {
-      "name": "csrf_token",
-      "type": "hidden",
-      "required": true,
-      "value": "PsERHvmk+4Ouq3wjMAaLsATrAk7sydJjkSbZFVynvwCJRZRtOTkosFHJQy5p5fFiBv6KnxwP2oSXUvE8J5w9Lw=="
-    },
-    {
-      "name": "email",
-      "type": "email",
-      "required": true
+  "type": "input",
+  "group": "link",
+  "attributes": {
+    "name": "email",
+    "type": "email",
+    "required": true,
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {}
+}
+{
+  "type": "input",
+  "group": "link",
+  "attributes": {
+    "name": "method",
+    "type": "submit",
+    "value": "link",
+    "disabled": false
+  },
+  "messages": null,
+  "meta": {
+    "label": {
+      "id": 1070005,
+      "text": "Submit",
+      "type": "info"
     }
-  ]
+  }
 }
 ```
 
@@ -303,7 +317,7 @@ $ curl -H "Accept: application/json" -s \
 The Recovery User Interface is a route (page / site) in your application
 (server, native app, single page app) that should render a recovery form.
 
-In stark contrast to other Identity Systems, ORY Kratos does not render this
+In stark contrast to other Identity Systems, Ory Kratos does not render this
 HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
@@ -316,7 +330,7 @@ framework:
 
 ## Recovery Form Validation
 
-The form payloads are then submitted to ORY Kratos which follows up with:
+The form payloads are then submitted to Ory Kratos which follows up with:
 
 - An HTTP 302 Found redirect pointing to the Recovery UI for Browser Clients.
 - An `application/json` response for API Clients.
@@ -348,7 +362,7 @@ expired, the user will be HTTP 302 redirected to the Recovery UI.
 
 :::note
 
-When an invalid or expired challenge is used, ORY Kratos initializes a new
+When an invalid or expired challenge is used, Ory Kratos initializes a new
 Account Recovery flow automatically. This flow will always be a Browser-based
 flow because the challenge is completed by clicking a link!
 
@@ -362,7 +376,7 @@ Please keep in mind that this part of the flow always involves a Browser!
 
 ## Successful Recovery
 
-Completing account recovery always results in a HTTP 302 redirect with a ORY
+Completing account recovery always results in a HTTP 302 redirect with a Ory
 Kratos Login Session Cookie to the Settings UI with a Settings Flow prompting
 the user to update their password or credentials:
 

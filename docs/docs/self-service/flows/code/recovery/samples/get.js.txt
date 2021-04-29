@@ -4,6 +4,6 @@ const kratos = new PublicApi(new Configuration({ basePath: 'http://127.0.0.1:443
 const flowId = '' // usually something like: req.query.flow
 
 kratos.getSelfServiceRecoveryFlow(flowId)
-  .then(({ status, data: flow, ...response }) => {
+  .then(({ data: flow }) => {
     console.log(flow) // see the Raw HTTP tab for the payload
   })

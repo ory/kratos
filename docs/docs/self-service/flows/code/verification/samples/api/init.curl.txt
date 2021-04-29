@@ -1,15 +1,62 @@
 $ curl -s -X GET \
-  -H "Accept: application/json"  \
-  http://127.0.0.1:4433/self-service/verification/api | jq
+    -H "Accept: application/json" \
+    http://127.0.0.1:4433/self-service/verification/api | \
+      jq
 
 {
-  "id": "4fd52be5-5f80-4493-ab5c-90cb9bd331d2",
+  "id": "030951e5-ca40-4e41-a8f4-f97d24a54dd0",
   "type": "api",
-  "expires_at": "2020-09-10T07:39:10.9503284Z",
-  "issued_at": "2020-09-10T06:39:10.9503284Z",
+  "expires_at": "2021-04-28T13:13:32.635288994Z",
+  "issued_at": "2021-04-28T12:13:32.635288994Z",
   "request_url": "http://127.0.0.1:4433/self-service/verification/api",
-  "methods": {
-    // ...
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/verification?flow=030951e5-ca40-4e41-a8f4-f97d24a54dd0",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
   },
   "state": "choose_method"
 }

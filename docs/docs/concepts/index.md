@@ -3,14 +3,14 @@ id: index
 title: Overview
 ---
 
-ORY Kratos is a new software archetype **Identity Infrastructure Service**.
+Ory Kratos is a new software archetype **Identity Infrastructure Service**.
 Traditional identity systems - sometimes referred to as Identity and Access
 Management (IAM), Identity Management (IdM), Identity Provider (IP/IdP), or
 Identity as a Service (IDaaS) - have shortcomings that highlight the main
-differences between ORY Kratos and other systems.
+differences between Ory Kratos and other systems.
 
-ORY Kratos solves identity on the network. It is not an on-device, for instance
-mobile phones, user database. In ORY Kratos there is always an exchange of
+Ory Kratos solves identity on the network. It is not an on-device, for instance
+mobile phones, user database. In Ory Kratos there is always an exchange of
 credentials. In the case of web applications and identity:
 
 - Username + Password -> Cookie, Token, ...
@@ -37,20 +37,20 @@ reasons for this would perhaps include the following:
   de-facto standards to emerge and instead uses a consenus driven feature set,
   even if it doesn't fit the use case 100%.
 
-While ORY Kratos is currently not certifiable, it tackles these topics as
+While Ory Kratos is currently not certifiable, it tackles these topics as
 follows:
 
-- With inspiration from the approach taken in the Kubernetes Project, ORY
+- With inspiration from the approach taken in the Kubernetes Project, Ory
   provides an open source project that hopefully becomes an open standard in the
   future.
-- Prioritise simplicity and ease of use for developers. ORY Kratos integrates
+- Prioritise simplicity and ease of use for developers. Ory Kratos integrates
   critical security components without relying on complex flows and protocols.
 
-Using ORY Kratos it is possible to consume OAuth2 and OpenID Connect, and/or
-create an OAuth2 and OpenID Connect Provider by combining ORY Kratos with
-[ORY Hydra](http://github.com/ory/hydra) .
+Using Ory Kratos it is possible to consume OAuth2 and OpenID Connect, and/or
+create an OAuth2 and OpenID Connect Provider by combining Ory Kratos with
+[Ory Hydra](http://github.com/ory/hydra) .
 
-With a primary developer audience, ORY designs, secures, and tests critical
+With a primary developer audience, Ory designs, secures, and tests critical
 network flows, system architectures, user flows, protocols, and business logic.
 
 ## Today's Landscape
@@ -62,7 +62,7 @@ Let's take a look at different approaches and software systems today.
 _Disclaimer: There are neither product nor project names in this section. This
 section's goal is to describe circumstances and problems that mostly stem from
 the community's experience. For information purposes, there is a preliminary
-comparison of ORY Kratos and other projects and products available at
+comparison of Ory Kratos and other projects and products available at
 [Comparison](../further-reading/comparison.md)_.
 
 Full-stack IAM is usually sold as a one-size-fits-all solution. Due to size and
@@ -117,10 +117,10 @@ where OAuth2 and OpenID Connect are often the primary protocols, the challenge
 is making a secure and simple login without any extra overhead, for instance,
 with Oauth2 and OpenID.
 
-ORY's focus is on simplicity, user experience, and above all, using the right
-tools and technologies for the target application. Feedback from ORY's user
-community as well as the open source development efforts involved in ORY Hydra-
-OAuth2 and OpenID Connect server [ORY Hydra](https://github.com/ory/hydra), show
+Ory's focus is on simplicity, user experience, and above all, using the right
+tools and technologies for the target application. Feedback from Ory's user
+community as well as the open source development efforts involved in Ory Hydra-
+OAuth2 and OpenID Connect server [Ory Hydra](https://github.com/ory/hydra), show
 that implementing OAuth2 or OpenID Connect is often frustrating and too complex.
 These technologies are not one size fits all, and not designed for every
 implementation scenario.
@@ -147,13 +147,13 @@ federation over the browser, they do not solve:
 
 The point is that OAuth2 is hard to use because the intended use cases (for
 instance "Facebook Photo Backups") are very specific, and the proper security
-mechanisms need to be in place to deal with malicious third parties. ORY Kratos
+mechanisms need to be in place to deal with malicious third parties. Ory Kratos
 simplifies user login.
 
 ### Use a library
 
 Due to the multitude of programming languages across front end, backend and core
-infrastructure, ORY Kratos embraced a polyglot design. In other words ORY Kratos
+infrastructure, Ory Kratos embraced a polyglot design. In other words Ory Kratos
 provides Software Development Kits (SDK) and libraries for the main programming
 languages.
 
@@ -171,7 +171,7 @@ nightmare to decouple.
 
 Starting from scratch is sometimes the only option to fulfill the product's
 architectural requirements. In this case, the following are some of the main
-considerations and challenges in ORY's efforts:
+considerations and challenges in Ory's efforts:
 
 - To manage changing user models;
 - To choose and use some encryption algorithms such as BCrypt, PBKDF2, Scrypt,
@@ -198,19 +198,19 @@ considerations and challenges in ORY's efforts:
   signs up.
 
 The list above is purposely kept short. There are very many things to consider
-when building Kratos in concert with the other products ORY Keto, ORY Hydra, and
-ORY Oathkeeper. The list is really, really long.
+when building Kratos in concert with the other products Ory Keto, Ory Hydra, and
+Ory Oathkeeper. The list is really, really long.
 
-## Introducing ORY Kratos
+## Introducing Ory Kratos
 
 Considering all of the information above, there would be enough context to
-understand why and how ORY Kratos started, and why it's different from other
-more conventional approaches. ORY Kratos uses a new stack, is open source, and
+understand why and how Ory Kratos started, and why it's different from other
+more conventional approaches. Ory Kratos uses a new stack, is open source, and
 peer reviewed and developed in a broad community of experts.
 
 ### Solving a specific problem domain
 
-ORY Kratos addresses a clearly defined problem domain:
+Ory Kratos addresses a clearly defined problem domain:
 
 - managing credentials such as passwords, recovery email addresses, and security
   questions;
@@ -222,16 +222,16 @@ ORY Kratos addresses a clearly defined problem domain:
 - managing identity data for example first name, last name, profile picture, and
   birthday, etc.
 
-ORY has numerous products that support the protocols OAuth2 or OpenID Connect in
-[ORY Hydra](http://github.com/ory/hydra), a permission system in
-[ORY Keto](http://github.com/ory/keto), and a Reverse Proxy in
-[ORY Oathkeeper](http://github.com/ory/oathkeeper).
+Ory has numerous products that support the protocols OAuth2 or OpenID Connect in
+[Ory Hydra](http://github.com/ory/hydra), a permission system in
+[Ory Keto](http://github.com/ory/keto), and a Reverse Proxy in
+[Ory Oathkeeper](http://github.com/ory/oathkeeper).
 
 ### Software Architecture
 
-ORY's
+Ory's
 [Software Architecture and Philosophy](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy)
-document, explains the architectural beliefs and framework behind the ORY
+document, explains the architectural beliefs and framework behind the Ory
 Products in particular:
 
 - Small runtime footprint with an about five (5) MB binary running on all
@@ -245,13 +245,13 @@ Products in particular:
 
 ### Bring your own User Interface (Framework)
 
-ORY's approach to user interface and user experience is to provide for an
+Ory's approach to user interface and user experience is to provide for an
 interaction concept with maximum flexibility and creativity. Some companies need
 [progressive profiling](https://blog.hubspot.com/blog/tabid/6307/bid/34155/how-to-capture-more-and-better-lead-intel-with-progressive-profiling.aspx)
 and build a NodeJS app. Other companies desire to capture everything in one go,
 using Client-Side JavaScript library such as Angular or React. Some companies
-want an iOS-native registration and login experience. While ORY's cloud native
-headless API approach address many integration and UI issues, with ORY Kratos,
+want an iOS-native registration and login experience. While Ory's cloud native
+headless API approach address many integration and UI issues, with Ory Kratos,
 predefined flows make it easy to implement a custom user interface for login,
 registration, profile management, account reset, etc. Furthermore, to make it
 very easy to get started there is a reference implementation
@@ -270,14 +270,14 @@ system:
 - An employee that uses a unique username + password to login with a cost center
   attached to the profile.
 
-ORY Kratos implements both scenarios by using
-[JSON Schemas for Identities](./identity-data-model)
+Ory Kratos implements both scenarios by using
+[JSON Schemas for Identities](./identity-data-model.mdx)
 
 ### Forget passport-js, oidc-client, ...
 
-While proprietary and bespoke middleware can protect APIs and Web endpoints, ORY
-Open Source provides a base solution for many use cases. For example, ORY Kratos
-integrates with ORY Oathkeeper, a Reverse Proxy solution. Defining Access Rules
+While proprietary and bespoke middleware can protect APIs and Web endpoints, Ory
+Open Source provides a base solution for many use cases. For example, Ory Kratos
+integrates with Ory Oathkeeper, a Reverse Proxy solution. Defining Access Rules
 is as easy as writing a few lines of JSON / JSON5 / YAML!
 
 Please consult the [Quickstart documentation](../quickstart.mdx), for further

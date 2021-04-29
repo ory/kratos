@@ -7,29 +7,29 @@ import useBaseUrl from '@docusaurus/useBaseUrl'
 import Mermaid from '@theme/Mermaid'
 
 The [Quickstart](../quickstart.mdx) covers a basic set up that uses client-side
-routing in `SecureApp` to forward requests to ORY Kratos.
+routing in `SecureApp` to forward requests to Ory Kratos.
 
 Systems that have more than a few components often use reverse proxies such as
-Nginx, Envoy, or Kong to route and authorize traffic to applications. ORY Kratos
+Nginx, Envoy, or Kong to route and authorize traffic to applications. Ory Kratos
 works very well in such environments. The purpose of this guide is to clarify
 how to use an IAP (Identity and Access Proxy) to authorize incoming requests. In
 this tutorial we will be using
-[ORY Oathkeeper](https://github.com/ory/oathkeeper) to achieve this.
+[Ory Oathkeeper](https://github.com/ory/oathkeeper) to achieve this.
 
-This guide expects that you have familiarized yourself with ORY Kratos' concepts
+This guide expects that you have familiarized yourself with Ory Kratos' concepts
 introduced in the [Quickstart](../quickstart.mdx).
 
 To ensure that no one can access the dashboard without prior authentication, we
 are making use of our reverse proxy
-([ORY Oathkeeper](https://github.com/ory/oathkeeper)) denying all
+([Ory Oathkeeper](https://github.com/ory/oathkeeper)) denying all
 unauthenticated traffic to `http://secure-app/dashboard` and redirecting the
 user to the login page at `http://secure-app/auth/login`. Further, we will
 configure access to `http://secure-app/auth/login` in such a way that access
 only works if one is not yet authenticated.
 
-## Running ORY Kratos and the ORY Oathkeeper Identity and Access Proxy
+## Running Ory Kratos and the Ory Oathkeeper Identity and Access Proxy
 
-Clone the ORY Kratos repository and fetch the latest images:
+Clone the Ory Kratos repository and fetch the latest images:
 
 ```shell script
 git clone https://github.com/ory/kratos.git
@@ -38,7 +38,7 @@ git checkout v0.5.5-alpha.1
 
 ```
 
-Next, run the quickstart and add the ORY Oathkeeper config:
+Next, run the quickstart and add the Ory Oathkeeper config:
 
 ```shell script
 docker-compose \
@@ -75,7 +75,7 @@ oathkeeper_1  | {"level":"info","msg":"Listening on http://:4455","time":"2020-0
 
 This demo makes use of several services:
 
-1. [ORY Kratos](https://github.com/ory/kratos)
+1. [Ory Kratos](https://github.com/ory/kratos)
 
 - Public ("Browser") API (port 4433)
 - Admin API (port 4434) - This is made public only so we can test via the CLI.
@@ -86,7 +86,7 @@ This demo makes use of several services:
   registration, logout, dashboard, and other UIs. Because we are accessing this
   via a proxy, its port (4435) is not publicly exposed.
 
-3. [ORY Oathkeeper](https://github.com/ory/oathkeeper)
+3. [Ory Oathkeeper](https://github.com/ory/oathkeeper)
 
 - Reverse proxy (port 4455) - a reverse proxy to protect the **SecureApp**.
 - API (port 4456) - Oathkeeper's API. This is made public only so we can test
@@ -94,7 +94,7 @@ This demo makes use of several services:
 
 4. [MailSlurper](https://github.com/mailslurper)
 
-- Public (port 4436) - a development SMTP server with which ORY Kratos sends
+- Public (port 4436) - a development SMTP server with which Ory Kratos sends
   emails.
 
 To better understand the application architecture, let's take a look at the
@@ -119,18 +119,18 @@ subgraph dn["Internal Docker Network (intranet)"]
     SA-->|Talks to|OK
     OK-->|Sends mail via|SMTP
     OO-->|Validates auth sessions using|OK
-    OK[ORY Kratos]
-    OO["Reverse Proxy (ORY Oathkeeper)"]
-    SA["SecureApp (ORY Kratos SelfService UI Node Example)"]
+    OK[Ory Kratos]
+    OO["Reverse Proxy (Ory Oathkeeper)"]
+    SA["SecureApp (Ory Kratos SelfService UI Node Example)"]
     SMTP["SMTP Server (MailSlurper)"]
 end
 `}
 />
 
 As you can see, all requests except for our demo mail server are proxied through
-ORY Oathkeeper.
+Ory Oathkeeper.
 
-The next diagram shows how we've configured the routes in ORY Oathkeeper:
+The next diagram shows how we've configured the routes in Ory Oathkeeper:
 
 <Mermaid
   chart={`
@@ -140,7 +140,7 @@ subgraph pi[Public Internet]
 end
 subgraph vpc[VPC / Cloud / Docker Network]
 subgraph "Demilitarized Zone / DMZ"
-    OK[ORY Oathkeeper :4455]
+    OK[Ory Oathkeeper :4455]
     B --> OK
 end
     OK -->|"Forwards {/,/dashboard} to"| SAD
@@ -150,9 +150,9 @@ end
     OK -->|"Forwards /auth/* to"| SAA
     OK -->|"Forwards /.ory/kratos/public/* to"| KP
     subgraph "Private Subnet / Intranet"
-    K[ ORY Kratos ]
-    KP([ ORY Kratos Public API ])
-    KA([ ORY Kratos Admin API ])
+    K[ Ory Kratos ]
+    KP([ Ory Kratos Public API ])
+    KA([ Ory Kratos Admin API ])
     SA --> KA
     KA -.belongs to.-> K
     KP -.belongs to.-> K
@@ -178,8 +178,8 @@ end
 `}
 />
 
-In order to avoid common cross-domain issues with cookies, we're using ORY
-Oathkeeper to proxy requests to ORY Kratos' Public API so that all requests come
+In order to avoid common cross-domain issues with cookies, we're using Ory
+Oathkeeper to proxy requests to Ory Kratos' Public API so that all requests come
 from the same hostname.
 
 ## Perform Registration, Login, and Logout
@@ -198,22 +198,22 @@ You can find all configuration files used for this quickstart guide in
 and
 [`./quickstart-oathkeeper.yml`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/quickstart-oathkeeper.yml).
 
-### ORY Oathkeeper: Identity and Access Proxy
+### Ory Oathkeeper: Identity and Access Proxy
 
-All configuration for [ORY Oathkeeper](https://www.ory.sh/oathkeeper/) resides
+All configuration for [Ory Oathkeeper](https://www.ory.sh/oathkeeper/) resides
 in
 [`./contrib/quickstart/oathkeeper`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/contrib/quickstart/oathkeeper).
 
 #### Configuration
 
-We define several configuration options for ORY Oathkeeper such as the port for
+We define several configuration options for Ory Oathkeeper such as the port for
 the proxy and where to load the access rules from.
 
 #### Cookie Session Authenticator
 
 The
 [Cookie Session Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authn#cookie_session)
-is enabled and points to [ORY Kratos' `/sessions/whoami` API](../reference/api).
+is enabled and points to [Ory Kratos' `/sessions/whoami` API](../reference/api).
 It uses the `ory_kratos_session` cookie to identify if a request contains a
 session or not:
 
@@ -281,7 +281,7 @@ in the HTTP Header instead of
 `Cookie: ory_kratos_session=...`
 
 The JWT is signed using a RS256 key. To verify the JWT we can use the public key
-provided by ORY Oathkeeper's JWKS API:
+provided by Ory Oathkeeper's JWKS API:
 
 `http://127.0.0.1:4456/.well-known/jwks.json`
 
@@ -355,7 +355,7 @@ access_rules:
 ```
 
 In `access-rules.yml` we define three rules. The first rule forwards all traffic
-matching `http://127.0.0.1:4455/.ory/kratos/public/` to ORY Kratos' Public API:
+matching `http://127.0.0.1:4455/.ory/kratos/public/` to Ory Kratos' Public API:
 
 ```yaml title="contrib/quickstart/oathkeeper/access-rules.yml"
 - id: 'ory:kratos:public'

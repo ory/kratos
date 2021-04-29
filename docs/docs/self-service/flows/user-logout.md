@@ -3,7 +3,7 @@ id: user-logout
 title: User Logout
 ---
 
-ORY Kratos supports two logout flows:
+Ory Kratos supports two logout flows:
 
 - Browser-based (easy): This flow works for all applications running on top of a
   browser. Websites, single-page apps, Cordova/Ionic, and so on.
@@ -13,7 +13,7 @@ ORY Kratos supports two logout flows:
 ## Self-Service User Logout for Browser Applications
 
 > WARNING - This flow is currently vulnerable to CSRF attacks because anyone can
-> direct your users to the logout endpoint. A future release of ORY Kratos will
+> direct your users to the logout endpoint. A future release of Ory Kratos will
 > use POST Forms with Anti-CSRF Tokens to prevent this problem. This is tracked
 > as [kratos#142](https://github.com/ory/kratos/issues/142).
 
@@ -21,7 +21,7 @@ To log a user out, all you have to do is to direct the browser to
 `http://ory-kratos-public/self-service/browser/flows/logout`. After successful
 logout, the browser will be redirected either to the `return_to` query parameter
 from the initial request URL, or fall back to the `default_browser_return_url`
-value set in ORY Kratos' configuration file:
+value set in Ory Kratos' configuration file:
 
 ```
 selfservice:
@@ -33,4 +33,4 @@ selfservice:
 
 ## Self-Service User Logout for API Clients
 
-This will be addressed in a future release of ORY Kratos.
+This will be addressed in a future release of Ory Kratos.

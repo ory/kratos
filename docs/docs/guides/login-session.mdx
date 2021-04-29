@@ -3,6 +3,7 @@ id: login-session
 title: Configuring And Checking for Login Sessions
 ---
 
+import CodeFromRemote from '@theme/CodeFromRemote'
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 
@@ -11,7 +12,7 @@ cookie or as a token, depending on the interaction type.
 
 ## Login Session Configuration
 
-A session is valid for the session lifespan you specify in the ORY Kratos
+A session is valid for the session lifespan you specify in the Ory Kratos
 config:
 
 ```yaml title="path/to/kratos/config.yml
@@ -51,7 +52,7 @@ The easiest way to check if a user is signed in is to call the
 
 :::note
 
-Make sure to include the ORY Kratos Session Cookie when calling this endpoint.
+Make sure to include the Ory Kratos Session Cookie when calling this endpoint.
 If you are calling this endpoint from a proxy or middleware, make sure to
 forward the cookies sent to the proxy/middleware. If you are calling this
 endpoint as an AJAX call, make sure to include credentials and configure CORS
@@ -109,36 +110,21 @@ A typical session payload will look like this:
   ]}>
 <TabItem value="nodejs">
 
-```js
-import { PublicApi } from '@ory/kratos-client'
+{' '}
 
-const publicEndpoint = new PublicApi(config.kratos.public)
-const protect = (req: Request, res: Response, next: NextFunction) => {
-  req.headers['host'] = config.kratos.public.split('/')[2]
-  publicEndpoint
-    .whoami(req)
-    .then(({ body, response }) => {
-      req.user = { session: body }
-      next()
-    })
-    .catch(() => {
-      // Redirect to login if not logged in
-      res.redirect('/auth/login')
-    })
-
-// const app = express()
-// ...
-
-app.get('/', protect, dashboard)
-```
+<CodeFromRemote
+  lang="js"
+  link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/middleware/simple.ts"
+  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/middleware/simple.ts"
+/>
 
 </TabItem>
 </Tabs>
 
 ### API Client
 
-API clients receive and use ORY Kratos Session Tokens which can be checked by
-calling the `/sessions/whoami` endpoint and including the ORY Kratos Session
+API clients receive and use Ory Kratos Session Tokens which can be checked by
+calling the `/sessions/whoami` endpoint and including the Ory Kratos Session
 Token as a bearer token in the HTTP Authorization Header:
 
 ```shell script

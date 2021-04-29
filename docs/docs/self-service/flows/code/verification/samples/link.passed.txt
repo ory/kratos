@@ -1,5 +1,5 @@
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4434/self-service/verification/flows?id=eb2aa29b-a726-4477-8635-9d5830f543fc' \
-  | jq -r '.state'
+    'http://127.0.0.1:4434/self-service/verification/flows?id=78815659-b7d5-4c28-8327-5c86a5589ed8' | \
+      jq -r '.state'
 
 passed_challenge

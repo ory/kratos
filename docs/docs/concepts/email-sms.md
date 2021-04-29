@@ -3,7 +3,7 @@ id: email-sms
 title: Out-of-band communication via E-Mail and SMS
 ---
 
-ORY Kratos sends out-of-band messages via SMS or E-Mail. These messages are
+Ory Kratos sends out-of-band messages via SMS or E-Mail. These messages are
 required for The following exemplary use cases require these messages:
 
 - Send an account activation email
@@ -14,7 +14,7 @@ required for The following exemplary use cases require these messages:
 
 ## Mail courier
 
-ORY Kratos processes email dispatch using a mail courier worker, which must run
+Ory Kratos processes email dispatch using a mail courier worker, which must run
 as a singleton in order to process the mail queue correctly. It can be run as a
 background worker on a single-instance Kratos setup or as a distinct singleton
 foreground worker in multi-instance deployments.
@@ -34,7 +34,7 @@ courier can be started with the `kratos courier watch` command
 
 ## Sending E-Mails via SMTP
 
-To have E-Mail delivery running with ORY Kratos requires an SMTP server. This is
+To have E-Mail delivery running with Ory Kratos requires an SMTP server. This is
 set up in the configuration file using an absolute URL with the `smtp` schema:
 
 ```yaml title="path/to/my/kratos/config.yml"
@@ -111,4 +111,4 @@ Hi, please verify your account by clicking the following link:
 ## Sending SMS
 
 The Sending SMS feature is not supported at present. It will be available in a
-future version of ORY Kratos.
+future version of Ory Kratos.

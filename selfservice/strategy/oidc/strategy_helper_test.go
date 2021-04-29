@@ -197,7 +197,7 @@ func newHydra(t *testing.T, subject, website *string, scope *[]string) (remoteAd
 	})
 
 	if remotePublic == "" && remoteAdmin == "" {
-		t.Logf("Environment did not provide ORY Hydra, starting fresh.")
+		t.Logf("Environment did not provide Ory Hydra, starting fresh.")
 		publicPort, err := freeport.GetFreePort()
 		require.NoError(t, err)
 
@@ -231,7 +231,7 @@ func newHydra(t *testing.T, subject, website *string, scope *[]string) (remoteAd
 		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
 	}
 
-	t.Logf("ORY Hydra running at: %s %s", remotePublic, remoteAdmin)
+	t.Logf("Ory Hydra running at: %s %s", remotePublic, remoteAdmin)
 
 	return remoteAdmin, remotePublic, hydraIntegrationTSURL
 }

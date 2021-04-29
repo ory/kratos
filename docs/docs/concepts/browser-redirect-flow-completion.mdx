@@ -55,8 +55,8 @@ want the user to end up at that page after login. To achieve that, you append
 `?return_to=https://www.myapp.com/blog/write` when initializing the Login /
 Registration /Settings flow.
 
-Because ORY Kratos prevents Open Redirect Attacks, you need to whitelist the
-domain in your ORY Kratos config:
+Because Ory Kratos prevents Open Redirect Attacks, you need to whitelist the
+domain in your Ory Kratos config:
 
 ```yaml file="path/to/my/kratos.config.yml"
 selfservice:
@@ -129,6 +129,16 @@ selfservice:
     verification:
       after:
         default_redirect_to: https://this-is-overridden-by-password/
+```
+
+#### Specify Redirection URL during Registration
+
+Verification emails are usually sent in response to a successful registration
+flow. To specify the redirect URL for the verification flow after registration,
+append `after_verification_return_to` to the Browser Registration Init endpoint:
+
+```
+https://public.kratos/self-service/registration/browser?after_verification_return_to=https://my-redirect/foo
 ```
 
 ## JSON
