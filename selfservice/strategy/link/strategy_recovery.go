@@ -252,7 +252,7 @@ type submitSelfServiceRecoveryFlowWithLinkMethod struct {
 //   (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 //   a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Consumes:
 //     - application/json

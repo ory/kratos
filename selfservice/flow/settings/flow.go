@@ -56,7 +56,7 @@ type Flow struct {
 	// required: true
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 
-	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
 	//
 	// required: true

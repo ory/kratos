@@ -48,7 +48,7 @@ func (r AdminApiApiCreateIdentityRequest) Execute() (*Identity, *http.Response, 
  * This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
 using this method! A way to achieve that will be introduced in the future.
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiCreateIdentityRequest
 */
@@ -324,7 +324,7 @@ func (r AdminApiApiDeleteIdentityRequest) Execute() (*http.Response, error) {
 This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
 assumed that is has been deleted already.
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID is the identity's ID.
  * @return AdminApiApiDeleteIdentityRequest
@@ -437,7 +437,7 @@ func (r AdminApiApiGetIdentityRequest) Execute() (*Identity, *http.Response, err
 
 /*
  * GetIdentity Get an Identity
- * Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+ * Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of identity you want to get
  * @return AdminApiApiGetIdentityRequest
@@ -706,7 +706,7 @@ This endpoint supports stub values to help you implement the error UI:
 
 `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
 
-More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiGetSelfServiceErrorRequest
 */
@@ -848,7 +848,7 @@ func (r AdminApiApiGetSelfServiceLoginFlowRequest) Execute() (*LoginFlow, *http.
  * GetSelfServiceLoginFlow Get Login Flow
  * This endpoint returns a login flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiGetSelfServiceLoginFlowRequest
 */
@@ -1000,7 +1000,7 @@ func (r AdminApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*RecoveryFlow, 
  * GetSelfServiceRecoveryFlow Get information about a recovery flow
  * This endpoint returns a recovery flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiGetSelfServiceRecoveryFlowRequest
 */
@@ -1142,7 +1142,7 @@ func (r AdminApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*Registrati
  * GetSelfServiceRegistrationFlow Get Registration Flow
  * This endpoint returns a registration flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiGetSelfServiceRegistrationFlowRequest
 */
@@ -1292,13 +1292,13 @@ func (r AdminApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SettingsFlow, 
 
 /*
  * GetSelfServiceSettingsFlow Get Settings Flow
- * When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie
-or the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes
+ * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
+or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
 but instead 403 or 500 to improve data privacy.
 
-You can access this endpoint without credentials when using ORY Kratos' Admin API.
+You can access this endpoint without credentials when using Ory Kratos' Admin API.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiGetSelfServiceSettingsFlowRequest
 */
@@ -1464,7 +1464,7 @@ func (r AdminApiApiGetSelfServiceVerificationFlowRequest) Execute() (*Verificati
  * GetSelfServiceVerificationFlow Get Verification Flow
  * This endpoint returns a verification flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiGetSelfServiceVerificationFlowRequest
 */
@@ -1952,7 +1952,7 @@ func (r AdminApiApiListIdentitiesRequest) Execute() ([]Identity, *http.Response,
  * ListIdentities List Identities
  * Lists all identities. Does not support search at the moment.
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiListIdentitiesRequest
 */
@@ -2175,7 +2175,7 @@ using this method! A way to achieve that will be introduced in the future.
 
 The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of identity you want to update
  * @return AdminApiApiUpdateIdentityRequest

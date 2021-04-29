@@ -1,12 +1,10 @@
 package template
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/shurcooL/go/ioutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -27,7 +25,8 @@ func TestLoadTextTemplate(t *testing.T) {
 
 	t.Run("method=cache works", func(t *testing.T) {
 		fp := filepath.Join(os.TempDir(), x.NewUUID().String()) + ".body.gotmpl"
-		require.NoError(t, ioutil.WriteFile(fp, bytes.NewBufferString("cached stub body")))
+
+		require.NoError(t, os.WriteFile(fp, []byte("cached stub body"), 0666))
 		assert.Contains(t, executeTemplate(t, fp), "cached stub body")
 
 		require.NoError(t, os.RemoveAll(fp))

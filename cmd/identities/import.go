@@ -62,13 +62,6 @@ WARNING: Importing credentials is not yet supported.`,
 				return cmdx.FailSilently(cmd)
 			}
 
-			// TODO merge
-			//
-			//resp, err := c.Admin.CreateIdentity(&admin.CreateIdentityParams{
-			//	Body:       &params,
-			//	Context:    cmd.Context(),
-			//	HTTPClient: cliclient.NewHTTPClient(cmd),
-			//})
 			ident, _, err := c.AdminApi.CreateIdentity(cmd.Context()).CreateIdentity(params).Execute()
 			if err != nil {
 				failed[src] = err

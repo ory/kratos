@@ -12,7 +12,7 @@ const chart = ({
 sequenceDiagram
 
   participant B as Browser
-  participant K as ORY Kratos
+  participant K as Ory Kratos
   participant A as Flow UI
 
   B->>K: Follow link to /self-service/${components}/browser

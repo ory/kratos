@@ -1,6 +1,6 @@
 // Ory Kratos
 //
-// Welcome to the ORY Kratos HTTP API documentation!
+// Welcome to the Ory Kratos HTTP API documentation!
 //
 //     Schemes: http, https
 //     Host:

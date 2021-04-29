@@ -17,7 +17,7 @@ import (
 
 var watchCmd = &cobra.Command{
 	Use:   "watch",
-	Short: "Starts the ORY Kratos message courier",
+	Short: "Starts the Ory Kratos message courier",
 	Run: func(cmd *cobra.Command, args []string) {
 		r := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
 		StartCourier(cmd.Context(), r)

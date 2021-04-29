@@ -37,7 +37,7 @@ func TestNodesSort(t *testing.T) {
 	f, err := container.NewFromJSONSchema("/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
 	require.NoError(t, err)
 
-	f.UpdateNodesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
+	f.UpdateNodeValuesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
 	f.SetCSRF("csrf_token")
 
 	inputs, err := sortFixtures.ReadDir("fixtures/sort/input")

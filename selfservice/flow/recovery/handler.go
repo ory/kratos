@@ -96,7 +96,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // :::
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Schemes: http, https
 //
@@ -134,7 +134,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Schemes: http, https
 //
@@ -180,7 +180,7 @@ type getSelfServiceRecoveryFlowParameters struct {
 //
 // This endpoint returns a recovery flow's context with, for example, error details and other information.
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Produces:
 //     - application/json
@@ -260,7 +260,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //   (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 //   a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Consumes:
 //     - application/json

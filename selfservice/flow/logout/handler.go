@@ -51,7 +51,7 @@ func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 // On successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request
 // or fall back to `urls.default_return_to`.
 //
-// More information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+// More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 //
 //     Schemes: http, https
 //

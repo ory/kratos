@@ -76,7 +76,7 @@ type getSelfServiceErrorParameters struct {
 //
 // - `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
 //
-// More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+// More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
 //
 //     Produces:
 //     - application/json
