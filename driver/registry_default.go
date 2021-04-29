@@ -360,9 +360,12 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 
 func (m *RegistryDefault) Hasher() hash.Hasher {
 	if m.passwordHasher == nil {
-		if m.c.HasherPasswordHashingAlgorithm() == "bcrypt" {
+		switch m.c.HasherPasswordHashingAlgorithm() {
+		case "bcrypt":
 			m.passwordHasher = hash.NewHasherBcrypt(m)
-		} else {
+		case "bcryptAes":
+			m.passwordHasher = hash.NewHasherBcryptAES(m)
+		default:
 			m.passwordHasher = hash.NewHasherArgon2(m)
 		}
 	}

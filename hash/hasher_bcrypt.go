@@ -1,10 +1,13 @@
 package hash
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
+	"fmt"
 
 	"github.com/ory/kratos/schema"
-
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ory/kratos/driver/config"
@@ -24,15 +27,24 @@ func NewHasherBcrypt(c BcryptConfiguration) *Bcrypt {
 
 func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) {
 	if err := validateBcryptPasswordLength(password); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword(password, int(h.c.Config(ctx).HasherBcrypt().Cost))
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
-	return hash, nil
+	var b bytes.Buffer
+	if _, err := fmt.Fprintf(
+		&b,
+		"$bcrypt$%s",
+		base64.RawStdEncoding.EncodeToString(hash),
+	); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return b.Bytes(), nil
 }
 
 func validateBcryptPasswordLength(password []byte) error {
