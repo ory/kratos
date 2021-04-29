@@ -95,7 +95,6 @@ builds:
       - 6
       - 7
     goos:
-      - freebsd
       - linux
       - windows
       - darwin
