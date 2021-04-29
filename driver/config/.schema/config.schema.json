@@ -60,6 +60,59 @@
         "hook"
       ]
     },
+    "WebHookAuthBasicAuthProperties": {
+      "properties": {
+        "type": {
+          "const": "basic-auth"
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "user": {
+              "type": "string",
+              "description": "user name for basic auth"
+            },
+            "password": {
+              "type": "string",
+              "description": "password for basic auth"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["user", "password"]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type", "config"]
+    },
+    "WebHookAuthApiKeyProperties": {
+      "properties": {
+        "type": {
+          "const": "api-key"
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The name of the api key"
+            },
+            "value": {
+              "type": "string",
+              "description": "The value of the api key"
+            },
+            "in": {
+              "type": "string",
+              "description": "How the api key should be transferred",
+              "enum": ["header", "cookie"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["name", "value", "in"]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type", "config"]
+    },
     "selfServiceWebHook": {
       "type": "object",
       "properties": {
@@ -67,7 +120,40 @@
           "const": "web-hook"
         },
         "config": {
-          "type": "object"
+          "type": "object",
+          "title": "Web-Hook Configuration",
+          "description": "Define what the hook should do",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL the Web-Hook should call",
+              "format": "uri"
+            },
+            "method": {
+              "type": "string",
+              "description": "The HTTP method to use (GET, POST, etc)."
+            },
+            "body": {
+              "type": "string",
+              "description": "Path to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads"
+            },
+            "auth": {
+              "type": "object",
+              "title": "Auth mechanisms",
+              "description": "Define which auth mechanism the Web-Hook should use",
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/WebHookAuthApiKeyProperties"
+                },
+                {
+                  "$ref": "#/definitions/WebHookAuthBasicAuthProperties"
+                }
+              ]
+            },
+            "additionalProperties": false
+          },
+          "additionalProperties": false,
+          "required": ["url", "method", "body"]
         }
       },
       "additionalProperties": false,
