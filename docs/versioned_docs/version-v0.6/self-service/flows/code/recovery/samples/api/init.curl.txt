@@ -1,0 +1,62 @@
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    http://127.0.0.1:4433/self-service/recovery/api | \
+      jq
+
+{
+  "id": "c0da5b82-f22c-4609-8467-8c7e2fbc12db",
+  "type": "api",
+  "expires_at": "2021-04-28T13:22:01.115431237Z",
+  "issued_at": "2021-04-28T12:22:01.115431237Z",
+  "request_url": "http://127.0.0.1:4433/self-service/recovery/api",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/recovery?flow=c0da5b82-f22c-4609-8467-8c7e2fbc12db",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
+  },
+  "state": "choose_method"
+}

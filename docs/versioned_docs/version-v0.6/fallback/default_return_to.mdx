@@ -1,0 +1,17 @@
+---
+id: default_return_to
+title: This should be the Error UI
+---
+
+You ended up here because you did not set the following configuration value:
+
+```yaml title="path/to/kratos/config.yml
+selfservice:
+  default_browser_return_url: http://my-app.com/dashboard
+```
+
+You can set this configuration value using environment variable
+`SELFSERVICE_DEFAULT_BROWSER_RETURN_URL` as well!
+
+If you don't know what that means, head over to
+[Self-Service Flow Completion](../concepts/browser-redirect-flow-completion.mdx)!

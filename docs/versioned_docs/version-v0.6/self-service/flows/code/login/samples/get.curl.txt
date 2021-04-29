@@ -1,0 +1,86 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4434/self-service/login/flows?id=42e26bc5-8014-400c-b463-dc5c3738c242' | jq
+
+{
+  "id": "42e26bc5-8014-400c-b463-dc5c3738c242",
+  "type": "browser",
+  "expires_at": "2021-04-28T10:04:44.506336771Z",
+  "issued_at": "2021-04-28T09:54:44.506336771Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "8RygCHIdyMXVc3jxIAf/6uAuv/jBJLo5mt6nXdcB/JOzncLRu5510BNZNOjvA6Soii504s1Yq/sgvfOXxzck6g==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password_identifier",
+          "type": "text",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070004,
+            "text": "ID",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1010001,
+            "text": "Sign in",
+            "type": "info",
+            "context": {}
+          }
+        }
+      }
+    ]
+  },
+  "forced": false
+}

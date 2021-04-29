@@ -1,0 +1,61 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4433/self-service/verification/flows?id=956c0499-17a9-4a99-9602-9282d1632f7b' | \
+      jq
+
+{
+  "id": "956c0499-17a9-4a99-9602-9282d1632f7b",
+  "type": "browser",
+  "expires_at": "2021-04-28T13:24:12.648411549Z",
+  "issued_at": "2021-04-28T12:24:12.648411549Z",
+  "request_url": "http://127.0.0.1:4433/self-service/verification/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/verification?flow=956c0499-17a9-4a99-9602-9282d1632f7b",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "KXCO7oX0XT83JyDs20tsjJydszEu2+R2cyP1fWk0yBSWpqVxAUl5FQ/1LmrYP4/qZWTsDTp7Yf8gUW/V2nJgcw==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
+  },
+  "state": "choose_method"
+}

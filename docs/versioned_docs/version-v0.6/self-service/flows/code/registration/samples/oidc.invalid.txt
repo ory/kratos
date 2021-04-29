@@ -1,0 +1,30 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4433/self-service/registration/flows?id=76cec270-1719-4c9e-b09a-4af8281d511e' \
+    | jq -r '.ui.nodes[] | select(.attributes.name=="traits.website")'
+
+{
+  "type": "input",
+  "group": "oidc",
+  "attributes": {
+    "name": "traits.website",
+    "type": "url",
+    "disabled": false
+  },
+  "messages": [
+    {
+      "id": 4000002,
+      "text": "Property website is missing.",
+      "type": "error",
+      "context": {
+        "property": "website"
+      }
+    }
+  ],
+  "meta": {
+    "label": {
+      "id": 1070002,
+      "text": "Website",
+      "type": "info"
+    }
+  }
+}

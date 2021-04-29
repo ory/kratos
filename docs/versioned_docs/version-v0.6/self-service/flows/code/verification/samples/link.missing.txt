@@ -1,0 +1,72 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4433/self-service/verification/flows?id=11f6e7f4-99f9-4bcf-bcfc-208d8db942c5' | \
+      jq
+
+{
+  "id": "11f6e7f4-99f9-4bcf-bcfc-208d8db942c5",
+  "type": "browser",
+  "expires_at": "2021-04-28T13:35:42.627410804Z",
+  "issued_at": "2021-04-28T12:35:42.627410804Z",
+  "request_url": "http://127.0.0.1:4433/self-service/verification/browser",
+  "active": "link",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/verification?flow=11f6e7f4-99f9-4bcf-bcfc-208d8db942c5",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "UEHaePrAA2H+nDW2BFI6OTQh4LM1sC7rbVPkT3Z0zE/vl/Hnfn0nS8ZOOzAHJtlfzdi/jyEQq2I+IX7nxTJkKA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [
+          {
+            "id": 4000002,
+            "text": "Property email is missing.",
+            "type": "error",
+            "context": {
+              "property": "email"
+            }
+          }
+        ],
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
+  },
+  "state": "choose_method"
+}

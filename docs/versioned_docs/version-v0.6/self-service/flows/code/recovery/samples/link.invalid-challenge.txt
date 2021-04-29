@@ -1,0 +1,69 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4433/self-service/recovery/flows?id=db163ca2-5e03-4961-8398-c537ed6c1cb9' | \
+      jq
+
+{
+  "id": "db163ca2-5e03-4961-8398-c537ed6c1cb9",
+  "type": "browser",
+  "expires_at": "2021-04-28T13:54:51.358334636Z",
+  "issued_at": "2021-04-28T12:54:51.358334636Z",
+  "request_url": "http://127.0.0.1:4433/self-service/recovery?flow=199a2c74-08ca-4f22-b24c-3de3032682f8&token=XSpIPzkW4DgnJVhBG5Wjw3F123Z0ORmGrrq",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/recovery?flow=db163ca2-5e03-4961-8398-c537ed6c1cb9",
+    "method": "POST",
+    "messages": [
+      {
+        "id": 4060004,
+        "text": "The recovery token is invalid or has already been used. Please retry the flow.",
+        "type": "error",
+        "context": {}
+      }
+    ],
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "TZ1eswBzgOQF6VC1PdPGR9vX9JfpRiwe6ZWAKpjNwgunyE3C+nF4sgKOB4hXBZTrvUBWWmMLXhXmdq/vIKWLnA==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
+  },
+  "state": "choose_method"
+}

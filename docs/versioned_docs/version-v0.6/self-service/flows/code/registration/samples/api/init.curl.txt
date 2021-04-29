@@ -1,0 +1,16 @@
+$ curl -s -X GET \
+  -H "Accept: application/json"  \
+  http://127.0.0.1:4433/self-service/registration/api | jq
+
+{
+  "id": "406f4d53-3972-465c-b9bb-368b5f484018",
+  "type": "api",
+  "expires_at": "2021-04-28T09:26:51.492772584Z",
+  "issued_at": "2021-04-28T09:16:51.492772584Z",
+  "request_url": "http://127.0.0.1:4433/self-service/registration/api",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/registration?flow=406f4d53-3972-465c-b9bb-368b5f484018",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
