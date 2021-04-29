@@ -45,7 +45,7 @@ context('Recovery', () => {
     })
 
     it('should cause form errors with invalid email', () => {
-      const email = gen.email()
+      const email = "abc"
       cy.get('input[name="email"]').type(email)
       cy.get('button[value="link"]').click()
       cy.get('.messages .message').should(
