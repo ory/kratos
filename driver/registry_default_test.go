@@ -295,12 +295,91 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	})
 
 	t.Run("type=settings", func(t *testing.T) {
-		conf, reg := internal.NewFastRegistryWithMocks(t)
-		conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+		// AFTER hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor { return nil },
+			},
+			{
+				uc: "Only verify hook configured for the strategy",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+					// I think this is a bug as there is a hook named verify defined for both profile and password
+					// strategies. Instead of using it, the code makes use of the property used above and which
+					// is defined in an entirely different flow (verification).
+				},
+				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
+					return []settings.PostHookPostPersistExecutor{
+						hook.NewVerifier(reg),
+					}
+				},
+			},
+			{
+				uc: "A verify hook and a web-hook are configured for profile strategy",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceSettingsAfter+".profile.hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "body": "bar"}},
+					})
+					conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+				},
+				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
+					return []settings.PostHookPostPersistExecutor{
+						hook.NewVerifier(reg),
+						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
+					}
+				},
+			},
+			{
+				uc: "Two web-hooks are configured on a global level",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceSettingsAfter+".hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
+					return []settings.PostHookPostPersistExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+			{
+				uc: "Hooks are configured on a global level, as well as on a strategy level",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+					conf.MustSet(config.ViperKeySelfServiceSettingsAfter+".profile.hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "GET"}},
+					})
+					conf.MustSet(config.ViperKeySelfServiceSettingsAfter+".hooks", []map[string]interface{}{
+						{"hook": "web-hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
+					return []settings.PostHookPostPersistExecutor{
+						hook.NewVerifier(reg),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"foo"}`)),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
 
-		h := reg.PostSettingsPostPersistHooks(ctx, "profile")
-		require.Len(t, h, 1)
-		assert.Equal(t, []settings.PostHookPostPersistExecutor{hook.NewVerifier(reg)}, h)
+				h := reg.PostSettingsPostPersistHooks(ctx, "profile")
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
 	})
 }
 

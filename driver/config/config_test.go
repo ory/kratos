@@ -258,12 +258,20 @@ func TestViperProvider(t *testing.T) {
 			}{
 				{
 					strategy: "password",
-					hooks:    []config.SelfServiceHook{},
+					hooks: []config.SelfServiceHook{
+						{Name: "web-hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/after_settings_password_hook"}`)},
+					},
 				},
 				{
 					strategy: "profile",
-					hooks:    []config.SelfServiceHook{
-						// {Name: "verify", Config: json.RawMessage(`{}`)},
+					hooks: []config.SelfServiceHook{
+						{Name: "web-hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/after_settings_profile_hook"}`)},
+					},
+				},
+				{
+					strategy: "global",
+					hooks: []config.SelfServiceHook{
+						{Name: "web-hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/after_settings_global_hook"}`)},
 					},
 				},
 			} {

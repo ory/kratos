@@ -280,7 +280,7 @@
         }
       }
     },
-    "selfServiceGlobalHooks": {
+    "selfServiceHooks": {
       "type": "array",
       "items": {
         "anyOf": [
@@ -305,6 +305,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceVerifyHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
               }
             ]
           },
@@ -373,6 +376,9 @@
         },
         "profile": {
           "$ref": "#/definitions/selfServiceAfterSettingsMethod"
+        },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
         }
       }
     },
@@ -390,7 +396,7 @@
           "$ref": "#/definitions/selfServiceAfterLoginMethod"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceGlobalHooks"
+          "$ref": "#/definitions/selfServiceHooks"
         }
       }
     },
@@ -408,7 +414,7 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceGlobalHooks"
+          "$ref": "#/definitions/selfServiceHooks"
         }
       }
     },
@@ -420,7 +426,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceGlobalHooks"
+          "$ref": "#/definitions/selfServiceHooks"
         }
       }
     },
@@ -431,7 +437,7 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
-          "$ref": "#/definitions/selfServiceGlobalHooks"
+          "$ref": "#/definitions/selfServiceHooks"
         }
       },
       "additionalProperties": false

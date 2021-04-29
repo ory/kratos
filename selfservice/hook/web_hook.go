@@ -7,6 +7,9 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow/settings"
+
 	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -203,6 +206,16 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
+	return e.execute(&templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestUrl:     req.URL.String(),
+		Session:        session,
+	})
+}
+
+func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, session *identity.Identity) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,

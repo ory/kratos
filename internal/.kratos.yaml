@@ -97,6 +97,22 @@ selfservice:
         default_browser_return_url: https://self-service/settings/return_to
         password:
           default_browser_return_url: https://self-service/settings/password/return_to
+          hooks:
+            - hook: web-hook
+              config:
+                url: https://test.kratos.ory.sh/after_settings_password_hook
+                method: POST
+        profile:
+          hooks:
+            - hook: web-hook
+              config:
+                url: https://test.kratos.ory.sh/after_settings_profile_hook
+                method: POST
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/after_settings_global_hook
+              method: POST
 
     login:
       ui_url: http://test.kratos.ory.sh/login
