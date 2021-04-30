@@ -175,6 +175,15 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 	return &WebHook{r: r, c: c}
 }
 
+func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
+	return e.execute(&templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestUrl:     req.URL.String(),
+	})
+}
+
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow, session *session.Session) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
@@ -202,6 +211,15 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 		RequestMethod:  req.Method,
 		RequestUrl:     req.URL.String(),
 		Session:        session,
+	})
+}
+
+func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
+	return e.execute(&templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestUrl:     req.URL.String(),
 	})
 }
 

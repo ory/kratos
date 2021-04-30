@@ -468,6 +468,15 @@
         }
       }
     },
+    "selfServiceBeforeLogin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
     "selfServiceAfterLogin": {
       "type": "object",
       "additionalProperties": false,
@@ -481,6 +490,15 @@
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterLoginMethod"
         },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeRegistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
         "hooks": {
           "$ref": "#/definitions/selfServiceHooks"
         }
@@ -639,6 +657,9 @@
                     "1s"
                   ]
                 },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeRegistration"
+                },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterRegistration"
                 }
@@ -667,6 +688,9 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeLogin"
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterLogin"

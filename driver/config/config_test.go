@@ -157,8 +157,14 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRegistrationRequestLifespan())
 
 			t.Run("hook=before", func(t *testing.T) {
-				hook := p.SelfServiceFlowRegistrationBeforeHooks()
-				require.Len(t, hook, 0)
+				expHooks := []config.SelfServiceHook{
+					{Name: "web-hook", Config: json.RawMessage(`{"method":"GET","url":"https://test.kratos.ory.sh/before_registration_hook"}`)},
+				}
+
+				hooks := p.SelfServiceFlowRegistrationBeforeHooks()
+
+				require.Len(t, hooks, 1)
+				assert.Equal(t, expHooks, hooks)
 				// assert.EqualValues(t, "redirect", hook.Name)
 				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
@@ -203,8 +209,14 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, time.Minute*99, p.SelfServiceFlowLoginRequestLifespan())
 
 			t.Run("hook=before", func(t *testing.T) {
-				hook := p.SelfServiceFlowLoginBeforeHooks()
-				require.Len(t, hook, 0)
+				expHooks := []config.SelfServiceHook{
+					{Name: "web-hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/before_login_hook"}`)},
+				}
+
+				hooks := p.SelfServiceFlowLoginBeforeHooks()
+
+				require.Len(t, hooks, 1)
+				assert.Equal(t, expHooks, hooks)
 				// assert.EqualValues(t, "redirect", hook.Name)
 				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
@@ -244,13 +256,6 @@ func TestViperProvider(t *testing.T) {
 		t.Run("method=settings", func(t *testing.T) {
 			assert.Equal(t, time.Minute*99, p.SelfServiceFlowSettingsFlowLifespan())
 			assert.Equal(t, time.Minute*5, p.SelfServiceFlowSettingsPrivilegedSessionMaxAge())
-
-			t.Run("hook=before", func(t *testing.T) {
-				hook := p.SelfServiceFlowLoginBeforeHooks()
-				require.Len(t, hook, 0)
-				// assert.EqualValues(t, "redirect", hook.Name)
-				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
-			})
 
 			for _, tc := range []struct {
 				strategy string

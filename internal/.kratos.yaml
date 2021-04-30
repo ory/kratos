@@ -122,6 +122,12 @@ selfservice:
     login:
       ui_url: http://test.kratos.ory.sh/login
       lifespan: 99m
+      before:
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/before_login_hook
+              method: POST
       after:
         default_browser_return_url: https://self-service/login/return_to
         password:
@@ -156,6 +162,12 @@ selfservice:
     registration:
       ui_url: http://test.kratos.ory.sh/register
       lifespan: 98m
+      before:
+        hooks:
+          - hook: web-hook
+            config:
+              url: https://test.kratos.ory.sh/before_registration_hook
+              method: GET
       after:
         default_browser_return_url: https://self-service/registration/return_to
         password:
