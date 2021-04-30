@@ -1,0 +1,1 @@
+ALTER TABLE "_identity_credentials_tmp" RENAME TO "identity_credentials";

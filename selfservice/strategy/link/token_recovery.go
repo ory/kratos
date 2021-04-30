@@ -47,6 +47,7 @@ type RecoveryToken struct {
 	RecoveryAddressID uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
 	FlowID uuid.NullUUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
+	NID    uuid.UUID     `json:"-"  faker:"-" db:"nid"`
 }
 
 func (RecoveryToken) TableName(ctx context.Context) string {

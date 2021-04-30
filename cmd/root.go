@@ -7,6 +7,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 
+	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/cmd/hashers"
 
 	"github.com/ory/kratos/cmd/remote"
@@ -30,7 +31,7 @@ var RootCmd = &cobra.Command{
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		if !errors.Is(err, cmdx.ErrNoPrintButFail) {
-			fmt.Fprintln(RootCmd.ErrOrStderr(), err)
+			_, _ = fmt.Fprintln(RootCmd.ErrOrStderr(), err)
 		}
 		os.Exit(1)
 	}
@@ -45,6 +46,7 @@ func init() {
 	migrate.RegisterCommandRecursive(RootCmd)
 	remote.RegisterCommandRecursive(RootCmd)
 	hashers.RegisterCommandRecursive(RootCmd)
+	courier.RegisterCommandRecursive(RootCmd)
 
 	RootCmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
 }

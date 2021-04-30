@@ -1,0 +1,1 @@
+CREATE INDEX "identity_recovery_tokens_nid_idx" ON "_identity_recovery_tokens_tmp" (id, nid);

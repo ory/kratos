@@ -4,71 +4,51 @@
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
   "request_url": "http://kratos:4433/self-service/browser/flows/settings",
-  "messages": null,
-  "methods": {
-    "oidc": {
-      "method": "oidc",
-      "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/settings/connections?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "4apNE3S+VLL1UPu8GhyLOhdnhkzLZxrwTqZ/dx5xf3eP0nO6RigYo3h3UkxySahBnHWQctE4EpCANse5Rdlc+A=="
-          }
-        ]
-      }
-    },
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/password?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "4apNE3S+VLL1UPu8GhyLOhdnhkzLZxrwTqZ/dx5xf3eP0nO6RigYo3h3UkxySahBnHWQctE4EpCANse5Rdlc+A=="
-          }
-        ]
-      }
-    },
-    "profile": {
-      "method": "profile",
-      "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "IoLeYNbYJdALHIKvrgK7iYyMHA8r/rhG+6mr3z0nleRM+uDJ5E5pwYY7K1/GV5jyB54KMTGhsCY1ORMRZo+2aw=="
-          },
-          {
-            "name": "traits.email",
-            "type": "text",
-            "value": "foobar@ory.sh"
-          }
-        ]
-      }
-    }
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
   },
   "identity": {
     "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
     "schema_id": "default",
-    "schema_url": "",
+    "schema_url": "https://www.ory.sh/schemas/default",
     "traits": {
       "email": "foobar@ory.sh"
-    }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "b2d59320-8564-4400-a39f-a22a497a23f1",
+        "value": "foobar+without-code@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      },
+      {
+        "id": "c2427b6d-312b-46d9-9285-536db7ae11fd",
+        "value": "foobar@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      },
+      {
+        "id": "d4718a67-aec2-418d-8173-6ebc7bde3b86",
+        "value": "foobar+11345642c6c0@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "b8293f1c-010f-45d9-b809-f3fc5365ba80",
+        "value": "foobar@ory.sh",
+        "via": "email"
+      }
+    ]
   },
   "state": "show_form"
 }

@@ -1,0 +1,9 @@
+import { Configuration, PublicApi } from '@ory/kratos-client';
+const kratos = new PublicApi(new Configuration({ basePath: 'http://127.0.0.1:4433/' }));
+
+const flowId = '' // usually something like: req.query.flow
+
+return kratos.getSelfServiceLoginFlow(flowId)
+  .then(({ status, data: flow, ...response }) => {
+    console.log(flow) // see the Raw HTTP tab for the payload
+  })

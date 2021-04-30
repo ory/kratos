@@ -1,7 +1,10 @@
 package verification
 
 import (
+	"context"
 	"net/http"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
 
@@ -15,7 +18,9 @@ const (
 type (
 	Strategy interface {
 		VerificationStrategyID() string
+		VerificationNodeGroup() node.Group
 		PopulateVerificationMethod(*http.Request, *Flow) error
+		Verify(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
 	}
 	AdminHandler interface {
 		RegisterAdminVerificationRoutes(admin *x.RouterAdmin)
@@ -25,7 +30,8 @@ type (
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {
-		VerificationStrategies() Strategies
+		VerificationStrategies(ctx context.Context) Strategies
+		AllVerificationStrategies() Strategies
 	}
 )
 

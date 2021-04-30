@@ -9,6 +9,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/pointerx"
+
+	"github.com/ory/kratos/ui/container"
+
+	"github.com/ory/kratos-client-go"
+
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos/corpx"
 
 	"github.com/gofrs/uuid"
@@ -18,10 +28,6 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/x/pointerx"
-
-	sdkp "github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -29,7 +35,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
@@ -39,9 +45,33 @@ func init() {
 }
 
 var (
-	csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Value: x.FakeCSRFToken,
-		Required: true, Type: pointerx.String("hidden")}
+	csrfField = testhelpers.NewFakeCSRFNode()
 )
+
+func newFakeProfile(email string) []kratos.UiNode {
+	return []kratos.UiNode{
+		*testhelpers.NewFakeCSRFNode(),
+		{
+			Type:  "input",
+			Group: "profile",
+			Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
+				Name:  "traits.email",
+				Type:  "email",
+				Value: &kratos.UiNodeInputAttributesValue{String: pointerx.String(email)},
+			}),
+		},
+		{
+			Type:  "input",
+			Group: "profile",
+			Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
+				Name: "traits.name",
+				Type: "text",
+			}),
+		},
+		*testhelpers.NewMethodSubmit("authenticator_password", "password"),
+		*testhelpers.NewPasswordNode(),
+	}
+}
 
 func TestSettingsStrategy(t *testing.T) {
 	if testing.Short() {
@@ -51,15 +81,14 @@ func TestSettingsStrategy(t *testing.T) {
 	var (
 		conf, reg = internal.NewFastRegistryWithMocks(t)
 		subject   string
+		website   string
 		scope     []string
 	)
 
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &scope)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
-	public := testhelpers.NewSDKClient(publicTS)
-	admin := testhelpers.NewSDKClient(adminTS)
 
 	viperSetProviderConfig(
 		t,
@@ -111,7 +140,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var newProfileFlow = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
 		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
-			x.ParseUUID(string(*testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Payload.ID)))
+			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Id)))
 		require.NoError(t, err)
 		assert.Empty(t, req.Active)
 
@@ -124,48 +153,44 @@ func TestSettingsStrategy(t *testing.T) {
 		// sanity check
 		got, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), req.ID)
 		require.NoError(t, err)
-		require.Len(t, got.Methods, len(req.Methods))
+		require.Len(t, got.UI.Nodes, len(req.UI.Nodes))
 
 		return req
 	}
 
 	// does the same as new profile request but uses the SDK
-	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *models.SettingsFlow {
-		req := newProfileFlow(t, client, redirectTo, exp)
-		rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
-			WithID(req.ID.String()), nil)
-		require.NoError(t, err)
-		return rs.Payload
+	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
+		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS)
 	}
 
 	t.Run("case=should not be able to continue a flow with a malformed ID", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow=i-am-not-a-uuid", nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow=i-am-not-a-uuid", nil)
 		AssertSystemError(t, errTS, res, body, 400, "malformed")
 	})
 
-	t.Run("case=should not be able to continue a flow without the request query parameter", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath, nil)
+	t.Run("case=should not be able to continue a flow without the flow query parameter", func(t *testing.T) {
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow, nil)
 		AssertSystemError(t, errTS, res, body, 400, "query parameter is missing")
 	})
 
 	t.Run("case=should not be able to continue a flow with a non-existing ID", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow="+x.NewUUID().String(), nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow="+x.NewUUID().String(), nil)
 		AssertSystemError(t, errTS, res, body, 404, "not be found")
 	})
 
 	t.Run("case=should not be able to continue a flow that is expired", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", -time.Hour)
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(), nil)
-		AssertSystemError(t, errTS, res, body, 400, "expired")
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+settings.RouteSubmitFlow+"?flow="+req.ID.String(), nil)
+
+		require.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow=")
+		assert.NotContains(t, res.Request.URL.String(), req.ID.String(), "should initialize a new flow")
+		assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(), "expired")
 	})
 
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		_, err := public.Public.GetSelfServiceSettingsFlow(sdkp.
-			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["oryer"]).
-			WithID(req.ID.String()), nil)
+		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "403")
 	})
@@ -173,9 +198,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["password"]).
-			WithID(req.ID.String()), nil)
+		rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents["password"]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
@@ -186,50 +209,636 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.EqualValues(t, users["password"].Traits, req.Identity.Traits)
 		assert.EqualValues(t, users["password"].SchemaID, req.Identity.SchemaID)
 
-		assert.EqualValues(t, req.ID.String(), *rs.Payload.ID)
-		assert.EqualValues(t, req.RequestURL, *rs.Payload.RequestURL)
-		assert.EqualValues(t, req.Identity.ID.String(), *rs.Payload.Identity.ID)
-		assert.EqualValues(t, req.IssuedAt, time.Time(*rs.Payload.IssuedAt))
+		assert.EqualValues(t, req.ID.String(), rs.Id)
+		assert.EqualValues(t, req.RequestURL, rs.RequestUrl)
+		assert.EqualValues(t, req.Identity.ID.String(), rs.Identity.Id)
+		assert.EqualValues(t, req.IssuedAt, rs.IssuedAt)
 
-		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()])
-		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), *rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Method)
-		require.EqualValues(t, publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(),
-			*rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Action)
+		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Ui)
+		require.EqualValues(t, "POST", rs.Ui.Method)
+		require.EqualValues(t, publicTS.URL+settings.RouteSubmitFlow+"?flow="+req.ID.String(),
+			rs.Ui.Action)
 	})
 
-	expectedOryerFields := models.FormFields{
-		{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "google"},
-		{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"}}
-	expectedGithuberFields := models.FormFields{
-		{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "google"},
-		{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
-		{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "github"}}
+	expectedPasswordFields := json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "john` + testID + `@doe.com"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050002,
+        "text": "Link ory",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]`)
+	expectedOryerFields := json.RawMessage(`[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+` + testID + `@ory.sh",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.name",
+      "type": "text",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "profile",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "password",
+      "type": "password",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "password",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "link",
+      "type": "submit",
+      "value": "github",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info",
+        "context": {
+          "provider": "github"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "link",
+      "type": "submit",
+      "value": "google",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info",
+        "context": {
+          "provider": "google"
+        }
+      }
+    }
+  }
+]`)
+	expectedGithuberFields := json.RawMessage(`[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+github+` + testID + `@ory.sh",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.name",
+      "type": "text",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "profile",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "password",
+      "type": "password",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "password",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "unlink",
+      "type": "submit",
+      "value": "github",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1050003,
+        "text": "Unlink github",
+        "type": "info",
+        "context": {
+          "provider": "github"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "link",
+      "type": "submit",
+      "value": "google",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info",
+        "context": {
+          "provider": "google"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info",
+        "context": {
+          "provider": "ory"
+        }
+      }
+    }
+  }
+]
+`)
+
 	t.Run("case=should adjust linkable providers based on linked credentials", func(t *testing.T) {
 		for _, tc := range []struct {
 			agent    string
-			expected models.FormFields
+			expected json.RawMessage
 		}{
-			{agent: "password", expected: models.FormFields{
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "ory"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "google"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"}}},
-			{agent: "oryer", expected: expectedOryerFields},
-			{agent: "githuber", expected: expectedGithuberFields},
-			{agent: "multiuser", expected: models.FormFields{
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"}}},
+			{agent: "password", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedPasswordFields))},
+			{agent: "oryer", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedOryerFields))},
+			{agent: "githuber", expected: json.RawMessage(jsonx.TestMarshalJSONString(t, expectedGithuberFields))},
+			{agent: "multiuser", expected: json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+multiuser+` + testID + `@ory.sh"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050003,
+        "text": "Unlink google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]`)},
 		} {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
 				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
-				assert.EqualValues(t, append(models.FormFields{csrfField}, tc.expected...),
-					rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+				assertx.EqualAsJSON(t, tc.expected, rs.Ui.Nodes)
 			})
 		}
 	})
 
-	var action = func(req *models.SettingsFlow) string {
-		return *req.Methods[identity.CredentialsTypeOIDC.String()].Config.Action
+	var action = func(req *kratos.SettingsFlow) string {
+		return req.Ui.Action
 	}
 
 	var checkCredentials = func(t *testing.T, shouldExist bool, iid uuid.UUID, provider, subject string) {
@@ -265,26 +874,31 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	t.Run("suite=unlink", func(t *testing.T) {
-		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsFlow) {
+		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 			return
 		}
 
-		var unlinkInvalid = func(agent, provider string, expectedFields models.FormFields) func(t *testing.T) {
+		var unlinkInvalid = func(agent, provider string, expectedFields json.RawMessage) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
+				assertx.EqualAsJSON(t, expectedFields, req.Ui.Nodes, "%s", body)
 
-				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
-				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
+				t.Logf("%s", req.Id)
+				t.Logf("%s", body)
+
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
+
+				//assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
+				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
-				testhelpers.JSONEq(t, append(models.FormFields{csrfField}, expectedFields...),
-					json.RawMessage(gjson.GetBytes(body, `methods.oidc.config.fields`).Raw))
+				assertx.EqualAsJSON(t, expectedFields,
+					json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), "%s", body)
 
-				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
+				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 					"can not unlink non-existing OpenID Connect")
 			}
 		}
@@ -303,7 +917,7 @@ func TestSettingsStrategy(t *testing.T) {
 			t.Cleanup(reset(t))
 
 			body, res, req := unlink(t, agent, provider)
-			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 			require.Equal(t, "success", gjson.GetBytes(body, "state").String(), "%s", body)
 
 			checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID)
@@ -312,18 +926,16 @@ func TestSettingsStrategy(t *testing.T) {
 		t.Run("case=should not be able to unlink a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "github"
 
-			var runUnauthed = func(t *testing.T) *models.SettingsFlow {
+			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
 				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-					WithID(string(*req.ID)), nil)
+				rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, *rs.Payload.State)
+				require.EqualValues(t, settings.StateShowForm, rs.State)
 
 				checkCredentials(t, true, users[agent].ID, provider, "hackerman+github+"+testID)
 
@@ -342,7 +954,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
@@ -352,26 +964,25 @@ func TestSettingsStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=link", func(t *testing.T) {
-		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsFlow) {
+		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
 			return
 		}
 
-		var linkInvalid = func(agent, provider string, expectedFields models.FormFields) func(t *testing.T) {
+		var linkInvalid = func(agent, provider string, expectedFields json.RawMessage) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := link(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
-				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
-				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
+				//assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
+				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
-				testhelpers.JSONEq(t, append(models.FormFields{csrfField}, expectedFields...),
-					json.RawMessage(gjson.GetBytes(body, `methods.oidc.config.fields`).Raw))
+				assertx.EqualAsJSON(t, expectedFields, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw))
 
-				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
+				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 					"can not link unknown or already existing OpenID Connect connection")
 			}
 		}
@@ -396,7 +1007,7 @@ func TestSettingsStrategy(t *testing.T) {
 			body, res, _ := link(t, agent, provider)
 
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-			assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 		})
 
 		t.Run("case=should not be able to link a connection which is missing the ID token", func(t *testing.T) {
@@ -410,7 +1021,7 @@ func TestSettingsStrategy(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
 			t.Logf("%s", body)
-			assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
+			assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 				"no id_token was returned")
 		})
 
@@ -424,7 +1035,7 @@ func TestSettingsStrategy(t *testing.T) {
 			body, res, _ := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
+			assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 				"no id_token was returned")
 		})
 
@@ -435,20 +1046,327 @@ func TestSettingsStrategy(t *testing.T) {
 			scope = []string{"openid"}
 
 			agent, provider := "githuber", "google"
-			_, res, req := link(t, agent, provider)
+			updatedFlow, res, originalFlow := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-				WithID(string(*req.ID)), nil)
+			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, *rs.Payload.State)
+			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
 
-			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "github"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"},
-			}...), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+			assertx.EqualAsJSON(t, json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "`+x.FakeCSRFToken+`"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+github+`+testID+`@ory.sh"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050003,
+        "text": "Unlink github",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]
+`), originalFlow.Ui.Nodes)
+
+			expected := json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "` + x.FakeCSRFToken + `"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+github+` + testID + `@ory.sh"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050003,
+        "text": "Unlink github",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050003,
+        "text": "Unlink google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]`)
+			assertx.EqualAsJSON(t, expected, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), res.Request.URL)
+			assertx.EqualAsJSON(t, expected, updatedFlowSDK.Ui.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
@@ -463,17 +1381,165 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-				WithID(string(*req.ID)), nil)
+			rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, *rs.Payload.State)
+			require.EqualValues(t, settings.StateSuccess, rs.State)
 
-			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "ory"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"},
-			}...), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+			assertx.EqualAsJSON(t, json.RawMessage(`[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "`+x.FakeCSRFToken+`"
+    },
+    "group": "default",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "john`+testID+`@doe.com"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": null,
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050002,
+        "text": "Link ory",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050003,
+        "text": "Unlink google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]`), rs.Ui.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
@@ -482,18 +1548,16 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID
 
-			var runUnauthed = func(t *testing.T) *models.SettingsFlow {
+			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
 				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-					WithID(string(*req.ID)), nil)
+				rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, *rs.Payload.State)
+				require.EqualValues(t, settings.StateShowForm, rs.State)
 
 				checkCredentials(t, false, users[agent].ID, provider, subject)
 
@@ -512,7 +1576,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
@@ -531,33 +1595,27 @@ func TestPopulateSettingsMethod(t *testing.T) {
 
 		// Enabled per default:
 		// 		conf.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
-		c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), map[string]interface{}{
-			"enabled": true,
-			"config":  conf})
+		viperSetProviderConfig(t, c, conf.Providers...)
 		return reg
 	}
 
 	ns := func(t *testing.T, reg *driver.RegistryDefault) *oidc.Strategy {
-		ss, err := reg.SettingsStrategies().Strategy(identity.CredentialsTypeOIDC.String())
+		ss, err := reg.SettingsStrategies(context.Background()).Strategy(identity.CredentialsTypeOIDC.String())
 		require.NoError(t, err)
 		return ss.(*oidc.Strategy)
 	}
 
 	nr := func() *settings.Flow {
-		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
+		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), UI: container.New("")}
 	}
 
-	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *form.HTMLForm {
+	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *container.Container {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
-		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
-		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config)
-		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator)
-		require.Equal(t, identity.CredentialsTypeOIDC.String(), req.Methods[identity.CredentialsTypeOIDC.String()].Method)
-		f := req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm
-		assert.Equal(t, "https://www.ory.sh"+oidc.SettingsPath+"?flow="+req.ID.String(), f.Action)
-		assert.Equal(t, "POST", f.Method)
-		return f
+		require.NotNil(t, req.UI)
+		require.NotNil(t, req.UI.Nodes)
+		assert.Equal(t, "POST", req.UI.Method)
+		return req.UI
 	}
 
 	defaultConfig := []oidc.Configuration{
@@ -570,57 +1628,57 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		reg := nreg(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
 		i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`)}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
+		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), UI: container.New("")}
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
-		require.Nil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
+		require.Empty(t, req.UI.Nodes)
 	})
 
 	for k, tc := range []struct {
 		c      []oidc.Configuration
 		i      *identity.Credentials
-		e      form.Fields
+		e      node.Nodes
 		withpw bool
 	}{
 		{
 			c: []oidc.Configuration{},
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
 			},
 		},
 		{
 			c: []oidc.Configuration{
 				{Provider: "generic", ID: "github"},
 			},
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "github"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("github"),
 			},
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "facebook"},
-				{Name: "link", Type: "submit", Value: "google"},
-				{Name: "link", Type: "submit", Value: "github"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("facebook"),
+				oidc.NewLinkNode("google"),
+				oidc.NewLinkNode("github"),
 			},
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "facebook"},
-				{Name: "link", Type: "submit", Value: "google"},
-				{Name: "link", Type: "submit", Value: "github"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("facebook"),
+				oidc.NewLinkNode("google"),
+				oidc.NewLinkNode("github"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{}, Config: []byte(`{}`)},
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "facebook"},
-				{Name: "link", Type: "submit", Value: "github"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("facebook"),
+				oidc.NewLinkNode("github"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
@@ -628,11 +1686,11 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "facebook"},
-				{Name: "link", Type: "submit", Value: "github"},
-				{Name: "unlink", Type: "submit", Value: "google"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("facebook"),
+				oidc.NewLinkNode("github"),
+				oidc.NewUnlinkNode("google"),
 			},
 			withpw: true,
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
@@ -642,11 +1700,11 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "github"},
-				{Name: "unlink", Type: "submit", Value: "google"},
-				{Name: "unlink", Type: "submit", Value: "facebook"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("github"),
+				oidc.NewUnlinkNode("google"),
+				oidc.NewUnlinkNode("facebook"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
@@ -672,7 +1730,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				}
 			}
 			actual := populate(t, reg, i, nr())
-			assert.EqualValues(t, tc.e, actual.Fields)
+			assert.EqualValues(t, tc.e, actual.Nodes)
 		})
 	}
 }

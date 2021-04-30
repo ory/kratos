@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ory/x/tracing"
+
 	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/identity"
@@ -46,14 +48,18 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 	panic("implement me")
 }
 
+func (l *logRegistryOnly) Tracer(ctx context.Context) *tracing.Tracer {
+	return nil
+}
+
 var _ persisterDependencies = &logRegistryOnly{}
 
 func TestPersisterHMAC(t *testing.T) {
-	conf := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
+	conf := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"foobarbaz"})
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
-	p, err := NewPersister(&logRegistryOnly{c: conf}, c)
+	p, err := NewPersister(context.Background(), &logRegistryOnly{c: conf}, c)
 	require.NoError(t, err)
 
 	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "hashme")))

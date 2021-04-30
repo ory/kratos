@@ -1,0 +1,1 @@
+ALTER TABLE "identity_verification_tokens" DROP COLUMN "_nid_tmp";

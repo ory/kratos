@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_settings_flows" DROP COLUMN "_nid_tmp";

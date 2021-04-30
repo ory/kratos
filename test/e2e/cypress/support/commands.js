@@ -35,19 +35,79 @@ import {
   pollInterval,
   privilegedLifespan
 } from '../helpers'
+import dayjs from 'dayjs'
+
+const YAML = require('yamljs')
+
+const configFile = 'test/e2e/kratos.generated.yml'
 
 const mergeFields = (form, fields) => {
   const result = {}
-  form.fields.forEach(({ name, value }) => {
-    result[name] = value
+  form.nodes.forEach(({ attributes, type }) => {
+    if (type === 'input') {
+      result[attributes.name] = attributes.value
+    }
   })
 
   return { ...result, ...fields }
 }
 
+const updateConfigFile = (cb) => {
+  cy.readFile(configFile).then((contents) => {
+    let config = YAML.parse(contents)
+    config = cb(config)
+    cy.writeFile(configFile, YAML.stringify(config))
+  })
+  cy.wait(100)
+}
+
+Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.settings.privileged_session_max_age = '1ms'
+    return config
+  })
+})
+
+Cypress.Commands.add('longPrivilegedSessionTime', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.settings.privileged_session_max_age = '1m'
+    return config
+  })
+})
+Cypress.Commands.add('longVerificationLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.verification.lifespan = '1m'
+    return config
+  })
+})
+Cypress.Commands.add('shortVerificationLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.verification.lifespan = '4s'
+    return config
+  })
+})
+Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.recovery.lifespan = '1m'
+    return config
+  })
+})
+
+Cypress.Commands.add('shortRecoveryLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.recovery.lifespan = '4s'
+    return config
+  })
+})
+
 Cypress.Commands.add(
   'register',
-  ({ email = gen.email(), password = gen.password(), fields = {} } = {}) => {
+  ({
+    email = gen.email(),
+    password = gen.password(),
+    query = {},
+    fields = {}
+  } = {}) => {
     console.log('Creating user account: ', { email, password })
 
     // see https://github.com/cypress-io/cypress/issues/408
@@ -56,7 +116,8 @@ Cypress.Commands.add(
 
     cy.request({
       url: APP_URL + '/self-service/registration/browser',
-      followRedirect: false
+      followRedirect: false,
+      qs: query
     })
       .then(({ redirectedToUrl }) => {
         expect(redirectedToUrl).to.contain(APP_URL + '/auth/registration?flow=')
@@ -70,13 +131,14 @@ Cypress.Commands.add(
       })
       .then(({ body, status }) => {
         expect(status).to.eq(200)
-        const form = body.methods.password.config
+        const form = body.ui
         return cy.request({
           method: form.method,
           body: mergeFields(form, {
             ...fields,
             'traits.email': email,
-            password
+            password,
+            method: 'password'
           }),
           url: form.action,
           followRedirect: false
@@ -99,13 +161,14 @@ Cypress.Commands.add(
         url: APP_URL + '/self-service/registration/api'
       })
       .then(({ body }) => {
-        const form = body.methods.password.config
+        const form = body.ui
         return cy.request({
           method: form.method,
           body: mergeFields(form, {
             ...fields,
             'traits.email': email,
-            password
+            password,
+            method: 'password'
           }),
           url: form.action
         })
@@ -191,6 +254,7 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
   cy.visit(APP_URL)
   cy.clearCookies()
 
+  cy.longPrivilegedSessionTime()
   cy.request({
     url: APP_URL + '/self-service/login/browser',
     followRedirect: false
@@ -202,16 +266,20 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
     })
     .then(({ body, status }) => {
       expect(status).to.eq(200)
-      const form = body.methods.password.config
+      const form = body.ui
       return cy.request({
         method: form.method,
-        body: mergeFields(form, { identifier: email, password }),
+        body: mergeFields(form, {
+          password_identifier: email,
+          password,
+          method: 'password'
+        }),
         url: form.action,
         followRedirect: false
       })
     })
     .then((res) => {
-      console.log('Login sequence compelted: ', { email, password })
+      console.log('Login sequence completed: ', { email, password })
       if (expectSession) {
         expect(res.redirectedToUrl).to.not.contain(
           APP_URL + '/auth/login?flow='
@@ -226,7 +294,7 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
 
 Cypress.Commands.add('loginMobile', ({ email, password }) => {
   cy.visit(MOBILE_URL)
-  cy.get('input[data-testid="identifier"]').type(email)
+  cy.get('input[data-testid="password_identifier"]').type(email)
   cy.get('input[data-testid="password"]').type(password)
   cy.get('div[data-testid="submit-form"]').click()
 })
@@ -243,14 +311,15 @@ Cypress.Commands.add(
     type: { email: temail, password: tpassword } = {}
   }) => {
     cy.url().should('include', '/auth/login')
-    cy.get('input[name="identifier"]').should('have.value', email)
+    cy.get('input[name="password_identifier"]').should('have.value', email)
     if (temail) {
-      cy.get('input[name="identifier"]').clear().type(temail)
+      cy.get('input[name="password_identifier"]').clear().type(temail)
     }
     if (tpassword) {
       cy.get('input[name="password"]').clear().type(tpassword)
     }
-    cy.get('button[type="submit"]').click()
+    cy.longPrivilegedSessionTime()
+    cy.get('button[value="password"]').click()
   }
 )
 
@@ -280,19 +349,13 @@ Cypress.Commands.add('deleteMail', ({ atLeast = 0 } = {}) => {
 Cypress.Commands.add('session', () =>
   cy.request('GET', `${KRATOS_PUBLIC}/sessions/whoami`).then((response) => {
     expect(response.body.id).to.not.be.empty
-    expect(Cypress.moment().isBefore(Cypress.moment(response.body.expires_at)))
-      .to.be.true
+    expect(dayjs().isBefore(dayjs(response.body.expires_at))).to.be.true
 
     // Add a grace second for MySQL which does not support millisecs.
+    expect(dayjs().isAfter(dayjs(response.body.issued_at).subtract(1, 's'))).to
+      .be.true
     expect(
-      Cypress.moment().isAfter(
-        Cypress.moment(response.body.issued_at).subtract(1, 's')
-      )
-    ).to.be.true
-    expect(
-      Cypress.moment().isAfter(
-        Cypress.moment(response.body.authenticated_at).subtract(1, 's')
-      )
+      dayjs().isAfter(dayjs(response.body.authenticated_at).subtract(1, 's'))
     ).to.be.true
     expect(response.body.identity).to.exist
     return response.body
@@ -326,7 +389,7 @@ Cypress.Commands.add('getIdentityByEmail', ({ email }) =>
 
 Cypress.Commands.add(
   'performEmailVerification',
-  ({ expect: { email } = {} } = {}) =>
+  ({ expect: { email, redirectTo } = {} } = {}) =>
     cy.getMail().then((message) => {
       expect(message.subject.trim()).to.equal(
         'Please verify your email address'
@@ -339,15 +402,26 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
-      cy.visit(link.href)
-      cy.location('pathname').should('not.contain', 'verify')
+      if (redirectTo) {
+        cy.request({ url: link.href, followRedirect: false }).should(
+          (response) => {
+            expect(response.status).to.eq(302)
+            expect(response.redirectedToUrl).to.eq(redirectTo)
+          }
+        )
+      } else {
+        cy.visit(link.href)
+        cy.location('pathname').should('not.contain', 'verify')
+      }
     })
 )
 
-Cypress.Commands.add('verifyEmail', ({ expect: { email } = {} } = {}) =>
-  cy.performEmailVerification({ expect: { email } }).then(() => {
-    cy.session().should(assertVerifiableAddress({ email, isVerified: true }))
-  })
+Cypress.Commands.add(
+  'verifyEmail',
+  ({ expect: { email, redirectTo } = {} } = {}) =>
+    cy.performEmailVerification({ expect: { email, redirectTo } }).then(() => {
+      cy.session().should(assertVerifiableAddress({ email, isVerified: true }))
+    })
 )
 
 // Uses the verification email but waits so that it expires
@@ -362,7 +436,7 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
-      cy.wait(5000)
+      cy.longRecoveryLifespan()
       cy.visit(link.href)
     })
 )
@@ -397,9 +471,10 @@ Cypress.Commands.add(
       const link = parseHtml(message.body).querySelector('a')
       cy.session().should((session) => {
         assertVerifiableAddress({ isVerified: false, email: email })(session)
-        cy.wait(5000) // specified in base...
+        // specified in base...
       })
 
+      cy.longVerificationLifespan()
       cy.visit(link.href)
       cy.location('pathname').should('include', 'verify')
       cy.location('search').should('not.be.empty', 'request')
@@ -419,9 +494,8 @@ Cypress.Commands.add('waitForPrivilegedSessionToExpire', () => {
   cy.session().should((session) => {
     expect(session.authenticated_at).to.not.be.empty
     cy.wait(
-      Cypress.moment(session.authenticated_at)
-        .add(privilegedLifespan)
-        .diff(Cypress.moment()) + 100
+      dayjs(session.authenticated_at).add(privilegedLifespan).diff(dayjs()) +
+        100
     )
   })
 })

@@ -18,25 +18,25 @@ context('Settings Flow Success', () => {
   })
 
   it('shows all settings forms', () => {
-    cy.get('#user-profile h3').should('contain.text', 'Profile')
-    cy.get('#user-profile input[name="traits.email"]').should(
+    cy.get('p').should('contain.text', 'Profile')
+    cy.get('input[name="traits.email"]').should(
       'contain.value',
       email
     )
-    cy.get('#user-profile input[name="traits.website"]').should(
+    cy.get('input[name="traits.website"]').should(
       'contain.value',
       website
     )
 
-    cy.get('#user-password h3').should('contain.text', 'Password')
-    cy.get('#user-password input[name="password"]').should('be.empty')
+    cy.get('p').should('contain.text', 'Password')
+    cy.get('input[name="password"]').should('be.empty')
   })
 
   describe('password', () => {
     it('modifies the password with privileged session', () => {
       // Once input weak password to test which error message is cleared after updating successfully
-      cy.get('#user-password input[name="password"]').clear().type('123')
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').clear().type('123')
+      cy.get('button[value="password"]').click()
       cy.get('.container').should(
         'not.contain.text',
         'Your changes have been saved!'
@@ -45,11 +45,11 @@ context('Settings Flow Success', () => {
         'contain.text',
         'The password can not be used'
       )
-      cy.get('#user-password input[name="password"]').should('be.empty')
+      cy.get('input[name="password"]').should('be.empty')
 
       password = up(password)
-      cy.get('#user-password input[name="password"]').clear().type(password)
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').clear().type(password)
+      cy.get('button[value="password"]').click()
       cy.get('.container').should(
         'contain.text',
         'Your changes have been saved!'
@@ -58,7 +58,7 @@ context('Settings Flow Success', () => {
         'not.contain.text',
         'The password can not be used'
       )
-      cy.get('#user-password input[name="password"]').should('be.empty')
+      cy.get('input[name="password"]').should('be.empty')
     })
 
     it('is unable to log in with the old password', () => {
@@ -72,9 +72,9 @@ context('Settings Flow Success', () => {
 
     it('modifies the password with an unprivileged session', () => {
       password = up(password)
-      cy.get('#user-password input[name="password"]').clear().type(password)
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-password button[type="submit"]').click()
+      cy.get('input[name="password"]').clear().type(password)
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
+      cy.get('button[value="password"]').click()
 
       cy.reauth({ expect: { email }, type: { password: down(password) } })
 
@@ -83,21 +83,21 @@ context('Settings Flow Success', () => {
         'contain.text',
         'Your changes have been saved!'
       )
-      cy.get('#user-password input[name="password"]').should('be.empty')
+      cy.get('input[name="password"]').should('be.empty')
     })
   })
 
   describe('profile', () => {
     it('modifies an unprotected trait', () => {
-      cy.get('#user-profile input[name="traits.website"]')
+      cy.get('input[name="traits.website"]')
         .clear()
         .type('https://github.com/ory')
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('button[value="profile"]').click()
       cy.get('.container').should(
         'contain.text',
         'Your changes have been saved!'
       )
-      cy.get('#user-profile input[name="traits.website"]').should(
+      cy.get('input[name="traits.website"]').should(
         'contain.value',
         'https://github.com/ory'
       )
@@ -105,13 +105,13 @@ context('Settings Flow Success', () => {
 
     it('modifies a protected trait with privileged session', () => {
       email = up(email)
-      cy.get('#user-profile input[name="traits.email"]').clear().type(email)
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(email)
+      cy.get('button[value="profile"]').click()
       cy.get('.container').should(
         'contain.text',
         'Your changes have been saved!'
       )
-      cy.get('#user-profile input[name="traits.email"]').should(
+      cy.get('input[name="traits.email"]').should(
         'contain.value',
         email
       )
@@ -125,9 +125,9 @@ context('Settings Flow Success', () => {
 
     it('modifies a protected trait with unprivileged session', () => {
       email = up(email)
-      cy.get('#user-profile input[name="traits.email"]').clear().type(email)
-      cy.waitForPrivilegedSessionToExpire() // wait for the privileged session to time out
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(email)
+      cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
+      cy.get('button[value="profile"]').click()
 
       cy.reauth({ expect: { email: down(email) }, type: { password } })
 
@@ -136,7 +136,7 @@ context('Settings Flow Success', () => {
         'contain.text',
         'Your changes have been saved!'
       )
-      cy.get('#user-profile input[name="traits.email"]').should(
+      cy.get('input[name="traits.email"]').should(
         'contain.value',
         email
       )

@@ -3,36 +3,19 @@ package sql
 import (
 	"context"
 
+	"github.com/ory/x/popx"
+
 	"github.com/gobuffalo/pop/v5"
 )
 
-type transactionContextKey int
-
-const transactionKey transactionContextKey = 0
-
 func WithTransaction(ctx context.Context, tx *pop.Connection) context.Context {
-	return context.WithValue(ctx, transactionKey, tx)
+	return popx.WithTransaction(ctx, tx)
 }
 
 func (p *Persister) Transaction(ctx context.Context, callback func(ctx context.Context, connection *pop.Connection) error) error {
-	c := ctx.Value(transactionKey)
-	if c != nil {
-		if conn, ok := c.(*pop.Connection); ok {
-			return callback(ctx, conn.WithContext(ctx))
-		}
-	}
-
-	return p.c.WithContext(ctx).Transaction(func(tx *pop.Connection) error {
-		return callback(WithTransaction(ctx, tx), tx)
-	})
+	return popx.Transaction(ctx, p.c.WithContext(ctx), callback)
 }
 
 func (p *Persister) GetConnection(ctx context.Context) *pop.Connection {
-	c := ctx.Value(transactionKey)
-	if c != nil {
-		if conn, ok := c.(*pop.Connection); ok {
-			return conn.WithContext(ctx)
-		}
-	}
-	return p.c.WithContext(ctx)
+	return popx.GetConnection(ctx, p.c.WithContext(ctx))
 }

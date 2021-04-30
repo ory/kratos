@@ -1,0 +1,1 @@
+INSERT INTO "_selfservice_verification_flows_tmp" (id, request_url, issued_at, expires_at, csrf_token, created_at, updated_at, type, state, active_method, ui) SELECT id, request_url, issued_at, expires_at, csrf_token, created_at, updated_at, type, state, active_method, ui FROM "selfservice_verification_flows";

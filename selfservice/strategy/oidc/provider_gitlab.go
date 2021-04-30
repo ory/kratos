@@ -33,6 +33,34 @@ func NewProviderGitLab(
 	}
 }
 
+func (g *ProviderGitLab) oauth2() (*oauth2.Config, error) {
+	endpoint, err := g.endpoint()
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+
+	authUrl := *endpoint
+	tokenUrl := *endpoint
+
+	authUrl.Path = path.Join(authUrl.Path, "/oauth/authorize")
+	tokenUrl.Path = path.Join(tokenUrl.Path, "/oauth/token")
+
+	return &oauth2.Config{
+		ClientID:     g.config.ClientID,
+		ClientSecret: g.config.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  authUrl.String(),
+			TokenURL: tokenUrl.String(),
+		},
+		Scopes:      g.config.Scope,
+		RedirectURL: g.config.Redir(g.public),
+	}, nil
+}
+
+func (g *ProviderGitLab) OAuth2(ctx context.Context) (*oauth2.Config, error) {
+	return g.oauth2()
+}
+
 func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {

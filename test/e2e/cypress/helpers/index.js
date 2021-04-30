@@ -59,12 +59,12 @@ module.exports = {
   assertRecoveryAddress: assertRecoveryAddress,
 
   // Format is
-  verifyHrefPattern: /^http:.*\/self-service\/verification\/methods\/link\?token=([a-zA-Z0-9]+)$/,
+  verifyHrefPattern: /^http:.*\/self-service\/verification\?(((&|)token|(&|)flow)=([\-a-zA-Z0-9]+)){2}$/,
 
   // intervals define how long to wait for something,
-  pollInterval: 100, // how long to wait before retry
+  pollInterval: 250, // how long to wait before retry
 
   // Adding 1+ second on top because MySQL doesn't do millisecs.
-  verifyLifespan: 5000 + 1050,
-  privilegedLifespan: 5000 + 1050
+  verifyLifespan: 5000 + 1000,
+  privilegedLifespan: 5000 + 1000
 }

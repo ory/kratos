@@ -1,0 +1,1 @@
+CREATE INDEX "selfservice_verification_flows_nid_idx" ON "_selfservice_verification_flows_tmp" (id, nid);

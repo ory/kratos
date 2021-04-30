@@ -1,6 +1,6 @@
 import {gen, MOBILE_URL, website} from '../../../../helpers'
 
-context('Login Flow Errors', () => {
+context('Settings Flow Errors', () => {
   let email, password
 
   before(() => {

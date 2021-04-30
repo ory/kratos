@@ -1,9 +1,13 @@
 package driver
 
-import "github.com/ory/kratos/selfservice/flow/settings"
+import (
+	"context"
 
-func (m *RegistryDefault) PostSettingsPrePersistHooks(settingsType string) (b []settings.PostHookPrePersistExecutor) {
-	for _, v := range m.getHooks(settingsType, m.c.SelfServiceFlowSettingsAfterHooks(settingsType)) {
+	"github.com/ory/kratos/selfservice/flow/settings"
+)
+
+func (m *RegistryDefault) PostSettingsPrePersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPrePersistExecutor) {
+	for _, v := range m.getHooks(settingsType, m.Config(ctx).SelfServiceFlowSettingsAfterHooks(settingsType)) {
 		if hook, ok := v.(settings.PostHookPrePersistExecutor); ok {
 			b = append(b, hook)
 		}
@@ -11,12 +15,12 @@ func (m *RegistryDefault) PostSettingsPrePersistHooks(settingsType string) (b []
 	return
 }
 
-func (m *RegistryDefault) PostSettingsPostPersistHooks(settingsType string) (b []settings.PostHookPostPersistExecutor) {
-	if m.c.SelfServiceFlowVerificationEnabled() {
+func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, settingsType string) (b []settings.PostHookPostPersistExecutor) {
+	if m.Config(ctx).SelfServiceFlowVerificationEnabled() {
 		b = append(b, m.HookVerifier())
 	}
 
-	for _, v := range m.getHooks(settingsType, m.c.SelfServiceFlowSettingsAfterHooks(settingsType)) {
+	for _, v := range m.getHooks(settingsType, m.Config(ctx).SelfServiceFlowSettingsAfterHooks(settingsType)) {
 		if hook, ok := v.(settings.PostHookPostPersistExecutor); ok {
 			b = append(b, hook)
 		}
@@ -45,15 +49,23 @@ func (m *RegistryDefault) SettingsFlowErrorHandler() *settings.ErrorHandler {
 	return m.selfserviceSettingsErrorHandler
 }
 
-func (m *RegistryDefault) SettingsStrategies() settings.Strategies {
-	if len(m.profileStrategies) == 0 {
-		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(settings.Strategy); ok {
-				if m.c.SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
-					m.profileStrategies = append(m.profileStrategies, s)
-				}
+func (m *RegistryDefault) SettingsStrategies(ctx context.Context) (profileStrategies settings.Strategies) {
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(settings.Strategy); ok {
+			if m.Config(ctx).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
+				profileStrategies = append(profileStrategies, s)
 			}
 		}
 	}
-	return m.profileStrategies
+	return
+}
+
+func (m *RegistryDefault) AllSettingsStrategies() settings.Strategies {
+	var profileStrategies []settings.Strategy
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(settings.Strategy); ok {
+			profileStrategies = append(profileStrategies, s)
+		}
+	}
+	return profileStrategies
 }

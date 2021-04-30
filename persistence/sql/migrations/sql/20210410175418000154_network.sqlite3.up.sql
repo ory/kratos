@@ -1,0 +1,1 @@
+ALTER TABLE identity_verification_tokens ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT;

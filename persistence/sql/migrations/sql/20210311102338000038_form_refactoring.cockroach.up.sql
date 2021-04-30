@@ -1,0 +1,1 @@
+UPDATE "selfservice_verification_flows" SET "ui" = "_ui_tmp";

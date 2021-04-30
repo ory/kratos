@@ -19,7 +19,7 @@ context('Verify', () => {
 
     it('should request verification and receive an email and verify it', () => {
       cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
 
       cy.get('.messages .message').should(
         'contain.text',
@@ -34,7 +34,7 @@ context('Verify', () => {
     it('should request verification for an email that does not exist yet', () => {
       const email = `not-${identity.email}`
       cy.get('input[name="email"]').type(email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
 
       cy.get('.messages .message').should(
         'contain.text',
@@ -57,7 +57,7 @@ context('Verify', () => {
 
     it('should not verify email when clicking on link received on different address', () => {
       cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
 
       cy.verifyEmail({ expect: { email: identity.email } })
 
@@ -78,7 +78,7 @@ context('Verify', () => {
 
       // request verification link for identity
       cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[type="submit"]').click()
+      cy.get('button[value="link"]').click()
 
       cy.performEmailVerification({ expect: { email: identity.email } })
 
@@ -86,6 +86,22 @@ context('Verify', () => {
       cy.session().should(assertVerifiableAddress({ email: identity2.email, isVerified: false }))
 
       cy.location('pathname').should('eq', '/')
+    })
+
+    it('should redirect to return_to after completing verification', () => {
+      cy.clearCookies()
+      // registered with other email address
+      const identity2 = gen.identity()
+      cy.register(identity2)
+      cy.deleteMail({ atLeast: 1 }) // clean up registration email
+
+      cy.login(identity2)
+      
+      cy.visit(APP_URL + '/self-service/verification/browser', {qs:{return_to: "http://127.0.0.1:4455/verification_callback"}})
+      // request verification link for identity
+      cy.get('input[name="email"]').type(identity2.email)
+      cy.get('button[type="submit"]').click()
+      cy.verifyEmail({ expect: { email: identity2.email, redirectTo: "http://127.0.0.1:4455/verification_callback"} })
     })
   })
 })

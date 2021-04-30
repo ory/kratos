@@ -4,21 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
+	"time"
 
-	"github.com/ory/x/pkgerx"
+	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
-	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
-	"github.com/ory/x/decoderx"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -26,13 +21,11 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-)
-
-const (
-	RouteSettings = "/self-service/settings/methods/profile"
+	"github.com/ory/x/decoderx"
 )
 
 var _ settings.Strategy = new(Strategy)
@@ -73,7 +66,7 @@ type (
 
 // swagger:model settingsProfileFormConfig
 type SettingsProfileRequestMethod struct {
-	*form.HTMLForm
+	*container.Container
 }
 
 func NewStrategy(d strategyDependencies) *Strategy {
@@ -84,14 +77,9 @@ func (s *Strategy) SettingsStrategyID() string {
 	return settings.StrategyProfile
 }
 
-func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
-	s.d.CSRFHandler().IgnorePath(RouteSettings)
+func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {}
 
-	public.POST(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.d)))
-	public.GET(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.d)))
-}
-
-func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, pr *settings.Flow) error {
+func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, f *settings.Flow) error {
 	traitsSchema, err := s.d.Config(r.Context()).IdentityTraitsSchemas().FindSchemaByID(id.SchemaID)
 	if err != nil {
 		return err
@@ -99,149 +87,97 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-
-	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
-		urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
-		url.Values{"flow": {pr.ID.String()}},
-	).String(), traitsSchema.URL, "", schemaCompiler)
+	nodes, err := container.NodesFromJSONSchema(node.ProfileGroup, traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
 		return err
 	}
 
-	f.SetValuesFromJSON(json.RawMessage(id.Traits), "traits")
-	f.SetCSRF(s.d.GenerateCSRFToken(r))
-
-	if err := f.SortFields(traitsSchema.URL); err != nil {
-		return err
+	for _, n := range nodes {
+		f.UI.SetNode(n)
 	}
 
-	pr.Methods[s.SettingsStrategyID()] = &settings.FlowMethod{
-		Method: s.SettingsStrategyID(),
-		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &SettingsProfileRequestMethod{HTMLForm: f}},
-	}
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.UpdateNodeValuesFromJSON(json.RawMessage(id.Traits), "traits", node.ProfileGroup)
+	f.UI.Nodes.Append(node.NewInputField("method", "profile", node.ProfileGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSave()))
+
 	return nil
 }
 
-// nolint:deadcode,unused
-// swagger:parameters completeSelfServiceSettingsFlowWithProfileMethod
-type completeSelfServiceSettingsFlowWithProfileMethodParameters struct {
-	// Flow is flow ID.
-	//
-	// in: query
-	Flow string `json:"flow"`
-
-	// in: body
-	Payload interface{}
-}
-
-// swagger:route POST /self-service/settings/methods/profile public completeSelfServiceSettingsFlowWithProfileMethod
-//
-// Complete Settings Flow with Profile Method
-//
-// Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint
-// behaves differently for API and browser flows.
-//
-// API-initiated flows expect `application/json` to be sent in the body and respond with
-//   - HTTP 200 and an application/json body with the session token on success;
-//   - HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
-//   - HTTP 400 on form validation errors.
-//   - HTTP 401 when the endpoint is called without a valid session token.
-//   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was
-// 	   updated (e.g. recovery email). Implies that the user needs to re-authenticate.
-//
-// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-//   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-//   - a HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.
-//   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
-//
-// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-//
-//     Consumes:
-//     - application/json
-//     - application/x-www-form-urlencoded
-//
-//     Produces:
-//     - application/json
-//
-//     Security:
-//       sessionToken:
-//
-//     Schemes: http, https
-//
-//     Responses:
-//       200: settingsViaApiResponse
-//       200: settingsFlow
-//       302: emptyResponse
-//       400: settingsFlow
-//       401: genericError
-//       403: genericError
-//       500: genericError
-func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var p CompleteSelfServiceBrowserSettingsProfileStrategyFlow
-	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
+func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
+	var p submitSelfServiceBrowserSettingsProfileStrategyFlow
+	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		s.continueFlow(w, r, ctxUpdate, &p)
-		return
+		return ctxUpdate, s.continueFlow(w, r, ctxUpdate, &p)
 	} else if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
-		return
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 	}
 
-	option, err := s.newSettingsProfileDecoder(r.Context(), ctxUpdate.Session.Identity)
+	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.SettingsStrategyID(), s.d); err != nil {
+		return ctxUpdate, err
+	}
+
+	option, err := s.newSettingsProfileDecoder(r.Context(), ctxUpdate.GetSessionIdentity())
 	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
-		return
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 	}
 
 	if err := s.dc.Decode(r, &p, option,
-		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
-		return
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 	}
 
 	// Reset after decoding form
 	p.SetFlowID(ctxUpdate.Flow.ID)
 
-	s.continueFlow(w, r, ctxUpdate, &p)
+	if err := s.continueFlow(w, r, ctxUpdate, &p); err != nil {
+		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
+	}
+
+	return ctxUpdate, nil
 }
 
-func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) {
-	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
-		return
+func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceBrowserSettingsProfileStrategyFlow) error {
+	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
+		return err
+	}
+
+	if err := flow.EnsureCSRF(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+		return err
 	}
 
 	if len(p.Traits) == 0 {
-		s.handleSettingsError(w, r, ctxUpdate, nil, p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
-		return
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes."))
 	}
 
 	if err := s.hydrateForm(r, ctxUpdate.Flow, ctxUpdate.Session, p.Traits); err != nil {
-		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, settings.StrategyProfile, ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
-		return
+		return err
 	}
 
-	update, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
+	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
+	ttl := s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
+	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
+		options = append(options, identity.ManagerAllowWriteProtectedTraits)
+	}
+
+	update, err := s.d.IdentityManager().SetTraits(r.Context(), ctxUpdate.GetSessionIdentity().ID, identity.Traits(p.Traits), options...)
 	if err != nil {
-		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, settings.StrategyProfile, ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
-		return
+		if errors.Is(err, identity.ErrProtectedFieldModified) {
+			return settings.NewFlowNeedsReAuth()
+		}
+		return err
 	}
 
-	update.Traits = identity.Traits(p.Traits)
-	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r,
-		settings.StrategyProfile, ctxUpdate, update); err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p.Traits, p, err)
-		return
-	}
+	ctxUpdate.UpdateIdentity(update)
+	return nil
 }
 
 // Complete profile update payload
 //
-// swagger:parameters completeSelfServiceBrowserSettingsProfileStrategyFlow
+// swagger:parameters submitSelfServiceBrowserSettingsProfileStrategyFlow
 // nolint:deadcode,unused
-type completeSelfServiceBrowserSettingsProfileStrategyFlowParameters struct {
+type submitSelfServiceBrowserSettingsProfileStrategyFlowParameters struct {
 	// Request is the request ID.
 	//
 	// required: true
@@ -251,13 +187,23 @@ type completeSelfServiceBrowserSettingsProfileStrategyFlowParameters struct {
 
 	// in: body
 	// required: true
-	Body CompleteSelfServiceBrowserSettingsProfileStrategyFlow
+	Body submitSelfServiceBrowserSettingsProfileStrategyFlow
 }
 
 // nolint:deadcode,unused
-type CompleteSelfServiceBrowserSettingsProfileStrategyFlow struct {
+// swagger:model submitSelfServiceSettingsFlowWithProfileMethod
+type submitSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	// Traits contains all of the identity's traits.
+	//
+	// required: true
 	Traits json.RawMessage `json:"traits"`
+
+	// Method
+	//
+	// Should be set to profile when trying to update a profile.
+	//
+	// type: string
+	Method string `json:"method"`
 
 	// FlowIDRequestID is the flow ID.
 	//
@@ -270,62 +216,50 @@ type CompleteSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	CSRFToken string `json:"csrf_token"`
 }
 
-func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetFlowID() uuid.UUID {
+func (p *submitSelfServiceBrowserSettingsProfileStrategyFlow) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.FlowID)
 }
 
-func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uuid.UUID) {
+func (p *submitSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uuid.UUID) {
 	p.FlowID = rid.String()
 }
 
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
-	action := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
-		url.Values{"flow": {ar.ID.String()}})
-
-	ar.Methods[settings.StrategyProfile].Config.Reset()
 	if traits != nil {
-		for _, field := range form.NewHTMLFormFromJSON(action.String(), traits, "traits").Fields {
-			ar.Methods[settings.StrategyProfile].Config.SetField(field)
-		}
+		ar.UI.Nodes.ResetNodesWithPrefix("traits.")
+		ar.UI.UpdateNodeValuesFromJSON(traits, "traits", node.ProfileGroup)
 	}
-	ar.Methods[settings.StrategyProfile].Config.SetCSRF(s.d.GenerateCSRFToken(r))
-
-	traitsSchema, err := s.d.Config(r.Context()).IdentityTraitsSchemas().FindSchemaByID(ss.Identity.SchemaID)
-	if err != nil {
-		return err
-	}
-
-	if err = ar.Methods[settings.StrategyProfile].Config.SortFields(traitsSchema.URL); err != nil {
-		return err
-	}
+	ar.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	return nil
 }
 
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow, err error) {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *submitSelfServiceBrowserSettingsProfileStrategyFlow, err error) error {
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),
-			settings.ContinuityOptions(p, puc.Session.Identity)...); err != nil {
-			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), puc.Flow, puc.Session.Identity, err)
-			return
+			settings.ContinuityOptions(p, puc.GetSessionIdentity())...); err != nil {
+			return err
 		}
 	}
 
 	if puc.Flow != nil {
 		if traits == nil {
-			traits = json.RawMessage(puc.GetSessionIdentity().Traits)
+			if len(p.Traits) >= 0 {
+				traits = p.Traits
+			} else {
+				traits = json.RawMessage(puc.GetSessionIdentity().Traits)
+			}
 		}
 
 		if err := s.hydrateForm(r, puc.Flow, puc.Session, traits); err != nil {
-			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), puc.Flow, puc.GetSessionIdentity(), err)
-			return
+			return err
 		}
 	}
 
-	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), puc.Flow, puc.GetSessionIdentity(), err)
+	return err
 }
 
 // newSettingsProfileDecoder returns a decoderx.HTTPDecoderOption with a JSON Schema for type assertion and
@@ -335,8 +269,7 @@ func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Id
 	if err != nil {
 		return nil, err
 	}
-	raw, err := sjson.SetBytes(pkgerx.MustRead(pkger.Open(
-		"github.com/ory/kratos:/selfservice/strategy/password/.schema/settings.schema.json")),
+	raw, err := sjson.SetBytes(settingsSchema,
 		"properties.traits.$ref", ss.URL.String()+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -348,4 +281,8 @@ func (s *Strategy) newSettingsProfileDecoder(ctx context.Context, i *identity.Id
 	}
 
 	return o, nil
+}
+
+func (s *Strategy) NodeGroup() node.Group {
+	return node.ProfileGroup
 }

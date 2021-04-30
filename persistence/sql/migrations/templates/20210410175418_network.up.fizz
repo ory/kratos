@@ -1,0 +1,250 @@
+add_column("selfservice_login_flows", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE selfservice_login_flows DROP COLUMN nid")
+  sql("ALTER TABLE selfservice_login_flows ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("selfservice_login_flows", "nid", {"networks": ["id"]}, {
+      "name": "selfservice_login_flows_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE selfservice_login_flows SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("selfservice_login_flows", "nid", "uuid", { "null": false })
+add_index("selfservice_login_flows", ["id", "nid"], {"name":  "selfservice_login_flows_nid_idx"})
+
+add_column("selfservice_registration_flows", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE selfservice_registration_flows DROP COLUMN nid")
+  sql("ALTER TABLE selfservice_registration_flows ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("selfservice_registration_flows", "nid", {"networks": ["id"]}, {
+      "name": "selfservice_registration_flows_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE selfservice_registration_flows SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("selfservice_registration_flows", "nid", "uuid", { "null": false })
+add_index("selfservice_registration_flows", ["id", "nid"], {"name":  "selfservice_registration_flows_nid_idx"})
+
+add_column("selfservice_settings_flows", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE selfservice_settings_flows DROP COLUMN nid")
+  sql("ALTER TABLE selfservice_settings_flows ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("selfservice_settings_flows", "nid", {"networks": ["id"]}, {
+      "name": "selfservice_settings_flows_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE selfservice_settings_flows SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("selfservice_settings_flows", "nid", "uuid", { "null": false })
+add_index("selfservice_settings_flows", ["id", "nid"], {"name":  "selfservice_settings_flows_nid_idx"})
+
+add_column("selfservice_errors", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE selfservice_errors DROP COLUMN nid")
+  sql("ALTER TABLE selfservice_errors ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("selfservice_errors", "nid", {"networks": ["id"]}, {
+      "name": "selfservice_errors_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE selfservice_errors SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("selfservice_errors", "nid", "uuid", { "null": false })
+add_index("selfservice_errors", ["id", "nid"], {"name":  "selfservice_errors_nid_idx"})
+
+add_column("continuity_containers", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE continuity_containers DROP COLUMN nid")
+  sql("ALTER TABLE continuity_containers ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("continuity_containers", "nid", {"networks": ["id"]}, {
+      "name": "continuity_containers_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE continuity_containers SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("continuity_containers", "nid", "uuid", { "null": false })
+add_index("continuity_containers", ["id", "nid"], {"name":  "continuity_containers_nid_idx"})
+
+add_column("courier_messages", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE courier_messages DROP COLUMN nid")
+  sql("ALTER TABLE courier_messages ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("courier_messages", "nid", {"networks": ["id"]}, {
+      "name": "courier_messages_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE courier_messages SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("courier_messages", "nid", "uuid", { "null": false })
+add_index("courier_messages", ["id", "nid"], {"name":  "courier_messages_nid_idx"})
+
+add_column("identities", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identities DROP COLUMN nid")
+  sql("ALTER TABLE identities ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("identities", "nid", {"networks": ["id"]}, {
+      "name": "identities_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE identities SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("identities", "nid", "uuid", { "null": false })
+add_index("identities", ["id", "nid"], {"name":  "identities_nid_idx"})
+
+add_column("identity_credentials", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identity_credentials DROP COLUMN nid")
+  sql("ALTER TABLE identity_credentials ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("identity_credentials", "nid", {"networks": ["id"]}, {
+      "name": "identity_credentials_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE identity_credentials SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("identity_credentials", "nid", "uuid", { "null": false })
+add_index("identity_credentials", ["id", "nid"], {"name":  "identity_credentials_nid_idx"})
+
+add_column("identity_credential_identifiers", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identity_credential_identifiers DROP COLUMN nid")
+  sql("ALTER TABLE identity_credential_identifiers ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("identity_credential_identifiers", "nid", {"networks": ["id"]}, {
+      "name": "identity_credential_identifiers_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE identity_credential_identifiers SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("identity_credential_identifiers", "nid", "uuid", { "null": false })
+add_index("identity_credential_identifiers", ["id", "nid"], {"name":  "identity_credential_identifiers_nid_idx"})
+drop_index("identity_credential_identifiers", "identity_credential_identifiers_identifier_idx")
+add_index("identity_credential_identifiers", ["nid", "identifier"], {"unique": true, "name": "identity_credential_identifiers_identifier_nid_uq_idx"})
+
+add_column("selfservice_recovery_flows", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE selfservice_recovery_flows DROP COLUMN nid")
+  sql("ALTER TABLE selfservice_recovery_flows ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("selfservice_recovery_flows", "nid", {"networks": ["id"]}, {
+      "name": "selfservice_recovery_flows_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE selfservice_recovery_flows SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("selfservice_recovery_flows", "nid", "uuid", { "null": false })
+add_index("selfservice_recovery_flows", ["id", "nid"], {"name":  "selfservice_recovery_flows_nid_idx"})
+
+add_column("identity_recovery_addresses", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identity_recovery_addresses DROP COLUMN nid")
+  sql("ALTER TABLE identity_recovery_addresses ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("identity_recovery_addresses", "nid", {"networks": ["id"]}, {
+      "name": "identity_recovery_addresses_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE identity_recovery_addresses SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("identity_recovery_addresses", "nid", "uuid", { "null": false })
+add_index("identity_recovery_addresses", ["id", "nid"], {"name":  "identity_recovery_addresses_nid_idx"})
+drop_index("identity_recovery_addresses", "identity_recovery_addresses_status_via_uq_idx")
+drop_index("identity_recovery_addresses", "identity_recovery_addresses_status_via_idx")
+add_index("identity_recovery_addresses", ["nid", "via", "value"], { "unique": true, "name": "identity_recovery_addresses_status_via_uq_idx" })
+add_index("identity_recovery_addresses", ["nid", "via", "value"], { "name": "identity_recovery_addresses_status_via_idx" })
+
+add_column("identity_recovery_tokens", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identity_recovery_tokens DROP COLUMN nid")
+  sql("ALTER TABLE identity_recovery_tokens ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("identity_recovery_tokens", "nid", {"networks": ["id"]}, {
+      "name": "identity_recovery_tokens_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE identity_recovery_tokens SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("identity_recovery_tokens", "nid", "uuid", { "null": false })
+add_index("identity_recovery_tokens", ["id", "nid"], {"name":  "identity_recovery_tokens_nid_idx"})
+
+add_column("selfservice_verification_flows", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE selfservice_verification_flows DROP COLUMN nid")
+  sql("ALTER TABLE selfservice_verification_flows ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("selfservice_verification_flows", "nid", {"networks": ["id"]}, {
+      "name": "selfservice_verification_flows_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE selfservice_verification_flows SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("selfservice_verification_flows", "nid", "uuid", { "null": false })
+add_index("selfservice_verification_flows", ["id", "nid"], {"name":  "selfservice_verification_flows_nid_idx"})
+
+add_column("identity_verifiable_addresses", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identity_verifiable_addresses DROP COLUMN nid")
+  sql("ALTER TABLE identity_verifiable_addresses ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("identity_verifiable_addresses", "nid", {"networks": ["id"]}, {
+      "name": "identity_verifiable_addresses_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE identity_verifiable_addresses SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("identity_verifiable_addresses", "nid", "uuid", { "null": false })
+add_index("identity_verifiable_addresses", ["id", "nid"], {"name":  "identity_verifiable_addresses_nid_idx"})
+drop_index("identity_verifiable_addresses", "identity_verifiable_addresses_status_via_uq_idx")
+drop_index("identity_verifiable_addresses", "identity_verifiable_addresses_status_via_idx")
+add_index("identity_verifiable_addresses", ["nid", "via", "value"], { "unique": true, "name": "identity_verifiable_addresses_status_via_uq_idx" })
+add_index("identity_verifiable_addresses", ["nid", "via", "value"], { "name": "identity_verifiable_addresses_status_via_idx" })
+
+add_column("identity_verification_tokens", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identity_verification_tokens DROP COLUMN nid")
+  sql("ALTER TABLE identity_verification_tokens ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("identity_verification_tokens", "nid", {"networks": ["id"]}, {
+      "name": "identity_verification_tokens_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE identity_verification_tokens SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("identity_verification_tokens", "nid", "uuid", { "null": false })
+add_index("identity_verification_tokens", ["id", "nid"], {"name": "identity_verification_tokens_nid_idx"})
+
+
+add_column("sessions", "nid", "uuid", { "null": true })
+{{ if .IsSQLite }}
+  sql("ALTER TABLE sessions DROP COLUMN nid")
+  sql("ALTER TABLE sessions ADD COLUMN nid CHAR(36) NULL REFERENCES networks(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_foreign_key("sessions", "nid", {"networks": ["id"]}, {
+      "name": "sessions_nid_fk_idx",
+      "on_delete": "CASCADE",
+      "on_update": "RESTRICT",
+  })
+{{ end }}
+sql("UPDATE sessions SET nid = (SELECT id FROM networks LIMIT 1)")
+change_column("sessions", "nid", "uuid", { "null": false })
+add_index("sessions", ["id", "nid"], {"name":  "sessions_nid_idx"})

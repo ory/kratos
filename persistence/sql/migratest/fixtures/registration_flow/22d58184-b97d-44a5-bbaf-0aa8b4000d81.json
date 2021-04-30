@@ -4,46 +4,9 @@
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
   "request_url": "http://kratos:4433/self-service/browser/flows/registration",
-  "messages": null,
-  "methods": {
-    "oidc": {
-      "method": "oidc",
-      "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/22d58184-b97d-44a5-bbaf-0aa8b4000d81",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "vtujrgwX3K+icdz8iHW3WD4VYd+QIGCb1NqjWcF+wj4f0k/yh0BpKZQ45QLlBkl6ABimTEwT5xhLSP2wIWqIog=="
-          }
-        ]
-      }
-    },
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/password?request=22d58184-b97d-44a5-bbaf-0aa8b4000d81",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "vtujrgwX3K+icdz8iHW3WD4VYd+QIGCb1NqjWcF+wj4f0k/yh0BpKZQ45QLlBkl6ABimTEwT5xhLSP2wIWqIog=="
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "traits.email",
-            "type": "email"
-          }
-        ]
-      }
-    }
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
   }
 }

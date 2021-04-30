@@ -1,0 +1,38 @@
+drop_table("selfservice_login_flow_methods")
+drop_column("selfservice_login_flows", "messages")
+
+add_column("selfservice_login_flows", "ui", "json", { "null": true })
+sql("UPDATE selfservice_login_flows SET ui='{}'")
+change_column("selfservice_login_flows", "ui", "json", { "null": false })
+
+
+drop_table("selfservice_registration_flow_methods")
+drop_column("selfservice_registration_flows", "messages")
+
+add_column("selfservice_registration_flows", "ui", "json", { "null": true })
+sql("UPDATE selfservice_registration_flows SET ui='{}'")
+change_column("selfservice_registration_flows", "ui", "json", { "null": false })
+
+
+drop_table("selfservice_settings_flow_methods")
+drop_column("selfservice_settings_flows", "messages")
+
+add_column("selfservice_settings_flows", "ui", "json", { "null": true })
+sql("UPDATE selfservice_settings_flows SET ui='{}'")
+change_column("selfservice_settings_flows", "ui", "json", { "null": false })
+
+
+drop_table("selfservice_recovery_flow_methods")
+drop_column("selfservice_recovery_flows", "messages")
+
+add_column("selfservice_recovery_flows", "ui", "json", { "null": true })
+sql("UPDATE selfservice_recovery_flows SET ui='{}'")
+change_column("selfservice_recovery_flows", "ui", "json", { "null": false })
+
+
+drop_table("selfservice_verification_flow_methods")
+drop_column("selfservice_verification_flows", "messages")
+
+add_column("selfservice_verification_flows", "ui", "json", { "null": true })
+sql("UPDATE selfservice_verification_flows SET ui='{}'")
+change_column("selfservice_verification_flows", "ui", "json", { "null": false })

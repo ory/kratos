@@ -1,0 +1,1 @@
+DROP INDEX "identity_credentials_nid_idx";

@@ -1,0 +1,14 @@
+{
+  "id": "68fb4010-84a9-4d1e-9f92-2705978ee89e",
+  "type": "api",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/recovery",
+  "active": "link",
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  },
+  "state": "choose_method"
+}

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/configx"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/stringsx"
@@ -26,15 +28,16 @@ func init() {
 	})
 }
 
-func NewConfigurationWithDefaults() *config.Config {
-	c := config.MustNew(logrusx.New("", ""),
+func NewConfigurationWithDefaults(t *testing.T) *config.Config {
+	c := config.MustNew(t, logrusx.New("", ""),
 		configx.WithValues(map[string]interface{}{
 			"log.level":                                      "trace",
-			config.ViperKeyDSN:                               dbal.InMemoryDSN,
+			config.ViperKeyDSN:                               dbal.SQLiteInMemory,
 			config.ViperKeyHasherArgon2ConfigMemory:          16384,
 			config.ViperKeyHasherArgon2ConfigIterations:      1,
 			config.ViperKeyHasherArgon2ConfigParallelism:     1,
 			config.ViperKeyHasherArgon2ConfigSaltLength:      16,
+			config.ViperKeyHasherBcryptCost:                  4,
 			config.ViperKeyHasherArgon2ConfigKeyLength:       16,
 			config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
 			config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
@@ -58,17 +61,24 @@ func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDef
 	})
 
 	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
+	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID())
 	return conf, reg
 }
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
 func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *driver.RegistryDefault) {
-	c := NewConfigurationWithDefaults()
-	c.MustSet(config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.InMemoryDSN))
+	c := NewConfigurationWithDefaults(t)
+	c.MustSet(config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.SQLiteInMemory))
 
 	reg, err := driver.NewRegistryFromDSN(c, logrusx.New("", ""))
 	require.NoError(t, err)
 	reg.Config(context.Background()).MustSet("dev", true)
 	require.NoError(t, reg.Init(context.Background()))
+
+	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID())
+	actual, err := reg.Persister().DetermineNetwork(context.Background())
+	require.NoError(t, err)
+	require.EqualValues(t, reg.Persister().NetworkID(), actual.ID)
+
 	return c, reg.(*driver.RegistryDefault)
 }

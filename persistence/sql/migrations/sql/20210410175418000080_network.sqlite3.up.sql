@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "identity_credential_identifiers_identifier_idx" ON "_identity_credential_identifiers_tmp" (identifier);

@@ -1,0 +1,258 @@
+---
+id: faq
+title: Frequently Asked Questions (FAQ)
+---
+
+<!-- This file is generated. Please edit /docs/faq.yaml or /docs/scripts/gen-faq.js instead. Changes will be overwritten otherwise -->
+
+import { Question, FaqTags } from '@theme/Faq'
+
+<FaqTags
+  tags={[
+    'kratos',
+    'secrets',
+    'config',
+    'database',
+    'ecosystem',
+    'user',
+    'validation',
+    'traits',
+    'registration',
+    'cors',
+    'feature',
+    'hooks',
+    'migration',
+    'security',
+    'oidc',
+    'spa'
+  ]}
+  initiallyDisabled={['kratos']}
+/>
+<br />
+<br />
+
+<Question tags={['kratos', 'secrets', 'config']}>
+  #kratos #secrets #config
+  <p>
+    <strong>Q</strong>: Is it possible to pass multiple system.secret values
+    through the ENV, or do you have to use a config file for that?
+  </p>
+  <p>
+    <strong>A</strong>: Yes, you can set them as environmental variable, you
+    just have to separate them using a <code>,</code>. More info on these
+    conventions in the documentation:{' '}
+    <a href="https://www.ory.sh/docs/ecosystem/configuring/#stringnumeric-arrays">
+      Setting configuration values via environmental variables
+    </a>
+    .
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'database']}>
+  #kratos #database
+  <p>
+    <strong>Q</strong>: We want to seperate our customers and employees, so we
+    store them in different databases. But we would like to have them use the
+    same login dialog for our portal. How can I achieve that with Ory Kratos?
+  </p>
+  <p>
+    <strong>A</strong>: You can deploy Ory Kratos two times, and use the same
+    login UI pointing to two different Kratos login endpoints -{' '}
+    <code>/login/customer</code> or <code>/login/employee</code>, either by
+    having two different login routes, or by adding some logic to your login UI
+    that reroutes customers to <code>/login/customer</code> and employees to{' '}
+    <code>/login/employee</code>. So you define the same login or registration
+    UI URLs in both of the Kratos configurations. You may need to tell your
+    login/registration UI which Kratos it is supposed to talk to. The instances
+    are cheap to deploy and the databases are completely isolated from each
+    other. For example something like <code>/login/customer</code> and{' '}
+    <code>/login/employee</code>.
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'ecosystem']}>
+  #kratos #ecosystem
+  <p>
+    <strong>Q</strong>: Is the code audited by an independent entity and is
+    there a bug bounty program?
+  </p>
+  <p>
+    <strong>A</strong>: We will do that when the APIs and core are stable. A bug
+    bounty program is in the making but not done yet. If you are a security
+    researcher and interested in working on Kratos, please reach out to{' '}
+    <a href="mailto:security@ory.sh">security@ory.sh</a>.
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'user', 'validation', 'traits']}>
+  #kratos #user #validation #traits
+  <p>
+    <strong>Q</strong>: What is the correct flow to sanitize the username and
+    make sure it satisfies a specific regex (e.g. only alphanumeric characters)?
+  </p>
+  <p>
+    <strong>A</strong>: In the identity json schema using{' '}
+    <a href="https://json-schema.org/understanding-json-schema/reference/string.html#regular-expressions">
+      Regular Expressions
+    </a>
+    . To sanitize usernames coming from third-party OIDC providers like Google
+    or GitHub you write <a href="https://jsonnet.org">jsonnet code</a>.
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'registration', 'cors']}>
+  #kratos #registration #cors
+  <p>
+    <strong>Q</strong>: I am currently trying to get the Kratos registration
+    flow working on a react app that I am creating. I am having CORS issues with
+    the completeSelfServiceRegistrationFlowWithPasswordMethod call when using
+    the @oryd/kratos-client JS package.
+  </p>
+  <p>
+    <strong>A</strong>: You are using AJAX to submit the form. This is not
+    supported right now. You need to submit a regular HTML form. Do not use
+    AJAX. Do not use fetch. Let the user click the submit button and do not do
+    anything. AJAX will be better supported starting Kratos v0.6.
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'traits', 'feature']}>
+  #kratos #traits #feature
+  <p>
+    <strong>Q</strong>: Is the ability to freeze certain identity fields after
+    registration anywhere on the roadmap? Also I want read-only or hidden
+    user-specific data. Can I use traits for that? Example: Some of our identity
+    trait fields may be the subject to identity validation (
+    <a href="https://en.wikipedia.org/wiki/Know_your_customer">
+      know your customer
+    </a>
+    ). Once they are validated we do not allow the identity to be edited by the
+    end-user.
+  </p>
+  <p>
+    <strong>A</strong>: Currently traits are visible to the user and also
+    editable by them. It makes sense to have read-only and/or hidden traits for
+    users, but we can not give an exact timing when this will be available.
+    There is an open issue for this feature:
+    <a href="https://github.com/ory/kratos/issues/47">Issue</a>.
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'hooks', 'feature']}>
+  #kratos #hooks #feature
+  <p>
+    <strong>Q</strong>: Are there plans to provide hooks on
+    registration/login/logouts/identity updates?
+  </p>
+  <p>
+    <strong>A</strong>: Yes! See these issues for more information on the
+    current progress:{' '}
+    <a href="https://github.com/ory/kratos/issues/271">
+      Feature Request: Webhooks
+    </a>{' '}
+    and{' '}
+    <a href="https://github.com/ory/kratos/issues/30">
+      Implement RPC After Hook
+    </a>
+    .
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'registration', 'traits']}>
+  #kratos #registration #traits
+  <p>
+    <strong>Q</strong>: How can I verify beforehand if a username is available
+    during registration?
+  </p>
+  <p>
+    <strong>A</strong>: You can not right now. It would allow account
+    enumeration attacks. See also the{' '}
+    <a href="https://www.ory.sh/kratos/docs/concepts/security/#account-enumeration">
+      section in the documentation
+    </a>
+    .
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'database', 'migration', 'feature']}>
+  #kratos #database #migration #feature
+  <p>
+    <strong>Q</strong>: Do have plans to support user migration scenarios
+    similar to auth0 automatic migrations? E.g. configure a callback to the
+    legacy system when you cannot find the corresponding user, and store the
+    identity on successful legacy system response.
+  </p>
+  <p>
+    <strong>A</strong>: No plans yet, but migration is an important piece of the
+    puzzle. We will focus on importing existing users first. An alternative to
+    callback and custom code is fronting the legacy system with Ory Hydra
+    (OAuth2/OIDC Server) and then using that as an upstream in Ory Kratos.
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'security']}>
+  #kratos #security
+  <p>
+    <strong>Q</strong>: Do you have protection or plans for brute force attacks
+    i.e. repetitive login attempts? Leaked database scans?
+  </p>
+  <p>
+    <strong>A</strong>: See the following document:{' '}
+    <a href="https://www.ory.sh/kratos/docs/concepts/security#passwords">
+      Ory Kratos Security Measures
+    </a>
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'oidc', 'traits']}>
+  #kratos #oidc #traits
+  <p>
+    <strong>Q</strong>: How do I append a random suffix e.g. a number to OIDC
+    usernames if the username returned by a provider is already taken.
+  </p>
+  <p>
+    <strong>A</strong>: You can use the md5 function built in the{' '}
+    <a href="https://jsonnet.org/ref/stdlib.html">jsonnet standart library</a>.
+    See the following issue as well:{' '}
+    <a href="https://github.com/ory/kratos/issues/988">
+      Add random function to the jsonnet library
+    </a>
+    .
+  </p>
+</Question>
+
+<br />
+<Question tags={['kratos', 'spa']}>
+  #kratos #spa
+  <p>
+    <strong>Q</strong>: I want to implement a single-page-app (SPA). Is this
+    possible with Ory Kratos?
+  </p>
+  <p>
+    <strong>A</strong>: Yes, definitely. We do not have an example-app (yet).
+    Also, you might not get around some page-reloads as you definitely should,
+    as it is not possible to use the API flows in the browser. This is important
+    to prevent{' '}
+    <a href="https://en.wikipedia.org/wiki/Cross-site_request_forgery">
+      CSRF attacks
+    </a>
+    . So hopefully you are not too strict with your SPA. A sample app is being
+    worked on here:{' '}
+    <a href="https://github.com/ory/kratos/issues/668">
+      Implement React SPA sample app
+    </a>
+    .
+  </p>
+</Question>
+
+<br />

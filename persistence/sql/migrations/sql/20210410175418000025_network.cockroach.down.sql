@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "selfservice_errors_nid_idx";

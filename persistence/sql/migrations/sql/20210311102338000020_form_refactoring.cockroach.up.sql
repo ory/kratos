@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_settings_flows" RENAME COLUMN "ui" TO "_ui_tmp";

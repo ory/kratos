@@ -1,0 +1,1 @@
+ALTER TABLE "identity_recovery_tokens" RENAME COLUMN "nid" TO "_nid_tmp";
