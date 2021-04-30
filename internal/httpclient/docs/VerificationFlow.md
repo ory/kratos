@@ -4,14 +4,17 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **string** | Active, if set, contains the registration method that is being used. It is initially not set. | [optional] 
-**ExpiresAt** | Pointer to **time.Time** | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated. | [optional] 
-**Id** | **string** |  | 
-**IssuedAt** | Pointer to **time.Time** | IssuedAt is the time (UTC) when the request occurred. | [optional] 
-**RequestUrl** | Pointer to **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | [optional] 
-**State** | **string** |  | 
-**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
-**Ui** | [**UiContainer**](UiContainer.md) |  | 
+**Active** | Pointer to **
+string** | Active, if set, contains the registration method that is being used. It is initially not set. | [optional]
+**ExpiresAt** | Pointer to **
+time.Time** | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated. | [optional]
+**Id** | **string** |  |
+**IssuedAt** | Pointer to **time.Time** | IssuedAt is the time (UTC) when the request occurred. | [optional]
+**RequestUrl** | Pointer to **
+string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | [optional]
+**State** | **string** |  |
+**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. |
+**Ui** | [**UiContainer**](UiContainer.md) |  |
 
 ## Methods
 
@@ -19,9 +22,8 @@ Name | Type | Description | Notes
 
 `func NewVerificationFlow(id string, state string, type_ string, ui UiContainer, ) *VerificationFlow`
 
-NewVerificationFlow instantiates a new VerificationFlow object
-This constructor will assign default values to properties that have it defined,
-and makes sure properties required by API are set, but the set of arguments
+NewVerificationFlow instantiates a new VerificationFlow object This constructor will assign default values to properties
+that have it defined, and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
 ### NewVerificationFlowWithDefaults

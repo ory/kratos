@@ -9,7 +9,7 @@ import (
 // courierCmd represents the courier command
 var courierCmd = &cobra.Command{
 	Use:   "courier",
-	Short: "Commands related to the ORY Kratos message courier",
+	Short: "Commands related to the Ory Kratos message courier",
 }
 
 func init() {

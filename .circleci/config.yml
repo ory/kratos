@@ -4,7 +4,7 @@ orbs:
   changelog: ory/changelog@0.1.10
   goreleaser: ory/goreleaser@0.1.31
   slack: circleci/slack@3.4.2
-  sdk: ory/sdk@0.1.41
+  sdk: ory/sdk@0.1.42
   docs: ory/docs@0.0.11
   nancy: ory/nancy@0.0.18
   golangci: ory/golangci@0.0.18
@@ -161,18 +161,15 @@ workflows:
           filters:
             tags:
               only: /.*/
-#      - sdk/generate:
-#          appname: Ory_Kratos
-#          specignorepgks: github.com/ory/kratos-client-go
-#          swagpath: spec/api.json
-#          requires:
-#            - test
-#            - test-e2e
-#          filters:
-#            tags:
-#              only: /.*/
-#            branches:
-#              ignore: /master/
+      - sdk/generate-openapi:
+          requires:
+            - test
+            - test-e2e
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /master/
       - docs/cli
       - docs/build:
           swag-spec-location: spec/api.json
@@ -181,12 +178,12 @@ workflows:
               only: /.*/
             branches:
               only: master
-      - sdk/release:
-          swagpath: spec/api.json
+      - sdk/release-openapi:
+          swagpath: spec/openapi.json
           requires:
             - test
             - test-e2e
-#            - sdk/generate
+            - sdk/generate-openapi
             - goreleaser/release
           filters:
             tags:

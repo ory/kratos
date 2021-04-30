@@ -44,7 +44,7 @@ type (
 var _ cmdx.Table = loadResults{}
 
 func (l loadResults) Header() []string {
-	return append((&resultTable{}).Header(), "MEMORY PARAM", "ITERATIONS PARAM")
+	return append((&resultTable{}).Header(), "MEMOry PARAM", "ITERATIONS PARAM")
 }
 
 func (l loadResults) Table() [][]string {

@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 let config = {
-  projectName: 'ORY Template',
+  projectName: 'Ory Template',
   projectSlug: 'docusaurus-template',
   projectTagLine: 'Stubbydi dab dub dadada',
   newsletter:
