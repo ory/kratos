@@ -157,9 +157,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "hook"
-      ]
+      "required": [ "hook", "config" ]
     },
     "OIDCClaims": {
       "title": "OpenID Connect claims",
