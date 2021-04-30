@@ -5,7 +5,9 @@ title: Hooks
 
 Hooks execute logic after a flow (login, registration, settings, ...):
 
+- _Before login:_ is executed when a login flow starts.
 - _After login:_ is executed after a login was successful.
+- _Before registration:_ is executed when a registration flow starts.
 - _After registration:_ is executed when a registration was successful:
   - _Before persisting:_ runs before the identity is saved in the database.
   - _After persisting:_ runs after the identity was saved in the database.
@@ -25,7 +27,7 @@ To configure hooks for all methods of a particular flow, following pattern must 
 selfservice:
   flows:
     <particular flow>:
-      after:
+      <before or after>:
         hooks:
           - hook: <hook 1 name>
             <hook 1 specific configuration>
@@ -57,36 +59,43 @@ following example
 selfservice:
   flows:
     <particular flow>:
-      after:
+      before:
         hooks:
           - hook: <hook 1 name>
             <hook 1 specific configuration>
+      after:
+        hooks:
+          - hook: <hook 2 name>
+            <hook 2 specific configuration>
         <strategy 1>:
           <strategy specific config>
           hooks:
-            - hook: <hook 2 name>
-              <hook 2 specific configuration>
+            - hook: <hook 3 name>
+              <hook 3 specific configuration>
         <strategy 2>:
           <strategy specific config>
 ```
 
-"hook 1" is only run for "strategy 2", but not for "strategy 1" as latter defines its own hooks.
+"hook 1" is always run when the flow is started. On the finalization of the flow, "hook2" is only run
+for "strategy 2", but not for "strategy 1" as latter defines its own hooks.
 
 ## All flows
 Following hooks can be configured for all flows.
 
 ### Web-Hooks
-Web-Hooks can be configured for every, but error and logout flow.
+Web-Hooks can be configured for every, but error and logout flow and can be configured on either the before/after
+level or at the level of a particular method.
 
 :::note
 
 As of today Web-Hooks cannot control the execution of the flow by patching/updating particular
 properties of flow specific object upon Web-Hook completion. It will however cancel the execution of
-the flow if the call to the Web-Hook end point fails.
+the flow if the call to the Web-Hook end point fails either due to a network error or if the end point
+responses with an HTTP code > 300.
 
 :::
 
-The configuration for a web-hook goes into the `hooks` property either on the flow, or the method
+The configuration for a web-hook goes into the `hooks` property either on the flow before/after, or the method
 level and has the following structure:
 
 ```.yaml
@@ -136,6 +145,21 @@ password: My-Pass-Value
 
 ## Login
 
+Hooks running before or after successful user login are defined per Self-Service
+Registration Method in ORY Kratos' configuration file.
+
+### Before
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    login:
+      before:
+        hooks:
+          - hook: web-hook
+            # web-hook specific configuration
+```
+
 ### After
 
 ```yaml title="path/to/my/kratos.config.yml"
@@ -144,7 +168,8 @@ selfservice:
     login:
       after:
         password:
-          - hook: revoke_active_sessions
+          hooks:
+            - hook: revoke_active_sessions
 ```
 
 #### `revoke_active_sessions`
@@ -158,14 +183,27 @@ selfservice:
     login:
       after:
         <method>:
-          - hook: revoke_active_sessions
-            # can not be configured
+          hooks:
+            - hook: revoke_active_sessions
+              # can not be configured
 ```
 
 ## Registration
 
-Hooks running after successful user registration are defined per Self-Service
+Hooks running before or after successful user registration are defined per Self-Service
 Registration Method in ORY Kratos' configuration file.
+
+### Before
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    registration:
+      before:
+        hooks:
+          - hook: web-hook
+            # web-hook specific configuration
+```
 
 ### After
 
@@ -175,9 +213,11 @@ selfservice:
     registration:
       after:
         oidc:
-          - hook: session
+          hooks:
+            - hook: session
         password:
-          - hook: session
+          hooks:
+            - hook: session
 ```
 
 #### `session`
@@ -217,8 +257,9 @@ selfservice:
     registration:
       after:
         <method>:
-          - hook: session
-            # can not be configured
+          hooks:
+            - hook: session
+              # can not be configured
 ```
 
 Depending on the registration flow type the behavior changes.
@@ -273,4 +314,4 @@ selfservice:
       after:
 ```
 
-No hooks are available for this flow at the moment.
+Only Web-Hooks hooks are available for this flow at the moment.
