@@ -3,7 +3,6 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -170,12 +169,10 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	fmt.Printf("\n\nPre-merge:\n%s\n\n", i.Traits)
 	i.Traits, err = merge(container.Form.Encode(), json.RawMessage(i.Traits), option)
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
-	fmt.Printf("\n\nPost-merge:\n%s\n%s\n\n", i.Traits, container.Form.Encode())
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
