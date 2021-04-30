@@ -78,6 +78,14 @@ Following hooks can be configured for all flows.
 ### Web-Hooks
 Web-Hooks can be configured for every, but error and logout flow.
 
+:::note
+
+As of today Web-Hooks cannot control the execution of the flow by patching/updating particular
+properties of flow specific object upon Web-Hook completion. It will however cancel the execution of
+the flow if the call to the Web-Hook end point fails.
+
+:::
+
 The configuration for a web-hook goes into the `hooks` property either on the flow, or the method
 level and has the following structure:
 
