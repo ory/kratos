@@ -20,7 +20,7 @@ var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
 var ErrUnknownHashFormat = errors.New("unknown hash format")
 
 func Compare(ctx context.Context, cfg *config.Config, password []byte, hash []byte) error {
-	algorithm, realHash, err := parsePasswordHash(hash)
+	algorithm, realHash, err := ParsePasswordHash(hash)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -51,29 +51,27 @@ func CompareBcrypt(_ context.Context, password []byte, hash string) error {
 }
 
 func IsPasswordHash(hash []byte) bool {
-	_, _, err := parsePasswordHash(hash)
+	_, _, err := ParsePasswordHash(hash)
 	return err == nil
 }
 
-func parsePasswordHash(input []byte) (algorithm, hash string, err error) {
+func ParsePasswordHash(input []byte) (algorithm, hash string, err error) {
 	hashParts := strings.SplitN(string(input), "$", 3)
 	if len(hashParts) != 3 {
 		err = ErrUnknownHashFormat
 		return
 	}
 
+	hash = "$" + hashParts[2]
 	switch hashParts[1] {
 	case Argon2AlgorithmId:
 		algorithm = Argon2AlgorithmId
-		hash = hashParts[2]
 		return
 	case BcryptAlgorithmId:
 		algorithm = BcryptAlgorithmId
-		hash = hashParts[2]
 		return
 	case BcryptAESAlgorithmId:
 		algorithm = BcryptAESAlgorithmId
-		hash = hashParts[2]
 		return
 	default:
 		err = ErrUnknownHashAlgorithm
@@ -104,7 +102,7 @@ func aes256Decrypt(data string, key []byte) ([]byte, error) {
 }
 
 func CompareBcryptAes(_ context.Context, hashConfig *config.BcryptAES, password []byte, hash string) error {
-	aesDecrypted, err := aes256Decrypt(hash, []byte(hashConfig.Key))
+	aesDecrypted, err := aes256Decrypt(hash[1:], []byte(hashConfig.Key))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -139,12 +137,12 @@ func CompareArgon2id(_ context.Context, password []byte, hashPart string) error 
 
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
-	if len(parts) != 4 {
+	if len(parts) != 5 {
 		return nil, nil, nil, ErrInvalidHash
 	}
 
 	var version int
-	_, err = fmt.Sscanf(parts[0], "v=%d", &version)
+	_, err = fmt.Sscanf(parts[1], "v=%d", &version)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -153,18 +151,18 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 	}
 
 	p = new(config.Argon2)
-	_, err = fmt.Sscanf(parts[1], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
+	_, err = fmt.Sscanf(parts[2], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[2])
+	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[3])
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	p.SaltLength = uint32(len(salt))
 
-	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[3])
+	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
 		return nil, nil, nil, err
 	}

@@ -3,7 +3,6 @@ package hash
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -40,9 +39,9 @@ func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
 		&b,
-		"$%s$%s",
+		"$%s%s",
 		BcryptAlgorithmId,
-		base64.RawStdEncoding.EncodeToString(hash),
+		hash,
 	); err != nil {
 		return nil, errors.WithStack(err)
 	}
