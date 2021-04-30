@@ -25,6 +25,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
+		identity.PrivilegedPoolProvider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -49,7 +50,8 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 
 	for k := range i.VerifiableAddresses {
 		address := &i.VerifiableAddresses[k]
-		if address.Verified {
+		if address.Status == identity.VerifiableAddressStatusCompleted ||
+			address.Status == identity.VerifiableAddressStatusSent {
 			continue
 		}
 
@@ -71,6 +73,12 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 
 		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, address, token); err != nil {
 			return err
+		}
+		if address.Status != identity.VerifiableAddressStatusSent {
+			address.Status = identity.VerifiableAddressStatusPending
+			if err := e.r.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -15,6 +15,7 @@ const (
 	VerifiableAddressTypeEmail VerifiableAddressType = AddressTypeEmail
 
 	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
+	VerifiableAddressStatusSent      VerifiableAddressStatus = "sent"
 	VerifiableAddressStatusCompleted VerifiableAddressStatus = "completed"
 )
 
