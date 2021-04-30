@@ -1,10 +1,11 @@
 package prometheus
 
 import (
-	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type MetricsManager struct {
