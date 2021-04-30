@@ -51,8 +51,7 @@ func (h *BcryptAES) aes256Encrypt(data, key []byte) ([]byte, error) {
 	cipherText := fmt.Sprintf(
 		"%s%s",
 		hex.EncodeToString(nonce),
-		hex.EncodeToString(gcm.Seal(nil, nonce, data, nil)),
-		)
+		hex.EncodeToString(gcm.Seal(nil, nonce, data, nil)))
 	return []byte(cipherText), nil
 }
 

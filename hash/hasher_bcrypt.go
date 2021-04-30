@@ -6,11 +6,11 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/ory/kratos/schema"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/schema"
 )
 
 const BcryptAlgorithmId = "bcrypt"
