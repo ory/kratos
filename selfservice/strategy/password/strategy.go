@@ -86,8 +86,7 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 				return 0, errors.WithStack(err)
 			}
 
-			if len(c.Identifiers) > 0 && len(c.Identifiers[0]) > 0 &&
-				(hash.IsBcryptHash([]byte(conf.HashedPassword)) || hash.IsArgon2idHash([]byte(conf.HashedPassword))) {
+			if len(c.Identifiers) > 0 && len(c.Identifiers[0]) > 0 && hash.IsPasswordHash([]byte(conf.HashedPassword)) {
 				count++
 			}
 		}

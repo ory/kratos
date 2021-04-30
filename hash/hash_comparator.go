@@ -20,17 +20,18 @@ var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
 var ErrUnknownHashFormat = errors.New("unknown hash format")
 
 func Compare(ctx context.Context, cfg *config.Config, password []byte, hash []byte) error {
-	hashParts := strings.SplitN(string(hash), "$", 3)
-	if len(hashParts) != 3 {
-		return ErrUnknownHashFormat
+	algorithm, realHash, err := parsePasswordHash(hash)
+	if err != nil {
+		return errors.WithStack(err)
 	}
-	switch hashParts[1] {
-	case "argon2id":
-		return CompareArgon2id(ctx, password, hashParts[2])
-	case "bcrypt":
-		return CompareBcrypt(ctx, password, hashParts[2])
-	case "bcryptAes":
-		return CompareBcryptAes(ctx, cfg.HasherBcryptAES(), password, hashParts[2])
+
+	switch algorithm {
+	case Argon2AlgorithmId:
+		return CompareArgon2id(ctx, password, realHash)
+	case BcryptAlgorithmId:
+		return CompareBcrypt(ctx, password, realHash)
+	case BcryptAESAlgorithmId:
+		return CompareBcryptAes(ctx, cfg.HasherBcryptAES(), password, realHash)
 	default:
 		return ErrUnknownHashAlgorithm
 	}
@@ -48,6 +49,38 @@ func CompareBcrypt(_ context.Context, password []byte, hash string) error {
 
 	return nil
 }
+
+func IsPasswordHash(hash []byte) bool {
+	_, _, err := parsePasswordHash(hash)
+	return err == nil
+}
+
+func parsePasswordHash(input []byte) (algorithm, hash string, err error) {
+	hashParts := strings.SplitN(string(input), "$", 3)
+	if len(hashParts) != 3 {
+		err = ErrUnknownHashFormat
+		return
+	}
+
+	switch hashParts[1] {
+	case Argon2AlgorithmId:
+		algorithm = Argon2AlgorithmId
+		hash = hashParts[2]
+		return
+	case BcryptAlgorithmId:
+		algorithm = BcryptAlgorithmId
+		hash = hashParts[2]
+		return
+	case BcryptAESAlgorithmId:
+		algorithm = BcryptAESAlgorithmId
+		hash = hashParts[2]
+		return
+	default:
+		err = ErrUnknownHashAlgorithm
+		return
+	}
+}
+
 func aes256Decrypt(data string, key []byte) ([]byte, error) {
 	dataHex, err := base64.RawStdEncoding.Strict().DecodeString(data)
 	if err != nil {

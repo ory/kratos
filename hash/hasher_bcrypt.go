@@ -13,6 +13,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
+const BcryptAlgorithmId = "bcrypt"
+
 type Bcrypt struct {
 	c BcryptConfiguration
 }
@@ -38,7 +40,8 @@ func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
 		&b,
-		"$bcrypt$%s",
+		"$%s$%s",
+		BcryptAlgorithmId,
 		base64.RawStdEncoding.EncodeToString(hash),
 	); err != nil {
 		return nil, errors.WithStack(err)
