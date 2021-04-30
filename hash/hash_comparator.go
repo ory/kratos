@@ -104,12 +104,12 @@ func aes256Decrypt(data string, key []byte) ([]byte, error) {
 }
 
 func CompareBcryptAes(_ context.Context, hashConfig *config.BcryptAES, password []byte, hash string) error {
-	decrypted, err := aes256Decrypt(hash, []byte(hashConfig.Key))
+	aesDecrypted, err := aes256Decrypt(hash, []byte(hashConfig.Key))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	err = bcrypt.CompareHashAndPassword(decrypted, password)
+	err = bcrypt.CompareHashAndPassword(aesDecrypted, password)
 	if err != nil {
 		return err
 	}
