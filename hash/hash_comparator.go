@@ -2,10 +2,11 @@ package hash
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -16,23 +17,66 @@ import (
 )
 
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
+var ErrUnknownHashFormat = errors.New("unknown hash format")
 
-func Compare(ctx context.Context, password []byte, hash []byte) error {
-	if IsBcryptHash(hash) {
-		return CompareBcrypt(ctx, password, hash)
-	} else if IsArgon2idHash(hash) {
-		return CompareArgon2id(ctx, password, hash)
-	} else {
+func Compare(ctx context.Context, cfg *config.Config, password []byte, hash []byte) error {
+	hashParts := strings.SplitN(string(hash), "$", 3)
+	if len(hashParts) != 3 {
+		return ErrUnknownHashFormat
+	}
+	switch hashParts[1] {
+	case "argon2id":
+		return CompareArgon2id(ctx, password, hashParts[2])
+	case "bcrypt":
+		return CompareBcrypt(ctx, password, hashParts[2])
+	case "bcryptAes":
+		return CompareBcryptAes(ctx, cfg.HasherBcryptAES(), password, hashParts[2])
+	default:
 		return ErrUnknownHashAlgorithm
 	}
 }
 
-func CompareBcrypt(_ context.Context, password []byte, hash []byte) error {
+func CompareBcrypt(_ context.Context, password []byte, hash string) error {
 	if err := validateBcryptPasswordLength(password); err != nil {
 		return err
 	}
 
-	err := bcrypt.CompareHashAndPassword(hash, password)
+	err := bcrypt.CompareHashAndPassword([]byte(hash), password)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func aes256Decrypt(data string, key []byte) ([]byte, error) {
+	dataHex, err := base64.RawStdEncoding.Strict().DecodeString(data)
+	if err != nil {
+		return nil, err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce := dataHex[:gcm.NonceSize()]
+	ciphertext := dataHex[gcm.NonceSize():]
+
+	return gcm.Open(nil, nonce, ciphertext, nil)
+}
+
+func CompareBcryptAes(_ context.Context, hashConfig *config.BcryptAES, password []byte, hash string) error {
+	decrypted, err := aes256Decrypt(hash, []byte(hashConfig.Key))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	err = bcrypt.CompareHashAndPassword(decrypted, password)
 	if err != nil {
 		return err
 	}
@@ -40,16 +84,16 @@ func CompareBcrypt(_ context.Context, password []byte, hash []byte) error {
 	return nil
 }
 
-func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
+func CompareArgon2id(_ context.Context, password []byte, hashPart string) error {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
-	p, salt, hash, err := decodeArgon2idHash(string(hash))
+	p, salt, hash, err := decodeArgon2idHash(hashPart)
 	if err != nil {
 		return err
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
+	otherHash := argon2.IDKey(password, salt, p.Iterations, uint32(p.Memory), p.Parallelism, p.KeyLength)
 
 	// Check that the contents of the hashed passwords are identical. Note
 	// that we are using the subtle.ConstantTimeCompare() function for this
@@ -60,24 +104,14 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	return ErrMismatchedHashAndPassword
 }
 
-func IsBcryptHash(hash []byte) bool {
-	res, _ := regexp.Match("^\\$2[abzy]?\\$", hash)
-	return res
-}
-
-func IsArgon2idHash(hash []byte) bool {
-	res, _ := regexp.Match("^\\$argon2id\\$", hash)
-	return res
-}
-
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
-	if len(parts) != 6 {
+	if len(parts) != 4 {
 		return nil, nil, nil, ErrInvalidHash
 	}
 
 	var version int
-	_, err = fmt.Sscanf(parts[2], "v=%d", &version)
+	_, err = fmt.Sscanf(parts[0], "v=%d", &version)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -86,18 +120,18 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 	}
 
 	p = new(config.Argon2)
-	_, err = fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
+	_, err = fmt.Sscanf(parts[1], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[4])
+	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[2])
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	p.SaltLength = uint32(len(salt))
 
-	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[5])
+	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[3])
 	if err != nil {
 		return nil, nil, nil, err
 	}
