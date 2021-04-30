@@ -89,6 +89,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	n.UseHandler(r.CSRFHandler())
 
 	r.RegisterPublicRoutes(router)
+	r.PrometheusManager().RegisterRouter(router)
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
@@ -128,6 +129,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(router)
+	r.PrometheusManager().RegisterRouter(router)
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
