@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "identity_verification_tokens_verifiable_address_id_idx";

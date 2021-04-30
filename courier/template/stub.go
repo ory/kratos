@@ -1,6 +1,7 @@
 package template
 
 import (
+	"encoding/json"
 	"path/filepath"
 
 	"github.com/ory/kratos/driver/config"
@@ -31,4 +32,12 @@ func (t *TestStub) EmailSubject() (string, error) {
 
 func (t *TestStub) EmailBody() (string, error) {
 	return loadTextTemplate(filepath.Join(t.c.CourierTemplatesRoot(), "test_stub/email.body.gotmpl"), t.m)
+}
+
+func (t *TestStub) EmailBodyPlaintext() (string, error) {
+	return loadTextTemplate(filepath.Join(t.c.CourierTemplatesRoot(), "test_stub/email.body.plaintext.gotmpl"), t.m)
+}
+
+func (t *TestStub) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.m)
 }

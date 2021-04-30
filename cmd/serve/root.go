@@ -27,14 +27,14 @@ import (
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "Run the ORY Kratos server",
+	Short: "Run the Ory Kratos server",
 	Run: func(cmd *cobra.Command, args []string) {
 		d := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
 
 		if d.Config(cmd.Context()).IsInsecureDevMode() {
 			d.Logger().Warn(`
 
-YOU ARE RUNNING ORY KRATOS IN DEV MODE.
+YOU ARE RUNNING Ory KRATOS IN DEV MODE.
 SECURITY IS DISABLED.
 DON'T DO THIS IN PRODUCTION!
 
@@ -62,4 +62,5 @@ func init() {
 
 	serveCmd.PersistentFlags().Bool("sqa-opt-out", false, "Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa")
 	serveCmd.PersistentFlags().Bool("dev", false, "Disables critical security features to make development easier")
+	serveCmd.PersistentFlags().Bool("watch-courier", false, "Run the message courier as a background task, to simplify single-instance setup")
 }

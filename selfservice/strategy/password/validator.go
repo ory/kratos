@@ -3,6 +3,9 @@ package password
 import (
 	"bufio"
 	"context"
+	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/kratos/driver/config"
 
@@ -53,7 +56,7 @@ var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 type DefaultPasswordValidator struct {
 	sync.RWMutex
 	reg    validatorDependencies
-	Client *http.Client
+	Client *retryablehttp.Client
 	hashes map[string]int64
 
 	minIdentifierPasswordDist            int
@@ -66,7 +69,7 @@ type validatorDependencies interface {
 
 func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		Client:                    httpx.NewResilientClientLatencyToleranceMedium(nil),
+		Client:                    httpx.NewResilientClient(httpx.ResilientClientWithConnectionTimeout(time.Second)),
 		reg:                       reg,
 		hashes:                    map[string]int64{},
 		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}
@@ -176,7 +179,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 	}
 
 	if c > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
-		return errors.Errorf("the password has been found in at least %d data breaches and must no longer be used.", c)
+		return errors.New("the password has been found in data breaches and must no longer be used.")
 	}
 
 	return nil

@@ -1,0 +1,1 @@
+DROP INDEX "identity_recovery_addresses_status_via_idx";

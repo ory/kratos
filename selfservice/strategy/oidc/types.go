@@ -4,11 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/ory/kratos/text"
+	"github.com/ory/x/stringsx"
+
+	"github.com/ory/kratos/ui/container"
+
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/x"
 )
 
@@ -38,18 +45,20 @@ type ProviderCredentialsConfig struct {
 }
 
 type FlowMethod struct {
-	*form.HTMLForm
+	*container.Container
 }
 
-func (r *FlowMethod) AddProviders(providers []Configuration) *FlowMethod {
+func AddProviders(c *container.Container, providers []Configuration, message func(provider string) *text.Message) {
 	for _, p := range providers {
-		r.Fields = append(r.Fields, form.Field{Name: "provider", Type: "submit", Value: p.ID})
+		c.GetNodes().Append(
+			node.NewInputField("provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit).WithMetaLabel(message(
+				stringsx.Coalesce(p.Label, p.ID))),
+		)
 	}
-	return r
 }
 
-func NewFlowMethod(f *form.HTMLForm) *FlowMethod {
-	return &FlowMethod{HTMLForm: f}
+func NewFlowMethod(f *container.Container) *FlowMethod {
+	return &FlowMethod{Container: f}
 }
 
 type ider interface {

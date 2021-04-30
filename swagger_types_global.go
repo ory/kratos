@@ -32,8 +32,7 @@ type genericErrorPayload struct {
 	Debug string `json:"debug"`
 }
 
-// Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-// typically 201.
+// Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201.
 //
 // swagger:response emptyResponse
 type emptyResponse struct{}

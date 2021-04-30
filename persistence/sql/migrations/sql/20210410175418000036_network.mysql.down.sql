@@ -1,0 +1,1 @@
+ALTER TABLE `selfservice_errors` DROP FOREIGN KEY `selfservice_errors_nid_fk_idx`;

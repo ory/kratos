@@ -1,0 +1,1 @@
+drop_index("courier_messages", "courier_messages_status_idx")

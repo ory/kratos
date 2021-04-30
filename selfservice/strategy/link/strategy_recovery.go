@@ -5,33 +5,27 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/x/pkgerx"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/decoderx"
-
-	"github.com/ory/x/sqlxx"
-
 	"github.com/ory/herodot"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 const (
-	RouteRecovery                = "/self-service/recovery/methods/link" // #nosec G101
 	RouteAdminCreateRecoveryLink = "/recovery/link"
 )
 
@@ -40,25 +34,21 @@ func (s *Strategy) RecoveryStrategyID() string {
 }
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
-	redirect := session.RedirectOnAuthenticated(s.d)
-	public.GET(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(s.handleRecovery, redirect))
-	public.POST(RouteRecovery, s.d.SessionHandler().IsNotAuthenticated(s.handleRecovery, redirect))
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
-	admin.POST(RouteAdminCreateRecoveryLink, s.createRecoveryLink)
+	wrappedCreateRecoveryLink := strategy.IsDisabled(s.d, s.RecoveryStrategyID(), s.createRecoveryLink)
+	admin.POST(RouteAdminCreateRecoveryLink, wrappedCreateRecoveryLink)
 }
 
-func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) error {
-	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery)).String())
+func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) error {
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.GetNodes().Upsert(
+		// v0.5: form.Field{Name: "email", Type: "email", Required: true},
+		node.NewInputField("email", nil, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+	)
+	f.UI.GetNodes().Append(node.NewInputField("method", s.RecoveryStrategyID(), node.RecoveryLinkGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSubmit()))
 
-	f.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.SetField(form.Field{Name: "email", Type: "email", Required: true})
-
-	req.Methods[s.RecoveryStrategyID()] = &recovery.FlowMethod{
-		Method: s.RecoveryStrategyID(),
-		Config: &recovery.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{HTMLForm: f}},
-	}
 	return nil
 }
 
@@ -152,8 +142,14 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	req, err := recovery.NewFlow(expiresIn, s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), flow.TypeBrowser)
+	req, err := recovery.NewFlow(s.d.Config(r.Context()), expiresIn, s.d.GenerateCSRFToken(r),
+		r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 	if err != nil {
+		s.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -186,17 +182,19 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 	s.d.Writer().Write(w, r, &recoveryLink{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery),
+			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), recovery.RouteSubmitFlow),
 			url.Values{
 				"token": {token.Token},
 				"flow":  {req.ID.String()},
-			}).String()})
+			}).String()},
+		herodot.UnescapedHTML)
 }
 
-// swagger:parameters completeSelfServiceRecoveryFlowWithLinkMethod
-type completeSelfServiceRecoveryFlowWithLinkMethodParameters struct {
+// swagger:parameters submitSelfServiceRecoveryFlowWithLinkMethod
+// nolint:deadcode,unused
+type submitSelfServiceRecoveryFlowWithLinkMethodParameters struct {
 	// in: body
-	Body completeSelfServiceRecoveryFlowWithLinkMethod
+	Body submitSelfServiceRecoveryFlowWithLinkMethod
 
 	// Recovery Token
 	//
@@ -204,20 +202,23 @@ type completeSelfServiceRecoveryFlowWithLinkMethodParameters struct {
 	// is invalid (e.g. expired) an error will be shown to the end-user.
 	//
 	// in: query
-	Token string `json:"token"`
+	Token string `json:"token" form:"token"`
 
 	// The Flow ID
 	//
 	// format: uuid
 	// in: query
-	Flow string `json:"flow"`
+	Flow string `json:"flow" form:"flow"`
 }
 
-func (m *completeSelfServiceRecoveryFlowWithLinkMethodParameters) GetFlow() uuid.UUID {
+// nolint:deadcode,unused
+func (m *submitSelfServiceRecoveryFlowWithLinkMethodParameters) GetFlow() uuid.UUID {
 	return x.ParseUUID(m.Flow)
 }
 
-type completeSelfServiceRecoveryFlowWithLinkMethod struct {
+// swagger:model submitSelfServiceRecoveryFlowWithLinkMethod
+// nolint:deadcode,unused
+type submitSelfServiceRecoveryFlowWithLinkMethod struct {
 	// Email to Recover
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -226,13 +227,13 @@ type completeSelfServiceRecoveryFlowWithLinkMethod struct {
 	//
 	// format: email
 	// in: body
-	Email string `json:"email"`
+	Email string `json:"email" form:"email"`
 
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
 }
 
-// swagger:route POST /self-service/recovery/methods/link public completeSelfServiceRecoveryFlowWithLinkMethod
+// swagger:route POST /self-service/recovery/methods/link public submitSelfServiceRecoveryFlowWithLinkMethod
 //
 // Complete Recovery Flow with Link Method
 //
@@ -251,7 +252,7 @@ type completeSelfServiceRecoveryFlowWithLinkMethod struct {
 //   (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 //   a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Consumes:
 //     - application/json
@@ -266,240 +267,215 @@ type completeSelfServiceRecoveryFlowWithLinkMethod struct {
 //       400: recoveryFlow
 //       302: emptyResponse
 //       500: genericError
-func (s *Strategy) handleRecovery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	body, err := s.decodeRecovery(r, false)
+func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
+	body, err := s.decodeRecovery(r)
 	if err != nil {
-		s.handleRecoveryError(w, r, nil, body, err)
-		return
+		return s.handleRecoveryError(w, r, nil, body, err)
 	}
 
 	if len(body.Token) > 0 {
-		s.recoveryUseToken(w, r, body)
-		return
+		if err := flow.MethodEnabledAndAllowed(r.Context(), s.RecoveryStrategyID(), s.RecoveryStrategyID(), s.d); err != nil {
+			return s.handleRecoveryError(w, r, nil, body, err)
+		}
+
+		return s.recoveryUseToken(w, r, body)
 	}
 
-	req, err := s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), body.GetFlow())
+	if err := flow.MethodEnabledAndAllowed(r.Context(), s.RecoveryStrategyID(), body.Method, s.d); err != nil {
+		return s.handleRecoveryError(w, r, nil, body, err)
+	}
+
+	req, err := s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), x.ParseUUID(body.Flow))
 	if err != nil {
-		s.handleRecoveryError(w, r, req, body, err)
-		return
+		return s.handleRecoveryError(w, r, req, body, err)
 	}
 
 	if err := req.Valid(); err != nil {
-		s.handleRecoveryError(w, r, req, body, err)
-		return
+		return s.handleRecoveryError(w, r, req, body, err)
 	}
 
 	switch req.State {
 	case recovery.StateChooseMethod:
 		fallthrough
 	case recovery.StateEmailSent:
-		s.recoveryHandleFormSubmission(w, r, req)
-		return
+		return s.recoveryHandleFormSubmission(w, r, req)
 	case recovery.StatePassedChallenge:
 		// was already handled, do not allow retry
-		s.retryRecoveryFlowWithMessage(w, r, req.Type, text.NewErrorValidationRecoveryRetrySuccess())
-		return
+		return s.retryRecoveryFlowWithMessage(w, r, req.Type, text.NewErrorValidationRecoveryRetrySuccess())
 	default:
-		s.retryRecoveryFlowWithMessage(w, r, req.Type, text.NewErrorValidationRecoveryStateFailure())
-		return
+		return s.retryRecoveryFlowWithMessage(w, r, req.Type, text.NewErrorValidationRecoveryStateFailure())
 	}
 }
 
-func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, f *recovery.Flow, recoveredID uuid.UUID) {
+func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, f *recovery.Flow, recoveredID uuid.UUID) error {
 	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), recoveredID)
 	if err != nil {
-		s.handleRecoveryError(w, r, f, nil, err)
-		return
+		return s.handleRecoveryError(w, r, f, nil, err)
 	}
 
-	f.Messages.Clear()
+	f.UI.Messages.Clear()
 	f.State = recovery.StatePassedChallenge
 	f.RecoveredIdentityID = uuid.NullUUID{
 		UUID:  recoveredID,
 		Valid: true,
 	}
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
-		s.handleRecoveryError(w, r, f, nil, err)
-		return
+		return s.handleRecoveryError(w, r, f, nil, err)
 	}
 
 	sess := session.NewActiveSession(recovered, s.d.Config(r.Context()), time.Now().UTC())
 	if err := s.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, sess); err != nil {
-		s.handleRecoveryError(w, r, f, nil, err)
-		return
+		return s.handleRecoveryError(w, r, f, nil, err)
 	}
 
 	sf, err := s.d.SettingsHandler().NewFlow(w, r, sess.Identity, flow.TypeBrowser)
 	if err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
+		return s.handleRecoveryError(w, r, f, nil, err)
 	}
 
-	sf.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge())))
+	sf.UI.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge())))
 	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), sf); err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
+		return s.handleRecoveryError(w, r, f, nil, err)
 	}
 
 	http.Redirect(w, r, sf.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body *completeSelfServiceRecoveryFlowWithLinkMethodParameters) {
+func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload) error {
 	token, err := s.d.RecoveryTokenPersister().UseRecoveryToken(r.Context(), body.Token)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
-			s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed())
-			return
+			return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed())
 		}
 
-		s.handleRecoveryError(w, r, nil, body, err)
-		return
+		return s.handleRecoveryError(w, r, nil, body, err)
 	}
 
 	var f *recovery.Flow
 	if !token.FlowID.Valid {
-		f, err = recovery.NewFlow(time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), flow.TypeBrowser)
+		f, err = recovery.NewFlow(s.d.Config(r.Context()), time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r),
+			r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 		if err != nil {
-			s.handleRecoveryError(w, r, nil, body, err)
-			return
+			return s.handleRecoveryError(w, r, nil, body, err)
 		}
 
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), f); err != nil {
-			s.handleRecoveryError(w, r, nil, body, err)
-			return
+			return s.handleRecoveryError(w, r, nil, body, err)
 		}
 	} else {
 		f, err = s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), token.FlowID.UUID)
 		if err != nil {
-			s.handleRecoveryError(w, r, nil, body, err)
-			return
+			return s.handleRecoveryError(w, r, nil, body, err)
 		}
 	}
 
 	if err := token.Valid(); err != nil {
-		s.handleRecoveryError(w, r, f, body, err)
-		return
+		return s.handleRecoveryError(w, r, f, body, err)
 	}
 
-	s.recoveryIssueSession(w, r, f, token.RecoveryAddress.IdentityID)
+	return s.recoveryIssueSession(w, r, f, token.RecoveryAddress.IdentityID)
 }
 
-func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) {
+func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewFlow(s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), ft)
+	req, err := recovery.NewFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), ft)
 	if err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
+		return err
 	}
 
-	req.Messages.Add(message)
+	req.UI.Messages.Add(message)
 	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
+		return err
 	}
 
 	if ft == flow.TypeBrowser {
 		http.Redirect(w, r, req.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
-		return
+	} else {
+		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
+			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusFound)
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
-		recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusFound)
+	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.Request, req *recovery.Flow) {
-	var body = new(completeSelfServiceRecoveryFlowWithLinkMethodParameters)
-	body, err := s.decodeRecovery(r, true)
+func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.Request, req *recovery.Flow) error {
+	body, err := s.decodeRecovery(r)
 	if err != nil {
-		s.handleRecoveryError(w, r, req, body, err)
-		return
+		return s.handleRecoveryError(w, r, req, body, err)
 	}
 
-	if len(body.Body.Email) == 0 {
-		s.handleRecoveryError(w, r, req, body, schema.NewRequiredError("#/email", "email"))
-		return
+	if len(body.Email) == 0 {
+		return s.handleRecoveryError(w, r, req, body, schema.NewRequiredError("#/email", "email"))
 	}
 
-	if err := flow.VerifyRequest(r, req.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.Body.CSRFToken); err != nil {
-		s.handleRecoveryError(w, r, req, body, err)
-		return
+	if err := flow.EnsureCSRF(r, req.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.CSRFToken); err != nil {
+		return s.handleRecoveryError(w, r, req, body, err)
 	}
 
-	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), req, identity.VerifiableAddressTypeEmail, body.Body.Email); err != nil {
+	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, req, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
-			s.handleRecoveryError(w, r, req, body, err)
-			return
+			return s.handleRecoveryError(w, r, req, body, err)
 		}
 		// Continue execution
 	}
 
-	config, err := req.MethodToForm(s.RecoveryStrategyID())
-	if err != nil {
-		s.handleRecoveryError(w, r, req, body, err)
-		return
-	}
+	req.UI.Reset("email")
+	req.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	req.UI.GetNodes().Upsert(
+		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
+		node.NewInputField("email", body.Email, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+	)
 
-	config.Reset()
-	config.SetCSRF(s.d.GenerateCSRFToken(r))
-	config.SetField(form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email})
-
-	req.Active = sqlxx.NullString(s.RecoveryStrategyID())
+	req.Active = sqlxx.NullString(s.RecoveryNodeGroup())
 	req.State = recovery.StateEmailSent
-	req.Messages.Set(text.NewRecoveryEmailSent())
+	req.UI.Messages.Set(text.NewRecoveryEmailSent())
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), req); err != nil {
-		s.handleRecoveryError(w, r, req, body, err)
-		return
+		return s.handleRecoveryError(w, r, req, body, err)
 	}
 
-	if req.Type == flow.TypeBrowser {
-		http.Redirect(w, r, req.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
-		return
-	}
-
-	updatedFlow, err := s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), req.ID)
-	if err != nil {
-		s.handleRecoveryError(w, r, req, body, err)
-		return
-	}
-
-	s.d.Writer().Write(w, r, updatedFlow)
+	return nil
 }
 
-func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *completeSelfServiceRecoveryFlowWithLinkMethodParameters, err error) {
+func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *recoverySubmitPayload, err error) error {
 	if req != nil {
-		config, err := req.MethodToForm(s.RecoveryStrategyID())
-		if err != nil {
-			s.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, s.RecoveryStrategyID(), req, err)
-			return
-		}
-
-		config.Reset()
-		config.SetCSRF(s.d.GenerateCSRFToken(r))
-		config.SetField(form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email})
+		req.UI.Reset("email")
+		req.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		req.UI.GetNodes().Upsert(
+			// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
+			node.NewInputField("email", body.Email, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+		)
 	}
 
-	s.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, s.RecoveryStrategyID(), req, err)
+	return err
 }
 
-func (s *Strategy) decodeRecovery(r *http.Request, decodeBody bool) (*completeSelfServiceRecoveryFlowWithLinkMethodParameters, error) {
-	var body completeSelfServiceRecoveryFlowWithLinkMethod
+type recoverySubmitPayload struct {
+	Method    string `json:"method" form:"method"`
+	Token     string `json:"token" form:"token"`
+	CSRFToken string `json:"csrf_token" form:"csrf_token"`
+	Flow      string `json:"flow" form:"flow"`
+	Email     string `json:"email" form:"email"`
+}
 
-	if decodeBody {
-		if err := s.dx.Decode(r, &body,
-			decoderx.MustHTTPRawJSONSchemaCompiler(
-				pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/link/.schema/email.schema.json")),
-			),
-			decoderx.HTTPDecoderSetValidatePayloads(false),
-			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-			return nil, err
-		}
+func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, error) {
+	var body recoverySubmitPayload
+
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(recoveryMethodSchema)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	q := r.URL.Query()
-	return &completeSelfServiceRecoveryFlowWithLinkMethodParameters{
-		Flow:  q.Get("flow"),
-		Token: q.Get("token"),
-		Body:  body,
-	}, nil
+	if err := s.dx.Decode(r, &body, compiler,
+		decoderx.HTTPDecoderUseQueryAndBody(),
+		decoderx.HTTPKeepRequestBody(true),
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat(),
+	); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &body, nil
 }

@@ -21,18 +21,18 @@ type (
 		x.CSRFProvider
 		session.ManagementProvider
 		errorx.ManagementProvider
+		config.Provider
 	}
 	HandlerProvider interface {
 		LogoutHandler() *Handler
 	}
 	Handler struct {
-		c *config.Config
 		d handlerDependencies
 	}
 )
 
-func NewHandler(d handlerDependencies, c *config.Config) *Handler {
-	return &Handler{d: d, c: c}
+func NewHandler(d handlerDependencies) *Handler {
+	return &Handler{d: d}
 }
 
 func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
@@ -51,7 +51,7 @@ func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 // On successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request
 // or fall back to `urls.default_return_to`.
 //
-// More information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+// More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 //
 //     Schemes: http, https
 //
@@ -66,10 +66,10 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	ret, err := x.SecureRedirectTo(r, h.c.SelfServiceFlowLogoutRedirectURL(),
+	ret, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceFlowLogoutRedirectURL(),
 		x.SecureRedirectUseSourceURL(r.RequestURI),
-		x.SecureRedirectAllowURLs(h.c.SelfServiceBrowserWhitelistedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(h.c.SelfPublicURL()),
+		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL(r)),
 	)
 	if err != nil {
 		fmt.Printf("\n%s\n\n", err.Error())

@@ -21,9 +21,18 @@
           }
         },
         "website": {
+          "title": "Website",
           "type": "string",
           "format": "uri",
           "minLength": 10
+        },
+        "consent": {
+          "title": "Consent",
+          "const": true
+        },
+        "newsletter": {
+          "title": "Newsletter",
+          "type": "boolean"
         }
       },
       "required": [

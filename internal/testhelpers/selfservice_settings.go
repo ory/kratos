@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/ioutilx"
+	"github.com/ory/kratos-client-go"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
@@ -19,18 +19,13 @@ import (
 	"github.com/tidwall/sjson"
 	"github.com/urfave/negroni"
 
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/x/pointerx"
-
-	"github.com/ory/kratos-client-go/client"
-	"github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/urlx"
 )
 
 func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
@@ -44,30 +39,27 @@ func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 	return ts
 }
 
-func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceSettingsFlowOK {
-	publicClient := NewSDKClient(ts)
+func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SettingsFlow {
+	publicClient := NewSDKCustomClient(ts, client)
 
 	res, err := client.Get(ts.URL + settings.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Public.GetSelfServiceSettingsFlow(
-		public.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
-			WithID(res.Request.URL.Query().Get("flow")), nil,
-	)
+	rs, _, err := publicClient.PublicApi.GetSelfServiceSettingsFlow(context.Background()).
+		Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Payload.Active)
+	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceSettingsViaAPIFlowOK {
-	publicClient := NewSDKClient(ts)
+func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SettingsFlow {
+	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, err := publicClient.Public.InitializeSelfServiceSettingsViaAPIFlow(public.
-		NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(client), nil)
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceSettingsViaAPIFlow(context.Background()).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Payload.Active)
+	assert.Empty(t, rs.Active)
 
 	return rs
 }
@@ -97,23 +89,6 @@ func ExpectURL(isAPI bool, api, browser string) string {
 		return api
 	}
 	return browser
-}
-
-func GetSettingsFlowMethodConfig(t *testing.T, rs *models.SettingsFlow, id string) *models.SettingsFlowMethodConfig {
-	require.NotEmpty(t, rs.Methods[id])
-	require.NotEmpty(t, rs.Methods[id].Config)
-	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	return rs.Methods[id].Config
-}
-
-func GetSettingsFlowMethodConfigDeprecated(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.SettingsFlowMethodConfig {
-	rs := InitializeSettingsFlowViaBrowser(t, primaryUser, ts)
-
-	require.NotEmpty(t, rs.Payload.Methods[id])
-	require.NotEmpty(t, rs.Payload.Methods[id].Config)
-	require.NotEmpty(t, rs.Payload.Methods[id].Config.Action)
-
-	return rs.Payload.Methods[id].Config
 }
 
 func NewSettingsUITestServer(t *testing.T, conf *config.Config) *httptest.Server {
@@ -153,7 +128,7 @@ func NewSettingsUIEchoServer(t *testing.T, reg *driver.RegistryDefault) *httptes
 	return ts
 }
 
-func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos, conf *config.Config) *httptest.Server {
+func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *kratos.APIClient, conf *config.Config) *httptest.Server {
 	var called int
 	loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, 0, called)
@@ -161,12 +136,12 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 
 		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-		res, err := adminClient.Public.GetSelfServiceLoginFlow(public.NewGetSelfServiceLoginFlowParams().WithID(r.URL.Query().Get("flow")))
+		res, _, err := adminClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
 
 		require.NoError(t, err)
-		require.NotEmpty(t, res.Payload.RequestURL)
+		require.NotEmpty(t, res.RequestUrl)
 
-		redir := urlx.ParseOrPanic(*res.Payload.RequestURL).Query().Get("return_to")
+		redir := urlx.ParseOrPanic(res.RequestUrl).Query().Get("return_to")
 		t.Logf("Redirecting to: %s", redir)
 		http.Redirect(w, r, redir, http.StatusFound)
 	}))
@@ -187,10 +162,10 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	reg.WithCSRFHandler(hh)
 
 	reg.SettingsHandler().RegisterPublicRoutes(public)
-	reg.SettingsStrategies().RegisterPublicRoutes(public)
+	reg.SettingsStrategies(context.Background()).RegisterPublicRoutes(public)
 	reg.LoginHandler().RegisterPublicRoutes(public)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginStrategies().RegisterPublicRoutes(public)
+	reg.LoginStrategies(context.Background()).RegisterPublicRoutes(public)
 
 	tsp, tsa := httptest.NewServer(hh), httptest.NewServer(admin)
 	t.Cleanup(tsp.Close)
@@ -229,13 +204,13 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 func SettingsMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *models.SettingsFlowMethodConfig,
+	f *kratos.SettingsFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
-	require.NotEmpty(t, f.Action)
+	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -250,7 +225,6 @@ func SubmitSettingsForm(
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
-	method string,
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
@@ -262,20 +236,19 @@ func SubmitSettingsForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var payload *models.SettingsFlow
+	var payload *kratos.SettingsFlow
 	if isAPI {
-		payload = InitializeSettingsFlowViaAPI(t, hc, publicTS).Payload
+		payload = InitializeSettingsFlowViaAPI(t, hc, publicTS)
 	} else {
-		payload = InitializeSettingsFlowViaBrowser(t, hc, publicTS).Payload
+		payload = InitializeSettingsFlowViaBrowser(t, hc, publicTS)
 	}
 
 	time.Sleep(time.Millisecond * 10) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetSettingsFlowMethodConfig(t, payload, method)
-	values := SDKFormFieldsToURLValues(config.Fields)
+	values := SDKFormFieldsToURLValues(payload.Ui.Nodes)
 	withValues(values)
 
-	b, res := SettingsMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, values))
+	b, res := SettingsMakeRequest(t, isAPI, payload, hc, EncodeFormAsJSON(t, isAPI, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

@@ -2,21 +2,19 @@ package schema
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
-	"path"
 
-	"github.com/ory/x/pkgerx"
-
-	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/jsonschema/v3"
 )
 
-var schemas = pkger.Dir("github.com/ory/kratos:/schema/.schema")
+//go:embed .schema/extension/*.json
+var extensionSchemas embed.FS
 
 const (
-	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = "extension/identity.schema.json"
+	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = ".schema/extension/identity.schema.json"
 	extensionName                     string                    = "ory.sh/kratos"
 )
 
@@ -59,7 +57,7 @@ type (
 
 func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...Extension) (*ExtensionRunner, error) {
 	var err error
-	schema, err := pkgerx.Read(pkger.Open(path.Join(string(schemas), string(meta))))
+	schema, err := extensionSchemas.ReadFile(string(meta))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

@@ -1,0 +1,1 @@
+INSERT INTO "_courier_messages_tmp" (id, type, status, body, subject, recipient, created_at, updated_at, template_type, template_data, nid) SELECT id, type, status, body, subject, recipient, created_at, updated_at, template_type, template_data, nid FROM "courier_messages";

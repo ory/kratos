@@ -24,7 +24,7 @@ $ kratos hashers argon2 calibrate 1s
 It will output the exact values to use in the
 [configuration](../reference/configuration.md).
 
-Head to [our blogpost](https://ory.sh/argon2-parameter-choice-best-practice/)
+Head to [our blogpost](https://www.ory.sh/choose-recommended-argon2-parameters-password-hashing/)
 about Argon2 parameters to learn how this command and password checking in ORY
 Kratos works.
 

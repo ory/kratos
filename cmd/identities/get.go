@@ -2,13 +2,11 @@ package identities
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/ory/kratos-client-go/client/admin"
-
+	"github.com/ory/kratos-client-go"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/cmdx"
 
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/spf13/cobra"
@@ -30,21 +28,21 @@ var GetCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
 
-		identities := make([]*models.Identity, 0, len(args))
+		identities := make([]kratos.Identity, 0, len(args))
 		failed := make(map[string]error)
 		for _, id := range args {
-			resp, err := c.Admin.GetIdentity(admin.NewGetIdentityParamsWithTimeout(time.Second).WithID(id))
-			if err != nil {
+			identity, _, err := c.AdminApi.GetIdentity(cmd.Context(), id).Execute()
+			if x.SDKError(err) != nil {
 				failed[id] = err
 				continue
 			}
 
-			identities = append(identities, resp.Payload)
+			identities = append(identities, *identity)
 		}
 
 		if len(identities) == 1 {
-			cmdx.PrintRow(cmd, (*outputIdentity)(identities[0]))
-		} else {
+			cmdx.PrintRow(cmd, (*outputIdentity)(&identities[0]))
+		} else if len(identities) > 1 {
 			cmdx.PrintTable(cmd, &outputIdentityCollection{identities})
 		}
 		cmdx.PrintErrors(cmd, failed)

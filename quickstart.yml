@@ -2,21 +2,18 @@ version: '3.7'
 
 services:
   kratos-migrate:
-    image: oryd/kratos:v0.5.5-alpha.1-sqlite
+    image: oryd/kratos:v0.6.0-alpha.1.pre.2-sqlite
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
     volumes:
-      -
-        type: volume
+      - type: volume
         source: kratos-sqlite
         target: /var/lib/sqlite
         read_only: false
-      -
-        type: bind
+      - type: bind
         source: ./contrib/quickstart/kratos/email-password
         target: /etc/config/kratos
-    command:
-      -c /etc/config/kratos/kratos.yml migrate sql -e --yes
+    command: -c /etc/config/kratos/kratos.yml migrate sql -e --yes
     restart: on-failure
     networks:
       - intranet
@@ -33,24 +30,21 @@ services:
   kratos:
     depends_on:
       - kratos-migrate
-    image: oryd/kratos:v0.5.5-alpha.1-sqlite
+    image: oryd/kratos:v0.6.0-alpha.1.pre.2-sqlite
     ports:
-      - "4433:4433" # public
-      - "4434:4434" # admin
+      - '4433:4433' # public
+      - '4434:4434' # admin
     restart: unless-stopped
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
       - LOG_LEVEL=trace
-    command:
-      serve -c /etc/config/kratos/kratos.yml --dev
+    command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
     volumes:
-      -
-        type: volume
+      - type: volume
         source: kratos-sqlite
         target: /var/lib/sqlite
         read_only: false
-      -
-        type: bind
+      - type: bind
         source: ./contrib/quickstart/kratos/email-password
         target: /etc/config/kratos
     networks:
@@ -59,8 +53,8 @@ services:
   mailslurper:
     image: oryd/mailslurper:latest-smtps
     ports:
-      - "4436:4436"
-      - "4437:4437"
+      - '4436:4436'
+      - '4437:4437'
     networks:
       - intranet
 

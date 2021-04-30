@@ -3,17 +3,22 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "required": [
-    "password",
-    "traits"
+    "method",
+    "password"
   ],
   "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
     "password": {
       "type": "string",
       "minLength": 1
     },
-    "csrf_token": {
-      "type": "string"
+    "traits": {
+      "description": "This field will be overwritten in registration.go's decoder() method. Do not add anything to this field as it has no effect."
     },
-    "traits": {}
+    "method": {
+      "type": "string"
+    }
   }
 }

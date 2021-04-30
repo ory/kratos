@@ -1,8 +1,13 @@
 package settings
 
 import (
+	"context"
 	"net/http"
 	"reflect"
+
+	"github.com/ory/kratos/session"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
 
@@ -18,8 +23,10 @@ var pkgName = reflect.TypeOf(Strategies{}).PkgPath()
 
 type Strategy interface {
 	SettingsStrategyID() string
+	NodeGroup() node.Group
 	RegisterSettingsRoutes(*x.RouterPublic)
 	PopulateSettingsMethod(*http.Request, *identity.Identity, *Flow) error
+	Settings(w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (*UpdateContext, error)
 }
 
 type Strategies []Strategy
@@ -51,5 +58,6 @@ func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 }
 
 type StrategyProvider interface {
-	SettingsStrategies() Strategies
+	SettingsStrategies(ctx context.Context) Strategies
+	AllSettingsStrategies() Strategies
 }

@@ -7,6 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
+
+	"github.com/ory/kratos-client-go"
+
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -18,10 +22,7 @@ import (
 
 	"github.com/ory/herodot"
 
-	sdkp "github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
@@ -49,21 +50,21 @@ func TestHandleError(t *testing.T) {
 
 	var registrationFlow *registration.Flow
 	var flowError error
-	var ct identity.CredentialsType
+	var group node.Group
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		h.WriteFlowError(w, r, ct, registrationFlow, flowError)
+		h.WriteFlowError(w, r, registrationFlow, group, flowError)
 	})
 
 	reset := func() {
 		registrationFlow = nil
 		flowError = nil
-		ct = ""
+		group = ""
 	}
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *registration.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f := registration.NewFlow(ttl, "csrf_token", req, ft)
-		for _, s := range reg.RegistrationStrategies() {
+		f := registration.NewFlow(conf, ttl, "csrf_token", req, ft)
+		for _, s := range reg.RegistrationStrategies(context.Background()) {
 			require.NoError(t, s.PopulateRegistrationMethod(req, f))
 		}
 
@@ -77,11 +78,10 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?error=")
 
-		sse, err := sdk.Public.GetSelfServiceError(sdkp.NewGetSelfServiceErrorParams().
-			WithError(res.Request.URL.Query().Get("error")))
+		sse, _, err := sdk.PublicApi.GetSelfServiceError(context.Background()).Error_(res.Request.URL.Query().Get("error")).Execute()
 		require.NoError(t, err)
 
-		return sse.Payload.Errors, nil
+		return sse.Errors, nil
 	}
 
 	anHourAgo := time.Now().Add(-time.Hour)
@@ -90,7 +90,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = identity.CredentialsTypePassword
+		group = node.PasswordGroup
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
@@ -100,7 +100,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = identity.CredentialsTypePassword
+		group = node.PasswordGroup
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestHandleError(t *testing.T) {
 
 			registrationFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = registration.NewFlowExpiredError(anHourAgo)
-			ct = identity.CredentialsTypePassword
+			group = node.PasswordGroup
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestHandleError(t *testing.T) {
 
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationRegistrationFlowExpired), int(gjson.GetBytes(body, "messages.0.id").Int()))
+			assert.Equal(t, int(text.ErrorValidationRegistrationFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()))
 			assert.NotEqual(t, registrationFlow.ID.String(), gjson.GetBytes(body, "id").String())
 		})
 
@@ -138,7 +138,7 @@ func TestHandleError(t *testing.T) {
 
 			registrationFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = schema.NewInvalidCredentialsError()
-			ct = identity.CredentialsTypePassword
+			group = node.PasswordGroup
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -147,7 +147,7 @@ func TestHandleError(t *testing.T) {
 
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "methods.password.config.messages.0.id").Int()), "%s", body)
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
 			assert.Equal(t, registrationFlow.ID.String(), gjson.GetBytes(body, "id").String())
 		})
 
@@ -156,7 +156,7 @@ func TestHandleError(t *testing.T) {
 
 			registrationFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = identity.CredentialsTypePassword
+			group = node.PasswordGroup
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -167,36 +167,18 @@ func TestHandleError(t *testing.T) {
 			require.NoError(t, err)
 			assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
 		})
-
-		t.Run("case=method is unknown", func(t *testing.T) {
-			t.Cleanup(reset)
-
-			registrationFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = "invalid-method"
-
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.Equal(t, http.StatusInternalServerError, res.StatusCode)
-
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.Contains(t, gjson.GetBytes(body, "error.message").String(), "invalid-method", "%s", body)
-		})
 	})
 
 	t.Run("flow=browser", func(t *testing.T) {
-		expectRegistrationUI := func(t *testing.T) (*models.RegistrationFlow, *http.Response) {
+		expectRegistrationUI := func(t *testing.T) (*kratos.RegistrationFlow, *http.Response) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRegistrationUI().String()+"?flow=")
 
-			lf, err := sdk.Public.GetSelfServiceRegistrationFlow(sdkp.NewGetSelfServiceRegistrationFlowParams().
-				WithID(res.Request.URL.Query().Get("flow")))
+			lf, _, err := sdk.PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 			require.NoError(t, err)
-			return lf.Payload, res
+			return lf, res
 		}
 
 		t.Run("case=expired error", func(t *testing.T) {
@@ -204,11 +186,11 @@ func TestHandleError(t *testing.T) {
 
 			registrationFlow = &registration.Flow{Type: flow.TypeBrowser}
 			flowError = registration.NewFlowExpiredError(anHourAgo)
-			ct = identity.CredentialsTypePassword
+			group = node.PasswordGroup
 
 			lf, _ := expectRegistrationUI(t)
-			require.Len(t, lf.Messages, 1)
-			assert.Equal(t, int(text.ErrorValidationRegistrationFlowExpired), int(lf.Messages[0].ID))
+			require.Len(t, lf.Ui.Messages, 1)
+			assert.Equal(t, int(text.ErrorValidationRegistrationFlowExpired), int(lf.Ui.Messages[0].Id))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {
@@ -216,12 +198,12 @@ func TestHandleError(t *testing.T) {
 
 			registrationFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = schema.NewInvalidCredentialsError()
-			ct = identity.CredentialsTypePassword
+			group = node.PasswordGroup
 
 			lf, _ := expectRegistrationUI(t)
-			require.NotEmpty(t, lf.Methods[string(ct)], x.MustEncodeJSON(t, lf))
-			require.Len(t, lf.Methods[string(ct)].Config.Messages, 1, x.MustEncodeJSON(t, lf))
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Methods[string(ct)].Config.Messages[0].ID), x.MustEncodeJSON(t, lf))
+			require.NotEmpty(t, lf.Ui, x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.Ui.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Ui.Messages[0].Id), x.MustEncodeJSON(t, lf))
 		})
 
 		t.Run("case=generic error", func(t *testing.T) {
@@ -229,22 +211,10 @@ func TestHandleError(t *testing.T) {
 
 			registrationFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = identity.CredentialsTypePassword
+			group = node.PasswordGroup
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
-		})
-
-		t.Run("case=method is unknown", func(t *testing.T) {
-			t.Cleanup(reset)
-
-			registrationFlow = newFlow(t, time.Minute, flow.TypeBrowser)
-			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = "invalid-method"
-
-			sse, _ := expectErrorUI(t)
-			body := x.MustEncodeJSON(t, sse)
-			assert.Contains(t, gjson.Get(body, "0.message").String(), "invalid-method", "%s", body)
 		})
 	})
 }

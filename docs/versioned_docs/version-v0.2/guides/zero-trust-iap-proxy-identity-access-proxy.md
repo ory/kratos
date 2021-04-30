@@ -38,8 +38,6 @@ git clone https://github.com/ory/kratos.git
 cd kratos
 git checkout v0.2.1-alpha.1
 
-docker pull oryd/kratos:latest-sqlite
-docker pull oryd/kratos-selfservice-ui-node:latest
 ```
 
 Next, run the quickstart and add the ORY Oathkeeper config:

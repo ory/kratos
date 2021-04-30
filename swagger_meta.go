@@ -1,6 +1,6 @@
 // Ory Kratos
 //
-// Welcome to the ORY Kratos HTTP API documentation!
+// Welcome to the Ory Kratos HTTP API documentation!
 //
 //     Schemes: http, https
 //     Host:
@@ -18,6 +18,10 @@
 //     sessionToken:
 //          type: apiKey
 //          name: X-Session-Token
+//          in: header
+//     sessionCookie:
+//          type: apiKey
+//          name: Cookie
 //          in: header
 //
 //     Extensions:

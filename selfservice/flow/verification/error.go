@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlxx"
@@ -62,8 +64,8 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
-	methodName string,
 	f *Flow,
+	group node.Group,
 	err error,
 ) {
 	s.d.Audit().
@@ -79,22 +81,22 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := NewFlow(s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
-			s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(), f.Type)
+		a, err := NewFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
+			s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), f.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
-			s.WriteFlowError(w, r, methodName, f, err)
+			s.WriteFlowError(w, r, f, group, err)
 			return
 		}
 
-		a.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.ago))
+		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.ago))
 		if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return
 		}
 
 		if f.Type == flow.TypeAPI {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
 		} else {
 			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
@@ -102,19 +104,12 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	method, ok := f.Methods[methodName]
-	if !ok {
-		s.forward(w, r, f, errors.WithStack(herodot.ErrInternalServerError.
-			WithErrorf(`Expected verification method "%s" to exist in flow. This is a bug in the code and should be reported on GitHub.`, methodName)))
-		return
-	}
-
-	if err := method.Config.ParseError(err); err != nil {
+	if err := f.UI.ParseError(group, err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
 
-	f.Active = sqlxx.NullString(methodName)
+	f.Active = sqlxx.NullString(group)
 	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return

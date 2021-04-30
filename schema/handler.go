@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,14 +43,11 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.get)
 }
 
-// The raw identity traits schema
+// Raw JSON Schema
 //
-// swagger:response schemaResponse
+// swagger:model jsonSchema
 // nolint:deadcode,unused
-type schemaResponse struct {
-	// in: body
-	Body interface{}
-}
+type schemaResponse json.RawMessage
 
 // nolint:deadcode,unused
 // swagger:parameters getSchema
@@ -71,7 +69,7 @@ type getSchemaParameters struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: schemaResponse
+//       200: jsonSchema
 //       404: genericError
 //       500: genericError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

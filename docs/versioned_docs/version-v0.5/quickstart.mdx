@@ -17,7 +17,7 @@ merely a guide to get you set up with some examples.
 <iframe
   width="560"
   height="315"
-  src="https://www.youtube.com/embed/5t1Zr_zJc7E"
+  src="https://www.youtube.com/embed/JhlIZ3aChXc"
   frameborder="0"
   allowfullscreen
 />
@@ -129,8 +129,6 @@ git clone https://github.com/ory/kratos.git
 cd kratos
 git checkout v0.5.5-alpha.1
 
-docker pull oryd/kratos:latest-sqlite
-docker pull oryd/kratos-selfservice-ui-node:latest
 docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 # If you have SELinux, run:
 docker-compose -f quickstart.yml -f quickstart-selinux.yml -f quickstart-standalone.yml up --build --force-recreate
@@ -458,11 +456,11 @@ chapters of this documentation.
 
 To get a minimal version of ORY Kratos running, you need to set configuration
 values for
-[`identity.default_schema_url`](https://github.com/ory/kratos/blob/v0.5.5-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L67)
+[`identity.default_schema_url`](https://github.com/ory/kratos/blob/v0.5.5-alpha.1/contrib/quickstart/kratos/email-password/kratos.yml#L75)
 and
 [`DSN`](https://github.com/ory/kratos/blob/v0.5.5-alpha.1/quickstart.yml#L42).
 You should also configure
-[`selfservice.flows.*.ui_url`](https://github.com/ory/kratos/blob/v0.5.5-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L40)
+[`selfservice.flows.*.ui_url`](https://github.com/ory/kratos/blob/v0.5.5-alpha.1/contrib/quickstart/kratos/email-password/kratos.yml#L24)
 or else Kratos will use fallback URLs.
 
 :::
@@ -503,7 +501,7 @@ If you want to run the quickstart with MySQL, run the following docker-compose:
 
 If you want to change ports for the SelfService-UI, you need to change them in
 `quickstart.yml` as well as in the
-`contrib/quickstart/kratos/email-password/.kratos.yml` accordingly.
+`contrib/quickstart/kratos/email-password/kratos.yml` accordingly.
 
 Note that you also need to change the ports for flows (error, settings,
 recovery, verification, logout, login, registration).

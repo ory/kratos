@@ -1,0 +1,1 @@
+DROP INDEX "selfservice_login_flows_nid_idx";

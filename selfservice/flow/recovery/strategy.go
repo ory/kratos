@@ -1,7 +1,10 @@
 package recovery
 
 import (
+	"context"
 	"net/http"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
 
@@ -15,7 +18,9 @@ const (
 type (
 	Strategy interface {
 		RecoveryStrategyID() string
+		RecoveryNodeGroup() node.Group
 		PopulateRecoveryMethod(*http.Request, *Flow) error
+		Recover(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
 	}
 	AdminHandler interface {
 		RegisterAdminRecoveryRoutes(admin *x.RouterAdmin)
@@ -25,7 +30,8 @@ type (
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {
-		RecoveryStrategies() Strategies
+		AllRecoveryStrategies() Strategies
+		RecoveryStrategies(ctx context.Context) Strategies
 	}
 )
 

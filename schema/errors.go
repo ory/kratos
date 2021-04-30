@@ -48,6 +48,17 @@ func NewInvalidFormatError(instancePtr, format, value string) error {
 	})
 }
 
+func NewTOTPVerifierWrongError(instancePtr string) error {
+	t := text.NewErrorValidationTOTPVerifierWrong()
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     t.Text,
+			InstancePtr: instancePtr,
+		},
+		Messages: new(text.Messages).Add(t),
+	})
+}
+
 type ValidationErrorContextPasswordPolicyViolation struct {
 	Reason string
 }
@@ -100,5 +111,55 @@ func NewDuplicateCredentialsError() error {
 			Context:     &ValidationErrorContextDuplicateCredentialsError{},
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationDuplicateCredentials()),
+	})
+}
+
+func NewNoLoginStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to login with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationLoginNoStrategyFound()),
+	})
+}
+
+func NewNoRegistrationStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to sing up with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationRegistrationNoStrategyFound()),
+	})
+}
+
+func NewNoSettingsStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to update settings with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationSettingsNoStrategyFound()),
+	})
+}
+
+func NewNoRecoveryStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to recover your account with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationRecoveryNoStrategyFound()),
+	})
+}
+
+func NewNoVerificationStrategyResponsible() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `could not find a strategy to verify your account with`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationVerificationNoStrategyFound()),
 	})
 }

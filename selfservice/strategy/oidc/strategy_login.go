@@ -4,6 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"time"
+
+	"github.com/ory/x/sqlcon"
+
+	"github.com/ory/kratos/selfservice/flow/registration"
+
+	"github.com/ory/kratos/text"
+
+	"github.com/ory/kratos/continuity"
 
 	"github.com/pkg/errors"
 
@@ -21,24 +30,18 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
-	if sr.Type != flow.TypeBrowser {
+func (s *Strategy) PopulateLoginMethod(r *http.Request, l *login.Flow) error {
+	if l.Type != flow.TypeBrowser {
 		return nil
 	}
 
-	config, err := s.populateMethod(r, sr.ID)
-	if err != nil {
-		return err
-	}
-	sr.Methods[s.ID()] = &login.FlowMethod{Method: s.ID(),
-		Config: &login.FlowMethodConfig{FlowMethodConfigurator: config}}
-	return nil
+	return s.populateMethod(r, l.UI, text.NewInfoLoginWith)
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
-		if errors.Is(err, herodot.ErrNotFound) {
+		if errors.Is(err, sqlcon.ErrNoRows) {
 			// If no account was found we're "manually" creating a new registration flow and redirecting the browser
 			// to that endpoint.
 
@@ -55,33 +58,80 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// This flow only works for browsers anyways.
 			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser)
 			if err != nil {
-				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-				return
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 
-			s.processRegistration(w, r, aa, claims, provider, container)
-			return
+			if _, err := s.processRegistration(w, r, aa, claims, provider, container); err != nil {
+				return aa, err
+			}
+
+			return nil, nil
 		}
 
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
 	var o CredentialsConfig
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
-		return
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 	}
 
 	for _, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-				return
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
-			return
+			return nil, nil
 		}
 	}
 
-	s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+	return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+}
+
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) (i *identity.Identity, err error) {
+	if err := r.ParseForm(); err != nil {
+		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+	}
+
+	var pid = r.Form.Get("provider") // this can come from both url query and post body
+	if pid == "" {
+		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+	}
+
+	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+
+	provider, err := s.provider(r.Context(), r, pid)
+	if err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+
+	c, err := provider.OAuth2(r.Context())
+	if err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+
+	req, err := s.validateFlow(r.Context(), r, f.ID)
+	if err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+
+	if s.alreadyAuthenticated(w, r, req) {
+		return
+	}
+
+	state := x.NewUUID().String()
+	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
+		continuity.WithPayload(&authCodeContainer{
+			State:  state,
+			FlowID: f.ID.String(),
+			Form:   r.PostForm,
+		}),
+		continuity.WithLifespan(time.Minute*30)); err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+
+	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
+	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 }

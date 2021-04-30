@@ -1,0 +1,2 @@
+drop_column("courier_messages", "template_type")
+drop_column("courier_messages", "template_data")

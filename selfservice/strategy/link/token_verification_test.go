@@ -1,9 +1,14 @@
 package link
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/logrusx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,10 +21,13 @@ import (
 )
 
 func TestVerificationToken(t *testing.T) {
+	conf, err := config.New(context.Background(), logrusx.New("", ""), configx.SkipValidation())
+	require.NoError(t, err)
+
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 	t.Run("func=NewSelfServiceVerificationToken", func(t *testing.T) {
 		t.Run("case=creates unique tokens", func(t *testing.T) {
-			f, err := verification.NewFlow(time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := verification.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			tokens := make([]string, 10)
@@ -32,7 +40,7 @@ func TestVerificationToken(t *testing.T) {
 	})
 	t.Run("method=Valid", func(t *testing.T) {
 		t.Run("case=is invalid when the flow is expired", func(t *testing.T) {
-			f, err := verification.NewFlow(-time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := verification.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			token := NewSelfServiceVerificationToken(nil, f)

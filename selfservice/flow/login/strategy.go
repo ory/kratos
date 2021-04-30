@@ -1,18 +1,22 @@
 package login
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
 type Strategy interface {
 	ID() identity.CredentialsType
+	NodeGroup() node.Group
 	RegisterLoginRoutes(*x.RouterPublic)
 	PopulateLoginMethod(r *http.Request, sr *Flow) error
+	Login(w http.ResponseWriter, r *http.Request, f *Flow) (i *identity.Identity, err error)
 }
 
 type Strategies []Strategy
@@ -44,5 +48,6 @@ func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 }
 
 type StrategyProvider interface {
-	LoginStrategies() Strategies
+	AllLoginStrategies() Strategies
+	LoginStrategies(ctx context.Context) Strategies
 }
