@@ -1,0 +1,1 @@
+DROP INDEX "courier_messages_nid_idx";

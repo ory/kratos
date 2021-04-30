@@ -1,16 +1,15 @@
 package daemon
 
 import (
-	cx "context"
 	"net/http"
-	"strings"
 	"sync"
+
+	"github.com/ory/kratos/selfservice/flow/recovery"
 
 	"github.com/ory/x/reqlog"
 
+	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/driver/config"
-
-	"github.com/ory/x/stringsx"
 
 	"github.com/rs/cors"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/ory/analytics-go/v4"
 
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/networkx"
 
 	"github.com/gorilla/context"
 	"github.com/spf13/cobra"
@@ -37,8 +37,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -67,6 +65,8 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	defer wg.Done()
 	modifiers := newOptions(opts)
 
+	ctx := cmd.Context()
+
 	c := r.Config(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
@@ -75,43 +75,41 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	router := x.NewRouterPublic()
-	csrf := x.NewCSRFHandler(
-		router,
-		r.Writer(),
-		l,
-		stringsx.Coalesce(c.SelfPublicURL().Path, "/"),
-		c.SelfPublicURL().Hostname(),
-		!c.IsInsecureDevMode(),
-	)
+	csrf := x.NewCSRFHandler(router, r)
 
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 
-	r.RegisterPublicRoutes(router)
+	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL().String()))
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
 	var handler http.Handler = n
-	options, enabled := r.Config(cmd.Context()).CORS("public")
+	options, enabled := r.Config(ctx).CORS("public")
 	if enabled {
 		handler = cors.New(options).Handler(handler)
 	}
 
-	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.PublicListenOn(),
-		Handler: context.ClearHandler(handler),
-	})
+	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(handler)})
+	addr := c.PublicListenOn()
 
-	l.Printf("Starting the public httpd on: %s", server.Addr)
-	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
-		l.Fatalln("Failed to gracefully shutdown public httpd")
+	l.Printf("Starting the public httpd on: %s", addr)
+	if err := graceful.Graceful(func() error {
+		listener, err := networkx.MakeListener(addr, c.PublicSocketPermission())
+		if err != nil {
+			return err
+		}
+
+		return server.Serve(listener)
+	}, server.Shutdown); err != nil {
+		l.Fatalf("Failed to gracefully shutdown public httpd: %s", err)
 	}
 	l.Println("Public httpd was shutdown gracefully")
 }
@@ -119,6 +117,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
 	defer wg.Done()
 	modifiers := newOptions(opts)
+	ctx := cmd.Context()
 
 	c := r.Config(cmd.Context())
 	l := r.Logger()
@@ -128,25 +127,30 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	}
 
 	router := x.NewRouterAdmin()
-	r.RegisterAdminRoutes(router)
+	RegisterAdminRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
 	n.UseHandler(router)
-	server := graceful.WithDefaults(&http.Server{
-		Addr:    c.AdminListenOn(),
-		Handler: context.ClearHandler(n),
-	})
+	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(n)})
+	addr := c.AdminListenOn()
 
-	l.Printf("Starting the admin httpd on: %s", server.Addr)
-	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
-		l.Fatalln("Failed to gracefully shutdown admin httpd")
+	l.Printf("Starting the admin httpd on: %s", addr)
+	if err := graceful.Graceful(func() error {
+		listener, err := networkx.MakeListener(addr, c.AdminSocketPermission())
+		if err != nil {
+			return err
+		}
+
+		return server.Serve(listener)
+	}, server.Shutdown); err != nil {
+		l.Fatalf("Failed to gracefully shutdown admin httpd: %s", err)
 	}
 	l.Println("Admin httpd was shutdown gracefully")
 }
@@ -159,14 +163,8 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 		d.Logger(),
 		d.Config(cmd.Context()).Source(),
 		&metricsx.Options{
-			Service: "ory-kratos",
-			ClusterID: metricsx.Hash(
-				strings.Join([]string{
-					d.Config(cmd.Context()).DSN(),
-					d.Config(cmd.Context()).SelfPublicURL().String(),
-					d.Config(cmd.Context()).SelfAdminURL().String(),
-				}, "|"),
-			),
+			Service:       "ory-kratos",
+			ClusterID:     metricsx.Hash(d.Persister().NetworkID().String()),
 			IsDevelopment: d.Config(cmd.Context()).IsInsecureDevMode(),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{
@@ -175,21 +173,19 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				healthx.ReadyCheckPath,
 				healthx.VersionPath,
 
-				password.RouteRegistration,
-				password.RouteLogin,
-				password.RouteSettings,
-
 				oidc.RouteBase,
 
 				login.RouteInitBrowserFlow,
 				login.RouteInitAPIFlow,
 				login.RouteGetFlow,
+				login.RouteSubmitFlow,
 
 				logout.RouteBrowser,
 
 				registration.RouteInitBrowserFlow,
 				registration.RouteInitAPIFlow,
 				registration.RouteGetFlow,
+				registration.RouteSubmitFlow,
 
 				session.RouteWhoami,
 				identity.RouteBase,
@@ -197,16 +193,19 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				settings.RouteInitBrowserFlow,
 				settings.RouteInitAPIFlow,
 				settings.RouteGetFlow,
+				settings.RouteSubmitFlow,
 
 				verification.RouteInitAPIFlow,
 				verification.RouteInitBrowserFlow,
 				verification.RouteGetFlow,
+				verification.RouteSubmitFlow,
 
-				profile.RouteSettings,
+				recovery.RouteInitAPIFlow,
+				recovery.RouteInitBrowserFlow,
+				recovery.RouteGetFlow,
+				recovery.RouteSubmitFlow,
 
 				link.RouteAdminCreateRecoveryLink,
-				link.RouteRecovery,
-				link.RouteVerification,
 
 				errorx.RouteGet,
 				prometheus.MetricsPrometheusPath,
@@ -224,19 +223,9 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	ctx, cancel := cx.WithCancel(cmd.Context())
-
-	d.Logger().Println("Courier worker started.")
-	if err := graceful.Graceful(func() error {
-		return d.Courier().Work(ctx)
-	}, func(_ cx.Context) error {
-		cancel()
-		return nil
-	}); err != nil {
-		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
+	if d.Config(cmd.Context()).IsBackgroundCourierEnabled() {
+		go courier.Watch(cmd.Context(), d)
 	}
-
-	d.Logger().Println("Courier worker was shutdown gracefully.")
 }
 
 func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args []string) {

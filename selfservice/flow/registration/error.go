@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
 
@@ -14,7 +16,6 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
 )
@@ -65,8 +66,8 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
-	ct identity.CredentialsType,
 	f *Flow,
+	group node.Group,
 	err error,
 ) {
 	s.d.Audit().
@@ -85,18 +86,18 @@ func (s *ErrorHandler) WriteFlowError(
 		a, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, f.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
-			s.WriteFlowError(w, r, ct, f, err)
+			s.WriteFlowError(w, r, f, group, err)
 			return
 		}
 
-		a.Messages.Add(text.NewErrorValidationRegistrationFlowExpired(e.ago))
+		a.UI.AddMessage(group, text.NewErrorValidationRegistrationFlowExpired(e.ago))
 		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return
 		}
 
 		if f.Type == flow.TypeAPI {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
 		} else {
 			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
@@ -104,19 +105,18 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	method, ok := f.Methods[ct]
-	if !ok {
-		s.forward(w, r, f, errors.WithStack(herodot.ErrInternalServerError.
-			WithErrorf(`Expected registration method "%s" to exist in flow. This is a bug in the code and should be reported on GitHub.`, ct)))
-		return
-	}
-
-	if err := method.Config.ParseError(err); err != nil {
+	f.UI.ResetMessages()
+	if err := f.UI.ParseError(group, err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
 
-	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlowMethod(r.Context(), f.ID, ct, method); err != nil {
+	if err := SortNodes(f.UI.Nodes, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

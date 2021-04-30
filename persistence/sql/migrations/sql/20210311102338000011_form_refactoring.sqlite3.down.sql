@@ -1,0 +1,1 @@
+INSERT INTO "_selfservice_recovery_flows_tmp" (id, request_url, issued_at, expires_at, active_method, csrf_token, state, recovered_identity_id, created_at, updated_at, type, nid) SELECT id, request_url, issued_at, expires_at, active_method, csrf_token, state, recovered_identity_id, created_at, updated_at, type, nid FROM "selfservice_recovery_flows";

@@ -1,0 +1,1 @@
+UPDATE "sessions" SET "nid" = "_nid_tmp";

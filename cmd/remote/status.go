@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos-client-go/client/health"
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
@@ -38,23 +37,25 @@ func (s *statusState) Interface() interface{} {
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Print the alive and readiness status of a ORY Kratos instance",
+	Short: "Print the alive and readiness status of a Ory Kratos instance",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)
 		state := &statusState{}
 		defer cmdx.PrintRow(cmd, state)
 
-		_, err := c.Health.IsInstanceAlive(&health.IsInstanceAliveParams{Context: cmd.Context()})
+		alive, _, err := c.AdminApi.IsAlive(cmd.Context()).Execute()
 		if err != nil {
 			return
 		}
-		state.Alive = true
 
-		_, err = c.Health.IsInstanceReady(&health.IsInstanceReadyParams{Context: cmd.Context()})
+		state.Alive = alive.Status == "ok"
+
+		ready, _, err := c.AdminApi.IsReady(cmd.Context()).Execute()
 		if err != nil {
 			return
 		}
-		state.Ready = true
+
+		state.Ready = ready.Status == "ok"
 	},
 }

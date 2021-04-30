@@ -1,0 +1,1 @@
+ALTER TABLE `continuity_containers` DROP COLUMN `nid`;

@@ -1,0 +1,13 @@
+{
+  "id": "7be6c72c-c868-4b61-a1f0-1130603665d8",
+  "type": "api",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/verification/email",
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  },
+  "state": "show_form"
+}

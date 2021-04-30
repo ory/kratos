@@ -10,20 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/ioutilx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/pointerx"
-
-	"github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/ioutilx"
 )
 
 func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
@@ -37,67 +32,53 @@ func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceVerificationFlowOK {
-	publicClient := NewSDKClient(ts)
+func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
+	publicClient := NewSDKCustomClient(ts, client)
 
 	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Public.GetSelfServiceVerificationFlow(
-		public.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(client).
-			WithID(res.Request.URL.Query().Get("flow")),
-	)
+	rs, _, err := publicClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err, "%s", res.Request.URL.String())
-	assert.Empty(t, rs.Payload.Active)
+	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceVerificationFlowOK {
-	publicClient := NewSDKClient(ts)
+func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
+	publicClient := NewSDKCustomClient(ts, client)
 	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Public.GetSelfServiceVerificationFlow(
-		public.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(client).
-			WithID(res.Request.URL.Query().Get("flow")),
-	)
+	rs, _, err := publicClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Payload.Active)
+	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceVerificationViaAPIFlowOK {
-	publicClient := NewSDKClient(ts)
+func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
+	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, err := publicClient.Public.InitializeSelfServiceVerificationViaAPIFlow(public.
-		NewInitializeSelfServiceVerificationViaAPIFlowParams().WithHTTPClient(client))
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceVerificationViaAPIFlow(context.Background()).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Payload.Active)
+	assert.Empty(t, rs.Active)
 
 	return rs
-}
-
-func GetVerificationFlowMethodConfig(t *testing.T, rs *models.VerificationFlow, id string) *models.VerificationFlowMethodConfig {
-	require.NotEmpty(t, rs.Methods[id])
-	require.NotEmpty(t, rs.Methods[id].Config)
-	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	return rs.Methods[id].Config
 }
 
 func VerificationMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *models.VerificationFlowMethodConfig,
+	f *kratos.VerificationFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
-	require.NotEmpty(t, f.Action)
+	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -112,25 +93,23 @@ func SubmitVerificationForm(
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
-	method identity.CredentialsType,
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var f *models.VerificationFlow
+	var f *kratos.VerificationFlow
 	if isAPI {
-		f = InitializeVerificationFlowViaAPI(t, hc, publicTS).Payload
+		f = InitializeVerificationFlowViaAPI(t, hc, publicTS)
 	} else {
-		f = InitializeVerificationFlowViaBrowser(t, hc, publicTS).Payload
+		f = InitializeVerificationFlowViaBrowser(t, hc, publicTS)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetVerificationFlowMethodConfig(t, f, method.String())
-	formPayload := SDKFormFieldsToURLValues(config.Fields)
+	formPayload := SDKFormFieldsToURLValues(f.Ui.Nodes)
 	withValues(formPayload)
 
-	b, res := VerificationMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, formPayload))
+	b, res := VerificationMakeRequest(t, isAPI, f, hc, EncodeFormAsJSON(t, isAPI, formPayload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

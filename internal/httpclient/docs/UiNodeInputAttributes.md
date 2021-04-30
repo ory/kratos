@@ -1,0 +1,197 @@
+# UiNodeInputAttributes
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**Disabled** | **bool** | Sets the input&#39;s disabled field to true or false. | 
+**Label** | Pointer to [**UiText**](UiText.md) |  | [optional] 
+**Name** | **string** | The input&#39;s element name. | 
+**Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
+**Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
+**Type** | **string** |  | 
+**Value** | Pointer to [**UiNodeInputAttributesValue**](UiNodeInputAttributesValue.md) |  | [optional] 
+
+## Methods
+
+### NewUiNodeInputAttributes
+
+`func NewUiNodeInputAttributes(disabled bool, name string, type_ string, ) *UiNodeInputAttributes`
+
+NewUiNodeInputAttributes instantiates a new UiNodeInputAttributes object
+This constructor will assign default values to properties that have it defined,
+and makes sure properties required by API are set, but the set of arguments
+will change when the set of required properties is changed
+
+### NewUiNodeInputAttributesWithDefaults
+
+`func NewUiNodeInputAttributesWithDefaults() *UiNodeInputAttributes`
+
+NewUiNodeInputAttributesWithDefaults instantiates a new UiNodeInputAttributes object
+This constructor will only assign default values to properties that have it defined,
+but it doesn't guarantee that properties required by API are set
+
+### GetDisabled
+
+`func (o *UiNodeInputAttributes) GetDisabled() bool`
+
+GetDisabled returns the Disabled field if non-nil, zero value otherwise.
+
+### GetDisabledOk
+
+`func (o *UiNodeInputAttributes) GetDisabledOk() (*bool, bool)`
+
+GetDisabledOk returns a tuple with the Disabled field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetDisabled
+
+`func (o *UiNodeInputAttributes) SetDisabled(v bool)`
+
+SetDisabled sets Disabled field to given value.
+
+
+### GetLabel
+
+`func (o *UiNodeInputAttributes) GetLabel() UiText`
+
+GetLabel returns the Label field if non-nil, zero value otherwise.
+
+### GetLabelOk
+
+`func (o *UiNodeInputAttributes) GetLabelOk() (*UiText, bool)`
+
+GetLabelOk returns a tuple with the Label field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLabel
+
+`func (o *UiNodeInputAttributes) SetLabel(v UiText)`
+
+SetLabel sets Label field to given value.
+
+### HasLabel
+
+`func (o *UiNodeInputAttributes) HasLabel() bool`
+
+HasLabel returns a boolean if a field has been set.
+
+### GetName
+
+`func (o *UiNodeInputAttributes) GetName() string`
+
+GetName returns the Name field if non-nil, zero value otherwise.
+
+### GetNameOk
+
+`func (o *UiNodeInputAttributes) GetNameOk() (*string, bool)`
+
+GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetName
+
+`func (o *UiNodeInputAttributes) SetName(v string)`
+
+SetName sets Name field to given value.
+
+
+### GetPattern
+
+`func (o *UiNodeInputAttributes) GetPattern() string`
+
+GetPattern returns the Pattern field if non-nil, zero value otherwise.
+
+### GetPatternOk
+
+`func (o *UiNodeInputAttributes) GetPatternOk() (*string, bool)`
+
+GetPatternOk returns a tuple with the Pattern field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetPattern
+
+`func (o *UiNodeInputAttributes) SetPattern(v string)`
+
+SetPattern sets Pattern field to given value.
+
+### HasPattern
+
+`func (o *UiNodeInputAttributes) HasPattern() bool`
+
+HasPattern returns a boolean if a field has been set.
+
+### GetRequired
+
+`func (o *UiNodeInputAttributes) GetRequired() bool`
+
+GetRequired returns the Required field if non-nil, zero value otherwise.
+
+### GetRequiredOk
+
+`func (o *UiNodeInputAttributes) GetRequiredOk() (*bool, bool)`
+
+GetRequiredOk returns a tuple with the Required field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRequired
+
+`func (o *UiNodeInputAttributes) SetRequired(v bool)`
+
+SetRequired sets Required field to given value.
+
+### HasRequired
+
+`func (o *UiNodeInputAttributes) HasRequired() bool`
+
+HasRequired returns a boolean if a field has been set.
+
+### GetType
+
+`func (o *UiNodeInputAttributes) GetType() string`
+
+GetType returns the Type field if non-nil, zero value otherwise.
+
+### GetTypeOk
+
+`func (o *UiNodeInputAttributes) GetTypeOk() (*string, bool)`
+
+GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetType
+
+`func (o *UiNodeInputAttributes) SetType(v string)`
+
+SetType sets Type field to given value.
+
+
+### GetValue
+
+`func (o *UiNodeInputAttributes) GetValue() UiNodeInputAttributesValue`
+
+GetValue returns the Value field if non-nil, zero value otherwise.
+
+### GetValueOk
+
+`func (o *UiNodeInputAttributes) GetValueOk() (*UiNodeInputAttributesValue, bool)`
+
+GetValueOk returns a tuple with the Value field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetValue
+
+`func (o *UiNodeInputAttributes) SetValue(v UiNodeInputAttributesValue)`
+
+SetValue sets Value field to given value.
+
+### HasValue
+
+`func (o *UiNodeInputAttributes) HasValue() bool`
+
+HasValue returns a boolean if a field has been set.
+
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

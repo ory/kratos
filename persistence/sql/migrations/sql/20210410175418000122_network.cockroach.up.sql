@@ -1,0 +1,1 @@
+UPDATE "identity_recovery_tokens" SET "nid" = "_nid_tmp";

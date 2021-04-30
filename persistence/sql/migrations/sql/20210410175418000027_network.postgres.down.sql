@@ -1,0 +1,1 @@
+DROP INDEX "continuity_containers_nid_idx";

@@ -35,7 +35,7 @@ context('Registration Flow Errors', () => {
 
       cy.get('div[data-testid="submit-form"]').click()
       cy.get('*[data-testid="field/password"]')
-        .should('contain.text', 'missing')
+        .should('contain.text', 'length must be')
     })
 
     it('should show an error when the email is empty', () => {
@@ -59,7 +59,7 @@ context('Registration Flow Errors', () => {
 
     it('should show a missing indicator if no fields are set', () => {
       cy.get('div[data-testid="submit-form"]').click()
-      cy.get('*[data-testid="field/password"]').should('contain.text', 'Property')
+      cy.get('*[data-testid="field/password"]').should('contain.text', 'length must be')
     })
 
 

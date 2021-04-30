@@ -5,7 +5,10 @@
   "issued_at": "2013-10-07T08:23:19Z",
   "request_url": "http://kratos:4433/self-service/browser/flows/registration",
   "active": "link",
-  "messages": [],
-  "methods": {},
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  },
   "state": "choose_method"
 }

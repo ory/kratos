@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ory/kratos/persistence/sql"
+	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/stretchr/testify/require"
 
@@ -25,11 +25,13 @@ func TestPersister_CreateIdentityRacy(t *testing.T) {
 		RawURL: "file://./stub/identity.schema.json",
 	}
 
-	for name, p := range createCleanDatabases(t) {
+	ctx := context.Background()
 
+	for name, p := range createCleanDatabases(t) {
 		t.Run(fmt.Sprintf("db=%s", name), func(t *testing.T) {
 			var wg sync.WaitGroup
 			p.Config(context.Background()).MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+			_, ps := testhelpers.NewNetwork(t, ctx, p.Persister())
 
 			for i := 0; i < 10; i++ {
 				wg.Add(1)
@@ -46,7 +48,7 @@ func TestPersister_CreateIdentityRacy(t *testing.T) {
 					})
 					id.Traits = identity.Traits("{}")
 
-					require.NoError(t, p.Persister().(*sql.Persister).CreateIdentity(context.Background(), id))
+					require.NoError(t, ps.CreateIdentity(context.Background(), id))
 				}()
 			}
 

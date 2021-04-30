@@ -1,0 +1,97 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "value": "qomtJu6UOzh5Gqkq3MEwbbJuNgJEfDg9gEowfMH0OhjfAIcWbc0PrbvMS6LL7m8ptuuuQE+oUDoXUQOy/kRccw==",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "oidc.provider",
+      "type": "submit",
+      "value": "github",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "oidc.provider",
+      "type": "submit",
+      "value": "google",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "oidc.provider",
+      "type": "submit",
+      "value": "hydra",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "oidc",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "traits.abcd",
+      "type": "input",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "traits.email",
+      "type": "email",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "password",
+      "disabled": false
+    },
+    "messages": null,
+    "meta": {}
+  }
+]

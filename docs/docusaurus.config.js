@@ -1,4 +1,5 @@
 const config = require('./contrib/config.js')
+const fs = require('fs')
 
 const githubRepoName =
   config.projectSlug === 'ecosystem' ? 'docs' : config.projectSlug
@@ -7,14 +8,8 @@ const baseUrl = config.baseUrl ? config.baseUrl : `/${config.projectSlug}/docs/`
 
 const links = [
   {
-    to: '/',
-    activeBasePath: baseUrl,
-    label: `Docs`,
-    position: 'left'
-  },
-  {
-    href: 'https://www.ory.sh/docs',
-    label: 'Ecosystem',
+    to: 'https://www.ory.sh/',
+    label: `Home`,
     position: 'left'
   },
   {
@@ -23,21 +18,27 @@ const links = [
     position: 'left'
   },
   {
-    href: 'https://github.com/ory/${githubRepoName}/discussions',
+    href: `https://github.com/ory/${githubRepoName}/discussions`,
     label: 'Discussions',
-    position: 'left'
+    position: 'right'
   },
   {
     href: 'https://www.ory.sh/chat',
-    label: 'Chat',
-    position: 'left'
+    label: 'Slack',
+    position: 'right'
   },
   {
     href: `https://github.com/ory/${githubRepoName}`,
     label: 'GitHub',
-    position: 'left'
+    position: 'right'
   }
 ]
+
+const customCss = [require.resolve('./contrib/theme.css')]
+
+if (fs.existsSync('./src/css/theme.css')) {
+  customCss.push(require.resolve('./src/css/theme.css'))
+}
 
 module.exports = {
   title: config.projectName,
@@ -53,11 +54,14 @@ module.exports = {
     prism: {
       theme: require('prism-react-renderer/themes/github'),
       darkTheme: require('prism-react-renderer/themes/dracula'),
-      additionalLanguages: ['pug']
+      additionalLanguages: ['pug', 'shell-session']
     },
     announcementBar: {
       id: 'supportus',
-      content: `Sign up for <a href="${config.newsletter}">important security announcements</a> and if you like ${config.projectName} give it a ⭐️ on <a target="_blank" rel="noopener noreferrer" href="https://github.com/ory/${githubRepoName}">GitHub</a>!`
+      content:
+        config.projectSlug === 'docs'
+          ? `Sign up for <a href="${config.newsletter}">important security announcements</a> and if you like the ${config.projectName} give us some ⭐️ on <a target="_blank" rel="noopener noreferrer" href="https://github.com/ory">GitHub</a>!`
+          : `Sign up for <a href="${config.newsletter}">important security announcements</a> and if you like ${config.projectName} give it a ⭐️ on <a target="_blank" rel="noopener noreferrer" href="https://github.com/ory/${githubRepoName}">GitHub</a>!`
     },
     algolia: {
       apiKey: '8463c6ece843b377565726bb4ed325b0',
@@ -73,7 +77,10 @@ module.exports = {
         alt: config.projectName,
         src: `img/logo-${config.projectSlug}.svg`,
         srcDark: `img/logo-${config.projectSlug}.svg`,
-        href: `https://www.ory.sh/${config.projectSlug}`
+        href:
+          config.projectSlug === 'docs'
+            ? `https://www.ory.sh`
+            : `https://www.ory.sh/${config.projectSlug}`
       },
       items: [
         ...links,
@@ -92,7 +99,7 @@ module.exports = {
     },
     footer: {
       style: 'dark',
-      copyright: `Copyright © ${new Date().getFullYear()} ORY GmbH`,
+      copyright: `Copyright © ${new Date().getFullYear()} Ory GmbH`,
       links: [
         {
           title: 'Company',
@@ -138,10 +145,7 @@ module.exports = {
     [
       '@docusaurus/theme-classic',
       {
-        customCss:
-          config.projectSlug === 'docusaurus-template'
-            ? require.resolve('./contrib/theme.css')
-            : require.resolve('./src/css/theme.css')
+        customCss
       }
     ],
     '@docusaurus/theme-search-algolia'

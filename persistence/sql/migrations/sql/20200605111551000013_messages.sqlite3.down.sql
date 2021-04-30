@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "selfservice_verification_flows_nid_idx";

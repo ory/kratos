@@ -3,6 +3,7 @@ import { APP_URL, assertVerifiableAddress, gen } from '../../../../helpers'
 context('Registration', () => {
   describe('successful flow', () => {
     beforeEach(() => {
+      cy.longVerificationLifespan()
       cy.visit(APP_URL + '/auth/registration')
       cy.deleteMail()
     })
@@ -27,6 +28,14 @@ context('Registration', () => {
       cy.register({ email, password: up(password) })
 
       cy.verifyEmail({ expect: { email } })
+    })
+
+    it('is redirected to after_verification_return_to after verification', () => {
+      cy.clearCookies()
+      const { email, password } = gen.identity()
+      cy.register({email, password, query: {after_verification_return_to: "http://127.0.0.1:4455/verification_callback"} })
+      cy.login({ email, password })
+      cy.verifyEmail({ expect: { email, redirectTo: "http://127.0.0.1:4455/verification_callback"} })
     })
   })
 })

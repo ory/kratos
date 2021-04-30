@@ -7,13 +7,14 @@ import (
 )
 
 func TestIDs(t *testing.T) {
-	assert.Equal(t, 1010000, int(InfoSelfServiceLogin))
+	assert.Equal(t, 1010000, int(InfoSelfServiceLoginRoot))
 
 	assert.Equal(t, 1020000, int(InfoSelfServiceLogout))
 
 	assert.Equal(t, 1030000, int(InfoSelfServiceMFA))
 
-	assert.Equal(t, 1040000, int(InfoSelfServiceRegistration))
+	assert.Equal(t, 1040000, int(InfoSelfServiceRegistrationRoot))
+	assert.Equal(t, 1040001, int(InfoSelfServiceRegistration))
 
 	assert.Equal(t, 1050000, int(InfoSelfServiceSettings))
 	assert.Equal(t, 1050001, int(InfoSelfServiceSettingsUpdateSuccess))

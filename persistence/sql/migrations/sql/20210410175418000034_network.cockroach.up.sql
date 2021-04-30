@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_errors" RENAME COLUMN "nid" TO "_nid_tmp";

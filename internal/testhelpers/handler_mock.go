@@ -85,7 +85,7 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 
 	var found bool
 	for _, c := range res.Cookies() {
-		if c.Name == session.DefaultSessionCookieName {
+		if c.Name == config.DefaultSessionCookieName {
 			found = true
 		}
 	}

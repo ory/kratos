@@ -7,7 +7,15 @@
   "videosFolder": "test/e2e/cypress/videos",
   "screenshotsFolder": "test/e2e/cypress/screenshots",
   "retries": {
-    "runMode": 2,
+    "runMode": 3,
     "openMode": 1
-  }
+  },
+  "timeouts": {
+    "defaultCommandTimeout": 10000,
+    "requestTimeout": 10000
+  },
+  "projectId": "bc48bg",
+  "video": true,
+  "videoCompression": false,
+  "screenshotOnRunFailure": true
 }

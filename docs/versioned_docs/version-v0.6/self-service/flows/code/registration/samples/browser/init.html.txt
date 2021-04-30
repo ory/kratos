@@ -1,0 +1,11 @@
+<a href="http://127.0.0.1:4433/self-service/registration/browser">Sign up</a>
+
+<!-- or -->
+
+<script>
+  const initRegistration = () => {
+    window.location.href = 'http://127.0.0.1:4433/self-service/registration/browser'
+  }
+</script>
+
+<a onClick="initRegistration">Sign up</a>

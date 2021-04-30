@@ -125,21 +125,30 @@ func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID str
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, original)
 }
 
-func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) error {
+func (m *Manager) SetTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) (*Identity, error) {
 	o := newManagerOptions(opts)
 	original, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// original is used to check whether protected traits were modified
 	updated := deepcopy.Copy(original).(*Identity)
 	updated.Traits = traits
 	if err := m.validate(ctx, updated, o); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := m.requiresPrivilegedAccess(ctx, original, updated, o); err != nil {
+		return nil, err
+	}
+
+	return updated, nil
+}
+
+func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) error {
+	updated, err := m.SetTraits(ctx, id, traits, opts...)
+	if err != nil {
 		return err
 	}
 
@@ -149,7 +158,7 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 func (m *Manager) validate(ctx context.Context, i *Identity, o *managerOptions) error {
 	if err := m.r.IdentityValidator().Validate(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok && !o.ExposeValidationErrors {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+			return herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)
 		}
 		return err
 	}

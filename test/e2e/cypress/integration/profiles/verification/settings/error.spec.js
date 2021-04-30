@@ -23,16 +23,21 @@ context('Settings', () => {
     })
 
     it('is unable to verify the email address if the code is no longer valid', () => {
+      cy.shortVerificationLifespan()
+      cy.visit(APP_URL + '/settings')
+
       const email = `not-${identity.email}`
-      cy.get('#user-profile input[name="traits.email"]').clear().type(email)
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(email)
+      cy.get('button[value="profile"]').click()
+      cy.wait(4000)
+
       cy.verifyEmailButExpired({ expect: { email } })
     })
 
     it('is unable to verify the email address if the code is incorrect', () => {
       const email = `not-${identity.email}`
-      cy.get('#user-profile input[name="traits.email"]').clear().type(email)
-      cy.get('#user-profile button[type="submit"]').click()
+      cy.get('input[name="traits.email"]').clear().type(email)
+      cy.get('button[value="profile"]').click()
 
       cy.getMail().then((mail) => {
         const link = parseHtml(mail.body).querySelector('a')

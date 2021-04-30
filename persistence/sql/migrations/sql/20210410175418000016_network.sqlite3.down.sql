@@ -1,0 +1,1 @@
+INSERT INTO "_identity_credentials_tmp" (id, config, identity_credential_type_id, identity_id, created_at, updated_at) SELECT id, config, identity_credential_type_id, identity_id, created_at, updated_at FROM "identity_credentials";

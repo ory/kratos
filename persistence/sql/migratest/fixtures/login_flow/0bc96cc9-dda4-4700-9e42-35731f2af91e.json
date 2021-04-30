@@ -1,0 +1,13 @@
+{
+  "id": "0bc96cc9-dda4-4700-9e42-35731f2af91e",
+  "type": "api",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/login",
+  "ui": {
+    "action": "",
+    "method": "",
+    "nodes": null
+  },
+  "forced": false
+}

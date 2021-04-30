@@ -86,7 +86,7 @@ func (ss *schemas) getByName(n string) (*schema, error) {
 }
 
 func TestSchemas(t *testing.T) {
-	t.Run("test .schema/config.schema.json", SchemaTestRunner("../../.schema", "config"))
+	t.Run("test .schema/config.schema.json", SchemaTestRunner("../../driver/config/.schema", "config"))
 }
 
 func SchemaTestRunner(spath string, sname string) func(*testing.T) {
