@@ -63,6 +63,8 @@ func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *htt
 func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (*Container, error) {
 	container, err := m.container(ctx, r, name)
 	if err != nil {
+		// We do not care about an error here
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
 		return nil, err
 	}
 
@@ -122,6 +124,8 @@ func (m *ManagerCookie) container(ctx context.Context, r *http.Request, name str
 func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) error {
 	sid, err := m.sid(ctx, r, name)
 	if errors.Is(err, &ErrNotResumable) {
+		// We do not care about an error here
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
 		return nil
 	} else if err != nil {
 		return err
