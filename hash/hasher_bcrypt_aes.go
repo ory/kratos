@@ -32,12 +32,6 @@ func NewHasherBcryptAES(c BcryptAESConfiguration) *BcryptAES {
 	return &BcryptAES{c: c}
 }
 
-func (h *BcryptAES) sha512Hash(password string) []byte {
-	hasher := sha3.New512()
-	_, _ = hasher.Write([]byte(password))
-	return hasher.Sum(nil)
-}
-
 func (h *BcryptAES) aes256Encrypt(data, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
