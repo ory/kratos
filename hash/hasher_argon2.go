@@ -21,6 +21,8 @@ var (
 	ErrMismatchedHashAndPassword = errors.New("passwords do not match")
 )
 
+const Argon2AlgorithmId = "argon2id"
+
 type Argon2 struct {
 	c Argon2Configuration
 }
@@ -53,7 +55,8 @@ func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
 		&b,
-		"$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
+		"$%s$v=%d$m=%d,t=%d,p=%d$%s$%s",
+		Argon2AlgorithmId,
 		argon2.Version, toKB(p.Memory), p.Iterations, p.Parallelism,
 		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(hash),
