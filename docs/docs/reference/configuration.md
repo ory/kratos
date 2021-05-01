@@ -163,9 +163,37 @@ selfservice:
       #
       lifespan: 1h
 
+      ## before ##
+      #
+      before:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_REGISTRATION_BEFORE_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_REGISTRATION_BEFORE_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config: # web_hook specific configuration
+        
+
       ## after ##
       #
       after:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_REGISTRATION_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_REGISTRATION_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config: # web_hook specific configuration
+        
         ## password ##
         #
         password:
@@ -179,6 +207,8 @@ selfservice:
           #
           hooks:
             - hook: session
+            - hook: web_hook
+              config: # web_hook specific configuration
 
           ## Redirect browsers to set URL per default ##
           #
@@ -209,6 +239,8 @@ selfservice:
           #
           hooks:
             - hook: session
+            - hook: web_hook
+              config: # web_hook specific configuration
 
           ## Redirect browsers to set URL per default ##
           #
@@ -278,10 +310,37 @@ selfservice:
       #    > set SELFSERVICE_FLOWS_LOGIN_LIFESPAN=<value>
       #
       lifespan: 1h
+      
+      ## before ##
+      #
+      before:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_LOGIN_BEFORE_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_LOGIN_BEFORE_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config: # web_hook specific configuration
 
       ## after ##
       #
       after:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_LOGIN_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_LOGIN_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config: # web_hook specific configuration
+            
         ## password ##
         #
         password:
@@ -295,6 +354,8 @@ selfservice:
           #
           hooks:
             - hook: revoke_active_sessions
+            - hook: web_hook
+              config: # web_hook specific configuration
 
           ## Redirect browsers to set URL per default ##
           #
@@ -325,6 +386,8 @@ selfservice:
           #
           hooks:
             - hook: revoke_active_sessions
+            - hook: web_hook
+              config: # web_hook specific configuration
 
           ## Redirect browsers to set URL per default ##
           #
@@ -413,6 +476,18 @@ selfservice:
         #    > set SELFSERVICE_FLOWS_VERIFICATION_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
         default_browser_return_url: https://my-app.com/dashboard
+        
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_VERIFICATION_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_VERIFICATION_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config: # web_hook specific configuration
 
       ## Self-Service Verification Request Lifespan ##
       #
@@ -485,6 +560,18 @@ selfservice:
         #    > set SELFSERVICE_FLOWS_RECOVERY_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
         default_browser_return_url: https://my-app.com/dashboard
+        
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_RECOVERY_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_RECOVERY_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config: # web_hook specific configuration
 
       ## Self-Service Recovery Request Lifespan ##
       #
@@ -579,6 +666,18 @@ selfservice:
       ## after ##
       #
       after:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_SETTINGS_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config: # web_hook specific configuration
+            
         ## password ##
         #
         password:
@@ -592,6 +691,8 @@ selfservice:
           #
           hooks:
             - hook: verify
+            - hook: web_hook
+              config: # web_hook specific configuration
 
           ## Redirect browsers to set URL per default ##
           #
@@ -622,6 +723,8 @@ selfservice:
           #
           hooks:
             - hook: verify
+            - hook: web_hook
+              config: # web_hook specific configuration
 
           ## Redirect browsers to set URL per default ##
           #
