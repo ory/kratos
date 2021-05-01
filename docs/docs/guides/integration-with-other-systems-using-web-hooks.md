@@ -3,12 +3,14 @@ id: integration-with-other-systems-using-web-hooks
 title: Integration using Web-Hooks
 ---
 
-Ory Kratos supports integration with other systems (e.g. ERP, Marketing, etc) using Web-Hooks.
+Ory Kratos supports integration with other systems (e.g. ERP, Marketing, etc)
+using Web-Hooks.
 
-If you for example would like to send a marketing email using [Mailchimp](https://mailchimp.com) upon a user registration, you can do so easily:
+If you for example would like to send a marketing email using
+[Mailchimp](https://mailchimp.com) upon a user registration, you can do so
+easily:
 
 ```yaml title="path/to/my/kratos.config.yml"
-...
 selfservice:
   flows:
     registration:
@@ -38,4 +40,3 @@ function(ctx) {
   }
 }
 ```
-

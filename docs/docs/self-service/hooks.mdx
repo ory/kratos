@@ -11,17 +11,20 @@ Hooks execute logic after a flow (login, registration, settings, ...):
 - _After registration:_ is executed when a registration was successful:
   - _Before persisting:_ runs before the identity is saved in the database.
   - _After persisting:_ runs after the identity was saved in the database.
-- After recovery:_ is executed after a password has been successfully recovered.
+- _After recovery:_ is executed after a password has been successfully
+  recovered.
 - _After settings:_ is executed when a settings was successful:
   - _Before persisting:_ runs before the identity is saved in the database.
   - _After persisting:_ runs after the identity was saved in the database.
-- _After verification:_ is executed when the verification of an account was successful.
+- _After verification:_ is executed when the verification of an account was
+  successful.
 
-There are hooks, which can be configured only for a particular flow (login, registration,
-settings, ...) method (password, oidc, profile) and hooks, which can be configured
-for all methods of any flow.
+There are hooks, which can be configured only for a particular flow (login,
+registration, settings, ...) method (password, oidc, profile) and hooks, which
+can be configured for all methods of any flow.
 
-To configure hooks for all methods of a particular flow, following pattern must be used:
+To configure hooks for all methods of a particular flow, following pattern must
+be used:
 
 ```yaml title="path/to/my/kratos.config.yml
 selfservice:
@@ -36,13 +39,14 @@ selfservice:
           ...
 ```
 
-Following pattern must be followed to configure hooks for a particular flow method:
+Following pattern must be followed to configure hooks for a particular flow
+method:
 
 ```yaml title="path/to/my/kratos.config.yml
 selfservice:
   flows:
     <particular flow>:
-      after:
+      <before or after>:
         <particular method>:
           hooks:
             - hook: <hook 1 name>
@@ -52,8 +56,8 @@ selfservice:
             ...
 ```
 
-Hooks configured on a particular method level always override the hooks configured on the flow level. So given the
-following example
+Hooks configured on a particular method level always override the hooks
+configured on the flow level. So given the following example
 
 ```yaml title="path/to/my/kratos.config.yml
 selfservice:
@@ -76,27 +80,33 @@ selfservice:
           <strategy specific config>
 ```
 
-"hook 1" is always run when the flow is started. On the finalization of the flow, "hook2" is only run
-for "strategy 2", but not for "strategy 1" as latter defines its own hooks.
+"hook 1" is always run when the flow is started. On the finalization of the
+flow, "hook2" is only run for "strategy 2", but not for "strategy 1" as latter
+defines its own hooks.
 
 ## All flows
+
 Following hooks can be configured for all flows.
 
 ### Web-Hooks
-Web-Hooks can be configured for every, but error and logout flow and can be configured on either the before/after
-level or at the level of a particular method.
+
+Web-Hooks can be configured for every, but error and logout flow and can be
+configured on either the before/after level or at the level of a particular
+method. Support for Web-Hooks before execution of a method is currently
+supported only for registration and login methods.
 
 :::note
 
-As of today Web-Hooks cannot control the execution of the flow by patching/updating particular
-properties of flow specific object upon Web-Hook completion. It will however cancel the execution of
-the flow if the call to the Web-Hook end point fails either due to a network error or if the end point
+As of today Web-Hooks cannot control the execution of the flow by
+patching/updating particular properties of flow specific object upon Web-Hook
+completion. It will however cancel the execution of the flow if the call to the
+Web-Hook end point fails either due to a network error or if the end point
 responses with an HTTP code > 300.
 
 :::
 
-The configuration for a web-hook goes into the `hooks` property either on the flow before/after, or the method
-level and has the following structure:
+The configuration for a web-hook goes into the `hooks` property either on the
+flow before/after, or the method level and has the following structure:
 
 ```.yaml
   - hook: web-hook
@@ -111,22 +121,30 @@ level and has the following structure:
 ```
 
 The configuration section of a web-hook consists of
-* `url` - the url, the web-hook should call (mandatory)
-* `method` - the HTTP method (GET, POST, ...), the web-hook should use (mandatory)
-* `body` - path to a jsonnet template, used by the web-hook to render the payload to send (optional).
-           This property is ignored for HTTP `method`s, which do not support sending of HTTP body payloads.
-* `auth` - configuration of authentication and authorization mechanisms to be used by the web-hook
 
-Web-Hooks bind `flow` and the `session` object, as well as request headers (`request_headers`), request
-method (`request_method`), and the request url (`request_url`) of the flow into the jsonnet template.
-These are available through a `ctx` object. E.g. to create a body looking like `{ user_id: <some-id> }` to
-be send to the web hook end point, the jsonnet template would look like this:
+- `url` - the url, the web-hook should call (mandatory)
+- `method` - the HTTP method (GET, POST, ...), the web-hook should use
+  (mandatory)
+- `body` - path to a jsonnet template, used by the web-hook to render the
+  payload to send (optional). This property is ignored for HTTP `method`s, which
+  do not support sending of HTTP body payloads.
+- `auth` - configuration of authentication and authorization mechanisms to be
+  used by the web-hook
+
+Web-Hooks bind `flow` and the `session` object, as well as request headers
+(`request_headers`), request method (`request_method`), and the request url
+(`request_url`) of the flow into the jsonnet template. These are available
+through a `ctx` object. E.g. to create a body looking like
+`{ user_id: <some-id> }` to be send to the web hook end point, the jsonnet
+template would look like this:
 `function(ctx) { user_id: ctx.session.identity.id }`
 
 #### Web-Hook Authentication and Authorization Mechanisms
+
 For `auth` following mechanisms are supported:
-* Authentication via an Api Key. Type must be set to `api-key`.
-* Authentication via Basic Authentication. Type must be set to `basic-auth`.
+
+- Authentication via an Api Key. Type must be set to `api-key`.
+- Authentication via Basic Authentication. Type must be set to `basic-auth`.
 
 For `api-key` the config looks as follows:
 
@@ -136,12 +154,16 @@ value: The-Value-of-My-Key
 in: header # alternatively cookie
 ```
 
+All properties are mandatory.
 
 For `basic-auth` the config looks as follows:
+
 ```.yaml
 user: My-User
 password: My-Pass-Value
 ```
+
+All properties are mandatory.
 
 ## Login
 
@@ -190,8 +212,8 @@ selfservice:
 
 ## Registration
 
-Hooks running before or after successful user registration are defined per Self-Service
-Registration Method in ORY Kratos' configuration file.
+Hooks running before or after successful user registration are defined per
+Self-Service Registration Method in ORY Kratos' configuration file.
 
 ### Before
 
