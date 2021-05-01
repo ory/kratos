@@ -114,6 +114,44 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	})
 
 	t.Run("type=registration", func(t *testing.T) {
+		// BEFORE hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []registration.PreHookExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []registration.PreHookExecutor { return nil },
+			},
+			{
+				uc: "Two web_hooks are configured",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceRegistrationBeforeHooks, []map[string]interface{}{
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PreHookExecutor {
+					return []registration.PreHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				h := reg.PreRegistrationHooks(ctx)
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
 
 		// AFTER hooks
 		for _, tc := range []struct {
@@ -208,6 +246,45 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	})
 
 	t.Run("type=login", func(t *testing.T) {
+		// BEFORE hooks
+		for _, tc := range []struct {
+			uc     string
+			prep   func(conf *config.Config)
+			expect func(reg *driver.RegistryDefault) []login.PreHookExecutor
+		}{
+			{
+				uc:     "No hooks configured",
+				prep:   func(conf *config.Config) {},
+				expect: func(reg *driver.RegistryDefault) []login.PreHookExecutor { return nil },
+			},
+			{
+				uc: "Two web_hooks are configured",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceLoginBeforeHooks, []map[string]interface{}{
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
+						{"hook": "web_hook", "config": map[string]interface{}{"url": "bar", "method": "GET"}},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []login.PreHookExecutor {
+					return []login.PreHookExecutor{
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"POST","url":"foo"}`)),
+						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"bar"}`)),
+					}
+				},
+			},
+		} {
+			t.Run(fmt.Sprintf("before/uc=%s", tc.uc), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				h := reg.PreLoginHooks(ctx)
+
+				expectedExecutors := tc.expect(reg)
+				require.Len(t, h, len(expectedExecutors))
+				assert.Equal(t, expectedExecutors, h)
+			})
+		}
+
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string
