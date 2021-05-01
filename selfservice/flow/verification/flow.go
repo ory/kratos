@@ -46,7 +46,7 @@ type Flow struct {
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 
-	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
 	RequestURL string `json:"request_url" db:"request_url"`
 

@@ -94,7 +94,7 @@ paths:
       description: |-
         Lists all identities. Does not support search at the moment.
 
-        Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+        Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
       operationId: listIdentities
       parameters:
       - description: |-
@@ -146,7 +146,7 @@ paths:
         This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
         using this method! A way to achieve that will be introduced in the future.
 
-        Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+        Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
       operationId: createIdentity
       requestBody:
         content:
@@ -189,7 +189,7 @@ paths:
         This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
         assumed that is has been deleted already.
 
-        Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+        Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
       operationId: deleteIdentity
       parameters:
       - description: ID is the identity's ID.
@@ -220,7 +220,7 @@ paths:
       tags:
       - admin
     get:
-      description: Learn how identities work in [ORY Kratos' User And Identity Model
+      description: Learn how identities work in [Ory Kratos' User And Identity Model
         Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
       operationId: getIdentity
       parameters:
@@ -267,7 +267,7 @@ paths:
 
         The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
-        Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+        Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
       operationId: updateIdentity
       parameters:
       - description: ID must be set to the ID of identity you want to update
@@ -417,7 +417,7 @@ paths:
         On successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request
         or fall back to `urls.default_return_to`.
 
-        More information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+        More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
       operationId: initializeSelfServiceBrowserLogoutFlow
       responses:
         "302":
@@ -441,7 +441,7 @@ paths:
 
         `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
 
-        More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+        More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
       operationId: getSelfServiceError
       parameters:
       - description: Error is the container's ID
@@ -496,7 +496,7 @@ paths:
         a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
         a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: submitSelfServiceLoginFlow
       parameters:
       - description: |-
@@ -565,7 +565,7 @@ paths:
 
         :::
 
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: initializeSelfServiceLoginViaAPIFlow
       parameters:
       - description: |-
@@ -613,7 +613,7 @@ paths:
 
         This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: initializeSelfServiceLoginViaBrowserFlow
       responses:
         "302":
@@ -633,7 +633,7 @@ paths:
       description: |-
         This endpoint returns a login flow's context with, for example, error details and other information.
 
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: getSelfServiceLoginFlow
       parameters:
       - description: |-
@@ -701,7 +701,7 @@ paths:
         (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
         a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-        More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
       operationId: submitSelfServiceRecoveryFlow
       parameters:
       - description: |-
@@ -763,7 +763,7 @@ paths:
 
         :::
 
-        More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
       operationId: initializeSelfServiceRecoveryViaAPIFlow
       responses:
         "200":
@@ -796,7 +796,7 @@ paths:
 
         This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-        More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
       operationId: initializeSelfServiceRecoveryViaBrowserFlow
       responses:
         "302":
@@ -816,7 +816,7 @@ paths:
       description: |-
         This endpoint returns a recovery flow's context with, for example, error details and other information.
 
-        More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
       operationId: getSelfServiceRecoveryFlow
       parameters:
       - description: |-
@@ -878,7 +878,7 @@ paths:
         (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
         a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-        More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
       operationId: submitSelfServiceRecoveryFlowWithLinkMethod
       parameters:
       - description: |-
@@ -948,7 +948,7 @@ paths:
         a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
         a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
 
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: submitSelfServiceRegistrationFlow
       parameters:
       - description: |-
@@ -1017,7 +1017,7 @@ paths:
 
         :::
 
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: initializeSelfServiceRegistrationViaAPIFlow
       responses:
         "200":
@@ -1055,7 +1055,7 @@ paths:
 
         :::
 
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: initializeSelfServiceRegistrationViaBrowserFlow
       responses:
         "302":
@@ -1075,7 +1075,7 @@ paths:
       description: |-
         This endpoint returns a registration flow's context with, for example, error details and other information.
 
-        More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: getSelfServiceRegistrationFlow
       parameters:
       - description: |-
@@ -1144,7 +1144,7 @@ paths:
         a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
         a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 
-        More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+        More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: submitSelfServiceSettingsFlow
       parameters:
       - description: |-
@@ -1211,7 +1211,7 @@ paths:
     get:
       description: |-
         This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
-        You must provide a valid ORY Kratos Session Token for this endpoint to respond with HTTP 200 OK.
+        You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 
         To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
 
@@ -1225,7 +1225,7 @@ paths:
 
         :::
 
-        More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+        More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: initializeSelfServiceSettingsViaAPIFlow
       responses:
         "200":
@@ -1256,7 +1256,7 @@ paths:
       description: |-
         This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
         `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
-        ORY Kratos Session Cookie is included in the request, a login flow will be initialized.
+        Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
 
         :::note
 
@@ -1264,7 +1264,7 @@ paths:
 
         :::
 
-        More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+        More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: initializeSelfServiceSettingsViaBrowserFlow
       responses:
         "302":
@@ -1284,13 +1284,13 @@ paths:
   /self-service/settings/flows:
     get:
       description: |-
-        When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie
-        or the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes
+        When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
+        or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
         but instead 403 or 500 to improve data privacy.
 
-        You can access this endpoint without credentials when using ORY Kratos' Admin API.
+        You can access this endpoint without credentials when using Ory Kratos' Admin API.
 
-        More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+        More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: getSelfServiceSettingsFlow
       parameters:
       - description: |-
@@ -1359,7 +1359,7 @@ paths:
 
         :::
 
-        More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+        More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
       operationId: initializeSelfServiceVerificationViaAPIFlow
       responses:
         "200":
@@ -1391,7 +1391,7 @@ paths:
 
         This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-        More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+        More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
       operationId: initializeSelfServiceVerificationViaBrowserFlow
       responses:
         "302":
@@ -1411,7 +1411,7 @@ paths:
       description: |-
         This endpoint returns a verification flow's context with, for example, error details and other information.
 
-        More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+        More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
       operationId: getSelfServiceVerificationFlow
       parameters:
       - description: |-
@@ -1473,7 +1473,7 @@ paths:
         (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
         a new Verification Flow ID which contains an error message that the verification link was invalid.
 
-        More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+        More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
       operationId: submitSelfServiceVerificationFlow
       parameters:
       - description: |-
@@ -1560,21 +1560,20 @@ paths:
         This endpoint is useful for reverse proxies and API Gateways.
       operationId: whoami
       parameters:
-      - explode: false
-        in: header
-        name: Cookie
-        required: false
-        schema:
-          type: string
-        style: simple
-      - description: 'in: authorization'
-        explode: true
-        in: query
-        name: Authorization
-        required: false
-        schema:
-          type: string
-        style: form
+        - explode: false
+          in: header
+          name: Cookie
+          required: false
+          schema:
+            type: string
+          style: simple
+        - explode: false
+          in: header
+          name: Authorization
+          required: false
+          schema:
+            type: string
+          style: simple
       responses:
         "200":
           content:
@@ -2646,7 +2645,7 @@ components:
           type: string
         request_url:
           description: |-
-            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+            RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
           type: string
         type:
@@ -2798,7 +2797,7 @@ components:
           type: string
         request_url:
           description: |-
-            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+            RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
           type: string
         state:
@@ -2915,7 +2914,7 @@ components:
           type: string
         request_url:
           description: |-
-            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+            RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
           type: string
         type:
@@ -3189,7 +3188,7 @@ components:
           type: string
         request_url:
           description: |-
-            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+            RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
           type: string
         state:
@@ -3811,7 +3810,7 @@ components:
           type: string
         request_url:
           description: |-
-            RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+            RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
           type: string
         state:

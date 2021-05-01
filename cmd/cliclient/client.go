@@ -2,9 +2,11 @@ package cliclient
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
+	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/spf13/cobra"
 
@@ -23,19 +25,7 @@ type ContextKey int
 
 const (
 	ClientContextKey ContextKey = iota + 1
-	HTTPClientContextKey
 )
-
-func NewHTTPClient(cmd *cobra.Command) *http.Client {
-	if f, ok := cmd.Context().Value(HTTPClientContextKey).(func(cmd *cobra.Command) *http.Client); ok {
-		return f(cmd)
-	} else if f != nil {
-		panic(fmt.Sprintf("ClientContextKey was expected to be *http.Client but it contained an invalid type %T ", f))
-	}
-	return &http.Client{
-		Transport: http.DefaultTransport,
-	}
-}
 
 func NewClient(cmd *cobra.Command) *kratos.APIClient {
 	if f, ok := cmd.Context().Value(ClientContextKey).(func(cmd *cobra.Command) *kratos.APIClient); ok {
@@ -61,10 +51,12 @@ func NewClient(cmd *cobra.Command) *kratos.APIClient {
 	cmdx.Must(err, `Could not parse the endpoint URL "%s".`, endpoint)
 
 	conf := kratos.NewConfiguration()
+	conf.HTTPClient = retryablehttp.NewClient().StandardClient()
+	conf.HTTPClient.Timeout = time.Second * 10
 	conf.Servers = kratos.ServerConfigurations{{URL: u.String()}}
 	return kratos.NewAPIClient(conf)
 }
 
 func RegisterClientFlags(flags *pflag.FlagSet) {
-	flags.StringP(FlagEndpoint, FlagEndpoint[:1], "", fmt.Sprintf("The URL of ORY Kratos' Admin API. Alternatively set using the %s environmental variable.", envKeyEndpoint))
+	flags.StringP(FlagEndpoint, FlagEndpoint[:1], "", fmt.Sprintf("The URL of Ory Kratos' Admin API. Alternatively set using the %s environmental variable.", envKeyEndpoint))
 }

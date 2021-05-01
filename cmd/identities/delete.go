@@ -30,8 +30,6 @@ var DeleteCmd = &cobra.Command{
 		)
 
 		for _, a := range args {
-			// TODO merge
-			// _, err := c.Admin.DeleteIdentity(admin.NewDeleteIdentityParams().WithID(a).WithTimeout(time.Second).WithHTTPClient(cliclient.NewHTTPClient(cmd)))
 			_, err := c.AdminApi.DeleteIdentity(cmd.Context(), a).Execute()
 			if err != nil {
 				errs = append(errs, err)

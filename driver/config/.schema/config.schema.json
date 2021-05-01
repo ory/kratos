@@ -1,7 +1,7 @@
 {
   "$id": "https://github.com/ory/kratos/driver/config/.schema/config.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "ORY Kratos Configuration",
+  "title": "Ory Kratos Configuration",
   "type": "object",
   "definitions": {
     "baseUrl": {
@@ -14,9 +14,33 @@
         "https://my-app.com/.ory/kratos/public"
       ]
     },
+    "socket": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Sets the permissions of the unix socket",
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Owner of unix socket. If empty, the owner will be the user running hydra.",
+          "default": ""
+        },
+        "group": {
+          "type": "string",
+          "description": "Group of unix socket. If empty, the group will be the primary group of the user running hydra.",
+          "default": ""
+        },
+        "mode": {
+          "type": "integer",
+          "description": "Mode of unix socket in numeric form",
+          "default": 493,
+          "minimum": 0,
+          "maximum": 511
+        }
+      }
+    },
     "defaultReturnTo": {
       "title": "Redirect browsers to set URL per default",
-      "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
+      "description": "Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
       "format": "uri-reference",
       "examples": [
@@ -295,7 +319,7 @@
         },
         "mapper_url": {
           "title": "Jsonnet Mapper URL",
-          "description": "The URL where the jsonnet source is located for mapping the provider's data to ORY Kratos data.",
+          "description": "The URL where the jsonnet source is located for mapping the provider's data to Ory Kratos data.",
           "type": "string",
           "format": "uri",
           "examples": [
@@ -708,7 +732,7 @@
                 },
                 "ui_url": {
                   "title": "Verify UI URL",
-                  "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "description": "URL where the Ory Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
                   "examples": [
@@ -746,7 +770,7 @@
                 },
                 "ui_url": {
                   "title": "Recovery UI URL",
-                  "description": "URL where the ORY Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "description": "URL where the Ory Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
                   "examples": [
@@ -776,8 +800,8 @@
               "additionalProperties": false,
               "properties": {
                 "ui_url": {
-                  "title": "ORY Kratos Error UI URL",
-                  "description": "URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "title": "Ory Kratos Error UI URL",
+                  "description": "URL where the Ory Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
                   "format": "uri-reference",
                   "examples": [
@@ -865,7 +889,7 @@
                   "properties": {
                     "providers": {
                       "title": "OpenID Connect and OAuth2 Providers",
-                      "description": "A list and configuration of OAuth2 and OpenID Connect providers ORY Kratos should integrate with.",
+                      "description": "A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.",
                       "type": "array",
                       "items": {
                         "$ref": "#/definitions/selfServiceOIDCProvider"
@@ -975,6 +999,9 @@
                 4434
               ],
               "default": 4434
+            },
+            "socket": {
+              "$ref": "#/definitions/socket"
             }
           },
           "additionalProperties": false
@@ -1162,6 +1189,9 @@
                 4433
               ],
               "default": 4433
+            },
+            "socket": {
+              "$ref": "#/definitions/socket"
             }
           },
           "additionalProperties": false
@@ -1172,7 +1202,7 @@
     "tracing": {
       "type": "object",
       "additionalProperties": false,
-      "description": "ORY Hydra supports distributed tracing.",
+      "description": "Ory Hydra supports distributed tracing.",
       "properties": {
         "provider": {
           "type": "string",
@@ -1191,7 +1221,7 @@
           "type": "string",
           "description": "Specifies the service name to use on the tracer.",
           "examples": [
-            "ORY Kratos"
+            "Ory Kratos"
           ]
         },
         "providers": {
@@ -1469,11 +1499,8 @@
           "title": "Password hashing algorithm",
           "description": "One of the values: argon2, bcrypt",
           "type": "string",
-          "default": "argon2",
-          "enum": [
-            "argon2",
-            "bcrypt"
-          ]
+          "default": "bcrypt",
+          "enum": ["argon2", "bcrypt"]
         },
         "argon2": {
           "title": "Configuration for the Argon2id hasher.",

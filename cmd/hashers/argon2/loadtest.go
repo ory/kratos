@@ -38,7 +38,7 @@ var (
 )
 
 func (r *resultTable) Header() []string {
-	return []string{"TOTAL SAMPLE TIME", "MEDIAN REQUEST TIME", "STANDARD DEVIATION", "MIN REQUEST TIME", "MAX REQUEST TIME", "MEMORY USED"}
+	return []string{"TOTAL SAMPLE TIME", "MEDIAN REQUEST TIME", "STANDARD DEVIATION", "MIN REQUEST TIME", "MAX REQUEST TIME", "MEMOry USED"}
 }
 
 func (r *resultTable) Columns() []string {

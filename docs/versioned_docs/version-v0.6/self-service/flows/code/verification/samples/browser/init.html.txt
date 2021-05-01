@@ -1,0 +1,11 @@
+<a href="http://127.0.0.1:4433/self-service/verification/browser">Resend Verification Email</a>
+
+<!-- or -->
+
+<script>
+  const initverification = () => {
+    window.location.href = 'http://127.0.0.1:4433/self-service/verification/browser'
+  }
+</script>
+
+<a onClick="initverification">Resend Verification Email</a>

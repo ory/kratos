@@ -209,7 +209,7 @@ It is a reference for all possible configuration values.
 If you are looking for an example configuration, it is better to try out the quickstart.
 
 To find out more about edge cases like setting string array values through environmental variables head to the
-[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring) section.
+[Configuring Ory services](https://www.ory.sh/docs/ecosystem/configuring) section.
 
 \`\`\`yaml
 ${out.yaml}
