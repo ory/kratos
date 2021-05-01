@@ -72,7 +72,7 @@ selfservice:
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_recovery_hook
               method: GET
@@ -85,7 +85,7 @@ selfservice:
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_verification_hook
               method: GET
@@ -100,20 +100,20 @@ selfservice:
         password:
           default_browser_return_url: https://self-service/settings/password/return_to
           hooks:
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_settings_password_hook
                 method: POST
                 body: /path/to/template.jsonnet
         profile:
           hooks:
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_settings_profile_hook
                 method: POST
                 body: /path/to/template.jsonnet
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_settings_global_hook
               method: POST
@@ -124,7 +124,7 @@ selfservice:
       lifespan: 99m
       before:
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/before_login_hook
               method: POST
@@ -134,7 +134,7 @@ selfservice:
           default_browser_return_url: https://self-service/login/password/return_to
           hooks:
             - hook: revoke_active_sessions
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_login_password_hook
                 method: POST
@@ -146,14 +146,14 @@ selfservice:
                     password: super-secret
         oidc:
           hooks:
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_login_oidc_hook
                 method: GET
                 body: /path/to/template.jsonnet
             - hook: revoke_active_sessions
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_login_global_hook
               method: POST
@@ -164,7 +164,7 @@ selfservice:
       lifespan: 98m
       before:
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/before_registration_hook
               method: GET
@@ -173,13 +173,13 @@ selfservice:
         password:
           hooks:
             - hook: session
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_registration_password_hook
                 method: POST
                 body: /path/to/template.jsonnet
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             config:
               url: https://test.kratos.ory.sh/after_registration_global_hook
               method: POST
@@ -193,7 +193,7 @@ selfservice:
         oidc:
           default_browser_return_url: https://self-service/registration/oidc/return_to
           hooks:
-            - hook: web-hook
+            - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_registration_oidc_hook
                 method: GET

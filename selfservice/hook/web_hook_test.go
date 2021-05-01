@@ -89,7 +89,7 @@ func TestJsonNetSupport(t *testing.T) {
 		Session:        &td,
 	}
 
-	b, err := createBody("test_body.jsonnet", data)
+	b, err := createBody("./stub/test_body.jsonnet", data)
 	assert.NoError(t, err)
 
 	buf := new(strings.Builder)

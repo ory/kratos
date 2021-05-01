@@ -141,7 +141,7 @@
       "type": "object",
       "properties": {
         "hook": {
-          "const": "web-hook"
+          "const": "web_hook"
         },
         "config": {
           "type": "object",
