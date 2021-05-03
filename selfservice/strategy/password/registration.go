@@ -118,10 +118,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypePassword, f, i); err != nil {
-		return s.handleRegistrationError(w, r, f, &p, err)
-	}
-
 	return nil
 }
 
