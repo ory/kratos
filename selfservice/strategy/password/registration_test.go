@@ -571,6 +571,33 @@ func TestRegistration(t *testing.T) {
 				assert.Equal(t, `registration-identifier-10-browser`, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
 			})
 		})
+
+		t.Run("case=should work with regular JSON", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
+			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			t.Cleanup(func() {
+				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+			})
+
+			hc := testhelpers.NewClientWithCookies(t)
+			hc.Transport = testhelpers.NewTransportWithLogger(hc.Transport, t)
+			payload := testhelpers.InitializeRegistrationFlowViaBrowser(t, hc, publicTS)
+			values := testhelpers.SDKFormFieldsToURLValues(payload.Ui.Nodes)
+			time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
+
+			username := x.NewUUID()
+			actual, res := testhelpers.RegistrationMakeRequest(t, true, payload, hc, fmt.Sprintf(`{
+  "method": "password",
+  "csrf_token": "%s",
+  "password": "%s",
+  "traits": {
+    "foobar": "bar",
+    "username": "%s"
+  }
+}`, values.Get("csrf_token"), x.NewUUID(), username))
+			assert.EqualValues(t, http.StatusOK, res.StatusCode, assertx.PrettifyJSONPayload(t, actual))
+			assert.Equal(t, username.String(), gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
+		})
 	})
 
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
