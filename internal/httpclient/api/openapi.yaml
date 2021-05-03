@@ -1560,20 +1560,20 @@ paths:
         This endpoint is useful for reverse proxies and API Gateways.
       operationId: whoami
       parameters:
-        - explode: false
-          in: header
-          name: Cookie
-          required: false
-          schema:
-            type: string
-          style: simple
-        - explode: false
-          in: header
-          name: Authorization
-          required: false
-          schema:
-            type: string
-          style: simple
+      - explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: Authorization
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -3422,14 +3422,27 @@ components:
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethod'
     submitSelfServiceRegistrationFlowWithPasswordMethod:
+      description: |-
+        SubmitSelfServiceRegistrationFlowWithPasswordMethod is used to decode the registration form payload
+        when using the password method.
       properties:
         csrf_token:
+          description: The CSRF Token
+          type: string
+        method:
+          description: |-
+            Method to use
+
+            This field must be set to `password` when using the password method.
           type: string
         password:
+          description: Password to sign the user up with
           type: string
         traits:
+          description: The identity's traits
           type: object
-      title: RegistrationFormPayload is used to decode the registration form payload.
+      required:
+      - method
       type: object
     submitSelfServiceSettingsFlow:
       oneOf:
