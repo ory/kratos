@@ -908,7 +908,7 @@ serve:
     socket:
       ## group ##
       #
-      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
+      # Group of unix socket. If empty, the group will be the primary group of the user running Kratos.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -938,7 +938,7 @@ serve:
 
       ## owner ##
       #
-      # Owner of unix socket. If empty, the owner will be the user running hydra.
+      # Owner of unix socket. If empty, the owner will be the user running Kratos.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -1135,7 +1135,7 @@ serve:
     socket:
       ## group ##
       #
-      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
+      # Group of unix socket. If empty, the group will be the primary group of the user running Kratos.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -1165,7 +1165,7 @@ serve:
 
       ## owner ##
       #
-      # Owner of unix socket. If empty, the owner will be the user running hydra.
+      # Owner of unix socket. If empty, the owner will be the user running Kratos.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -1192,7 +1192,7 @@ serve:
 
 ## tracing ##
 #
-# Ory Hydra supports distributed tracing.
+# Ory Kratos supports distributed tracing.
 #
 tracing:
   ## service_name ##

@@ -127,7 +127,7 @@ func NewNoLoginStrategyResponsible() error {
 func NewNoRegistrationStrategyResponsible() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
-			Message:     `could not find a strategy to sing up with`,
+			Message:     `could not find a strategy to sign up with`,
 			InstancePtr: "#/",
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationRegistrationNoStrategyFound()),
