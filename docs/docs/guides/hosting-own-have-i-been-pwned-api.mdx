@@ -5,13 +5,16 @@ title: Hosting own Have I Been Pwned API
 
 Ory Kratos uses the Have I Been Pwned (HiBP) API, with the k-anonymity flag,
 to check if the password the user registers with has been a part of one 
-of the previous leaks.
+of the breaches documented by the HiBP project.
 
-If your Kratos operates in an environment where the egress to the HiBP public
-API hosted at haveibeenpwned.com is restricted via network policies, for
-example as a result of CISO policies, you can host the HiBP API in-house
-and configure Kratos to use your own instance of the API. To do so, configure
-Kratos to use your API:
+In some environments, due to various CISO policies, it might be difficult to
+establish egress connectivity to non-approved hosts. If it happens that your
+Kratos operates in such a controlled and it cannot communicate with HiBP API
+hosted at haveibeenpwned.com but the requirement to check if passwords have
+been leaked,  you can host the HiBP API in-house and configure Kratos to use
+your own instance of the API.
+
+To do so, configure Kratos to use your API:
 
 ```yaml title="path/to/kratos/config.yml
 selfservice:
@@ -27,10 +30,10 @@ in this repository](https://github.com/radekg/hibp).
 :::note
 
 Ory Kratos `haveibeenpwned_host` setting does not allow configuring the
-respective CA chain at the moment but it does require a TLS connection.
+respective CA chain at the moment but it **does require a TLS connection**.
 Therefore your private HiBP API must use one of the trusted CAs of the
 underlying operating system.
 
-A solution might be to host the HiBP API using a Let's Encrypt certificate
-or install the private CA certificate in the trusted CA certificates
-of the system on which Kratos is running.
+A solution might be to host the HiBP API using a certificate issued by
+Let's Encrypt certificate or install the private CA certificate in the
+trusted CA certificates of the system on which Kratos is running.
