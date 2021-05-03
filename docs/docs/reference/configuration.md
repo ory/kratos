@@ -177,7 +177,6 @@ selfservice:
         hooks:
           - hook: web_hook
             config: # web_hook specific configuration
-        
 
       ## after ##
       #
@@ -193,7 +192,7 @@ selfservice:
         hooks:
           - hook: web_hook
             config: # web_hook specific configuration
-        
+
         ## password ##
         #
         password:
@@ -310,7 +309,7 @@ selfservice:
       #    > set SELFSERVICE_FLOWS_LOGIN_LIFESPAN=<value>
       #
       lifespan: 1h
-      
+
       ## before ##
       #
       before:
@@ -340,7 +339,7 @@ selfservice:
         hooks:
           - hook: web_hook
             config: # web_hook specific configuration
-            
+
         ## password ##
         #
         password:
@@ -476,7 +475,7 @@ selfservice:
         #    > set SELFSERVICE_FLOWS_VERIFICATION_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
         default_browser_return_url: https://my-app.com/dashboard
-        
+
         ## hooks ##
         #
         # Set this value using environment variables on
@@ -560,7 +559,7 @@ selfservice:
         #    > set SELFSERVICE_FLOWS_RECOVERY_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
         default_browser_return_url: https://my-app.com/dashboard
-        
+
         ## hooks ##
         #
         # Set this value using environment variables on
@@ -677,7 +676,7 @@ selfservice:
         hooks:
           - hook: web_hook
             config: # web_hook specific configuration
-            
+
         ## password ##
         #
         password:

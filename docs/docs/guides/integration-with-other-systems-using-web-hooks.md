@@ -8,8 +8,8 @@ using Web-Hooks.
 
 ### Mailchimp
 
-To send marketing email using [Mailchimp](https://mailchimp.com) upon registration,
-add the following to your Ory Kratos config:
+To send marketing email using [Mailchimp](https://mailchimp.com) upon
+registration, add the following to your Ory Kratos config:
 
 ```yaml title="path/to/my/kratos.config.yml"
 selfservice:
@@ -26,8 +26,8 @@ selfservice:
 ```
 
 And create a JsonNet file. Please be aware that Mailchimps' authentication
-mechanism currently requires to save the Mailchimp key in the JsonNet. For
-other systems you would be using the `web_hook`'s `auth` config.
+mechanism currently requires to save the Mailchimp key in the JsonNet. For other
+systems you would be using the `web_hook`'s `auth` config.
 
 ```jsonnet title="/path/to/my/mandrillapp.jsonnet"
 function(ctx) {
