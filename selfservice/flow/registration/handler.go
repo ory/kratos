@@ -183,7 +183,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceRegistrationFlow
-type getSelfServiceRegistrationFlowParameters struct {
+type getSelfServiceRegistrationFlow struct {
 	// The Registration Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
