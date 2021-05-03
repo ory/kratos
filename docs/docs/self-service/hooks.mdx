@@ -29,8 +29,8 @@ be used:
 ```yaml title="path/to/my/kratos.config.yml
 selfservice:
   flows:
-    <particular flow>:
-      <before or after>:
+    <login|registration|recovery|...>:
+      <before|after>:
         hooks:
           - hook: <hook 1 name>
             <hook 1 specific configuration>
@@ -45,7 +45,7 @@ method:
 ```yaml title="path/to/my/kratos.config.yml
 selfservice:
   flows:
-    <particular flow>:
+    <login|registration|recovery|...>:
       <before or after>:
         <particular method>:
           hooks:
@@ -62,27 +62,25 @@ configured on the flow level. So given the following example
 ```yaml title="path/to/my/kratos.config.yml
 selfservice:
   flows:
-    <particular flow>:
+    login:
       before:
         hooks:
-          - hook: <hook 1 name>
-            <hook 1 specific configuration>
+          - hook: hook_1
+            # hook_1 specific configuration
       after:
         hooks:
-          - hook: <hook 2 name>
-            <hook 2 specific configuration>
-        <strategy 1>:
-          <strategy specific config>
+          - hook: hook_2
+            # hook_2 specific configuration
+        password:
           hooks:
-            - hook: <hook 3 name>
-              <hook 3 specific configuration>
-        <strategy 2>:
-          <strategy specific config>
+            - hook: hook_3
+              # hook_3 specific configuration
+        # ...
 ```
 
-"hook 1" is always run when the flow is started. On the finalization of the
-flow, "hook2" is only run for "strategy 2", but not for "strategy 1" as latter
-defines its own hooks.
+`hook_1` is always run when the flow is started. On the finalization of the
+flow, `hook_2` is not run for the `password` method, but for the `oidc` method (for example).
+If the `password` method is used, then `hook_3` will run.
 
 ## All flows
 
@@ -109,7 +107,7 @@ The configuration for a web-hook goes into the `hooks` property either on the
 flow before/after, or the method level and has the following structure:
 
 ```.yaml
-  - hook: web-hook
+  - hook: web_hook
     config:
       url: https://test.kratos.ory.sh/after_verification_hook
       method: POST # GET, DELETE, etc
@@ -178,7 +176,7 @@ selfservice:
     login:
       before:
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             # web-hook specific configuration
 ```
 
@@ -223,7 +221,7 @@ selfservice:
     registration:
       before:
         hooks:
-          - hook: web-hook
+          - hook: web_hook
             # web-hook specific configuration
 ```
 

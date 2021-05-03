@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -74,7 +75,7 @@ func (m *RegistryDefault) VerificationExecutor() *verification.HookExecutor {
 
 func (m *RegistryDefault) PostVerificationHooks(ctx context.Context) (b []verification.PostHookExecutor) {
 
-	for _, v := range m.getHooks("global", m.Config(ctx).SelfServiceFlowVerificationAfterHooks("global")) {
+	for _, v := range m.getHooks(config.HookGlobal, m.Config(ctx).SelfServiceFlowVerificationAfterHooks(config.HookGlobal)) {
 		if hook, ok := v.(verification.PostHookExecutor); ok {
 			b = append(b, hook)
 		}

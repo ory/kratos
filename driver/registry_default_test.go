@@ -30,7 +30,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("type=verification", func(t *testing.T) {
-
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string
@@ -72,7 +71,6 @@ func TestDriverDefault_Hooks(t *testing.T) {
 	})
 
 	t.Run("type=recovery", func(t *testing.T) {
-
 		// AFTER hooks
 		for _, tc := range []struct {
 			uc     string

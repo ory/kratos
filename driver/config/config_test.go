@@ -192,7 +192,7 @@ func TestViperProvider(t *testing.T) {
 					},
 				},
 				{
-					strategy: "global",
+					strategy: config.HookGlobal,
 					hooks: []config.SelfServiceHook{
 						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"in":"header","name":"My-Key","value":"My-Key-Value"},"type":"api-key"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_global_hook"}`)},
 					},
@@ -240,7 +240,7 @@ func TestViperProvider(t *testing.T) {
 					},
 				},
 				{
-					strategy: "global",
+					strategy: config.HookGlobal,
 					hooks: []config.SelfServiceHook{
 						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_login_global_hook"}`)},
 					},
@@ -274,7 +274,7 @@ func TestViperProvider(t *testing.T) {
 					},
 				},
 				{
-					strategy: "global",
+					strategy: config.HookGlobal,
 					hooks: []config.SelfServiceHook{
 						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_settings_global_hook"}`)},
 					},
@@ -292,7 +292,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRecoveryRequestLifespan())
 			assert.Equal(t, "http://test.kratos.ory.sh/recovery", p.SelfServiceFlowRecoveryUI().String())
 
-			hooks := p.SelfServiceFlowRecoveryAfterHooks("global")
+			hooks := p.SelfServiceFlowRecoveryAfterHooks(config.HookGlobal)
 			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_recovery_hook"}`)}}, hooks)
 		})
 
@@ -300,7 +300,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, time.Minute*97, p.SelfServiceFlowVerificationRequestLifespan())
 			assert.Equal(t, "http://test.kratos.ory.sh/verification", p.SelfServiceFlowVerificationUI().String())
 
-			hooks := p.SelfServiceFlowVerificationAfterHooks("global")
+			hooks := p.SelfServiceFlowVerificationAfterHooks(config.HookGlobal)
 			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_verification_hook"}`)}}, hooks)
 		})
 
