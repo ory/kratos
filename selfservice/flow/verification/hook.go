@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -14,9 +13,9 @@ import (
 
 type (
 	PostHookExecutor interface {
-		ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
+		ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
 	}
-	PostHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
+	PostHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
 
 	HooksProvider interface {
 		PostVerificationHooks(ctx context.Context) []PostHookExecutor
@@ -31,8 +30,8 @@ func PostHookVerificationExecutorNames(e []PostHookExecutor) []string {
 	return names
 }
 
-func (f PostHookExecutorFunc) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
-	return f(w, r, a, s)
+func (f PostHookExecutorFunc) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
+	return f(w, r, a, i)
 }
 
 type (
@@ -62,13 +61,12 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 }
 
 func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
-	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC())
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Debug("Running ExecutePostVerificationHooks.")
 	for k, executor := range e.d.PostVerificationHooks(r.Context()) {
-		if err := executor.ExecutePostVerificationHook(w, r, a, s); err != nil {
+		if err := executor.ExecutePostVerificationHook(w, r, a, i); err != nil {
 			return err
 		}
 

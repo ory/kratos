@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/settings"
 
@@ -58,11 +60,12 @@ type (
 	}
 
 	templateContext struct {
-		Flow           interface{} `json:"flow"`
-		RequestHeaders http.Header `json:"request_headers"`
-		RequestMethod  string      `json:"request_method"`
-		RequestUrl     string      `json:"request_url"`
-		Session        interface{} `json:"session"`
+		Flow           flow.Flow          `json:"flow"`
+		RequestHeaders http.Header        `json:"request_headers"`
+		RequestMethod  string             `json:"request_method"`
+		RequestUrl     string             `json:"request_url"`
+		Session        *session.Session   `json:"session"`
+		Identity       *identity.Identity `json:"identity"`
 	}
 
 	WebHook struct {
@@ -191,16 +194,17 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.URL.String(),
 		Session:        session,
+		Identity:       session.Identity,
 	})
 }
 
-func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, session *session.Session) error {
+func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, identity *identity.Identity) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.URL.String(),
-		Session:        session,
+		Identity:       identity,
 	})
 }
 
@@ -211,6 +215,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 		RequestMethod:  req.Method,
 		RequestUrl:     req.URL.String(),
 		Session:        session,
+		Identity:       session.Identity,
 	})
 }
 
@@ -230,16 +235,17 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 		RequestMethod:  req.Method,
 		RequestUrl:     req.URL.String(),
 		Session:        session,
+		Identity:       session.Identity,
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, session *identity.Identity) error {
+func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, identity *identity.Identity) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.URL.String(),
-		Session:        session,
+		Identity:       identity,
 	})
 }
 
@@ -247,7 +253,7 @@ func (e *WebHook) execute(data *templateContext) error {
 	// TODO: reminder for the future: move parsing of config to the web hook initialization
 	conf, err := newWebHookConfig(e.c)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
 	body, err := createBody(conf.templatePath, data)

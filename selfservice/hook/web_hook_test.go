@@ -7,9 +7,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x"
+
+	"github.com/ory/kratos/session"
+
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -72,21 +77,21 @@ func TestApiKeyInCookieStrategy(t *testing.T) {
 }
 
 func TestJsonNetSupport(t *testing.T) {
-	id, _ := uuid.NewV1()
-	td := struct {
-		ID  uuid.UUID `json:"id"`
-		Foo string    `json:"foo"`
-	}{id, "Bar"}
+	f := login.Flow{ID: x.NewUUID()}
+	s := session.Session{ID: x.NewUUID()}
+	i := identity.NewIdentity("")
+
 	headers := http.Header{}
 	headers.Add("Some-Header", "Some-Value")
 	headers.Add("Cookie", "c1=v1")
 	headers.Add("Cookie", "c2=v2")
 	data := &templateContext{
-		Flow:           &td,
+		Flow:           &f,
 		RequestHeaders: headers,
 		RequestMethod:  "POST",
 		RequestUrl:     "https://test.kratos.ory.sh/some-test-path",
-		Session:        &td,
+		Session:        &s,
+		Identity:       i,
 	}
 
 	b, err := createBody("./stub/test_body.jsonnet", data)
@@ -99,6 +104,7 @@ func TestJsonNetSupport(t *testing.T) {
 		{
 			"flow_id": "%s",
 			"session_id": "%s",
+			"identity_id": "%s",
 			"headers": {
 				"Cookie": ["%s", "%s"],
 				"Some-Header": ["%s"]
@@ -106,8 +112,7 @@ func TestJsonNetSupport(t *testing.T) {
 			"method": "%s",
 			"url": "%s"
 		}`,
-		td.ID,
-		td.Foo,
+		f.ID, s.ID, i.ID,
 		data.RequestHeaders.Values("Cookie")[0],
 		data.RequestHeaders.Values("Cookie")[1],
 		data.RequestHeaders.Get("Some-Header"),

@@ -90,10 +90,15 @@ func SelfServiceHookFakeIdentity(t *testing.T) *identity.Identity {
 func SelfServiceHookConfigReset(t *testing.T, conf *config.Config) func() {
 	return func() {
 		conf.MustSet(config.ViperKeySelfServiceLoginAfter, nil)
+		conf.MustSet(config.ViperKeySelfServiceLoginAfter+".hooks", nil)
 		conf.MustSet(config.ViperKeySelfServiceLoginBeforeHooks, nil)
+		conf.MustSet(config.ViperKeySelfServiceRecoveryAfter, nil)
+		conf.MustSet(config.ViperKeySelfServiceRecoveryAfter+".hooks", nil)
 		conf.MustSet(config.ViperKeySelfServiceRegistrationAfter, nil)
+		conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+".hooks", nil)
 		conf.MustSet(config.ViperKeySelfServiceRegistrationBeforeHooks, nil)
 		conf.MustSet(config.ViperKeySelfServiceSettingsAfter, nil)
+		conf.MustSet(config.ViperKeySelfServiceSettingsAfter+".hooks", nil)
 	}
 }
 
@@ -130,18 +135,18 @@ func SelfServiceHookRegistrationViperSetPost(t *testing.T, conf *config.Config, 
 }
 
 func SelfServiceHookLoginErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, err error) bool {
-	return selfServiceHookErrorHandler(t, w, r, login.ErrHookAbortFlow, err)
+	return SelfServiceHookErrorHandler(t, w, r, login.ErrHookAbortFlow, err)
 }
 
 func SelfServiceHookRegistrationErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, err error) bool {
-	return selfServiceHookErrorHandler(t, w, r, registration.ErrHookAbortFlow, err)
+	return SelfServiceHookErrorHandler(t, w, r, registration.ErrHookAbortFlow, err)
 }
 
 func SelfServiceHookSettingsErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, err error) bool {
-	return selfServiceHookErrorHandler(t, w, r, settings.ErrHookAbortRequest, err)
+	return SelfServiceHookErrorHandler(t, w, r, settings.ErrHookAbortRequest, err)
 }
 
-func selfServiceHookErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, abortErr error, actualErr error) bool {
+func SelfServiceHookErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, abortErr error, actualErr error) bool {
 	if actualErr != nil {
 		t.Logf("received error: %+v", actualErr)
 		if errors.Is(actualErr, abortErr) {
@@ -155,26 +160,26 @@ func selfServiceHookErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Re
 }
 
 func SelfServiceMakeLoginPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
-	return selfServiceMakeHookRequest(t, ts, "/login/pre", false, url.Values{})
+	return SelfServiceMakeHookRequest(t, ts, "/login/pre", false, url.Values{})
 }
 
 func SelfServiceMakeLoginPostHookRequest(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string) {
-	return selfServiceMakeHookRequest(t, ts, "/login/post", asAPI, query)
+	return SelfServiceMakeHookRequest(t, ts, "/login/post", asAPI, query)
 }
 
 func SelfServiceMakeRegistrationPreHookRequest(t *testing.T, ts *httptest.Server) (*http.Response, string) {
-	return selfServiceMakeHookRequest(t, ts, "/registration/pre", false, url.Values{})
+	return SelfServiceMakeHookRequest(t, ts, "/registration/pre", false, url.Values{})
 }
 
 func SelfServiceMakeRegistrationPostHookRequest(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string) {
-	return selfServiceMakeHookRequest(t, ts, "/registration/post", asAPI, query)
+	return SelfServiceMakeHookRequest(t, ts, "/registration/post", asAPI, query)
 }
 
 func SelfServiceMakeSettingsPostHookRequest(t *testing.T, ts *httptest.Server, asAPI bool, query url.Values) (*http.Response, string) {
-	return selfServiceMakeHookRequest(t, ts, "/settings/post", asAPI, query)
+	return SelfServiceMakeHookRequest(t, ts, "/settings/post", asAPI, query)
 }
 
-func selfServiceMakeHookRequest(t *testing.T, ts *httptest.Server, suffix string, asAPI bool, query url.Values) (*http.Response, string) {
+func SelfServiceMakeHookRequest(t *testing.T, ts *httptest.Server, suffix string, asAPI bool, query url.Values) (*http.Response, string) {
 	if len(query) > 0 {
 		suffix += "?" + query.Encode()
 	}
