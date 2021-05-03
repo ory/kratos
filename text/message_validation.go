@@ -102,7 +102,7 @@ func NewErrorValidationTOTPVerifierWrong() *Message {
 func NewErrorValidationIdentifierMissing() *Message {
 	return &Message{
 		ID:   ErrorValidationIdentifierMissing,
-		Text: fmt.Sprintf("Could not find any login identifiers. Did you forget to set them?"),
+		Text: "Could not find any login identifiers. Did you forget to set them?",
 		Type: Error,
 	}
 }
