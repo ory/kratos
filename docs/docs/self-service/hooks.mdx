@@ -79,8 +79,8 @@ selfservice:
 ```
 
 `hook_1` is always run when the flow is started. On the finalization of the
-flow, `hook_2` is not run for the `password` method, but for the `oidc` method (for example).
-If the `password` method is used, then `hook_3` will run.
+flow, `hook_2` is not run for the `password` method, but for the `oidc` method
+(for example). If the `password` method is used, then `hook_3` will run.
 
 ## All flows
 
@@ -129,13 +129,13 @@ The configuration section of a web-hook consists of
 - `auth` - configuration of authentication and authorization mechanisms to be
   used by the web-hook
 
-Web-Hooks bind `flow` and the `session` object, as well as request headers
-(`request_headers`), request method (`request_method`), and the request url
-(`request_url`) of the flow into the jsonnet template. These are available
-through a `ctx` object. E.g. to create a body looking like
-`{ user_id: <some-id> }` to be send to the web hook end point, the jsonnet
-template would look like this:
-`function(ctx) { user_id: ctx.session.identity.id }`
+Web-Hooks bind the `flow`, as well as request headers (`request_headers`),
+request method (`request_method`), and the request url (`request_url`) of the
+flow into the jsonnet template. If available, `session` and `identity` objects
+are bound into the jsonnet template as well. These objects are available through
+a `ctx` object. E.g. to create a body looking like `{ user_id: <some-id> }` to
+be send to the web hook end point, the jsonnet template would look like this:
+`function(ctx) { user_id: ctx.identity.id }`
 
 #### Web-Hook Authentication and Authorization Mechanisms
 
