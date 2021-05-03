@@ -80,6 +80,16 @@ func NewPasswordPolicyViolationError(instancePtr string, reason string) error {
 	})
 }
 
+func NewMissingIdentifierError() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     fmt.Sprintf("could not find any identifiers"),
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationIdentifierMissing()),
+	})
+}
+
 type ValidationErrorContextInvalidCredentialsError struct{}
 
 func (r *ValidationErrorContextInvalidCredentialsError) AddContext(_, _ string) {}
