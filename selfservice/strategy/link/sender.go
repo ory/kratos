@@ -25,6 +25,7 @@ type (
 		courier.Provider
 		identity.PoolProvider
 		identity.ManagementProvider
+		identity.PrivilegedPoolProvider
 		x.LoggingProvider
 		config.Provider
 
@@ -137,13 +138,20 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 		WithSensitiveField("verification_link_token", token.Token).
 		Info("Sending out verification email with verification link.")
 
-	return s.send(ctx, string(address.Via), templates.NewVerificationValid(s.r.Config(ctx),
+	if err := s.send(ctx, string(address.Via), templates.NewVerificationValid(s.r.Config(ctx),
 		&templates.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(nil), verification.RouteSubmitFlow),
 			url.Values{
 				"flow":  {f.ID.String()},
 				"token": {token.Token},
-			}).String()}))
+			}).String()})); err != nil {
+		return err
+	}
+	address.Status = identity.VerifiableAddressStatusPending
+	if err := s.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Sender) send(ctx context.Context, via string, t courier.EmailTemplate) error {
