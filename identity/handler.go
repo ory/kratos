@@ -43,13 +43,6 @@ func NewHandler(r handlerDependencies) *Handler {
 	return &Handler{r: r}
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
-		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
-		public.Handle(m, RouteMethod, h.method)
-	}
-}
-
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteBase, h.list)
 	admin.GET(RouteBase+"/:id", h.get)
@@ -57,6 +50,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 	admin.POST(RouteBase, h.create)
 	admin.PUT(RouteBase+"/:id", h.update)
+
+	admin.GET(RouteMethod, h.method)
 }
 
 type methodResponse struct {
@@ -64,6 +59,18 @@ type methodResponse struct {
 	Provider string `json:"provider,omitempty"`
 }
 
+// swagger:route GET /method admin getMethod
+//
+// Get login method for a previously registered email address or username
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: loginMethod
+//       500: genericError
 func (h *Handler) method(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// if the credentials can be looked up directly by email address then they're type password
