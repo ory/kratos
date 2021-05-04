@@ -179,7 +179,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 	}
 
 	if c > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
-		return errors.New("the password has been found in data breaches and must no longer be used.")
+		return errors.New("the password has been found in data breaches and must no longer be used")
 	}
 
 	return nil
