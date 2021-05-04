@@ -3,16 +3,16 @@ id: hosting-own-have-i-been-pwned-api
 title: Hosting own Have I Been Pwned API
 ---
 
-Ory Kratos uses the Have I Been Pwned (HiBP) API, with the k-anonymity flag,
-to check if the password the user registers with has been a part of one 
-of the breaches documented by the HiBP project.
+Ory Kratos uses the Have I Been Pwned (HiBP) API, with the k-anonymity flag, to
+check if the password the user registers with has been a part of one of the
+breaches documented by the HiBP project.
 
 In some environments, due to various CISO policies, it might be difficult to
 establish egress connectivity to non-approved hosts. If it happens that your
 Kratos operates in such an environment and it cannot communicate with the HiBP
 API at haveibeenpwned.com, but there is the requirement to check if passwords
-have been leaked, you can host the HiBP API yourself and configure Kratos to
-use your own instance.
+have been leaked, you can host the HiBP API yourself and configure Kratos to use
+your own instance.
 
 To do so, configure Kratos to use your API:
 
@@ -24,8 +24,8 @@ selfservice:
         haveibeenpwned_host: api.private.host
 ```
 
-An example of a minimal self-hosted, k-anonymity enabled HiBP API [can be found
-in this repository](https://github.com/radekg/hibp).
+An example of a minimal self-hosted, k-anonymity enabled HiBP API
+[can be found in this repository](https://github.com/radekg/hibp).
 
 :::note
 
@@ -34,6 +34,6 @@ respective CA chain at the moment but it **does require a TLS connection**.
 Therefore your private HiBP API must use one of the trusted CAs of the
 underlying operating system.
 
-A solution might be to host the HiBP API using a certificate issued by
-Let's Encrypt certificate or install the private CA certificate in the
-trusted CA certificates of the system on which Kratos is running.
+A solution might be to host the HiBP API using a certificate issued by Let's
+Encrypt certificate or install the private CA certificate in the trusted CA
+certificates of the system on which Kratos is running.

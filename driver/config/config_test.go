@@ -144,7 +144,7 @@ func TestViperProvider(t *testing.T) {
 				config  string
 				enabled bool
 			}{
-				{id: "password", enabled: true, config: `{"ignore_network_errors":true,"max_breaches":0}`},
+				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","ignore_network_errors":true,"max_breaches":0}`},
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
