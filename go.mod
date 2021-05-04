@@ -44,7 +44,7 @@ require (
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.5.0
 	github.com/google/go-github/v27 v27.0.1
-	github.com/google/go-jsonnet v0.16.0
+	github.com/google/go-jsonnet v0.17.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.1.3

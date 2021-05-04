@@ -83,6 +83,7 @@ const (
 	ViperKeySelfServiceSettingsAfter                                = "selfservice.flows.settings.after"
 	ViperKeySelfServiceSettingsRequestLifespan                      = "selfservice.flows.settings.lifespan"
 	ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter        = "selfservice.flows.settings.privileged_session_max_age"
+	ViperKeySelfServiceRecoveryAfter                                = "selfservice.flows.recovery.after"
 	ViperKeySelfServiceRecoveryEnabled                              = "selfservice.flows.recovery.enabled"
 	ViperKeySelfServiceRecoveryUI                                   = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan                      = "selfservice.flows.recovery.lifespan"
@@ -91,6 +92,7 @@ const (
 	ViperKeySelfServiceVerificationUI                               = "selfservice.flows.verification.ui_url"
 	ViperKeySelfServiceVerificationRequestLifespan                  = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
+	ViperKeySelfServiceVerificationAfter                            = "selfservice.flows.verification.after"
 	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
 	ViperKeyIdentitySchemas                                         = "identity.schemas"
 	ViperKeyHasherAlgorithm                                         = "hashers.algorithm"
@@ -186,8 +188,14 @@ func (c *Argon2) MarshalJSON() ([]byte, error) {
 
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
+const HookGlobal = "global"
+
 func HookStrategyKey(key, strategy string) string {
-	return fmt.Sprintf("%s.%s.hooks", key, strategy)
+	if strategy == HookGlobal {
+		return fmt.Sprintf("%s.hooks", key)
+	} else {
+		return fmt.Sprintf("%s.%s.hooks", key, strategy)
+	}
 }
 
 func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
@@ -584,7 +592,7 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 
 	var aliases []DomainAlias
 	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
-		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
+		p.l.WithError(err).WithField("config", raw).Warnf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
 		return primary
 	}
 
@@ -753,12 +761,20 @@ func (p *Config) SelfServiceFlowVerificationReturnTo(defaultReturnTo *url.URL) *
 	return p.p.RequestURIF(ViperKeySelfServiceVerificationBrowserDefaultReturnTo, defaultReturnTo)
 }
 
+func (p *Config) SelfServiceFlowVerificationAfterHooks(strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceVerificationAfter, strategy))
+}
+
 func (p *Config) SelfServiceFlowRecoveryReturnTo() *url.URL {
 	return p.p.RequestURIF(ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo())
 }
 
 func (p *Config) SelfServiceFlowRecoveryRequestLifespan() time.Duration {
 	return p.p.DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRecoveryAfter, strategy))
 }
 
 func (p *Config) SelfServiceFlowSettingsPrivilegedSessionMaxAge() time.Duration {

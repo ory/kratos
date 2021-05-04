@@ -5,15 +5,181 @@ title: Hooks
 
 Hooks execute logic after a flow (login, registration, settings, ...):
 
+- _Before login:_ is executed when a login flow starts.
 - _After login:_ is executed after a login was successful.
+- _Before registration:_ is executed when a registration flow starts.
 - _After registration:_ is executed when a registration was successful:
   - _Before persisting:_ runs before the identity is saved in the database.
   - _After persisting:_ runs after the identity was saved in the database.
+- _After recovery:_ is executed after a password has been successfully
+  recovered.
 - _After settings:_ is executed when a settings was successful:
   - _Before persisting:_ runs before the identity is saved in the database.
   - _After persisting:_ runs after the identity was saved in the database.
+- _After verification:_ is executed when the verification of an account was
+  successful.
+
+There are hooks, which can be configured only for a particular flow (login,
+registration, settings, ...) method (password, oidc, profile) and hooks, which
+can be configured for all methods of any flow.
+
+To configure hooks for all methods of a particular flow, following pattern must
+be used:
+
+```yaml title="path/to/my/kratos.config.yml
+selfservice:
+  flows:
+    <login|registration|recovery|...>:
+      <before|after>:
+        hooks:
+          - hook: <hook 1 name>
+            <hook 1 specific configuration>
+          - hook: <hook 2 name>
+            <hook 2 specific configuration>
+          ...
+```
+
+Following pattern must be followed to configure hooks for a particular flow
+method:
+
+```yaml title="path/to/my/kratos.config.yml
+selfservice:
+  flows:
+    <login|registration|recovery|...>:
+      <before or after>:
+        <particular method>:
+          hooks:
+            - hook: <hook 1 name>
+              <hook 1 specific configuration>
+            - hook: <hook 2 name>
+              <hook 2 specific configuration>
+            ...
+```
+
+Hooks configured on a particular method level always override the hooks
+configured on the flow level. So given the following example
+
+```yaml title="path/to/my/kratos.config.yml
+selfservice:
+  flows:
+    login:
+      before:
+        hooks:
+          - hook: hook_1
+            # hook_1 specific configuration
+      after:
+        hooks:
+          - hook: hook_2
+            # hook_2 specific configuration
+        password:
+          hooks:
+            - hook: hook_3
+              # hook_3 specific configuration
+        # ...
+```
+
+`hook_1` is always run when the flow is started. On the finalization of the
+flow, `hook_2` is not run for the `password` method, but for the `oidc` method
+(for example). If the `password` method is used, then `hook_3` will run.
+
+## All flows
+
+Following hooks can be configured for all flows.
+
+### Web-Hooks
+
+Web-Hooks can be configured for every, but error and logout flow and can be
+configured on either the before/after level or at the level of a particular
+method. Support for Web-Hooks before execution of a method is currently
+supported only for registration and login methods.
+
+:::note
+
+As of today Web-Hooks cannot control the execution of the flow by
+patching/updating particular properties of flow specific object upon Web-Hook
+completion. It will however cancel the execution of the flow if the call to the
+Web-Hook end point fails either due to a network error or if the end point
+responses with an HTTP code > 300.
+
+:::
+
+The configuration for a web-hook goes into the `hooks` property either on the
+flow before/after, or the method level and has the following structure:
+
+```.yaml
+  - hook: web_hook
+    config:
+      url: https://test.kratos.ory.sh/after_verification_hook
+      method: POST # GET, DELETE, etc
+      body: /link/to/my/jsonnet/file
+      auth:
+        type: <some-type>
+        config:
+          <type-specific-config>
+```
+
+The configuration section of a web-hook consists of
+
+- `url` - the url, the web-hook should call (mandatory)
+- `method` - the HTTP method (GET, POST, ...), the web-hook should use
+  (mandatory)
+- `body` - path to a jsonnet template, used by the web-hook to render the
+  payload to send (optional). This property is ignored for HTTP `method`s, which
+  do not support sending of HTTP body payloads.
+- `auth` - configuration of authentication and authorization mechanisms to be
+  used by the web-hook
+
+Web-Hooks bind the `flow`, as well as request headers (`request_headers`),
+request method (`request_method`), and the request url (`request_url`) of the
+flow into the jsonnet template for all methods and execution paths (before and
+after). For the `after` execution path of all flows, it binds the `identity`
+object into the jsonnet template as well. These objects are available through a
+`ctx` object. E.g. to create a body looking like `{ user_id: <some-id> }` to be
+send to the web hook end point, the jsonnet template would look like this:
+`function(ctx) { user_id: ctx.identity.id }`
+
+#### Web-Hook Authentication and Authorization Mechanisms
+
+For `auth` following mechanisms are supported:
+
+- Authentication via an Api Key. Type must be set to `api-key`.
+- Authentication via Basic Authentication. Type must be set to `basic-auth`.
+
+For `api-key` the config looks as follows:
+
+```.yaml
+name: Some-Name
+value: The-Value-of-My-Key
+in: header # alternatively cookie
+```
+
+All properties are mandatory.
+
+For `basic-auth` the config looks as follows:
+
+```.yaml
+user: My-User
+password: My-Pass-Value
+```
+
+All properties are mandatory.
 
 ## Login
+
+Hooks running before or after successful user login are defined per Self-Service
+Registration Method in ORY Kratos' configuration file.
+
+### Before
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    login:
+      before:
+        hooks:
+          - hook: web_hook
+            # web-hook specific configuration
+```
 
 ### After
 
@@ -23,7 +189,8 @@ selfservice:
     login:
       after:
         password:
-          - hook: revoke_active_sessions
+          hooks:
+            - hook: revoke_active_sessions
 ```
 
 #### `revoke_active_sessions`
@@ -37,14 +204,27 @@ selfservice:
     login:
       after:
         <method>:
-          - hook: revoke_active_sessions
-            # can not be configured
+          hooks:
+            - hook: revoke_active_sessions
+              # can not be configured
 ```
 
 ## Registration
 
-Hooks running after successful user registration are defined per Self-Service
-Registration Method in Ory Kratos' configuration file.
+Hooks running before or after successful user registration are defined per
+Self-Service Registration Method in ORY Kratos' configuration file.
+
+### Before
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    registration:
+      before:
+        hooks:
+          - hook: web_hook
+            # web-hook specific configuration
+```
 
 ### After
 
@@ -54,9 +234,11 @@ selfservice:
     registration:
       after:
         oidc:
-          - hook: session
+          hooks:
+            - hook: session
         password:
-          - hook: session
+          hooks:
+            - hook: session
 ```
 
 #### `session`
@@ -96,8 +278,9 @@ selfservice:
     registration:
       after:
         <method>:
-          - hook: session
-            # can not be configured
+          hooks:
+            - hook: session
+              # can not be configured
 ```
 
 Depending on the registration flow type the behavior changes.
@@ -152,4 +335,4 @@ selfservice:
       after:
 ```
 
-No hooks are available for this flow at the moment.
+Only Web-Hooks hooks are available for this flow at the moment.

@@ -140,7 +140,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 	vm := jsonnet.MakeVM()
 	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateSnippet(provider.Config().Mapper, jn.String())
+	evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {

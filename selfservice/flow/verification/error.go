@@ -21,6 +21,10 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var (
+	ErrHookAbortFlow = errors.New("aborted verification hook execution")
+)
+
 type (
 	errorHandlerDependencies interface {
 		errorx.ManagementProvider
