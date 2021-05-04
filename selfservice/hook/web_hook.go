@@ -64,7 +64,6 @@ type (
 		RequestHeaders http.Header        `json:"request_headers"`
 		RequestMethod  string             `json:"request_method"`
 		RequestUrl     string             `json:"request_url"`
-		Session        *session.Session   `json:"session"`
 		Identity       *identity.Identity `json:"identity"`
 	}
 
@@ -193,7 +192,6 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
-		Session:        session,
 		Identity:       session.Identity,
 	})
 }
@@ -214,7 +212,6 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
-		Session:        session,
 		Identity:       session.Identity,
 	})
 }
@@ -234,7 +231,6 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
-		Session:        session,
 		Identity:       session.Identity,
 	})
 }

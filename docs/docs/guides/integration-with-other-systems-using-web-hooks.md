@@ -38,7 +38,7 @@ function(ctx) {
     text: "Welcome to Ory Kratos",
     to: [
       {
-        email: ctx.session.identity.verifiable_addresses[0].value,
+        email: ctx.identity.verifiable_addresses[0].value,
         type: "to"
       }
     ]

@@ -91,7 +91,6 @@ func TestApiKeyInCookieStrategy(t *testing.T) {
 
 func TestJsonNetSupport(t *testing.T) {
 	f := login.Flow{ID: x.NewUUID()}
-	s := session.Session{ID: x.NewUUID()}
 	i := identity.NewIdentity("")
 
 	headers := http.Header{}
@@ -103,7 +102,6 @@ func TestJsonNetSupport(t *testing.T) {
 		RequestHeaders: headers,
 		RequestMethod:  "POST",
 		RequestUrl:     "https://test.kratos.ory.sh/some-test-path",
-		Session:        &s,
 		Identity:       i,
 	}
 
@@ -116,7 +114,6 @@ func TestJsonNetSupport(t *testing.T) {
 	expected := fmt.Sprintf(`
 		{
 			"flow_id": "%s",
-			"session_id": "%s",
 			"identity_id": "%s",
 			"headers": {
 				"Cookie": ["%s", "%s"],
@@ -125,7 +122,7 @@ func TestJsonNetSupport(t *testing.T) {
 			"method": "%s",
 			"url": "%s"
 		}`,
-		f.ID, s.ID, i.ID,
+		f.ID, i.ID,
 		data.RequestHeaders.Values("Cookie")[0],
 		data.RequestHeaders.Values("Cookie")[1],
 		data.RequestHeaders.Get("Some-Header"),
@@ -277,7 +274,6 @@ func TestWebHooks(t *testing.T) {
 		h, _ := json.Marshal(req.Header)
 		return fmt.Sprintf(`{
    					"flow_id": "%s",
-					"session_id": null,
 					"identity_id": null,
    					"headers": %s,
 					"method": "%s",
@@ -285,28 +281,15 @@ func TestWebHooks(t *testing.T) {
 				}`, f.GetID(), string(h), req.Method, req.RequestURI)
 	}
 
-	bodyWithIdentity := func(req *http.Request, f flow.Flow, s *session.Session) string {
+	bodyWithFlowAndIdentity := func(req *http.Request, f flow.Flow, s *session.Session) string {
 		h, _ := json.Marshal(req.Header)
 		return fmt.Sprintf(`{
    					"flow_id": "%s",
-					"session_id": null,
 					"identity_id": "%s",
    					"headers": %s,
 					"method": "%s",
 					"url": "%s"
 				}`, f.GetID(), s.Identity.ID, string(h), req.Method, req.RequestURI)
-	}
-
-	bodyWithSessionAndIdentity := func(req *http.Request, f flow.Flow, s *session.Session) string {
-		h, _ := json.Marshal(req.Header)
-		return fmt.Sprintf(`{
-   					"flow_id": "%s",
-					"session_id": "%s",
-					"identity_id": "%s",
-   					"headers": %s,
-					"method": "%s",
-					"url": "%s"
-				}`, f.GetID(), s.ID, s.Identity.ID, string(h), req.Method, req.RequestURI)
 	}
 
 	for _, tc := range []struct {
@@ -332,7 +315,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecuteLoginPostHook(nil, req, f.(*login.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithSessionAndIdentity(req, f, s)
+				return bodyWithFlowAndIdentity(req, f, s)
 			},
 		},
 		{
@@ -352,7 +335,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithSessionAndIdentity(req, f, s)
+				return bodyWithFlowAndIdentity(req, f, s)
 			},
 		},
 		{
@@ -362,7 +345,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecutePostRecoveryHook(nil, req, f.(*recovery.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithSessionAndIdentity(req, f, s)
+				return bodyWithFlowAndIdentity(req, f, s)
 			},
 		},
 		{
@@ -372,7 +355,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithIdentity(req, f, s)
+				return bodyWithFlowAndIdentity(req, f, s)
 			},
 		},
 		{
@@ -382,7 +365,7 @@ func TestWebHooks(t *testing.T) {
 				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
-				return bodyWithIdentity(req, f, s)
+				return bodyWithFlowAndIdentity(req, f, s)
 			},
 		},
 	} {
