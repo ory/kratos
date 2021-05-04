@@ -183,7 +183,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.URL.String(),
+		RequestUrl:     req.RequestURI,
 	})
 }
 
@@ -192,7 +192,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.URL.String(),
+		RequestUrl:     req.RequestURI,
 		Session:        session,
 		Identity:       session.Identity,
 	})
@@ -203,7 +203,7 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.URL.String(),
+		RequestUrl:     req.RequestURI,
 		Identity:       identity,
 	})
 }
@@ -213,7 +213,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.URL.String(),
+		RequestUrl:     req.RequestURI,
 		Session:        session,
 		Identity:       session.Identity,
 	})
@@ -224,7 +224,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.URL.String(),
+		RequestUrl:     req.RequestURI,
 	})
 }
 
@@ -233,7 +233,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.URL.String(),
+		RequestUrl:     req.RequestURI,
 		Session:        session,
 		Identity:       session.Identity,
 	})
@@ -244,7 +244,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestUrl:     req.URL.String(),
+		RequestUrl:     req.RequestURI,
 		Identity:       identity,
 	})
 }
@@ -256,9 +256,15 @@ func (e *WebHook) execute(data *templateContext) error {
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	body, err := createBody(conf.templatePath, data)
-	if err != nil {
-		return fmt.Errorf("failed to create web hook body: %w", err)
+	var body io.Reader
+	if conf.method != "TRACE" {
+		// According to the HTTP spec any request method, but TRACE is allowed to
+		// have a body. Even this is a really bad practice for some of them, like for
+		// GET
+		body, err = createBody(conf.templatePath, data)
+		if err != nil {
+			return fmt.Errorf("failed to create web hook body: %w", err)
+		}
 	}
 
 	if err = doHttpCall(conf.method, conf.url, conf.auth, body); err != nil {
