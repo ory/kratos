@@ -1306,27 +1306,6 @@ func TestSettingsStrategy(t *testing.T) {
       "disabled": false,
       "name": "unlink",
       "type": "submit",
-      "value": "ory"
-    },
-    "group": "oidc",
-    "messages": null,
-    "meta": {
-      "label": {
-        "context": {
-          "provider": "ory"
-        },
-        "id": 1050003,
-        "text": "Unlink ory",
-        "type": "info"
-      }
-    },
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "unlink",
-      "type": "submit",
       "value": "github"
     },
     "group": "oidc",
@@ -1359,6 +1338,27 @@ func TestSettingsStrategy(t *testing.T) {
         },
         "id": 1050003,
         "text": "Unlink google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050003,
+        "text": "Unlink ory",
         "type": "info"
       }
     },
@@ -1481,27 +1481,6 @@ func TestSettingsStrategy(t *testing.T) {
       "disabled": false,
       "name": "link",
       "type": "submit",
-      "value": "ory"
-    },
-    "group": "oidc",
-    "messages": null,
-    "meta": {
-      "label": {
-        "context": {
-          "provider": "ory"
-        },
-        "id": 1050002,
-        "text": "Link ory",
-        "type": "info"
-      }
-    },
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "link",
-      "type": "submit",
       "value": "github"
     },
     "group": "oidc",
@@ -1534,6 +1513,27 @@ func TestSettingsStrategy(t *testing.T) {
         },
         "id": 1050003,
         "text": "Unlink google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": null,
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050002,
+        "text": "Link ory",
         "type": "info"
       }
     },
