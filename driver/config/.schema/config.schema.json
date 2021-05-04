@@ -60,18 +60,6 @@
         "hook"
       ]
     },
-    "selfServiceVerifyHook": {
-      "type": "object",
-      "properties": {
-        "hook": {
-          "const": "verify"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "hook"
-      ]
-    },
     "selfServiceSessionIssuerHook": {
       "type": "object",
       "properties": {
@@ -411,9 +399,6 @@
           "type": "array",
           "items": {
             "anyOf": [
-              {
-                "$ref": "#/definitions/selfServiceVerifyHook"
-              },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
               }
