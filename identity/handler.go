@@ -3,16 +3,19 @@ package identity
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
-	"github.com/ory/kratos/driver/config"
+	"github.com/ory/herodot"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/jsonx"
-	"github.com/ory/x/urlx"
-
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
+
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 const RouteBase = "/identities"
@@ -214,7 +217,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		return
 	}
 
-	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits)}
+	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: StateActive, StateChangedAt: sqlxx.NullTime(time.Now())}
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -255,6 +258,11 @@ type UpdateIdentity struct {
 	//
 	// required: true
 	Traits json.RawMessage `json:"traits"`
+
+	// State is the identity's state.
+	//
+	// required: true
+	State State `json:"state"`
 }
 
 // swagger:route PUT /identities/{id} admin updateIdentity
@@ -298,6 +306,15 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	if ur.SchemaID != "" {
 		identity.SchemaID = ur.SchemaID
+	}
+
+	if ur.State != "" && identity.State != ur.State {
+		if err := ur.State.IsValid(); err != nil {
+			h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+		}
+
+		identity.State = ur.State
+		identity.StateChangedAt = sqlxx.NullTime(time.Now())
 	}
 
 	identity.Traits = []byte(ur.Traits)

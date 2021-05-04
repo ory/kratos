@@ -2483,9 +2483,11 @@ components:
           status: status
           via: via
         schema_id: schema_id
+        state_changed_at: 2000-01-23T04:56:07.000+00:00
         created_at: 2000-01-23T04:56:07.000+00:00
         schema_url: schema_url
         id: id
+        state: state
       properties:
         created_at:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
@@ -2511,6 +2513,12 @@ components:
 
             format: url
           type: string
+        state:
+          type: string
+        state_changed_at:
+          format: date-time
+          title: NullTime implements sql.NullTime functionality.
+          type: string
         traits:
           description: |-
             Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -2531,6 +2539,7 @@ components:
       - id
       - schema_id
       - schema_url
+      - state
       - traits
       title: Identity represents an Ory Kratos identity
       type: object
@@ -2561,6 +2570,8 @@ components:
           format: date-time
           type: string
       type: object
+    identityState:
+      type: string
     identityTraits:
       description: |-
         Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -2737,9 +2748,11 @@ components:
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: state
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -3012,9 +3025,11 @@ components:
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: state
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
           identity:
@@ -3049,9 +3064,11 @@ components:
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: state
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -3153,9 +3170,11 @@ components:
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: state
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         id: id
@@ -3271,9 +3290,11 @@ components:
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: state
         active: active
         id: id
         state: state
@@ -3381,9 +3402,11 @@ components:
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: state
         flow:
           expires_at: 2000-01-23T04:56:07.000+00:00
           ui:
@@ -3465,9 +3488,11 @@ components:
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: state
           active: active
           id: id
           state: state
@@ -3884,6 +3909,8 @@ components:
             SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
             will update the Identity's SchemaID.
           type: string
+        state:
+          type: string
         traits:
           description: |-
             Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -3891,6 +3918,7 @@ components:
             in `schema_id`.
           type: object
       required:
+      - state
       - traits
       type: object
     verifiableIdentityAddress:

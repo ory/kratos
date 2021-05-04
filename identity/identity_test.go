@@ -14,4 +14,5 @@ func TestNewIdentity(t *testing.T) {
 	// assert.NotEmpty(t, i.Metadata)
 	assert.NotEmpty(t, i.Traits)
 	assert.NotNil(t, i.Credentials)
+	assert.True(t, i.IsActive())
 }

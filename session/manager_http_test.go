@@ -87,7 +87,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -143,7 +143,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -158,9 +158,9 @@ func TestManagerHTTP(t *testing.T) {
 		t.Run("case=revoked", func(t *testing.T) {
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/internal/testhelpers"
@@ -128,6 +129,7 @@ func TestHandler(t *testing.T) {
 
 			i.Traits = []byte(res.Get("traits").Raw)
 			i.ID = x.ParseUUID(res.Get("id").String())
+			i.StateChangedAt = sqlxx.NullTime(res.Get("state_changed_at").Time())
 			assert.NotEmpty(t, res.Get("id").String())
 
 			assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
@@ -146,14 +148,23 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=should update an identity and persist the changes", func(t *testing.T) {
-			ur := identity.UpdateIdentity{Traits: []byte(`{"bar":"baz","foo":"baz"}`), SchemaID: i.SchemaID}
+			ur := identity.UpdateIdentity{
+				Traits:   []byte(`{"bar":"baz","foo":"baz"}`),
+				SchemaID: i.SchemaID,
+				State:    identity.StateDisabled,
+			}
+
 			res := send(t, "PUT", "/identities/"+i.ID.String(), http.StatusOK, &ur)
 			assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 			assert.EqualValues(t, "baz", res.Get("traits.foo").String(), "%s", res.Raw)
+			assert.EqualValues(t, identity.StateDisabled, res.Get("state").String(), "%s", res.Raw)
+			assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 
 			res = get(t, "/identities/"+i.ID.String(), http.StatusOK)
 			assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 			assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
+			assert.EqualValues(t, identity.StateDisabled, res.Get("state").String(), "%s", res.Raw)
+			assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 		})
 
 		t.Run("case=should delete a client and no longer be able to retrieve it", func(t *testing.T) {
@@ -216,6 +227,20 @@ func TestHandler(t *testing.T) {
 			Traits:   cr.Traits,
 		})
 		assert.Contains(t, res.Get("error.reason").String(), `additionalProperties "department" not allowed`, "%s", res.Raw)
+	})
+
+	t.Run("case=should fail to update identity if state is invalid", func(t *testing.T) {
+		var cr identity.CreateIdentity
+		cr.SchemaID = "employee"
+		cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh", "department": "ory"}`)
+		res := send(t, "POST", "/identities", http.StatusCreated, &cr)
+
+		id := res.Get("id").String()
+		res = send(t, "PUT", "/identities/"+id, http.StatusBadRequest, &identity.UpdateIdentity{
+			State:  "invalid-state",
+			Traits: []byte(`{"email":"` + x.NewUUID().String() + `", "department": "ory"}`),
+		})
+		assert.Contains(t, res.Get("error.reason").String(), `Identity state is not valid.`, "%s", res.Raw)
 	})
 
 	t.Run("case=should update the schema id", func(t *testing.T) {

@@ -20,6 +20,22 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+// swagger:model identityState
+type State string
+
+func (lt State) IsValid() error {
+	switch lt {
+	case StateActive, StateDisabled:
+		return nil
+	}
+	return errors.New("Identity state is not valid.")
+}
+
+const (
+	StateActive   State = "active"
+	StateDisabled State = "disabled"
+)
+
 // Identity represents an Ory Kratos identity
 //
 // An identity can be a real human, a service, an IoT device - everything that
@@ -50,6 +66,14 @@ type Identity struct {
 	// format: url
 	// required: true
 	SchemaURL string `json:"schema_url" faker:"-" db:"-"`
+
+	// State is the identity's state.
+	//
+	// required: true
+	State State `json:"state" faker:"-" db:"state"`
+
+	// StateChangedAt contains the last time when the identity's state changed.
+	StateChangedAt sqlxx.NullTime `json:"state_changed_at" faker:"-" db:"state_changed_at"`
 
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 	// in a self-service manner. The input will always be validated against the JSON Schema defined
@@ -129,6 +153,10 @@ func (i *Identity) lock() *sync.RWMutex {
 	return i.l
 }
 
+func (i *Identity) IsActive() bool {
+	return i.State == StateActive
+}
+
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.lock().Lock()
 	defer i.lock().Unlock()
@@ -182,6 +210,8 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		Traits:              Traits("{}"),
 		SchemaID:            traitsSchemaID,
 		VerifiableAddresses: []VerifiableAddress{},
+		State:               StateActive,
+		StateChangedAt:      sqlxx.NullTime(time.Now()),
 		l:                   new(sync.RWMutex),
 	}
 }
