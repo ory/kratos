@@ -158,7 +158,6 @@ func TestContainer(t *testing.T) {
 					Nodes: node.Nodes{
 						node.NewInputField("numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
 						node.NewInputField("objy.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
-						node.NewInputField("objy.objy", nil, node.DefaultGroup, node.InputAttributeTypeText),
 						node.NewInputField("objy.stringy", nil, node.DefaultGroup, node.InputAttributeTypeText),
 						node.NewInputField("stringy", nil, node.DefaultGroup, node.InputAttributeTypeText),
 					},
@@ -171,7 +170,6 @@ func TestContainer(t *testing.T) {
 					Nodes: node.Nodes{
 						node.NewInputField("traits.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
 						node.NewInputField("traits.objy.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
-						node.NewInputField("traits.objy.objy", nil, node.DefaultGroup, node.InputAttributeTypeText),
 						node.NewInputField("traits.objy.stringy", nil, node.DefaultGroup, node.InputAttributeTypeText),
 						node.NewInputField("traits.stringy", nil, node.DefaultGroup, node.InputAttributeTypeText),
 					},

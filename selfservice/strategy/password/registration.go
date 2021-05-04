@@ -22,19 +22,32 @@ import (
 	"github.com/ory/x/errorsx"
 )
 
-// RegistrationFormPayload is used to decode the registration form payload.
+// SubmitSelfServiceRegistrationFlowWithPasswordMethod is used to decode the registration form payload
+// when using the password method.
 //
 // swagger:model submitSelfServiceRegistrationFlowWithPasswordMethod
-type RegistrationFormPayload struct {
-	Password  string          `json:"password"`
-	Traits    json.RawMessage `json:"traits"`
-	CSRFToken string          `json:"csrf_token"`
+type SubmitSelfServiceRegistrationFlowWithPasswordMethod struct {
+	// Password to sign the user up with
+	Password string `json:"password"`
+
+	// The identity's traits
+	Traits json.RawMessage `json:"traits"`
+
+	// The CSRF Token
+	CSRFToken string `json:"csrf_token"`
+
+	// Method to use
+	//
+	// This field must be set to `password` when using the password method.
+	//
+	// required: true
+	Method string `json:"method"`
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
 }
 
-func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *RegistrationFormPayload, err error) error {
+func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *SubmitSelfServiceRegistrationFlowWithPasswordMethod, err error) error {
 	if f != nil {
 		if p != nil {
 			for _, n := range container.NewFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
@@ -51,7 +64,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 	return err
 }
 
-func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
+func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethod, r *http.Request) error {
 	raw, err := sjson.SetBytes(registrationSchema,
 		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
@@ -71,7 +84,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	var p RegistrationFormPayload
+	var p SubmitSelfServiceRegistrationFlowWithPasswordMethod
 	if err := s.decode(&p, r); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
@@ -105,10 +118,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypePassword, f, i); err != nil {
-		return s.handleRegistrationError(w, r, f, &p, err)
-	}
-
 	return nil
 }
 
@@ -122,7 +131,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 		// This should never happen
 		return errors.WithStack(x.PseudoPanic.WithReasonf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
 	} else if len(c.Identifiers) == 0 {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No login identifiers (e.g. email, phone number, username) were set. Contact an administrator, the identity schema is misconfigured."))
+		return schema.NewMissingIdentifierError()
 	}
 
 	for _, id := range c.Identifiers {

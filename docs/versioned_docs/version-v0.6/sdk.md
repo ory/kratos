@@ -23,7 +23,7 @@ repositories:
 - [Go](https://github.com/ory/kratos-client-go)
 - [Java](https://search.maven.org/artifact/sh.ory.kratos/kratos-client)
 - [JavaScript](https://www.npmjs.com/package/@ory/kratos-client) with TypeScript
-  definitions and compatible with: NodeJS, ReactJS, AnuglarJS, Vue.js, and many
+  definitions and compatible with: NodeJS, ReactJS, AngularJS, Vue.js, and many
   more.
 - [PHP](https://packagist.org/packages/ory/kratos-client)
 - [Python](https://pypi.org/project/ory-kratos-client/)

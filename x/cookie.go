@@ -63,6 +63,8 @@ func SessionUnsetKey(w http.ResponseWriter, r *http.Request, s sessions.Store, i
 	cookie, err := s.Get(r, id)
 	if err != nil {
 		return nil
+	} else if cookie.IsNew {
+		return nil
 	}
 
 	delete(cookie.Values, key)

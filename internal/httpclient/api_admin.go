@@ -2067,7 +2067,7 @@ func (r AdminApiApiPrometheusRequest) Execute() (*http.Response, error) {
 }
 
 /*
- * Prometheus Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to your deployment like so:
+ * Prometheus Get snapshot metrics from the Kratos service. If you're using k8s, you can then add annotations to your deployment like so:
  * ```
 metadata:
 annotations:

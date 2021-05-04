@@ -183,7 +183,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceRegistrationFlow
-type getSelfServiceRegistrationFlowParameters struct {
+type getSelfServiceRegistrationFlow struct {
 	// The Registration Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -318,8 +318,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	var found bool
-	var s identity.CredentialsType
+	var s Strategy
 	for _, ss := range h.d.AllRegistrationStrategies() {
 		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
@@ -330,18 +329,17 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 			return
 		}
 
-		s = ss.ID()
-		found = true
+		s = ss
 		break
 	}
 
-	if !found {
+	if s == nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 		return
 	}
 
-	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s, f, i); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), f, i); err != nil {
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, s.NodeGroup(), err)
 		return
 	}
 }

@@ -223,7 +223,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 // nolint:deadcode,unused
 // swagger:parameters submitSelfServiceRecoveryFlow
-type submitSelfServiceRegistrationFlow struct {
+type submitSelfServiceRecoveryFlow struct {
 	// The Registration Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your

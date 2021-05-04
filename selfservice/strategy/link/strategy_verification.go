@@ -61,7 +61,7 @@ func (s *Strategy) decodeVerification(r *http.Request) (*verificationSubmitPaylo
 		decoderx.HTTPDecoderUseQueryAndBody(),
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
-		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
 		return nil, errors.WithStack(err)

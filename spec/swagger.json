@@ -330,7 +330,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
+        "summary": "Get snapshot metrics from the Kratos service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
         "operationId": "prometheus",
         "responses": {
           "200": {
@@ -3079,16 +3079,26 @@
       "type": "object"
     },
     "submitSelfServiceRegistrationFlowWithPasswordMethod": {
+      "description": "SubmitSelfServiceRegistrationFlowWithPasswordMethod is used to decode the registration form payload\nwhen using the password method.",
       "type": "object",
-      "title": "RegistrationFormPayload is used to decode the registration form payload.",
+      "required": [
+        "method"
+      ],
       "properties": {
         "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method to use\n\nThis field must be set to `password` when using the password method.",
           "type": "string"
         },
         "password": {
+          "description": "Password to sign the user up with",
           "type": "string"
         },
         "traits": {
+          "description": "The identity's traits",
           "type": "object"
         }
       }
