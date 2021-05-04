@@ -2,8 +2,8 @@ package driver
 
 import (
 	"context"
-	"github.com/ory/kratos/driver/config"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/settings"
 )
 
