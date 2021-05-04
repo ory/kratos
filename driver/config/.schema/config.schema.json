@@ -21,12 +21,12 @@
       "properties": {
         "owner": {
           "type": "string",
-          "description": "Owner of unix socket. If empty, the owner will be the user running hydra.",
+          "description": "Owner of unix socket. If empty, the owner will be the user running Kratos.",
           "default": ""
         },
         "group": {
           "type": "string",
-          "description": "Group of unix socket. If empty, the group will be the primary group of the user running hydra.",
+          "description": "Group of unix socket. If empty, the group will be the primary group of the user running Kratos.",
           "default": ""
         },
         "mode": {
@@ -1035,7 +1035,7 @@
     "tracing": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Ory Hydra supports distributed tracing.",
+      "description": "Ory Kratos supports distributed tracing.",
       "properties": {
         "provider": {
           "type": "string",
