@@ -26,7 +26,7 @@ quickstart.
 
 To find out more about edge cases like setting string array values through
 environmental variables head to the
-[Configuring Ory services](https://www.ory.sh/docs/ecosystem/configuring)
+[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring)
 section.
 
 ```yaml
