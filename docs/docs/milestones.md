@@ -170,8 +170,6 @@ New feature or request.
       ([kratos#776](https://github.com/ory/kratos/issues/776))
 - [ ] Implement immutable keyword in JSON Schema for Identity Traits
       ([kratos#117](https://github.com/ory/kratos/issues/117))
-- [ ] Feature Request: Webhooks
-      ([kratos#271](https://github.com/ory/kratos/issues/271))
 - [ ] Gracefully handle CSRF errors
       ([kratos#91](https://github.com/ory/kratos/issues/91)) -
       [@hackerman](https://github.com/aeneasr)
@@ -188,6 +186,8 @@ New feature or request.
 - [ ] Write tests for domain aliasing in cookie handler
       ([kratos#1292](https://github.com/ory/kratos/issues/1292)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Feature Request: Webhooks
+      ([kratos#271](https://github.com/ory/kratos/issues/271))
 - [x] Implement Security Questions MFA
       ([kratos#469](https://github.com/ory/kratos/issues/469))
 - [x] Double slash in URLs causes CSRF issues
