@@ -2276,7 +2276,7 @@
             "$ref": "#/components/responses/emptyResponse"
           }
         },
-        "summary": "Get snapshot metrics from the Kratos service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
+        "summary": "Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
         "tags": [
           "admin"
         ]
