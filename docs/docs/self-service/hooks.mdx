@@ -142,10 +142,10 @@ send to the web hook end point, the jsonnet template would look like this:
 
 For `auth` following mechanisms are supported:
 
-- Authentication via an Api Key. Type must be set to `api-key`.
-- Authentication via Basic Authentication. Type must be set to `basic-auth`.
+- Authentication via an Api Key. Type must be set to `api_key`.
+- Authentication via Basic Authentication. Type must be set to `basic_auth`.
 
-For `api-key` the config looks as follows:
+For `api_key` the config looks as follows:
 
 ```.yaml
 name: Some-Name
@@ -155,7 +155,7 @@ in: header # alternatively cookie
 
 All properties are mandatory.
 
-For `basic-auth` the config looks as follows:
+For `basic_auth` the config looks as follows:
 
 ```.yaml
 user: My-User

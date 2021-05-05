@@ -20,13 +20,15 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/julienschmidt/httprouter"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/session"
 
-	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -154,7 +156,7 @@ func TestWebHookConfig(t *testing.T) {
 			authStrategy: &noopAuthStrategy{},
 		},
 		{
-			strategy: "basic-auth",
+			strategy: "basic_auth",
 			method:   "GET",
 			url:      "https://test.kratos.ory.sh/my_hook2",
 			body:     "/path/to/my/jsonnet2.file",
@@ -163,7 +165,7 @@ func TestWebHookConfig(t *testing.T) {
 				"method": "GET",
 				"body": "/path/to/my/jsonnet2.file",
 				"auth": {
-					"type": "basic-auth",
+					"type": "basic_auth",
 					"config": {
 						"user": "test-api-user",
 						"password": "secret"
@@ -182,7 +184,7 @@ func TestWebHookConfig(t *testing.T) {
 				"method": "DELETE",
 				"body": "/path/to/my/jsonnet3.file",
 				"auth": {
-					"type": "api-key",
+					"type": "api_key",
 					"config": {
 						"in": "header",
 						"name": "my-api-key",
@@ -202,7 +204,7 @@ func TestWebHookConfig(t *testing.T) {
 				"method": "POST",
 				"body": "/path/to/my/jsonnet4.file",
 				"auth": {
-					"type": "api-key",
+					"type": "api_key",
 					"config": {
 						"in": "cookie",
 						"name": "my-api-key",
@@ -384,7 +386,7 @@ func TestWebHooks(t *testing.T) {
 					uc: "api key in header",
 					createAuthConfig: func() string {
 						return `{
-							"type": "api-key",
+							"type": "api_key",
 							"config": {
 								"name": "My-Key",
 								"value": "My-Key-Value",
@@ -400,7 +402,7 @@ func TestWebHooks(t *testing.T) {
 					uc: "api key in cookie",
 					createAuthConfig: func() string {
 						return `{
-							"type": "api-key",
+							"type": "api_key",
 							"config": {
 								"name": "My-Key",
 								"value": "My-Key-Value",
@@ -416,7 +418,7 @@ func TestWebHooks(t *testing.T) {
 					uc: "basic auth",
 					createAuthConfig: func() string {
 						return `{
-							"type": "basic-auth",
+							"type": "basic_auth",
 							"config": {
 								"user": "My-User",
 								"password": "Super-Secret"
