@@ -147,7 +147,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 			}).String()})); err != nil {
 		return err
 	}
-	address.Status = identity.VerifiableAddressStatusPending
+	address.Status = identity.VerifiableAddressStatusSent
 	if err := s.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address); err != nil {
 		return err
 	}

@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/courier"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -98,6 +100,24 @@ func TestVerifier(t *testing.T) {
 			assert.Contains(t, recipients, "bar@ory.sh")
 			assert.NotContains(t, recipients, "baz@ory.sh")
 			// Email to baz@ory.sh is skipped because it is verified already.
+
+			//these addresses will be marked as sent and won't be sent again by the hook
+			address1, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
+			require.NoError(t, err)
+			assert.EqualValues(t, identity.VerifiableAddressStatusSent, address1.Status)
+			address2, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "bar@ory.sh")
+			require.NoError(t, err)
+			assert.EqualValues(t, identity.VerifiableAddressStatusSent, address2.Status)
+
+			settingsFlow := &settings.Flow{RequestURL: "http://foo.com/settings?after_verification_return_to=verification_callback"}
+			require.NoError(t, hf(h, i, settingsFlow))
+			expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(), "", u, reg.VerificationStrategies(context.Background()), settingsFlow)
+			var verificationFlow2 verification.Flow
+			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow2))
+			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow2.RequestURL)
+			messages, err = reg.CourierPersister().NextMessages(context.Background(), 12)
+			require.EqualError(t, err, courier.ErrQueueEmpty.Error())
+			assert.Len(t, messages, 0)
 		})
 	}
 }
