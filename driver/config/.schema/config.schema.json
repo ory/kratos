@@ -72,10 +72,10 @@
         "hook"
       ]
     },
-    "WebHookAuthBasicAuthProperties": {
+    "webHookAuthBasicAuthProperties": {
       "properties": {
         "type": {
-          "const": "basic-auth"
+          "const": "basic_auth"
         },
         "config": {
           "type": "object",
@@ -96,10 +96,10 @@
       "additionalProperties": false,
       "required": ["type", "config"]
     },
-    "WebHookAuthApiKeyProperties": {
+    "webHookAuthApiKeyProperties": {
       "properties": {
         "type": {
-          "const": "api-key"
+          "const": "api_key"
         },
         "config": {
           "type": "object",
@@ -155,10 +155,10 @@
               "description": "Define which auth mechanism the Web-Hook should use",
               "oneOf": [
                 {
-                  "$ref": "#/definitions/WebHookAuthApiKeyProperties"
+                  "$ref": "#/definitions/webHookAuthApiKeyProperties"
                 },
                 {
-                  "$ref": "#/definitions/WebHookAuthBasicAuthProperties"
+                  "$ref": "#/definitions/webHookAuthBasicAuthProperties"
                 }
               ]
             },

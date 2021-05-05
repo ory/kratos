@@ -140,7 +140,7 @@ selfservice:
                 method: POST
                 body: /path/to/template.jsonnet
                 auth:
-                  type: basic-auth
+                  type: basic_auth
                   config:
                     user: test-user
                     password: super-secret
@@ -185,7 +185,7 @@ selfservice:
               method: POST
               body: /path/to/template.jsonnet
               auth:
-                type: api-key
+                type: api_key
                 config:
                   name: My-Key
                   value: My-Key-Value
