@@ -108,6 +108,10 @@ func NodesFromJSONSchema(group node.Group, jsonSchemaRef, prefix string, compile
 
 	nodes := node.Nodes{}
 	for _, value := range paths {
+		if value.TypeHint == jsonschemax.JSON {
+			continue
+		}
+
 		name := addPrefix(value.Name, prefix, ".")
 		nodes = append(nodes, node.NewInputFieldFromSchema(name, group, value))
 	}

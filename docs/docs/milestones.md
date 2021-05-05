@@ -152,13 +152,13 @@ Something is not working.
 - [ ] Account Recovery API flow requires CSRF cookie
       ([kratos#1141](https://github.com/ory/kratos/issues/1141)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] No email validation for /verify and /recovery page. email queue is
-      backlogged with invalid emails.
-      ([kratos#1285](https://github.com/ory/kratos/issues/1285))
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] handle 409 error in settings flow
       ([kratos#1107](https://github.com/ory/kratos/issues/1107))
+- [x] No email validation for /verify and /recovery page. email queue is
+      backlogged with invalid emails.
+      ([kratos#1285](https://github.com/ory/kratos/issues/1285))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -170,8 +170,6 @@ New feature or request.
       ([kratos#776](https://github.com/ory/kratos/issues/776))
 - [ ] Implement immutable keyword in JSON Schema for Identity Traits
       ([kratos#117](https://github.com/ory/kratos/issues/117))
-- [ ] Feature Request: Webhooks
-      ([kratos#271](https://github.com/ory/kratos/issues/271))
 - [ ] Gracefully handle CSRF errors
       ([kratos#91](https://github.com/ory/kratos/issues/91)) -
       [@hackerman](https://github.com/aeneasr)
@@ -188,6 +186,8 @@ New feature or request.
 - [ ] Write tests for domain aliasing in cookie handler
       ([kratos#1292](https://github.com/ory/kratos/issues/1292)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Feature Request: Webhooks
+      ([kratos#271](https://github.com/ory/kratos/issues/271))
 - [x] Implement Security Questions MFA
       ([kratos#469](https://github.com/ory/kratos/issues/469))
 - [x] Double slash in URLs causes CSRF issues

@@ -61,7 +61,7 @@ func (s *Strategy) decodeVerification(r *http.Request) (*verificationSubmitPaylo
 		decoderx.HTTPDecoderUseQueryAndBody(),
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
-		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
 		return nil, errors.WithStack(err)
@@ -239,6 +239,15 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	f.UI.Messages.Clear()
 	f.State = verification.StatePassedChallenge
 	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+		return s.handleVerificationError(w, r, f, body, err)
+	}
+
+	i, err := s.d.IdentityPool().GetIdentity(r.Context(), token.VerifiableAddress.IdentityID)
+	if err != nil {
+		return s.handleVerificationError(w, r, f, body, err)
+	}
+
+	if err := s.d.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 

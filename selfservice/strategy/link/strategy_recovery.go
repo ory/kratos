@@ -333,6 +333,10 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.handleRecoveryError(w, r, f, nil, err)
 	}
 
+	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
+		return s.handleRecoveryError(w, r, f, nil, err)
+	}
+
 	sf.UI.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge())))
 	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), sf); err != nil {
 		return s.handleRecoveryError(w, r, f, nil, err)
@@ -471,7 +475,7 @@ func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, erro
 		decoderx.HTTPDecoderUseQueryAndBody(),
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
-		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
 		return nil, errors.WithStack(err)

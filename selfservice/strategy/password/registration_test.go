@@ -330,35 +330,23 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
 			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/missing-identifier.schema.json")
 
-			var check = func(t *testing.T, actual string) {
-				assert.Equal(t, int64(http.StatusInternalServerError), gjson.Get(actual, "code").Int(), "%s", actual)
-				assert.Equal(t, "Internal Server Error", gjson.Get(actual, "status").String(), "%s", actual)
-				assert.Contains(t, gjson.Get(actual, "reason").String(), "No login identifiers", "%s", actual)
-			}
-
-			values := url.Values{
-				"method":          {"password"},
-				"traits.username": {"registration-identifier-6"},
-				"password":        {x.NewUUID().String()},
-				"traits.foobar":   {"bar"},
-				"csrf_token":      {x.FakeCSRFToken},
+			values := func(values url.Values) {
+				values.Set("method", "password")
+				values.Set("traits.username", "registration-identifier-6")
+				values.Set("password", x.NewUUID().String())
+				values.Set("traits.foobar", "bar")
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-
-				body, res := testhelpers.RegistrationMakeRequest(t, false, f, apiClient, values.Encode())
-				assert.Contains(t, res.Request.URL.String(), publicTS.URL)
-				check(t, gjson.Get(body, "error").Raw)
+				body := testhelpers.SubmitRegistrationForm(t, true, apiClient, publicTS, values,
+					identity.CredentialsTypePassword, http.StatusBadRequest,
+					publicTS.URL+registration.RouteSubmitFlow)
+				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "Could not find any login identifiers. Did you forget to set them?", "%s", body)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-
-				body, res := testhelpers.RegistrationMakeRequest(t, false, f, apiClient, values.Encode())
-				assert.Contains(t, res.Request.URL.String(), errTS.URL)
-				check(t, gjson.Get(body, "0").Raw)
+				body := expectValidationError(t, false, values)
+				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "Could not find any login identifiers. Did you forget to set them?", "%s", body)
 			})
 		})
 
@@ -570,6 +558,33 @@ func TestRegistration(t *testing.T) {
 				actual := expectSuccessfulLogin(t, false, nil, values(false))
 				assert.Equal(t, `registration-identifier-10-browser`, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
 			})
+		})
+
+		t.Run("case=should work with regular JSON", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
+			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			t.Cleanup(func() {
+				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+			})
+
+			hc := testhelpers.NewClientWithCookies(t)
+			hc.Transport = testhelpers.NewTransportWithLogger(hc.Transport, t)
+			payload := testhelpers.InitializeRegistrationFlowViaBrowser(t, hc, publicTS)
+			values := testhelpers.SDKFormFieldsToURLValues(payload.Ui.Nodes)
+			time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
+
+			username := x.NewUUID()
+			actual, res := testhelpers.RegistrationMakeRequest(t, true, payload, hc, fmt.Sprintf(`{
+  "method": "password",
+  "csrf_token": "%s",
+  "password": "%s",
+  "traits": {
+    "foobar": "bar",
+    "username": "%s"
+  }
+}`, values.Get("csrf_token"), x.NewUUID(), username))
+			assert.EqualValues(t, http.StatusOK, res.StatusCode, assertx.PrettifyJSONPayload(t, actual))
+			assert.Equal(t, username.String(), gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
 		})
 	})
 

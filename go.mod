@@ -44,7 +44,7 @@ require (
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.5.0
 	github.com/google/go-github/v27 v27.0.1
-	github.com/google/go-jsonnet v0.16.0
+	github.com/google/go-jsonnet v0.17.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.1.3
@@ -75,7 +75,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.228
+	github.com/ory/x v0.0.236
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/philhofer/fwd v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1

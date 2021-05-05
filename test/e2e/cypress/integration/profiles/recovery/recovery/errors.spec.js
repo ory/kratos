@@ -40,7 +40,7 @@ context('Recovery', () => {
       cy.get('button[value="link"]').click()
       cy.get('.messages .message').should(
         'contain.text',
-        'Property email is missing'
+        '"" is not valid "email"'
       )
     })
 

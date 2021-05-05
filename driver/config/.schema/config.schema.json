@@ -21,12 +21,12 @@
       "properties": {
         "owner": {
           "type": "string",
-          "description": "Owner of unix socket. If empty, the owner will be the user running hydra.",
+          "description": "Owner of unix socket. If empty, the owner will be the user running Kratos.",
           "default": ""
         },
         "group": {
           "type": "string",
-          "description": "Group of unix socket. If empty, the group will be the primary group of the user running hydra.",
+          "description": "Group of unix socket. If empty, the group will be the primary group of the user running Kratos.",
           "default": ""
         },
         "mode": {
@@ -60,18 +60,6 @@
         "hook"
       ]
     },
-    "selfServiceVerifyHook": {
-      "type": "object",
-      "properties": {
-        "hook": {
-          "const": "verify"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "hook"
-      ]
-    },
     "selfServiceSessionIssuerHook": {
       "type": "object",
       "properties": {
@@ -83,6 +71,105 @@
       "required": [
         "hook"
       ]
+    },
+    "webHookAuthBasicAuthProperties": {
+      "properties": {
+        "type": {
+          "const": "basic_auth"
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "user": {
+              "type": "string",
+              "description": "user name for basic auth"
+            },
+            "password": {
+              "type": "string",
+              "description": "password for basic auth"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["user", "password"]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type", "config"]
+    },
+    "webHookAuthApiKeyProperties": {
+      "properties": {
+        "type": {
+          "const": "api_key"
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The name of the api key"
+            },
+            "value": {
+              "type": "string",
+              "description": "The value of the api key"
+            },
+            "in": {
+              "type": "string",
+              "description": "How the api key should be transferred",
+              "enum": ["header", "cookie"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["name", "value", "in"]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type", "config"]
+    },
+    "selfServiceWebHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "web_hook"
+        },
+        "config": {
+          "type": "object",
+          "title": "Web-Hook Configuration",
+          "description": "Define what the hook should do",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL the Web-Hook should call",
+              "format": "uri"
+            },
+            "method": {
+              "type": "string",
+              "description": "The HTTP method to use (GET, POST, etc)."
+            },
+            "body": {
+              "type": "string",
+              "description": "Path to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads"
+            },
+            "auth": {
+              "type": "object",
+              "title": "Auth mechanisms",
+              "description": "Define which auth mechanism the Web-Hook should use",
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/webHookAuthApiKeyProperties"
+                },
+                {
+                  "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+                }
+              ]
+            },
+            "additionalProperties": false
+          },
+          "additionalProperties": false,
+          "required": ["url", "method"]
+        }
+      },
+      "additionalProperties": false,
+      "required": [ "hook", "config" ]
     },
     "OIDCClaims": {
       "title": "OpenID Connect claims",
@@ -289,6 +376,18 @@
         }
       }
     },
+    "selfServiceHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceWebHook"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "additionalItems": false
+    },
     "selfServiceAfterSettingsMethod": {
       "type": "object",
       "additionalProperties": false,
@@ -301,7 +400,7 @@
           "items": {
             "anyOf": [
               {
-                "$ref": "#/definitions/selfServiceVerifyHook"
+                "$ref": "#/definitions/selfServiceWebHook"
               }
             ]
           },
@@ -323,6 +422,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceSessionRevokerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
               }
             ]
           },
@@ -344,6 +446,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceSessionIssuerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
               }
             ]
           },
@@ -364,6 +469,18 @@
         },
         "profile": {
           "$ref": "#/definitions/selfServiceAfterSettingsMethod"
+        },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeLogin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
         }
       }
     },
@@ -379,6 +496,18 @@
         },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterLoginMethod"
+        },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceBeforeRegistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
         }
       }
     },
@@ -394,8 +523,35 @@
         },
         "oidc": {
           "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
+        },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
         }
       }
+    },
+    "selfServiceAfterVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      }
+    },
+    "selfServiceAfterRecovery": {
+      "type": "object",
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "$ref": "#/definitions/selfServiceHooks"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -508,6 +664,9 @@
                     "1s"
                   ]
                 },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeRegistration"
+                },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterRegistration"
                 }
@@ -537,6 +696,9 @@
                     "1s"
                   ]
                 },
+                "before": {
+                  "$ref": "#/definitions/selfServiceBeforeLogin"
+                },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterLogin"
                 }
@@ -564,13 +726,7 @@
                   "default": "https://www.ory.sh/kratos/docs/fallback/verification"
                 },
                 "after": {
-                  "type": "object",
-                  "properties": {
-                    "default_browser_return_url": {
-                      "$ref": "#/definitions/defaultReturnTo"
-                    }
-                  },
-                  "additionalProperties": false
+                  "$ref": "#/definitions/selfServiceAfterVerification"
                 },
                 "lifespan": {
                   "title": "Self-Service Verification Request Lifespan",
@@ -608,13 +764,7 @@
                   "default": "https://www.ory.sh/kratos/docs/fallback/recovery"
                 },
                 "after": {
-                  "type": "object",
-                  "properties": {
-                    "default_browser_return_url": {
-                      "$ref": "#/definitions/defaultReturnTo"
-                    }
-                  },
-                  "additionalProperties": false
+                  "$ref": "#/definitions/selfServiceAfterRecovery"
                 },
                 "lifespan": {
                   "title": "Self-Service Recovery Request Lifespan",
@@ -787,7 +937,9 @@
               "title": "SMTP Sender Name",
               "description": "The recipient of an email will see this as the sender name.",
               "type": "string",
-              "examples": ["Bob"]
+              "examples": [
+                "Bob"
+              ]
             }
           },
           "required": [
@@ -1035,7 +1187,7 @@
     "tracing": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Ory Hydra supports distributed tracing.",
+      "description": "Ory Kratos supports distributed tracing.",
       "properties": {
         "provider": {
           "type": "string",
@@ -1389,7 +1541,9 @@
           "title": "Configuration for the Bcrypt hasher. Minimum is 4 when --dev flag is used and 12 otherwise.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["cost"],
+          "required": [
+            "cost"
+          ],
           "properties": {
             "cost": {
               "type": "integer",

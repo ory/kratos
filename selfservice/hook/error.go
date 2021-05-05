@@ -5,6 +5,10 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/ory/kratos/selfservice/flow/verification"
+
+	"github.com/ory/kratos/selfservice/flow/recovery"
+
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/identity"
@@ -66,4 +70,12 @@ func (e Error) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *
 
 func (e Error) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, i *identity.Identity) error {
 	return e.err("ExecutePostRegistrationPrePersistHook", registration.ErrHookAbortFlow)
+}
+
+func (e Error) ExecutePostRecoveryHook(w http.ResponseWriter, r *http.Request, a *recovery.Flow, s *session.Session) error {
+	return e.err("ExecutePostRecoveryHook", recovery.ErrHookAbortFlow)
+}
+
+func (e Error) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *verification.Flow, i *identity.Identity) error {
+	return e.err("ExecutePostVerificationHook", verification.ErrHookAbortFlow)
 }
