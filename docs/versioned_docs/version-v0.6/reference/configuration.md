@@ -26,7 +26,7 @@ quickstart.
 
 To find out more about edge cases like setting string array values through
 environmental variables head to the
-[Configuring Ory services](https://www.ory.sh/docs/ecosystem/configuring)
+[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring)
 section.
 
 ```yaml
@@ -163,6 +163,30 @@ selfservice:
       #
       lifespan: 1h
 
+      ## before ##
+      #
+      before:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_REGISTRATION_BEFORE_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_REGISTRATION_BEFORE_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
       ## after ##
       #
       after:
@@ -226,6 +250,27 @@ selfservice:
           #
           default_browser_return_url: https://my-app.com/dashboard
 
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_REGISTRATION_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_REGISTRATION_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
         ## Redirect browsers to set URL per default ##
         #
         # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
@@ -278,6 +323,30 @@ selfservice:
       #    > set SELFSERVICE_FLOWS_LOGIN_LIFESPAN=<value>
       #
       lifespan: 1h
+
+      ## before ##
+      #
+      before:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_LOGIN_BEFORE_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_LOGIN_BEFORE_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
 
       ## after ##
       #
@@ -342,6 +411,27 @@ selfservice:
           #
           default_browser_return_url: https://my-app.com/dashboard
 
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_LOGIN_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_LOGIN_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
         ## Redirect browsers to set URL per default ##
         #
         # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
@@ -398,6 +488,27 @@ selfservice:
       ## after ##
       #
       after:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_VERIFICATION_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_VERIFICATION_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
         ## Redirect browsers to set URL per default ##
         #
         # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
@@ -470,6 +581,27 @@ selfservice:
       ## after ##
       #
       after:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_RECOVERY_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_RECOVERY_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
         ## Redirect browsers to set URL per default ##
         #
         # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
@@ -591,7 +723,17 @@ selfservice:
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PASSWORD_HOOKS=<value>
           #
           hooks:
-            - hook: verify
+            - hook: web_hook
+              config:
+                url: http://a.aaa
+                method: ''
+                auth:
+                  type: api_key
+                  config:
+                    name: ''
+                    value: ''
+                    in: header
+                body: ''
 
           ## Redirect browsers to set URL per default ##
           #
@@ -621,7 +763,17 @@ selfservice:
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PROFILE_HOOKS=<value>
           #
           hooks:
-            - hook: verify
+            - hook: web_hook
+              config:
+                url: http://a.aaa
+                method: ''
+                auth:
+                  type: api_key
+                  config:
+                    name: ''
+                    value: ''
+                    in: header
+                body: ''
 
           ## Redirect browsers to set URL per default ##
           #
@@ -638,6 +790,27 @@ selfservice:
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PROFILE_DEFAULT_BROWSER_RETURN_URL=<value>
           #
           default_browser_return_url: https://my-app.com/dashboard
+
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_SETTINGS_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
 
         ## Redirect browsers to set URL per default ##
         #

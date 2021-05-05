@@ -180,7 +180,7 @@ selfservice:
               url: http://a.aaa
               method: ''
               auth:
-                type: api-key
+                type: api_key
                 config:
                   name: ''
                   value: ''
@@ -264,7 +264,7 @@ selfservice:
               url: http://a.aaa
               method: ''
               auth:
-                type: api-key
+                type: api_key
                 config:
                   name: ''
                   value: ''
@@ -341,7 +341,7 @@ selfservice:
               url: http://a.aaa
               method: ''
               auth:
-                type: api-key
+                type: api_key
                 config:
                   name: ''
                   value: ''
@@ -425,7 +425,7 @@ selfservice:
               url: http://a.aaa
               method: ''
               auth:
-                type: api-key
+                type: api_key
                 config:
                   name: ''
                   value: ''
@@ -502,7 +502,7 @@ selfservice:
               url: http://a.aaa
               method: ''
               auth:
-                type: api-key
+                type: api_key
                 config:
                   name: ''
                   value: ''
@@ -595,7 +595,7 @@ selfservice:
               url: http://a.aaa
               method: ''
               auth:
-                type: api-key
+                type: api_key
                 config:
                   name: ''
                   value: ''
@@ -723,7 +723,17 @@ selfservice:
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PASSWORD_HOOKS=<value>
           #
           hooks:
-            - hook: verify
+            - hook: web_hook
+              config:
+                url: http://a.aaa
+                method: ''
+                auth:
+                  type: api_key
+                  config:
+                    name: ''
+                    value: ''
+                    in: header
+                body: ''
 
           ## Redirect browsers to set URL per default ##
           #
@@ -753,7 +763,17 @@ selfservice:
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PROFILE_HOOKS=<value>
           #
           hooks:
-            - hook: verify
+            - hook: web_hook
+              config:
+                url: http://a.aaa
+                method: ''
+                auth:
+                  type: api_key
+                  config:
+                    name: ''
+                    value: ''
+                    in: header
+                body: ''
 
           ## Redirect browsers to set URL per default ##
           #
@@ -785,7 +805,7 @@ selfservice:
               url: http://a.aaa
               method: ''
               auth:
-                type: api-key
+                type: api_key
                 config:
                   name: ''
                   value: ''
