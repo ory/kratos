@@ -101,7 +101,7 @@ func TestVerifier(t *testing.T) {
 			assert.NotContains(t, recipients, "baz@ory.sh")
 			// Email to baz@ory.sh is skipped because it is verified already.
 
-			//these addresses will be marked as sent and won't be sent again by the hook
+			//these addresses will be marked as sent and won't be sent again by the settings hook
 			address1, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
 			require.NoError(t, err)
 			assert.EqualValues(t, identity.VerifiableAddressStatusSent, address1.Status)
@@ -109,9 +109,8 @@ func TestVerifier(t *testing.T) {
 			require.NoError(t, err)
 			assert.EqualValues(t, identity.VerifiableAddressStatusSent, address2.Status)
 
-			settingsFlow := &settings.Flow{RequestURL: "http://foo.com/settings?after_verification_return_to=verification_callback"}
-			require.NoError(t, hf(h, i, settingsFlow))
-			expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(), "", u, reg.VerificationStrategies(context.Background()), settingsFlow)
+			require.NoError(t, hf(h, i, originalFlow))
+			expectedVerificationFlow, err = verification.NewPostHookFlow(conf, conf.SelfServiceFlowVerificationRequestLifespan(), "", u, reg.VerificationStrategies(context.Background()), originalFlow)
 			var verificationFlow2 verification.Flow
 			require.NoError(t, reg.Persister().GetConnection(context.Background()).First(&verificationFlow2))
 			assert.Equal(t, expectedVerificationFlow.RequestURL, verificationFlow2.RequestURL)
