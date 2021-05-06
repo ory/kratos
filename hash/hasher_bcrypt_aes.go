@@ -6,7 +6,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -48,11 +47,11 @@ func (h *BcryptAES) aes256Encrypt(data, key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	cipherText := fmt.Sprintf(
-		"%s%s",
-		hex.EncodeToString(nonce),
-		hex.EncodeToString(gcm.Seal(nil, nonce, data, nil)))
-	return []byte(cipherText), nil
+	hash := append(nonce, gcm.Seal(nil, nonce, data, nil)...)
+	encoded := make([]byte, hex.EncodedLen(len(hash)))
+	hex.Encode(encoded, hash)
+
+	return encoded, nil
 }
 
 func (h *BcryptAES) Generate(ctx context.Context, password []byte) ([]byte, error) {
@@ -73,9 +72,9 @@ func (h *BcryptAES) Generate(ctx context.Context, password []byte) ([]byte, erro
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
 		&b,
-		"$%s%s", // '$' is already included in the resulting hash
+		"$%s$%s",
 		BcryptAESAlgorithmId,
-		base64.RawStdEncoding.EncodeToString(hash),
+		hash,
 	); err != nil {
 		return nil, errors.WithStack(err)
 	}

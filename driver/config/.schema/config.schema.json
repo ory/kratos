@@ -1491,7 +1491,7 @@
           "description": "One of the values: argon2, bcrypt",
           "type": "string",
           "default": "bcrypt",
-          "enum": ["argon2", "bcrypt"]
+          "enum": ["argon2", "bcrypt", "bcyptaes"]
         },
         "argon2": {
           "title": "Configuration for the Argon2id hasher.",
@@ -1544,7 +1544,7 @@
           "additionalProperties": false
         },
         "bcrypt": {
-          "title": "Configuration for the Bcrypt hasher. Minimum is 4 when --dev flag is used and 12 otherwise.",
+          "title": "Configuration for the Bcrypt hasher.",
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -1552,10 +1552,30 @@
           ],
           "properties": {
             "cost": {
+              "title": "Cost of the BCrypt algorithm. Minimum is 4 when --dev flag is used and 12 otherwise.",
               "type": "integer",
               "minimum": 4,
               "maximum": 31,
               "default": 12
+            }
+          }
+        },
+        "bcryptaes": {
+          "title": "Configuration for the Bcrypt-AES hasher.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cost"],
+          "properties": {
+            "cost": {
+              "title": "Cost of the BCrypt algorithm. Minimum is 4 when --dev flag is used and 12 otherwise.",
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 31,
+              "default": 12
+            },
+            "key": {
+              "title": "AES key used to encrypt the final hash. Must be 32-byte long.",
+              "type": "string"
             }
           }
         }
