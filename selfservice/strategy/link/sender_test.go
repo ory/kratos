@@ -65,7 +65,6 @@ func TestManager(t *testing.T) {
 
 		require.NoError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "tracked@ory.sh"))
 		require.EqualError(t, reg.LinkSender().SendVerificationLink(context.Background(), f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
-
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
 		require.Len(t, messages, 2)
@@ -79,5 +78,8 @@ func TestManager(t *testing.T) {
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "tried to verify")
 		assert.NotContains(t, messages[1].Body, urlx.AppendPaths(conf.SelfPublicURL(nil), verification.RouteSubmitFlow).String()+"?")
+		address, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "tracked@ory.sh")
+		require.NoError(t, err)
+		assert.EqualValues(t, identity.VerifiableAddressStatusSent, address.Status)
 	})
 }

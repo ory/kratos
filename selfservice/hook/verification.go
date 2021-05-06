@@ -49,10 +49,9 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 
 	for k := range i.VerifiableAddresses {
 		address := &i.VerifiableAddresses[k]
-		if address.Verified {
+		if address.Status != identity.VerifiableAddressStatusPending {
 			continue
 		}
-
 		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(r.Context()),
 			e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
 			e.r.GenerateCSRFToken(r), r, e.r.VerificationStrategies(r.Context()), f)
@@ -73,6 +72,5 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 	}
-
 	return nil
 }
