@@ -6,18 +6,21 @@ import (
 	"crypto/cipher"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/ory/kratos/driver/config"
 )
 
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
 var ErrUnknownHashFormat = errors.New("unknown hash format")
+var ErrNonceSizeIncorrect = errors.New("nonce size is incorrect")
 
 func Compare(ctx context.Context, cfg *config.Config, password []byte, hash []byte) error {
 	algorithm, realHash, err := ParsePasswordHash(hash)
@@ -27,24 +30,24 @@ func Compare(ctx context.Context, cfg *config.Config, password []byte, hash []by
 
 	switch algorithm {
 	case Argon2AlgorithmId:
-		return CompareArgon2id(ctx, password, realHash)
+		return CompareArgon2id(ctx, cfg, password, realHash)
 	case BcryptAlgorithmId:
-		return CompareBcrypt(ctx, password, realHash)
+		return CompareBcrypt(ctx, cfg, password, realHash)
 	case BcryptAESAlgorithmId:
-		return CompareBcryptAes(ctx, cfg.HasherBcryptAES(), password, realHash)
+		return CompareBcryptAes(ctx, cfg, password, realHash)
 	default:
 		return ErrUnknownHashAlgorithm
 	}
 }
 
-func CompareBcrypt(_ context.Context, password []byte, hash string) error {
+func CompareBcrypt(_ context.Context, _ *config.Config, password []byte, hash string) error {
 	if err := validateBcryptPasswordLength(password); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(hash), password)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -80,11 +83,6 @@ func ParsePasswordHash(input []byte) (algorithm, hash string, err error) {
 }
 
 func aes256Decrypt(data string, key []byte) ([]byte, error) {
-	dataHex, err := base64.RawStdEncoding.Strict().DecodeString(data)
-	if err != nil {
-		return nil, err
-	}
-
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -95,32 +93,39 @@ func aes256Decrypt(data string, key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	nonce := dataHex[:gcm.NonceSize()]
-	ciphertext := dataHex[gcm.NonceSize():]
+	decoded, err := hex.DecodeString(data)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce := decoded[:gcm.NonceSize()]
+	ciphertext := decoded[gcm.NonceSize():]
 
 	return gcm.Open(nil, nonce, ciphertext, nil)
 }
 
-func CompareBcryptAes(_ context.Context, hashConfig *config.BcryptAES, password []byte, hash string) error {
-	aesDecrypted, err := aes256Decrypt(hash[1:], []byte(hashConfig.Key))
+func CompareBcryptAes(_ context.Context, cfg *config.Config, password []byte, hash string) error {
+	aesDecrypted, err := aes256Decrypt(hash[1:], []byte(cfg.HasherBcryptAES().Key))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	err = bcrypt.CompareHashAndPassword(aesDecrypted, password)
+	sh := sha3.New512()
+	sh.Write(password)
+	err = bcrypt.CompareHashAndPassword(aesDecrypted, sh.Sum(nil))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
 }
 
-func CompareArgon2id(_ context.Context, password []byte, hashPart string) error {
+func CompareArgon2id(_ context.Context, _ *config.Config, password []byte, hashPart string) error {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
 	p, salt, hash, err := decodeArgon2idHash(hashPart)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// Derive the key from the other password using the same parameters.
