@@ -19,7 +19,7 @@ services:
       - intranet
 
   kratos-selfservice-ui-node:
-    image: oryd/kratos-selfservice-ui-node:v0.6.0-alpha.1.pre.2
+    image: oryd/kratos-selfservice-ui-node:v0.6.0-alpha.1
     environment:
       - KRATOS_PUBLIC_URL=http://kratos:4433/
       - KRATOS_ADMIN_URL=http://kratos:4434/
