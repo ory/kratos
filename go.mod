@@ -97,4 +97,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/tools v0.1.0
+	github.com/davecgh/go-spew v1.1.1
 )
