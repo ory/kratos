@@ -4,7 +4,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-05-06)](#unreleased-2021-05-06)
+- [Unreleased (2021-05-07)](#unreleased-2021-05-07)
+- [0.6.0-alpha.2 (2021-05-07)](#060-alpha2-2021-05-07)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
 - [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
@@ -139,7 +140,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.0-alpha.1...7b2448566f82e69d555997654ee410f9b4ff3939) (2021-05-06)
+# Unreleased (2021-05-07)
+
+No significant changes have been made for this release.
+
+
+# [0.6.0-alpha.2](https://github.com/ory/kratos/compare/v0.6.0-alpha.1...v0.6.0-alpha.2) (2021-05-07)
 
 
 ### Bug Fixes
