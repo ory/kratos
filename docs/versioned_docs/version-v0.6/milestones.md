@@ -141,8 +141,6 @@ Something is not working.
 
 #### Issues
 
-- [ ] Receive the verification email every time when I update my password
-      ([kratos#1221](https://github.com/ory/kratos/issues/1221))
 - [ ] Investigate why smtps fails but smtp does not
       ([kratos#781](https://github.com/ory/kratos/issues/781)) -
       [@hackerman](https://github.com/aeneasr)
@@ -156,6 +154,8 @@ Something is not working.
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] handle 409 error in settings flow
       ([kratos#1107](https://github.com/ory/kratos/issues/1107))
+- [x] Receive the verification email every time when I update my password
+      ([kratos#1221](https://github.com/ory/kratos/issues/1221))
 - [x] No email validation for /verify and /recovery page. email queue is
       backlogged with invalid emails.
       ([kratos#1285](https://github.com/ory/kratos/issues/1285))
@@ -319,7 +319,7 @@ Blocks milestones or other issues or pulls.
 
 #### Issues
 
-- [ ] Ory Kratos v0.6 pre-release list
+- [x] Ory Kratos v0.6 pre-release list
       ([kratos#1222](https://github.com/ory/kratos/issues/1222)) -
       [@hackerman](https://github.com/aeneasr)
 
