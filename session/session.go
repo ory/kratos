@@ -2,7 +2,6 @@ package session
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ory/kratos/corp"
@@ -53,22 +52,18 @@ func (s Session) TableName(ctx context.Context) string {
 func NewActiveSession(i *identity.Identity, c interface {
 	SessionLifespan() time.Duration
 }, authenticatedAt time.Time) *Session {
-	return &Session{
-		ID:              x.NewUUID(),
-		ExpiresAt:       authenticatedAt.Add(c.SessionLifespan()),
-		AuthenticatedAt: authenticatedAt,
-		IssuedAt:        time.Now().UTC(),
-		Identity:        i,
-		IdentityID:      i.ID,
-		Token:           randx.MustString(32, randx.AlphaNum),
-		Active:          true,
-	}
+	return newActiveSession(i, c, authenticatedAt, false)
 }
 
 func NewActiveRecoverySession(i *identity.Identity, c interface {
 	SessionLifespan() time.Duration
 }, authenticatedAt time.Time) *Session {
-	fmt.Println(" =======================> Issuing a recovery session")
+	return newActiveSession(i, c, authenticatedAt, true)
+}
+
+func newActiveSession(i *identity.Identity, c interface {
+	SessionLifespan() time.Duration
+}, authenticatedAt time.Time, recovery bool) *Session {
 	return &Session{
 		ID:              x.NewUUID(),
 		ExpiresAt:       authenticatedAt.Add(c.SessionLifespan()),
@@ -78,7 +73,7 @@ func NewActiveRecoverySession(i *identity.Identity, c interface {
 		IdentityID:      i.ID,
 		Token:           randx.MustString(32, randx.AlphaNum),
 		Active:          true,
-		Recovery:        true,
+		Recovery:        recovery,
 	}
 }
 
