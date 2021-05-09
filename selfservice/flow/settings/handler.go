@@ -413,6 +413,22 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		break
 	}
 
+	// if the submission was from a recovery session, we have to end the recovery session and
+	// reissue a new session which isn't a recovery session anymore
+	if ss.Recovery {
+		if err := h.d.SessionManager().PurgeFromRequest(r.Context(), w, r); err != nil {
+			h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
+			return
+		}
+		newSession := session.NewActiveSession(ss.Identity, h.d.Config(r.Context()), time.Now())
+
+		// this could sit nicely behind a flag to leave the user signed out after the password change
+		if err := h.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, newSession); err != nil {
+			h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, ss.Identity, err)
+			return
+		}
+	}
+
 	if updateContext == nil {
 		c := &UpdateContext{Session: ss, Flow: f}
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, c.GetIdentityToUpdate(), errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
