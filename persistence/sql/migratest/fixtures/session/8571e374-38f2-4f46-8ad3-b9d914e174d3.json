@@ -21,5 +21,6 @@
         "verified_at": null
       }
     ]
-  }
+  },
+  "recovery": false
 }
