@@ -1,0 +1,1 @@
+add_column("sessions", "recovery", "boolean", {"null": false, "default": false})

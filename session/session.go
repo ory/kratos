@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ory/kratos/corp"
@@ -33,6 +34,8 @@ type Session struct {
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
+	Recovery bool `json:"recovery" db:"recovery"`
+
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
@@ -59,6 +62,23 @@ func NewActiveSession(i *identity.Identity, c interface {
 		IdentityID:      i.ID,
 		Token:           randx.MustString(32, randx.AlphaNum),
 		Active:          true,
+	}
+}
+
+func NewActiveRecoverySession(i *identity.Identity, c interface {
+	SessionLifespan() time.Duration
+}, authenticatedAt time.Time) *Session {
+	fmt.Println(" =======================> Issuing a recovery session")
+	return &Session{
+		ID:              x.NewUUID(),
+		ExpiresAt:       authenticatedAt.Add(c.SessionLifespan()),
+		AuthenticatedAt: authenticatedAt,
+		IssuedAt:        time.Now().UTC(),
+		Identity:        i,
+		IdentityID:      i.ID,
+		Token:           randx.MustString(32, randx.AlphaNum),
+		Active:          true,
+		Recovery:        true,
 	}
 }
 
