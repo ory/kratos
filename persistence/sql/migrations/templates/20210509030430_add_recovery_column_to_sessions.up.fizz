@@ -1,1 +1,1 @@
-add_column("sessions", "recovery", "boolean", {"null": false, "default": false})
+add_column("sessions", "recovery", "boolean", {"default_raw": "FALSE"})
