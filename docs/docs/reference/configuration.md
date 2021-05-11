@@ -871,20 +871,6 @@ selfservice:
       # Define how passwords are validated.
       #
       config:
-        ## Ignore Lookup Network Errors ##
-        #
-        # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
-        #
-        # Default value: true
-        #
-        # Set this value using environment variables on
-        # - Linux/macOS:
-        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
-        # - Windows Command Line (CMD):
-        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
-        #
-        ignore_network_errors: false
-
         ## Allow Password Breaches ##
         #
         # Defines how often a password may have been breached before it is rejected.
@@ -900,6 +886,34 @@ selfservice:
         #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MAX_BREACHES=<value>
         #
         max_breaches: 0
+
+        ## Ignore Lookup Network Errors ##
+        #
+        # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        #
+        ignore_network_errors: false
+
+        ## Custom haveibeenpwned host ##
+        #
+        # Allows changing the default HIBP host to a self hosted version.
+        #
+        # Default value: api.pwnedpasswords.com
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_HOST=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_HOST=<value>
+        #
+        haveibeenpwned_host: ''
 
       ## Enables Username/Email and Password Method ##
       #
