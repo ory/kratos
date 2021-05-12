@@ -1491,7 +1491,7 @@
           "description": "One of the values: argon2, bcrypt",
           "type": "string",
           "default": "bcrypt",
-          "enum": ["argon2", "bcrypt", "bcyptaes"]
+          "enum": ["argon2", "bcrypt", "bcryptaes"]
         },
         "argon2": {
           "title": "Configuration for the Argon2id hasher.",
@@ -1564,7 +1564,6 @@
           "title": "Configuration for the Bcrypt-AES hasher.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["cost", "key"],
           "properties": {
             "cost": {
               "title": "Cost of the BCrypt algorithm. Minimum is 4 when --dev flag is used and 12 otherwise.",
@@ -1777,6 +1776,34 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "hashers": {
+            "properties": {
+              "algorithm": {
+                "const": "bcryptaes"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "hashers": {
+            "properties": {
+              "bcryptaes": {
+                "required": [
+                  "cost",
+                  "key"
+                ]
+              }
+            },
+            "required": ["bcryptaes"]
           }
         }
       }
