@@ -1564,7 +1564,7 @@
           "title": "Configuration for the Bcrypt-AES hasher.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["cost"],
+          "required": ["cost", "key"],
           "properties": {
             "cost": {
               "title": "Cost of the BCrypt algorithm. Minimum is 4 when --dev flag is used and 12 otherwise.",

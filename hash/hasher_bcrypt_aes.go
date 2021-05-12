@@ -44,7 +44,7 @@ func (h *BcryptAES) aes256Encrypt(data, key []byte) ([]byte, error) {
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	hash := append(nonce, gcm.Seal(nil, nonce, data, nil)...)

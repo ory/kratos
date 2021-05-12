@@ -18,9 +18,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
-var ErrUnknownHashFormat = errors.New("unknown hash format")
-var ErrNonceSizeIncorrect = errors.New("nonce size is incorrect")
+var ErrUnknownHashAlgorithm = fmt.Errorf("unknown hash algorithm")
+var ErrUnknownHashFormat = fmt.Errorf("unknown hash format")
 
 func Compare(ctx context.Context, cfg *config.Config, password []byte, hash []byte) error {
 	algorithm, realHash, err := ParsePasswordHash(hash)
@@ -61,7 +60,7 @@ func IsPasswordHash(hash []byte) bool {
 func ParsePasswordHash(input []byte) (algorithm, hash string, err error) {
 	hashParts := strings.SplitN(string(input), "$", 3)
 	if len(hashParts) != 3 {
-		err = ErrUnknownHashFormat
+		err = errors.WithStack(ErrUnknownHashFormat)
 		return
 	}
 

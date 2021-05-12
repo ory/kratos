@@ -195,7 +195,7 @@ func TestComparatorBcryptAesFail(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			mod := make([]byte, len(pw))
 			copy(mod, pw)
-			mod[len(pw)-1] = ^pw[len(pw)-1]
+			mod[len(pw)-1] = ^mod[len(pw)-1]
 
 			err := hash.CompareBcryptAes(context.Background(), p, pw, string(mod))
 			assert.Error(t, err)
