@@ -20,20 +20,20 @@ This command gets all the details about an identity. To get an identity by some
 selector, e.g. the recovery email address, use the list command in combination
 with jq.
 
-We have to admit, this is not easy if you don&#39;t speak jq fluently. What
+We have to admit, this is not easy if you don't speak jq fluently. What
 about opening an issue and telling us what predefined selectors you want to
 have? https://github.com/ory/kratos/issues/new/choose
 
 ```
-kratos identities get &lt;id-0 [id-1 ...]&gt; [flags]
+kratos identities get <id-0 [id-1 ...]> [flags]
 ```
 
 ### Examples
 
 ```
-To get the identities with the recovery email address at the domain &#34;ory.sh&#34;, run:
+To get the identities with the recovery email address at the domain "ory.sh", run:
 
-	$ kratos identities get $(kratos identities list --format json | jq -r &#39;map(select(.recovery_addresses[].value | endswith(&#34;@ory.sh&#34;))) | .[].id&#39;)
+	$ kratos identities get $(kratos identities list --format json | jq -r 'map(select(.recovery_addresses[].value | endswith("@ory.sh"))) | .[].id')
 ```
 
 ### Options
@@ -45,8 +45,8 @@ To get the identities with the recovery email address at the domain &#34;ory.sh&
 ### Options inherited from parent commands
 
 ```
-  -e, --endpoint string   The URL of Ory Kratos&#39; Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
-  -f, --format string     Set the output format. One of table, json, and json-pretty. (default &#34;default&#34;)
+  -e, --endpoint string   The URL of Ory Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
+  -f, --format string     Set the output format. One of table, json, and json-pretty. (default "default")
   -q, --quiet             Be quiet with output printing.
 ```
 
