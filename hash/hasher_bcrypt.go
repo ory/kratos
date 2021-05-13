@@ -12,7 +12,7 @@ import (
 	"github.com/ory/kratos/schema"
 )
 
-const BcryptAlgorithmId = "bcrypt"
+var BcryptAlgorithmId = []byte("bcrypt")
 
 type Bcrypt struct {
 	c BcryptConfiguration

@@ -89,7 +89,7 @@ func TestBcryptHasherGeneratesHash(t *testing.T) {
 
 			// Valid format: $2a$12$[22 character salt][31 character hash]
 			assert.Equal(t, 60, len(realHash), "invalid bcrypt hash length")
-			assert.Equal(t, "$2a$04$", realHash[:7], "invalid bcrypt identifier")
+			assert.Equal(t, []byte("$2a$04$"), realHash[:7], "invalid bcrypt identifier")
 		})
 	}
 }
@@ -97,7 +97,7 @@ func TestBcryptHasherGeneratesHash(t *testing.T) {
 func TestComparatorBcryptFailsWhenPasswordIsTooLong(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	password := mkpw(t, 73)
-	err := hash.CompareBcrypt(context.Background(), reg.Config(context.Background()), password, "hash")
+	err := hash.CompareBcrypt(context.Background(), reg.Config(context.Background()), password, []byte("hash"))
 
 	assert.Error(t, err, "password is too long")
 }
@@ -142,7 +142,7 @@ func TestComparatorBcryptFail(t *testing.T) {
 			copy(mod, pw)
 			mod[len(pw)-1] = ^pw[len(pw)-1]
 
-			err := hash.CompareBcrypt(context.Background(), reg.Config(context.Background()), pw, string(mod))
+			err := hash.CompareBcrypt(context.Background(), reg.Config(context.Background()), pw, mod)
 			assert.Error(t, err)
 		})
 	}
@@ -197,7 +197,7 @@ func TestComparatorBcryptAesFail(t *testing.T) {
 			copy(mod, pw)
 			mod[len(pw)-1] = ^mod[len(pw)-1]
 
-			err := hash.CompareBcryptAes(context.Background(), p, pw, string(mod))
+			err := hash.CompareBcryptAes(context.Background(), p, pw, mod)
 			assert.Error(t, err)
 		})
 	}
@@ -208,26 +208,26 @@ func TestCompare(t *testing.T) {
 		configx.WithConfigFiles("../internal/.kratos.yaml"))
 
 	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcrypt$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))
-	assert.Nil(t, hash.CompareBcrypt(context.Background(), p, []byte("test"), "$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6"))
+	assert.Nil(t, hash.CompareBcrypt(context.Background(), p, []byte("test"), []byte("$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcrypt$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL7")))
 
 	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcrypt$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZbO")))
-	assert.Nil(t, hash.CompareBcrypt(context.Background(), p, []byte("test"), "$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZbO"))
+	assert.Nil(t, hash.CompareBcrypt(context.Background(), p, []byte("test"), []byte("$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZbO")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcrypt$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZb1")))
 
 	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw")))
-	assert.Nil(t, hash.CompareArgon2id(context.Background(), p, []byte("test"), "$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"))
+	assert.Nil(t, hash.CompareArgon2id(context.Background(), p, []byte("test"), []byte("$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRN2")))
 
 	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$argon2id$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp4")))
-	assert.Nil(t, hash.CompareArgon2id(context.Background(), p, []byte("test"), "$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp4"))
+	assert.Nil(t, hash.CompareArgon2id(context.Background(), p, []byte("test"), []byte("$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp4")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$argon2id$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp5")))
 
 	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899c")))
-	assert.Nil(t, hash.CompareBcryptAes(context.Background(), p, []byte("test"), "$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899c"))
+	assert.Nil(t, hash.CompareBcryptAes(context.Background(), p, []byte("test"), []byte("$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899c")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899d")))
 
 	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014665")))
-	assert.Nil(t, hash.CompareBcryptAes(context.Background(), p, []byte("test"), "$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014665"))
+	assert.Nil(t, hash.CompareBcryptAes(context.Background(), p, []byte("test"), []byte("$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014665")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014666")))
 }

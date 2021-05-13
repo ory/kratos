@@ -21,7 +21,7 @@ var (
 	ErrMismatchedHashAndPassword = errors.New("passwords do not match")
 )
 
-const Argon2AlgorithmId = "argon2id"
+var Argon2AlgorithmId = []byte("argon2id")
 
 type Argon2 struct {
 	c Argon2Configuration

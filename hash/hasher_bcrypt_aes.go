@@ -17,7 +17,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-const BcryptAESAlgorithmId = "bcryptAes"
+var BcryptAESAlgorithmId = []byte("bcryptAes")
 
 type BcryptAES struct {
 	c BcryptAESConfiguration
