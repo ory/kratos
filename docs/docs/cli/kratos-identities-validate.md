@@ -22,7 +22,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an
 array of identities.
 
 ```
-kratos identities validate &lt;file.json [file-2.json [file-3.json] ...]&gt; [flags]
+kratos identities validate <file.json [file-2.json [file-3.json] ...]> [flags]
 ```
 
 ### Options
@@ -34,8 +34,8 @@ kratos identities validate &lt;file.json [file-2.json [file-3.json] ...]&gt; [fl
 ### Options inherited from parent commands
 
 ```
-  -e, --endpoint string   The URL of Ory Kratos&#39; Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
-  -f, --format string     Set the output format. One of table, json, and json-pretty. (default &#34;default&#34;)
+  -e, --endpoint string   The URL of Ory Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
+  -f, --format string     Set the output format. One of table, json, and json-pretty. (default "default")
   -q, --quiet             Be quiet with output printing.
 ```
 
