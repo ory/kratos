@@ -170,9 +170,6 @@ func TestComparatorBcryptAesSuccess(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, hash.BcryptAESAlgorithmId, algorithm)
 
-			hs2, _ := hasher.Generate(context.Background(), []byte("test"))
-			fmt.Printf("test: %s\n", string(hs2))
-
 			err = hash.CompareBcryptAes(context.Background(), reg.Config(context.Background()), pw, realHash)
 			assert.Nil(t, err, "hash validation fails")
 		})

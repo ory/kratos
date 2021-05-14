@@ -24,7 +24,7 @@ var ErrUnknownHashAlgorithm = fmt.Errorf("unknown hash algorithm")
 var ErrUnknownHashFormat = fmt.Errorf("unknown hash format")
 
 var hashSeparator = []byte("$")
-var bcryptLegacyPrefix = regexp.MustCompile(`^\$2[abzy]?\$`)
+var bcryptLegacyPrefix = regexp.MustCompile(`^2[abzy]?$`)
 
 func Compare(ctx context.Context, cfg *config.Config, password []byte, hash []byte) error {
 	algorithm, realHash, err := ParsePasswordHash(hash)
