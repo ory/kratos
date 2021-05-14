@@ -725,9 +725,7 @@ Please look at the Google developer documentation which can be found
 
 **Create VK Application**
 
-
-Create a
-[VK OAuth2 Application](https://vk.com/apps?act=manage).
+Create a [VK OAuth2 Application](https://vk.com/apps?act=manage).
 
 Select "Create"
 
@@ -759,15 +757,13 @@ The pattern of this URL is:
 https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
 ```
 
-
 :::note
 
 While you can use
-[VK as an OIDC identity provider](https://vk.com/dev/authcode_flow_user),
-VK only returns access_token and not id_token. Therefore, Ory Kratos makes
-a request to
-[VK's API](https://vk.com/dev/users.get) and adds
-the user info to `std.extVar('claims')`.
+[VK as an OIDC identity provider](https://vk.com/dev/authcode_flow_user), VK
+only returns access_token and not id_token. Therefore, Ory Kratos makes a
+request to [VK's API](https://vk.com/dev/users.get) and adds the user info to
+`std.extVar('claims')`.
 
 :::
 
@@ -816,13 +812,12 @@ selfservice:
               - email # required for email and email_verified claims in the near future
 ```
 
-Next, open the login endpoint of the SecureApp and you should see the VK
-Login option!
+Next, open the login endpoint of the SecureApp and you should see the VK Login
+option!
 
 ## Yandex
 
 **Create Yandex Application**
-
 
 Create a
 [Yandex OAuth2 Application](https://yandex.com/dev/oauth/doc/dg/tasks/register-client.html).
@@ -849,15 +844,14 @@ The pattern of this URL is:
 https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
 ```
 
-
 :::note
 
 While you can use
 [Yandex as an OIDC identity provider](https://yandex.com/dev/oauth/doc/dg/concepts/about.html),
-Yandex only returns access_token and not id_token. Therefore, Ory Kratos makes
-a request to
-[Yandex's API](https://yandex.com/dev/passport/doc/dg/reference/request.html) and adds
-the user info to `std.extVar('claims')`.
+Yandex only returns access_token and not id_token. Therefore, Ory Kratos makes a
+request to
+[Yandex's API](https://yandex.com/dev/passport/doc/dg/reference/request.html)
+and adds the user info to `std.extVar('claims')`.
 
 :::
 
