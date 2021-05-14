@@ -1206,6 +1206,11 @@
                       "href": "https://www.ory.sh/hydra/docs/next/cli/hydra-keys-get"
                     },
                     {
+                      "label": "hydra keys import",
+                      "type": "link",
+                      "href": "https://www.ory.sh/hydra/docs/next/cli/hydra-keys-import"
+                    },
+                    {
                       "label": "hydra migrate",
                       "type": "link",
                       "href": "https://www.ory.sh/hydra/docs/next/cli/hydra-migrate"
