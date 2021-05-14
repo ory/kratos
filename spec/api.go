@@ -2,5 +2,5 @@ package spec
 
 import _ "embed"
 
-//go:embed api.json
+//go:embed openapi.json
 var API []byte
