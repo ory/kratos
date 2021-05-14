@@ -2,12 +2,12 @@ version: '3.7'
 
 services:
   kratos-migrate:
-    image: oryd/kratos:v0.6.1-alpha.1
+    image: oryd/kratos:v0.6.2-alpha.1
     environment:
       - DSN=cockroach://root@cockroachd:26257/defaultdb?sslmode=disable&max_conns=20&max_idle_conns=4
 
   kratos:
-    image: oryd/kratos:v0.6.1-alpha.1
+    image: oryd/kratos:v0.6.2-alpha.1
     environment:
       - DSN=cockroach://root@cockroachd:26257/defaultdb?sslmode=disable&max_conns=20&max_idle_conns=4
 
