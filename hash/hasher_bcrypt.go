@@ -39,7 +39,7 @@ func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
 		&b,
-		"$%s%s",
+		"$%s%s", // BCrypt hash has already '$' prefix so no need to add it here between ID and hash
 		BcryptAlgorithmId,
 		hash,
 	); err != nil {
