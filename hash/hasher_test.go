@@ -215,6 +215,11 @@ func TestCompare(t *testing.T) {
 	assert.Nil(t, hash.CompareBcrypt(context.Background(), p, []byte("test"), []byte("$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZbO")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcrypt$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZb1")))
 
+	// legacy bcrypt hash format
+	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZbO")))
+	assert.Nil(t, hash.CompareBcrypt(context.Background(), p, []byte("test"), []byte("$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZbO")))
+	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$2a$15$GRvRO2nrpYTEuPQX6AieaOlZ4.7nMGsXpt.QWMev1zrP86JNspZb1")))
+
 	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw")))
 	assert.Nil(t, hash.CompareArgon2id(context.Background(), p, []byte("test"), []byte("$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRN2")))

@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -23,6 +24,7 @@ var ErrUnknownHashAlgorithm = fmt.Errorf("unknown hash algorithm")
 var ErrUnknownHashFormat = fmt.Errorf("unknown hash format")
 
 var hashSeparator = []byte("$")
+var bcryptLegacyPrefix = regexp.MustCompile(`^\$2[abzy]?\$`)
 
 func Compare(ctx context.Context, cfg *config.Config, password []byte, hash []byte) error {
 	algorithm, realHash, err := ParsePasswordHash(hash)
@@ -72,6 +74,9 @@ func ParsePasswordHash(input []byte) (algorithm, hash []byte, err error) {
 	case bytes.Equal(hashParts[1], Argon2AlgorithmId):
 		algorithm = Argon2AlgorithmId
 		return
+	case bcryptLegacyPrefix.Match(hashParts[1]):
+		hash = input
+		fallthrough
 	case bytes.Equal(hashParts[1], BcryptAlgorithmId):
 		algorithm = BcryptAlgorithmId
 		return
