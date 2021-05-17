@@ -108,6 +108,8 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderSlack(&p, public), nil
 			case addProviderName("facebook"):
 				return NewProviderFacebook(&p, public), nil
+			case addProviderName("auth0"):
+				return NewProviderAuth0(&p, public), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}

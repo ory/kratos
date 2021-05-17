@@ -389,6 +389,85 @@ selfservice:
 
 GitLab is now an option to log in via Kratos.
 
+## Auth0
+
+To set up "Sign in with Auth0" you must create an
+[Auth0 Application for your Auth0 Tenant](https://auth0.com/docs/applications). Note that the endpoint for the 
+application starts with your Tenant name. e.g. `myAuth0Tenant.auth0.com`. This will be the `IssuerURL` you will use
+when configuring the the OIDC connection.
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4433/self-service/methods/oidc/callback/gitlab
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+:::note
+
+While you can use
+[Auth0 as an OIDC identity provider](https://docs.gitlab.com/ee/integration/openid_connect_provider.html),
+Auth0 only returns the sub and sub_legacy claims in the ID token. Therefore,
+Ory Kratos makes a request to
+[Auth0's /userinfo API](https://auth0.com/docs/api/authentication?http#user-profile) and adds the
+user info to `std.extVar('claims')`.
+
+:::
+
+```json title="contrib/quickstart/kratos/email-password/oidc.auth0.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by Auth0.
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+      username: claims.nickname,
+    },
+  },
+}
+```
+
+Now, enable the Auth0 provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`. Note that the `issuer_url` needs to be 
+the top-level domain for your Auth0 application. This can be found by going to the Auth0 application page and 
+choosing `Settings` then `Advanced Settings` then `Endpoints`. In general though the endpoint is of the form 
+`myAuth0Tenant.auth0.com` (where `myAuth0Tenant` is the name of your tenant). 
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: auth0 # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: auth0
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Auth0
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Auth0
+            mapper_url: file:///etc/config/kratos/oidc.auth0.jsonnet
+            issuer_url: .... # Replace this with the endpoint of the Auth0 tenant.
+            scope:
+              - openid
+              - profile
+              - email
+```
+
+Auth0 is now an option to log in via Kratos.
+
 ## Microsoft
 
 This will enable you to log in using any Azure AD directory - Multitenant and
