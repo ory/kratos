@@ -16,39 +16,38 @@ import (
 	"time"
 )
 
-// RecoveryAddress struct for RecoveryAddress
-type RecoveryAddress struct {
+// SelfServiceErrorContainer struct for SelfServiceErrorContainer
+type SelfServiceErrorContainer struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
-	Id        string     `json:"id"`
+	// Errors in the container
+	Errors []map[string]interface{} `json:"errors"`
+	Id     string                   `json:"id"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	Value     string     `json:"value"`
-	Via       string     `json:"via"`
 }
 
-// NewRecoveryAddress instantiates a new RecoveryAddress object
+// NewSelfServiceErrorContainer instantiates a new SelfServiceErrorContainer object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRecoveryAddress(id string, value string, via string) *RecoveryAddress {
-	this := RecoveryAddress{}
+func NewSelfServiceErrorContainer(errors []map[string]interface{}, id string) *SelfServiceErrorContainer {
+	this := SelfServiceErrorContainer{}
+	this.Errors = errors
 	this.Id = id
-	this.Value = value
-	this.Via = via
 	return &this
 }
 
-// NewRecoveryAddressWithDefaults instantiates a new RecoveryAddress object
+// NewSelfServiceErrorContainerWithDefaults instantiates a new SelfServiceErrorContainer object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewRecoveryAddressWithDefaults() *RecoveryAddress {
-	this := RecoveryAddress{}
+func NewSelfServiceErrorContainerWithDefaults() *SelfServiceErrorContainer {
+	this := SelfServiceErrorContainer{}
 	return &this
 }
 
 // GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
-func (o *RecoveryAddress) GetCreatedAt() time.Time {
+func (o *SelfServiceErrorContainer) GetCreatedAt() time.Time {
 	if o == nil || o.CreatedAt == nil {
 		var ret time.Time
 		return ret
@@ -58,7 +57,7 @@ func (o *RecoveryAddress) GetCreatedAt() time.Time {
 
 // GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetCreatedAtOk() (*time.Time, bool) {
+func (o *SelfServiceErrorContainer) GetCreatedAtOk() (*time.Time, bool) {
 	if o == nil || o.CreatedAt == nil {
 		return nil, false
 	}
@@ -66,7 +65,7 @@ func (o *RecoveryAddress) GetCreatedAtOk() (*time.Time, bool) {
 }
 
 // HasCreatedAt returns a boolean if a field has been set.
-func (o *RecoveryAddress) HasCreatedAt() bool {
+func (o *SelfServiceErrorContainer) HasCreatedAt() bool {
 	if o != nil && o.CreatedAt != nil {
 		return true
 	}
@@ -75,12 +74,36 @@ func (o *RecoveryAddress) HasCreatedAt() bool {
 }
 
 // SetCreatedAt gets a reference to the given time.Time and assigns it to the CreatedAt field.
-func (o *RecoveryAddress) SetCreatedAt(v time.Time) {
+func (o *SelfServiceErrorContainer) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
 }
 
+// GetErrors returns the Errors field value
+func (o *SelfServiceErrorContainer) GetErrors() []map[string]interface{} {
+	if o == nil {
+		var ret []map[string]interface{}
+		return ret
+	}
+
+	return o.Errors
+}
+
+// GetErrorsOk returns a tuple with the Errors field value
+// and a boolean to check if the value has been set.
+func (o *SelfServiceErrorContainer) GetErrorsOk() ([]map[string]interface{}, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Errors, true
+}
+
+// SetErrors sets field value
+func (o *SelfServiceErrorContainer) SetErrors(v []map[string]interface{}) {
+	o.Errors = v
+}
+
 // GetId returns the Id field value
-func (o *RecoveryAddress) GetId() string {
+func (o *SelfServiceErrorContainer) GetId() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -91,7 +114,7 @@ func (o *RecoveryAddress) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetIdOk() (*string, bool) {
+func (o *SelfServiceErrorContainer) GetIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -99,12 +122,12 @@ func (o *RecoveryAddress) GetIdOk() (*string, bool) {
 }
 
 // SetId sets field value
-func (o *RecoveryAddress) SetId(v string) {
+func (o *SelfServiceErrorContainer) SetId(v string) {
 	o.Id = v
 }
 
 // GetUpdatedAt returns the UpdatedAt field value if set, zero value otherwise.
-func (o *RecoveryAddress) GetUpdatedAt() time.Time {
+func (o *SelfServiceErrorContainer) GetUpdatedAt() time.Time {
 	if o == nil || o.UpdatedAt == nil {
 		var ret time.Time
 		return ret
@@ -114,7 +137,7 @@ func (o *RecoveryAddress) GetUpdatedAt() time.Time {
 
 // GetUpdatedAtOk returns a tuple with the UpdatedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetUpdatedAtOk() (*time.Time, bool) {
+func (o *SelfServiceErrorContainer) GetUpdatedAtOk() (*time.Time, bool) {
 	if o == nil || o.UpdatedAt == nil {
 		return nil, false
 	}
@@ -122,7 +145,7 @@ func (o *RecoveryAddress) GetUpdatedAtOk() (*time.Time, bool) {
 }
 
 // HasUpdatedAt returns a boolean if a field has been set.
-func (o *RecoveryAddress) HasUpdatedAt() bool {
+func (o *SelfServiceErrorContainer) HasUpdatedAt() bool {
 	if o != nil && o.UpdatedAt != nil {
 		return true
 	}
@@ -131,62 +154,17 @@ func (o *RecoveryAddress) HasUpdatedAt() bool {
 }
 
 // SetUpdatedAt gets a reference to the given time.Time and assigns it to the UpdatedAt field.
-func (o *RecoveryAddress) SetUpdatedAt(v time.Time) {
+func (o *SelfServiceErrorContainer) SetUpdatedAt(v time.Time) {
 	o.UpdatedAt = &v
 }
 
-// GetValue returns the Value field value
-func (o *RecoveryAddress) GetValue() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Value
-}
-
-// GetValueOk returns a tuple with the Value field value
-// and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetValueOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Value, true
-}
-
-// SetValue sets field value
-func (o *RecoveryAddress) SetValue(v string) {
-	o.Value = v
-}
-
-// GetVia returns the Via field value
-func (o *RecoveryAddress) GetVia() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Via
-}
-
-// GetViaOk returns a tuple with the Via field value
-// and a boolean to check if the value has been set.
-func (o *RecoveryAddress) GetViaOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Via, true
-}
-
-// SetVia sets field value
-func (o *RecoveryAddress) SetVia(v string) {
-	o.Via = v
-}
-
-func (o RecoveryAddress) MarshalJSON() ([]byte, error) {
+func (o SelfServiceErrorContainer) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
+	}
+	if true {
+		toSerialize["errors"] = o.Errors
 	}
 	if true {
 		toSerialize["id"] = o.Id
@@ -194,47 +172,41 @@ func (o RecoveryAddress) MarshalJSON() ([]byte, error) {
 	if o.UpdatedAt != nil {
 		toSerialize["updated_at"] = o.UpdatedAt
 	}
-	if true {
-		toSerialize["value"] = o.Value
-	}
-	if true {
-		toSerialize["via"] = o.Via
-	}
 	return json.Marshal(toSerialize)
 }
 
-type NullableRecoveryAddress struct {
-	value *RecoveryAddress
+type NullableSelfServiceErrorContainer struct {
+	value *SelfServiceErrorContainer
 	isSet bool
 }
 
-func (v NullableRecoveryAddress) Get() *RecoveryAddress {
+func (v NullableSelfServiceErrorContainer) Get() *SelfServiceErrorContainer {
 	return v.value
 }
 
-func (v *NullableRecoveryAddress) Set(val *RecoveryAddress) {
+func (v *NullableSelfServiceErrorContainer) Set(val *SelfServiceErrorContainer) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableRecoveryAddress) IsSet() bool {
+func (v NullableSelfServiceErrorContainer) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableRecoveryAddress) Unset() {
+func (v *NullableSelfServiceErrorContainer) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableRecoveryAddress(val *RecoveryAddress) *NullableRecoveryAddress {
-	return &NullableRecoveryAddress{value: val, isSet: true}
+func NewNullableSelfServiceErrorContainer(val *SelfServiceErrorContainer) *NullableSelfServiceErrorContainer {
+	return &NullableSelfServiceErrorContainer{value: val, isSet: true}
 }
 
-func (v NullableRecoveryAddress) MarshalJSON() ([]byte, error) {
+func (v NullableSelfServiceErrorContainer) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableRecoveryAddress) UnmarshalJSON(src []byte) error {
+func (v *NullableSelfServiceErrorContainer) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

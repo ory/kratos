@@ -27,9 +27,12 @@
   value: "#/components/schemas/uiNodeInputAttributesValue"
 
 - op: replace
-  path: /components/schemas/errorContainer/properties/errors/type
+  path: /components/schemas/selfServiceErrorContainer/properties/errors/type
   value: array
 - op: replace
-  path: /components/schemas/errorContainer/properties/errors/items
+  path: /components/schemas/selfServiceErrorContainer/properties/errors/items
   value:
     type: object
+
+- op: remove
+  path: "#/components/schemas/identityTraits/type"

@@ -113,9 +113,9 @@
             "$ref": "#/responses/identityList"
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -142,7 +142,7 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/CreateIdentity"
+              "$ref": "#/definitions/createIdentity"
             }
           }
         ],
@@ -151,21 +151,21 @@
             "$ref": "#/responses/identityResponse"
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "409": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -202,22 +202,16 @@
           "200": {
             "$ref": "#/responses/identityResponse"
           },
-          "400": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -251,30 +245,39 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/UpdateIdentity"
+              "$ref": "#/definitions/updateIdentity"
             }
           }
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/identityResponse"
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "409": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -307,15 +310,15 @@
             "$ref": "#/responses/emptyResponse"
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -374,21 +377,21 @@
             }
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -426,15 +429,15 @@
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -457,9 +460,9 @@
             "$ref": "#/responses/emptyResponse"
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -492,24 +495,24 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/errorContainer"
+            "$ref": "#/responses/selfServiceErrorResponse"
           },
           "403": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -569,9 +572,9 @@
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -580,6 +583,9 @@
     "/self-service/login/api": {
       "get": {
         "description": "This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing login flow call `/self-service/login/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks, including CSRF login attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "produces": [
+          "application/json"
+        ],
         "schemes": [
           "http",
           "https"
@@ -587,8 +593,8 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize Login Flow for API clients",
-        "operationId": "initializeSelfServiceLoginViaAPIFlow",
+        "summary": "Initialize Login Flow for Native Apps and API clients",
+        "operationId": "initializeSelfServiceLoginForNativeApps",
         "parameters": [
           {
             "type": "boolean",
@@ -605,15 +611,15 @@
             }
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -630,15 +636,23 @@
           "public"
         ],
         "summary": "Initialize Login Flow for browsers",
-        "operationId": "initializeSelfServiceLoginViaBrowserFlow",
+        "operationId": "initializeSelfServiceLoginForBrowsers",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "Refresh a login session\n\nIf set to true, this will refresh an existing login session by\nasking the user to sign in again. This will reset the\nauthenticated_at time of the session.",
+            "name": "refresh",
+            "in": "query"
+          }
+        ],
         "responses": {
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -677,27 +691,27 @@
             }
           },
           "403": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "410": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -749,9 +763,9 @@
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -767,8 +781,8 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize Recovery Flow for API Clients",
-        "operationId": "initializeSelfServiceRecoveryViaAPIFlow",
+        "summary": "Initialize Recovery Flow for Native Apps and API clients",
+        "operationId": "initializeSelfServiceRecoveryForNativeApps",
         "responses": {
           "200": {
             "description": "recoveryFlow",
@@ -777,15 +791,15 @@
             }
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -802,15 +816,15 @@
           "public"
         ],
         "summary": "Initialize Recovery Flow for Browser Clients",
-        "operationId": "initializeSelfServiceRecoveryViaBrowserFlow",
+        "operationId": "initializeSelfServiceRecoveryForBrowsers",
         "responses": {
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -849,21 +863,21 @@
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "410": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -920,9 +934,9 @@
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -980,9 +994,9 @@
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -998,8 +1012,8 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize Registration Flow for API clients",
-        "operationId": "initializeSelfServiceRegistrationViaAPIFlow",
+        "summary": "Initialize Registration Flow for Native Apps and API clients",
+        "operationId": "initializeSelfServiceRegistrationForNativeApps",
         "responses": {
           "200": {
             "description": "registrationFlow",
@@ -1008,15 +1022,15 @@
             }
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1033,15 +1047,15 @@
           "public"
         ],
         "summary": "Initialize Registration Flow for browsers",
-        "operationId": "initializeSelfServiceRegistrationViaBrowserFlow",
+        "operationId": "initializeSelfServiceRegistrationForBrowsers",
         "responses": {
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1080,27 +1094,27 @@
             }
           },
           "403": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "410": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1163,21 +1177,21 @@
             }
           },
           "401": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "403": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1198,8 +1212,8 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize Settings Flow for API Clients",
-        "operationId": "initializeSelfServiceSettingsViaAPIFlow",
+        "summary": "Initialize Settings Flow for Native Apps and API clients",
+        "operationId": "initializeSelfServiceSettingsForNativeApps",
         "responses": {
           "200": {
             "description": "settingsFlow",
@@ -1208,15 +1222,15 @@
             }
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1238,15 +1252,15 @@
           "public"
         ],
         "summary": "Initialize Settings Flow for Browsers",
-        "operationId": "initializeSelfServiceSettingsViaBrowserFlow",
+        "operationId": "initializeSelfServiceSettingsForBrowsers",
         "responses": {
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1290,27 +1304,27 @@
             }
           },
           "403": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "410": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1326,8 +1340,8 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize Verification Flow for API Clients",
-        "operationId": "initializeSelfServiceVerificationViaAPIFlow",
+        "summary": "Initialize Verification Flow for Native Apps and API clients",
+        "operationId": "initializeSelfServiceVerificationForNativeApps",
         "responses": {
           "200": {
             "description": "verificationFlow",
@@ -1336,15 +1350,15 @@
             }
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1361,15 +1375,15 @@
           "public"
         ],
         "summary": "Initialize Verification Flow for Browser Clients",
-        "operationId": "initializeSelfServiceVerificationViaBrowserFlow",
+        "operationId": "initializeSelfServiceVerificationForBrowsers",
         "responses": {
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1408,21 +1422,21 @@
             }
           },
           "403": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "404": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1474,9 +1488,9 @@
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1515,15 +1529,15 @@
             "$ref": "#/responses/emptyResponse"
           },
           "400": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1533,10 +1547,10 @@
       "get": {
         "security": [
           {
-            "sessionToken": []
+            "sessionCookie": []
           }
         ],
-        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nThis endpoint is useful for reverse proxies and API Gateways.",
+        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!",
         "produces": [
           "application/json"
         ],
@@ -1548,16 +1562,11 @@
           "public"
         ],
         "summary": "Check Who the Current HTTP Session Belongs To",
-        "operationId": "whoami",
+        "operationId": "toSession",
         "parameters": [
           {
             "type": "string",
-            "name": "Cookie",
-            "in": "header"
-          },
-          {
-            "type": "string",
-            "name": "Authorization",
+            "name": "X-Session-Token",
             "in": "header"
           }
         ],
@@ -1569,15 +1578,15 @@
             }
           },
           "401": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           },
           "500": {
-            "description": "genericError",
+            "description": "jsonError",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/jsonError"
             }
           }
         }
@@ -1735,23 +1744,6 @@
         }
       }
     },
-    "CreateIdentity": {
-      "type": "object",
-      "required": [
-        "schema_id",
-        "traits"
-      ],
-      "properties": {
-        "schema_id": {
-          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
-          "type": "string"
-        },
-        "traits": {
-          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
-          "type": "object"
-        }
-      }
-    },
     "CreateRecoveryLink": {
       "type": "object",
       "required": [
@@ -1821,47 +1813,6 @@
         "Id": {
           "description": "The id of the newly created object.",
           "type": "string"
-        }
-      }
-    },
-    "Identity": {
-      "type": "object",
-      "required": [
-        "id",
-        "schema_id",
-        "schema_url",
-        "traits"
-      ],
-      "properties": {
-        "id": {
-          "$ref": "#/definitions/UUID"
-        },
-        "recovery_addresses": {
-          "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/RecoveryAddress"
-          },
-          "x-omitempty": true
-        },
-        "schema_id": {
-          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
-          "type": "string"
-        },
-        "schema_url": {
-          "description": "SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
-          "type": "string"
-        },
-        "traits": {
-          "$ref": "#/definitions/Traits"
-        },
-        "verifiable_addresses": {
-          "description": "VerifiableAddresses contains all the addresses that can be verified by the user.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/VerifiableAddress"
-          },
-          "x-omitempty": true
         }
       }
     },
@@ -2432,8 +2383,18 @@
         "via"
       ],
       "properties": {
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
         "id": {
           "$ref": "#/definitions/UUID"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
         },
         "value": {
           "type": "string"
@@ -2462,67 +2423,12 @@
     "State": {
       "type": "string"
     },
-    "Traits": {
-      "type": "object"
-    },
     "Type": {
       "description": "The flow type can either be `api` or `browser`.",
       "type": "string",
       "title": "Type is the flow type."
     },
     "UUID": {"type": "string", "format": "uuid4"},
-    "UpdateIdentity": {
-      "type": "object",
-      "required": [
-        "traits"
-      ],
-      "properties": {
-        "schema_id": {
-          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
-          "type": "string"
-        },
-        "traits": {
-          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
-          "type": "object"
-        }
-      }
-    },
-    "VerifiableAddress": {
-      "type": "object",
-      "required": [
-        "id",
-        "value",
-        "verified",
-        "via",
-        "status"
-      ],
-      "properties": {
-        "id": {
-          "$ref": "#/definitions/UUID"
-        },
-        "status": {
-          "$ref": "#/definitions/VerifiableAddressStatus"
-        },
-        "value": {
-          "type": "string"
-        },
-        "verified": {
-          "type": "boolean"
-        },
-        "verified_at": {
-          "$ref": "#/definitions/NullTime"
-        },
-        "via": {
-          "$ref": "#/definitions/VerifiableAddressType"
-        }
-      }
-    },
-    "VerifiableAddressStatus": {
-      "type": "string"
-    },
-    "VerifiableAddressType": {
-      "type": "string"
-    },
     "Volume": {
       "description": "Volume volume",
       "type": "object",
@@ -2599,61 +2505,64 @@
         }
       }
     },
-    "errorContainer": {
+    "createIdentity": {
       "type": "object",
       "required": [
-        "id",
-        "errors"
+        "schema_id",
+        "traits"
       ],
       "properties": {
-        "errors": {
-          "description": "Errors in the container",
-          "type": "object"
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+          "type": "string"
         },
-        "id": {
-          "$ref": "#/definitions/UUID"
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
+          "type": "object"
         }
       }
     },
     "genericError": {
-      "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "Error response",
-      "properties": {
-        "error": {
-          "$ref": "#/definitions/genericErrorPayload"
-        }
-      }
-    },
-    "genericErrorPayload": {
-      "type": "object",
+      "required": [
+        "message"
+      ],
       "properties": {
         "code": {
-          "description": "Code represents the error status code (404, 403, 401, ...).",
+          "description": "The status code",
           "type": "integer",
           "format": "int64",
           "example": 404
         },
         "debug": {
-          "description": "Debug contains debug information. This is usually not available and has to be enabled.",
+          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
           "type": "string",
-          "example": "The database adapter was unable to find the element"
+          "example": "SQL field \"foo\" is not a bool."
         },
         "details": {
+          "description": "Further error details",
           "type": "object",
           "additionalProperties": true
         },
         "message": {
-          "type": "string"
+          "description": "Error message\n\nThe error's message.",
+          "type": "string",
+          "example": "The resource could not be found"
         },
         "reason": {
-          "type": "string"
+          "description": "A human-readable reason for the error",
+          "type": "string",
+          "example": "User with ID 1234 does not exist."
         },
         "request": {
-          "type": "string"
+          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
+          "type": "string",
+          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
         },
         "status": {
-          "type": "string"
+          "description": "The status description",
+          "type": "string",
+          "example": "Not Found"
         }
       }
     },
@@ -2678,12 +2587,70 @@
         }
       }
     },
+    "identity": {
+      "description": "An identity can be a real human, a service, an IoT device - everything that\ncan be described as an \"actor\" in a system.",
+      "type": "object",
+      "title": "Identity represents an Ory Kratos identity",
+      "required": [
+        "id",
+        "schema_id",
+        "schema_url",
+        "traits"
+      ],
+      "properties": {
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "recovery_addresses": {
+          "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RecoveryAddress"
+          },
+          "x-omitempty": true
+        },
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+          "type": "string"
+        },
+        "schema_url": {
+          "description": "SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
+          "type": "string"
+        },
+        "traits": {
+          "$ref": "#/definitions/identityTraits"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "verifiable_addresses": {
+          "description": "VerifiableAddresses contains all the addresses that can be verified by the user.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/verifiableIdentityAddress"
+          },
+          "x-omitempty": true
+        }
+      }
+    },
     "identityCredentials": {
       "description": "Credentials represents a specific credential type",
       "type": "object",
       "properties": {
         "config": {
           "$ref": "#/definitions/JSONRawMessage"
+        },
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
         },
         "identifiers": {
           "description": "Identifiers represents a list of unique identifiers this credential type matches.",
@@ -2694,6 +2661,36 @@
         },
         "type": {
           "$ref": "#/definitions/CredentialsType"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "identityTraits": {
+      "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
+      "type": "object"
+    },
+    "identityVerifiableAddressStatus": {
+      "description": "VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema",
+      "type": "string"
+    },
+    "identityVerifiableAddressType": {
+      "description": "VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema",
+      "type": "string"
+    },
+    "jsonError": {
+      "description": "The standard Ory JSON API error format.",
+      "type": "object",
+      "title": "JSON API Error Response",
+      "required": [
+        "error"
+      ],
+      "properties": {
+        "error": {
+          "$ref": "#/definitions/genericError"
         }
       }
     },
@@ -2716,6 +2713,11 @@
       "properties": {
         "active": {
           "$ref": "#/definitions/CredentialsType"
+        },
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
         },
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,\na new flow has to be initiated.",
@@ -2743,6 +2745,11 @@
         },
         "ui": {
           "$ref": "#/definitions/uiContainer"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -2872,7 +2879,7 @@
       ],
       "properties": {
         "identity": {
-          "$ref": "#/definitions/Identity"
+          "$ref": "#/definitions/identity"
         },
         "session": {
           "$ref": "#/definitions/session"
@@ -2892,6 +2899,32 @@
         "session_token": {
           "description": "The Session Token\n\nInvalidate this session token.",
           "type": "string"
+        }
+      }
+    },
+    "selfServiceErrorContainer": {
+      "type": "object",
+      "required": [
+        "id",
+        "errors"
+      ],
+      "properties": {
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "errors": {
+          "description": "Errors in the container",
+          "type": "object"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -2920,7 +2953,7 @@
           "$ref": "#/definitions/UUID"
         },
         "identity": {
-          "$ref": "#/definitions/Identity"
+          "$ref": "#/definitions/identity"
         },
         "issued_at": {
           "type": "string",
@@ -2955,7 +2988,7 @@
           "$ref": "#/definitions/UUID"
         },
         "identity": {
-          "$ref": "#/definitions/Identity"
+          "$ref": "#/definitions/identity"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the flow occurred.",
@@ -3013,7 +3046,7 @@
           "$ref": "#/definitions/settingsFlow"
         },
         "identity": {
-          "$ref": "#/definitions/Identity"
+          "$ref": "#/definitions/identity"
         }
       }
     },
@@ -3091,7 +3124,8 @@
         },
         "method": {
           "description": "Method to use\n\nThis field must be set to `password` when using the password method.",
-          "type": "string"
+          "type": "string",
+          "pattern": "^password$"
         },
         "password": {
           "description": "Password to sign the user up with",
@@ -3346,6 +3380,68 @@
         "$ref": "#/definitions/uiText"
       }
     },
+    "updateIdentity": {
+      "type": "object",
+      "required": [
+        "traits"
+      ],
+      "properties": {
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
+          "type": "object"
+        }
+      }
+    },
+    "verifiableIdentityAddress": {
+      "description": "VerifiableAddress is an identity's verifiable address",
+      "type": "object",
+      "required": [
+        "id",
+        "value",
+        "verified",
+        "via",
+        "status"
+      ],
+      "properties": {
+        "created_at": {
+          "description": "When this entry was created",
+          "type": "string",
+          "format": "date-time",
+          "example": "2014-01-01T23:28:56.782Z"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "status": {
+          "$ref": "#/definitions/identityVerifiableAddressStatus"
+        },
+        "updated_at": {
+          "description": "When this entry was last updated",
+          "type": "string",
+          "format": "date-time",
+          "example": "2014-01-01T23:28:56.782Z"
+        },
+        "value": {
+          "description": "The address value\n\nexample foo@user.com",
+          "type": "string"
+        },
+        "verified": {
+          "description": "Indicates if the address has already been verified",
+          "type": "boolean",
+          "example": true
+        },
+        "verified_at": {
+          "$ref": "#/definitions/NullTime"
+        },
+        "via": {
+          "$ref": "#/definitions/identityVerifiableAddressType"
+        }
+      }
+    },
     "verificationFlow": {
       "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
       "type": "object",
@@ -3403,25 +3499,25 @@
     "emptyResponse": {
       "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
     },
-    "errorContainer": {
-      "description": "User-facing error response",
-      "schema": {
-        "$ref": "#/definitions/errorContainer"
-      }
-    },
     "identityList": {
       "description": "A list of identities.",
       "schema": {
         "type": "array",
         "items": {
-          "$ref": "#/definitions/Identity"
+          "$ref": "#/definitions/identity"
         }
       }
     },
     "identityResponse": {
       "description": "A single identity.",
       "schema": {
-        "$ref": "#/definitions/Identity"
+        "$ref": "#/definitions/identity"
+      }
+    },
+    "selfServiceErrorResponse": {
+      "description": "User-facing error response",
+      "schema": {
+        "$ref": "#/definitions/selfServiceErrorContainer"
       }
     }
   },

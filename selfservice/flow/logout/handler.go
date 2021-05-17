@@ -57,7 +57,7 @@ func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 //
 //     Responses:
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	_ = h.d.CSRFHandler().RegenerateToken(w, r)
 

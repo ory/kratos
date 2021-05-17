@@ -72,6 +72,7 @@ type revokeSessionParameters struct {
 	Body revokeSession
 }
 
+// swagger:model revokeSession
 type revokeSession struct {
 	// The Session Token
 	//
@@ -100,8 +101,8 @@ type revokeSession struct {
 //
 //     Responses:
 //       204: emptyResponse
-//       400: genericError
-//       500: genericError
+//       400: jsonError
+//       500: jsonError
 func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var p revokeSession
 	if err := h.dx.Decode(r, &p,
@@ -120,16 +121,13 @@ func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 }
 
 // nolint:deadcode,unused
-// swagger:parameters whoami
-type whoamiParameters struct {
+// swagger:parameters toSession
+type sessionWhoAmIParameters struct {
 	// in: header
-	Cookie string `json:"Cookie"`
-
-	// in: header
-	Authorization string `json:"Authorization"`
+	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:route GET /sessions/whoami public whoami
+// swagger:route GET /sessions/whoami public toSession
 //
 // Check Who the Current HTTP Session Belongs To
 //
@@ -137,7 +135,11 @@ type whoamiParameters struct {
 // Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
 // Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
 //
-// This endpoint is useful for reverse proxies and API Gateways.
+// This endpoint is useful for:
+//
+// - AJAX calls. Remember to send credentials and set up CORS correctly!
+// - Reverse proxies and API Gateways
+// - Server-side calls - use the `X-Session-Token` header!
 //
 //     Produces:
 //     - application/json
@@ -145,12 +147,12 @@ type whoamiParameters struct {
 //     Schemes: http, https
 //
 //     Security:
-//       sessionToken:
+//       sessionCookie:
 //
 //     Responses:
 //       200: session
-//       401: genericError
-//       500: genericError
+//       401: jsonError
+//       500: jsonError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
