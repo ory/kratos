@@ -392,9 +392,10 @@ GitLab is now an option to log in via Kratos.
 ## Auth0
 
 To set up "Sign in with Auth0" you must create an
-[Auth0 Application for your Auth0 Tenant](https://auth0.com/docs/applications). Note that the endpoint for the 
-application starts with your Tenant name. e.g. `myAuth0Tenant.auth0.com`. This will be the `IssuerURL` you will use
-when configuring the the OIDC connection.
+[Auth0 Application for your Auth0 Tenant](https://auth0.com/docs/applications).
+Note that the endpoint for the application starts with your Tenant name. e.g.
+`myAuth0Tenant.auth0.com`. This will be the `IssuerURL` you will use when
+configuring the the OIDC connection.
 
 Set the "Redirect URI" to:
 
@@ -412,10 +413,10 @@ http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callbac
 
 While you can use
 [Auth0 as an OIDC identity provider](https://docs.gitlab.com/ee/integration/openid_connect_provider.html),
-Auth0 only returns the sub and sub_legacy claims in the ID token. Therefore,
-Ory Kratos makes a request to
-[Auth0's /userinfo API](https://auth0.com/docs/api/authentication?http#user-profile) and adds the
-user info to `std.extVar('claims')`.
+Auth0 only returns the sub and sub_legacy claims in the ID token. Therefore, Ory
+Kratos makes a request to
+[Auth0's /userinfo API](https://auth0.com/docs/api/authentication?http#user-profile)
+and adds the user info to `std.extVar('claims')`.
 
 :::
 
@@ -441,10 +442,12 @@ local claims = {
 ```
 
 Now, enable the Auth0 provider in the Ory Kratos config located at
-`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`. Note that the `issuer_url` needs to be 
-the top-level domain for your Auth0 application. This can be found by going to the Auth0 application page and 
-choosing `Settings` then `Advanced Settings` then `Endpoints`. In general though the endpoint is of the form 
-`myAuth0Tenant.auth0.com` (where `myAuth0Tenant` is the name of your tenant). 
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`. Note
+that the `issuer_url` needs to be the top-level domain for your Auth0
+application. This can be found by going to the Auth0 application page and
+choosing `Settings` then `Advanced Settings` then `Endpoints`. In general though
+the endpoint is of the form `myAuth0Tenant.auth0.com` (where `myAuth0Tenant` is
+the name of your tenant).
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve

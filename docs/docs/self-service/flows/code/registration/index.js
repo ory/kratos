@@ -84,8 +84,7 @@ export const getFlowMethodOidcWithCompletion = {
   browser: {
     label: 'Browser UI',
     image: require('./images/browser-oidc-invalid.png').default,
-    alt:
-      'User Registration HTML Form with missing or invalid fields when performing an OpenID Connect flow'
+    alt: 'User Registration HTML Form with missing or invalid fields when performing an OpenID Connect flow'
   },
   missing: {
     label: 'Missing Website',
