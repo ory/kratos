@@ -16,21 +16,6 @@
       email: "hi@ory.sh"
 
 - op: replace
-  path: /servers
-  value:
-    - url: https://{tenant}.tenants.oryapis.com/api/kratos/{api}
-      variables:
-        tenant:
-          default: demo
-          description: Tenant ID as provided by Ory Cloud.
-        api:
-          default: public
-          description: Target the public or administrative API.
-          enum:
-            - public
-            - admin
-
-- op: replace
   path: /components/securitySchemes/sessionCookie
   value:
     type: apiKey

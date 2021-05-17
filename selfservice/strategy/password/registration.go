@@ -40,6 +40,7 @@ type SubmitSelfServiceRegistrationFlowWithPasswordMethod struct {
 	//
 	// This field must be set to `password` when using the password method.
 	//
+	// pattern: ^password$
 	// required: true
 	Method string `json:"method"`
 }

@@ -1,6 +1,6 @@
 # \AdminApi
 
-All URIs are relative to *https://demo.tenants.oryapis.com/api/kratos/public*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -19,7 +19,7 @@ Method | HTTP request | Description
 [**IsAlive**](AdminApi.md#IsAlive) | **Get** /health/alive | Check HTTP Server Status
 [**IsReady**](AdminApi.md#IsReady) | **Get** /health/ready | Check HTTP Server and Database Status
 [**ListIdentities**](AdminApi.md#ListIdentities) | **Get** /identities | List Identities
-[**Prometheus**](AdminApi.md#Prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Kratos service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
+[**Prometheus**](AdminApi.md#Prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Hydra service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 [**UpdateIdentity**](AdminApi.md#UpdateIdentity) | **Put** /identities/{id} | Update an Identity
 
 
@@ -366,7 +366,7 @@ No authorization required
 
 ## GetSelfServiceError
 
-> ErrorContainer GetSelfServiceError(ctx).Error_(error_).Execute()
+> SelfServiceErrorContainer GetSelfServiceError(ctx).Error_(error_).Execute()
 
 Get User-Facing Self-Service Errors
 
@@ -394,7 +394,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `AdminApi.GetSelfServiceError``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `GetSelfServiceError`: ErrorContainer
+    // response from `GetSelfServiceError`: SelfServiceErrorContainer
     fmt.Fprintf(os.Stdout, "Response from `AdminApi.GetSelfServiceError`: %v\n", resp)
 }
 ```
@@ -414,7 +414,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**ErrorContainer**](ErrorContainer.md)
+[**SelfServiceErrorContainer**](SelfServiceErrorContainer.md)
 
 ### Authorization
 
@@ -1015,7 +1015,7 @@ No authorization required
 
 > Prometheus(ctx).Execute()
 
-Get snapshot metrics from the Kratos service. If you're using k8s, you can then add annotations to your deployment like so:
+Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to your deployment like so:
 
 
 

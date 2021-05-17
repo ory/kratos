@@ -126,7 +126,7 @@ func (a *AdminApiService) CreateIdentityExecute(r AdminApiApiCreateIdentityReque
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -136,7 +136,7 @@ func (a *AdminApiService) CreateIdentityExecute(r AdminApiApiCreateIdentityReque
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 409 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -146,7 +146,7 @@ func (a *AdminApiService) CreateIdentityExecute(r AdminApiApiCreateIdentityReque
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -265,7 +265,7 @@ func (a *AdminApiService) CreateRecoveryLinkExecute(r AdminApiApiCreateRecoveryL
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -275,7 +275,7 @@ func (a *AdminApiService) CreateRecoveryLinkExecute(r AdminApiApiCreateRecoveryL
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -285,7 +285,7 @@ func (a *AdminApiService) CreateRecoveryLinkExecute(r AdminApiApiCreateRecoveryL
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -401,7 +401,7 @@ func (a *AdminApiService) DeleteIdentityExecute(r AdminApiApiDeleteIdentityReque
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -411,7 +411,7 @@ func (a *AdminApiService) DeleteIdentityExecute(r AdminApiApiDeleteIdentityReque
 			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -515,18 +515,8 @@ func (a *AdminApiService) GetIdentityExecute(r AdminApiApiGetIdentityRequest) (*
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v GenericError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -536,7 +526,7 @@ func (a *AdminApiService) GetIdentityExecute(r AdminApiApiGetIdentityRequest) (*
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -650,7 +640,7 @@ func (a *AdminApiService) GetSchemaExecute(r AdminApiApiGetSchemaRequest) (map[s
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -660,7 +650,7 @@ func (a *AdminApiService) GetSchemaExecute(r AdminApiApiGetSchemaRequest) (map[s
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -694,7 +684,7 @@ func (r AdminApiApiGetSelfServiceErrorRequest) Error_(error_ string) AdminApiApi
 	return r
 }
 
-func (r AdminApiApiGetSelfServiceErrorRequest) Execute() (*ErrorContainer, *http.Response, error) {
+func (r AdminApiApiGetSelfServiceErrorRequest) Execute() (*SelfServiceErrorContainer, *http.Response, error) {
 	return r.ApiService.GetSelfServiceErrorExecute(r)
 }
 
@@ -719,16 +709,16 @@ func (a *AdminApiService) GetSelfServiceError(ctx context.Context) AdminApiApiGe
 
 /*
  * Execute executes the request
- * @return ErrorContainer
+ * @return SelfServiceErrorContainer
  */
-func (a *AdminApiService) GetSelfServiceErrorExecute(r AdminApiApiGetSelfServiceErrorRequest) (*ErrorContainer, *http.Response, error) {
+func (a *AdminApiService) GetSelfServiceErrorExecute(r AdminApiApiGetSelfServiceErrorRequest) (*SelfServiceErrorContainer, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  *ErrorContainer
+		localVarReturnValue  *SelfServiceErrorContainer
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AdminApiService.GetSelfServiceError")
@@ -786,7 +776,7 @@ func (a *AdminApiService) GetSelfServiceErrorExecute(r AdminApiApiGetSelfService
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -796,7 +786,7 @@ func (a *AdminApiService) GetSelfServiceErrorExecute(r AdminApiApiGetSelfService
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -806,7 +796,7 @@ func (a *AdminApiService) GetSelfServiceErrorExecute(r AdminApiApiGetSelfService
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -928,7 +918,7 @@ func (a *AdminApiService) GetSelfServiceLoginFlowExecute(r AdminApiApiGetSelfSer
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -938,7 +928,7 @@ func (a *AdminApiService) GetSelfServiceLoginFlowExecute(r AdminApiApiGetSelfSer
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -948,7 +938,7 @@ func (a *AdminApiService) GetSelfServiceLoginFlowExecute(r AdminApiApiGetSelfSer
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 410 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -958,7 +948,7 @@ func (a *AdminApiService) GetSelfServiceLoginFlowExecute(r AdminApiApiGetSelfSer
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1080,7 +1070,7 @@ func (a *AdminApiService) GetSelfServiceRecoveryFlowExecute(r AdminApiApiGetSelf
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1090,7 +1080,7 @@ func (a *AdminApiService) GetSelfServiceRecoveryFlowExecute(r AdminApiApiGetSelf
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 410 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1100,7 +1090,7 @@ func (a *AdminApiService) GetSelfServiceRecoveryFlowExecute(r AdminApiApiGetSelf
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1222,7 +1212,7 @@ func (a *AdminApiService) GetSelfServiceRegistrationFlowExecute(r AdminApiApiGet
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1232,7 +1222,7 @@ func (a *AdminApiService) GetSelfServiceRegistrationFlowExecute(r AdminApiApiGet
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1242,7 +1232,7 @@ func (a *AdminApiService) GetSelfServiceRegistrationFlowExecute(r AdminApiApiGet
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 410 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1252,7 +1242,7 @@ func (a *AdminApiService) GetSelfServiceRegistrationFlowExecute(r AdminApiApiGet
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1355,20 +1345,6 @@ func (a *AdminApiService) GetSelfServiceSettingsFlowExecute(r AdminApiApiGetSelf
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["sessionToken"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["X-Session-Token"] = key
-			}
-		}
-	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -1392,7 +1368,7 @@ func (a *AdminApiService) GetSelfServiceSettingsFlowExecute(r AdminApiApiGetSelf
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1402,7 +1378,7 @@ func (a *AdminApiService) GetSelfServiceSettingsFlowExecute(r AdminApiApiGetSelf
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1412,7 +1388,7 @@ func (a *AdminApiService) GetSelfServiceSettingsFlowExecute(r AdminApiApiGetSelf
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 410 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1422,7 +1398,7 @@ func (a *AdminApiService) GetSelfServiceSettingsFlowExecute(r AdminApiApiGetSelf
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1544,7 +1520,7 @@ func (a *AdminApiService) GetSelfServiceVerificationFlowExecute(r AdminApiApiGet
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1554,7 +1530,7 @@ func (a *AdminApiService) GetSelfServiceVerificationFlowExecute(r AdminApiApiGet
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -1564,7 +1540,7 @@ func (a *AdminApiService) GetSelfServiceVerificationFlowExecute(r AdminApiApiGet
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -2034,7 +2010,7 @@ func (a *AdminApiService) ListIdentitiesExecute(r AdminApiApiListIdentitiesReque
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -2067,7 +2043,7 @@ func (r AdminApiApiPrometheusRequest) Execute() (*http.Response, error) {
 }
 
 /*
- * Prometheus Get snapshot metrics from the Kratos service. If you're using k8s, you can then add annotations to your deployment like so:
+ * Prometheus Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to your deployment like so:
  * ```
 metadata:
 annotations:
@@ -2256,7 +2232,7 @@ func (a *AdminApiService) UpdateIdentityExecute(r AdminApiApiUpdateIdentityReque
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -2266,7 +2242,17 @@ func (a *AdminApiService) UpdateIdentityExecute(r AdminApiApiUpdateIdentityReque
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
-			var v GenericError
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 409 {
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -2276,7 +2262,7 @@ func (a *AdminApiService) UpdateIdentityExecute(r AdminApiApiUpdateIdentityReque
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericError
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()

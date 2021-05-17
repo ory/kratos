@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/ory/x/assertx"
+
 	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/assert"
@@ -26,7 +28,7 @@ func TestGetCmd(t *testing.T) {
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
 
-		assert.Equal(t, string(ij)+"\n", stdOut)
+		assertx.EqualAsJSONExcept(t, json.RawMessage(ij), json.RawMessage(stdOut), []string{"created_at", "updated_at"})
 	})
 
 	t.Run("case=gets three identities", func(t *testing.T) {
@@ -37,7 +39,7 @@ func TestGetCmd(t *testing.T) {
 		isj, err := json.Marshal(is)
 		require.NoError(t, err)
 
-		assert.Equal(t, string(isj)+"\n", stdOut)
+		assertx.EqualAsJSONExcept(t, json.RawMessage(isj), json.RawMessage(stdOut), []string{"created_at", "updated_at"})
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {

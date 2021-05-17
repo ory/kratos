@@ -28,10 +28,10 @@ type Container struct {
 	Payload sqlxx.NullJSONRawMessage `json:"payload" db:"payload"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt time.Time `json:"-" db:"created_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"-" db:"updated_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 func (c *Container) UTC() *Container {
