@@ -79,6 +79,8 @@ New feature or request.
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
+- [ ] Add TLS configuration
+      ([kratos#791](https://github.com/ory/kratos/issues/791))
 - [ ] More meta information about the managed identity
       ([kratos#820](https://github.com/ory/kratos/issues/820))
 - [ ] Add i18n support to mail templates
@@ -106,9 +108,6 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Please clarify docs to specify that a reverse proxy is _required_ for
-      public usage due to lack of TLS support
-      ([kratos#791](https://github.com/ory/kratos/issues/791))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
