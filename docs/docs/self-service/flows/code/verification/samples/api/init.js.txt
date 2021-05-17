@@ -1,7 +1,7 @@
 import { Configuration, PublicApi } from '@ory/kratos-client';
 const kratos = new PublicApi(new Configuration({ basePath: 'http://127.0.0.1:4433/' }));
 
-kratos.initializeSelfServiceVerificationViaAPIFlow()
+kratos.initializeSelfServiceVerificationForNativeApps()
   .then(({ data: flow }) => {
     console.log(flow) // see the Raw HTTP tab for the payload
   })

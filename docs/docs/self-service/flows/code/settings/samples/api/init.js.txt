@@ -5,7 +5,7 @@ const kratos = new PublicApi(new Configuration({
   apiKey: 'the-session-token'
 }));
 
-kratos.initializeSelfServiceSettingsViaAPIFlow()
+kratos.initializeSelfServiceSettingsForNativeApps()
   .then(({ data: flow }) => {
     console.log(flow) // see the Raw HTTP tab for the payload
   })
