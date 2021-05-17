@@ -59,6 +59,7 @@ func NewHandler(d handlerDependencies) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 
 	redirect := session.RedirectOnAuthenticated(h.d)
