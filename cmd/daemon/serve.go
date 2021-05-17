@@ -13,7 +13,7 @@ import (
 
 	"github.com/rs/cors"
 
-	"github.com/ory/kratos/metrics/prometheus"
+	prometheus "github.com/ory/x/prometheusx"
 
 	"github.com/ory/analytics-go/v4"
 
