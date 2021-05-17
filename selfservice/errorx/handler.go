@@ -49,7 +49,7 @@ func (h *Handler) RegisterAdminRoutes(public *x.RouterAdmin) {
 
 // User-facing error response
 //
-// swagger:response errorContainer
+// swagger:response selfServiceErrorResponse
 // nolint:deadcode,unused
 type getSelfServiceErrorResponse struct {
 	// in: body
@@ -84,10 +84,10 @@ type getSelfServiceErrorParameters struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: errorContainer
-//       403: genericError
-//       404: genericError
-//       500: genericError
+//       200: selfServiceErrorResponse
+//       403: jsonError
+//       404: jsonError
+//       500: jsonError
 func (h *Handler) publicFetchError(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchError(w, r); err != nil {
 		h.r.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))

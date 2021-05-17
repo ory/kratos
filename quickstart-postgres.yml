@@ -2,12 +2,12 @@ version: '3.7'
 
 services:
   kratos-migrate:
-    image: oryd/kratos:v0.6.0-alpha.1.pre.2
+    image: oryd/kratos:v0.6.3-alpha.1
     environment:
       - DSN=postgres://kratos:secret@postgresd:5432/kratos?sslmode=disable&max_conns=20&max_idle_conns=4
 
   kratos:
-    image: oryd/kratos:v0.6.0-alpha.1.pre.2
+    image: oryd/kratos:v0.6.3-alpha.1
     environment:
       - DSN=postgres://kratos:secret@postgresd:5432/kratos?sslmode=disable&max_conns=20&max_idle_conns=4
 

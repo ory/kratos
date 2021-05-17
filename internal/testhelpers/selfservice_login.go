@@ -63,7 +63,7 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceLoginViaAPIFlow(context.Background()).Refresh(forced).Execute()
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceLoginForNativeApps(context.Background()).Refresh(forced).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 

@@ -39,6 +39,7 @@ type (
 		identity.ValidationProvider
 		config.Provider
 
+		HandlerProvider
 		HooksProvider
 		FlowPersistenceProvider
 
@@ -155,6 +156,12 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
+	newFlow, err := e.d.SettingsHandler().NewFlow(w, r, i, ctxUpdate.Flow.Type)
+	if err != nil {
+		return err
+	}
+
+	ctxUpdate.Flow.UI = newFlow.UI
 	ctxUpdate.Flow.UI.ResetMessages()
 	ctxUpdate.Flow.UI.AddMessage(node.DefaultGroup, text.NewInfoSelfServiceSettingsUpdateSuccess())
 	if err := e.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), ctxUpdate.Flow); err != nil {

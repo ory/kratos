@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ory/x/assertx"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -143,7 +145,7 @@ func TestHandler(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				assert.JSONEq(t, string(expected), string(actual), "%s != %s", expected, actual)
+				assertx.EqualAsJSONExcept(t, json.RawMessage(expected), json.RawMessage(actual), []string{"created_at", "updated_at"})
 				assert.Empty(t, gjson.GetBytes(actual, "csrf_token").String())
 				assert.JSONEq(t, string(x.RequireJSONMarshal(t, gg)), gjson.GetBytes(actual, "errors").Raw)
 				t.Logf("%s", actual)

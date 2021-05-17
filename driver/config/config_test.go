@@ -144,7 +144,7 @@ func TestViperProvider(t *testing.T) {
 				config  string
 				enabled bool
 			}{
-				{id: "password", enabled: true, config: `{"ignore_network_errors":true,"max_breaches":0}`},
+				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","ignore_network_errors":true,"max_breaches":0}`},
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
@@ -157,8 +157,14 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRegistrationRequestLifespan())
 
 			t.Run("hook=before", func(t *testing.T) {
-				hook := p.SelfServiceFlowRegistrationBeforeHooks()
-				require.Len(t, hook, 0)
+				expHooks := []config.SelfServiceHook{
+					{Name: "web_hook", Config: json.RawMessage(`{"method":"GET","url":"https://test.kratos.ory.sh/before_registration_hook"}`)},
+				}
+
+				hooks := p.SelfServiceFlowRegistrationBeforeHooks()
+
+				require.Len(t, hooks, 1)
+				assert.Equal(t, expHooks, hooks)
 				// assert.EqualValues(t, "redirect", hook.Name)
 				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
@@ -171,6 +177,7 @@ func TestViperProvider(t *testing.T) {
 					strategy: "password",
 					hooks: []config.SelfServiceHook{
 						{Name: "session", Config: json.RawMessage(`{}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_password_hook"}`)},
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
 					},
@@ -179,8 +186,15 @@ func TestViperProvider(t *testing.T) {
 					strategy: "oidc",
 					hooks: []config.SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_registration_oidc_hook"}`)},
 						{Name: "session", Config: json.RawMessage(`{}`)},
 						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
+					},
+				},
+				{
+					strategy: config.HookGlobal,
+					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"in":"header","name":"My-Key","value":"My-Key-Value"},"type":"api_key"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_registration_global_hook"}`)},
 					},
 				},
 			} {
@@ -195,8 +209,14 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, time.Minute*99, p.SelfServiceFlowLoginRequestLifespan())
 
 			t.Run("hook=before", func(t *testing.T) {
-				hook := p.SelfServiceFlowLoginBeforeHooks()
-				require.Len(t, hook, 0)
+				expHooks := []config.SelfServiceHook{
+					{Name: "web_hook", Config: json.RawMessage(`{"method":"POST","url":"https://test.kratos.ory.sh/before_login_hook"}`)},
+				}
+
+				hooks := p.SelfServiceFlowLoginBeforeHooks()
+
+				require.Len(t, hooks, 1)
+				assert.Equal(t, expHooks, hooks)
 				// assert.EqualValues(t, "redirect", hook.Name)
 				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
@@ -209,12 +229,20 @@ func TestViperProvider(t *testing.T) {
 					strategy: "password",
 					hooks: []config.SelfServiceHook{
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"password":"super-secret","user":"test-user"},"type":"basic_auth"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_login_password_hook"}`)},
 					},
 				},
 				{
 					strategy: "oidc",
 					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_login_oidc_hook"}`)},
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+					},
+				},
+				{
+					strategy: config.HookGlobal,
+					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_login_global_hook"}`)},
 					},
 				},
 			} {
@@ -229,25 +257,26 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, time.Minute*99, p.SelfServiceFlowSettingsFlowLifespan())
 			assert.Equal(t, time.Minute*5, p.SelfServiceFlowSettingsPrivilegedSessionMaxAge())
 
-			t.Run("hook=before", func(t *testing.T) {
-				hook := p.SelfServiceFlowLoginBeforeHooks()
-				require.Len(t, hook, 0)
-				// assert.EqualValues(t, "redirect", hook.Name)
-				// assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
-			})
-
 			for _, tc := range []struct {
 				strategy string
 				hooks    []config.SelfServiceHook
 			}{
 				{
 					strategy: "password",
-					hooks:    []config.SelfServiceHook{},
+					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_settings_password_hook"}`)},
+					},
 				},
 				{
 					strategy: "profile",
-					hooks:    []config.SelfServiceHook{
-						// {Name: "verify", Config: json.RawMessage(`{}`)},
+					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_settings_profile_hook"}`)},
+					},
+				},
+				{
+					strategy: config.HookGlobal,
+					hooks: []config.SelfServiceHook{
+						{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_settings_global_hook"}`)},
 					},
 				},
 			} {
@@ -259,13 +288,20 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("method=recovery", func(t *testing.T) {
+			assert.Equal(t, true, p.SelfServiceFlowRecoveryEnabled())
 			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRecoveryRequestLifespan())
 			assert.Equal(t, "http://test.kratos.ory.sh/recovery", p.SelfServiceFlowRecoveryUI().String())
+
+			hooks := p.SelfServiceFlowRecoveryAfterHooks(config.HookGlobal)
+			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_recovery_hook"}`)}}, hooks)
 		})
 
 		t.Run("method=verification", func(t *testing.T) {
 			assert.Equal(t, time.Minute*97, p.SelfServiceFlowVerificationRequestLifespan())
 			assert.Equal(t, "http://test.kratos.ory.sh/verification", p.SelfServiceFlowVerificationUI().String())
+
+			hooks := p.SelfServiceFlowVerificationAfterHooks(config.HookGlobal)
+			assert.Equal(t, []config.SelfServiceHook{{Name: "web_hook", Config: json.RawMessage(`{"body":"/path/to/template.jsonnet","method":"GET","url":"https://test.kratos.ory.sh/after_verification_hook"}`)}}, hooks)
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {

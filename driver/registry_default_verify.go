@@ -3,6 +3,7 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
@@ -61,5 +62,24 @@ func (m *RegistryDefault) AllVerificationStrategies() (recoveryStrategies verifi
 			recoveryStrategies = append(recoveryStrategies, s)
 		}
 	}
+
+	return
+}
+
+func (m *RegistryDefault) VerificationExecutor() *verification.HookExecutor {
+	if m.selfserviceVerificationExecutor == nil {
+		m.selfserviceVerificationExecutor = verification.NewHookExecutor(m)
+	}
+	return m.selfserviceVerificationExecutor
+}
+
+func (m *RegistryDefault) PostVerificationHooks(ctx context.Context) (b []verification.PostHookExecutor) {
+
+	for _, v := range m.getHooks(config.HookGlobal, m.Config(ctx).SelfServiceFlowVerificationAfterHooks(config.HookGlobal)) {
+		if hook, ok := v.(verification.PostHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+
 	return
 }

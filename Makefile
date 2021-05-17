@@ -95,6 +95,7 @@ sdk: .bin/swagger .bin/cli node_modules
 					-p file://.schema/openapi/patches/meta.yaml \
 					-p file://.schema/openapi/patches/schema.yaml \
 					-p file://.schema/openapi/patches/selfservice.yaml \
+					-p file://.schema/openapi/patches/security.yaml \
 					spec/swagger.json spec/openapi.json
 
 		rm -rf internal/httpclient/models internal/httpclient/clients

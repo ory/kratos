@@ -1,35 +1,18 @@
 // nolint:deadcode,unused
 package main
 
-// Error response
+import "github.com/ory/herodot"
+
+// JSON API Error Response
 //
-// Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.
+// The standard Ory JSON API error format.
 //
-// swagger:model genericError
-type genericError struct {
-	Error genericErrorPayload `json:"error"`
-}
-
-type genericErrorPayload struct {
-	// Code represents the error status code (404, 403, 401, ...).
+// swagger:model jsonError
+type jsonError struct {
+	// Contains error details
 	//
-	// example: 404
-	Code int `json:"code,omitempty"`
-
-	Status string `json:"status,omitempty"`
-
-	Request string `json:"request,omitempty"`
-
-	Reason string `json:"reason,omitempty"`
-
-	Details map[string]interface{} `json:"details,omitempty"`
-
-	Message string `json:"message"`
-
-	// Debug contains debug information. This is usually not available and has to be enabled.
-	//
-	// example: The database adapter was unable to find the element
-	Debug string `json:"debug"`
+	// required: true
+	Error herodot.DefaultError `json:"error"`
 }
 
 // Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201.

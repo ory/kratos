@@ -4,16 +4,16 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **string** | and so on. | [optional]
-**ExpiresAt** | **
-time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. |
-**Forced** | Pointer to **bool** | Forced stores whether this login flow should enforce re-authentication. | [optional]
-**Id** | **string** |  |
-**IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow started. |
-**RequestUrl** | **
-string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. |
-**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. |
-**Ui** | [**UiContainer**](UiContainer.md) |  |
+**Active** | Pointer to **string** | and so on. | [optional] 
+**CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
+**ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
+**Forced** | Pointer to **bool** | Forced stores whether this login flow should enforce re-authentication. | [optional] 
+**Id** | **string** |  | 
+**IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow started. | 
+**RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
+**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
+**Ui** | [**UiContainer**](UiContainer.md) |  | 
+**UpdatedAt** | Pointer to **time.Time** | UpdatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 
 ## Methods
 
@@ -21,8 +21,9 @@ string** | RequestURL is the initial URL that was requested from Ory Kratos. It 
 
 `func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, type_ string, ui UiContainer, ) *LoginFlow`
 
-NewLoginFlow instantiates a new LoginFlow object This constructor will assign default values to properties that have it
-defined, and makes sure properties required by API are set, but the set of arguments
+NewLoginFlow instantiates a new LoginFlow object
+This constructor will assign default values to properties that have it defined,
+and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
 ### NewLoginFlowWithDefaults
@@ -57,6 +58,31 @@ SetActive sets Active field to given value.
 `func (o *LoginFlow) HasActive() bool`
 
 HasActive returns a boolean if a field has been set.
+
+### GetCreatedAt
+
+`func (o *LoginFlow) GetCreatedAt() time.Time`
+
+GetCreatedAt returns the CreatedAt field if non-nil, zero value otherwise.
+
+### GetCreatedAtOk
+
+`func (o *LoginFlow) GetCreatedAtOk() (*time.Time, bool)`
+
+GetCreatedAtOk returns a tuple with the CreatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCreatedAt
+
+`func (o *LoginFlow) SetCreatedAt(v time.Time)`
+
+SetCreatedAt sets CreatedAt field to given value.
+
+### HasCreatedAt
+
+`func (o *LoginFlow) HasCreatedAt() bool`
+
+HasCreatedAt returns a boolean if a field has been set.
 
 ### GetExpiresAt
 
@@ -202,6 +228,31 @@ and a boolean to check if the value has been set.
 
 SetUi sets Ui field to given value.
 
+
+### GetUpdatedAt
+
+`func (o *LoginFlow) GetUpdatedAt() time.Time`
+
+GetUpdatedAt returns the UpdatedAt field if non-nil, zero value otherwise.
+
+### GetUpdatedAtOk
+
+`func (o *LoginFlow) GetUpdatedAtOk() (*time.Time, bool)`
+
+GetUpdatedAtOk returns a tuple with the UpdatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUpdatedAt
+
+`func (o *LoginFlow) SetUpdatedAt(v time.Time)`
+
+SetUpdatedAt sets UpdatedAt field to given value.
+
+### HasUpdatedAt
+
+`func (o *LoginFlow) HasUpdatedAt() bool`
+
+HasUpdatedAt returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

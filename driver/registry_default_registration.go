@@ -3,6 +3,7 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
@@ -13,12 +14,15 @@ func (m *RegistryDefault) PostRegistrationPrePersistHooks(ctx context.Context, c
 			b = append(b, hook)
 		}
 	}
+
 	return
 }
 
 func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, credentialsType identity.CredentialsType) (b []registration.PostHookPostPersistExecutor) {
+	initialHookCount := 0
 	if m.Config(ctx).SelfServiceFlowVerificationEnabled() {
 		b = append(b, m.HookVerifier())
+		initialHookCount = 1
 	}
 
 	for _, v := range m.getHooks(string(credentialsType), m.Config(ctx).SelfServiceFlowRegistrationAfterHooks(string(credentialsType))) {
@@ -26,6 +30,17 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(ctx context.Context, 
 			b = append(b, hook)
 		}
 	}
+
+	if len(b) == initialHookCount {
+		// since we don't want merging hooks defined in a specific strategy and global hooks
+		// global hooks are added only if no strategy specific hooks are defined
+		for _, v := range m.getHooks(config.HookGlobal, m.Config(ctx).SelfServiceFlowRegistrationAfterHooks(config.HookGlobal)) {
+			if hook, ok := v.(registration.PostHookPostPersistExecutor); ok {
+				b = append(b, hook)
+			}
+		}
+	}
+
 	return
 }
 

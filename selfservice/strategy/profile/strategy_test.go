@@ -182,7 +182,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, publicTS.URL+route, payload.RequestUrl)
 
 			actual := jsonx.TestMarshalJSONString(t, payload.Ui)
-			assert.EqualValues(t, payload.Identity.Traits["email"], gjson.Get(actual, "nodes.#(attributes.name==traits.email).attributes.value").String())
+			assert.EqualValues(t, payload.Identity.Traits.(map[string]interface{})["email"], gjson.Get(actual, "nodes.#(attributes.name==traits.email).attributes.value").String())
 			assert.NotEmpty(t, gjson.Get(actual, "nodes.#(attributes.name==csrf_token).attributes.value").String(), "csrf token missing")
 
 			assertx.EqualAsJSONExcept(t, json.RawMessage(`{
@@ -333,7 +333,7 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).PublicApi.InitializeSelfServiceSettingsViaAPIFlow(context.Background()).Execute()
+			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).PublicApi.InitializeSelfServiceSettingsForNativeApps(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, apiIdentity1, pr, settings.RouteInitAPIFlow)
 		})

@@ -79,6 +79,8 @@ New feature or request.
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
+- [ ] Add TLS configuration
+      ([kratos#791](https://github.com/ory/kratos/issues/791))
 - [ ] More meta information about the managed identity
       ([kratos#820](https://github.com/ory/kratos/issues/820))
 - [ ] Add i18n support to mail templates
@@ -106,9 +108,6 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Please clarify docs to specify that a reverse proxy is _required_ for
-      public usage due to lack of TLS support
-      ([kratos#791](https://github.com/ory/kratos/issues/791))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
@@ -141,8 +140,6 @@ Something is not working.
 
 #### Issues
 
-- [ ] Receive the verification email every time when I update my password
-      ([kratos#1221](https://github.com/ory/kratos/issues/1221))
 - [ ] Investigate why smtps fails but smtp does not
       ([kratos#781](https://github.com/ory/kratos/issues/781)) -
       [@hackerman](https://github.com/aeneasr)
@@ -152,13 +149,15 @@ Something is not working.
 - [ ] Account Recovery API flow requires CSRF cookie
       ([kratos#1141](https://github.com/ory/kratos/issues/1141)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] No email validation for /verify and /recovery page. email queue is
-      backlogged with invalid emails.
-      ([kratos#1285](https://github.com/ory/kratos/issues/1285))
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] handle 409 error in settings flow
       ([kratos#1107](https://github.com/ory/kratos/issues/1107))
+- [x] Receive the verification email every time when I update my password
+      ([kratos#1221](https://github.com/ory/kratos/issues/1221))
+- [x] No email validation for /verify and /recovery page. email queue is
+      backlogged with invalid emails.
+      ([kratos#1285](https://github.com/ory/kratos/issues/1285))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -170,8 +169,6 @@ New feature or request.
       ([kratos#776](https://github.com/ory/kratos/issues/776))
 - [ ] Implement immutable keyword in JSON Schema for Identity Traits
       ([kratos#117](https://github.com/ory/kratos/issues/117))
-- [ ] Feature Request: Webhooks
-      ([kratos#271](https://github.com/ory/kratos/issues/271))
 - [ ] Gracefully handle CSRF errors
       ([kratos#91](https://github.com/ory/kratos/issues/91)) -
       [@hackerman](https://github.com/aeneasr)
@@ -188,6 +185,8 @@ New feature or request.
 - [ ] Write tests for domain aliasing in cookie handler
       ([kratos#1292](https://github.com/ory/kratos/issues/1292)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Feature Request: Webhooks
+      ([kratos#271](https://github.com/ory/kratos/issues/271))
 - [x] Implement Security Questions MFA
       ([kratos#469](https://github.com/ory/kratos/issues/469))
 - [x] Double slash in URLs causes CSRF issues
@@ -319,7 +318,7 @@ Blocks milestones or other issues or pulls.
 
 #### Issues
 
-- [ ] Ory Kratos v0.6 pre-release list
+- [x] Ory Kratos v0.6 pre-release list
       ([kratos#1222](https://github.com/ory/kratos/issues/1222)) -
       [@hackerman](https://github.com/aeneasr)
 

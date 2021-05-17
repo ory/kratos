@@ -55,7 +55,6 @@ context('Settings', () => {
 
       cy.get('input[name="password"]').type(gen.password())
       cy.get('button[value="password"]').click()
-      cy.visit(APP_URL + '/settings')
 
       cy.get('button[value="hydra"]')
         .should('have.attr', 'name', 'unlink')

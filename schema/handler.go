@@ -70,8 +70,8 @@ type getSchemaParameters struct {
 //
 //     Responses:
 //       200: jsonSchema
-//       404: genericError
-//       500: genericError
+//       404: jsonError
+//       500: jsonError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.IdentityTraitsSchemas(r.Context()).GetByID(ps.ByName("id"))
 	if err != nil {
