@@ -269,7 +269,7 @@
             "discord",
             "slack",
             "facebook",
-            "auth0",
+            "auth0"
           ],
           "examples": [
             "google"
