@@ -20,70 +20,74 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-type (
-	// Identity represents an Ory Kratos identity
+// Identity represents an Ory Kratos identity
+//
+// An identity can be a real human, a service, an IoT device - everything that
+// can be described as an "actor" in a system.
+//
+// swagger:model identity
+type Identity struct {
+	l *sync.RWMutex `db:"-" faker:"-"`
+
+	// ID is the identity's unique identifier.
 	//
-	// An identity can be a real human, a service, an IoT device - everything that
-	// can be described as an "actor" in a system.
+	// The Identity ID can not be changed and can not be chosen. This ensures future
+	// compatibility and optimization for distributed stores such as CockroachDB.
 	//
-	// swagger:model identity
-	Identity struct {
-		l *sync.RWMutex `db:"-" faker:"-"`
+	// required: true
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
-		// ID is the identity's unique identifier.
-		//
-		// The Identity ID can not be changed and can not be chosen. This ensures future
-		// compatibility and optimization for distributed stores such as CockroachDB.
-		//
-		// required: true
-		ID uuid.UUID `json:"id" faker:"-" db:"id"`
+	// Credentials represents all credentials that can be used for authenticating this identity.
+	Credentials map[CredentialsType]Credentials `json:"-" faker:"-" db:"-"`
 
-		// Credentials represents all credentials that can be used for authenticating this identity.
-		Credentials map[CredentialsType]Credentials `json:"-" faker:"-" db:"-"`
+	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
+	//
+	// required: true
+	SchemaID string `json:"schema_id" faker:"-" db:"schema_id"`
 
-		// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
-		//
-		// required: true
-		SchemaID string `json:"schema_id" faker:"-" db:"schema_id"`
+	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
+	//
+	// format: url
+	// required: true
+	SchemaURL string `json:"schema_url" faker:"-" db:"-"`
 
-		// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
-		//
-		// format: url
-		// required: true
-		SchemaURL string `json:"schema_url" faker:"-" db:"-"`
+	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+	// in a self-service manner. The input will always be validated against the JSON Schema defined
+	// in `schema_url`.
+	//
+	// required: true
+	Traits Traits `json:"traits" faker:"-" db:"traits"`
 
-		// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
-		// in a self-service manner. The input will always be validated against the JSON Schema defined
-		// in `schema_url`.
-		//
-		// required: true
-		Traits Traits `json:"traits" faker:"-" db:"traits"`
+	// VerifiableAddresses contains all the addresses that can be verified by the user.
+	//
+	// Extensions:
+	// ---
+	// x-omitempty: true
+	// ---
+	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
 
-		// VerifiableAddresses contains all the addresses that can be verified by the user.
-		//
-		// Extensions:
-		// ---
-		// x-omitempty: true
-		// ---
-		VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
+	//
+	// Extensions:
+	// ---
+	// x-omitempty: true
+	// ---
+	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
 
-		// RecoveryAddresses contains all the addresses that can be used to recover an identity.
-		//
-		// Extensions:
-		// ---
-		// x-omitempty: true
-		// ---
-		RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
+	// CreatedAt is a helper struct field for gobuffalo.pop.
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
-		// CreatedAt is a helper struct field for gobuffalo.pop.
-		CreatedAt time.Time `json:"-" db:"created_at"`
+	// UpdatedAt is a helper struct field for gobuffalo.pop.
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+}
 
-		// UpdatedAt is a helper struct field for gobuffalo.pop.
-		UpdatedAt time.Time `json:"-" db:"updated_at"`
-		NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
-	}
-	Traits json.RawMessage
-)
+// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+// in a self-service manner. The input will always be validated against the JSON Schema defined
+// in `schema_url`.
+//
+// swagger:model identityTraits
+type Traits json.RawMessage
 
 func (t *Traits) Scan(value interface{}) error {
 	return sqlxx.JSONScan(t, value)

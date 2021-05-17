@@ -4,5 +4,7 @@
   "verified": false,
   "via": "email",
   "status": "pending",
-  "verified_at": null
+  "verified_at": null,
+  "created_at": "2013-10-07T08:23:19Z",
+  "updated_at": "2013-10-07T08:23:19Z"
 }

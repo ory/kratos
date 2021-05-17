@@ -3,6 +3,7 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 )
@@ -27,6 +28,16 @@ func (m *RegistryDefault) PostLoginHooks(ctx context.Context, credentialsType id
 	for _, v := range m.getHooks(string(credentialsType), m.Config(ctx).SelfServiceFlowLoginAfterHooks(string(credentialsType))) {
 		if hook, ok := v.(login.PostHookExecutor); ok {
 			b = append(b, hook)
+		}
+	}
+
+	if len(b) == 0 {
+		// since we don't want merging hooks defined in a specific strategy and global hooks
+		// global hooks are added only if no strategy specific hooks are defined
+		for _, v := range m.getHooks(config.HookGlobal, m.Config(ctx).SelfServiceFlowLoginAfterHooks("global")) {
+			if hook, ok := v.(login.PostHookExecutor); ok {
+				b = append(b, hook)
+			}
 		}
 	}
 	return

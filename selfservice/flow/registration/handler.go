@@ -106,9 +106,9 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	return f, nil
 }
 
-// swagger:route GET /self-service/registration/api public initializeSelfServiceRegistrationViaAPIFlow
+// swagger:route GET /self-service/registration/api public initializeSelfServiceRegistrationForNativeApps
 //
-// Initialize Registration Flow for API clients
+// Initialize Registration Flow for Native Apps and API clients
 //
 // This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -133,8 +133,8 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 //
 //     Responses:
 //       200: registrationFlow
-//       400: genericError
-//       500: genericError
+//       400: jsonError
+//       500: jsonError
 func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeAPI)
 	if err != nil {
@@ -145,7 +145,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, a)
 }
 
-// swagger:route GET /self-service/registration/browser public initializeSelfServiceRegistrationViaBrowserFlow
+// swagger:route GET /self-service/registration/browser public initializeSelfServiceRegistrationForBrowsers
 //
 // Initialize Registration Flow for browsers
 //
@@ -166,7 +166,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 //     Responses:
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeBrowser)
 	if err != nil {
@@ -183,7 +183,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceRegistrationFlow
-type getSelfServiceRegistrationFlowParameters struct {
+type getSelfServiceRegistrationFlow struct {
 	// The Registration Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -209,10 +209,10 @@ type getSelfServiceRegistrationFlowParameters struct {
 //
 //     Responses:
 //       200: registrationFlow
-//       403: genericError
-//       404: genericError
-//       410: genericError
-//       500: genericError
+//       403: jsonError
+//       404: jsonError
+//       410: jsonError
+//       500: jsonError
 func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ar, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
@@ -288,7 +288,7 @@ type submitSelfServiceRegistrationFlowBody struct{}
 //       200: registrationViaApiResponse
 //       302: emptyResponse
 //       400: registrationFlow
-//       500: genericError
+//       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
@@ -318,8 +318,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	var found bool
-	var s identity.CredentialsType
+	var s Strategy
 	for _, ss := range h.d.AllRegistrationStrategies() {
 		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
@@ -330,18 +329,17 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 			return
 		}
 
-		s = ss.ID()
-		found = true
+		s = ss
 		break
 	}
 
-	if !found {
+	if s == nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 		return
 	}
 
-	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s, f, i); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), f, i); err != nil {
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, s.NodeGroup(), err)
 		return
 	}
 }

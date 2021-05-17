@@ -4,15 +4,16 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**CsrfToken** | Pointer to **string** |  | [optional] 
-**Password** | Pointer to **string** |  | [optional] 
-**Traits** | Pointer to **map[string]interface{}** |  | [optional] 
+**CsrfToken** | Pointer to **string** | The CSRF Token | [optional] 
+**Method** | **string** | Method to use  This field must be set to &#x60;password&#x60; when using the password method. | 
+**Password** | Pointer to **string** | Password to sign the user up with | [optional] 
+**Traits** | Pointer to **map[string]interface{}** | The identity&#39;s traits | [optional] 
 
 ## Methods
 
 ### NewSubmitSelfServiceRegistrationFlowWithPasswordMethod
 
-`func NewSubmitSelfServiceRegistrationFlowWithPasswordMethod() *SubmitSelfServiceRegistrationFlowWithPasswordMethod`
+`func NewSubmitSelfServiceRegistrationFlowWithPasswordMethod(method string, ) *SubmitSelfServiceRegistrationFlowWithPasswordMethod`
 
 NewSubmitSelfServiceRegistrationFlowWithPasswordMethod instantiates a new SubmitSelfServiceRegistrationFlowWithPasswordMethod object
 This constructor will assign default values to properties that have it defined,
@@ -51,6 +52,26 @@ SetCsrfToken sets CsrfToken field to given value.
 `func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) HasCsrfToken() bool`
 
 HasCsrfToken returns a boolean if a field has been set.
+
+### GetMethod
+
+`func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) GetMethod() string`
+
+GetMethod returns the Method field if non-nil, zero value otherwise.
+
+### GetMethodOk
+
+`func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) GetMethodOk() (*string, bool)`
+
+GetMethodOk returns a tuple with the Method field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetMethod
+
+`func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) SetMethod(v string)`
+
+SetMethod sets Method field to given value.
+
 
 ### GetPassword
 

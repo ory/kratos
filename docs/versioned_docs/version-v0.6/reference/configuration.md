@@ -26,7 +26,7 @@ quickstart.
 
 To find out more about edge cases like setting string array values through
 environmental variables head to the
-[Configuring Ory services](https://www.ory.sh/docs/ecosystem/configuring)
+[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring)
 section.
 
 ```yaml
@@ -163,6 +163,30 @@ selfservice:
       #
       lifespan: 1h
 
+      ## before ##
+      #
+      before:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_REGISTRATION_BEFORE_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_REGISTRATION_BEFORE_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
       ## after ##
       #
       after:
@@ -226,6 +250,27 @@ selfservice:
           #
           default_browser_return_url: https://my-app.com/dashboard
 
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_REGISTRATION_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_REGISTRATION_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
         ## Redirect browsers to set URL per default ##
         #
         # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
@@ -278,6 +323,30 @@ selfservice:
       #    > set SELFSERVICE_FLOWS_LOGIN_LIFESPAN=<value>
       #
       lifespan: 1h
+
+      ## before ##
+      #
+      before:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_LOGIN_BEFORE_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_LOGIN_BEFORE_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
 
       ## after ##
       #
@@ -342,6 +411,27 @@ selfservice:
           #
           default_browser_return_url: https://my-app.com/dashboard
 
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_LOGIN_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_LOGIN_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
         ## Redirect browsers to set URL per default ##
         #
         # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
@@ -398,6 +488,27 @@ selfservice:
       ## after ##
       #
       after:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_VERIFICATION_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_VERIFICATION_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
         ## Redirect browsers to set URL per default ##
         #
         # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
@@ -470,6 +581,27 @@ selfservice:
       ## after ##
       #
       after:
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_RECOVERY_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_RECOVERY_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
+
         ## Redirect browsers to set URL per default ##
         #
         # Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
@@ -591,7 +723,17 @@ selfservice:
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PASSWORD_HOOKS=<value>
           #
           hooks:
-            - hook: verify
+            - hook: web_hook
+              config:
+                url: http://a.aaa
+                method: ''
+                auth:
+                  type: api_key
+                  config:
+                    name: ''
+                    value: ''
+                    in: header
+                body: ''
 
           ## Redirect browsers to set URL per default ##
           #
@@ -621,7 +763,17 @@ selfservice:
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PROFILE_HOOKS=<value>
           #
           hooks:
-            - hook: verify
+            - hook: web_hook
+              config:
+                url: http://a.aaa
+                method: ''
+                auth:
+                  type: api_key
+                  config:
+                    name: ''
+                    value: ''
+                    in: header
+                body: ''
 
           ## Redirect browsers to set URL per default ##
           #
@@ -638,6 +790,27 @@ selfservice:
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PROFILE_DEFAULT_BROWSER_RETURN_URL=<value>
           #
           default_browser_return_url: https://my-app.com/dashboard
+
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_FLOWS_SETTINGS_AFTER_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_HOOKS=<value>
+        #
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://a.aaa
+              method: ''
+              auth:
+                type: api_key
+                config:
+                  name: ''
+                  value: ''
+                  in: header
+              body: ''
 
         ## Redirect browsers to set URL per default ##
         #
@@ -698,20 +871,6 @@ selfservice:
       # Define how passwords are validated.
       #
       config:
-        ## Ignore Lookup Network Errors ##
-        #
-        # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
-        #
-        # Default value: true
-        #
-        # Set this value using environment variables on
-        # - Linux/macOS:
-        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
-        # - Windows Command Line (CMD):
-        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
-        #
-        ignore_network_errors: false
-
         ## Allow Password Breaches ##
         #
         # Defines how often a password may have been breached before it is rejected.
@@ -727,6 +886,34 @@ selfservice:
         #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MAX_BREACHES=<value>
         #
         max_breaches: 0
+
+        ## Ignore Lookup Network Errors ##
+        #
+        # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        #
+        ignore_network_errors: false
+
+        ## Custom haveibeenpwned host ##
+        #
+        # Allows changing the default HIBP host to a self hosted version.
+        #
+        # Default value: api.pwnedpasswords.com
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_HOST=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_HOST=<value>
+        #
+        haveibeenpwned_host: ''
 
       ## Enables Username/Email and Password Method ##
       #
@@ -908,7 +1095,7 @@ serve:
     socket:
       ## group ##
       #
-      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
+      # Group of unix socket. If empty, the group will be the primary group of the user running Kratos.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -938,7 +1125,7 @@ serve:
 
       ## owner ##
       #
-      # Owner of unix socket. If empty, the owner will be the user running hydra.
+      # Owner of unix socket. If empty, the owner will be the user running Kratos.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -1135,7 +1322,7 @@ serve:
     socket:
       ## group ##
       #
-      # Group of unix socket. If empty, the group will be the primary group of the user running hydra.
+      # Group of unix socket. If empty, the group will be the primary group of the user running Kratos.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -1165,7 +1352,7 @@ serve:
 
       ## owner ##
       #
-      # Owner of unix socket. If empty, the owner will be the user running hydra.
+      # Owner of unix socket. If empty, the owner will be the user running Kratos.
       #
       # Set this value using environment variables on
       # - Linux/macOS:
@@ -1192,7 +1379,7 @@ serve:
 
 ## tracing ##
 #
-# Ory Hydra supports distributed tracing.
+# Ory Kratos supports distributed tracing.
 #
 tracing:
   ## service_name ##

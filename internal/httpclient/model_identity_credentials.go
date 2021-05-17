@@ -13,15 +13,20 @@ package kratos
 
 import (
 	"encoding/json"
+	"time"
 )
 
 // IdentityCredentials Credentials represents a specific credential type
 type IdentityCredentials struct {
 	Config map[string]interface{} `json:"config,omitempty"`
+	// CreatedAt is a helper struct field for gobuffalo.pop.
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// Identifiers represents a list of unique identifiers this credential type matches.
 	Identifiers []string `json:"identifiers,omitempty"`
 	// and so on.
 	Type *string `json:"type,omitempty"`
+	// UpdatedAt is a helper struct field for gobuffalo.pop.
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
 // NewIdentityCredentials instantiates a new IdentityCredentials object
@@ -71,6 +76,38 @@ func (o *IdentityCredentials) HasConfig() bool {
 // SetConfig gets a reference to the given map[string]interface{} and assigns it to the Config field.
 func (o *IdentityCredentials) SetConfig(v map[string]interface{}) {
 	o.Config = v
+}
+
+// GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
+func (o *IdentityCredentials) GetCreatedAt() time.Time {
+	if o == nil || o.CreatedAt == nil {
+		var ret time.Time
+		return ret
+	}
+	return *o.CreatedAt
+}
+
+// GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityCredentials) GetCreatedAtOk() (*time.Time, bool) {
+	if o == nil || o.CreatedAt == nil {
+		return nil, false
+	}
+	return o.CreatedAt, true
+}
+
+// HasCreatedAt returns a boolean if a field has been set.
+func (o *IdentityCredentials) HasCreatedAt() bool {
+	if o != nil && o.CreatedAt != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCreatedAt gets a reference to the given time.Time and assigns it to the CreatedAt field.
+func (o *IdentityCredentials) SetCreatedAt(v time.Time) {
+	o.CreatedAt = &v
 }
 
 // GetIdentifiers returns the Identifiers field value if set, zero value otherwise.
@@ -137,16 +174,54 @@ func (o *IdentityCredentials) SetType(v string) {
 	o.Type = &v
 }
 
+// GetUpdatedAt returns the UpdatedAt field value if set, zero value otherwise.
+func (o *IdentityCredentials) GetUpdatedAt() time.Time {
+	if o == nil || o.UpdatedAt == nil {
+		var ret time.Time
+		return ret
+	}
+	return *o.UpdatedAt
+}
+
+// GetUpdatedAtOk returns a tuple with the UpdatedAt field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityCredentials) GetUpdatedAtOk() (*time.Time, bool) {
+	if o == nil || o.UpdatedAt == nil {
+		return nil, false
+	}
+	return o.UpdatedAt, true
+}
+
+// HasUpdatedAt returns a boolean if a field has been set.
+func (o *IdentityCredentials) HasUpdatedAt() bool {
+	if o != nil && o.UpdatedAt != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetUpdatedAt gets a reference to the given time.Time and assigns it to the UpdatedAt field.
+func (o *IdentityCredentials) SetUpdatedAt(v time.Time) {
+	o.UpdatedAt = &v
+}
+
 func (o IdentityCredentials) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.Config != nil {
 		toSerialize["config"] = o.Config
+	}
+	if o.CreatedAt != nil {
+		toSerialize["created_at"] = o.CreatedAt
 	}
 	if o.Identifiers != nil {
 		toSerialize["identifiers"] = o.Identifiers
 	}
 	if o.Type != nil {
 		toSerialize["type"] = o.Type
+	}
+	if o.UpdatedAt != nil {
+		toSerialize["updated_at"] = o.UpdatedAt
 	}
 	return json.Marshal(toSerialize)
 }

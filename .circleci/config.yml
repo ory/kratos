@@ -172,7 +172,7 @@ workflows:
               ignore: /master/
       - docs/cli
       - docs/build:
-          swag-spec-location: spec/api.json
+          swag-spec-location: spec/openapi.json
           filters:
             tags:
               only: /.*/

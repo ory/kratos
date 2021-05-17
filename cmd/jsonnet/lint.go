@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/linter"
@@ -21,6 +22,8 @@ var jsonnetLintCmd = &cobra.Command{
 ` + GlobHelp,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		vm := jsonnet.MakeVM()
+
 		for _, pattern := range args {
 			files, err := filepath.Glob(pattern)
 			cmdx.Must(err, `Glob path "%s" is not valid: %s`, pattern, err)
@@ -29,12 +32,10 @@ var jsonnetLintCmd = &cobra.Command{
 				content, err := ioutil.ReadFile(file)
 				cmdx.Must(err, `Unable to read file "%s" because: %s`, file, err)
 
-				node, err := jsonnet.SnippetToAST(file, string(content))
-				cmdx.Must(err, `Unable to parse JSONNet source "%s" because: %s`, file, err)
+				var outBuilder strings.Builder
+				errorsFound := linter.LintSnippet(vm, &outBuilder, file, string(content))
 
-				ew := &linter.ErrorWriter{Writer: os.Stderr}
-				linter.Lint(node, ew)
-				if ew.ErrorsFound {
+				if errorsFound {
 					_, _ = fmt.Fprintf(os.Stderr, "Linter found issues.")
 					os.Exit(1)
 				}

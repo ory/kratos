@@ -100,7 +100,7 @@ filling E-mail subject and body.
     invalidating a verification
 
 For example:
-[`/courier/template/courier/builtin/templates/verification/valid/email.body.gotmpl`](https://github.com/ory/kratos/blob/master/courier/template/templates/verification/valid/email.body.gotmpl)
+[`https://github.com/ory/kratos/blob/master/courier/template/courier/builtin/templates/verification/valid/email.body.gotmpl`](https://github.com/ory/kratos/blob/master/courier/template/courier/builtin/templates/verification/valid/email.body.gotmpl)
 
 ```gotmpl title="courier/template/templates/verification/valid/email.body.gotmpl"
 Hi, please verify your account by clicking the following link:

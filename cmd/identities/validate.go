@@ -52,7 +52,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 
 var schemas = make(map[string]*jsonschema.Schema)
 
-const createIdentityPath = "api.json#/definitions/CreateIdentity"
+const createIdentityPath = "openapi.json#/components/schemas/createIdentity"
 
 type schemaGetter = func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error)
 
@@ -64,7 +64,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	if !ok {
 		// add swagger schema
 		schemaCompiler := jsonschema.NewCompiler()
-		err := schemaCompiler.AddResource("api.json", bytes.NewReader(spec.API))
+		err := schemaCompiler.AddResource("openapi.json", bytes.NewReader(spec.API))
 		if err != nil {
 			return errors.Wrap(err, "Could not add swagger schema to the schema compiler. This is an error with the binary you use and should be reported. Thanks ;)")
 		}

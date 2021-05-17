@@ -80,6 +80,16 @@ func NewPasswordPolicyViolationError(instancePtr string, reason string) error {
 	})
 }
 
+func NewMissingIdentifierError() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     "could not find any identifiers",
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationIdentifierMissing()),
+	})
+}
+
 type ValidationErrorContextInvalidCredentialsError struct{}
 
 func (r *ValidationErrorContextInvalidCredentialsError) AddContext(_, _ string) {}
@@ -127,7 +137,7 @@ func NewNoLoginStrategyResponsible() error {
 func NewNoRegistrationStrategyResponsible() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
-			Message:     `could not find a strategy to sing up with`,
+			Message:     `could not find a strategy to sign up with`,
 			InstancePtr: "#/",
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationRegistrationNoStrategyFound()),

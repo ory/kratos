@@ -97,6 +97,44 @@ func TestManagerHTTP(t *testing.T) {
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
 
+		t.Run("case=valid bearer auth as fallback", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+
+			i := identity.Identity{Traits: []byte("{}")}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+			s = session.NewActiveSession(&i, conf, time.Now())
+			require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
+			require.NotEmpty(t, s.Token)
+
+			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer "+s.Token)
+
+			c := http.DefaultClient
+			res, err := c.Do(req)
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		})
+
+		t.Run("case=valid x-session-token auth even if bearer is set", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+
+			i := identity.Identity{Traits: []byte("{}")}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+			s = session.NewActiveSession(&i, conf, time.Now())
+			require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
+
+			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer invalid")
+			req.Header.Set("X-Session-Token", s.Token)
+
+			c := http.DefaultClient
+			res, err := c.Do(req)
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		})
+
 		t.Run("case=expired", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySessionLifespan, "1ns")
 			t.Cleanup(func() {

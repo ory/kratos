@@ -83,6 +83,7 @@ const (
 	ViperKeySelfServiceSettingsAfter                                = "selfservice.flows.settings.after"
 	ViperKeySelfServiceSettingsRequestLifespan                      = "selfservice.flows.settings.lifespan"
 	ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter        = "selfservice.flows.settings.privileged_session_max_age"
+	ViperKeySelfServiceRecoveryAfter                                = "selfservice.flows.recovery.after"
 	ViperKeySelfServiceRecoveryEnabled                              = "selfservice.flows.recovery.enabled"
 	ViperKeySelfServiceRecoveryUI                                   = "selfservice.flows.recovery.ui_url"
 	ViperKeySelfServiceRecoveryRequestLifespan                      = "selfservice.flows.recovery.lifespan"
@@ -91,6 +92,7 @@ const (
 	ViperKeySelfServiceVerificationUI                               = "selfservice.flows.verification.ui_url"
 	ViperKeySelfServiceVerificationRequestLifespan                  = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
+	ViperKeySelfServiceVerificationAfter                            = "selfservice.flows.verification.after"
 	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
 	ViperKeyIdentitySchemas                                         = "identity.schemas"
 	ViperKeyHasherAlgorithm                                         = "hashers.algorithm"
@@ -103,6 +105,7 @@ const (
 	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
+	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
@@ -146,8 +149,9 @@ type (
 		URL string `json:"url"`
 	}
 	PasswordPolicy struct {
-		MaxBreaches         uint `json:"max_breaches"`
-		IgnoreNetworkErrors bool `json:"ignore_network_errors"`
+		HaveIBeenPwnedHost  string `json:"haveibeenpwned_host"`
+		MaxBreaches         uint   `json:"max_breaches"`
+		IgnoreNetworkErrors bool   `json:"ignore_network_errors"`
 	}
 	Schemas []Schema
 	Config  struct {
@@ -186,8 +190,14 @@ func (c *Argon2) MarshalJSON() ([]byte, error) {
 
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
+const HookGlobal = "global"
+
 func HookStrategyKey(key, strategy string) string {
-	return fmt.Sprintf("%s.%s.hooks", key, strategy)
+	if strategy == HookGlobal {
+		return fmt.Sprintf("%s.hooks", key)
+	} else {
+		return fmt.Sprintf("%s.%s.hooks", key, strategy)
+	}
 }
 
 func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
@@ -584,7 +594,7 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 
 	var aliases []DomainAlias
 	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
-		p.l.WithError(err).WithField("config", raw).Errorf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
+		p.l.WithError(err).WithField("config", raw).Warnf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
 		return primary
 	}
 
@@ -753,12 +763,20 @@ func (p *Config) SelfServiceFlowVerificationReturnTo(defaultReturnTo *url.URL) *
 	return p.p.RequestURIF(ViperKeySelfServiceVerificationBrowserDefaultReturnTo, defaultReturnTo)
 }
 
+func (p *Config) SelfServiceFlowVerificationAfterHooks(strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceVerificationAfter, strategy))
+}
+
 func (p *Config) SelfServiceFlowRecoveryReturnTo() *url.URL {
 	return p.p.RequestURIF(ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, p.SelfServiceBrowserDefaultReturnTo())
 }
 
 func (p *Config) SelfServiceFlowRecoveryRequestLifespan() time.Duration {
 	return p.p.DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRecoveryAfter, strategy))
 }
 
 func (p *Config) SelfServiceFlowSettingsPrivilegedSessionMaxAge() time.Duration {
@@ -809,6 +827,7 @@ func (p *Config) ConfigVersion() string {
 
 func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 	return &PasswordPolicy{
+		HaveIBeenPwnedHost:  p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
 		MaxBreaches:         uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
 		IgnoreNetworkErrors: p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
 	}

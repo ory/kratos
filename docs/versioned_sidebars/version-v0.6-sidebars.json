@@ -67,7 +67,7 @@
             {
               "label": "Bring your own UI",
               "type": "link",
-              "href": "https://www.ory.sh/docs/guides/ui"
+              "href": "https://www.ory.sh/docs/guides/bring-your-user-interface"
             }
           ]
         },
@@ -1204,6 +1204,11 @@
                       "label": "hydra keys get",
                       "type": "link",
                       "href": "https://www.ory.sh/hydra/docs/next/cli/hydra-keys-get"
+                    },
+                    {
+                      "label": "hydra keys import",
+                      "type": "link",
+                      "href": "https://www.ory.sh/hydra/docs/next/cli/hydra-keys-import"
                     },
                     {
                       "label": "hydra migrate",
