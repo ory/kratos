@@ -18,6 +18,7 @@ import (
 )
 
 var BcryptAESAlgorithmId = []byte("bcryptAes")
+var NoAESKeyError = errors.New("encode error: no AES keys were configured")
 
 type BcryptAES struct {
 	c BcryptAESConfiguration
@@ -56,6 +57,10 @@ func (h *BcryptAES) aes256Encrypt(data, key []byte) ([]byte, error) {
 
 func (h *BcryptAES) Generate(ctx context.Context, password []byte) ([]byte, error) {
 	cfg := h.c.Config(ctx).HasherBcryptAES()
+	if len(cfg.Key) == 0 {
+		return nil, NoAESKeyError
+	}
+
 	sh := sha3.New512()
 	sh.Write(password)
 	bcryptPassword, err := bcrypt.GenerateFromPassword(sh.Sum(nil), int(cfg.Cost))
@@ -63,7 +68,7 @@ func (h *BcryptAES) Generate(ctx context.Context, password []byte) ([]byte, erro
 		return nil, errors.WithStack(err)
 	}
 
-	hash, err := h.aes256Encrypt(bcryptPassword, []byte(cfg.Key))
+	hash, err := h.aes256Encrypt(bcryptPassword, cfg.Key[0])
 
 	if err != nil {
 		return nil, errors.WithStack(err)

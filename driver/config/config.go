@@ -139,8 +139,8 @@ type (
 		Cost uint32 `json:"cost"`
 	}
 	BcryptAES struct {
-		Cost uint32 `json:"cost"`
-		Key  string `json:"key"`
+		Cost uint32   `json:"cost"`
+		Key  [][]byte `json:"key"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -321,9 +321,15 @@ func (p *Config) HasherBcryptAES() *BcryptAES {
 		cost = BcryptDefaultCost
 	}
 
+	keys := p.p.Strings(ViperKeyHasherBcryptAESKey)
+	result := make([][]byte, len(keys))
+	for k, v := range keys {
+		result[k] = []byte(v)
+	}
+
 	return &BcryptAES{
 		Cost: cost,
-		Key:  p.p.String(ViperKeyHasherBcryptAESKey),
+		Key:  result,
 	}
 }
 

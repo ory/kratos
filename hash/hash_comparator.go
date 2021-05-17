@@ -22,6 +22,8 @@ import (
 
 var ErrUnknownHashAlgorithm = fmt.Errorf("unknown hash algorithm")
 var ErrUnknownHashFormat = fmt.Errorf("unknown hash format")
+var ErrEmptyHashCompare = fmt.Errorf("empty hash provided")
+var ErrEmptyPasswordCompare = fmt.Errorf("empty password provided")
 
 var hashSeparator = []byte("$")
 var bcryptLegacyPrefix = regexp.MustCompile(`^2[abzy]?$`)
@@ -113,14 +115,29 @@ func aes256Decrypt(data, key []byte) ([]byte, error) {
 }
 
 func CompareBcryptAes(_ context.Context, cfg *config.Config, password, hash []byte) error {
-	aesDecrypted, err := aes256Decrypt(hash[1:], []byte(cfg.HasherBcryptAES().Key))
-	if err != nil {
-		return errors.WithStack(err)
+	if len(hash) == 0 {
+		return errors.WithStack(ErrEmptyHashCompare)
+	}
+	if len(password) == 0 {
+		return errors.WithStack(ErrEmptyPasswordCompare)
+	}
+	var lastError error
+	var aesDecrypted []byte
+	hasherCfg := cfg.HasherBcryptAES()
+	for _, key := range hasherCfg.Key {
+		aesDecrypted, lastError = aes256Decrypt(hash[1:], key)
+		if lastError == nil {
+			break
+		}
+	}
+
+	if lastError != nil {
+		return errors.WithStack(lastError)
 	}
 
 	sh := sha3.New512()
 	sh.Write(password)
-	err = bcrypt.CompareHashAndPassword(aesDecrypted, sh.Sum(nil))
+	err := bcrypt.CompareHashAndPassword(aesDecrypted, sh.Sum(nil))
 	if err != nil {
 		return errors.WithStack(err)
 	}

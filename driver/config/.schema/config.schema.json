@@ -1566,15 +1566,22 @@
           "additionalProperties": false,
           "properties": {
             "cost": {
-              "title": "Cost of the BCrypt algorithm. Minimum is 4 when --dev flag is used and 12 otherwise.",
+              "title": "Cost of the BCrypt-AES algorithm. Minimum is 4 when --dev flag is used and 12 otherwise.",
               "type": "integer",
               "minimum": 4,
               "maximum": 31,
               "default": 12
             },
             "key": {
-              "title": "AES key used to encrypt the final hash. Must be 32-byte long.",
-              "type": "string"
+              "type": "array",
+              "title": "Encryption Keys for BCrypt-AES hasher",
+              "description": "The first key in the array is used for encrypting/verifying credentials while all other keys are used to verify older hashes that were encrypted with that old key.",
+              "items": {
+                "type": "string",
+                "minLength": 32,
+                "maxLength": 32
+              },
+              "uniqueItems": true
             }
           }
         }
