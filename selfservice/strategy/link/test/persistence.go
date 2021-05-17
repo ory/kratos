@@ -81,7 +81,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				actual, err := p.UseRecoveryToken(ctx, expected.Token)
 				require.NoError(t, err)
-				assertx.EqualAsJSON(t, expected.RecoveryAddress, actual.RecoveryAddress)
+				assertx.EqualAsJSONExcept(t, expected.RecoveryAddress, actual.RecoveryAddress, []string{"created_at", "updated_at"})
 				assert.Equal(t, nid, actual.NID)
 				assert.Equal(t, expected.RecoveryAddress.IdentityID, actual.RecoveryAddress.IdentityID)
 				assert.NotEqual(t, expected.Token, actual.Token)
@@ -142,7 +142,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				actual, err := p.UseVerificationToken(ctx, expected.Token)
 				require.NoError(t, err)
-				assertx.EqualAsJSON(t, expected.VerifiableAddress, actual.VerifiableAddress)
+				assertx.EqualAsJSONExcept(t, expected.VerifiableAddress, actual.VerifiableAddress, []string{"created_at", "updated_at"})
 				assert.Equal(t, nid, actual.NID)
 				assert.Equal(t, expected.VerifiableAddress.IdentityID, actual.VerifiableAddress.IdentityID)
 				assert.NotEqual(t, expected.Token, actual.Token)

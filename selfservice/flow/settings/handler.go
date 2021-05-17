@@ -118,6 +118,15 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 	return f, nil
 }
 
+// nolint:deadcode,unused
+// swagger:parameters initializeSelfServiceSettingsForNativeApps
+type initializeSelfServiceSettingsForNativeApps struct {
+	// The Session Token of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+}
+
 // swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsForNativeApps
 //
 // Initialize Settings Flow for Native Apps and API clients
@@ -215,6 +224,15 @@ type getSelfServiceSettingsFlowParameters struct {
 	// required: true
 	// in: query
 	ID string `json:"id"`
+}
+
+// nolint:deadcode,unused
+// swagger:parameters getSelfServiceSettingsFlow
+type getSelfServiceSettingsFlow struct {
+	// The Session Token of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
 }
 
 // swagger:route GET /self-service/settings/flows public admin getSelfServiceSettingsFlow
@@ -316,6 +334,11 @@ type submitSelfServiceSettingsFlow struct {
 
 	// in: body
 	Body submitSelfServiceSettingsFlowBody
+
+	// The Session Token of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
 }
 
 // swagger:model submitSelfServiceSettingsFlow

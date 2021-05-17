@@ -1266,13 +1266,18 @@ func (a *AdminApiService) GetSelfServiceRegistrationFlowExecute(r AdminApiApiGet
 }
 
 type AdminApiApiGetSelfServiceSettingsFlowRequest struct {
-	ctx        context.Context
-	ApiService *AdminApiService
-	id         *string
+	ctx           context.Context
+	ApiService    *AdminApiService
+	id            *string
+	xSessionToken *string
 }
 
 func (r AdminApiApiGetSelfServiceSettingsFlowRequest) Id(id string) AdminApiApiGetSelfServiceSettingsFlowRequest {
 	r.id = &id
+	return r
+}
+func (r AdminApiApiGetSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) AdminApiApiGetSelfServiceSettingsFlowRequest {
+	r.xSessionToken = &xSessionToken
 	return r
 }
 
@@ -1344,6 +1349,9 @@ func (a *AdminApiService) GetSelfServiceSettingsFlowExecute(r AdminApiApiGetSelf
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
