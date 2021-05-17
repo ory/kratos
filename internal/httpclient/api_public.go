@@ -745,13 +745,18 @@ func (a *PublicApiService) GetSelfServiceRegistrationFlowExecute(r PublicApiApiG
 }
 
 type PublicApiApiGetSelfServiceSettingsFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-	id         *string
+	ctx           context.Context
+	ApiService    *PublicApiService
+	id            *string
+	xSessionToken *string
 }
 
 func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Id(id string) PublicApiApiGetSelfServiceSettingsFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) PublicApiApiGetSelfServiceSettingsFlowRequest {
+	r.xSessionToken = &xSessionToken
 	return r
 }
 
@@ -823,6 +828,9 @@ func (a *PublicApiService) GetSelfServiceSettingsFlowExecute(r PublicApiApiGetSe
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -2008,8 +2016,14 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r Pub
 }
 
 type PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
+	ctx           context.Context
+	ApiService    *PublicApiService
+	xSessionToken *string
+}
+
+func (r PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest) XSessionToken(xSessionToken string) PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest {
+	r.xSessionToken = &xSessionToken
+	return r
 }
 
 func (r PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest) Execute() (*SettingsFlow, *http.Response, error) {
@@ -2085,6 +2099,9 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForNativeAppsExecute(r P
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -3095,11 +3112,16 @@ type PublicApiApiSubmitSelfServiceSettingsFlowRequest struct {
 	ctx                           context.Context
 	ApiService                    *PublicApiService
 	flow                          *string
+	xSessionToken                 *string
 	submitSelfServiceSettingsFlow *SubmitSelfServiceSettingsFlow
 }
 
 func (r PublicApiApiSubmitSelfServiceSettingsFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceSettingsFlowRequest {
 	r.flow = &flow
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) PublicApiApiSubmitSelfServiceSettingsFlowRequest {
+	r.xSessionToken = &xSessionToken
 	return r
 }
 func (r PublicApiApiSubmitSelfServiceSettingsFlowRequest) SubmitSelfServiceSettingsFlow(submitSelfServiceSettingsFlow SubmitSelfServiceSettingsFlow) PublicApiApiSubmitSelfServiceSettingsFlowRequest {
@@ -3185,6 +3207,9 @@ func (a *PublicApiService) SubmitSelfServiceSettingsFlowExecute(r PublicApiApiSu
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	// body params
 	localVarPostBody = r.submitSelfServiceSettingsFlow

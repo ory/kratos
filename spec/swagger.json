@@ -1158,6 +1158,12 @@
             "schema": {
               "$ref": "#/definitions/submitSelfServiceSettingsFlow"
             }
+          },
+          {
+            "type": "string",
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "name": "X-Session-Token",
+            "in": "header"
           }
         ],
         "responses": {
@@ -1214,6 +1220,14 @@
         ],
         "summary": "Initialize Settings Flow for Native Apps and API clients",
         "operationId": "initializeSelfServiceSettingsForNativeApps",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "name": "X-Session-Token",
+            "in": "header"
+          }
+        ],
         "responses": {
           "200": {
             "description": "settingsFlow",
@@ -1294,6 +1308,12 @@
             "name": "id",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "name": "X-Session-Token",
+            "in": "header"
           }
         ],
         "responses": {

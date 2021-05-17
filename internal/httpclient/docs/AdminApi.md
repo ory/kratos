@@ -630,7 +630,7 @@ No authorization required
 
 ## GetSelfServiceSettingsFlow
 
-> SettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).Execute()
+> SettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).XSessionToken(xSessionToken).Execute()
 
 Get Settings Flow
 
@@ -650,10 +650,11 @@ import (
 
 func main() {
     id := "id_example" // string | ID is the Settings Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/settings?flow=abcde`).
+    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.AdminApi.GetSelfServiceSettingsFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.AdminApi.GetSelfServiceSettingsFlow(context.Background()).Id(id).XSessionToken(xSessionToken).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `AdminApi.GetSelfServiceSettingsFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -675,6 +676,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceSettingsFlow
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | ID is the Settings Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/settings?flow&#x3D;abcde&#x60;). | 
+ **xSessionToken** | **string** | The Session Token of the Identity performing the settings flow. | 
 
 ### Return type
 

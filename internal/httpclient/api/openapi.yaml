@@ -1163,6 +1163,14 @@ paths:
         schema:
           type: string
         style: form
+      - description: The Session Token of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
@@ -1231,6 +1239,15 @@ paths:
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: initializeSelfServiceSettingsForNativeApps
+      parameters:
+      - description: The Session Token of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -1309,6 +1326,14 @@ paths:
         schema:
           type: string
         style: form
+      - description: The Session Token of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
