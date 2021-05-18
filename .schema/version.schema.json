@@ -126,7 +126,7 @@
                     }
                 },
                 {
-                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.0-alpha.1/.schema/config.schema.json"
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.0-alpha.1/driver/config/.schema/config.schema.json"
                 }
             ]
         },
@@ -140,7 +140,7 @@
                     }
                 },
                 {
-                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.0-alpha.2/.schema/config.schema.json"
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.0-alpha.2/driver/config/.schema/config.schema.json"
                 }
             ]
         },
@@ -154,7 +154,7 @@
                     }
                 },
                 {
-                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.1-alpha.1/.schema/config.schema.json"
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.1-alpha.1/driver/config/.schema/config.schema.json"
                 }
             ]
         },
@@ -168,7 +168,7 @@
                     }
                 },
                 {
-                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.2-alpha.1/.schema/config.schema.json"
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.2-alpha.1/driver/config/.schema/config.schema.json"
                 }
             ]
         },
@@ -182,7 +182,7 @@
                     }
                 },
                 {
-                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.3-alpha.1/.schema/config.schema.json"
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.6.3-alpha.1/driver/config/.schema/config.schema.json"
                 }
             ]
         }
