@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +27,7 @@ func TestAddressVerifier(t *testing.T) {
 
 		err := verifier.ExecuteLoginPostHook(nil, nil, nil, s)
 
-		assert.ErrorIs(t, err, ErrAddressNotVerified)
+		assert.ErrorIs(t, err, login.ErrAddressNotVerified)
 	})
 
 	t.Run("Single Address Verified", func(t *testing.T) {
@@ -82,7 +83,7 @@ func TestAddressVerifier(t *testing.T) {
 
 		err := verifier.ExecuteLoginPostHook(nil, nil, nil, s)
 
-		assert.ErrorIs(t, err, ErrAddressNotVerified)
+		assert.ErrorIs(t, err, login.ErrAddressNotVerified)
 	})
 
 	t.Run("One Address Verified And One Not", func(t *testing.T) {
@@ -102,7 +103,7 @@ func TestAddressVerifier(t *testing.T) {
 
 		err := verifier.ExecuteLoginPostHook(nil, nil, nil, s)
 
-		assert.ErrorIs(t, err, ErrAddressNotVerified)
+		assert.ErrorIs(t, err, login.ErrAddressNotVerified)
 	})
 
 }

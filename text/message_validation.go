@@ -15,6 +15,7 @@ const (
 	ErrorValidationDuplicateCredentials
 	ErrorValidationTOTPVerifierWrong
 	ErrorValidationIdentifierMissing
+	ErrorValidationAddressNotVerified
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
@@ -103,6 +104,14 @@ func NewErrorValidationIdentifierMissing() *Message {
 	return &Message{
 		ID:   ErrorValidationIdentifierMissing,
 		Text: "Could not find any login identifiers. Did you forget to set them?",
+		Type: Error,
+	}
+}
+
+func NewErrorValidationAddressNotVerified() *Message {
+	return &Message{
+		ID:   ErrorValidationAddressNotVerified,
+		Text: "Account not active yet. Did you forget to verify your email address?",
 		Type: Error,
 	}
 }

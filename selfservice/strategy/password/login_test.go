@@ -59,14 +59,24 @@ func TestCompleteLogin(t *testing.T) {
 
 	createIdentity := func(identifier, password string) {
 		p, _ := reg.Hasher().Generate(context.Background(), []byte(password))
+		iId := x.NewUUID()
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
-			ID:     x.NewUUID(),
+			ID:     iId,
 			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypePassword: {
 					Type:        identity.CredentialsTypePassword,
 					Identifiers: []string{identifier},
 					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				},
+			},
+			VerifiableAddresses: []identity.VerifiableAddress {
+				{
+					ID:         x.NewUUID(),
+					Value:      identifier,
+					Verified:   false,
+					CreatedAt:  time.Now(),
+					IdentityID: iId,
 				},
 			},
 		}))
@@ -538,5 +548,40 @@ func TestCompleteLogin(t *testing.T) {
 		body2, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
 
 		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
+	})
+
+	t.Run("should fail as email is not yet verified", func(t *testing.T) {
+		conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+			{"hook": "require_verified_address"},
+		})
+
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(identifier, pwd)
+
+		var values = func(v url.Values) {
+			v.Set("password_identifier", identifier)
+			v.Set("password", pwd)
+		}
+
+		var check = func(t *testing.T, body string) {
+			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
+
+			ensureFieldsExist(t, []byte(body))
+			assert.Equal(t,
+				errorsx.Cause(schema.NewAddressNotVerifiedError()).(*schema.ValidationError).Messages[0].Text,
+				gjson.Get(body, "ui.messages.0.text").String(),
+				"%s", body,
+			)
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectValidationError(t, false, false, values))
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectValidationError(t, true, false, values))
+		})
+
 	})
 }

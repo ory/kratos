@@ -382,7 +382,11 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	// TODO Handle n+1 authentication factor
 
 	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, s, f, i); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		if err == ErrAddressNotVerified {
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
+		} else {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		}
 		return
 	}
 }
