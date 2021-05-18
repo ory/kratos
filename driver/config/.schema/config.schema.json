@@ -72,6 +72,18 @@
         "hook"
       ]
     },
+    "selfServiceRequireVerifiedAddressHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "require_verified_address"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hook"
+      ]
+    },
     "webHookAuthBasicAuthProperties": {
       "properties": {
         "type": {
@@ -422,6 +434,9 @@
             "anyOf": [
               {
                 "$ref": "#/definitions/selfServiceSessionRevokerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"

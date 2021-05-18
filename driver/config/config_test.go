@@ -229,6 +229,7 @@ func TestViperProvider(t *testing.T) {
 					strategy: "password",
 					hooks: []config.SelfServiceHook{
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+						{Name: "require_verified_address", Config: json.RawMessage(`{}`)},
 						{Name: "web_hook", Config: json.RawMessage(`{"auth":{"config":{"password":"super-secret","user":"test-user"},"type":"basic_auth"},"body":"/path/to/template.jsonnet","method":"POST","url":"https://test.kratos.ory.sh/after_login_password_hook"}`)},
 					},
 				},
