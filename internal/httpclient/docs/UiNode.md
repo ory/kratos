@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Attributes** | [**UiNodeAttributes**](UiNodeAttributes.md) |  | 
 **Group** | **string** |  | 
-**Messages** | [**[]UiText**](UiText.md) |  | 
+**Messages** | Pointer to [**[]UiText**](UiText.md) |  | [optional] 
 **Meta** | [**Meta**](Meta.md) |  | 
 **Type** | **string** |  | 
 
@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 
 ### NewUiNode
 
-`func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta Meta, type_ string, ) *UiNode`
+`func NewUiNode(attributes UiNodeAttributes, group string, meta Meta, type_ string, ) *UiNode`
 
 NewUiNode instantiates a new UiNode object
 This constructor will assign default values to properties that have it defined,
@@ -88,6 +88,11 @@ and a boolean to check if the value has been set.
 
 SetMessages sets Messages field to given value.
 
+### HasMessages
+
+`func (o *UiNode) HasMessages() bool`
+
+HasMessages returns a boolean if a field has been set.
 
 ### GetMeta
 

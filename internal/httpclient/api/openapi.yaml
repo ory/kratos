@@ -3760,7 +3760,6 @@ components:
       required:
       - attributes
       - group
-      - messages
       - meta
       - type
       title: Node represents a flow's nodes

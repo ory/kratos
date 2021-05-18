@@ -1687,7 +1687,6 @@
           "type",
           "group",
           "attributes",
-          "messages",
           "meta"
         ],
         "title": "Node represents a flow's nodes",

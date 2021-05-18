@@ -19,7 +19,7 @@ import (
 type UiNode struct {
 	Attributes UiNodeAttributes `json:"attributes"`
 	Group      string           `json:"group"`
-	Messages   []UiText         `json:"messages"`
+	Messages   []UiText         `json:"messages,omitempty"`
 	Meta       Meta             `json:"meta"`
 	Type       string           `json:"type"`
 }
@@ -28,11 +28,10 @@ type UiNode struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta Meta, type_ string) *UiNode {
+func NewUiNode(attributes UiNodeAttributes, group string, meta Meta, type_ string) *UiNode {
 	this := UiNode{}
 	this.Attributes = attributes
 	this.Group = group
-	this.Messages = messages
 	this.Meta = meta
 	this.Type = type_
 	return &this
@@ -94,26 +93,34 @@ func (o *UiNode) SetGroup(v string) {
 	o.Group = v
 }
 
-// GetMessages returns the Messages field value
+// GetMessages returns the Messages field value if set, zero value otherwise.
 func (o *UiNode) GetMessages() []UiText {
-	if o == nil {
+	if o == nil || o.Messages == nil {
 		var ret []UiText
 		return ret
 	}
-
 	return o.Messages
 }
 
-// GetMessagesOk returns a tuple with the Messages field value
+// GetMessagesOk returns a tuple with the Messages field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *UiNode) GetMessagesOk() ([]UiText, bool) {
-	if o == nil {
+	if o == nil || o.Messages == nil {
 		return nil, false
 	}
 	return o.Messages, true
 }
 
-// SetMessages sets field value
+// HasMessages returns a boolean if a field has been set.
+func (o *UiNode) HasMessages() bool {
+	if o != nil && o.Messages != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMessages gets a reference to the given []UiText and assigns it to the Messages field.
 func (o *UiNode) SetMessages(v []UiText) {
 	o.Messages = v
 }
@@ -174,7 +181,7 @@ func (o UiNode) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["group"] = o.Group
 	}
-	if true {
+	if o.Messages != nil {
 		toSerialize["messages"] = o.Messages
 	}
 	if true {

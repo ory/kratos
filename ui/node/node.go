@@ -71,9 +71,7 @@ type Node struct {
 	// The node's messages
 	//
 	// Contains error, validation, or other messages relevant to this node.
-	//
-	// required: true
-	Messages text.Messages `json:"messages"`
+	Messages text.Messages `json:"messages,omitempty"`
 
 	// Meta contains a node meta information
 	//
