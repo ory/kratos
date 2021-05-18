@@ -363,7 +363,7 @@ func (m *RegistryDefault) Hasher() hash.Hasher {
 		switch m.c.HasherPasswordHashingAlgorithm() {
 		case "bcrypt":
 			m.passwordHasher = hash.NewHasherBcrypt(m)
-		case "bcryptAes":
+		case "bcryptaes":
 			m.passwordHasher = hash.NewHasherBcryptAES(m)
 		default:
 			m.passwordHasher = hash.NewHasherArgon2(m)

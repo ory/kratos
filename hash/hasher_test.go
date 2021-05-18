@@ -225,16 +225,16 @@ func TestCompare(t *testing.T) {
 	assert.Nil(t, hash.CompareArgon2id(context.Background(), p, []byte("test"), []byte("$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp4")))
 	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$argon2id$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp5")))
 
-	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899c")))
+	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptaes$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899c")))
 	assert.Nil(t, hash.CompareBcryptAes(context.Background(), p, []byte("test"), []byte("$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899c")))
-	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899d")))
+	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptaes$f5298ce2aed0e76e9f8d2edb905a6c42da007357d2c1778bd12ca5351d7085f0d72330b9b321383a50cd142a3ede42223b4dcbf8efc4674a86b1daac55b7161d5f57d3fd2b58a02c9995bb0394d3ab795fcf11aded25899d")))
 
-	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014665")))
+	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptaes$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014665")))
 	assert.Nil(t, hash.CompareBcryptAes(context.Background(), p, []byte("test"), []byte("$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014665")))
-	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014666")))
+	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptaes$485b35689563835d1d41b7e520822167e1645f36a237805c95a465cfea1e722cd5118d8983717b1dc26534f8806808e5c108cedf5a4744f961b851159dd2c9cd4d8d5cd27434ec1df2d84b78a0cdcdcb2ae874b9cc014666")))
 
 	// use secondary encryption key (test key rotation)
-	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$afc9b874b712ac06ab838ef6f1d50cb1fd804d9ad2e73c6713cbfc2bead081b38d7944cd1329447ac90d86b142d48daef9fb9e1d0c9b5fc22b041b3d4d087d50a0b6a7d4ae641bea3d6ddbd5b272b04dfad504e49073dc48")))
+	assert.Nil(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptaes$afc9b874b712ac06ab838ef6f1d50cb1fd804d9ad2e73c6713cbfc2bead081b38d7944cd1329447ac90d86b142d48daef9fb9e1d0c9b5fc22b041b3d4d087d50a0b6a7d4ae641bea3d6ddbd5b272b04dfad504e49073dc48")))
 	assert.Nil(t, hash.CompareBcryptAes(context.Background(), p, []byte("test"), []byte("$afc9b874b712ac06ab838ef6f1d50cb1fd804d9ad2e73c6713cbfc2bead081b38d7944cd1329447ac90d86b142d48daef9fb9e1d0c9b5fc22b041b3d4d087d50a0b6a7d4ae641bea3d6ddbd5b272b04dfad504e49073dc48")))
-	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptAes$afc9b874b712ac06ab838ef6f1d50cb1fd804d9ad2e73c6713cbfc2bead081b38d7944cd1329447ac90d86b142d48daef9fb9e1d0c9b5fc22b041b3d4d087d50a0b6a7d4ae641bea3d6ddbd5b272b04dfad504e49073dc49")))
+	assert.Error(t, hash.Compare(context.Background(), p, []byte("test"), []byte("$bcryptaes$afc9b874b712ac06ab838ef6f1d50cb1fd804d9ad2e73c6713cbfc2bead081b38d7944cd1329447ac90d86b142d48daef9fb9e1d0c9b5fc22b041b3d4d087d50a0b6a7d4ae641bea3d6ddbd5b272b04dfad504e49073dc49")))
 }

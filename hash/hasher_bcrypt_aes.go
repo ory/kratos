@@ -17,7 +17,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-var BcryptAESAlgorithmId = []byte("bcryptAes")
+var BcryptAESAlgorithmId = []byte("bcryptaes")
 var NoAESKeyError = errors.New("encode error: no AES keys were configured")
 
 type BcryptAES struct {
