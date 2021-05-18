@@ -308,16 +308,31 @@ func TestDriverDefault_Hooks(t *testing.T) {
 				},
 			},
 			{
-				uc: "A revoke_active_sessions hook and a web_hook are configured for password strategy",
+				uc: "Only require_verified_address hook configured for password strategy",
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+						{"hook": "require_verified_address"},
+					})
+				},
+				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
+					return []login.PostHookExecutor{
+						hook.NewAddressVerifier(),
+					}
+				},
+			},
+			{
+				uc: "A revoke_active_sessions hook, require_verified_address hook and a web_hook are configured for password strategy",
 				prep: func(conf *config.Config) {
 					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
 						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST", "body": "bar"}},
+						{"hook": "require_verified_address"},
 						{"hook": "revoke_active_sessions"},
 					})
 				},
 				expect: func(reg *driver.RegistryDefault) []login.PostHookExecutor {
 					return []login.PostHookExecutor{
 						hook.NewWebHook(reg, json.RawMessage(`{"body":"bar","method":"POST","url":"foo"}`)),
+						hook.NewAddressVerifier(),
 						hook.NewSessionDestroyer(reg),
 					}
 				},
@@ -343,6 +358,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
 						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "GET"}},
 						{"hook": "revoke_active_sessions"},
+						{"hook": "require_verified_address"},
 					})
 					conf.MustSet(config.ViperKeySelfServiceLoginAfter+".hooks", []map[string]interface{}{
 						{"hook": "web_hook", "config": map[string]interface{}{"url": "foo", "method": "POST"}},
@@ -352,6 +368,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					return []login.PostHookExecutor{
 						hook.NewWebHook(reg, json.RawMessage(`{"method":"GET","url":"foo"}`)),
 						hook.NewSessionDestroyer(reg),
+						hook.NewAddressVerifier(),
 					}
 				},
 			},

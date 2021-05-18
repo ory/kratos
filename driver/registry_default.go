@@ -75,6 +75,7 @@ type RegistryDefault struct {
 	hookVerifier         *hook.Verifier
 	hookSessionIssuer    *hook.SessionIssuer
 	hookSessionDestroyer *hook.SessionDestroyer
+	hookAddressVerifier  *hook.AddressVerifier
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
