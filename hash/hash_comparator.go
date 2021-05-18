@@ -91,8 +91,11 @@ func ParsePasswordHash(input []byte) (algorithm, hash []byte, err error) {
 	}
 }
 
-func aes256Decrypt(data, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+// aes256Decrypt decrypts data using 256-bit AES-GCM.  This both hides the content of
+// the data and provides a check that it hasn't been altered. Expects input
+// form nonce|ciphertext|tag where '|' indicates concatenation.
+func aes256Decrypt(ciphertext []byte, key *[32]byte) (plaintext []byte, err error) {
+	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return nil, err
 	}
@@ -102,16 +105,15 @@ func aes256Decrypt(data, key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	decoded := make([]byte, hex.DecodedLen(len(data)))
-	_, err = hex.Decode(decoded, data)
-	if err != nil {
-		return nil, err
+	if len(ciphertext) < gcm.NonceSize() {
+		return nil, errors.New("malformed ciphertext")
 	}
 
-	nonce := decoded[:gcm.NonceSize()]
-	ciphertext := decoded[gcm.NonceSize():]
-
-	return gcm.Open(nil, nonce, ciphertext, nil)
+	return gcm.Open(nil,
+		ciphertext[:gcm.NonceSize()],
+		ciphertext[gcm.NonceSize():],
+		nil,
+	)
 }
 
 func CompareBcryptAes(_ context.Context, cfg *config.Config, password, hash []byte) error {
@@ -121,11 +123,18 @@ func CompareBcryptAes(_ context.Context, cfg *config.Config, password, hash []by
 	if len(password) == 0 {
 		return errors.WithStack(ErrEmptyPasswordCompare)
 	}
+
+	decoded := make([]byte, hex.DecodedLen(len(hash[1:])))
+	_, err := hex.Decode(decoded, hash[1:])
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	var lastError error
 	var aesDecrypted []byte
 	hasherCfg := cfg.HasherBcryptAES()
 	for _, key := range hasherCfg.Key {
-		aesDecrypted, lastError = aes256Decrypt(hash[1:], key)
+		aesDecrypted, lastError = aes256Decrypt(decoded[:], &key)
 		if lastError == nil {
 			break
 		}
@@ -137,7 +146,7 @@ func CompareBcryptAes(_ context.Context, cfg *config.Config, password, hash []by
 
 	sh := sha3.New512()
 	sh.Write(password)
-	err := bcrypt.CompareHashAndPassword(aesDecrypted, sh.Sum(nil))
+	err = bcrypt.CompareHashAndPassword(aesDecrypted, sh.Sum(nil))
 	if err != nil {
 		return errors.WithStack(err)
 	}
