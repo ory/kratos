@@ -149,7 +149,7 @@ func TestRecovery(t *testing.T) {
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	public, _ := testhelpers.NewKratosServer(t, reg)
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToRecover,
 		identity.ManagerAllowWriteProtectedTraits))
@@ -157,8 +157,10 @@ func TestRecovery(t *testing.T) {
 	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
 		hc := testhelpers.NewDebugClient(t)
 		if !isAPI {
-			hc = testhelpers.NewDebugClient(t)
+			hc = testhelpers.NewClientWithCookies(t)
+			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
 		}
+
 		return testhelpers.SubmitRecoveryForm(t, isAPI, hc, public, values, c,
 			testhelpers.ExpectURL(isAPI, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI().String()))
 	}
@@ -175,14 +177,14 @@ func TestRecovery(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
 
-		assertx.EqualAsJSON(t, json.RawMessage(`[
+		assertx.EqualAsJSONExcept(t, json.RawMessage(`[
   {
     "attributes": {
       "disabled": false,
       "name": "csrf_token",
       "required": true,
       "type": "hidden",
-      "value": "`+x.FakeCSRFToken+`"
+      "value": ""
     },
     "group": "default",
     "messages": null,
@@ -219,7 +221,7 @@ func TestRecovery(t *testing.T) {
     },
     "type": "input"
   }
-]`), rs.Ui.Nodes)
+]`), rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+recovery.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
