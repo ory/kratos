@@ -2,9 +2,11 @@ package identity
 
 import (
 	"encoding/json"
-	"github.com/gofrs/uuid"
-	"github.com/ory/x/sqlxx"
 	"testing"
+
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/config"
 
@@ -80,7 +82,7 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 	credentials := map[CredentialsType]Credentials{
 		CredentialsTypePassword: Credentials{
 			Type:   CredentialsTypePassword,
-			Config: sqlxx.JSONRawMessage("{\"some\" : \"secet\"}"),
+			Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
 		},
 	}
 	i.Credentials = credentials
@@ -91,6 +93,6 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 	err = json.Unmarshal(jsonBytes, &jsonMap)
 	assert.Nil(t, err)
 	assert.NotNil(t, jsonMap["credentials"])
-	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updatedAt\":\"0001-01-01T00:00:00Z\"}}", string(jsonMap["credentials"]))
+	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\"}}", string(jsonMap["credentials"]))
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
 }
