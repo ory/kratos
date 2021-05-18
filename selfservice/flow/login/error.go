@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	ErrHookAbortFlow   = errors.New("aborted login hook execution")
-	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
+	ErrHookAbortFlow      = errors.New("aborted login hook execution")
+	ErrAlreadyLoggedIn    = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
 	ErrAddressNotVerified = herodot.ErrBadRequest.WithReason("The email address is not verified yet")
 )
 
