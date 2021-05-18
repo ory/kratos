@@ -15,7 +15,7 @@ import (
 
 	"github.com/ory/kratos/ui/container"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/ui/node"
 
