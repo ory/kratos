@@ -3,17 +3,17 @@ package hook
 import (
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
-	"github.com/pkg/errors"
 )
 
 var _ login.PostHookExecutor = new(SessionDestroyer)
 
-var ErrAddressNotVerified   = errors.New("address not verified yet")
+var ErrAddressNotVerified = errors.New("address not verified yet")
 
-type AddressVerifier struct {}
-
+type AddressVerifier struct{}
 
 func NewAddressVerifier() *AddressVerifier {
 	return &AddressVerifier{}
