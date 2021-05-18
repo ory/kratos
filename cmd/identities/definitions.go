@@ -3,7 +3,7 @@ package identities
 import (
 	"strings"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/x/cmdx"
 )

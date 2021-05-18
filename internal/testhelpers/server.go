@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/gobuffalo/httptest"
@@ -19,6 +20,11 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 	rp, ra := x.NewRouterPublic(), x.NewRouterAdmin()
 	public = httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
 	admin = httptest.NewServer(ra)
+
+	// Workaround for:
+	// - https://github.com/golang/go/issues/12610
+	// - https://github.com/golang/go/issues/31054
+	public.URL = strings.Replace(public.URL, "127.0.0.1", "localhost", -1)
 
 	if len(reg.Config(context.Background()).Source().String(config.ViperKeySelfServiceLoginUI)) == 0 {
 		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithCSRF/you-forgot-to-set-me/login")

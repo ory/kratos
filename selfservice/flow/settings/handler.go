@@ -118,9 +118,18 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 	return f, nil
 }
 
-// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsViaAPIFlow
+// nolint:deadcode,unused
+// swagger:parameters initializeSelfServiceSettingsForNativeApps
+type initializeSelfServiceSettingsForNativeApps struct {
+	// The Session Token of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+}
+
+// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsForNativeApps
 //
-// Initialize Settings Flow for API Clients
+// Initialize Settings Flow for Native Apps and API clients
 //
 // This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
 // You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
@@ -146,8 +155,8 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 //
 //     Responses:
 //       200: settingsFlow
-//       400: genericError
-//       500: genericError
+//       400: jsonError
+//       500: jsonError
 func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -164,7 +173,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, f)
 }
 
-// swagger:route GET /self-service/settings/browser public initializeSelfServiceSettingsViaBrowserFlow
+// swagger:route GET /self-service/settings/browser public initializeSelfServiceSettingsForBrowsers
 //
 // Initialize Settings Flow for Browsers
 //
@@ -187,7 +196,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 //     Responses:
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -217,6 +226,15 @@ type getSelfServiceSettingsFlowParameters struct {
 	ID string `json:"id"`
 }
 
+// nolint:deadcode,unused
+// swagger:parameters getSelfServiceSettingsFlow
+type getSelfServiceSettingsFlow struct {
+	// The Session Token of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+}
+
 // swagger:route GET /self-service/settings/flows public admin getSelfServiceSettingsFlow
 //
 // Get Settings Flow
@@ -239,10 +257,10 @@ type getSelfServiceSettingsFlowParameters struct {
 //
 //     Responses:
 //       200: settingsFlow
-//       403: genericError
-//       404: genericError
-//       410: genericError
-//       500: genericError
+//       403: jsonError
+//       404: jsonError
+//       410: jsonError
+//       500: jsonError
 func (h *Handler) fetchPublicFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchFlow(w, r, true); err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -316,6 +334,11 @@ type submitSelfServiceSettingsFlow struct {
 
 	// in: body
 	Body submitSelfServiceSettingsFlowBody
+
+	// The Session Token of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
 }
 
 // swagger:model submitSelfServiceSettingsFlow
@@ -360,9 +383,9 @@ type submitSelfServiceSettingsFlowBody struct{}
 //       200: settingsViaApiResponse
 //       302: emptyResponse
 //       400: settingsFlow
-//       401: genericError
-//       403: genericError
-//       500: genericError
+//       401: jsonError
+//       403: jsonError
+//       500: jsonError
 func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := GetFlowID(r)
 	if err != nil {

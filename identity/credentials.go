@@ -47,10 +47,10 @@ type Credentials struct {
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt time.Time `json:"-" db:"created_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"-" db:"updated_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
@@ -62,9 +62,9 @@ type (
 		// IdentityCredentialsID is a helper struct field for gobuffalo.pop.
 		IdentityCredentialsID uuid.UUID `json:"-" db:"identity_credential_id"`
 		// CreatedAt is a helper struct field for gobuffalo.pop.
-		CreatedAt time.Time `json:"-" db:"created_at"`
+		CreatedAt time.Time `json:"created_at" db:"created_at"`
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
-		UpdatedAt time.Time `json:"-" db:"updated_at"`
+		UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 		NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 	}
 

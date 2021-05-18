@@ -23,6 +23,7 @@ const (
 	MessageTypeEmail MessageType = iota + 1
 )
 
+// swagger:ignore
 type Message struct {
 	ID           uuid.UUID     `json:"-" faker:"-" db:"id"`
 	NID          uuid.UUID     `json:"-"  faker:"-" db:"nid"`

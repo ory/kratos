@@ -4,5 +4,7 @@
   "schema_url": "https://www.ory.sh/schemas/default",
   "traits": {
     "email": "bazbar@ory.sh"
-  }
+  },
+  "created_at": "2013-10-07T08:23:19Z",
+  "updated_at": "2013-10-07T08:23:19Z"
 }
