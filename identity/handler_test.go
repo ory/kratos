@@ -3,6 +3,7 @@ package identity_test
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/bxcodec/faker/v3"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -151,19 +152,19 @@ func TestHandler(t *testing.T) {
 			ur := identity.UpdateIdentity{
 				Traits:   []byte(`{"bar":"baz","foo":"baz"}`),
 				SchemaID: i.SchemaID,
-				State:    identity.StateDisabled,
+				State:    identity.StateInactive,
 			}
 
 			res := send(t, "PUT", "/identities/"+i.ID.String(), http.StatusOK, &ur)
 			assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 			assert.EqualValues(t, "baz", res.Get("traits.foo").String(), "%s", res.Raw)
-			assert.EqualValues(t, identity.StateDisabled, res.Get("state").String(), "%s", res.Raw)
+			assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 			assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 
 			res = get(t, "/identities/"+i.ID.String(), http.StatusOK)
 			assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 			assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
-			assert.EqualValues(t, identity.StateDisabled, res.Get("state").String(), "%s", res.Raw)
+			assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 			assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 		})
 
@@ -238,9 +239,9 @@ func TestHandler(t *testing.T) {
 		id := res.Get("id").String()
 		res = send(t, "PUT", "/identities/"+id, http.StatusBadRequest, &identity.UpdateIdentity{
 			State:  "invalid-state",
-			Traits: []byte(`{"email":"` + x.NewUUID().String() + `", "department": "ory"}`),
+			Traits: []byte(`{"email":"` + faker.Email() + `", "department": "ory"}`),
 		})
-		assert.Contains(t, res.Get("error.reason").String(), `Identity state is not valid.`, "%s", res.Raw)
+		assert.Contains(t, res.Get("error.reason").String(), `identity state is not valid`, "%s", res.Raw)
 	})
 
 	t.Run("case=should update the schema id", func(t *testing.T) {

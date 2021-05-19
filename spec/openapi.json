@@ -1042,7 +1042,12 @@
             "type": "string"
           },
           "state": {
-            "$ref": "#/components/schemas/identityState"
+            "description": "State is the identity's state.",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "type": "string"
           },
           "state_changed_at": {
             "$ref": "#/components/schemas/NullTime"
@@ -1102,9 +1107,6 @@
           }
         },
         "type": "object"
-      },
-      "identityState": {
-        "type": "string"
       },
       "identityTraits": {
         "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`."
@@ -1868,7 +1870,12 @@
             "type": "string"
           },
           "state": {
-            "$ref": "#/components/schemas/identityState"
+            "description": "State is the identity's state.",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "type": "string"
           },
           "traits": {
             "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",

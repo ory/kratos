@@ -2487,7 +2487,7 @@ components:
         created_at: 2000-01-23T04:56:07.000+00:00
         schema_url: schema_url
         id: id
-        state: state
+        state: active
       properties:
         created_at:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
@@ -2514,6 +2514,10 @@ components:
             format: url
           type: string
         state:
+          description: State is the identity's state.
+          enum:
+          - active
+          - inactive
           type: string
         state_changed_at:
           format: date-time
@@ -2570,8 +2574,6 @@ components:
           format: date-time
           type: string
       type: object
-    identityState:
-      type: string
     identityTraits:
       description: |-
         Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -2752,7 +2754,7 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: state
+            state: active
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -3029,7 +3031,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: state
+          state: active
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
           identity:
@@ -3068,7 +3070,7 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: state
+            state: active
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -3174,7 +3176,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: state
+          state: active
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         id: id
@@ -3294,7 +3296,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: state
+          state: active
         active: active
         id: id
         state: state
@@ -3406,7 +3408,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: state
+          state: active
         flow:
           expires_at: 2000-01-23T04:56:07.000+00:00
           ui:
@@ -3492,7 +3494,7 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: state
+            state: active
           active: active
           id: id
           state: state
@@ -3910,6 +3912,10 @@ components:
             will update the Identity's SchemaID.
           type: string
         state:
+          description: State is the identity's state.
+          enum:
+          - active
+          - inactive
           type: string
         traits:
           description: |-

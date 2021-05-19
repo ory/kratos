@@ -20,21 +20,21 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:model identityState
+// swagger:enum State
 type State string
-
-func (lt State) IsValid() error {
-	switch lt {
-	case StateActive, StateDisabled:
-		return nil
-	}
-	return errors.New("Identity state is not valid.")
-}
 
 const (
 	StateActive   State = "active"
-	StateDisabled State = "disabled"
+	StateInactive State = "inactive"
 )
+
+func (lt State) IsValid() error {
+	switch lt {
+	case StateActive, StateInactive:
+		return nil
+	}
+	return errors.New("identity state is not valid")
+}
 
 // Identity represents an Ory Kratos identity
 //
@@ -69,6 +69,9 @@ type Identity struct {
 
 	// State is the identity's state.
 	//
+	// enum:
+	// - active
+	// - inactive
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
 
