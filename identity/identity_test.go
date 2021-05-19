@@ -1,7 +1,10 @@
 package identity
 
 import (
+	"bytes"
 	"encoding/json"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -23,37 +26,36 @@ func TestNewIdentity(t *testing.T) {
 
 func TestMarshalExcludesCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	credentials := map[CredentialsType]Credentials{
+	i.Credentials = map[CredentialsType]Credentials{
 		CredentialsTypePassword: Credentials{
 			ID: uuid.UUID{},
 		},
 	}
 
-	i.Credentials = credentials
-	jsonBytes, err := json.Marshal(i)
-	assert.Nil(t, err)
-	var jsonMap = map[string]json.RawMessage{}
-	err = json.Unmarshal(jsonBytes, &jsonMap)
-	assert.Nil(t, err)
-	assert.Nil(t, jsonMap["credentials"])
-	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
+	var b bytes.Buffer
+	require.Nil(t, json.NewEncoder(&b).Encode(i))
+
+	assert.False(t, gjson.Get(b.String(), "credentials").Exists(), "Credentials should not be rendered to json")
+
+	// To ensure the original identity is not changed / Unmarshal has no side effects:
+	require.NotEmpty(t, i.Credentials)
 }
 
 func TestMarshalExcludesCredentialsByReference(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
-	credentials := map[CredentialsType]Credentials{
+	i.Credentials = map[CredentialsType]Credentials{
 		CredentialsTypePassword: Credentials{
-			Type: CredentialsTypePassword,
+			ID: uuid.UUID{},
 		},
 	}
-	i.Credentials = credentials
-	jsonBytes, err := json.Marshal(&i)
-	assert.Nil(t, err)
-	var jsonMap = map[string]json.RawMessage{}
-	err = json.Unmarshal(jsonBytes, &jsonMap)
-	assert.Nil(t, err)
-	assert.Nil(t, jsonMap["credentials"])
-	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
+
+	var b bytes.Buffer
+	require.Nil(t, json.NewEncoder(&b).Encode(&i))
+
+	assert.False(t, gjson.Get(b.String(), "credentials").Exists(), "Credentials should not be rendered to json")
+
+	// To ensure the original identity is not changed / Unmarshal has no side effects:
+	require.NotEmpty(t, i.Credentials)
 }
 
 func TestUnMarshallIgnoresCredentials(t *testing.T) {
@@ -69,12 +71,11 @@ func TestUnMarshallIgnoresCredentials(t *testing.T) {
 func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = nil
-	jsonBytes, err := json.Marshal(IdentityWithCredentialsMetadataInJSON(*i))
-	assert.Nil(t, err)
-	var jsonMap = map[string]json.RawMessage{}
-	err = json.Unmarshal(jsonBytes, &jsonMap)
-	assert.Nil(t, err)
-	assert.Nil(t, jsonMap["credentials"])
+
+	var b bytes.Buffer
+	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
+
+	assert.False(t, gjson.Get(b.String(), "credentials").Exists())
 }
 
 func TestMarshalIdentityWithCredentials(t *testing.T) {
@@ -87,12 +88,13 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 	}
 	i.Credentials = credentials
 
-	jsonBytes, err := json.Marshal(IdentityWithCredentialsMetadataInJSON(*i))
-	assert.Nil(t, err)
-	var jsonMap = map[string]json.RawMessage{}
-	err = json.Unmarshal(jsonBytes, &jsonMap)
-	assert.Nil(t, err)
-	assert.NotNil(t, jsonMap["credentials"])
-	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\"}}", string(jsonMap["credentials"]))
+
+	var b bytes.Buffer
+	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
+
+	credentialsInJson := gjson.Get(b.String(), "credentials")
+	assert.True(t, credentialsInJson.Exists())
+
+	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\"}}", credentialsInJson.Raw)
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
 }
