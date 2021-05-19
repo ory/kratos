@@ -187,7 +187,7 @@ func TestRecovery(t *testing.T) {
       "value": ""
     },
     "group": "default",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -199,7 +199,7 @@ func TestRecovery(t *testing.T) {
       "type": "email"
     },
     "group": "link",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -211,7 +211,7 @@ func TestRecovery(t *testing.T) {
       "value": "link"
     },
     "group": "link",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070005,
