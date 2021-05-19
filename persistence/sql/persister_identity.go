@@ -392,7 +392,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 
 func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
 	var address identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), via, value).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND LOWER(value) = ?", corp.ContextualizeNID(ctx, p.nid), via, strings.ToLower(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
