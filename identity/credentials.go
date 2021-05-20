@@ -42,7 +42,7 @@ type Credentials struct {
 
 	// Config contains the concrete credential payload. This might contain the bcrypt-hashed password, or the email
 	// for passwordless authentication.
-	Config sqlxx.JSONRawMessage `json:"config" db:"config"`
+	Config sqlxx.JSONRawMessage `json:"config,omitempty" db:"config"`
 
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 
