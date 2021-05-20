@@ -8,6 +8,10 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/golang/gddo/httputil"
+
+	"github.com/ory/herodot"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/x/stringsx"
@@ -86,4 +90,27 @@ type TransportWithHost struct {
 func (ct *TransportWithHost) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Host = ct.host
 	return ct.RoundTripper.RoundTrip(req)
+}
+
+func AcceptToRedirectOrJson(
+	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string,
+) {
+	switch httputil.NegotiateContentType(r, []string{
+		"text/html",
+		"application/json",
+	}, "text/html") {
+	case "application/json":
+		writer.Write(w, r, out)
+	case "text/html":
+		fallthrough
+	default:
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+	}
+}
+
+func AcceptsJSON(r *http.Request) bool {
+	return httputil.NegotiateContentType(r, []string{
+		"text/html",
+		"application/json",
+	}, "text/html") == "application/json"
 }

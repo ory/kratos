@@ -12,8 +12,8 @@ Method | HTTP request | Description
 [**GetSelfServiceSettingsFlow**](PublicApi.md#GetSelfServiceSettingsFlow) | **Get** /self-service/settings/flows | Get Settings Flow
 [**GetSelfServiceVerificationFlow**](PublicApi.md#GetSelfServiceVerificationFlow) | **Get** /self-service/verification/flows | Get Verification Flow
 [**InitializeSelfServiceBrowserLogoutFlow**](PublicApi.md#InitializeSelfServiceBrowserLogoutFlow) | **Get** /self-service/browser/flows/logout | Initialize Browser-Based Logout User Flow
-[**InitializeSelfServiceLoginForBrowsers**](PublicApi.md#InitializeSelfServiceLoginForBrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for browsers
-[**InitializeSelfServiceLoginForNativeApps**](PublicApi.md#InitializeSelfServiceLoginForNativeApps) | **Get** /self-service/login/api | Initialize Login Flow for Native Apps and API clients
+[**InitializeSelfServiceLoginForBrowsers**](PublicApi.md#InitializeSelfServiceLoginForBrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
+[**InitializeSelfServiceLoginWithoutBrowser**](PublicApi.md#InitializeSelfServiceLoginWithoutBrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
 [**InitializeSelfServiceRecoveryForBrowsers**](PublicApi.md#InitializeSelfServiceRecoveryForBrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browser Clients
 [**InitializeSelfServiceRecoveryForNativeApps**](PublicApi.md#InitializeSelfServiceRecoveryForNativeApps) | **Get** /self-service/recovery/api | Initialize Recovery Flow for Native Apps and API clients
 [**InitializeSelfServiceRegistrationForBrowsers**](PublicApi.md#InitializeSelfServiceRegistrationForBrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for browsers
@@ -562,9 +562,9 @@ No authorization required
 
 ## InitializeSelfServiceLoginForBrowsers
 
-> InitializeSelfServiceLoginForBrowsers(ctx).Refresh(refresh).Execute()
+> LoginFlow InitializeSelfServiceLoginForBrowsers(ctx).Refresh(refresh).Execute()
 
-Initialize Login Flow for browsers
+Initialize Login Flow for Browsers
 
 
 
@@ -590,6 +590,8 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceLoginForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceLoginForBrowsers`: LoginFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceLoginForBrowsers`: %v\n", resp)
 }
 ```
 
@@ -608,7 +610,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
- (empty response body)
+[**LoginFlow**](LoginFlow.md)
 
 ### Authorization
 
@@ -624,11 +626,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## InitializeSelfServiceLoginForNativeApps
+## InitializeSelfServiceLoginWithoutBrowser
 
-> LoginFlow InitializeSelfServiceLoginForNativeApps(ctx).Refresh(refresh).Execute()
+> LoginFlow InitializeSelfServiceLoginWithoutBrowser(ctx).Refresh(refresh).Execute()
 
-Initialize Login Flow for Native Apps and API clients
+Initialize Login Flow for APIs, Services, Apps, ...
 
 
 
@@ -649,13 +651,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceLoginForNativeApps(context.Background()).Refresh(refresh).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceLoginWithoutBrowser(context.Background()).Refresh(refresh).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceLoginForNativeApps``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceLoginWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `InitializeSelfServiceLoginForNativeApps`: LoginFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceLoginForNativeApps`: %v\n", resp)
+    // response from `InitializeSelfServiceLoginWithoutBrowser`: LoginFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceLoginWithoutBrowser`: %v\n", resp)
 }
 ```
 
@@ -665,7 +667,7 @@ func main() {
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiInitializeSelfServiceLoginForNativeAppsRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiInitializeSelfServiceLoginWithoutBrowserRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
