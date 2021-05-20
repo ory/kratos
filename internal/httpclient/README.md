@@ -112,8 +112,8 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**InitializeSelfServiceLoginWithoutBrowser**](docs/PublicApi.md#initializeselfserviceloginwithoutbrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceRecoveryForBrowsers**](docs/PublicApi.md#initializeselfservicerecoveryforbrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browser Clients
 *PublicApi* | [**InitializeSelfServiceRecoveryForNativeApps**](docs/PublicApi.md#initializeselfservicerecoveryfornativeapps) | **Get** /self-service/recovery/api | Initialize Recovery Flow for Native Apps and API clients
-*PublicApi* | [**InitializeSelfServiceRegistrationForBrowsers**](docs/PublicApi.md#initializeselfserviceregistrationforbrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for browsers
-*PublicApi* | [**InitializeSelfServiceRegistrationForNativeApps**](docs/PublicApi.md#initializeselfserviceregistrationfornativeapps) | **Get** /self-service/registration/api | Initialize Registration Flow for Native Apps and API clients
+*PublicApi* | [**InitializeSelfServiceRegistrationForBrowsers**](docs/PublicApi.md#initializeselfserviceregistrationforbrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for Browsers
+*PublicApi* | [**InitializeSelfServiceRegistrationWithoutBrowser**](docs/PublicApi.md#initializeselfserviceregistrationwithoutbrowser) | **Get** /self-service/registration/api | Initialize Registration Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceSettingsForBrowsers**](docs/PublicApi.md#initializeselfservicesettingsforbrowsers) | **Get** /self-service/settings/browser | Initialize Settings Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceSettingsForNativeApps**](docs/PublicApi.md#initializeselfservicesettingsfornativeapps) | **Get** /self-service/settings/api | Initialize Settings Flow for Native Apps and API clients
 *PublicApi* | [**InitializeSelfServiceVerificationForBrowsers**](docs/PublicApi.md#initializeselfserviceverificationforbrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
@@ -124,7 +124,7 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**SubmitSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#submitselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 *PublicApi* | [**SubmitSelfServiceRegistrationFlow**](docs/PublicApi.md#submitselfserviceregistrationflow) | **Post** /self-service/registration | Submit a Registration Flow
 *PublicApi* | [**SubmitSelfServiceSettingsFlow**](docs/PublicApi.md#submitselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
-*PublicApi* | [**SubmitSelfServiceVerificationFlow**](docs/PublicApi.md#submitselfserviceverificationflow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
+*PublicApi* | [**SubmitSelfServiceVerificationFlow**](docs/PublicApi.md#submitselfserviceverificationflow) | **Post** /self-service/verification/flows | Complete Verification Flow
 *PublicApi* | [**ToSession**](docs/PublicApi.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
 

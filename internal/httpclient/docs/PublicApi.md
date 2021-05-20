@@ -16,8 +16,8 @@ Method | HTTP request | Description
 [**InitializeSelfServiceLoginWithoutBrowser**](PublicApi.md#InitializeSelfServiceLoginWithoutBrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
 [**InitializeSelfServiceRecoveryForBrowsers**](PublicApi.md#InitializeSelfServiceRecoveryForBrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browser Clients
 [**InitializeSelfServiceRecoveryForNativeApps**](PublicApi.md#InitializeSelfServiceRecoveryForNativeApps) | **Get** /self-service/recovery/api | Initialize Recovery Flow for Native Apps and API clients
-[**InitializeSelfServiceRegistrationForBrowsers**](PublicApi.md#InitializeSelfServiceRegistrationForBrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for browsers
-[**InitializeSelfServiceRegistrationForNativeApps**](PublicApi.md#InitializeSelfServiceRegistrationForNativeApps) | **Get** /self-service/registration/api | Initialize Registration Flow for Native Apps and API clients
+[**InitializeSelfServiceRegistrationForBrowsers**](PublicApi.md#InitializeSelfServiceRegistrationForBrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for Browsers
+[**InitializeSelfServiceRegistrationWithoutBrowser**](PublicApi.md#InitializeSelfServiceRegistrationWithoutBrowser) | **Get** /self-service/registration/api | Initialize Registration Flow for APIs, Services, Apps, ...
 [**InitializeSelfServiceSettingsForBrowsers**](PublicApi.md#InitializeSelfServiceSettingsForBrowsers) | **Get** /self-service/settings/browser | Initialize Settings Flow for Browsers
 [**InitializeSelfServiceSettingsForNativeApps**](PublicApi.md#InitializeSelfServiceSettingsForNativeApps) | **Get** /self-service/settings/api | Initialize Settings Flow for Native Apps and API clients
 [**InitializeSelfServiceVerificationForBrowsers**](PublicApi.md#InitializeSelfServiceVerificationForBrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
@@ -28,7 +28,7 @@ Method | HTTP request | Description
 [**SubmitSelfServiceRecoveryFlowWithLinkMethod**](PublicApi.md#SubmitSelfServiceRecoveryFlowWithLinkMethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 [**SubmitSelfServiceRegistrationFlow**](PublicApi.md#SubmitSelfServiceRegistrationFlow) | **Post** /self-service/registration | Submit a Registration Flow
 [**SubmitSelfServiceSettingsFlow**](PublicApi.md#SubmitSelfServiceSettingsFlow) | **Post** /self-service/settings | Complete Settings Flow
-[**SubmitSelfServiceVerificationFlow**](PublicApi.md#SubmitSelfServiceVerificationFlow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
+[**SubmitSelfServiceVerificationFlow**](PublicApi.md#SubmitSelfServiceVerificationFlow) | **Post** /self-service/verification/flows | Complete Verification Flow
 [**ToSession**](PublicApi.md#ToSession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
 
@@ -814,9 +814,9 @@ No authorization required
 
 ## InitializeSelfServiceRegistrationForBrowsers
 
-> InitializeSelfServiceRegistrationForBrowsers(ctx).Execute()
+> RegistrationFlow InitializeSelfServiceRegistrationForBrowsers(ctx).Execute()
 
-Initialize Registration Flow for browsers
+Initialize Registration Flow for Browsers
 
 
 
@@ -841,6 +841,8 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRegistrationForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceRegistrationForBrowsers`: RegistrationFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRegistrationForBrowsers`: %v\n", resp)
 }
 ```
 
@@ -855,7 +857,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceRegis
 
 ### Return type
 
- (empty response body)
+[**RegistrationFlow**](RegistrationFlow.md)
 
 ### Authorization
 
@@ -871,11 +873,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## InitializeSelfServiceRegistrationForNativeApps
+## InitializeSelfServiceRegistrationWithoutBrowser
 
-> RegistrationFlow InitializeSelfServiceRegistrationForNativeApps(ctx).Execute()
+> RegistrationFlow InitializeSelfServiceRegistrationWithoutBrowser(ctx).Execute()
 
-Initialize Registration Flow for Native Apps and API clients
+Initialize Registration Flow for APIs, Services, Apps, ...
 
 
 
@@ -895,13 +897,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceRegistrationForNativeApps(context.Background()).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceRegistrationWithoutBrowser(context.Background()).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRegistrationForNativeApps``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRegistrationWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `InitializeSelfServiceRegistrationForNativeApps`: RegistrationFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRegistrationForNativeApps`: %v\n", resp)
+    // response from `InitializeSelfServiceRegistrationWithoutBrowser`: RegistrationFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRegistrationWithoutBrowser`: %v\n", resp)
 }
 ```
 
@@ -911,7 +913,7 @@ This endpoint does not need any parameter.
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiInitializeSelfServiceRegistrationForNativeAppsRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiInitializeSelfServiceRegistrationWithoutBrowserRequest struct via the builder pattern
 
 
 ### Return type

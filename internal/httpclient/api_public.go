@@ -617,6 +617,12 @@ func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*Registrat
  * GetSelfServiceRegistrationFlow Get Registration Flow
  * This endpoint returns a registration flow's context with, for example, error details and other information.
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiGetSelfServiceRegistrationFlowRequest
@@ -1698,22 +1704,28 @@ type PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest struct {
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest) Execute() (*RegistrationFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceRegistrationForBrowsersExecute(r)
 }
 
 /*
- * InitializeSelfServiceRegistrationForBrowsers Initialize Registration Flow for browsers
- * This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
-`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
-exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
-`?refresh=true` was set.
+ * InitializeSelfServiceRegistrationForBrowsers Initialize Registration Flow for Browsers
+ * This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
+cookies and anti-CSRF measures required for browser-based flows.
 
-:::note
+:::info
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
 :::
+
+If this endpoint is opened as a link in the browser, it will be redirected to
+`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+exists already, the browser will be redirected to `urls.default_redirect_url`.
+
+If this endpoint is called via an AJAX request, the response contains the registration flow without a redirect.
+
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1728,19 +1740,21 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsers(ctx cont
 
 /*
  * Execute executes the request
+ * @return RegistrationFlow
  */
-func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsersExecute(r PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsersExecute(r PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest) (*RegistrationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *RegistrationFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRegistrationForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/registration/browser"
@@ -1768,19 +1782,19 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsersExecute(r
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1793,28 +1807,43 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsersExecute(r
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest struct {
+type PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest) Execute() (*RegistrationFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceRegistrationForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest) Execute() (*RegistrationFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceRegistrationWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceRegistrationForNativeApps Initialize Registration Flow for Native Apps and API clients
+ * InitializeSelfServiceRegistrationWithoutBrowser Initialize Registration Flow for APIs, Services, Apps, ...
  * This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
 
 If a valid provided session cookie or session token is provided, a 400 Bad Request error
 will be returned unless the URL query parameter `?refresh=true` is set.
@@ -1833,10 +1862,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceRegistrationForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceRegistrationWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -1846,7 +1875,7 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForNativeApps(ctx co
  * Execute executes the request
  * @return RegistrationFlow
  */
-func (a *PublicApiService) InitializeSelfServiceRegistrationForNativeAppsExecute(r PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest) (*RegistrationFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceRegistrationWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest) (*RegistrationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -1856,7 +1885,7 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForNativeAppsExecute
 		localVarReturnValue  *RegistrationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRegistrationForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRegistrationWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -3025,7 +3054,13 @@ func (r PublicApiApiSubmitSelfServiceRegistrationFlowRequest) Execute() (*Regist
 
 /*
  * SubmitSelfServiceRegistrationFlow Submit a Registration Flow
- * Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
 behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and respond with
@@ -3034,9 +3069,14 @@ HTTP 200 and a application/json body with the created identity success - if the 
 HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
 a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
 a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+
+Browser flows with an accept header of `application/json` will not redirect but instead respond with
+HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -3399,7 +3439,7 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/self-service/verification/methods/link"
+	localVarPath := localBasePath + "/self-service/verification/flows"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
