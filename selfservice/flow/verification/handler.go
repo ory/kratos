@@ -235,7 +235,7 @@ type submitSelfServiceVerificationFlow struct {
 // nolint:deadcode,unused
 type submitSelfServiceRecoveryFlowBody struct{}
 
-// swagger:route POST /self-service/verification/methods/link public submitSelfServiceVerificationFlow
+// swagger:route POST /self-service/verification/flows public submitSelfServiceVerificationFlow
 //
 // Complete Verification Flow
 //

@@ -72,12 +72,15 @@ func TestInitFlow(t *testing.T) {
 		}
 	}
 
-	initAuthenticatedFlow := func(t *testing.T, isAPI bool) (*http.Response, []byte) {
+	initAuthenticatedFlow := func(t *testing.T, isAPI bool, isSPA bool) (*http.Response, []byte) {
 		route := registration.RouteInitBrowserFlow
 		if isAPI {
 			route = registration.RouteInitAPIFlow
 		}
 		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
+		if isSPA {
+			req.Header.Set("Accept", "application/json")
+		}
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
@@ -85,21 +88,32 @@ func TestInitFlow(t *testing.T) {
 		return res, body
 	}
 
-	initFlow := func(t *testing.T, isAPI bool) (*http.Response, []byte) {
+	initFlowWithAccept := func(t *testing.T, isAPI bool, accept string) (*http.Response, []byte) {
 		route := registration.RouteInitBrowserFlow
 		if isAPI {
 			route = registration.RouteInitAPIFlow
 		}
 		c := publicTS.Client()
-		res, err := c.Get(publicTS.URL + route)
+		req, err := http.NewRequest("GET", publicTS.URL+route, nil)
 		require.NoError(t, err)
-		if isAPI {
-			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
+		if accept != "" {
+			req.Header.Set("Accept", accept)
 		}
+
+		res, err := c.Do(req)
+		require.NoError(t, err)
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
+	}
+
+	initFlow := func(t *testing.T, isAPI bool) (*http.Response, []byte) {
+		return initFlowWithAccept(t, isAPI, "")
+	}
+
+	initSPAFlow := func(t *testing.T) (*http.Response, []byte) {
+		return initFlowWithAccept(t, false, "application/json")
 	}
 
 	t.Run("flow=api", func(t *testing.T) {
@@ -110,7 +124,7 @@ func TestInitFlow(t *testing.T) {
 		})
 
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
-			res, body := initAuthenticatedFlow(t, true)
+			res, body := initAuthenticatedFlow(t, true, false)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
@@ -122,9 +136,23 @@ func TestInitFlow(t *testing.T) {
 			assertion(body, false, false)
 			assert.Contains(t, res.Request.URL.String(), registrationTS.URL)
 		})
-		t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
-			res, _ := initAuthenticatedFlow(t, false)
+
+		t.Run("case=makes request with JSON", func(t *testing.T) {
+			res, body := initSPAFlow(t)
+			assertion(body, false, true)
+			assert.NotContains(t, res.Request.URL.String(), registrationTS.URL)
+		})
+
+		t.Run("case=redirects when already authenticated", func(t *testing.T) {
+			res, _ := initAuthenticatedFlow(t, false, false)
 			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
+		})
+
+		t.Run("case=responds with error if already authenticated and SPA", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, false, true)
+			assert.NotContains(t, res.Request.URL.String(), "https://www.ory.sh")
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 	})
 }
