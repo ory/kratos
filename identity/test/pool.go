@@ -568,6 +568,48 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
+
+			t.Run("case=create and update and find case insensitive", func(t *testing.T) {
+				var i identity.Identity
+				require.NoError(t, faker.FakeData(&i))
+
+				address := identity.NewVerifiableEmailAddress("verification.TestPersister.Update-Identity-case-insensitive@ory.sh", i.ID)
+				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
+				require.NoError(t, p.CreateIdentity(ctx, &i))
+
+				_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
+				require.NoError(t, err)
+
+				t.Run("can not find if on another network", func(t *testing.T) {
+					_, p := testhelpers.NewNetwork(t, ctx, p)
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
+					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				})
+
+				address = identity.NewVerifiableEmailAddress("verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh", i.ID)
+				i.VerifiableAddresses = []identity.VerifiableAddress{*address}
+				require.NoError(t, p.UpdateIdentity(ctx, &i))
+
+				_, err = p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
+				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
+
+				t.Run("can not find if on another network", func(t *testing.T) {
+					_, p := testhelpers.NewNetwork(t, ctx, p)
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
+					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				})
+
+				actual, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh"))
+				require.NoError(t, err)
+				assert.Equal(t, identity.VerifiableAddressTypeEmail, actual.Via)
+				assert.Equal(t, "verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh", actual.Value)
+
+				t.Run("can not find if on another network", func(t *testing.T) {
+					_, p := testhelpers.NewNetwork(t, ctx, p)
+					_, err := p.FindVerifiableAddressByValue(ctx, identity.VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh")
+					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				})
+			})
 		})
 
 		t.Run("suite=recovery-address", func(t *testing.T) {
@@ -626,7 +668,7 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "Recovery.TestPersister.Update@ory.sh")
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 
@@ -650,6 +692,42 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
+					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				})
+			})
+
+			t.Run("case=create and update and find case insensitive", func(t *testing.T) {
+				id := createIdentityWithAddresses(t, "recovery.TestPersister.Update-case-insensitive@ory.sh")
+
+				_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
+				require.NoError(t, err)
+
+				t.Run("can not find if on another network", func(t *testing.T) {
+					_, p := testhelpers.NewNetwork(t, ctx, p)
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("Recovery.TestPersister.Update-case-insensitive@ory.sh"))
+					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				})
+
+				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.RecoveryAddressTypeEmail, Value: "recovery.TestPersister.Update-case-insensitive-next@ory.sh"}}
+				require.NoError(t, p.UpdateIdentity(ctx, id))
+
+				_, err = p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
+				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
+
+				t.Run("can not find if on another network", func(t *testing.T) {
+					_, p := testhelpers.NewNetwork(t, ctx, p)
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
+					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				})
+
+				actual, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
+				require.NoError(t, err)
+				assert.Equal(t, identity.RecoveryAddressTypeEmail, actual.Via)
+				assert.Equal(t, "recovery.TestPersister.Update-case-insensitive-next@ory.sh", actual.Value)
+
+				t.Run("can not find if on another network", func(t *testing.T) {
+					_, p := testhelpers.NewNetwork(t, ctx, p)
+					_, err := p.FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})

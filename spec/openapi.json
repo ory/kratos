@@ -1022,6 +1022,13 @@
             "format": "date-time",
             "type": "string"
           },
+          "credentials": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/identityCredentials"
+            },
+            "description": "Credentials represents all credentials that can be used for authenticating this identity.",
+            "type": "object"
+          },
           "id": {
             "$ref": "#/components/schemas/UUID"
           },

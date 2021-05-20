@@ -2465,6 +2465,15 @@ components:
           via: via
         traits: ""
         updated_at: 2000-01-23T04:56:07.000+00:00
+        credentials:
+          key:
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            identifiers:
+            - identifiers
+            - identifiers
+            created_at: 2000-01-23T04:56:07.000+00:00
+            type: type
+            config: '{}'
         verifiable_addresses:
         - updated_at: 2014-01-01T23:28:56.782Z
           verified_at: 2000-01-23T04:56:07.000+00:00
@@ -2491,6 +2500,12 @@ components:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
           format: date-time
           type: string
+        credentials:
+          additionalProperties:
+            $ref: '#/components/schemas/identityCredentials'
+          description: Credentials represents all credentials that can be used for
+            authenticating this identity.
+          type: object
         id:
           format: uuid4
           type: string
@@ -2536,6 +2551,14 @@ components:
       type: object
     identityCredentials:
       description: Credentials represents a specific credential type
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        identifiers:
+        - identifiers
+        - identifiers
+        created_at: 2000-01-23T04:56:07.000+00:00
+        type: type
+        config: '{}'
       properties:
         config:
           title: JSONRawMessage represents a json.RawMessage that works well with
@@ -2719,6 +2742,15 @@ components:
               via: via
             traits: ""
             updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -2994,6 +3026,15 @@ components:
             via: via
           traits: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3031,6 +3072,15 @@ components:
               via: via
             traits: ""
             updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3135,6 +3185,15 @@ components:
             via: via
           traits: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3253,6 +3312,15 @@ components:
             via: via
           traits: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3363,6 +3431,15 @@ components:
             via: via
           traits: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3447,6 +3524,15 @@ components:
               via: via
             traits: ""
             updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
