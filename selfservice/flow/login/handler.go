@@ -115,6 +115,12 @@ type initializeSelfServiceBrowserLoginFlow struct {
 //
 // This endpoint initiates a login flow for API clients that do not use a browser, such as mobile devices, smart TVs, and so on.
 //
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
+//
 // If a valid provided session cookie or session token is provided, a 400 Bad Request error
 // will be returned unless the URL query parameter `?refresh=true` is set.
 //
@@ -172,6 +178,12 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 // This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate
 // cookies and anti-CSRF measures required for browser-based flows.
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // If this endpoint is opened as a link in the browser, it will be redirected to
 // `selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -251,6 +263,12 @@ type getSelfServiceLoginFlow struct {
 //
 // This endpoint returns a login flow's context with, for example, error details and other information.
 //
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
+//
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Produces:
@@ -310,6 +328,12 @@ type submitSelfServiceLoginFlowBody struct{}
 // swagger:route POST /self-service/login public submitSelfServiceLoginFlow
 //
 // Submit a Login Flow
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // Use this endpoint to complete a login flow. This endpoint
 // behaves differently for API and browser flows.
