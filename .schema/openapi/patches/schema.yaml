@@ -15,8 +15,6 @@
 - op: add
   path: /components/schemas/uiNodeInputAttributes/properties/value/nullable
   value: true
-- op: remove
-  path: /components/schemas/uiNodeInputAttributes/properties/value
 
 - op: replace
   path: /components/schemas/selfServiceErrorContainer/properties/errors/type

@@ -108,8 +108,8 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**GetSelfServiceSettingsFlow**](docs/PublicApi.md#getselfservicesettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
 *PublicApi* | [**GetSelfServiceVerificationFlow**](docs/PublicApi.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
 *PublicApi* | [**InitializeSelfServiceBrowserLogoutFlow**](docs/PublicApi.md#initializeselfservicebrowserlogoutflow) | **Get** /self-service/browser/flows/logout | Initialize Browser-Based Logout User Flow
-*PublicApi* | [**InitializeSelfServiceLoginForBrowsers**](docs/PublicApi.md#initializeselfserviceloginforbrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for browsers
-*PublicApi* | [**InitializeSelfServiceLoginForNativeApps**](docs/PublicApi.md#initializeselfserviceloginfornativeapps) | **Get** /self-service/login/api | Initialize Login Flow for Native Apps and API clients
+*PublicApi* | [**InitializeSelfServiceLoginForBrowsers**](docs/PublicApi.md#initializeselfserviceloginforbrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
+*PublicApi* | [**InitializeSelfServiceLoginWithoutBrowser**](docs/PublicApi.md#initializeselfserviceloginwithoutbrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceRecoveryForBrowsers**](docs/PublicApi.md#initializeselfservicerecoveryforbrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browser Clients
 *PublicApi* | [**InitializeSelfServiceRecoveryForNativeApps**](docs/PublicApi.md#initializeselfservicerecoveryfornativeapps) | **Get** /self-service/recovery/api | Initialize Recovery Flow for Native Apps and API clients
 *PublicApi* | [**InitializeSelfServiceRegistrationForBrowsers**](docs/PublicApi.md#initializeselfserviceregistrationforbrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for browsers
@@ -198,7 +198,6 @@ Class | Method | HTTP request | Description
  - [UiNodeAttributes](docs/UiNodeAttributes.md)
  - [UiNodeImageAttributes](docs/UiNodeImageAttributes.md)
  - [UiNodeInputAttributes](docs/UiNodeInputAttributes.md)
- - [UiNodeInputAttributesValue](docs/UiNodeInputAttributesValue.md)
  - [UiNodeTextAttributes](docs/UiNodeTextAttributes.md)
  - [UiText](docs/UiText.md)
  - [UpdateIdentity](docs/UpdateIdentity.md)
