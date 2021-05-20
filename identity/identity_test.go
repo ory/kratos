@@ -3,9 +3,10 @@ package identity
 import (
 	"bytes"
 	"encoding/json"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-	"testing"
 
 	"github.com/gofrs/uuid"
 
@@ -87,7 +88,6 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 		},
 	}
 	i.Credentials = credentials
-
 
 	var b bytes.Buffer
 	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
