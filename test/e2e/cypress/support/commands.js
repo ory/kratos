@@ -126,6 +126,15 @@ Cypress.Commands.add(
     cy.visit(APP_URL)
     cy.clearCookies()
 
+    //
+    // cy.request({
+    //   url: APP_URL + '/self-service/registration/browser',
+    //   followRedirect: false,
+    //   headers: {
+    //     'Accept': 'application/json'
+    //   },
+    //   qs: query
+    // })
     cy.request({
       url: APP_URL + '/self-service/registration/browser',
       followRedirect: false,
@@ -269,13 +278,12 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
   cy.longPrivilegedSessionTime()
   cy.request({
     url: APP_URL + '/self-service/login/browser',
-    followRedirect: false
+    followRedirect: false,
+    failOnStatusCode: false,
+    headers: {
+      'Accept': 'application/json'
+    },
   })
-    .then(({ redirectedToUrl }) => {
-      expect(redirectedToUrl).to.contain(APP_URL + '/auth/login?flow=')
-      const flow = redirectedToUrl.replace(APP_URL + '/auth/login?flow=', '')
-      return cy.request(APP_URL + '/self-service/login/flows?id=' + flow)
-    })
     .then(({ body, status }) => {
       expect(status).to.eq(200)
       const form = body.ui
@@ -286,19 +294,21 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
           password,
           method: 'password'
         }),
+        headers: {
+          'Accept': 'application/json',
+        },
         url: form.action,
-        followRedirect: false
+        followRedirect: false,
+        failOnStatusCode: false
       })
     })
-    .then((res) => {
+    .then(({status}) => {
       console.log('Login sequence completed: ', { email, password })
       if (expectSession) {
-        expect(res.redirectedToUrl).to.not.contain(
-          APP_URL + '/auth/login?flow='
-        )
+        expect(status).to.eq(200)
         return cy.session()
       } else {
-        expect(res.redirectedToUrl).to.contain(APP_URL + '/auth/login?flow=')
+        expect(status).to.not.eq(200)
         return cy.noSession()
       }
     })

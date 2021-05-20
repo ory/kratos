@@ -5,13 +5,13 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Session** | [**Session**](Session.md) |  | 
-**SessionToken** | **string** | The Session Token  A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header:  Authorization: bearer ${session-token}  The session token is only issued for API flows, not for Browser flows! | 
+**SessionToken** | Pointer to **string** | The Session Token  A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header:  Authorization: bearer ${session-token}  The session token is only issued for API flows, not for Browser flows! | [optional] 
 
 ## Methods
 
 ### NewLoginViaApiResponse
 
-`func NewLoginViaApiResponse(session Session, sessionToken string, ) *LoginViaApiResponse`
+`func NewLoginViaApiResponse(session Session, ) *LoginViaApiResponse`
 
 NewLoginViaApiResponse instantiates a new LoginViaApiResponse object
 This constructor will assign default values to properties that have it defined,
@@ -65,6 +65,11 @@ and a boolean to check if the value has been set.
 
 SetSessionToken sets SessionToken field to given value.
 
+### HasSessionToken
+
+`func (o *LoginViaApiResponse) HasSessionToken() bool`
+
+HasSessionToken returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
