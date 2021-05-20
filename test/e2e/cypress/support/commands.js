@@ -138,18 +138,11 @@ Cypress.Commands.add(
     cy.request({
       url: APP_URL + '/self-service/registration/browser',
       followRedirect: false,
+      headers: {
+        Accept: 'application/json'
+      },
       qs: query
     })
-      .then(({ redirectedToUrl }) => {
-        expect(redirectedToUrl).to.contain(APP_URL + '/auth/registration?flow=')
-        const flow = redirectedToUrl.replace(
-          APP_URL + '/auth/registration?flow=',
-          ''
-        )
-        return cy.request(
-          APP_URL + '/self-service/registration/flows?id=' + flow
-        )
-      })
       .then(({ body, status }) => {
         expect(status).to.eq(200)
         const form = body.ui
@@ -165,11 +158,9 @@ Cypress.Commands.add(
           followRedirect: false
         })
       })
-      .then((res) => {
+      .then(({ body }) => {
         console.log('Registration sequence completed: ', { email, password })
-        expect(res.redirectedToUrl).to.not.contain(
-          APP_URL + '/auth/registration?flow='
-        )
+        expect(body.identity.traits.email).to.contain(email)
       })
   }
 )

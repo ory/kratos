@@ -158,7 +158,7 @@ func TestRegistrationExecutor(t *testing.T) {
 
 					res, body := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), true, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
-					assert.NotEmpty(t, gjson.Get(body, "session.identity.id"))
+					assert.NotEmpty(t, gjson.Get(body, "identity.id"))
 					assert.Empty(t, gjson.Get(body, "session.token"))
 					assert.Empty(t, gjson.Get(body, "session_token"))
 				})

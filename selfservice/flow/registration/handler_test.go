@@ -139,7 +139,7 @@ func TestInitFlow(t *testing.T) {
 
 		t.Run("case=makes request with JSON", func(t *testing.T) {
 			res, body := initSPAFlow(t)
-			assertion(body, false, true)
+			assertion(body, false, false)
 			assert.NotContains(t, res.Request.URL.String(), registrationTS.URL)
 		})
 
