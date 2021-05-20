@@ -838,6 +838,12 @@ func (r AdminApiApiGetSelfServiceLoginFlowRequest) Execute() (*LoginFlow, *http.
  * GetSelfServiceLoginFlow Get Login Flow
  * This endpoint returns a login flow's context with, for example, error details and other information.
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiGetSelfServiceLoginFlowRequest
