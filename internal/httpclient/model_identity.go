@@ -20,7 +20,9 @@ import (
 type Identity struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
-	Id        string     `json:"id"`
+	// Credentials represents all credentials that can be used for authenticating this identity.
+	Credentials *map[string]IdentityCredentials `json:"credentials,omitempty"`
+	Id          string                          `json:"id"`
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
@@ -86,6 +88,38 @@ func (o *Identity) HasCreatedAt() bool {
 // SetCreatedAt gets a reference to the given time.Time and assigns it to the CreatedAt field.
 func (o *Identity) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
+}
+
+// GetCredentials returns the Credentials field value if set, zero value otherwise.
+func (o *Identity) GetCredentials() map[string]IdentityCredentials {
+	if o == nil || o.Credentials == nil {
+		var ret map[string]IdentityCredentials
+		return ret
+	}
+	return *o.Credentials
+}
+
+// GetCredentialsOk returns a tuple with the Credentials field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Identity) GetCredentialsOk() (*map[string]IdentityCredentials, bool) {
+	if o == nil || o.Credentials == nil {
+		return nil, false
+	}
+	return o.Credentials, true
+}
+
+// HasCredentials returns a boolean if a field has been set.
+func (o *Identity) HasCredentials() bool {
+	if o != nil && o.Credentials != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCredentials gets a reference to the given map[string]IdentityCredentials and assigns it to the Credentials field.
+func (o *Identity) SetCredentials(v map[string]IdentityCredentials) {
+	o.Credentials = &v
 }
 
 // GetId returns the Id field value
@@ -286,6 +320,9 @@ func (o Identity) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
+	}
+	if o.Credentials != nil {
+		toSerialize["credentials"] = o.Credentials
 	}
 	if true {
 		toSerialize["id"] = o.Id
