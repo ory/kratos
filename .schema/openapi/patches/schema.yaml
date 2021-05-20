@@ -15,16 +15,8 @@
 - op: add
   path: /components/schemas/uiNodeInputAttributes/properties/value/nullable
   value: true
-- op: replace
-  path: /components/schemas/uiNodeInputAttributesValue
-  value:
-    oneOf:
-      - type: string
-      - type: number
-      - type: boolean
-- op: add
-  path: /components/schemas/uiNodeInputAttributes/properties/value/$ref
-  value: "#/components/schemas/uiNodeInputAttributesValue"
+- op: remove
+  path: /components/schemas/uiNodeInputAttributes/properties/value
 
 - op: replace
   path: /components/schemas/selfServiceErrorContainer/properties/errors/type
