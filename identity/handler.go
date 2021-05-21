@@ -152,13 +152,13 @@ type getIdentityParameters struct {
 //       404: jsonError
 //       500: jsonError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	i, err := h.r.IdentityPool().GetIdentity(r.Context(), x.ParseUUID(ps.ByName("id")))
+	i, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, i)
+	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
 }
 
 // swagger:parameters createIdentity
