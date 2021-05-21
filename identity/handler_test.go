@@ -179,7 +179,7 @@ func TestHandler(t *testing.T) {
 		res := get(t, "/identities/"+i.ID.String(), http.StatusOK)
 		assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 		assert.True(t, res.Get("credentials").Exists())
-		// Should not contain changed date
+		// Should contain changed date
 		assert.True(t, res.Get("credentials.password.updated_at").Exists())
 		// Should not contain secrets
 		assert.False(t, res.Get("credentials.password.config").Exists())
