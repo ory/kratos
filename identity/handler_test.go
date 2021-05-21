@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ory/x/sqlxx"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/x/urlx"
 
@@ -147,8 +148,6 @@ func TestHandler(t *testing.T) {
 			assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 		})
 
-
-
 		t.Run("case=should update an identity and persist the changes", func(t *testing.T) {
 			ur := identity.UpdateIdentity{Traits: []byte(`{"bar":"baz","foo":"baz"}`), SchemaID: i.SchemaID}
 			res := send(t, "PUT", "/identities/"+i.ID.String(), http.StatusOK, &ur)
@@ -166,12 +165,12 @@ func TestHandler(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should return entity with credentials metadata", func(t*testing.T) {
+	t.Run("case=should return entity with credentials metadata", func(t *testing.T) {
 		// create identity with credentials
 		i := identity.NewIdentity("")
 		i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
-			Type:        identity.CredentialsTypePassword,
-			Config:      sqlxx.JSONRawMessage(`{"secret":"pst"}`),
+			Type:   identity.CredentialsTypePassword,
+			Config: sqlxx.JSONRawMessage(`{"secret":"pst"}`),
 		})
 		i.Traits = identity.Traits("{}")
 
