@@ -15,7 +15,7 @@ import (
 
 	"github.com/ory/x/jsonx"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/corpx"
 
@@ -198,7 +198,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "a3F2b3l2bzUzeDd2cHR2aTI0aXAxNmRqcm5rN3poM20="
       },
       "group": "default",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -210,7 +210,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "john-api@doe.com"
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -222,7 +222,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "foobar"
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -234,7 +234,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": 2.5
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -246,7 +246,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": false
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -258,7 +258,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": 2048
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -270,7 +270,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "asdfasdfasdfasdfasfdasdfasdfasdf"
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -282,7 +282,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "profile"
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1070003,
@@ -300,7 +300,7 @@ func TestStrategyTraits(t *testing.T) {
         "type": "password"
       },
       "group": "password",
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1070001,
@@ -318,7 +318,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "password"
       },
       "group": "password",
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1070003,

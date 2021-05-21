@@ -38,7 +38,7 @@ type Identity struct {
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
 	// Credentials represents all credentials that can be used for authenticating this identity.
-	Credentials map[CredentialsType]Credentials `json:"-" faker:"-" db:"-"`
+	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
@@ -192,4 +192,37 @@ func (i Identity) GetID() uuid.UUID {
 
 func (i Identity) GetNID() uuid.UUID {
 	return i.NID
+}
+
+func (i Identity) MarshalJSON() ([]byte, error) {
+	type localIdentity Identity
+	i.Credentials = nil
+	result, err := json.Marshal(localIdentity(i))
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (i *Identity) UnmarshalJSON(b []byte) error {
+	type localIdentity Identity
+	err := json.Unmarshal(b, (*localIdentity)(i))
+	i.Credentials = nil
+	return err
+}
+
+type IdentityWithCredentialsMetadataInJSON Identity
+
+func (i IdentityWithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
+	type localIdentity Identity
+	for k, v := range i.Credentials {
+		v.Config = nil
+		i.Credentials[k] = v
+	}
+
+	result, err := json.Marshal(localIdentity(i))
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

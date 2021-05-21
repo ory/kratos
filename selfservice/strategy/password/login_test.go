@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/x/ioutilx"
 

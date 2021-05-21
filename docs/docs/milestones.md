@@ -82,8 +82,6 @@ New feature or request.
       ([kratos#765](https://github.com/ory/kratos/issues/765))
 - [ ] Add TLS configuration
       ([kratos#791](https://github.com/ory/kratos/issues/791))
-- [ ] More meta information about the managed identity
-      ([kratos#820](https://github.com/ory/kratos/issues/820))
 - [ ] Add i18n support to mail templates
       ([kratos#834](https://github.com/ory/kratos/issues/834))
 - [ ] Add option for disabling registration
@@ -95,6 +93,8 @@ New feature or request.
       mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
 - [ ] login ui returned without flowid
       ([kratos#1055](https://github.com/ory/kratos/issues/1055))
+- [x] More meta information about the managed identity
+      ([kratos#820](https://github.com/ory/kratos/issues/820))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -146,6 +146,10 @@ Something is not working.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Reloading config values does not work
       ([kratos#804](https://github.com/ory/kratos/issues/804)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Verification submission endpoint (submitSelfServiceVerificationFlow) still
+      requires CSRF cookie for API flows
+      ([kratos#1368](https://github.com/ory/kratos/issues/1368)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))

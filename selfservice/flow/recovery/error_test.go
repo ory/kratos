@@ -11,7 +11,7 @@ import (
 
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"

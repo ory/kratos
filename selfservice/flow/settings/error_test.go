@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gobuffalo/httptest"
