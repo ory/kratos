@@ -8,10 +8,12 @@ import ApiWarning from '@theme/ApiWarning'
 import CodeFromRemote from '@theme/CodeFromRemote'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
+import SelfServiceSpaFlow from '@theme/SelfServiceSpaFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
   initBrowserFlow,
+  initSpaFlow,
   initApiFlow,
   getFlow,
   getFlowMethodPasswordWithErrors,
@@ -84,7 +86,7 @@ selfservice:
 The first step is to initialize the Registration Flow. This allows
 pre-registration hooks to run, set up Anti-CSRF tokens, and more.
 
-### Registration for Browser Clients
+### Registration for Server-Side Browser Clients
 
 The Registration Flow for browser clients relies on HTTP redirects between Ory
 Kratos, your Registration UI, and the end-user's browser:
@@ -112,7 +114,30 @@ selfservice:
       ui_url: http://127.0.0.1:4455/auth/registration
 ```
 
-### Registration for API Clients
+### Registration for Client-Side (AJAX) Browser Clients
+
+The Registration Flow for client-side browser clients relies on AJAX requests.
+
+:::note
+
+This flow requires AJAX and has all the potential problems with CORS. To make it
+work, you need to ensure that cookies work by setting the correct configuration
+options in your JavaScript code and the CORS headers of the server.
+
+:::
+
+<SelfServiceSpaFlow
+  flows={['registration']}
+  success="Set session cookie"
+  interactions={['"Log in"']}
+/>
+
+To initialize the Registration Flow, point the Browser to the initialization
+endpoint:
+
+<CodeTabs items={initSpaFlow} />
+
+### Registration for API Clients and Clients without Browsers
 
 <ApiWarning />
 
@@ -567,7 +592,7 @@ typically not an issue if you follow the guidelines in the
 
 :::
 
-### Browser Clients
+### Server-Side Browser Clients
 
 When the registration is completed successfully, Ory Kratos responds with a HTTP
 302 Redirect to the
@@ -628,6 +653,120 @@ curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQ
       {
         "id": "596c1db4-ccaa-4f4e-9623-cb7e768026ad",
         "value": "foouser@ory.sh",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+### Client-Side Browser Clients
+
+When the registration is completed successfully, Ory Kratos responds with a HTTP
+200 OK message which contains the identity:
+
+```
+{
+  "identity": {
+    "id": "d8baf63b-7ce6-4275-82b9-9ac6d97e5037",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "registration-api@user.org"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "87defb49-ad69-461c-b5f6-56c1ec39dd39",
+        "value": "registration-api@user.org",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "232793b8-8d60-427d-89e6-d0a97a7a172c",
+        "value": "registration-api@user.org",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+#### With Auto-Login on Registration
+
+If the `session` after hook is enabled, a `Set-Cookie` HTTP Header is set
+alongside the HTTP 302 redirect which contains the Ory Kratos Login Session
+Cookie:
+
+```
+HTTP/1.1 302 Found
+Cache-Control: 0
+Location: http://127.0.0.1:4455/
+Set-Cookie: csrf_token=b8OebRPTPr5ow23mA5gIZmFNLeuMbv8pZz1jT1Ex7ys=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly
+Set-Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==; Path=/; Expires=Fri, 04 Sep 2020 21:32:47 GMT; Max-Age=86400; HttpOnly; SameSite=Lax
+Vary: Cookie
+```
+
+As well as information about the session:
+
+```shell script
+{
+  "session": {
+    "id": "6d5ef6f4-ea54-4310-a762-473499835a48",
+    "active": true,
+    "expires_at": "2020-09-08T10:12:34.792802227Z",
+    "authenticated_at": "2020-09-07T10:12:34.797538934Z",
+    "issued_at": "2020-09-07T10:12:34.792813032Z",
+    "identity": {
+      "id": "8a7755df-1aac-4477-a53c-3f16fa059113",
+      "schema_id": "default",
+      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "traits": {
+        "email": "registration-session-api@user.org"
+      },
+      "verifiable_addresses": [
+        {
+          "id": "95139fe8-3360-4b08-adf6-4cc9b4555d86",
+          "value": "registration-session-api@user.org",
+          "verified": false,
+          "via": "email",
+          "status": "pending",
+          "verified_at": null
+        }
+      ],
+      "recovery_addresses": [
+        {
+          "id": "e6987729-b6fa-48d5-aa15-c0a57edfdfc4",
+          "value": "registration-session-api@user.org",
+          "via": "email"
+        }
+      ]
+    }
+  },
+  "identity": {
+    "id": "8a7755df-1aac-4477-a53c-3f16fa059113",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "registration-session-api@user.org"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "95139fe8-3360-4b08-adf6-4cc9b4555d86",
+        "value": "registration-session-api@user.org",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "e6987729-b6fa-48d5-aa15-c0a57edfdfc4",
+        "value": "registration-session-api@user.org",
         "via": "email"
       }
     ]
