@@ -90,12 +90,12 @@ to respective methods for filling E-mail subject and body.
 
 - recovery: recovery email templates root directory
   - valid: sub directory containing templates with variables `To` and
-    `VerificationURL` for validating a recovery
+    `RecoveryURL` for validating a recovery
   - invalid: sub directory containing templates with variables `To` for
     invalidating a recovery
 - verification: verification email templates root directory
   - valid: sub directory containing templates with variables `To` and
-    `RecoveryURL` for validating a verification
+    `VerificationURL` for validating a verification
   - invalid: sub directory containing templates with variables `To` for
     invalidating a verification
 
