@@ -2624,6 +2624,13 @@
           "type": "string",
           "format": "date-time"
         },
+        "credentials": {
+          "description": "Credentials represents all credentials that can be used for authenticating this identity.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/identityCredentials"
+          }
+        },
         "id": {
           "$ref": "#/definitions/UUID"
         },

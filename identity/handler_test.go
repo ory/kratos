@@ -2,6 +2,7 @@ package identity_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/bxcodec/faker/v3"
 	"io/ioutil"
@@ -172,6 +173,25 @@ func TestHandler(t *testing.T) {
 			remove(t, "/identities/"+i.ID.String(), http.StatusNoContent)
 			_ = get(t, "/identities/"+i.ID.String(), http.StatusNotFound)
 		})
+	})
+
+	t.Run("case=should return entity with credentials metadata", func(t *testing.T) {
+		// create identity with credentials
+		i := identity.NewIdentity("")
+		i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+			Type:   identity.CredentialsTypePassword,
+			Config: sqlxx.JSONRawMessage(`{"secret":"pst"}`),
+		})
+		i.Traits = identity.Traits("{}")
+
+		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
+		res := get(t, "/identities/"+i.ID.String(), http.StatusOK)
+		assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
+		assert.True(t, res.Get("credentials").Exists())
+		// Should contain changed date
+		assert.True(t, res.Get("credentials.password.updated_at").Exists())
+		// Should not contain secrets
+		assert.False(t, res.Get("credentials.password.config").Exists())
 	})
 
 	t.Run("case=should not be able to create an identity with an invalid schema", func(t *testing.T) {

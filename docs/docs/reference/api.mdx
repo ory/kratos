@@ -450,6 +450,13 @@ Status Code **200**
 | _anonymous_                                  | [[identity](#schemaidentity)]                                             | false    | none         | [An identity can be a real human, a service, an IoT device - everything that<br/>can be described as an "actor" in a system.]                                                                                          |
 | » Identity represents an Ory Kratos identity | [identity](#schemaidentity)                                               | false    | none         | An identity can be a real human, a service, an IoT device - everything that<br/>can be described as an "actor" in a system.                                                                                            |
 | »» created_at                                | string(date-time)                                                         | false    | none         | CreatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
+| »» credentials                               | object                                                                    | false    | none         | Credentials represents all credentials that can be used for authenticating this identity.                                                                                                                              |
+| »»» **additionalProperties**                 | [identityCredentials](#schemaidentitycredentials)                         | false    | none         | Credentials represents a specific credential type                                                                                                                                                                      |
+| »»»» config                                  | [JSONRawMessage](#schemajsonrawmessage)                                   | false    | none         | none                                                                                                                                                                                                                   |
+| »»»» created_at                              | string(date-time)                                                         | false    | none         | CreatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
+| »»»» identifiers                             | [string]                                                                  | false    | none         | Identifiers represents a list of unique identifiers this credential type matches.                                                                                                                                      |
+| »»»» type                                    | [CredentialsType](#schemacredentialstype)                                 | false    | none         | and so on.                                                                                                                                                                                                             |
+| »»»» updated_at                              | string(date-time)                                                         | false    | none         | UpdatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
 | »» id                                        | [UUID](#schemauuid)(uuid4)                                                | true     | none         | none                                                                                                                                                                                                                   |
 | »» recovery_addresses                        | [[RecoveryAddress](#schemarecoveryaddress)]                               | false    | none         | RecoveryAddresses contains all the addresses that can be used to recover an identity.                                                                                                                                  |
 | »»» created_at                               | string(date-time)                                                         | false    | none         | CreatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
@@ -479,6 +486,22 @@ Status Code **200**
 [
   {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -690,6 +713,22 @@ Learn how identities work in
 ```json
 {
   "created_at": "2019-08-24T14:15:22Z",
+  "credentials": {
+    "property1": {
+      "config": {},
+      "created_at": "2019-08-24T14:15:22Z",
+      "identifiers": ["string"],
+      "type": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    },
+    "property2": {
+      "config": {},
+      "created_at": "2019-08-24T14:15:22Z",
+      "identifiers": ["string"],
+      "type": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  },
   "id": "string",
   "recovery_addresses": [
     {
@@ -1074,6 +1113,22 @@ Learn how identities work in
 ```json
 {
   "created_at": "2019-08-24T14:15:22Z",
+  "credentials": {
+    "property1": {
+      "config": {},
+      "created_at": "2019-08-24T14:15:22Z",
+      "identifiers": ["string"],
+      "type": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    },
+    "property2": {
+      "config": {},
+      "created_at": "2019-08-24T14:15:22Z",
+      "identifiers": ["string"],
+      "type": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  },
   "id": "string",
   "recovery_addresses": [
     {
@@ -1289,6 +1344,22 @@ Learn how identities work in
 ```json
 {
   "created_at": "2019-08-24T14:15:22Z",
+  "credentials": {
+    "property1": {
+      "config": {},
+      "created_at": "2019-08-24T14:15:22Z",
+      "identifiers": ["string"],
+      "type": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    },
+    "property2": {
+      "config": {},
+      "created_at": "2019-08-24T14:15:22Z",
+      "identifiers": ["string"],
+      "type": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  },
   "id": "string",
   "recovery_addresses": [
     {
@@ -2569,6 +2640,22 @@ application (e.g. `/login?flow=abcde`).
     "id": "string",
     "identity": {
       "created_at": "2019-08-24T14:15:22Z",
+      "credentials": {
+        "property1": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        },
+        "property2": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        }
+      },
       "id": "string",
       "recovery_addresses": [
         {
@@ -4703,6 +4790,22 @@ application (e.g. `/registration?flow=abcde`).
 {
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -4737,6 +4840,22 @@ application (e.g. `/registration?flow=abcde`).
     "id": "string",
     "identity": {
       "created_at": "2019-08-24T14:15:22Z",
+      "credentials": {
+        "property1": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        },
+        "property2": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        }
+      },
       "id": "string",
       "recovery_addresses": [
         {
@@ -5654,6 +5773,22 @@ application (e.g. `/settings?flow=abcde`).
     "id": "string",
     "identity": {
       "created_at": "2019-08-24T14:15:22Z",
+      "credentials": {
+        "property1": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        },
+        "property2": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        }
+      },
       "id": "string",
       "recovery_addresses": [
         {
@@ -5736,6 +5871,22 @@ application (e.g. `/settings?flow=abcde`).
   },
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -5975,6 +6126,22 @@ More information can be found at
   "id": "string",
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -6444,6 +6611,22 @@ application (e.g. `/settings?flow=abcde`).
   "id": "string",
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -7829,6 +8012,22 @@ proxies and API Gateways Server-side calls - use the `X-Session-Token` header!
   "id": "string",
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -9219,6 +9418,22 @@ _VolumeUsageData Usage details about the volume. This information is used by the
 ```json
 {
   "created_at": "2019-08-24T14:15:22Z",
+  "credentials": {
+    "property1": {
+      "config": {},
+      "created_at": "2019-08-24T14:15:22Z",
+      "identifiers": ["string"],
+      "type": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    },
+    "property2": {
+      "config": {},
+      "created_at": "2019-08-24T14:15:22Z",
+      "identifiers": ["string"],
+      "type": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  },
   "id": "string",
   "recovery_addresses": [
     {
@@ -9252,16 +9467,18 @@ _Identity represents an Ory Kratos identity_
 
 #### Properties
 
-| Name                 | Type                                                            | Required | Restrictions | Description                                                                                                                                                                                                            |
-| -------------------- | --------------------------------------------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| created_at           | string(date-time)                                               | false    | none         | CreatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
-| id                   | [UUID](#schemauuid)                                             | true     | none         | none                                                                                                                                                                                                                   |
-| recovery_addresses   | [[RecoveryAddress](#schemarecoveryaddress)]                     | false    | none         | RecoveryAddresses contains all the addresses that can be used to recover an identity.                                                                                                                                  |
-| schema_id            | string                                                          | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                                                                                                                                 |
-| schema_url           | string                                                          | true     | none         | SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url                                                                                                      |
-| traits               | [identityTraits](#schemaidentitytraits)                         | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_url`. |
-| updated_at           | string(date-time)                                               | false    | none         | UpdatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
-| verifiable_addresses | [[verifiableIdentityAddress](#schemaverifiableidentityaddress)] | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                                                                                                                                       |
+| Name                       | Type                                                            | Required | Restrictions | Description                                                                                                                                                                                                            |
+| -------------------------- | --------------------------------------------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| created_at                 | string(date-time)                                               | false    | none         | CreatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
+| credentials                | object                                                          | false    | none         | Credentials represents all credentials that can be used for authenticating this identity.                                                                                                                              |
+| » **additionalProperties** | [identityCredentials](#schemaidentitycredentials)               | false    | none         | Credentials represents a specific credential type                                                                                                                                                                      |
+| id                         | [UUID](#schemauuid)                                             | true     | none         | none                                                                                                                                                                                                                   |
+| recovery_addresses         | [[RecoveryAddress](#schemarecoveryaddress)]                     | false    | none         | RecoveryAddresses contains all the addresses that can be used to recover an identity.                                                                                                                                  |
+| schema_id                  | string                                                          | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                                                                                                                                 |
+| schema_url                 | string                                                          | true     | none         | SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url                                                                                                      |
+| traits                     | [identityTraits](#schemaidentitytraits)                         | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_url`. |
+| updated_at                 | string(date-time)                                               | false    | none         | UpdatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
+| verifiable_addresses       | [[verifiableIdentityAddress](#schemaverifiableidentityaddress)] | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                                                                                                                                       |
 
 <a id="tocSidentitycredentials"></a>
 
@@ -9491,6 +9708,22 @@ _Login Flow_
     "id": "string",
     "identity": {
       "created_at": "2019-08-24T14:15:22Z",
+      "credentials": {
+        "property1": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        },
+        "property2": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        }
+      },
       "id": "string",
       "recovery_addresses": [
         {
@@ -9721,6 +9954,22 @@ _A Recovery Flow_
 {
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -9755,6 +10004,22 @@ _A Recovery Flow_
     "id": "string",
     "identity": {
       "created_at": "2019-08-24T14:15:22Z",
+      "credentials": {
+        "property1": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        },
+        "property2": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        }
+      },
       "id": "string",
       "recovery_addresses": [
         {
@@ -9854,6 +10119,22 @@ _The Response for Registration Flows via API_
   "id": "string",
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -9909,6 +10190,22 @@ _The Response for Registration Flows via API_
   "id": "string",
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
@@ -10087,6 +10384,22 @@ _Flow represents a Settings Flow_
     "id": "string",
     "identity": {
       "created_at": "2019-08-24T14:15:22Z",
+      "credentials": {
+        "property1": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        },
+        "property2": {
+          "config": {},
+          "created_at": "2019-08-24T14:15:22Z",
+          "identifiers": ["string"],
+          "type": "string",
+          "updated_at": "2019-08-24T14:15:22Z"
+        }
+      },
       "id": "string",
       "recovery_addresses": [
         {
@@ -10169,6 +10482,22 @@ _Flow represents a Settings Flow_
   },
   "identity": {
     "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
     "id": "string",
     "recovery_addresses": [
       {
