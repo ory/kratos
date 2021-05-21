@@ -81,9 +81,9 @@ courier:
   template_override_path: /conf/courier-templates
 ```
 
-`email.subject.gotmpl` and `email.body.gotmpl` are common template file names
-expected in remainder directories corresponding to respective methods for
-filling E-mail subject and body.
+`email.subject.gotmpl`, `email.body.gotmpl` and `email.body.plaintext.gotmpl`
+are common template file names expected in remainder directories corresponding
+to respective methods for filling E-mail subject and body.
 
 > Templates use the engine golang text template for text/html email rendering:
 > https://golang.org/pkg/text/template
@@ -106,6 +106,10 @@ For example:
 Hi, please verify your account by clicking the following link:
 
 <a href="{{ .VerificationURL }}">{{ .VerificationURL }}</a>
+```
+
+```gotmp title="courier/template/templates/verification/valid/email.body.plaintext.gotmpl"
+Hi, please verify your account by clicking the following link: {{ .VerificationURL }}
 ```
 
 ## Sending SMS
