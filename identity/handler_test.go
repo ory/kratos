@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/bxcodec/faker/v3"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/bxcodec/faker/v3"
 
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
