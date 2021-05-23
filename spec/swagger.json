@@ -2615,6 +2615,7 @@
         "id",
         "schema_id",
         "schema_url",
+        "state",
         "traits"
       ],
       "properties": {
@@ -2648,6 +2649,17 @@
         "schema_url": {
           "description": "SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
           "type": "string"
+        },
+        "state": {
+          "description": "State is the identity's state.",
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "state_changed_at": {
+          "$ref": "#/definitions/NullTime"
         },
         "traits": {
           "$ref": "#/definitions/identityTraits"
@@ -3410,12 +3422,21 @@
     "updateIdentity": {
       "type": "object",
       "required": [
-        "traits"
+        "traits",
+        "state"
       ],
       "properties": {
         "schema_id": {
           "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
           "type": "string"
+        },
+        "state": {
+          "description": "State is the identity's state.",
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ]
         },
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",

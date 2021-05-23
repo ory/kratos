@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "identities_nid_idx";
