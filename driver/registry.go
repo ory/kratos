@@ -3,7 +3,7 @@ package driver
 import (
 	"context"
 
-	"github.com/ory/kratos/metrics/prometheus"
+	prometheus "github.com/ory/x/prometheusx"
 	"github.com/ory/x/tracing"
 
 	"github.com/gorilla/sessions"

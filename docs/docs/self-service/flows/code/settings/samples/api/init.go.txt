@@ -18,7 +18,7 @@ func main() {
   sessionToken := "..."
 
 	ctx := context.WithValue(context.Background(), kratos.ContextAccessToken, sessionToken)
-	flow, _, err := c.PublicApi.InitializeSelfServiceSettingsViaAPIFlow(ctx).Execute()
+	flow, _, err := c.PublicApi.initializeSelfServiceSettingsForNativeApps(ctx).Execute()
   if err != nil {
     // ...
   }

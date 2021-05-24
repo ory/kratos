@@ -2465,6 +2465,15 @@ components:
           via: via
         traits: ""
         updated_at: 2000-01-23T04:56:07.000+00:00
+        credentials:
+          key:
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            identifiers:
+            - identifiers
+            - identifiers
+            created_at: 2000-01-23T04:56:07.000+00:00
+            type: type
+            config: '{}'
         verifiable_addresses:
         - updated_at: 2014-01-01T23:28:56.782Z
           verified_at: 2000-01-23T04:56:07.000+00:00
@@ -2483,14 +2492,22 @@ components:
           status: status
           via: via
         schema_id: schema_id
+        state_changed_at: 2000-01-23T04:56:07.000+00:00
         created_at: 2000-01-23T04:56:07.000+00:00
         schema_url: schema_url
         id: id
+        state: active
       properties:
         created_at:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
           format: date-time
           type: string
+        credentials:
+          additionalProperties:
+            $ref: '#/components/schemas/identityCredentials'
+          description: Credentials represents all credentials that can be used for
+            authenticating this identity.
+          type: object
         id:
           format: uuid4
           type: string
@@ -2510,6 +2527,16 @@ components:
             SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
 
             format: url
+          type: string
+        state:
+          description: State is the identity's state.
+          enum:
+          - active
+          - inactive
+          type: string
+        state_changed_at:
+          format: date-time
+          title: NullTime implements sql.NullTime functionality.
           type: string
         traits:
           description: |-
@@ -2531,11 +2558,20 @@ components:
       - id
       - schema_id
       - schema_url
+      - state
       - traits
       title: Identity represents an Ory Kratos identity
       type: object
     identityCredentials:
       description: Credentials represents a specific credential type
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        identifiers:
+        - identifiers
+        - identifiers
+        created_at: 2000-01-23T04:56:07.000+00:00
+        type: type
+        config: '{}'
       properties:
         config:
           title: JSONRawMessage represents a json.RawMessage that works well with
@@ -2719,6 +2755,15 @@ components:
               via: via
             traits: ""
             updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -2737,9 +2782,11 @@ components:
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: active
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -2994,6 +3041,15 @@ components:
             via: via
           traits: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3012,9 +3068,11 @@ components:
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: active
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
           identity:
@@ -3031,6 +3089,15 @@ components:
               via: via
             traits: ""
             updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3049,9 +3116,11 @@ components:
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: active
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -3135,6 +3204,15 @@ components:
             via: via
           traits: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3153,9 +3231,11 @@ components:
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: active
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         id: id
@@ -3253,6 +3333,15 @@ components:
             via: via
           traits: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3271,9 +3360,11 @@ components:
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: active
         active: active
         id: id
         state: state
@@ -3363,6 +3454,15 @@ components:
             via: via
           traits: ""
           updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
           - updated_at: 2014-01-01T23:28:56.782Z
             verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3381,9 +3481,11 @@ components:
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: active
         flow:
           expires_at: 2000-01-23T04:56:07.000+00:00
           ui:
@@ -3447,6 +3549,15 @@ components:
               via: via
             traits: ""
             updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
             - updated_at: 2014-01-01T23:28:56.782Z
               verified_at: 2000-01-23T04:56:07.000+00:00
@@ -3465,9 +3576,11 @@ components:
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: active
           active: active
           id: id
           state: state
@@ -3884,6 +3997,12 @@ components:
             SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
             will update the Identity's SchemaID.
           type: string
+        state:
+          description: State is the identity's state.
+          enum:
+          - active
+          - inactive
+          type: string
         traits:
           description: |-
             Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -3891,6 +4010,7 @@ components:
             in `schema_id`.
           type: object
       required:
+      - state
       - traits
       type: object
     verifiableIdentityAddress:

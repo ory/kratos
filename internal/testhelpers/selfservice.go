@@ -84,6 +84,7 @@ func SelfServiceHookFakeIdentity(t *testing.T) *identity.Identity {
 	var i identity.Identity
 	require.NoError(t, faker.FakeData(&i))
 	i.Traits = identity.Traits(`{}`)
+	i.State = identity.StateActive
 	return &i
 }
 

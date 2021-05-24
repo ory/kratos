@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/corpx"
 
@@ -44,6 +44,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 				Config:      []byte(`{"hashed_password":"foo"}`),
 			},
 		},
+		State:    identity.StateActive,
 		Traits:   identity.Traits(`{"email":"` + email + `"}`),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,
 	}
@@ -52,6 +53,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 func newEmptyIdentity() *identity.Identity {
 	return &identity.Identity{
 		ID:       x.NewUUID(),
+		State:    identity.StateActive,
 		Traits:   identity.Traits(`{}`),
 		SchemaID: config.DefaultIdentityTraitsSchemaID,
 	}

@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gobuffalo/httptest"
@@ -58,6 +58,7 @@ func TestHandleError(t *testing.T) {
 	var id identity.Identity
 	require.NoError(t, faker.FakeData(&id))
 	id.SchemaID = "default"
+	id.State = identity.StateActive
 
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		h.WriteFlowError(w, r, flowMethod, settingsFlow, &id, flowError)
@@ -127,8 +128,9 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			// This needs an authenticated client in order to call the RouteGetFlow endpoint
-			c := testhelpers.NewHTTPClientWithSessionToken(t, reg, session.NewActiveSession(&id,
-				testhelpers.NewSessionLifespanProvider(time.Hour), time.Now()))
+			s, err := session.NewActiveSession(&id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now())
+			require.NoError(t, err)
+			c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 
 			settingsFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = settings.NewFlowExpiredError(expiredAnHourAgo)

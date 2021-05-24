@@ -28,6 +28,9 @@ payload is usually in JSON format. An `identity` has the following properties:
 # which cannot be changed or updated at a later stage.
 id: '9f425a8d-7efc-4768-8f23-7647a74fdf13'
 
+# Every identity has a state. Inactive identities will not be able to log into the system.
+state: active
+
 # This section represents all the credentials associated with this identity.
 # It is further explained in the "Credentials" section.
 credentials:
@@ -73,22 +76,24 @@ Identities are
 
 - `created` - via API or self-service registration;
 - `updated` - via API or self-service settings, account recovery, etc.;
-- `disabled` - not yet implemented, see
-  [#598](https://github.com/ory/kratos/issues/598);
+- `inactive` - via API only;
 - `deleted` - via API or with a self-service flow (not yet implemented see
   [#596](https://github.com/ory/kratos/issues/596)).
 
-The identity state is therefore `active` or `disabled` (not yet implemented see
-[#598](https://github.com/ory/kratos/issues/598))
+The identity state is therefore `active` or `inactive`.
+
+An inactive identity will not be able to log into the system. It will receive a
+401 with a reason indicating that the account has been disabled. More states
+will be added later on for specific features.
 
 <Mermaid
   chart={`
 stateDiagram-v2
 [*] --> Active: create
 Active --> Active: update
-Active --> Disabled: disable
-Disabled --> [*]: delete
-Disabled --> Active: enable
+Active --> Inactive: disable
+Inactive --> [*]: delete
+Inactive --> Active: enable
 `}
 />
 

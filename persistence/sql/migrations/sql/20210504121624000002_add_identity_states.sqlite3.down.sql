@@ -1,0 +1,1 @@
+INSERT INTO "_identities_tmp" (id, schema_id, traits, created_at, updated_at, nid) SELECT id, schema_id, traits, created_at, updated_at, nid FROM "identities";

@@ -1022,6 +1022,13 @@
             "format": "date-time",
             "type": "string"
           },
+          "credentials": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/identityCredentials"
+            },
+            "description": "Credentials represents all credentials that can be used for authenticating this identity.",
+            "type": "object"
+          },
           "id": {
             "$ref": "#/components/schemas/UUID"
           },
@@ -1040,6 +1047,17 @@
           "schema_url": {
             "description": "SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
             "type": "string"
+          },
+          "state": {
+            "description": "State is the identity's state.",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "type": "string"
+          },
+          "state_changed_at": {
+            "$ref": "#/components/schemas/NullTime"
           },
           "traits": {
             "$ref": "#/components/schemas/identityTraits"
@@ -1062,6 +1080,7 @@
           "id",
           "schema_id",
           "schema_url",
+          "state",
           "traits"
         ],
         "title": "Identity represents an Ory Kratos identity",
@@ -1857,13 +1876,22 @@
             "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
             "type": "string"
           },
+          "state": {
+            "description": "State is the identity's state.",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "type": "string"
+          },
           "traits": {
             "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
             "type": "object"
           }
         },
         "required": [
-          "traits"
+          "traits",
+          "state"
         ],
         "type": "object"
       },
@@ -1991,7 +2019,7 @@
       "name": "Apache 2.0"
     },
     "title": "Ory Kratos API",
-    "version": "v0.6.3-alpha.1"
+    "version": ""
   },
   "openapi": "3.0.3",
   "paths": {

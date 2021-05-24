@@ -14,6 +14,8 @@
     "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
     "schema_id": "default",
     "schema_url": "https://www.ory.sh/schemas/default",
+    "state": "active",
+    "state_changed_at": null,
     "traits": {
       "email": "foobar@ory.sh"
     },

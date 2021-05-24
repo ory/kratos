@@ -450,7 +450,7 @@ func TestStrategy(t *testing.T) {
         "required": true,
         "disabled": false
       },
-      "messages": null,
+      "messages": [],
       "meta": {}
     },
     {
@@ -462,7 +462,7 @@ func TestStrategy(t *testing.T) {
         "value": "valid",
         "disabled": false
       },
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1040002,
@@ -483,7 +483,7 @@ func TestStrategy(t *testing.T) {
         "value": "invalid-issuer",
         "disabled": false
       },
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1040002,
@@ -519,7 +519,7 @@ func TestStrategy(t *testing.T) {
         "required": true,
         "disabled": false
       },
-      "messages": null,
+      "messages": [],
       "meta": {}
     },
     {
@@ -531,7 +531,7 @@ func TestStrategy(t *testing.T) {
         "value": "valid",
         "disabled": false
       },
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1010002,
@@ -552,7 +552,7 @@ func TestStrategy(t *testing.T) {
         "value": "invalid-issuer",
         "disabled": false
       },
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1010002,
