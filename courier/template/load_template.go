@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"embed"
 	"io"
+	"io/fs"
 	"os"
+	"path"
 	"text/template"
 
 	_ "embed"
@@ -17,43 +19,44 @@ import (
 //go:embed courier/builtin/templates/*
 var templates embed.FS
 
+func openTemplate(dir, name string) (fs.File, error) {
+	if file, err := os.DirFS(dir).Open(name); err == nil {
+		return file, nil
+	}
+	// hard-code the dir, since this is embedded at build time (see above)
+	return templates.Open(path.Join("courier/builtin/templates", name))
+}
+
 var cache, _ = lru.New(16)
 
-func loadTextTemplate(path string, model interface{}) (string, error) {
+func loadTextTemplate(dir, name string, model interface{}) (string, error) {
 	var b bytes.Buffer
 
-	if t, found := cache.Get(path); found {
+	if t, found := cache.Get(name); found {
 		var tb bytes.Buffer
-		if err := t.(*template.Template).ExecuteTemplate(&tb, path, model); err != nil {
+		if err := t.(*template.Template).ExecuteTemplate(&tb, name, model); err != nil {
 			return "", errors.WithStack(err)
 		}
 		return tb.String(), nil
 	}
 
-	if file, err := templates.Open(path); err == nil {
-		defer file.Close()
-		if _, err := io.Copy(&b, file); err != nil {
-			return "", errors.WithStack(err)
-		}
-	} else {
-		file, err := os.Open(path)
-		if err != nil {
-			return "", errors.WithStack(err)
-		}
-		defer file.Close()
-		if _, err := io.Copy(&b, file); err != nil {
-			return "", errors.WithStack(err)
-		}
+	file, err := openTemplate(dir, name)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	defer file.Close()
+	if _, err := io.Copy(&b, file); err != nil {
+		return "", errors.WithStack(err)
 	}
 
-	t, err := template.New(path).Funcs(sprig.TxtFuncMap()).Parse(b.String())
+	t, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(b.String())
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
 
-	_ = cache.Add(path, t)
+	_ = cache.Add(name, t)
 	var tb bytes.Buffer
-	if err := t.ExecuteTemplate(&tb, path, model); err != nil {
+	if err := t.ExecuteTemplate(&tb, name, model); err != nil {
 		return "", errors.WithStack(err)
 	}
 
