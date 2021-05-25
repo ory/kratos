@@ -132,7 +132,10 @@ func CompareBcryptAes(_ context.Context, cfg *config.Config, password, hash []by
 
 	var lastError error
 	var aesDecrypted []byte
-	hasherCfg := cfg.HasherBcryptAES()
+	hasherCfg, err := cfg.HasherBcryptAES()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	for i := range hasherCfg.Key {
 		aesDecrypted, lastError = aes256Decrypt(decoded[:], &hasherCfg.Key[i])
 		if lastError == nil {

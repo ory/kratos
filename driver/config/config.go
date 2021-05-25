@@ -309,7 +309,7 @@ func (p *Config) HasherBcrypt() *Bcrypt {
 	return &Bcrypt{Cost: cost}
 }
 
-func (p *Config) HasherBcryptAES() *BcryptAES {
+func (p *Config) HasherBcryptAES() (*BcryptAES, error) {
 	cost := uint32(p.p.IntF(ViperKeyHasherBcryptAESCost, int(BcryptDefaultCost)))
 	if !p.IsInsecureDevMode() && cost < BcryptDefaultCost {
 		cost = BcryptDefaultCost
@@ -321,10 +321,14 @@ func (p *Config) HasherBcryptAES() *BcryptAES {
 		copy(result[k][:], v)
 	}
 
+	if len(result) == 0 {
+		return nil, errors.New("no valid AES keys defined for bcryptaes hasher")
+	}
+
 	return &BcryptAES{
 		Cost: cost,
 		Key:  result,
-	}
+	}, nil
 }
 
 func (p *Config) listenOn(key string) string {
