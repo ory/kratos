@@ -1094,7 +1094,7 @@ import (
 
 func main() {
     id := "id_example" // string | ID must be set to the ID of identity you want to update
-    updateIdentity := *openapiclient.NewUpdateIdentity(map[string]interface{}(123)) // UpdateIdentity |  (optional)
+    updateIdentity := *openapiclient.NewUpdateIdentity("State_example", map[string]interface{}(123)) // UpdateIdentity |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)

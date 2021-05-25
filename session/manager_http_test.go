@@ -87,7 +87,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -100,9 +100,10 @@ func TestManagerHTTP(t *testing.T) {
 		t.Run("case=valid bearer auth as fallback", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySessionLifespan, "1m")
 
-			i := identity.Identity{Traits: []byte("{}")}
+			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, err := session.NewActiveSession(&i, conf, time.Now())
+			require.NoError(t, err)
 			require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
 			require.NotEmpty(t, s.Token)
 
@@ -119,9 +120,10 @@ func TestManagerHTTP(t *testing.T) {
 		t.Run("case=valid x-session-token auth even if bearer is set", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySessionLifespan, "1m")
 
-			i := identity.Identity{Traits: []byte("{}")}
+			i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, err := session.NewActiveSession(&i, conf, time.Now())
+			require.NoError(t, err)
 			require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
 
 			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
@@ -143,7 +145,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -158,9 +160,9 @@ func TestManagerHTTP(t *testing.T) {
 		t.Run("case=revoked", func(t *testing.T) {
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
-			s = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")

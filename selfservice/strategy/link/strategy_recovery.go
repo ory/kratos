@@ -323,7 +323,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.handleRecoveryError(w, r, f, nil, err)
 	}
 
-	sess := session.NewActiveSession(recovered, s.d.Config(r.Context()), time.Now().UTC())
+	sess, _ := session.NewActiveSession(recovered, s.d.Config(r.Context()), time.Now().UTC())
 	if err := s.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, sess); err != nil {
 		return s.handleRecoveryError(w, r, f, nil, err)
 	}

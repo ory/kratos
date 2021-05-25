@@ -12,7 +12,7 @@ import (
 
 	"github.com/ory/kratos/corp"
 
-	"github.com/ory/kratos/metrics/prometheus"
+	prometheus "github.com/ory/x/prometheusx"
 
 	"github.com/gobuffalo/pop/v5"
 
@@ -620,7 +620,7 @@ func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
 	m.rwl.Lock()
 	defer m.rwl.Unlock()
 	if m.pmm == nil {
-		m.pmm = prometheus.NewMetricsManager(m.buildVersion, m.buildHash, m.buildDate)
+		m.pmm = prometheus.NewMetricsManager("kratos", m.buildVersion, m.buildHash, m.buildDate)
 	}
 	return m.pmm
 }

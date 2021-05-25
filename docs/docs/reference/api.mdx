@@ -466,6 +466,8 @@ Status Code **200**
 | »»» via                                      | [RecoveryAddressType](#schemarecoveryaddresstype)                         | true     | none         | none                                                                                                                                                                                                                   |
 | »» schema_id                                 | string                                                                    | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                                                                                                                                 |
 | »» schema_url                                | string                                                                    | true     | none         | SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url                                                                                                      |
+| »» state                                     | string                                                                    | true     | none         | State is the identity's state.                                                                                                                                                                                         |
+| »» state_changed_at                          | [NullTime](#schemanulltime)(date-time)                                    | false    | none         | none                                                                                                                                                                                                                   |
 | »» traits                                    | any                                                                       | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_url`. |
 | »» updated_at                                | string(date-time)                                                         | false    | none         | UpdatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
 | »» verifiable_addresses                      | [[verifiableIdentityAddress](#schemaverifiableidentityaddress)]           | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                                                                                                                                       |
@@ -477,6 +479,13 @@ Status Code **200**
 | »»» verified                                 | boolean                                                                   | true     | none         | Indicates if the address has already been verified                                                                                                                                                                     |
 | »»» verified_at                              | [NullTime](#schemanulltime)(date-time)                                    | false    | none         | none                                                                                                                                                                                                                   |
 | »»» via                                      | [identityVerifiableAddressType](#schemaidentityverifiableaddresstype)     | true     | none         | VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema                                                                                                                        |
+
+###### Enumerated Values
+
+| Property | Value    |
+| -------- | -------- |
+| state    | active   |
+| state    | inactive |
 
 ##### Examples
 
@@ -514,6 +523,8 @@ Status Code **200**
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -741,6 +752,8 @@ Learn how identities work in
   ],
   "schema_id": "string",
   "schema_url": "string",
+  "state": "active",
+  "state_changed_at": "2019-08-24T14:15:22Z",
   "traits": null,
   "updated_at": "2019-08-24T14:15:22Z",
   "verifiable_addresses": [
@@ -1141,6 +1154,8 @@ Learn how identities work in
   ],
   "schema_id": "string",
   "schema_url": "string",
+  "state": "active",
+  "state_changed_at": "2019-08-24T14:15:22Z",
   "traits": null,
   "updated_at": "2019-08-24T14:15:22Z",
   "verifiable_addresses": [
@@ -1310,6 +1325,7 @@ Learn how identities work in
 ```json
 {
   "schema_id": "string",
+  "state": "active",
   "traits": {}
 }
 ```
@@ -1372,6 +1388,8 @@ Learn how identities work in
   ],
   "schema_id": "string",
   "schema_url": "string",
+  "state": "active",
+  "state_changed_at": "2019-08-24T14:15:22Z",
   "traits": null,
   "updated_at": "2019-08-24T14:15:22Z",
   "verifiable_addresses": [
@@ -1439,6 +1457,7 @@ func main() {
 const fetch = require('node-fetch');
 const input = '{
   "schema_id": "string",
+  "state": "active",
   "traits": {}
 }';
 const headers = {
@@ -2668,6 +2687,8 @@ application (e.g. `/login?flow=abcde`).
       ],
       "schema_id": "string",
       "schema_url": "string",
+      "state": "active",
+      "state_changed_at": "2019-08-24T14:15:22Z",
       "traits": null,
       "updated_at": "2019-08-24T14:15:22Z",
       "verifiable_addresses": [
@@ -4818,6 +4839,8 @@ application (e.g. `/registration?flow=abcde`).
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -4868,6 +4891,8 @@ application (e.g. `/registration?flow=abcde`).
       ],
       "schema_id": "string",
       "schema_url": "string",
+      "state": "active",
+      "state_changed_at": "2019-08-24T14:15:22Z",
       "traits": null,
       "updated_at": "2019-08-24T14:15:22Z",
       "verifiable_addresses": [
@@ -5801,6 +5826,8 @@ application (e.g. `/settings?flow=abcde`).
       ],
       "schema_id": "string",
       "schema_url": "string",
+      "state": "active",
+      "state_changed_at": "2019-08-24T14:15:22Z",
       "traits": null,
       "updated_at": "2019-08-24T14:15:22Z",
       "verifiable_addresses": [
@@ -5899,6 +5926,8 @@ application (e.g. `/settings?flow=abcde`).
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -6154,6 +6183,8 @@ More information can be found at
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -6639,6 +6670,8 @@ application (e.g. `/settings?flow=abcde`).
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -8040,6 +8073,8 @@ proxies and API Gateways Server-side calls - use the `X-Session-Token` header!
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -9446,6 +9481,8 @@ _VolumeUsageData Usage details about the volume. This information is used by the
   ],
   "schema_id": "string",
   "schema_url": "string",
+  "state": "active",
+  "state_changed_at": "2019-08-24T14:15:22Z",
   "traits": null,
   "updated_at": "2019-08-24T14:15:22Z",
   "verifiable_addresses": [
@@ -9476,9 +9513,18 @@ _Identity represents an Ory Kratos identity_
 | recovery_addresses         | [[RecoveryAddress](#schemarecoveryaddress)]                     | false    | none         | RecoveryAddresses contains all the addresses that can be used to recover an identity.                                                                                                                                  |
 | schema_id                  | string                                                          | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                                                                                                                                 |
 | schema_url                 | string                                                          | true     | none         | SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url                                                                                                      |
+| state                      | string                                                          | true     | none         | State is the identity's state.                                                                                                                                                                                         |
+| state_changed_at           | [NullTime](#schemanulltime)                                     | false    | none         | none                                                                                                                                                                                                                   |
 | traits                     | [identityTraits](#schemaidentitytraits)                         | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_url`. |
 | updated_at                 | string(date-time)                                               | false    | none         | UpdatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
 | verifiable_addresses       | [[verifiableIdentityAddress](#schemaverifiableidentityaddress)] | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                                                                                                                                       |
+
+##### Enumerated Values
+
+| Property | Value    |
+| -------- | -------- |
+| state    | active   |
+| state    | inactive |
 
 <a id="tocSidentitycredentials"></a>
 
@@ -9736,6 +9782,8 @@ _Login Flow_
       ],
       "schema_id": "string",
       "schema_url": "string",
+      "state": "active",
+      "state_changed_at": "2019-08-24T14:15:22Z",
       "traits": null,
       "updated_at": "2019-08-24T14:15:22Z",
       "verifiable_addresses": [
@@ -9982,6 +10030,8 @@ _A Recovery Flow_
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -10032,6 +10082,8 @@ _A Recovery Flow_
       ],
       "schema_id": "string",
       "schema_url": "string",
+      "state": "active",
+      "state_changed_at": "2019-08-24T14:15:22Z",
       "traits": null,
       "updated_at": "2019-08-24T14:15:22Z",
       "verifiable_addresses": [
@@ -10147,6 +10199,8 @@ _The Response for Registration Flows via API_
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -10218,6 +10272,8 @@ _The Response for Registration Flows via API_
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -10412,6 +10468,8 @@ _Flow represents a Settings Flow_
       ],
       "schema_id": "string",
       "schema_url": "string",
+      "state": "active",
+      "state_changed_at": "2019-08-24T14:15:22Z",
       "traits": null,
       "updated_at": "2019-08-24T14:15:22Z",
       "verifiable_addresses": [
@@ -10510,6 +10568,8 @@ _Flow represents a Settings Flow_
     ],
     "schema_id": "string",
     "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
     "traits": null,
     "updated_at": "2019-08-24T14:15:22Z",
     "verifiable_addresses": [
@@ -11270,6 +11330,7 @@ _TextAttributes represents the attributes of a text node._
 ```json
 {
   "schema_id": "string",
+  "state": "active",
   "traits": {}
 }
 ```
@@ -11279,7 +11340,15 @@ _TextAttributes represents the attributes of a text node._
 | Name      | Type   | Required | Restrictions | Description                                                                                                                                                                                                           |
 | --------- | ------ | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | schema_id | string | false    | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set<br/>will update the Identity's SchemaID.                                                                                |
+| state     | string | true     | none         | State is the identity's state.                                                                                                                                                                                        |
 | traits    | object | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_id`. |
+
+##### Enumerated Values
+
+| Property | Value    |
+| -------- | -------- |
+| state    | active   |
+| state    | inactive |
 
 <a id="tocSverifiableidentityaddress"></a>
 
