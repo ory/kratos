@@ -110,8 +110,8 @@ func CompareBcryptAes(_ context.Context, cfg *config.Config, password, hash []by
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	for i := range hasherCfg.Key {
-		aesDecrypted, lastError = cryptopasta.Decrypt(decoded[:], &hasherCfg.Key[i])
+	for i := range hasherCfg.Keys {
+		aesDecrypted, lastError = cryptopasta.Decrypt(decoded[:], &hasherCfg.Keys[i])
 		if lastError == nil {
 			break
 		}

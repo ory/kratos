@@ -39,7 +39,7 @@ func NewConfigurationWithDefaults(t *testing.T) *config.Config {
 			config.ViperKeyHasherArgon2ConfigSaltLength:      16,
 			config.ViperKeyHasherBcryptCost:                  4,
 			config.ViperKeyHasherArgon2ConfigKeyLength:       16,
-			config.ViperKeyHasherBcryptAESKey:                []string{"R3w7Hk5!47$$EqD*3!r5*kEfG97BHvAJ", "b3Dx@jtl1yKau0X3$L!5PJQTgjAOH%cJ"},
+			config.ViperKeyHasherBcryptAESKeys:               []string{"R3w7Hk5!47$$EqD*3!r5*kEfG97BHvAJ", "b3Dx@jtl1yKau0X3$L!5PJQTgjAOH%cJ"},
 			config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
 			config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
 			config.ViperKeyDefaultIdentitySchemaURL:          UnsetDefaultIdentitySchema,

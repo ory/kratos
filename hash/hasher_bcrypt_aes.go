@@ -41,7 +41,7 @@ func (h *BcryptAES) Generate(ctx context.Context, password []byte) ([]byte, erro
 		return nil, errors.WithStack(err)
 	}
 
-	hash, err := cryptopasta.Encrypt(bcryptPassword, &cfg.Key[0])
+	hash, err := cryptopasta.Encrypt(bcryptPassword, &cfg.Keys[0])
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

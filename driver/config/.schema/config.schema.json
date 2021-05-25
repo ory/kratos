@@ -1488,7 +1488,7 @@
       "properties": {
         "algorithm": {
           "title": "Password hashing algorithm",
-          "description": "One of the values: argon2, bcrypt",
+          "description": "One of the values: argon2, bcrypt, bcryptaes",
           "type": "string",
           "default": "bcrypt",
           "enum": ["argon2", "bcrypt", "bcryptaes"]
@@ -1572,7 +1572,7 @@
               "maximum": 31,
               "default": 12
             },
-            "key": {
+            "keys": {
               "type": "array",
               "title": "Encryption Keys for BCrypt-AES hasher",
               "description": "The first key in the array is used for encrypting/verifying credentials while all other keys are used to verify older hashes that were encrypted with that old key.",
@@ -1808,7 +1808,7 @@
               "bcryptaes": {
                 "required": [
                   "cost",
-                  "key"
+                  "keys"
                 ]
               }
             },

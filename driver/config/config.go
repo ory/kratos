@@ -107,7 +107,7 @@ const (
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyHasherBcryptAESCost                                     = "hashers.bcryptaes.cost"
-	ViperKeyHasherBcryptAESKey                                      = "hashers.bcryptaes.key"
+	ViperKeyHasherBcryptAESKeys                                     = "hashers.bcryptaes.keys"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
@@ -140,7 +140,7 @@ type (
 	}
 	BcryptAES struct {
 		Cost uint32     `json:"cost"`
-		Key  [][32]byte `json:"key"`
+		Keys [][32]byte `json:"key"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -315,7 +315,7 @@ func (p *Config) HasherBcryptAES() (*BcryptAES, error) {
 		cost = BcryptDefaultCost
 	}
 
-	keys := p.p.Strings(ViperKeyHasherBcryptAESKey)
+	keys := p.p.Strings(ViperKeyHasherBcryptAESKeys)
 	result := make([][32]byte, len(keys))
 	for k, v := range keys {
 		copy(result[k][:], v)
@@ -327,7 +327,7 @@ func (p *Config) HasherBcryptAES() (*BcryptAES, error) {
 
 	return &BcryptAES{
 		Cost: cost,
-		Key:  result,
+		Keys: result,
 	}, nil
 }
 
