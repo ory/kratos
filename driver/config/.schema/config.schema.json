@@ -1576,6 +1576,7 @@
               "type": "array",
               "title": "Encryption Keys for BCrypt-AES hasher",
               "description": "The first key in the array is used for encrypting/verifying credentials while all other keys are used to verify older hashes that were encrypted with that old key.",
+              "minItems": 1,
               "items": {
                 "type": "string",
                 "minLength": 32,
