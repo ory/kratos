@@ -288,8 +288,6 @@ func (p *Config) SessionPath() string {
 }
 
 func (p *Config) HasherArgon2() *Argon2 {
-	// warn about usage of default values and point to the docs
-	// warning will require https://github.com/ory/viper/issues/19
 	return &Argon2{
 		Memory:            p.p.ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
 		Iterations:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
@@ -303,8 +301,6 @@ func (p *Config) HasherArgon2() *Argon2 {
 }
 
 func (p *Config) HasherBcrypt() *Bcrypt {
-	// warn about usage of default values and point to the docs
-	// warning will require https://github.com/ory/viper/issues/19
 	cost := uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
 	if !p.IsInsecureDevMode() && cost < BcryptDefaultCost {
 		cost = BcryptDefaultCost
@@ -314,8 +310,6 @@ func (p *Config) HasherBcrypt() *Bcrypt {
 }
 
 func (p *Config) HasherBcryptAES() *BcryptAES {
-	// warn about usage of default values and point to the docs
-	// warning will require https://github.com/ory/viper/issues/19
 	cost := uint32(p.p.IntF(ViperKeyHasherBcryptAESCost, int(BcryptDefaultCost)))
 	if !p.IsInsecureDevMode() && cost < BcryptDefaultCost {
 		cost = BcryptDefaultCost
