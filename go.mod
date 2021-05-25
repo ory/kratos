@@ -45,6 +45,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.1.3
+	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69 // indirect
 	github.com/hashicorp/consul/api v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.6.8
 	github.com/hashicorp/golang-lru v0.5.4
