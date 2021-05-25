@@ -305,6 +305,8 @@ paths:
   /metrics/prometheus:
     get:
       description: |-
+        If you're using k8s, you can then add annotations to
+        your deployment like so:
         ```
         metadata:
         annotations:
@@ -317,8 +319,7 @@ paths:
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
       summary: |-
-        Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to
-        your deployment like so:
+        Get snapshot metrics from the Kratos service. 
       tags:
       - admin
   /recovery/link:
