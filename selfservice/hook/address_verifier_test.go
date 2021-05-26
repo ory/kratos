@@ -14,96 +14,73 @@ import (
 func TestAddressVerifier(t *testing.T) {
 	verifier := NewAddressVerifier()
 
-	t.Run("Single Address Not Verified", func(t *testing.T) {
-		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{
-			ID: x.NewUUID(),
-			VerifiableAddresses: []identity.VerifiableAddress{
+	for _, tc := range []struct {
+		flow       *login.Flow
+		neverError bool
+	}{
+		{&login.Flow{Active: identity.CredentialsTypePassword}, false},
+		{&login.Flow{Active: identity.CredentialsTypeOIDC}, true},
+	} {
+		t.Run(tc.flow.Active.String() + " flow", func(t *testing.T) {
+			for _, uc := range []struct {
+				name                string
+				verifiableAddresses []identity.VerifiableAddress
+				expectError         bool
+			}{
 				{
-					ID:       uuid.UUID{},
-					Verified: false,
-				},
-			},
-		}}
-
-		err := verifier.ExecuteLoginPostHook(nil, nil, nil, s)
-
-		assert.ErrorIs(t, err, login.ErrAddressNotVerified)
-	})
-
-	t.Run("Single Address Verified", func(t *testing.T) {
-		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{
-			ID: x.NewUUID(),
-			VerifiableAddresses: []identity.VerifiableAddress{
-				{
-					ID:       uuid.UUID{},
-					Verified: true,
-				},
-			},
-		}}
-
-		err := verifier.ExecuteLoginPostHook(nil, nil, nil, s)
-
-		assert.NoError(t, err)
-	})
-
-	t.Run("Multiple Addresses Verified", func(t *testing.T) {
-		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{
-			ID: x.NewUUID(),
-			VerifiableAddresses: []identity.VerifiableAddress{
-				{
-					ID:       uuid.UUID{},
-					Verified: true,
+					name: "Single Address Not Verified",
+					verifiableAddresses: []identity.VerifiableAddress{
+						{ ID: uuid.UUID{}, Verified: false },
+					},
+					expectError: true,
 				},
 				{
-					ID:       uuid.UUID{},
-					Verified: true,
-				},
-			},
-		}}
-
-		err := verifier.ExecuteLoginPostHook(nil, nil, nil, s)
-
-		assert.NoError(t, err)
-	})
-
-	t.Run("Multiple Addresses Not Verified", func(t *testing.T) {
-		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{
-			ID: x.NewUUID(),
-			VerifiableAddresses: []identity.VerifiableAddress{
-				{
-					ID:       uuid.UUID{},
-					Verified: false,
+					name: "Single Address Verified",
+					verifiableAddresses: []identity.VerifiableAddress{
+						{ ID: uuid.UUID{}, Verified: true},
+					},
+					expectError: false,
 				},
 				{
-					ID:       uuid.UUID{},
-					Verified: false,
-				},
-			},
-		}}
-
-		err := verifier.ExecuteLoginPostHook(nil, nil, nil, s)
-
-		assert.ErrorIs(t, err, login.ErrAddressNotVerified)
-	})
-
-	t.Run("One Address Verified And One Not", func(t *testing.T) {
-		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{
-			ID: x.NewUUID(),
-			VerifiableAddresses: []identity.VerifiableAddress{
-				{
-					ID:       uuid.UUID{},
-					Verified: true,
+					name: "Multiple Addresses Verified",
+					verifiableAddresses: []identity.VerifiableAddress{
+						{ ID: uuid.UUID{}, Verified: true },
+						{ ID: uuid.UUID{}, Verified: true },
+					},
+					expectError: false,
 				},
 				{
-					ID:       uuid.UUID{},
-					Verified: false,
+					name: "Multiple Addresses Not Verified",
+					verifiableAddresses: []identity.VerifiableAddress{
+						{ ID: uuid.UUID{}, Verified: false },
+						{ ID: uuid.UUID{}, Verified: false },
+					},
+					expectError: true,
 				},
-			},
-		}}
+				{
+					name: "One Address Verified And One Not",
+					verifiableAddresses: []identity.VerifiableAddress{
+						{ ID: uuid.UUID{}, Verified: true },
+						{ ID: uuid.UUID{}, Verified: false },
+					},
+					expectError: false,
+				},
+			} {
+				t.Run(uc.name, func(t *testing.T) {
+					sessions := &session.Session{
+						ID:       x.NewUUID(),
+						Identity: &identity.Identity{ID: x.NewUUID(), VerifiableAddresses: uc.verifiableAddresses},
+					}
 
-		err := verifier.ExecuteLoginPostHook(nil, nil, nil, s)
+					err := verifier.ExecuteLoginPostHook(nil, nil, tc.flow, sessions)
 
-		assert.ErrorIs(t, err, login.ErrAddressNotVerified)
-	})
-
+					if tc.neverError || !uc.expectError {
+						assert.NoError(t, err)
+					} else {
+						assert.ErrorIs(t, err, login.ErrAddressNotVerified)
+					}
+				})
+			}
+		})
+	}
 }

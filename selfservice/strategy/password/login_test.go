@@ -559,6 +559,7 @@ func TestCompleteLogin(t *testing.T) {
 		createIdentity(identifier, pwd)
 
 		var values = func(v url.Values) {
+			v.Set("method", "password")
 			v.Set("password_identifier", identifier)
 			v.Set("password", pwd)
 		}

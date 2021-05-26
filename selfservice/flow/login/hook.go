@@ -63,6 +63,21 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
 	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC()).Declassify()
 
+	// why (is there any reason) is it (Flow.Active) not set in the implementation of the corresponding Login
+	// method (strategy_login.go:L91 ff and login.go:L51 ff)?
+	// this can be easily achieved by the following lines
+	//
+	// f.Active = identity.CredentialsTypePassword // or identity.CredentialsTypeOidc
+	//
+	// if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+	// 	return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+	// }
+	//
+	// in the right place. Otherwise the Flow.Active property is never set (only in tests).
+	// If done as described above, there wouldn't be a need to pass around the `ct` argument as well, like in this method.
+	// So, FMPOV, the following line is just a hack due to the missing implementation described above.
+	a.Active = ct
+
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
