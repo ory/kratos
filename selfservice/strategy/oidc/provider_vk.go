@@ -79,15 +79,14 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token) (*Claim
 	defer resp.Body.Close()
 
 	type User struct {
-		Id            int    `json:"id,omitempty"`
-		FirstName     string `json:"first_name,omitempty"`
-		LastName      string `json:"last_name,omitempty"`
-		Nickname      string `json:"nickname,omitempty"`
-		Picture       string `json:"photo_200,omitempty"`
-		Email         string
-		EmailVerified bool
-		Gender        int    `json:"sex,omitempty"`
-		BirthDay      string `json:"bdate,omitempty"`
+		Id        int    `json:"id,omitempty"`
+		FirstName string `json:"first_name,omitempty"`
+		LastName  string `json:"last_name,omitempty"`
+		Nickname  string `json:"nickname,omitempty"`
+		Picture   string `json:"photo_200,omitempty"`
+		Email     string
+		Gender    int    `json:"sex,omitempty"`
+		BirthDay  string `json:"bdate,omitempty"`
 	}
 
 	var response struct {
@@ -102,7 +101,6 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token) (*Claim
 
 	if email := exchange.Extra("email"); email != nil {
 		user.Email = email.(string)
-		user.EmailVerified = true
 	}
 
 	gender := ""
@@ -114,15 +112,14 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token) (*Claim
 	}
 
 	return &Claims{
-		Issuer:        u.String(),
-		Subject:       strconv.Itoa(user.Id),
-		GivenName:     user.FirstName,
-		FamilyName:    user.LastName,
-		Nickname:      user.Nickname,
-		Picture:       user.Picture,
-		Email:         user.Email,
-		EmailVerified: user.EmailVerified,
-		Gender:        gender,
-		Birthdate:     user.BirthDay,
+		Issuer:     u.String(),
+		Subject:    strconv.Itoa(user.Id),
+		GivenName:  user.FirstName,
+		FamilyName: user.LastName,
+		Nickname:   user.Nickname,
+		Picture:    user.Picture,
+		Email:      user.Email,
+		Gender:     gender,
+		Birthdate:  user.BirthDay,
 	}, nil
 }
