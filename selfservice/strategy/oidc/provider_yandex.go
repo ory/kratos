@@ -76,15 +76,14 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	defer resp.Body.Close()
 
 	var user struct {
-		Id            string `json:"id,omitempty"`
-		FirstName     string `json:"first_name,omitempty"`
-		LastName      string `json:"last_name,omitempty"`
-		Email         string `json:"default_email,omitempty"`
-		EmailVerified bool
-		Picture       string `json:"default_avatar_id,omitempty"`
-		PictureEmpty  bool   `json:"is_avatar_empty,omitempty"`
-		Gender        string `json:"sex,omitempty"`
-		BirthDay      string `json:"birthday,omitempty"`
+		Id           string `json:"id,omitempty"`
+		FirstName    string `json:"first_name,omitempty"`
+		LastName     string `json:"last_name,omitempty"`
+		Email        string `json:"default_email,omitempty"`
+		Picture      string `json:"default_avatar_id,omitempty"`
+		PictureEmpty bool   `json:"is_avatar_empty,omitempty"`
+		Gender       string `json:"sex,omitempty"`
+		BirthDay     string `json:"birthday,omitempty"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
@@ -97,19 +96,14 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		user.Picture = ""
 	}
 
-	if user.Email != "" {
-		user.EmailVerified = true
-	}
-
 	return &Claims{
-		Issuer:        u.String(),
-		Subject:       user.Id,
-		GivenName:     user.FirstName,
-		FamilyName:    user.LastName,
-		Picture:       user.Picture,
-		Email:         user.Email,
-		EmailVerified: user.EmailVerified,
-		Gender:        user.Gender,
-		Birthdate:     user.BirthDay,
+		Issuer:     u.String(),
+		Subject:    user.Id,
+		GivenName:  user.FirstName,
+		FamilyName: user.LastName,
+		Picture:    user.Picture,
+		Email:      user.Email,
+		Gender:     user.Gender,
+		Birthdate:  user.BirthDay,
 	}, nil
 }
