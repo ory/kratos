@@ -1,0 +1,43 @@
+---
+id: tracing
+title: Distributed Tracing
+---
+
+Configuring Distributed Tracing (DT) will enable you to obtain a visualization
+of the call paths that take place in order to process a request made to Kratos.
+It's yet another tool that you can use to aid you in profiling, debugging and
+ultimately understanding your deployment of Kratos better. Kratos currently
+supports the following tracing options:
+
+- Tracing backend(s): Jaeger, Elastic APM, Datadog, Zipkin and Instana - _Note:
+  adding support for other
+  [opentracing compliant backends](https://opentracing.io/docs/supported-tracers)
+  is planned. To aid in priority, please
+  [create an issue](https://github.com/ory/kratos/issues) with your feature
+  request._
+- Following existing traces: If you have deployed Kratos behind a proxy that has
+  initiated a trace, Kratos will attempt to join that trace by examining the
+  request headers for tracing context.
+
+### What a Kratos trace includes
+
+In DT speak, a trace is comprised of one or more spans which are logical units
+of work. Each Kratos span is encapsulated with the following state:
+
+- A name
+- A start time
+- A finish time
+- A set of zero or more tags
+
+Kratos currently creates the following spans:
+
+- Top level span (_named after the request path_) for the requested endpoint.
+  Span tags: - http method - http status code - error IFF status code >= 400
+- Child span will be created if bcrypt (_e.g. when the token endpoint is
+  called_) is called. Span tags: - bcrypt work factor
+- All SQL database interactions. Spans/tags will vary depending on the database
+  driver used.
+
+This is still evolving and subject to change as tracing support continues to
+expand in Kratos. If you see something that is missing/wrong, please create an
+issue.
