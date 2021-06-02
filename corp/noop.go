@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/driver/config"
 )
 
