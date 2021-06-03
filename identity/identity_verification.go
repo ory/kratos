@@ -19,41 +19,71 @@ const (
 	VerifiableAddressStatusCompleted VerifiableAddressStatus = "completed"
 )
 
-type (
-	// VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.
-	VerifiableAddressType string
+// VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema
+//
+// swagger:model identityVerifiableAddressType
+type VerifiableAddressType string
 
-	// VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema.
-	VerifiableAddressStatus string
+// VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema
+//
+// swagger:model identityVerifiableAddressStatus
+type VerifiableAddressStatus string
 
-	// swagger:model verifiableIdentityAddress
-	VerifiableAddress struct {
-		// required: true
-		ID uuid.UUID `json:"id" db:"id" faker:"-"`
+// VerifiableAddress is an identity's verifiable address
+//
+// swagger:model verifiableIdentityAddress
+type VerifiableAddress struct {
+	// The ID
+	//
+	// required: true
+	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
-		// required: true
-		Value string `json:"value" db:"value"`
+	// The address value
+	//
+	// example foo@user.com
+	// required: true
+	Value string `json:"value" db:"value"`
 
-		// required: true
-		Verified bool `json:"verified" db:"verified"`
+	// Indicates if the address has already been verified
+	//
+	// example: true
+	// required: true
+	Verified bool `json:"verified" db:"verified"`
 
-		// required: true
-		Via VerifiableAddressType `json:"via" db:"via"`
+	// The delivery method
+	//
+	// enum: ["email"]
+	// example: email
+	// required: true
+	Via VerifiableAddressType `json:"via" db:"via"`
 
-		// required: true
-		Status VerifiableAddressStatus `json:"status" db:"status"`
+	// The verified address status
+	//
+	// enum: ["pending","sent","completed"]
+	// example: sent
+	// required: true
+	Status VerifiableAddressStatus `json:"status" db:"status"`
 
-		VerifiedAt sqlxx.NullTime `json:"verified_at" faker:"-" db:"verified_at"`
+	// When the address was verified
+	//
+	// example: 2014-01-01T23:28:56.782Z
+	VerifiedAt sqlxx.NullTime `json:"verified_at" faker:"-" db:"verified_at"`
 
-		// IdentityID is a helper struct field for gobuffalo.pop.
-		IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
-		// CreatedAt is a helper struct field for gobuffalo.pop.
-		CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
-		// UpdatedAt is a helper struct field for gobuffalo.pop.
-		UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-		NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
-	}
-)
+	// When this entry was created
+	//
+	// example: 2014-01-01T23:28:56.782Z
+	CreatedAt time.Time `json:"created_at" faker:"-" db:"created_at"`
+
+	// When this entry was last updated
+	//
+	// example: 2014-01-01T23:28:56.782Z
+	UpdatedAt time.Time `json:"updated_at" faker:"-" db:"updated_at"`
+
+	// IdentityID is a helper struct field for gobuffalo.pop.
+	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
+	// CreatedAt is a helper struct field for gobuffalo.pop.
+	NID uuid.UUID `json:"-"  faker:"-" db:"nid"`
+}
 
 func (v VerifiableAddressType) HTMLFormInputType() string {
 	switch v {

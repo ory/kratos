@@ -1,5 +1,5 @@
 disallowAdditionalPropertiesIfNotPresent: true
-packageName: kratos
+packageName: client
 generateInterfaces: false
 isGoSubmodule: false
 structPrefix: true

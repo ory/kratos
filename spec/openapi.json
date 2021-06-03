@@ -4,22 +4,12 @@
       "emptyResponse": {
         "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
       },
-      "errorContainer": {
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/errorContainer"
-            }
-          }
-        },
-        "description": "User-facing error response"
-      },
       "identityList": {
         "content": {
           "application/json": {
             "schema": {
               "items": {
-                "$ref": "#/components/schemas/Identity"
+                "$ref": "#/components/schemas/identity"
               },
               "type": "array"
             }
@@ -31,11 +21,21 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/Identity"
+              "$ref": "#/components/schemas/identity"
             }
           }
         },
         "description": "A single identity."
+      },
+      "selfServiceErrorResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/selfServiceErrorContainer"
+            }
+          }
+        },
+        "description": "User-facing error response"
       }
     },
     "schemas": {
@@ -168,23 +168,6 @@
         },
         "type": "object"
       },
-      "CreateIdentity": {
-        "properties": {
-          "schema_id": {
-            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
-            "type": "string"
-          },
-          "traits": {
-            "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
-            "type": "object"
-          }
-        },
-        "required": [
-          "schema_id",
-          "traits"
-        ],
-        "type": "object"
-      },
       "CreateRecoveryLink": {
         "properties": {
           "expires_in": {
@@ -254,47 +237,6 @@
         },
         "required": [
           "Id"
-        ],
-        "type": "object"
-      },
-      "Identity": {
-        "properties": {
-          "id": {
-            "$ref": "#/components/schemas/UUID"
-          },
-          "recovery_addresses": {
-            "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
-            "items": {
-              "$ref": "#/components/schemas/RecoveryAddress"
-            },
-            "type": "array",
-            "x-omitempty": true
-          },
-          "schema_id": {
-            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
-            "type": "string"
-          },
-          "schema_url": {
-            "description": "SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
-            "type": "string"
-          },
-          "traits": {
-            "$ref": "#/components/schemas/Traits"
-          },
-          "verifiable_addresses": {
-            "description": "VerifiableAddresses contains all the addresses that can be verified by the user.",
-            "items": {
-              "$ref": "#/components/schemas/VerifiableAddress"
-            },
-            "type": "array",
-            "x-omitempty": true
-          }
-        },
-        "required": [
-          "id",
-          "schema_id",
-          "schema_url",
-          "traits"
         ],
         "type": "object"
       },
@@ -859,8 +801,18 @@
       },
       "RecoveryAddress": {
         "properties": {
+          "created_at": {
+            "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          },
           "id": {
             "$ref": "#/components/schemas/UUID"
+          },
+          "updated_at": {
+            "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
           },
           "value": {
             "type": "string"
@@ -895,9 +847,6 @@
       "State": {
         "type": "string"
       },
-      "Traits": {
-        "type": "object"
-      },
       "Type": {
         "description": "The flow type can either be `api` or `browser`.",
         "title": "Type is the flow type.",
@@ -905,58 +854,6 @@
       },
       "UUID": {
         "format": "uuid4",
-        "type": "string"
-      },
-      "UpdateIdentity": {
-        "properties": {
-          "schema_id": {
-            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
-            "type": "string"
-          },
-          "traits": {
-            "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
-            "type": "object"
-          }
-        },
-        "required": [
-          "traits"
-        ],
-        "type": "object"
-      },
-      "VerifiableAddress": {
-        "properties": {
-          "id": {
-            "$ref": "#/components/schemas/UUID"
-          },
-          "status": {
-            "$ref": "#/components/schemas/VerifiableAddressStatus"
-          },
-          "value": {
-            "type": "string"
-          },
-          "verified": {
-            "type": "boolean"
-          },
-          "verified_at": {
-            "$ref": "#/components/schemas/NullTime"
-          },
-          "via": {
-            "$ref": "#/components/schemas/VerifiableAddressType"
-          }
-        },
-        "required": [
-          "id",
-          "value",
-          "verified",
-          "via",
-          "status"
-        ],
-        "type": "object"
-      },
-      "VerifiableAddressStatus": {
-        "type": "string"
-      },
-      "VerifiableAddressType": {
         "type": "string"
       },
       "Volume": {
@@ -1035,65 +932,65 @@
         ],
         "type": "object"
       },
-      "errorContainer": {
+      "createIdentity": {
         "properties": {
-          "errors": {
-            "description": "Errors in the container",
-            "items": {
-              "type": "object"
-            },
-            "type": "array"
+          "schema_id": {
+            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+            "type": "string"
           },
-          "id": {
-            "$ref": "#/components/schemas/UUID"
+          "traits": {
+            "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
+            "type": "object"
           }
         },
         "required": [
-          "id",
-          "errors"
+          "schema_id",
+          "traits"
         ],
         "type": "object"
       },
       "genericError": {
-        "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
-        "properties": {
-          "error": {
-            "$ref": "#/components/schemas/genericErrorPayload"
-          }
-        },
-        "title": "Error response",
-        "type": "object"
-      },
-      "genericErrorPayload": {
         "properties": {
           "code": {
-            "description": "Code represents the error status code (404, 403, 401, ...).",
+            "description": "The status code",
             "example": 404,
             "format": "int64",
             "type": "integer"
           },
           "debug": {
-            "description": "Debug contains debug information. This is usually not available and has to be enabled.",
-            "example": "The database adapter was unable to find the element",
+            "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
+            "example": "SQL field \"foo\" is not a bool.",
             "type": "string"
           },
           "details": {
             "additionalProperties": true,
+            "description": "Further error details",
             "type": "object"
           },
           "message": {
+            "description": "Error message\n\nThe error's message.",
+            "example": "The resource could not be found",
             "type": "string"
           },
           "reason": {
+            "description": "A human-readable reason for the error",
+            "example": "User with ID 1234 does not exist.",
             "type": "string"
           },
           "request": {
+            "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
+            "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
             "type": "string"
           },
           "status": {
+            "description": "The status description",
+            "example": "Not Found",
             "type": "string"
           }
         },
+        "required": [
+          "message"
+        ],
         "type": "object"
       },
       "healthNotReadyStatus": {
@@ -1117,11 +1014,88 @@
         },
         "type": "object"
       },
+      "identity": {
+        "description": "An identity can be a real human, a service, an IoT device - everything that\ncan be described as an \"actor\" in a system.",
+        "properties": {
+          "created_at": {
+            "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "credentials": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/identityCredentials"
+            },
+            "description": "Credentials represents all credentials that can be used for authenticating this identity.",
+            "type": "object"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "recovery_addresses": {
+            "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
+            "items": {
+              "$ref": "#/components/schemas/RecoveryAddress"
+            },
+            "type": "array",
+            "x-omitempty": true
+          },
+          "schema_id": {
+            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+            "type": "string"
+          },
+          "schema_url": {
+            "description": "SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
+            "type": "string"
+          },
+          "state": {
+            "description": "State is the identity's state.",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "type": "string"
+          },
+          "state_changed_at": {
+            "$ref": "#/components/schemas/NullTime"
+          },
+          "traits": {
+            "$ref": "#/components/schemas/identityTraits"
+          },
+          "updated_at": {
+            "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "verifiable_addresses": {
+            "description": "VerifiableAddresses contains all the addresses that can be verified by the user.",
+            "items": {
+              "$ref": "#/components/schemas/verifiableIdentityAddress"
+            },
+            "type": "array",
+            "x-omitempty": true
+          }
+        },
+        "required": [
+          "id",
+          "schema_id",
+          "schema_url",
+          "state",
+          "traits"
+        ],
+        "title": "Identity represents an Ory Kratos identity",
+        "type": "object"
+      },
       "identityCredentials": {
         "description": "Credentials represents a specific credential type",
         "properties": {
           "config": {
             "$ref": "#/components/schemas/JSONRawMessage"
+          },
+          "created_at": {
+            "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
           },
           "identifiers": {
             "description": "Identifiers represents a list of unique identifiers this credential type matches.",
@@ -1132,8 +1106,37 @@
           },
           "type": {
             "$ref": "#/components/schemas/CredentialsType"
+          },
+          "updated_at": {
+            "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
           }
         },
+        "type": "object"
+      },
+      "identityTraits": {
+        "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`."
+      },
+      "identityVerifiableAddressStatus": {
+        "description": "VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema",
+        "type": "string"
+      },
+      "identityVerifiableAddressType": {
+        "description": "VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema",
+        "type": "string"
+      },
+      "jsonError": {
+        "description": "The standard Ory JSON API error format.",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/genericError"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "JSON API Error Response",
         "type": "object"
       },
       "jsonSchema": {
@@ -1145,6 +1148,11 @@
         "properties": {
           "active": {
             "$ref": "#/components/schemas/CredentialsType"
+          },
+          "created_at": {
+            "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
           },
           "expires_at": {
             "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,\na new flow has to be initiated.",
@@ -1172,6 +1180,11 @@
           },
           "ui": {
             "$ref": "#/components/schemas/uiContainer"
+          },
+          "updated_at": {
+            "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
           }
         },
         "required": [
@@ -1306,7 +1319,7 @@
         "description": "The Response for Registration Flows via API",
         "properties": {
           "identity": {
-            "$ref": "#/components/schemas/Identity"
+            "$ref": "#/components/schemas/identity"
           },
           "session": {
             "$ref": "#/components/schemas/session"
@@ -1334,6 +1347,35 @@
         ],
         "type": "object"
       },
+      "selfServiceErrorContainer": {
+        "properties": {
+          "created_at": {
+            "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "errors": {
+            "description": "Errors in the container",
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "updated_at": {
+            "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "errors"
+        ],
+        "type": "object"
+      },
       "session": {
         "properties": {
           "active": {
@@ -1351,7 +1393,7 @@
             "$ref": "#/components/schemas/UUID"
           },
           "identity": {
-            "$ref": "#/components/schemas/Identity"
+            "$ref": "#/components/schemas/identity"
           },
           "issued_at": {
             "format": "date-time",
@@ -1383,7 +1425,7 @@
             "$ref": "#/components/schemas/UUID"
           },
           "identity": {
-            "$ref": "#/components/schemas/Identity"
+            "$ref": "#/components/schemas/identity"
           },
           "issued_at": {
             "description": "IssuedAt is the time (UTC) when the flow occurred.",
@@ -1447,7 +1489,7 @@
             "$ref": "#/components/schemas/settingsFlow"
           },
           "identity": {
-            "$ref": "#/components/schemas/Identity"
+            "$ref": "#/components/schemas/identity"
           }
         },
         "required": [
@@ -1534,6 +1576,7 @@
           },
           "method": {
             "description": "Method to use\n\nThis field must be set to `password` when using the password method.",
+            "pattern": "^password$",
             "type": "string"
           },
           "password": {
@@ -1827,6 +1870,77 @@
         },
         "type": "array"
       },
+      "updateIdentity": {
+        "properties": {
+          "schema_id": {
+            "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
+            "type": "string"
+          },
+          "state": {
+            "description": "State is the identity's state.",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "type": "string"
+          },
+          "traits": {
+            "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "traits",
+          "state"
+        ],
+        "type": "object"
+      },
+      "verifiableIdentityAddress": {
+        "description": "VerifiableAddress is an identity's verifiable address",
+        "properties": {
+          "created_at": {
+            "description": "When this entry was created",
+            "example": "2014-01-01T23:28:56.782Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "status": {
+            "$ref": "#/components/schemas/identityVerifiableAddressStatus"
+          },
+          "updated_at": {
+            "description": "When this entry was last updated",
+            "example": "2014-01-01T23:28:56.782Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "value": {
+            "description": "The address value\n\nexample foo@user.com",
+            "type": "string"
+          },
+          "verified": {
+            "description": "Indicates if the address has already been verified",
+            "example": true,
+            "type": "boolean"
+          },
+          "verified_at": {
+            "$ref": "#/components/schemas/NullTime"
+          },
+          "via": {
+            "$ref": "#/components/schemas/identityVerifiableAddressType"
+          }
+        },
+        "required": [
+          "id",
+          "value",
+          "verified",
+          "via",
+          "status"
+        ],
+        "type": "object"
+      },
       "verificationFlow": {
         "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
         "properties": {
@@ -1881,15 +1995,18 @@
       }
     },
     "securitySchemes": {
+      "oryToken": {
+        "scheme": "bearer",
+        "type": "http"
+      },
       "sessionCookie": {
         "in": "cookie",
         "name": "ory_kratos_session",
         "type": "apiKey"
       },
       "sessionToken": {
-        "in": "header",
-        "name": "X-Session-Token",
-        "type": "apiKey"
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
@@ -2037,11 +2154,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "List Identities",
@@ -2056,7 +2173,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateIdentity"
+                "$ref": "#/components/schemas/createIdentity"
               }
             }
           },
@@ -2070,31 +2187,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "409": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Create an Identity",
@@ -2126,21 +2243,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Delete an Identity",
@@ -2166,35 +2283,25 @@
           "200": {
             "$ref": "#/components/responses/identityResponse"
           },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/genericError"
-                }
-              }
-            },
-            "description": "genericError"
-          },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Get an Identity",
@@ -2220,7 +2327,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateIdentity"
+                "$ref": "#/components/schemas/updateIdentity"
               }
             }
           },
@@ -2228,37 +2335,54 @@
         },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/identityResponse"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/identity"
+                }
+              }
+            },
+            "description": "identity"
           },
           "400": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Update an Identity",
@@ -2311,31 +2435,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Create a Recovery Link",
@@ -2374,21 +2498,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "tags": [
@@ -2409,11 +2533,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Initialize Browser-Based Logout User Flow",
@@ -2439,37 +2563,37 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/errorContainer"
+            "$ref": "#/components/responses/selfServiceErrorResponse"
           },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Get User-Facing Self-Service Errors",
@@ -2537,11 +2661,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Submit a Login Flow",
@@ -2553,7 +2677,7 @@
     "/self-service/login/api": {
       "get": {
         "description": "This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing login flow call `/self-service/login/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks, including CSRF login attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
-        "operationId": "initializeSelfServiceLoginViaAPIFlow",
+        "operationId": "initializeSelfServiceLoginForNativeApps",
         "parameters": [
           {
             "description": "Refresh a login session\n\nIf set to true, this will refresh an existing login session by\nasking the user to sign in again. This will reset the\nauthenticated_at time of the session.",
@@ -2579,24 +2703,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
-        "summary": "Initialize Login Flow for API clients",
+        "summary": "Initialize Login Flow for Native Apps and API clients",
         "tags": [
           "public"
         ]
@@ -2605,7 +2729,17 @@
     "/self-service/login/browser": {
       "get": {
         "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
-        "operationId": "initializeSelfServiceLoginViaBrowserFlow",
+        "operationId": "initializeSelfServiceLoginForBrowsers",
+        "parameters": [
+          {
+            "description": "Refresh a login session\n\nIf set to true, this will refresh an existing login session by\nasking the user to sign in again. This will reset the\nauthenticated_at time of the session.",
+            "in": "query",
+            "name": "refresh",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "302": {
             "$ref": "#/components/responses/emptyResponse"
@@ -2614,11 +2748,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Initialize Login Flow for browsers",
@@ -2657,41 +2791,41 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "410": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Get Login Flow",
@@ -2749,11 +2883,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Complete Recovery Flow",
@@ -2765,7 +2899,7 @@
     "/self-service/recovery/api": {
       "get": {
         "description": "This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nTo fetch an existing recovery flow call `/self-service/recovery/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
-        "operationId": "initializeSelfServiceRecoveryViaAPIFlow",
+        "operationId": "initializeSelfServiceRecoveryForNativeApps",
         "responses": {
           "200": {
             "content": {
@@ -2781,24 +2915,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
-        "summary": "Initialize Recovery Flow for API Clients",
+        "summary": "Initialize Recovery Flow for Native Apps and API clients",
         "tags": [
           "public"
         ]
@@ -2807,7 +2941,7 @@
     "/self-service/recovery/browser": {
       "get": {
         "description": "This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists, the browser is returned to the configured return URL.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
-        "operationId": "initializeSelfServiceRecoveryViaBrowserFlow",
+        "operationId": "initializeSelfServiceRecoveryForBrowsers",
         "responses": {
           "302": {
             "$ref": "#/components/responses/emptyResponse"
@@ -2816,11 +2950,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Initialize Recovery Flow for Browser Clients",
@@ -2859,31 +2993,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "410": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Get information about a recovery flow",
@@ -2948,11 +3082,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Complete Recovery Flow with Link Method",
@@ -3019,11 +3153,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Submit a Registration Flow",
@@ -3035,7 +3169,7 @@
     "/self-service/registration/api": {
       "get": {
         "description": "This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing registration flow call `/self-service/registration/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
-        "operationId": "initializeSelfServiceRegistrationViaAPIFlow",
+        "operationId": "initializeSelfServiceRegistrationForNativeApps",
         "responses": {
           "200": {
             "content": {
@@ -3051,24 +3185,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
-        "summary": "Initialize Registration Flow for API clients",
+        "summary": "Initialize Registration Flow for Native Apps and API clients",
         "tags": [
           "public"
         ]
@@ -3077,7 +3211,7 @@
     "/self-service/registration/browser": {
       "get": {
         "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
-        "operationId": "initializeSelfServiceRegistrationViaBrowserFlow",
+        "operationId": "initializeSelfServiceRegistrationForBrowsers",
         "responses": {
           "302": {
             "$ref": "#/components/responses/emptyResponse"
@@ -3086,11 +3220,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Initialize Registration Flow for browsers",
@@ -3129,41 +3263,41 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "410": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Get Registration Flow",
@@ -3183,6 +3317,14 @@
             "in": "query",
             "name": "flow",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "in": "header",
+            "name": "X-Session-Token",
             "schema": {
               "type": "string"
             }
@@ -3231,31 +3373,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "security": [
@@ -3272,7 +3414,17 @@
     "/self-service/settings/api": {
       "get": {
         "description": "This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.\nYou must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.\n\nTo fetch an existing settings flow call `/self-service/settings/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "operationId": "initializeSelfServiceSettingsViaAPIFlow",
+        "operationId": "initializeSelfServiceSettingsForNativeApps",
+        "parameters": [
+          {
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "in": "header",
+            "name": "X-Session-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3288,21 +3440,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "security": [
@@ -3310,7 +3462,7 @@
             "sessionToken": []
           }
         ],
-        "summary": "Initialize Settings Flow for API Clients",
+        "summary": "Initialize Settings Flow for Native Apps and API clients",
         "tags": [
           "public"
         ]
@@ -3319,7 +3471,7 @@
     "/self-service/settings/browser": {
       "get": {
         "description": "This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid\nOry Kratos Session Cookie is included in the request, a login flow will be initialized.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "operationId": "initializeSelfServiceSettingsViaBrowserFlow",
+        "operationId": "initializeSelfServiceSettingsForBrowsers",
         "responses": {
           "302": {
             "$ref": "#/components/responses/emptyResponse"
@@ -3328,11 +3480,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "security": [
@@ -3359,6 +3511,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "in": "header",
+            "name": "X-Session-Token",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3376,41 +3536,41 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "410": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "security": [
@@ -3428,7 +3588,7 @@
     "/self-service/verification/api": {
       "get": {
         "description": "This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.\n\nTo fetch an existing verification flow call `/self-service/verification/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
-        "operationId": "initializeSelfServiceVerificationViaAPIFlow",
+        "operationId": "initializeSelfServiceVerificationForNativeApps",
         "responses": {
           "200": {
             "content": {
@@ -3444,24 +3604,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
-        "summary": "Initialize Verification Flow for API Clients",
+        "summary": "Initialize Verification Flow for Native Apps and API clients",
         "tags": [
           "public"
         ]
@@ -3470,7 +3630,7 @@
     "/self-service/verification/browser": {
       "get": {
         "description": "This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
-        "operationId": "initializeSelfServiceVerificationViaBrowserFlow",
+        "operationId": "initializeSelfServiceVerificationForBrowsers",
         "responses": {
           "302": {
             "$ref": "#/components/responses/emptyResponse"
@@ -3479,11 +3639,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Initialize Verification Flow for Browser Clients",
@@ -3522,31 +3682,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Get Verification Flow",
@@ -3604,11 +3764,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Complete Verification Flow",
@@ -3640,21 +3800,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "summary": "Initialize Logout Flow for API Clients - Revoke a Session",
@@ -3665,19 +3825,12 @@
     },
     "/sessions/whoami": {
       "get": {
-        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nThis endpoint is useful for reverse proxies and API Gateways.",
-        "operationId": "whoami",
+        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!",
+        "operationId": "toSession",
         "parameters": [
           {
             "in": "header",
-            "name": "Cookie",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Authorization",
+            "name": "X-Session-Token",
             "schema": {
               "type": "string"
             }
@@ -3698,26 +3851,26 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/genericError"
+                  "$ref": "#/components/schemas/jsonError"
                 }
               }
             },
-            "description": "genericError"
+            "description": "jsonError"
           }
         },
         "security": [
           {
-            "sessionToken": []
+            "sessionCookie": []
           }
         ],
         "summary": "Check Who the Current HTTP Session Belongs To",
@@ -3758,25 +3911,6 @@
       }
     }
   },
-  "servers": [
-    {
-      "url": "https://{tenant}.tenants.oryapis.com/api/kratos/{api}",
-      "variables": {
-        "api": {
-          "default": "public",
-          "description": "Target the public or administrative API.",
-          "enum": [
-            "public",
-            "admin"
-          ]
-        },
-        "tenant": {
-          "default": "demo",
-          "description": "Tenant ID as provided by Ory Cloud."
-        }
-      }
-    }
-  ],
   "tags": [
     {
       "description": "All administrative API endpoints exposed at the admin API port.",

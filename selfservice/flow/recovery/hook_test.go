@@ -33,7 +33,7 @@ func TestRecoveryExecutor(t *testing.T) {
 		router.GET("/recovery/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			a, err := recovery.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, reg.RecoveryStrategies(context.Background()), ft)
 			require.NoError(t, err)
-			s := session.NewActiveSession(i, conf, time.Now().UTC())
+			s, _ := session.NewActiveSession(i, conf, time.Now().UTC())
 			a.RequestURL = x.RequestURL(r).String()
 			if testhelpers.SelfServiceHookErrorHandler(t, w, r, recovery.ErrHookAbortFlow, reg.RecoveryExecutor().PostRecoveryHook(w, r, a, s)) {
 				_, _ = w.Write([]byte("ok"))

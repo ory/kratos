@@ -15,7 +15,7 @@ import (
 
 	"github.com/ory/x/jsonx"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/corpx"
 
@@ -48,6 +48,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 		},
 		Traits:              identity.Traits(`{"email":"` + email + `","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		SchemaID:            config.DefaultIdentityTraitsSchemaID,
+		State:               identity.StateActive,
 		VerifiableAddresses: []identity.VerifiableAddress{{Value: email, Via: identity.VerifiableAddressTypeEmail}},
 		// TO ADD - RECOVERY EMAIL,
 	}
@@ -82,8 +83,8 @@ func TestStrategyTraits(t *testing.T) {
 
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
 	apiIdentity1 := newIdentityWithPassword("john-api@doe.com")
-	browserIdentity2 := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`)}
-	apiIdentity2 := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`)}
+	browserIdentity2 := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`), State: identity.StateActive}
+	apiIdentity2 := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`), State: identity.StateActive}
 
 	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
 	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity2)
@@ -182,7 +183,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, publicTS.URL+route, payload.RequestUrl)
 
 			actual := jsonx.TestMarshalJSONString(t, payload.Ui)
-			assert.EqualValues(t, payload.Identity.Traits["email"], gjson.Get(actual, "nodes.#(attributes.name==traits.email).attributes.value").String())
+			assert.EqualValues(t, payload.Identity.Traits.(map[string]interface{})["email"], gjson.Get(actual, "nodes.#(attributes.name==traits.email).attributes.value").String())
 			assert.NotEmpty(t, gjson.Get(actual, "nodes.#(attributes.name==csrf_token).attributes.value").String(), "csrf token missing")
 
 			assertx.EqualAsJSONExcept(t, json.RawMessage(`{
@@ -198,7 +199,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "a3F2b3l2bzUzeDd2cHR2aTI0aXAxNmRqcm5rN3poM20="
       },
       "group": "default",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -210,7 +211,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "john-api@doe.com"
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -222,7 +223,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "foobar"
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -234,7 +235,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": 2.5
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -246,7 +247,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": false
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -258,7 +259,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": 2048
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -270,7 +271,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "asdfasdfasdfasdfasfdasdfasdfasdf"
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {},
       "type": "input"
     },
@@ -282,7 +283,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "profile"
       },
       "group": "profile",
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1070003,
@@ -300,7 +301,7 @@ func TestStrategyTraits(t *testing.T) {
         "type": "password"
       },
       "group": "password",
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1070001,
@@ -318,7 +319,7 @@ func TestStrategyTraits(t *testing.T) {
         "value": "password"
       },
       "group": "password",
-      "messages": null,
+      "messages": [],
       "meta": {
         "label": {
           "id": 1070003,
@@ -333,7 +334,7 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).PublicApi.InitializeSelfServiceSettingsViaAPIFlow(context.Background()).Execute()
+			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).PublicApi.InitializeSelfServiceSettingsForNativeApps(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, apiIdentity1, pr, settings.RouteInitAPIFlow)
 		})

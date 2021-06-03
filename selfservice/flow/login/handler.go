@@ -97,7 +97,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 }
 
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceBrowserLoginFlow initializeSelfServiceLoginViaAPIFlow
+// swagger:parameters initializeSelfServiceLoginForBrowsers initializeSelfServiceLoginForNativeApps
 type initializeSelfServiceBrowserLoginFlow struct {
 	// Refresh a login session
 	//
@@ -109,9 +109,9 @@ type initializeSelfServiceBrowserLoginFlow struct {
 	Refresh bool `json:"refresh"`
 }
 
-// swagger:route GET /self-service/login/api public initializeSelfServiceLoginViaAPIFlow
+// swagger:route GET /self-service/login/api public initializeSelfServiceLoginForNativeApps
 //
-// Initialize Login Flow for API clients
+// Initialize Login Flow for Native Apps and API clients
 //
 // This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -132,12 +132,15 @@ type initializeSelfServiceBrowserLoginFlow struct {
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
+//     Produces:
+//     - application/json
+//
 //     Schemes: http, https
 //
 //     Responses:
 //       200: loginFlow
-//       500: genericError
-//       400: genericError
+//       500: jsonError
+//       400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	a, err := h.NewLoginFlow(w, r, flow.TypeAPI)
 	if err != nil {
@@ -163,7 +166,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 }
 
-// swagger:route GET /self-service/login/browser public initializeSelfServiceLoginViaBrowserFlow
+// swagger:route GET /self-service/login/browser public initializeSelfServiceLoginForBrowsers
 //
 // Initialize Login Flow for browsers
 //
@@ -180,7 +183,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 //     Responses:
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if err != nil {
@@ -243,10 +246,10 @@ type getSelfServiceLoginFlow struct {
 //
 //     Responses:
 //       200: loginFlow
-//       403: genericError
-//       404: genericError
-//       410: genericError
-//       500: genericError
+//       403: jsonError
+//       404: jsonError
+//       410: jsonError
+//       500: jsonError
 func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ar, err := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
@@ -324,7 +327,7 @@ type submitSelfServiceLoginFlowBody struct{}
 //       200: loginViaApiResponse
 //       302: emptyResponse
 //       400: loginFlow
-//       500: genericError
+//       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {

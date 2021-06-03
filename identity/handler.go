@@ -3,16 +3,19 @@ package identity
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
-	"github.com/ory/kratos/driver/config"
+	"github.com/ory/herodot"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/jsonx"
-	"github.com/ory/x/urlx"
-
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
+
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 const RouteBase = "/identities"
@@ -104,7 +107,7 @@ type listIdentityParameters struct {
 //
 //     Responses:
 //       200: identityList
-//       500: genericError
+//       500: jsonError
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, itemsPerPage)
@@ -149,17 +152,16 @@ type getIdentityParameters struct {
 //
 //     Responses:
 //       200: identityResponse
-//       400: genericError
-//       404: genericError
-//       500: genericError
+//       404: jsonError
+//       500: jsonError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	i, err := h.r.IdentityPool().GetIdentity(r.Context(), x.ParseUUID(ps.ByName("id")))
+	i, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(ps.ByName("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, i)
+	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
 }
 
 // swagger:parameters createIdentity
@@ -169,6 +171,7 @@ type createIdentityParameters struct {
 	Body CreateIdentity
 }
 
+// swagger:model createIdentity
 type CreateIdentity struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
@@ -204,9 +207,9 @@ type CreateIdentity struct {
 //
 //     Responses:
 //       201: identityResponse
-//       400: genericError
-//		 409: genericError
-//       500: genericError
+//       400: jsonError
+//		 409: jsonError
+//       500: jsonError
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var cr CreateIdentity
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
@@ -214,7 +217,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		return
 	}
 
-	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits)}
+	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: StateActive, StateChangedAt: sqlxx.NullTime(time.Now())}
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -238,10 +241,12 @@ type updateIdentityParameters struct {
 	// required: true
 	// in: path
 	ID string `json:"id"`
+
 	// in: body
 	Body UpdateIdentity
 }
 
+// swagger:model updateIdentity
 type UpdateIdentity struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
 	// will update the Identity's SchemaID.
@@ -253,6 +258,11 @@ type UpdateIdentity struct {
 	//
 	// required: true
 	Traits json.RawMessage `json:"traits"`
+
+	// State is the identity's state.
+	//
+	// required: true
+	State State `json:"state"`
 }
 
 // swagger:route PUT /identities/{id} admin updateIdentity
@@ -275,10 +285,11 @@ type UpdateIdentity struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: identityResponse
-//       400: genericError
-//       404: genericError
-//       500: genericError
+//       200: identity
+//       400: jsonError
+//       404: jsonError
+//		 409: jsonError
+//       500: jsonError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var ur UpdateIdentity
 	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); err != nil {
@@ -295,6 +306,15 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	if ur.SchemaID != "" {
 		identity.SchemaID = ur.SchemaID
+	}
+
+	if ur.State != "" && identity.State != ur.State {
+		if err := ur.State.IsValid(); err != nil {
+			h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+		}
+
+		identity.State = ur.State
+		identity.StateChangedAt = sqlxx.NullTime(time.Now())
 	}
 
 	identity.Traits = []byte(ur.Traits)
@@ -337,8 +357,8 @@ type deleteIdentityParameters struct {
 //
 //     Responses:
 //       204: emptyResponse
-//		 404: genericError
-//       500: genericError
+//       404: jsonError
+//       500: jsonError
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)

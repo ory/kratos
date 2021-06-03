@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
@@ -57,7 +57,7 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *htt
 func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SettingsFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceSettingsViaAPIFlow(context.Background()).Execute()
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceSettingsForNativeApps(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 

@@ -52,7 +52,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 
 var schemas = make(map[string]*jsonschema.Schema)
 
-const createIdentityPath = "openapi.json#/definitions/CreateIdentity"
+const createIdentityPath = "openapi.json#/components/schemas/createIdentity"
 
 type schemaGetter = func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error)
 

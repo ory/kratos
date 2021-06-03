@@ -18,8 +18,7 @@
       "format": "uuid"
     },
     "csrf_token": {
-      "type": "string",
-      "minLength": 1
+      "type": "string"
     }
   }
 }

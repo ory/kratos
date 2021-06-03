@@ -11,7 +11,7 @@ import (
 
 	"github.com/ory/x/assertx"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/x/ioutilx"
 
@@ -49,7 +49,7 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 }
 
 func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
-	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.InitializeSelfServiceRegistrationViaAPIFlow(context.Background()).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.InitializeSelfServiceRegistrationForNativeApps(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs

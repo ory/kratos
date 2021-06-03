@@ -117,9 +117,9 @@ type recoveryLink struct {
 //
 //     Responses:
 //       200: recoveryLink
-//       404: genericError
-//       400: genericError
-//       500: genericError
+//       404: jsonError
+//       400: jsonError
+//       500: jsonError
 func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var p CreateRecoveryLink
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
@@ -266,7 +266,7 @@ type submitSelfServiceRecoveryFlowWithLinkMethod struct {
 //     Responses:
 //       400: recoveryFlow
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
 	body, err := s.decodeRecovery(r)
 	if err != nil {
@@ -323,7 +323,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.handleRecoveryError(w, r, f, nil, err)
 	}
 
-	sess := session.NewActiveSession(recovered, s.d.Config(r.Context()), time.Now().UTC())
+	sess, _ := session.NewActiveSession(recovered, s.d.Config(r.Context()), time.Now().UTC())
 	if err := s.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, sess); err != nil {
 		return s.handleRecoveryError(w, r, f, nil, err)
 	}

@@ -51,15 +51,18 @@ func TestVerification(t *testing.T) {
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRedirTS(t, "returned", conf)
 
-	public, _ := testhelpers.NewKratosServer(t, reg)
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToVerify,
 		identity.ManagerAllowWriteProtectedTraits))
 
 	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
 		hc := testhelpers.NewDebugClient(t)
 		if !isAPI {
-			hc = testhelpers.NewDebugClient(t)
+			hc = testhelpers.NewClientWithCookies(t)
+			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
 		}
+
 		return testhelpers.SubmitVerificationForm(t, isAPI, hc, public, values, c,
 			testhelpers.ExpectURL(isAPI, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI().String()))
 	}
@@ -76,17 +79,17 @@ func TestVerification(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		assertx.EqualAsJSON(t, json.RawMessage(`[
+		assertx.EqualAsJSONExcept(t, json.RawMessage(`[
   {
     "attributes": {
       "disabled": false,
       "name": "csrf_token",
       "required": true,
       "type": "hidden",
-      "value": "`+x.FakeCSRFToken+`"
+      "value": ""
     },
     "group": "default",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -98,7 +101,7 @@ func TestVerification(t *testing.T) {
       "type": "email"
     },
     "group": "link",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -110,7 +113,7 @@ func TestVerification(t *testing.T) {
       "value": "link"
     },
     "group": "link",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070005,
@@ -120,7 +123,7 @@ func TestVerification(t *testing.T) {
     },
     "type": "input"
   }
-]`), rs.Ui.Nodes)
+]`), rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})

@@ -10,6 +10,14 @@ import (
 // swagger:model uiTexts
 type Messages []Message
 
+func (h Messages) MarshalJSON() ([]byte, error) {
+	if len(h) == 0 {
+		return []byte("[]"), nil
+	}
+
+	return json.Marshal([]Message(h))
+}
+
 func (h *Messages) Scan(value interface{}) error {
 	return sqlxx.JSONScan(h, value)
 }

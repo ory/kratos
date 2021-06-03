@@ -59,6 +59,7 @@ func NewHandler(d handlerDependencies) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
+	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
 	public.GET(RouteInitAPIFlow, h.initAPIFlow)
@@ -72,9 +73,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteGetFlow, h.fetch)
 }
 
-// swagger:route GET /self-service/verification/api public initializeSelfServiceVerificationViaAPIFlow
+// swagger:route GET /self-service/verification/api public initializeSelfServiceVerificationForNativeApps
 //
-// Initialize Verification Flow for API Clients
+// Initialize Verification Flow for Native Apps and API clients
 //
 // This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -96,8 +97,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 //     Responses:
 //       200: verificationFlow
-//       500: genericError
-//       400: genericError
+//       500: jsonError
+//       400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
@@ -118,7 +119,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
-// swagger:route GET /self-service/verification/browser public initializeSelfServiceVerificationViaBrowserFlow
+// swagger:route GET /self-service/verification/browser public initializeSelfServiceVerificationForBrowsers
 //
 // Initialize Verification Flow for Browser Clients
 //
@@ -133,7 +134,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 //     Responses:
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
@@ -182,9 +183,9 @@ type getSelfServiceVerificationFlowParameters struct {
 //
 //     Responses:
 //       200: verificationFlow
-//       403: genericError
-//       404: genericError
-//       500: genericError
+//       403: jsonError
+//       404: jsonError
+//       500: jsonError
 func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowVerificationEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
@@ -267,7 +268,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //     Responses:
 //       400: verificationFlow
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {

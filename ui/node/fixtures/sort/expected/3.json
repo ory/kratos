@@ -9,7 +9,7 @@
       "required": true,
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -21,7 +21,7 @@
       "value": "github",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -33,7 +33,7 @@
       "value": "google",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -45,7 +45,7 @@
       "value": "hydra",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -57,7 +57,7 @@
       "value": "oidc",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -68,7 +68,7 @@
       "type": "input",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -79,7 +79,7 @@
       "type": "email",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -91,7 +91,7 @@
       "value": "password",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   }
 ]

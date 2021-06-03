@@ -2,7 +2,11 @@
   "id": "d7b9addb-ac15-4bc2-9fa5-562e0bf48755",
   "schema_id": "default",
   "schema_url": "https://www.ory.sh/schemas/default",
+  "state": "active",
+  "state_changed_at": null,
   "traits": {
     "email": "d7b9@ory.sh"
-  }
+  },
+  "created_at": "2013-10-07T08:23:19Z",
+  "updated_at": "2013-10-07T08:23:19Z"
 }

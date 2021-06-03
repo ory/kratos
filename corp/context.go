@@ -9,20 +9,29 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-func ContextualizeTableName(_ context.Context, name string) string {
-	return name
+type Contextualizer interface {
+	ContextualizeTableName(ctx context.Context, name string) string
+	ContextualizeMiddleware(ctx context.Context) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc)
+	ContextualizeConfig(ctx context.Context, fb *config.Config) *config.Config
+	ContextualizeNID(ctx context.Context, fallback uuid.UUID) uuid.UUID
 }
 
-func ContextualizeMiddleware(_ context.Context) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	return func(w http.ResponseWriter, r *http.Request, n http.HandlerFunc) {
-		n(w, r)
-	}
+var DefaultContextualizer Contextualizer = noopContextualizer{}
+
+// These global functions call the respective method on DefaultContextualizer
+
+func ContextualizeTableName(ctx context.Context, name string) string {
+	return DefaultContextualizer.ContextualizeTableName(ctx, name)
+}
+
+func ContextualizeMiddleware(ctx context.Context) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	return DefaultContextualizer.ContextualizeMiddleware(ctx)
 }
 
 func ContextualizeConfig(ctx context.Context, fb *config.Config) *config.Config {
-	return fb
+	return DefaultContextualizer.ContextualizeConfig(ctx, fb)
 }
 
-func ContextualizeNID(_ context.Context, fallback uuid.UUID) uuid.UUID {
-	return fallback
+func ContextualizeNID(ctx context.Context, fallback uuid.UUID) uuid.UUID {
+	return DefaultContextualizer.ContextualizeNID(ctx, fallback)
 }

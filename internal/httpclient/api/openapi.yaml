@@ -12,17 +12,7 @@ info:
     name: Apache 2.0
   title: Ory Kratos API
 servers:
-- url: https://{tenant}.tenants.oryapis.com/api/kratos/{api}
-  variables:
-    api:
-      default: public
-      description: Target the public or administrative API.
-      enum:
-      - public
-      - admin
-    tenant:
-      default: demo
-      description: Tenant ID as provided by Ory Cloud.
+- url: /
 tags:
 - description: All administrative API endpoints exposed at the admin API port.
   externalDocs:
@@ -129,15 +119,15 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/Identity'
+                  $ref: '#/components/schemas/identity'
                 type: array
           description: A list of identities.
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: List Identities
       tags:
       - admin
@@ -152,33 +142,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateIdentity'
+              $ref: '#/components/schemas/createIdentity'
         x-originalParamName: Body
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Identity'
+                $ref: '#/components/schemas/identity'
           description: A single identity.
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "409":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Create an Identity
       tags:
       - admin
@@ -208,14 +198,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Delete an Identity
       tags:
       - admin
@@ -237,26 +227,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Identity'
+                $ref: '#/components/schemas/identity'
           description: A single identity.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Get an Identity
       tags:
       - admin
@@ -282,33 +266,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateIdentity'
+              $ref: '#/components/schemas/updateIdentity'
         x-originalParamName: Body
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Identity'
-          description: A single identity.
+                $ref: '#/components/schemas/identity'
+          description: identity
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Update an Identity
       tags:
       - admin
@@ -327,7 +317,7 @@ paths:
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
       summary: |-
-        Get snapshot metrics from the Kratos service. If you're using k8s, you can then add annotations to
+        Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to
         your deployment like so:
       tags:
       - admin
@@ -354,20 +344,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Create a Recovery Link
       tags:
       - admin
@@ -395,14 +385,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       tags:
       - public
       - admin
@@ -427,8 +417,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Initialize Browser-Based Logout User Flow
       tags:
       - public
@@ -457,26 +447,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/errorContainer'
+                $ref: '#/components/schemas/selfServiceErrorContainer'
           description: User-facing error response
         "403":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Get User-Facing Self-Service Errors
       tags:
       - public
@@ -540,8 +530,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Submit a Login Flow
       tags:
       - public
@@ -566,7 +556,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: initializeSelfServiceLoginViaAPIFlow
+      operationId: initializeSelfServiceLoginForNativeApps
       parameters:
       - description: |-
           Refresh a login session
@@ -592,15 +582,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      summary: Initialize Login Flow for API clients
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: Initialize Login Flow for Native Apps and API clients
       tags:
       - public
   /self-service/login/browser:
@@ -614,7 +604,21 @@ paths:
         This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: initializeSelfServiceLoginViaBrowserFlow
+      operationId: initializeSelfServiceLoginForBrowsers
+      parameters:
+      - description: |-
+          Refresh a login session
+
+          If set to true, this will refresh an existing login session by
+          asking the user to sign in again. This will reset the
+          authenticated_at time of the session.
+        explode: true
+        in: query
+        name: refresh
+        required: false
+        schema:
+          type: boolean
+        style: form
       responses:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
@@ -623,8 +627,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Initialize Login Flow for browsers
       tags:
       - public
@@ -659,26 +663,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "410":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Get Login Flow
       tags:
       - public
@@ -739,8 +743,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Complete Recovery Flow
       tags:
       - public
@@ -764,7 +768,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-      operationId: initializeSelfServiceRecoveryViaAPIFlow
+      operationId: initializeSelfServiceRecoveryForNativeApps
       responses:
         "200":
           content:
@@ -776,15 +780,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      summary: Initialize Recovery Flow for API Clients
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: Initialize Recovery Flow for Native Apps and API clients
       tags:
       - public
   /self-service/recovery/browser:
@@ -797,7 +801,7 @@ paths:
         This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-      operationId: initializeSelfServiceRecoveryViaBrowserFlow
+      operationId: initializeSelfServiceRecoveryForBrowsers
       responses:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
@@ -806,8 +810,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Initialize Recovery Flow for Browser Clients
       tags:
       - public
@@ -842,20 +846,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "410":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Get information about a recovery flow
       tags:
       - public
@@ -927,8 +931,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Complete Recovery Flow with Link Method
       tags:
       - public
@@ -992,8 +996,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Submit a Registration Flow
       tags:
       - public
@@ -1018,7 +1022,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: initializeSelfServiceRegistrationViaAPIFlow
+      operationId: initializeSelfServiceRegistrationForNativeApps
       responses:
         "200":
           content:
@@ -1030,15 +1034,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      summary: Initialize Registration Flow for API clients
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: Initialize Registration Flow for Native Apps and API clients
       tags:
       - public
   /self-service/registration/browser:
@@ -1056,7 +1060,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: initializeSelfServiceRegistrationViaBrowserFlow
+      operationId: initializeSelfServiceRegistrationForBrowsers
       responses:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
@@ -1065,8 +1069,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Initialize Registration Flow for browsers
       tags:
       - public
@@ -1101,26 +1105,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "410":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Get Registration Flow
       tags:
       - public
@@ -1159,6 +1163,14 @@ paths:
         schema:
           type: string
         style: form
+      - description: The Session Token of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
@@ -1188,20 +1200,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "403":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       security:
       - sessionToken: []
       summary: Complete Settings Flow
@@ -1226,7 +1238,16 @@ paths:
         :::
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: initializeSelfServiceSettingsViaAPIFlow
+      operationId: initializeSelfServiceSettingsForNativeApps
+      parameters:
+      - description: The Session Token of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -1238,17 +1259,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       security:
       - sessionToken: []
-      summary: Initialize Settings Flow for API Clients
+      summary: Initialize Settings Flow for Native Apps and API clients
       tags:
       - public
   /self-service/settings/browser:
@@ -1265,7 +1286,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: initializeSelfServiceSettingsViaBrowserFlow
+      operationId: initializeSelfServiceSettingsForBrowsers
       responses:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
@@ -1274,8 +1295,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       security:
       - sessionToken: []
       summary: Initialize Settings Flow for Browsers
@@ -1305,6 +1326,14 @@ paths:
         schema:
           type: string
         style: form
+      - description: The Session Token of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -1316,26 +1345,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "410":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       security:
       - sessionToken: []
       summary: Get Settings Flow
@@ -1360,7 +1389,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-      operationId: initializeSelfServiceVerificationViaAPIFlow
+      operationId: initializeSelfServiceVerificationForNativeApps
       responses:
         "200":
           content:
@@ -1372,15 +1401,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
-      summary: Initialize Verification Flow for API Clients
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: Initialize Verification Flow for Native Apps and API clients
       tags:
       - public
   /self-service/verification/browser:
@@ -1392,7 +1421,7 @@ paths:
         This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-      operationId: initializeSelfServiceVerificationViaBrowserFlow
+      operationId: initializeSelfServiceVerificationForBrowsers
       responses:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
@@ -1401,8 +1430,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Initialize Verification Flow for Browser Clients
       tags:
       - public
@@ -1437,20 +1466,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Get Verification Flow
       tags:
       - public
@@ -1511,8 +1540,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Complete Verification Flow
       tags:
       - public
@@ -1539,14 +1568,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       summary: Initialize Logout Flow for API Clients - Revoke a Session
       tags:
       - public
@@ -1557,19 +1586,16 @@ paths:
         Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
         Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
 
-        This endpoint is useful for reverse proxies and API Gateways.
-      operationId: whoami
+        This endpoint is useful for:
+
+        AJAX calls. Remember to send credentials and set up CORS correctly!
+        Reverse proxies and API Gateways
+        Server-side calls - use the `X-Session-Token` header!
+      operationId: toSession
       parameters:
       - explode: false
         in: header
-        name: Cookie
-        required: false
-        schema:
-          type: string
-        style: simple
-      - explode: false
-        in: header
-        name: Authorization
+        name: X-Session-Token
         required: false
         schema:
           type: string
@@ -1585,16 +1611,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/genericError'
-          description: genericError
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
       security:
-      - sessionToken: []
+      - sessionCookie: []
       summary: Check Who the Current HTTP Session Belongs To
       tags:
       - public
@@ -1624,26 +1650,26 @@ components:
     emptyResponse:
       description: Empty responses are sent when, for example, resources are deleted.
         The HTTP status code for empty responses is typically 201.
-    errorContainer:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/errorContainer'
-      description: User-facing error response
     identityList:
       content:
         application/json:
           schema:
             items:
-              $ref: '#/components/schemas/Identity'
+              $ref: '#/components/schemas/identity'
             type: array
       description: A list of identities.
     identityResponse:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Identity'
+            $ref: '#/components/schemas/identity'
       description: A single identity.
+    selfServiceErrorResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/selfServiceErrorContainer'
+      description: User-facing error response
   schemas:
     AuthenticateOKBody:
       description: AuthenticateOKBody authenticate o k body
@@ -1740,25 +1766,6 @@ components:
           description: Details of an error
           type: string
       type: object
-    CreateIdentity:
-      example:
-        traits: '{}'
-        schema_id: schema_id
-      properties:
-        schema_id:
-          description: SchemaID is the ID of the JSON Schema to be used for validating
-            the identity's traits.
-          type: string
-        traits:
-          description: |-
-            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
-            in a self-service manner. The input will always be validated against the JSON Schema defined
-            in `schema_url`.
-          type: object
-      required:
-      - schema_id
-      - traits
-      type: object
     CreateRecoveryLink:
       example:
         identity_id: identity_id
@@ -1818,68 +1825,6 @@ components:
           type: string
       required:
       - Id
-      type: object
-    Identity:
-      example:
-        recovery_addresses:
-        - id: id
-          value: value
-          via: via
-        - id: id
-          value: value
-          via: via
-        traits: '{}'
-        verifiable_addresses:
-        - verified_at: 2000-01-23T04:56:07.000+00:00
-          verified: true
-          id: id
-          value: value
-          status: status
-          via: via
-        - verified_at: 2000-01-23T04:56:07.000+00:00
-          verified: true
-          id: id
-          value: value
-          status: status
-          via: via
-        schema_id: schema_id
-        schema_url: schema_url
-        id: id
-      properties:
-        id:
-          format: uuid4
-          type: string
-        recovery_addresses:
-          description: RecoveryAddresses contains all the addresses that can be used
-            to recover an identity.
-          items:
-            $ref: '#/components/schemas/RecoveryAddress'
-          type: array
-          x-omitempty: true
-        schema_id:
-          description: SchemaID is the ID of the JSON Schema to be used for validating
-            the identity's traits.
-          type: string
-        schema_url:
-          description: |-
-            SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
-
-            format: url
-          type: string
-        traits:
-          type: object
-        verifiable_addresses:
-          description: VerifiableAddresses contains all the addresses that can be
-            verified by the user.
-          items:
-            $ref: '#/components/schemas/VerifiableAddress'
-          type: array
-          x-omitempty: true
-      required:
-      - id
-      - schema_id
-      - schema_url
-      - traits
       type: object
     ImageDeleteResponseItem:
       description: ImageDeleteResponseItem image delete response item
@@ -2308,12 +2253,22 @@ components:
       type: object
     RecoveryAddress:
       example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        created_at: 2000-01-23T04:56:07.000+00:00
         id: id
         value: value
         via: via
       properties:
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
         id:
           format: uuid4
+          type: string
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
           type: string
         value:
           type: string
@@ -2337,68 +2292,12 @@ components:
       type: object
     State:
       type: string
-    Traits:
-      type: object
     Type:
       description: The flow type can either be `api` or `browser`.
       title: Type is the flow type.
       type: string
     UUID:
       format: uuid4
-      type: string
-    UpdateIdentity:
-      example:
-        traits: '{}'
-        schema_id: schema_id
-      properties:
-        schema_id:
-          description: |-
-            SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
-            will update the Identity's SchemaID.
-          type: string
-        traits:
-          description: |-
-            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
-            in a self-service manner. The input will always be validated against the JSON Schema defined
-            in `schema_id`.
-          type: object
-      required:
-      - traits
-      type: object
-    VerifiableAddress:
-      example:
-        verified_at: 2000-01-23T04:56:07.000+00:00
-        verified: true
-        id: id
-        value: value
-        status: status
-        via: via
-      properties:
-        id:
-          format: uuid4
-          type: string
-        status:
-          type: string
-        value:
-          type: string
-        verified:
-          type: boolean
-        verified_at:
-          format: date-time
-          title: NullTime implements sql.NullTime functionality.
-          type: string
-        via:
-          type: string
-      required:
-      - id
-      - status
-      - value
-      - verified
-      - via
-      type: object
-    VerifiableAddressStatus:
-      type: string
-    VerifiableAddressType:
       type: string
     Volume:
       description: Volume volume
@@ -2472,56 +2371,66 @@ components:
       - RefCount
       - Size
       type: object
-    errorContainer:
-      example:
-        id: id
-        errors:
-        - '{}'
-        - '{}'
+    createIdentity:
       properties:
-        errors:
-          description: Errors in the container
-          items:
-            type: object
-          type: array
-        id:
-          format: uuid4
+        schema_id:
+          description: SchemaID is the ID of the JSON Schema to be used for validating
+            the identity's traits.
           type: string
+        traits:
+          description: |-
+            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+            in a self-service manner. The input will always be validated against the JSON Schema defined
+            in `schema_url`.
+          type: object
       required:
-      - errors
-      - id
+      - schema_id
+      - traits
       type: object
     genericError:
-      description: Error responses are sent when an error (e.g. unauthorized, bad
-        request, ...) occurred.
-      properties:
-        error:
-          $ref: '#/components/schemas/genericErrorPayload'
-      title: Error response
-      type: object
-    genericErrorPayload:
       properties:
         code:
-          description: Code represents the error status code (404, 403, 401, ...).
+          description: The status code
           example: 404
           format: int64
           type: integer
         debug:
-          description: Debug contains debug information. This is usually not available
-            and has to be enabled.
-          example: The database adapter was unable to find the element
+          description: |-
+            Debug information
+
+            This field is often not exposed to protect against leaking
+            sensitive information.
+          example: SQL field "foo" is not a bool.
           type: string
         details:
           additionalProperties: true
+          description: Further error details
           type: object
         message:
+          description: |-
+            Error message
+
+            The error's message.
+          example: The resource could not be found
           type: string
         reason:
+          description: A human-readable reason for the error
+          example: User with ID 1234 does not exist.
           type: string
         request:
+          description: |-
+            The request ID
+
+            The request ID is often exposed internally in order to trace
+            errors across service architectures. This is often a UUID.
+          example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
           type: string
         status:
+          description: The status description
+          example: Not Found
           type: string
+      required:
+      - message
       type: object
     healthNotReadyStatus:
       properties:
@@ -2538,13 +2447,140 @@ components:
           description: Status always contains "ok".
           type: string
       type: object
+    identity:
+      description: |-
+        An identity can be a real human, a service, an IoT device - everything that
+        can be described as an "actor" in a system.
+      example:
+        recovery_addresses:
+        - updated_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
+          id: id
+          value: value
+          via: via
+        - updated_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
+          id: id
+          value: value
+          via: via
+        traits: ""
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        credentials:
+          key:
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            identifiers:
+            - identifiers
+            - identifiers
+            created_at: 2000-01-23T04:56:07.000+00:00
+            type: type
+            config: '{}'
+        verifiable_addresses:
+        - updated_at: 2014-01-01T23:28:56.782Z
+          verified_at: 2000-01-23T04:56:07.000+00:00
+          verified: true
+          created_at: 2014-01-01T23:28:56.782Z
+          id: id
+          value: value
+          status: status
+          via: via
+        - updated_at: 2014-01-01T23:28:56.782Z
+          verified_at: 2000-01-23T04:56:07.000+00:00
+          verified: true
+          created_at: 2014-01-01T23:28:56.782Z
+          id: id
+          value: value
+          status: status
+          via: via
+        schema_id: schema_id
+        state_changed_at: 2000-01-23T04:56:07.000+00:00
+        created_at: 2000-01-23T04:56:07.000+00:00
+        schema_url: schema_url
+        id: id
+        state: active
+      properties:
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        credentials:
+          additionalProperties:
+            $ref: '#/components/schemas/identityCredentials'
+          description: Credentials represents all credentials that can be used for
+            authenticating this identity.
+          type: object
+        id:
+          format: uuid4
+          type: string
+        recovery_addresses:
+          description: RecoveryAddresses contains all the addresses that can be used
+            to recover an identity.
+          items:
+            $ref: '#/components/schemas/RecoveryAddress'
+          type: array
+          x-omitempty: true
+        schema_id:
+          description: SchemaID is the ID of the JSON Schema to be used for validating
+            the identity's traits.
+          type: string
+        schema_url:
+          description: |-
+            SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
+
+            format: url
+          type: string
+        state:
+          description: State is the identity's state.
+          enum:
+          - active
+          - inactive
+          type: string
+        state_changed_at:
+          format: date-time
+          title: NullTime implements sql.NullTime functionality.
+          type: string
+        traits:
+          description: |-
+            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+            in a self-service manner. The input will always be validated against the JSON Schema defined
+            in `schema_url`.
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        verifiable_addresses:
+          description: VerifiableAddresses contains all the addresses that can be
+            verified by the user.
+          items:
+            $ref: '#/components/schemas/verifiableIdentityAddress'
+          type: array
+          x-omitempty: true
+      required:
+      - id
+      - schema_id
+      - schema_url
+      - state
+      - traits
+      title: Identity represents an Ory Kratos identity
+      type: object
     identityCredentials:
       description: Credentials represents a specific credential type
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        identifiers:
+        - identifiers
+        - identifiers
+        created_at: 2000-01-23T04:56:07.000+00:00
+        type: type
+        config: '{}'
       properties:
         config:
           title: JSONRawMessage represents a json.RawMessage that works well with
             JSON, SQL, and Swagger.
           type: object
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
         identifiers:
           description: Identifiers represents a list of unique identifiers this credential
             type matches.
@@ -2556,6 +2592,32 @@ components:
           title: CredentialsType  represents several different credential types, like
             password credentials, passwordless credentials,
           type: string
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+      type: object
+    identityTraits:
+      description: |-
+        Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+        in a self-service manner. The input will always be validated against the JSON Schema defined
+        in `schema_url`.
+    identityVerifiableAddressStatus:
+      description: VerifiableAddressStatus must not exceed 16 characters as that is
+        the limitation in the SQL Schema
+      type: string
+    identityVerifiableAddressType:
+      description: VerifiableAddressType must not exceed 16 characters as that is
+        the limitation in the SQL Schema
+      type: string
+    jsonError:
+      description: The standard Ory JSON API error format.
+      properties:
+        error:
+          $ref: '#/components/schemas/genericError'
+      required:
+      - error
+      title: JSON API Error Response
       type: object
     jsonSchema:
       description: Raw JSON Schema
@@ -2615,8 +2677,10 @@ components:
             id: 0
             text: text
             type: type
+        updated_at: 2000-01-23T04:56:07.000+00:00
         forced: true
         active: active
+        created_at: 2000-01-23T04:56:07.000+00:00
         id: id
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
@@ -2626,6 +2690,10 @@ components:
           description: and so on.
           title: CredentialsType  represents several different credential types, like
             password credentials, passwordless credentials,
+          type: string
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
           type: string
         expires_at:
           description: |-
@@ -2654,6 +2722,10 @@ components:
           type: string
         ui:
           $ref: '#/components/schemas/uiContainer'
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
       required:
       - expires_at
       - id
@@ -2671,29 +2743,50 @@ components:
           expires_at: 2000-01-23T04:56:07.000+00:00
           identity:
             recovery_addresses:
-            - id: id
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
               value: value
               via: via
-            - id: id
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
               value: value
               via: via
-            traits: '{}'
+            traits: ""
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
-            - verified_at: 2000-01-23T04:56:07.000+00:00
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
+              created_at: 2014-01-01T23:28:56.782Z
               id: id
               value: value
               status: status
               via: via
-            - verified_at: 2000-01-23T04:56:07.000+00:00
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
+              created_at: 2014-01-01T23:28:56.782Z
               id: id
               value: value
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: active
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -2936,63 +3029,105 @@ components:
         session_token: session_token
         identity:
           recovery_addresses:
-          - id: id
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
             value: value
             via: via
-          - id: id
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
             value: value
             via: via
-          traits: '{}'
+          traits: ""
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
-          - verified_at: 2000-01-23T04:56:07.000+00:00
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
+            created_at: 2014-01-01T23:28:56.782Z
             id: id
             value: value
             status: status
             via: via
-          - verified_at: 2000-01-23T04:56:07.000+00:00
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
+            created_at: 2014-01-01T23:28:56.782Z
             id: id
             value: value
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: active
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
           identity:
             recovery_addresses:
-            - id: id
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
               value: value
               via: via
-            - id: id
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
               value: value
               via: via
-            traits: '{}'
+            traits: ""
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
-            - verified_at: 2000-01-23T04:56:07.000+00:00
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
+              created_at: 2014-01-01T23:28:56.782Z
               id: id
               value: value
               status: status
               via: via
-            - verified_at: 2000-01-23T04:56:07.000+00:00
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
+              created_at: 2014-01-01T23:28:56.782Z
               id: id
               value: value
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: active
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
           issued_at: 2000-01-23T04:56:07.000+00:00
       properties:
         identity:
-          $ref: '#/components/schemas/Identity'
+          $ref: '#/components/schemas/identity'
         session:
           $ref: '#/components/schemas/session'
         session_token:
@@ -3023,34 +3158,84 @@ components:
       required:
       - session_token
       type: object
+    selfServiceErrorContainer:
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        created_at: 2000-01-23T04:56:07.000+00:00
+        id: id
+        errors:
+        - '{}'
+        - '{}'
+      properties:
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        errors:
+          description: Errors in the container
+          items:
+            type: object
+          type: array
+        id:
+          format: uuid4
+          type: string
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+      required:
+      - errors
+      - id
+      type: object
     session:
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
         identity:
           recovery_addresses:
-          - id: id
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
             value: value
             via: via
-          - id: id
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
             value: value
             via: via
-          traits: '{}'
+          traits: ""
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
-          - verified_at: 2000-01-23T04:56:07.000+00:00
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
+            created_at: 2014-01-01T23:28:56.782Z
             id: id
             value: value
             status: status
             via: via
-          - verified_at: 2000-01-23T04:56:07.000+00:00
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
+            created_at: 2014-01-01T23:28:56.782Z
             id: id
             value: value
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: active
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         id: id
@@ -3068,7 +3253,7 @@ components:
           format: uuid4
           type: string
         identity:
-          $ref: '#/components/schemas/Identity'
+          $ref: '#/components/schemas/identity'
         issued_at:
           format: date-time
           type: string
@@ -3136,29 +3321,50 @@ components:
             type: type
         identity:
           recovery_addresses:
-          - id: id
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
             value: value
             via: via
-          - id: id
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
             value: value
             via: via
-          traits: '{}'
+          traits: ""
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
-          - verified_at: 2000-01-23T04:56:07.000+00:00
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
+            created_at: 2014-01-01T23:28:56.782Z
             id: id
             value: value
             status: status
             via: via
-          - verified_at: 2000-01-23T04:56:07.000+00:00
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
+            created_at: 2014-01-01T23:28:56.782Z
             id: id
             value: value
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: active
         active: active
         id: id
         state: state
@@ -3181,7 +3387,7 @@ components:
           format: uuid4
           type: string
         identity:
-          $ref: '#/components/schemas/Identity'
+          $ref: '#/components/schemas/identity'
         issued_at:
           description: IssuedAt is the time (UTC) when the flow occurred.
           format: date-time
@@ -3236,29 +3442,50 @@ components:
       example:
         identity:
           recovery_addresses:
-          - id: id
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
             value: value
             via: via
-          - id: id
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
             value: value
             via: via
-          traits: '{}'
+          traits: ""
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
           verifiable_addresses:
-          - verified_at: 2000-01-23T04:56:07.000+00:00
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
+            created_at: 2014-01-01T23:28:56.782Z
             id: id
             value: value
             status: status
             via: via
-          - verified_at: 2000-01-23T04:56:07.000+00:00
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
             verified: true
+            created_at: 2014-01-01T23:28:56.782Z
             id: id
             value: value
             status: status
             via: via
           schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
+          state: active
         flow:
           expires_at: 2000-01-23T04:56:07.000+00:00
           ui:
@@ -3310,29 +3537,50 @@ components:
               type: type
           identity:
             recovery_addresses:
-            - id: id
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
               value: value
               via: via
-            - id: id
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
               value: value
               via: via
-            traits: '{}'
+            traits: ""
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
             verifiable_addresses:
-            - verified_at: 2000-01-23T04:56:07.000+00:00
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
+              created_at: 2014-01-01T23:28:56.782Z
               id: id
               value: value
               status: status
               via: via
-            - verified_at: 2000-01-23T04:56:07.000+00:00
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
               verified: true
+              created_at: 2014-01-01T23:28:56.782Z
               id: id
               value: value
               status: status
               via: via
             schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
+            state: active
           active: active
           id: id
           state: state
@@ -3343,7 +3591,7 @@ components:
         flow:
           $ref: '#/components/schemas/settingsFlow'
         identity:
-          $ref: '#/components/schemas/Identity'
+          $ref: '#/components/schemas/identity'
       required:
       - flow
       - identity
@@ -3434,6 +3682,7 @@ components:
             Method to use
 
             This field must be set to `password` when using the password method.
+          pattern: ^password$
           type: string
         password:
           description: Password to sign the user up with
@@ -3741,6 +3990,83 @@ components:
       items:
         $ref: '#/components/schemas/uiText'
       type: array
+    updateIdentity:
+      properties:
+        schema_id:
+          description: |-
+            SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
+            will update the Identity's SchemaID.
+          type: string
+        state:
+          description: State is the identity's state.
+          enum:
+          - active
+          - inactive
+          type: string
+        traits:
+          description: |-
+            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+            in a self-service manner. The input will always be validated against the JSON Schema defined
+            in `schema_id`.
+          type: object
+      required:
+      - state
+      - traits
+      type: object
+    verifiableIdentityAddress:
+      description: VerifiableAddress is an identity's verifiable address
+      example:
+        updated_at: 2014-01-01T23:28:56.782Z
+        verified_at: 2000-01-23T04:56:07.000+00:00
+        verified: true
+        created_at: 2014-01-01T23:28:56.782Z
+        id: id
+        value: value
+        status: status
+        via: via
+      properties:
+        created_at:
+          description: When this entry was created
+          example: 2014-01-01T23:28:56.782Z
+          format: date-time
+          type: string
+        id:
+          format: uuid4
+          type: string
+        status:
+          description: VerifiableAddressStatus must not exceed 16 characters as that
+            is the limitation in the SQL Schema
+          type: string
+        updated_at:
+          description: When this entry was last updated
+          example: 2014-01-01T23:28:56.782Z
+          format: date-time
+          type: string
+        value:
+          description: |-
+            The address value
+
+            example foo@user.com
+          type: string
+        verified:
+          description: Indicates if the address has already been verified
+          example: true
+          type: boolean
+        verified_at:
+          format: date-time
+          title: NullTime implements sql.NullTime functionality.
+          type: string
+        via:
+          description: VerifiableAddressType must not exceed 16 characters as that
+            is the limitation in the SQL Schema
+          type: string
+      required:
+      - id
+      - status
+      - value
+      - verified
+      - via
+      type: object
     verificationFlow:
       description: |-
         Used to verify an out-of-band communication
@@ -3879,13 +4205,15 @@ components:
       - version
       type: object
   securitySchemes:
+    oryToken:
+      scheme: bearer
+      type: http
     sessionCookie:
       in: cookie
       name: ory_kratos_session
       type: apiKey
     sessionToken:
-      in: header
-      name: X-Session-Token
-      type: apiKey
+      scheme: bearer
+      type: http
 x-forwarded-proto: string
 x-request-id: string

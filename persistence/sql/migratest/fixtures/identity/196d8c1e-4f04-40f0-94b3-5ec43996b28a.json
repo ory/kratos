@@ -2,7 +2,11 @@
   "id": "196d8c1e-4f04-40f0-94b3-5ec43996b28a",
   "schema_id": "default",
   "schema_url": "https://www.ory.sh/schemas/default",
+  "state": "active",
+  "state_changed_at": null,
   "traits": {
     "email": "foobar@ory.sh"
-  }
+  },
+  "created_at": "2013-10-07T08:23:19Z",
+  "updated_at": "2013-10-07T08:23:19Z"
 }

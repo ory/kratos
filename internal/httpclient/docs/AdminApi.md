@@ -1,6 +1,6 @@
 # \AdminApi
 
-All URIs are relative to *https://demo.tenants.oryapis.com/api/kratos/public*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -19,7 +19,7 @@ Method | HTTP request | Description
 [**IsAlive**](AdminApi.md#IsAlive) | **Get** /health/alive | Check HTTP Server Status
 [**IsReady**](AdminApi.md#IsReady) | **Get** /health/ready | Check HTTP Server and Database Status
 [**ListIdentities**](AdminApi.md#ListIdentities) | **Get** /identities | List Identities
-[**Prometheus**](AdminApi.md#Prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Kratos service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
+[**Prometheus**](AdminApi.md#Prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Hydra service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 [**UpdateIdentity**](AdminApi.md#UpdateIdentity) | **Put** /identities/{id} | Update an Identity
 
 
@@ -366,7 +366,7 @@ No authorization required
 
 ## GetSelfServiceError
 
-> ErrorContainer GetSelfServiceError(ctx).Error_(error_).Execute()
+> SelfServiceErrorContainer GetSelfServiceError(ctx).Error_(error_).Execute()
 
 Get User-Facing Self-Service Errors
 
@@ -394,7 +394,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `AdminApi.GetSelfServiceError``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `GetSelfServiceError`: ErrorContainer
+    // response from `GetSelfServiceError`: SelfServiceErrorContainer
     fmt.Fprintf(os.Stdout, "Response from `AdminApi.GetSelfServiceError`: %v\n", resp)
 }
 ```
@@ -414,7 +414,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**ErrorContainer**](ErrorContainer.md)
+[**SelfServiceErrorContainer**](SelfServiceErrorContainer.md)
 
 ### Authorization
 
@@ -630,7 +630,7 @@ No authorization required
 
 ## GetSelfServiceSettingsFlow
 
-> SettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).Execute()
+> SettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).XSessionToken(xSessionToken).Execute()
 
 Get Settings Flow
 
@@ -650,10 +650,11 @@ import (
 
 func main() {
     id := "id_example" // string | ID is the Settings Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/settings?flow=abcde`).
+    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.AdminApi.GetSelfServiceSettingsFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.AdminApi.GetSelfServiceSettingsFlow(context.Background()).Id(id).XSessionToken(xSessionToken).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `AdminApi.GetSelfServiceSettingsFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -675,6 +676,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceSettingsFlow
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | ID is the Settings Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/settings?flow&#x3D;abcde&#x60;). | 
+ **xSessionToken** | **string** | The Session Token of the Identity performing the settings flow. | 
 
 ### Return type
 
@@ -1015,7 +1017,7 @@ No authorization required
 
 > Prometheus(ctx).Execute()
 
-Get snapshot metrics from the Kratos service. If you're using k8s, you can then add annotations to your deployment like so:
+Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to your deployment like so:
 
 
 
@@ -1092,7 +1094,7 @@ import (
 
 func main() {
     id := "id_example" // string | ID must be set to the ID of identity you want to update
-    updateIdentity := *openapiclient.NewUpdateIdentity(map[string]interface{}(123)) // UpdateIdentity |  (optional)
+    updateIdentity := *openapiclient.NewUpdateIdentity("State_example", map[string]interface{}(123)) // UpdateIdentity |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)

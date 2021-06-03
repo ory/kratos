@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/x/ioutilx"
 
@@ -65,7 +65,7 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, ts *htt
 func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceRecoveryViaAPIFlow(context.Background()).Execute()
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceRecoveryForNativeApps(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 

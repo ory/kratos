@@ -5,13 +5,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **SchemaId** | Pointer to **string** | SchemaID is the ID of the JSON Schema to be used for validating the identity&#39;s traits. If set will update the Identity&#39;s SchemaID. | [optional] 
+**State** | **string** | State is the identity&#39;s state. | 
 **Traits** | **map[string]interface{}** | Traits represent an identity&#39;s traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in &#x60;schema_id&#x60;. | 
 
 ## Methods
 
 ### NewUpdateIdentity
 
-`func NewUpdateIdentity(traits map[string]interface{}, ) *UpdateIdentity`
+`func NewUpdateIdentity(state string, traits map[string]interface{}, ) *UpdateIdentity`
 
 NewUpdateIdentity instantiates a new UpdateIdentity object
 This constructor will assign default values to properties that have it defined,
@@ -50,6 +51,26 @@ SetSchemaId sets SchemaId field to given value.
 `func (o *UpdateIdentity) HasSchemaId() bool`
 
 HasSchemaId returns a boolean if a field has been set.
+
+### GetState
+
+`func (o *UpdateIdentity) GetState() string`
+
+GetState returns the State field if non-nil, zero value otherwise.
+
+### GetStateOk
+
+`func (o *UpdateIdentity) GetStateOk() (*string, bool)`
+
+GetStateOk returns a tuple with the State field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetState
+
+`func (o *UpdateIdentity) SetState(v string)`
+
+SetState sets State field to given value.
+
 
 ### GetTraits
 

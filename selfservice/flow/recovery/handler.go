@@ -60,6 +60,7 @@ func NewHandler(d handlerDependencies) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
+	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	redirect := session.RedirectOnAuthenticated(h.d)
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, redirect))
@@ -76,9 +77,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteGetFlow, h.fetch)
 }
 
-// swagger:route GET /self-service/recovery/api public initializeSelfServiceRecoveryViaAPIFlow
+// swagger:route GET /self-service/recovery/api public initializeSelfServiceRecoveryForNativeApps
 //
-// Initialize Recovery Flow for API Clients
+// Initialize Recovery Flow for Native Apps and API clients
 //
 // This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -102,8 +103,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 //     Responses:
 //       200: recoveryFlow
-//       500: genericError
-//       400: genericError
+//       500: jsonError
+//       400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
@@ -124,7 +125,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
-// swagger:route GET /self-service/recovery/browser public initializeSelfServiceRecoveryViaBrowserFlow
+// swagger:route GET /self-service/recovery/browser public initializeSelfServiceRecoveryForBrowsers
 //
 // Initialize Recovery Flow for Browser Clients
 //
@@ -140,7 +141,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 //     Responses:
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
@@ -189,9 +190,9 @@ type getSelfServiceRecoveryFlowParameters struct {
 //
 //     Responses:
 //       200: recoveryFlow
-//       404: genericError
-//       410: genericError
-//       500: genericError
+//       404: jsonError
+//       410: jsonError
+//       500: jsonError
 func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
@@ -274,7 +275,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //     Responses:
 //       400: recoveryFlow
 //       302: emptyResponse
-//       500: genericError
+//       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {

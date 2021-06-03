@@ -92,17 +92,14 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 }
 
 func (s *ManagerHTTP) extractToken(r *http.Request) string {
-	if token, ok := bearerTokenFromRequest(r); ok {
-		return token
-	}
-
 	if token := r.Header.Get("X-Session-Token"); len(token) > 0 {
 		return token
 	}
 
 	cookie, err := s.r.CookieManager(r.Context()).Get(r, s.cookieName(r.Context()))
 	if err != nil {
-		return ""
+		token, _ := bearerTokenFromRequest(r)
+		return token
 	}
 
 	token, ok := cookie.Values["session_token"].(string)
@@ -110,7 +107,8 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 		return token
 	}
 
-	return ""
+	token, _ = bearerTokenFromRequest(r)
+	return token
 }
 
 func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {

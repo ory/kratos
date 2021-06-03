@@ -14,6 +14,8 @@
     "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
     "schema_id": "default",
     "schema_url": "https://www.ory.sh/schemas/default",
+    "state": "active",
+    "state_changed_at": null,
     "traits": {
       "email": "foobar@ory.sh"
     },
@@ -24,7 +26,9 @@
         "verified": false,
         "via": "email",
         "status": "pending",
-        "verified_at": null
+        "verified_at": null,
+        "created_at": "2013-10-07T08:23:19Z",
+        "updated_at": "2013-10-07T08:23:19Z"
       },
       {
         "id": "c2427b6d-312b-46d9-9285-536db7ae11fd",
@@ -32,7 +36,9 @@
         "verified": false,
         "via": "email",
         "status": "pending",
-        "verified_at": null
+        "verified_at": null,
+        "created_at": "2013-10-07T08:23:19Z",
+        "updated_at": "2013-10-07T08:23:19Z"
       },
       {
         "id": "d4718a67-aec2-418d-8173-6ebc7bde3b86",
@@ -40,16 +46,22 @@
         "verified": false,
         "via": "email",
         "status": "pending",
-        "verified_at": null
+        "verified_at": null,
+        "created_at": "2013-10-07T08:23:19Z",
+        "updated_at": "2013-10-07T08:23:19Z"
       }
     ],
     "recovery_addresses": [
       {
         "id": "b8293f1c-010f-45d9-b809-f3fc5365ba80",
         "value": "foobar@ory.sh",
-        "via": "email"
+        "via": "email",
+        "created_at": "2013-10-07T08:23:19Z",
+        "updated_at": "2013-10-07T08:23:19Z"
       }
-    ]
+    ],
+    "created_at": "2013-10-07T08:23:19Z",
+    "updated_at": "2013-10-07T08:23:19Z"
   },
   "state": "show_form"
 }

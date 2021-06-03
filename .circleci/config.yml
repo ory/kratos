@@ -209,6 +209,7 @@ workflows:
             tags:
               only: /.*/
       - goreleaser/render-version-schema:
+          schema-path: driver/config/.schema/config.schema.json
           requires:
             - goreleaser/release
           filters:
