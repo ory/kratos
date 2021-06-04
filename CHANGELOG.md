@@ -4,14 +4,15 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-05-28)](#unreleased-2021-05-28)
+- [Unreleased (2021-06-02)](#unreleased-2021-06-02)
     - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
     - [Tests](#tests)
   - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
     - [Bug Fixes](#bug-fixes-1)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.6.2-alpha.1 (2021-05-14)](#062-alpha1-2021-05-14)
     - [Documentation](#documentation-1)
@@ -22,7 +23,7 @@
     - [Features](#features-2)
 - [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
     - [Bug Fixes](#bug-fixes-3)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-2)
     - [Features](#features-3)
     - [Tests](#tests-1)
@@ -36,7 +37,7 @@
     - [Unclassified](#unclassified-1)
   - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
     - [Bug Fixes](#bug-fixes-5)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-4)
     - [Features](#features-5)
   - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
@@ -56,7 +57,7 @@
     - [Unclassified](#unclassified-2)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
     - [Bug Fixes](#bug-fixes-9)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-8)
     - [Features](#features-8)
     - [Tests](#tests-6)
@@ -75,14 +76,14 @@
     - [Bug Fixes](#bug-fixes-14)
 - [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-15)
-    - [Code Refactoring](#code-refactoring-4)
+    - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-10)
     - [Features](#features-9)
     - [Unclassified](#unclassified-4)
     - [BREAKING CHANGES](#breaking-changes-3)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
     - [Bug Fixes](#bug-fixes-16)
-    - [Code Refactoring](#code-refactoring-5)
+    - [Code Refactoring](#code-refactoring-6)
     - [Documentation](#documentation-11)
     - [Features](#features-10)
     - [Unclassified](#unclassified-5)
@@ -91,18 +92,18 @@
     - [Documentation](#documentation-12)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
     - [Bug Fixes](#bug-fixes-17)
-    - [Code Refactoring](#code-refactoring-6)
+    - [Code Refactoring](#code-refactoring-7)
     - [Documentation](#documentation-13)
     - [Features](#features-11)
     - [Unclassified](#unclassified-6)
     - [BREAKING CHANGES](#breaking-changes-5)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-18)
-    - [Code Refactoring](#code-refactoring-7)
+    - [Code Refactoring](#code-refactoring-8)
     - [Documentation](#documentation-14)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-19)
-    - [Code Refactoring](#code-refactoring-8)
+    - [Code Refactoring](#code-refactoring-9)
     - [Documentation](#documentation-15)
     - [Features](#features-12)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
@@ -152,7 +153,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...f39739d94e97f20b94630b957371d11294dc8300) (2021-05-28)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...944d045aa7fc59eadfdd18951f0d4937b1ea79df) (2021-06-02)
 
 
 ### Bug Fixes
@@ -162,6 +163,11 @@
 * Recovery email case sensitive ([#1357](https://github.com/ory/kratos/issues/1357)) ([bce14c4](https://github.com/ory/kratos/commit/bce14c487450bd668859f362b98704644fa4c72a)), closes [#1329](https://github.com/ory/kratos/issues/1329)
 * Rename client package for external consumption ([cba8b00](https://github.com/ory/kratos/commit/cba8b00c8b755cc0bdc7818bc9d7390ff3532ce1))
 * Version schema ([#1359](https://github.com/ory/kratos/issues/1359)) ([8c4bac7](https://github.com/ory/kratos/commit/8c4bac71674e45e440d916c6c947ed018a8ea29a)), closes [#1331](https://github.com/ory/kratos/issues/1331) [#1101](https://github.com/ory/kratos/issues/1101) [ory/hydra#2427](https://github.com/ory/hydra/issues/2427)
+
+
+### Code Refactoring
+
+* Introduce DefaultContextualizer in corp package ([#1390](https://github.com/ory/kratos/issues/1390)) ([944d045](https://github.com/ory/kratos/commit/944d045aa7fc59eadfdd18951f0d4937b1ea79df)), closes [#1363](https://github.com/ory/kratos/issues/1363)
 
 
 ### Documentation
