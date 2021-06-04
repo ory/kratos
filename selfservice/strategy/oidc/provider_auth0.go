@@ -100,23 +100,17 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	var values map[string]interface{}
-	if err := json.Unmarshal(b, &values); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	updatedAt := 0
+	// There is an updated_at field. Look at the type. If float64 (default for json numbers, then
+	// we can just use the Claims. Otherwise we convert the value.
+	if updatedAtField := gjson.GetBytes(b, "updated_at"); updatedAtField.Exists() && updatedAtField.IsString() {
+			t, err := time.Parse(time.RFC3339, updatedAtField.String())
+			updatedAt = t.Unix()
 	}
-
-	if v, ok := values["updated_at"]; ok {
-		// There is an updated_at field. Look at the type. If float64 (default for json numbers, then
-		// we can just use the Claims. Otherwise we convert the value.
-		if _, ok := v.(string); ok {
-			// This is the bug. We need to convert.
-			c, err := auth0Claims(b)
-			if err != nil {
-				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-			}
-
-			return c, nil
-		}
+	
+	b, err := sjons.Delete(gjson.GetBytes(b, "updated_at")
+	if err != nil {
+		// ...
 	}
 
 	// If we get here, we the claims are standard and we proceed normally.
