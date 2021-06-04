@@ -473,8 +473,7 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 					instrumentedsql.WithOmitArgs(),
 				}
 			}
-
-			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
+			pool, idlePool, connMaxLifetime, _, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
 			m.Logger().
 				WithField("pool", pool).
 				WithField("idlePool", idlePool).
