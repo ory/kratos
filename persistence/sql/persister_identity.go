@@ -213,6 +213,11 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		i.SchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
+	i.StateChangedAt = sqlxx.NullTime(time.Now())
+	if i.State == "" {
+		i.State = identity.StateActive
+	}
+
 	if len(i.Traits) == 0 {
 		i.Traits = identity.Traits("{}")
 	}
@@ -392,7 +397,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 
 func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
 	var address identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), via, value).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND LOWER(value) = ?", corp.ContextualizeNID(ctx, p.nid), via, strings.ToLower(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -401,7 +406,7 @@ func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identi
 
 func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity.RecoveryAddressType, value string) (*identity.RecoveryAddress, error) {
 	var address identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", corp.ContextualizeNID(ctx, p.nid), via, value).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND LOWER(value) = ?", corp.ContextualizeNID(ctx, p.nid), via, strings.ToLower(value)).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 

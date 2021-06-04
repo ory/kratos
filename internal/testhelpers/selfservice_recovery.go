@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -51,6 +51,8 @@ func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
+
+	t.Logf("%+v\n\n%+v", client.Jar, res.Header)
 
 	rs, _, err := publicClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
@@ -96,7 +98,6 @@ func SubmitVerificationForm(
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
-	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var f *kratos.VerificationFlow
 	if isAPI {
 		f = InitializeVerificationFlowViaAPI(t, hc, publicTS)

@@ -5,10 +5,13 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
+**Credentials** | Pointer to [**map[string]IdentityCredentials**](IdentityCredentials.md) | Credentials represents all credentials that can be used for authenticating this identity. | [optional] 
 **Id** | **string** |  | 
 **RecoveryAddresses** | Pointer to [**[]RecoveryAddress**](RecoveryAddress.md) | RecoveryAddresses contains all the addresses that can be used to recover an identity. | [optional] 
 **SchemaId** | **string** | SchemaID is the ID of the JSON Schema to be used for validating the identity&#39;s traits. | 
 **SchemaUrl** | **string** | SchemaURL is the URL of the endpoint where the identity&#39;s traits schema can be fetched from.  format: url | 
+**State** | **string** | State is the identity&#39;s state. | 
+**StateChangedAt** | Pointer to **time.Time** |  | [optional] 
 **Traits** | **interface{}** | Traits represent an identity&#39;s traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in &#x60;schema_url&#x60;. | 
 **UpdatedAt** | Pointer to **time.Time** | UpdatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 **VerifiableAddresses** | Pointer to [**[]VerifiableIdentityAddress**](VerifiableIdentityAddress.md) | VerifiableAddresses contains all the addresses that can be verified by the user. | [optional] 
@@ -17,7 +20,7 @@ Name | Type | Description | Notes
 
 ### NewIdentity
 
-`func NewIdentity(id string, schemaId string, schemaUrl string, traits interface{}, ) *Identity`
+`func NewIdentity(id string, schemaId string, schemaUrl string, state string, traits interface{}, ) *Identity`
 
 NewIdentity instantiates a new Identity object
 This constructor will assign default values to properties that have it defined,
@@ -56,6 +59,31 @@ SetCreatedAt sets CreatedAt field to given value.
 `func (o *Identity) HasCreatedAt() bool`
 
 HasCreatedAt returns a boolean if a field has been set.
+
+### GetCredentials
+
+`func (o *Identity) GetCredentials() map[string]IdentityCredentials`
+
+GetCredentials returns the Credentials field if non-nil, zero value otherwise.
+
+### GetCredentialsOk
+
+`func (o *Identity) GetCredentialsOk() (*map[string]IdentityCredentials, bool)`
+
+GetCredentialsOk returns a tuple with the Credentials field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCredentials
+
+`func (o *Identity) SetCredentials(v map[string]IdentityCredentials)`
+
+SetCredentials sets Credentials field to given value.
+
+### HasCredentials
+
+`func (o *Identity) HasCredentials() bool`
+
+HasCredentials returns a boolean if a field has been set.
 
 ### GetId
 
@@ -141,6 +169,51 @@ and a boolean to check if the value has been set.
 
 SetSchemaUrl sets SchemaUrl field to given value.
 
+
+### GetState
+
+`func (o *Identity) GetState() string`
+
+GetState returns the State field if non-nil, zero value otherwise.
+
+### GetStateOk
+
+`func (o *Identity) GetStateOk() (*string, bool)`
+
+GetStateOk returns a tuple with the State field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetState
+
+`func (o *Identity) SetState(v string)`
+
+SetState sets State field to given value.
+
+
+### GetStateChangedAt
+
+`func (o *Identity) GetStateChangedAt() time.Time`
+
+GetStateChangedAt returns the StateChangedAt field if non-nil, zero value otherwise.
+
+### GetStateChangedAtOk
+
+`func (o *Identity) GetStateChangedAtOk() (*time.Time, bool)`
+
+GetStateChangedAtOk returns a tuple with the StateChangedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetStateChangedAt
+
+`func (o *Identity) SetStateChangedAt(v time.Time)`
+
+SetStateChangedAt sets StateChangedAt field to given value.
+
+### HasStateChangedAt
+
+`func (o *Identity) HasStateChangedAt() bool`
+
+HasStateChangedAt returns a boolean if a field has been set.
 
 ### GetTraits
 

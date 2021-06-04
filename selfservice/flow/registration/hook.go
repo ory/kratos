@@ -129,7 +129,11 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC())
+	s, err := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC())
+	if err != nil {
+		return err
+	}
+
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).

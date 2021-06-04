@@ -15,7 +15,7 @@ import (
 
 	"github.com/ory/kratos/ui/container"
 
-	"github.com/ory/kratos-client-go"
+	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -230,7 +230,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "` + x.FakeCSRFToken + `"
     },
     "group": "default",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -242,7 +242,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "john` + testID + `@doe.com"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -253,7 +253,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "text"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -265,7 +265,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "profile"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -283,7 +283,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070001,
@@ -301,7 +301,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -319,7 +319,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "github"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -340,7 +340,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "google"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -361,7 +361,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "ory"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -386,7 +386,7 @@ func TestSettingsStrategy(t *testing.T) {
       "required": true,
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -398,7 +398,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "hackerman+` + testID + `@ory.sh",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -409,7 +409,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "text",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -421,7 +421,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "profile",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -439,7 +439,7 @@ func TestSettingsStrategy(t *testing.T) {
       "required": true,
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070001,
@@ -457,7 +457,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "password",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -475,7 +475,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "github",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1050002,
@@ -496,7 +496,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "google",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1050002,
@@ -520,7 +520,7 @@ func TestSettingsStrategy(t *testing.T) {
       "required": true,
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -532,7 +532,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "hackerman+github+` + testID + `@ory.sh",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -543,7 +543,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "text",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {}
   },
   {
@@ -555,7 +555,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "profile",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -573,7 +573,7 @@ func TestSettingsStrategy(t *testing.T) {
       "required": true,
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070001,
@@ -591,7 +591,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "password",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -609,7 +609,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "github",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1050003,
@@ -630,7 +630,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "google",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1050002,
@@ -651,7 +651,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "ory",
       "disabled": false
     },
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1050003,
@@ -684,7 +684,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "` + x.FakeCSRFToken + `"
     },
     "group": "default",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -696,7 +696,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "hackerman+multiuser+` + testID + `@ory.sh"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -707,7 +707,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "text"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -719,7 +719,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "profile"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -737,7 +737,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070001,
@@ -755,7 +755,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -773,7 +773,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "github"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -794,7 +794,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "google"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -815,7 +815,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "ory"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1063,7 +1063,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "`+x.FakeCSRFToken+`"
     },
     "group": "default",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1075,7 +1075,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "hackerman+github+`+testID+`@ory.sh"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1086,7 +1086,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "text"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1098,7 +1098,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "profile"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -1116,7 +1116,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070001,
@@ -1134,7 +1134,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -1152,7 +1152,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "github"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1173,7 +1173,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "google"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1194,7 +1194,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "ory"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1220,7 +1220,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "` + x.FakeCSRFToken + `"
     },
     "group": "default",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1232,7 +1232,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "hackerman+github+` + testID + `@ory.sh"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1243,7 +1243,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "text"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1255,7 +1255,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "profile"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -1273,7 +1273,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070001,
@@ -1291,7 +1291,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -1309,7 +1309,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "github"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1330,7 +1330,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "google"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1351,7 +1351,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "ory"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1395,7 +1395,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "`+x.FakeCSRFToken+`"
     },
     "group": "default",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1407,7 +1407,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "john`+testID+`@doe.com"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1418,7 +1418,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "text"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {},
     "type": "input"
   },
@@ -1430,7 +1430,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "profile"
     },
     "group": "profile",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -1448,7 +1448,7 @@ func TestSettingsStrategy(t *testing.T) {
       "type": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070001,
@@ -1466,7 +1466,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "password"
     },
     "group": "password",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "id": 1070003,
@@ -1484,7 +1484,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "github"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1505,7 +1505,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "google"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {
@@ -1526,7 +1526,7 @@ func TestSettingsStrategy(t *testing.T) {
       "value": "ory"
     },
     "group": "oidc",
-    "messages": null,
+    "messages": [],
     "meta": {
       "label": {
         "context": {

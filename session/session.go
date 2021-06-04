@@ -4,15 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/x/randx"
-
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/randx"
 )
+
+var ErrIdentityDisabled = herodot.ErrUnauthorized.WithError("identity is disabled").WithReason("This account was disabled.")
 
 // swagger:model session
 type Session struct {
@@ -49,7 +50,11 @@ func (s Session) TableName(ctx context.Context) string {
 
 func NewActiveSession(i *identity.Identity, c interface {
 	SessionLifespan() time.Duration
-}, authenticatedAt time.Time) *Session {
+}, authenticatedAt time.Time) (*Session, error) {
+	if i != nil && !i.IsActive() {
+		return nil, ErrIdentityDisabled
+	}
+
 	return &Session{
 		ID:              x.NewUUID(),
 		ExpiresAt:       authenticatedAt.Add(c.SessionLifespan()),
@@ -59,7 +64,7 @@ func NewActiveSession(i *identity.Identity, c interface {
 		IdentityID:      i.ID,
 		Token:           randx.MustString(32, randx.AlphaNum),
 		Active:          true,
-	}
+	}, nil
 }
 
 type Device struct {
@@ -73,5 +78,5 @@ func (s *Session) Declassify() *Session {
 }
 
 func (s *Session) IsActive() bool {
-	return s.Active && s.ExpiresAt.After(time.Now())
+	return s.Active && s.ExpiresAt.After(time.Now()) && (s.Identity == nil || s.Identity.IsActive())
 }
