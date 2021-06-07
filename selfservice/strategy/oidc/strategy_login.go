@@ -78,7 +78,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 
 	for _, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, a, i); err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 			return nil, nil
@@ -130,6 +130,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+
+	f.Active = identity.CredentialsTypeOIDC
+	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
 	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)

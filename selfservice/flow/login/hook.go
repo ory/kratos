@@ -60,39 +60,24 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
 	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC()).Declassify()
-
-	// why (is there any reason) is it (Flow.Active) not set in the implementation of the corresponding Login
-	// method (strategy_login.go:L91 ff and login.go:L51 ff)?
-	// this can be easily achieved by the following lines
-	//
-	// f.Active = identity.CredentialsTypePassword // or identity.CredentialsTypeOidc
-	//
-	// if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
-	// 	return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
-	// }
-	//
-	// in the right place. Otherwise the Flow.Active property is never set (only in tests).
-	// If done as described above, there wouldn't be a need to pass around the `ct` argument as well, like in this method.
-	// So, FMPOV, the following line is just a hack due to the missing implementation described above.
-	a.Active = ct
 
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
-		WithField("flow_method", ct).
+		WithField("flow_method", a.Active).
 		Debug("Running ExecuteLoginPostHook.")
-	for k, executor := range e.d.PostLoginHooks(r.Context(), ct) {
+	for k, executor := range e.d.PostLoginHooks(r.Context(), a.Active) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), ct))).
+					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), a.Active))).
 					WithField("identity_id", i.ID).
-					WithField("flow_method", ct).
+					WithField("flow_method", a.Active).
 					Debug("A ExecuteLoginPostHook hook aborted early.")
 				return nil
 			}
@@ -103,9 +88,9 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 			WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), ct))).
+			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), a.Active))).
 			WithField("identity_id", i.ID).
-			WithField("flow_method", ct).
+			WithField("flow_method", a.Active).
 			Debug("ExecuteLoginPostHook completed successfully.")
 	}
 
@@ -133,7 +118,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
-		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(ct.String())))
+		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(a.Active.String())))
 }
 
 func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
