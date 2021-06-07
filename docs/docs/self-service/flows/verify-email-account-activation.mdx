@@ -76,14 +76,12 @@ selfservice:
 
 ## Account Activation
 
-Using this feature implements the so-called "account activation" with the
-difference that Ory Kratos does not provide a feature that prevents signing into
-accounts without verified addresses. The reason being that verification is
-proving that the user controls the given address, but it is not an
-authentication mechanism.
-
-You may however choose to limit what an identity without verified addresses is
-able to do in your application logic or API Gateways.
+Using this feature implements the so-called "account activation". Depending on
+your scenario or use cases, you may either choose to limit what an identity
+without verified addresses is able to do in your application logic or API
+Gateways, or make Ory Kratos prevent signing into accounts without verified
+addresses. Latter is possible by the usage of `require_verified_address` hook
+(See [Hooks](../hooks.mdx) for more details).
 
 ## Verification Methods
 

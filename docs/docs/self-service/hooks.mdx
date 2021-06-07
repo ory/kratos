@@ -6,7 +6,8 @@ title: Hooks
 Hooks execute logic after a flow (login, registration, settings, ...):
 
 - _Before login:_ is executed when a login flow starts.
-- _After login:_ is executed after a login was successful.
+- _After login:_ is executed after a successful identification and
+  authentication of the user, but before the kratos session is created.
 - _Before registration:_ is executed when a registration flow starts.
 - _After registration:_ is executed when a registration was successful:
   - _Before persisting:_ runs before the identity is saved in the database.
@@ -191,12 +192,13 @@ selfservice:
         password:
           hooks:
             - hook: revoke_active_sessions
+            - hook: require_verified_address
 ```
 
 #### `revoke_active_sessions`
 
 The `revoke_active_sessions` will delete all active sessions for that user on
-successful login:
+successful login. This hook is available for all supported methods:
 
 ```yaml title="path/to/my/kratos.config.yml"
 selfservice:
@@ -206,6 +208,22 @@ selfservice:
         <method>:
           hooks:
             - hook: revoke_active_sessions
+              # can not be configured
+```
+
+#### `require_verified_address`
+
+The `require_verified_address` will ensure, the user can login only if its email
+address is verified. This hook is available for the `password` method only:
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    login:
+      after:
+        password:
+          hooks:
+            - hook: require_verified_address
               # can not be configured
 ```
 
