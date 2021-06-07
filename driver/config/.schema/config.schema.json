@@ -421,7 +421,7 @@
         }
       }
     },
-    "selfServiceAfterLoginMethod": {
+    "selfServiceAfterPasswordLoginMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -437,6 +437,30 @@
               },
               {
                 "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
+        }
+      }
+    },
+    "selfServiceAfterOIDCLoginMethod": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceSessionRevokerHook"
               },
               {
                 "$ref": "#/definitions/selfServiceWebHook"
@@ -507,10 +531,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterLoginMethod"
+          "$ref": "#/definitions/selfServiceAfterPasswordLoginMethod"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterLoginMethod"
+          "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
         "hooks": {
           "$ref": "#/definitions/selfServiceHooks"
