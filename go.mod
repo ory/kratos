@@ -11,7 +11,7 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 // Use the internal name for tablename generation
 replace github.com/ory/kratos/corp => ./corp
 
-replace github.com/ory/cli => github.com/ory/cli v0.0.50
+replace github.com/ory/cli => github.com/ory/cli v0.0.53
 
 replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
@@ -52,7 +52,7 @@ require (
 	github.com/inhies/go-bytesize v0.0.0-20201103132853-d0aed0d254f8
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/knadh/koanf v0.14.1-0.20201201075439-e0853799f9ec
+	github.com/knadh/koanf v1.0.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/luna-duclos/instrumentedsql/opentracing v0.0.0-20201103091713-40d03108b6f4
 	github.com/mattn/goveralls v0.0.7
@@ -71,11 +71,9 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.238
+	github.com/ory/x v0.0.247
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.9.0
-	github.com/prometheus/common v0.15.0
 	github.com/rs/cors v1.6.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slack-go/slack v0.7.4
