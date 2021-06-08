@@ -100,95 +100,45 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	var values map[string]interface{}
-	if err := json.Unmarshal(b, &values); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
+	// Force updatedAt to be an int if given as a string in the response.
+	if updatedAtField := gjson.GetBytes(b, "updated_at"); updatedAtField.Exists() {
+		v := updatedAtField.Value()
+		switch v.(type) {
+		case string:
+			t, err := time.Parse(time.RFC3339, updatedAtField.String())
+			updatedAt := t.Unix()
 
-	if v, ok := values["updated_at"]; ok {
-		// There is an updated_at field. Look at the type. If float64 (default for json numbers, then
-		// we can just use the Claims. Otherwise we convert the value.
-		if _, ok := v.(string); ok {
-			// This is the bug. We need to convert.
-			c, err := auth0Claims(b)
+			// Unmarshal into generic map, replace the updated_at value with the correct type, then re-marshal.
+			var data map[string]interface{}
+			err = json.Unmarshal(b, &data)
+			if err != nil {
+				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("bad type in response"))
+			}
+
+			// convert the correct int64 type back to a string, so we can Marshal it.
+			data["updated_at"] = strconv.FormatInt(updatedAt, 10)
+
+			// now remarshal so the unmarshal into Claims works.
+			b, err = json.Marshal(data)
 			if err != nil {
 				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 			}
 
-			return c, nil
+		case float64:
+			// nothing to do
+			break
+
+		default:
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("bad updated_at type"))
 		}
 	}
 
-	// If we get here, we the claims are standard and we proceed normally.
+	// Once we get here, we know that if there is an updated_at field in the json, it is the correct type.
 	var claims Claims
 	if err := json.Unmarshal(b, &claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
 	return &claims, nil
-}
 
-// This is not great.
-func auth0Claims(b []byte) (*Claims, error) {
-
-	type Auth0Claims struct {
-		Issuer              string `json:"iss,omitempty"`
-		Subject             string `json:"sub,omitempty"`
-		Name                string `json:"name,omitempty"`
-		GivenName           string `json:"given_name,omitempty"`
-		FamilyName          string `json:"family_name,omitempty"`
-		LastName            string `json:"last_name,omitempty"`
-		MiddleName          string `json:"middle_name,omitempty"`
-		Nickname            string `json:"nickname,omitempty"`
-		PreferredUsername   string `json:"preferred_username,omitempty"`
-		Profile             string `json:"profile,omitempty"`
-		Picture             string `json:"picture,omitempty"`
-		Website             string `json:"website,omitempty"`
-		Email               string `json:"email,omitempty"`
-		EmailVerified       bool   `json:"email_verified,omitempty"`
-		Gender              string `json:"gender,omitempty"`
-		Birthdate           string `json:"birthdate,omitempty"`
-		Zoneinfo            string `json:"zoneinfo,omitempty"`
-		Locale              string `json:"locale,omitempty"`
-		PhoneNumber         string `json:"phone_number,omitempty"`
-		PhoneNumberVerified bool   `json:"phone_number_verified,omitempty"`
-		UpdatedAt           string `json:"updated_at,omitempty"`
-	}
-	var a Auth0Claims
-
-	if err := json.Unmarshal(b, &a); err != nil {
-		return nil, err
-	}
-
-	c := &Claims{}
-	t, err := time.Parse(time.RFC3339, a.UpdatedAt) // apparently this is RFC3339
-	if err == nil {
-		c.UpdatedAt = t.Unix()
-	} else {
-		// Don't know what to do here. Just zero I guess.
-		c.UpdatedAt = 0
-	}
-
-	c.Issuer = a.Issuer
-	c.Subject = a.Subject
-	c.Name = a.Name
-	c.GivenName = a.GivenName
-	c.FamilyName = a.FamilyName
-	c.LastName = a.LastName
-	c.MiddleName = a.MiddleName
-	c.Nickname = a.Nickname
-	c.PreferredUsername = a.PreferredUsername
-	c.Profile = a.Profile
-	c.Picture = a.Picture
-	c.Website = a.Website
-	c.Email = a.Email
-	c.EmailVerified = a.EmailVerified
-	c.Gender = a.Gender
-	c.Birthdate = a.Birthdate
-	c.Zoneinfo = a.Zoneinfo
-	c.Locale = a.Locale
-	c.PhoneNumber = a.PhoneNumber
-	c.PhoneNumberVerified = a.PhoneNumberVerified
-
-	return c, nil
 }
