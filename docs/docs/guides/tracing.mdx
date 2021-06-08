@@ -33,7 +33,8 @@ Kratos currently creates the following spans:
 
 - Top level span (_named after the request path_) for the requested endpoint.
   Span tags: - http method - http status code - error IFF status code >= 400
-- Child span will be created if bcrypt is called. Span tags: - bcrypt work factor
+- Child span will be created if bcrypt is called. Span tags: - bcrypt work
+  factor
 - All SQL database interactions. Spans/tags will vary depending on the database
   driver used.
 
