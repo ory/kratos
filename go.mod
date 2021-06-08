@@ -63,7 +63,6 @@ require (
 	github.com/ory/herodot v0.9.6
 	github.com/ory/jsonschema/v3 v3.0.3
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
-	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
 	github.com/ory/x v0.0.247
