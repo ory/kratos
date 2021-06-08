@@ -14,9 +14,8 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.2021
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7
 
-replace github.com/ory/x => github.com/ory/x v0.0.248-0.20210608133403-e4d4bdc867bf
-
-replace github.com/ory/cli => github.com/ory/cli v0.0.54-0.20210608133353-c4151d03309d
+replace github.com/ory/cli => github.com/ory/cli v0.0.54
+replace github.com/ory/x => github.com/ory/x v0.0.249
 
 require (
 	github.com/DataDog/datadog-go v4.7.0+incompatible // indirect
@@ -63,7 +62,7 @@ require (
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.54-0.20210608133353-c4151d03309d
+	github.com/ory/cli v0.0.54
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
@@ -73,7 +72,7 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.248-0.20210608133827-26114dc70306
+	github.com/ory/x v0.0.249
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/philhofer/fwd v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1
