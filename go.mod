@@ -63,7 +63,7 @@ require (
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.0-00010101000000-000000000000
+	github.com/ory/cli v0.0.54-0.20210608133353-c4151d03309d
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
