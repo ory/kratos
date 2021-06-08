@@ -24,11 +24,10 @@ import (
 	"github.com/ory/kratos/cmd"
 )
 
-func init() {
-	corp.SetContextualizer(new(corp.NoopContextualizer))
-}
 
 func main() {
+	corp.SetContextualizer(new(corp.ContextNoOp))
+
 	defer profilex.Profile().Stop()
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
