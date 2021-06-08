@@ -16,7 +16,7 @@ type Contextualizer interface {
 	ContextualizeNID(ctx context.Context, fallback uuid.UUID) uuid.UUID
 }
 
-var DefaultContextualizer Contextualizer = noopContextualizer{}
+var DefaultContextualizer Contextualizer = nil
 
 // These global functions call the respective method on DefaultContextualizer
 

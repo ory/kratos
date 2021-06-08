@@ -14,6 +14,8 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.2021
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7
 
+replace github.com/ory/cli => ../cli
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
@@ -43,7 +45,7 @@ require (
 	github.com/hashicorp/consul/api v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.6.8
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/imdario/mergo v0.3.7
+	github.com/imdario/mergo v0.3.11
 	github.com/inhies/go-bytesize v0.0.0-20201103132853-d0aed0d254f8
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
@@ -55,7 +57,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.53
+	github.com/ory/cli v0.0.54-0.20210608132413-b82ff3493cdf
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
@@ -65,7 +67,7 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.247
+	github.com/ory/x v0.0.248-0.20210608132615-281b250c7ba3
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.6.0
@@ -80,6 +82,6 @@ require (
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	golang.org/x/tools v0.1.0
 )
