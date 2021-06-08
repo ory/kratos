@@ -14,18 +14,16 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.2021
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7
 
-replace github.com/ory/cli => github.com/ory/cli v0.0.54
-replace github.com/ory/x => github.com/ory/x v0.0.249
+replace github.com/ory/cli => ../cli
+
+replace github.com/ory/x => github.com/ory/x v0.0.250
 
 require (
-	github.com/DataDog/datadog-go v4.7.0+incompatible // indirect
-	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/bwmarrin/discordgo v0.23.0
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/containerd/containerd v1.5.2 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/fatih/color v1.9.0
@@ -60,7 +58,6 @@ require (
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
-	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
 	github.com/ory/cli v0.0.54
 	github.com/ory/dockertest/v3 v3.6.5
@@ -72,9 +69,8 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.249
+	github.com/ory/x v0.0.250
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
-	github.com/philhofer/fwd v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.6.0
 	github.com/sirupsen/logrus v1.8.1
@@ -85,12 +81,9 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.7.1
 	github.com/tidwall/sjson v1.1.5
-	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/urfave/negroni v1.0.0
-	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	golang.org/x/tools v0.1.0
-	gopkg.in/gorp.v1 v1.7.2 // indirect
 )
