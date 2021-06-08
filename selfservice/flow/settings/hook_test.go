@@ -46,7 +46,7 @@ func TestSettingsExecutor(t *testing.T) {
 				handleErr := testhelpers.SelfServiceHookSettingsErrorHandler
 				router.GET("/settings/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
-					sess := session.NewActiveSession(i, conf, time.Now().UTC())
+					sess, _ := session.NewActiveSession(i, conf, time.Now().UTC())
 
 					a := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
 					a.RequestURL = x.RequestURL(r).String()

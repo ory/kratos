@@ -70,7 +70,7 @@ forms that need to be shown during e.g. login, registration:
 
 Nodes are grouped (using the `group` key) based on the source that generated the
 node. Sources are the different methods such as "password" ("Sign in/up with ID
-& assword"), "oidc" (Social Sign In), "link" (Password reset and email
+& password"), "oidc" (Social Sign In), "link" (Password reset and email
 verification), "profile" ("Update your profile") and the "default" group which
 typically contains the CSRF token.
 

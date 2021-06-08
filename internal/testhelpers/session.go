@@ -92,27 +92,37 @@ func NewHTTPClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault, se
 }
 
 func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	return NewHTTPClientWithSessionToken(t, reg, session.NewActiveSession(
-		&identity.Identity{ID: x.NewUUID()},
+	s, err := session.NewActiveSession(
+		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
-	))
+	)
+	require.NoError(t, err, "Could not initialize session from identity.")
+
+	return NewHTTPClientWithSessionToken(t, reg, s)
 }
 
 func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
-	return NewHTTPClientWithSessionCookie(t, reg, session.NewActiveSession(
-		&identity.Identity{ID: x.NewUUID()},
+	s, err := session.NewActiveSession(
+		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
-	))
+	)
+	require.NoError(t, err, "Could not initialize session from identity.")
+
+	return NewHTTPClientWithSessionCookie(t, reg, s)
 }
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	return NewHTTPClientWithSessionCookie(t, reg,
-		session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now()))
+	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now())
+	require.NoError(t, err, "Could not initialize session from identity.")
+
+	return NewHTTPClientWithSessionCookie(t, reg, s)
 }
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	return NewHTTPClientWithSessionToken(t, reg,
-		session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now()))
+	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now())
+	require.NoError(t, err, "Could not initialize session from identity.")
+
+	return NewHTTPClientWithSessionToken(t, reg, s)
 }

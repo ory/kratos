@@ -15,8 +15,15 @@ func TestSession(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 	authAt := time.Now()
 
-	s := session.NewActiveSession(new(identity.Identity), conf, authAt)
+	i := new(identity.Identity)
+	i.State = identity.StateActive
+	s, _ := session.NewActiveSession(i, conf, authAt)
 	assert.True(t, s.IsActive())
+
+	i = new(identity.Identity)
+	s, err := session.NewActiveSession(i, conf, authAt)
+	assert.Nil(t, s)
+	assert.Equal(t, session.ErrIdentityDisabled, err)
 
 	assert.False(t, (&session.Session{ExpiresAt: time.Now().Add(time.Hour)}).IsActive())
 	assert.False(t, (&session.Session{Active: true}).IsActive())

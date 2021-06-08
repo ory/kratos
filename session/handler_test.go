@@ -85,7 +85,7 @@ func TestSessionRevoke(t *testing.T) {
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/identity.schema.json")
 	i := &identity.Identity{Traits: identity.Traits(`{"baz":"bar"}`)}
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-	sess := NewActiveSession(i, conf, time.Now())
+	sess, _ := NewActiveSession(i, conf, time.Now())
 	require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), sess))
 
 	sdk := testhelpers.NewSDKClient(publicTS)

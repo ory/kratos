@@ -2,6 +2,8 @@
   "id": "ed253b2c-48ed-4c58-9b6f-1dc963c30a66",
   "schema_id": "default",
   "schema_url": "https://www.ory.sh/schemas/default",
+  "state": "active",
+  "state_changed_at": null,
   "traits": {
     "email": "bazbar@ory.sh"
   },

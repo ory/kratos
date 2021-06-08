@@ -56,9 +56,6 @@ New feature or request.
       ([kratos#517](https://github.com/ory/kratos/issues/517))
 - [ ] Selfservice account deletion
       ([kratos#596](https://github.com/ory/kratos/issues/596))
-- [ ] Implement identity state and administrative deactivation, deletion of
-      identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Add ability to import user credentials
       ([kratos#605](https://github.com/ory/kratos/issues/605)) -
       [@hackerman](https://github.com/aeneasr)
@@ -93,6 +90,9 @@ New feature or request.
       mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
 - [ ] login ui returned without flowid
       ([kratos#1055](https://github.com/ory/kratos/issues/1055))
+- [x] Implement identity state and administrative deactivation, deletion of
+      identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] More meta information about the managed identity
       ([kratos#820](https://github.com/ory/kratos/issues/820))
 
