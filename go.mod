@@ -8,11 +8,6 @@ replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27
 // official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 replace github.com/ory/kratos-client-go => ./internal/httpclient
 
-// Use the internal name for tablename generation
-replace github.com/ory/kratos/corp => ./corp
-
-replace github.com/ory/cli => github.com/ory/cli v0.0.53
-
 replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
 replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.20210412125924-f5ad9021d6ac
@@ -60,7 +55,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.50
+	github.com/ory/cli v0.0.53
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
