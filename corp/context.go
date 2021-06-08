@@ -20,7 +20,7 @@ var Context Contextualizer = nil
 
 func SetContextualizer(c Contextualizer) {
 	if _, ok := c.(*ContextNoOp); ok && Context != nil {
-		panic("contextualizer was already set")
+		return
 	}
 
 	Context = c

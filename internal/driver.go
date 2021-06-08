@@ -25,7 +25,6 @@ const UnsetDefaultIdentitySchema = "file://not-set.schema.json"
 
 func init() {
 	corp.SetContextualizer(new(corp.ContextNoOp))
-
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
 	})
