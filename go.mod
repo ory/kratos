@@ -14,7 +14,7 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.2021
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7
 
-replace github.com/ory/x => github.com/ory/x v0.0.248-0.20210608133827-26114dc70306
+replace github.com/ory/x => github.com/ory/x v0.0.248-0.20210608133403-e4d4bdc867bf
 
 replace github.com/ory/cli => github.com/ory/cli v0.0.54-0.20210608133353-c4151d03309d
 
