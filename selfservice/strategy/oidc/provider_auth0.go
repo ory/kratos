@@ -140,5 +140,4 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 	}
 
 	return &claims, nil
-
 }
