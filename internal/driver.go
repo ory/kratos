@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"github.com/ory/kratos/corp"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -26,6 +27,7 @@ func init() {
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
 	})
+	corp.SetContextualizer(new(corp.NoopContextualizer))
 }
 
 func NewConfigurationWithDefaults(t *testing.T) *config.Config {

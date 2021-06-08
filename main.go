@@ -16,12 +16,17 @@
 package main
 
 import (
+	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/profilex"
 
 	"github.com/ory/kratos/cmd"
 )
+
+func init() {
+	corp.SetContextualizer(new(corp.NoopContextualizer))
+}
 
 func main() {
 	defer profilex.Profile().Stop()

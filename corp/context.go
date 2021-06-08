@@ -18,8 +18,15 @@ type Contextualizer interface {
 
 var DefaultContextualizer Contextualizer = nil
 
-// These global functions call the respective method on DefaultContextualizer
+func SetContextualizer(c Contextualizer) {
+	if _, ok := c.(*NoopContextualizer); ok && DefaultContextualizer != nil {
+		panic("contextualizer was already set")
+	}
 
+	DefaultContextualizer = c
+}
+
+// These global functions call the respective method on DefaultContextualizer
 func ContextualizeTableName(ctx context.Context, name string) string {
 	return DefaultContextualizer.ContextualizeTableName(ctx, name)
 }
