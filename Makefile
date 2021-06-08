@@ -24,10 +24,10 @@ endef
 $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
-.bin/orydoc:
-		go build -o .bin/orydoc ./cmd/clidoc/.
+.bin/clidoc:
+		go build -o .bin/clidoc ./cmd/clidoc/.
 
-docs/cli: .bin/orydoc
+docs/cli: .bin/clidoc
 		clidoc .
 
 .bin/traefik:
