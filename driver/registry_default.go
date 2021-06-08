@@ -482,9 +482,9 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 				WithField("connMaxLifetime", connMaxLifetime).
 				Debug("Connecting to SQL Database")
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
-				URL:                       sqlcon.FinalizeDSN(m.l, cleanedDSN),
-				IdlePool:                  idlePool,
-				ConnMaxLifetime:           connMaxLifetime,
+				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
+				IdlePool:        idlePool,
+				ConnMaxLifetime: connMaxLifetime,
 				// This has been released with pop 5.3.4 but kratos needs https://github.com/gobuffalo/pop/pull/637
 				// to be merged first
 				// ConnMaxIdleTime:           connMaxIdleTime,
