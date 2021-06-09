@@ -24,7 +24,6 @@ import (
 	"github.com/ory/kratos/cmd"
 )
 
-
 func main() {
 	corp.SetContextualizer(new(corp.ContextNoOp))
 

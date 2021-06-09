@@ -2,8 +2,9 @@ package internal
 
 import (
 	"context"
-	"github.com/ory/kratos/corp"
 	"testing"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 

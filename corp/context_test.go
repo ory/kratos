@@ -2,11 +2,13 @@ package corp
 
 import (
 	"context"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
-type contextMock struct{
+
+type contextMock struct {
 	ContextNoOp
 }
 
