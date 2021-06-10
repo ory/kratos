@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/ory/kratos/x/xsql"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/ory/kratos/x/xsql"
 
 	"github.com/go-errors/errors"
 	"github.com/gobuffalo/pop/v5"
