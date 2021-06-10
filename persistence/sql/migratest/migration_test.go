@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ory/kratos/x/xsql"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -67,11 +67,11 @@ func TestMigrations(t *testing.T) {
 
 			t.Logf("Cleaning up before migrations")
 			_ = os.Remove("../migrations/sql/schema.sql")
-			testhelpers.CleanSQL(t, c)
+			xsql.CleanSQL(t, c)
 
 			t.Cleanup(func() {
 				t.Logf("Cleaning up after migrations")
-				testhelpers.CleanSQL(t, c)
+				xsql.CleanSQL(t, c)
 				require.NoError(t, c.Close())
 			})
 
