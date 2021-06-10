@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/ory/kratos/x/xsql"
 	"os"
 	"path/filepath"
 	"sync"
@@ -119,9 +120,9 @@ func createCleanDatabases(t *testing.T) map[string]*driver.RegistryDefault {
 		p := reg.Persister().(*sql.Persister)
 
 		_ = os.Remove("migrations/schema.sql")
-		testhelpers.CleanSQL(t, p.Connection(context.Background()))
+		xsql.CleanSQL(t, p.Connection(context.Background()))
 		t.Cleanup(func() {
-			testhelpers.CleanSQL(t, p.Connection(context.Background()))
+			xsql.CleanSQL(t, p.Connection(context.Background()))
 			_ = os.Remove("migrations/schema.sql")
 		})
 
