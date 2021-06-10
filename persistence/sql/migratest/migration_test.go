@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/x/xsql"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"testing"
+
+	"github.com/ory/kratos/x/xsql"
 
 	"github.com/ory/x/migratest"
 
