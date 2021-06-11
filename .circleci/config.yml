@@ -59,9 +59,11 @@ jobs:
 
       - golangci/install
       - golangci/lint
-      - go/load-cache
+      - go/load-cache:
+          key: ory-kratos-go-mod-v1
       - go/mod-download
-      - go/save-cache
+      - go/save-cache:
+          key: ory-kratos-go-mod-v1
       - node/install-packages
       - run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
       - run: make install
