@@ -333,7 +333,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
+        "summary": "Get snapshot metrics from the service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
         "operationId": "prometheus",
         "responses": {
           "200": {
@@ -1936,11 +1936,6 @@
         }
       }
     },
-    "NullTime": {
-      "type": "string",
-      "format": "date-time",
-      "title": "NullTime implements sql.NullTime functionality."
-    },
     "Plugin": {
       "description": "Plugin A plugin for the Engine API",
       "type": "object",
@@ -2659,7 +2654,7 @@
           ]
         },
         "state_changed_at": {
-          "$ref": "#/definitions/NullTime"
+          "$ref": "#/definitions/nullTime"
         },
         "traits": {
           "$ref": "#/definitions/identityTraits"
@@ -2808,6 +2803,15 @@
           "type": "string"
         }
       }
+    },
+    "nullJsonRawMessage": {
+      "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
+      "type": "object"
+    },
+    "nullTime": {
+      "type": "string",
+      "format": "date-time",
+      "title": "NullTime implements sql.NullTime functionality."
     },
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
@@ -3483,7 +3487,7 @@
           "example": true
         },
         "verified_at": {
-          "$ref": "#/definitions/NullTime"
+          "$ref": "#/definitions/nullTime"
         },
         "via": {
           "$ref": "#/definitions/identityVerifiableAddressType"
