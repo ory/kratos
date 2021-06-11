@@ -22,6 +22,4 @@ import (
 	_ "github.com/davidrjonas/semver-cli"
 
 	_ "github.com/hashicorp/consul/api"
-
-	_ "github.com/ory/cli"
 )

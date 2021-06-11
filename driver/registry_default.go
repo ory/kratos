@@ -474,16 +474,20 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 				}
 			}
 
-			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
+			// Use maxIdleConnTime - see comment below for https://github.com/gobuffalo/pop/pull/637
+			pool, idlePool, connMaxLifetime, _, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
 			m.Logger().
 				WithField("pool", pool).
 				WithField("idlePool", idlePool).
 				WithField("connMaxLifetime", connMaxLifetime).
 				Debug("Connecting to SQL Database")
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
-				URL:                       sqlcon.FinalizeDSN(m.l, cleanedDSN),
-				IdlePool:                  idlePool,
-				ConnMaxLifetime:           connMaxLifetime,
+				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
+				IdlePool:        idlePool,
+				ConnMaxLifetime: connMaxLifetime,
+				// This has been released with pop 5.3.4 but kratos needs https://github.com/gobuffalo/pop/pull/637
+				// to be merged first
+				// ConnMaxIdleTime:           connMaxIdleTime,
 				Pool:                      pool,
 				UseInstrumentedDriver:     m.Tracer(ctx).IsLoaded(),
 				InstrumentedDriverOptions: opts,
