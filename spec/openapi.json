@@ -340,11 +340,6 @@
         "title": "A Node's Meta Information",
         "type": "object"
       },
-      "NullTime": {
-        "format": "date-time",
-        "title": "NullTime implements sql.NullTime functionality.",
-        "type": "string"
-      },
       "Plugin": {
         "description": "Plugin A plugin for the Engine API",
         "properties": {
@@ -1057,7 +1052,7 @@
             "type": "string"
           },
           "state_changed_at": {
-            "$ref": "#/components/schemas/NullTime"
+            "$ref": "#/components/schemas/nullTime"
           },
           "traits": {
             "$ref": "#/components/schemas/identityTraits"
@@ -1214,6 +1209,15 @@
           "session"
         ],
         "type": "object"
+      },
+      "nullJsonRawMessage": {
+        "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
+        "type": "object"
+      },
+      "nullTime": {
+        "format": "date-time",
+        "title": "NullTime implements sql.NullTime functionality.",
+        "type": "string"
       },
       "recoveryFlow": {
         "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
@@ -1926,7 +1930,7 @@
             "type": "boolean"
           },
           "verified_at": {
-            "$ref": "#/components/schemas/NullTime"
+            "$ref": "#/components/schemas/nullTime"
           },
           "via": {
             "$ref": "#/components/schemas/identityVerifiableAddressType"
@@ -2400,7 +2404,7 @@
             "$ref": "#/components/responses/emptyResponse"
           }
         },
-        "summary": "Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
+        "summary": "Get snapshot metrics from the service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
         "tags": [
           "admin"
         ]
