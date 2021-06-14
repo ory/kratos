@@ -36,4 +36,5 @@ type Claims struct {
 	PhoneNumberVerified bool   `json:"phone_number_verified,omitempty"`
 	UpdatedAt           int64  `json:"updated_at,omitempty"`
 	HD                  string `json:"hd,omitempty"`
+	Team                string `json:"team,omitempty"`
 }

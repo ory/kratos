@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ory/kratos/corp"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/configx"
@@ -23,6 +25,7 @@ import (
 const UnsetDefaultIdentitySchema = "file://not-set.schema.json"
 
 func init() {
+	corp.SetContextualizer(new(corp.ContextNoOp))
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
 	})
