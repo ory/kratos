@@ -3,11 +3,12 @@ package test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/x/assertx"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
