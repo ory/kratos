@@ -115,3 +115,7 @@ func (a VerifiableAddress) GetID() uuid.UUID {
 func (a VerifiableAddress) GetNID() uuid.UUID {
 	return a.NID
 }
+
+func (a VerifiableAddress) ValidateNID() error {
+	return nil
+}

@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/ory/x/assertx"
 	"strconv"
 	"strings"
 	"testing"
@@ -397,10 +398,13 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 				var found bool
 				for _, i := range is {
 					if i.ID == id {
+						expected, err := p.GetIdentity(ctx, id)
+						require.NoError(t, err)
+						assertx.EqualAsJSON(t, expected, i)
 						found = true
 					}
 				}
-				assert.True(t, found, id)
+				require.True(t, found, id)
 			}
 
 			t.Run("no results on other network", func(t *testing.T) {

@@ -252,23 +252,27 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("nid = ?", corp.ContextualizeNID(ctx, p.nid)).
+		Eager("VerifiableAddresses", "RecoveryAddresses").
 		Paginate(page, perPage).Order("id DESC").
 		All(&is)); err != nil {
 		return nil, err
 	}
 
+	schemaCache := map[string]string{}
+
 	for k := range is {
 		i := &is[k]
-		if err := p.findVerifiableAddresses(ctx, i); err != nil {
+		if err := i.ValidateNID(); err != nil {
 			return nil, sqlcon.HandleError(err)
 		}
 
-		if err := p.findRecoveryAddresses(ctx, i); err != nil {
-			return nil, sqlcon.HandleError(err)
-		}
-
-		if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
-			return nil, err
+		if u, ok := schemaCache[i.SchemaID]; ok {
+			i.SchemaURL = u
+		} else {
+			if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
+				return nil, err
+			}
+			schemaCache[i.SchemaID] = i.SchemaURL
 		}
 
 		is[k] = *i
