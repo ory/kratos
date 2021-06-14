@@ -313,4 +313,143 @@ func TestHandler(t *testing.T) {
 	t.Run("case=should return 404 for non-existing identities", func(t *testing.T) {
 		remove(t, "/identities/"+x.NewUUID().String(), http.StatusNotFound)
 	})
+
+	t.Run("suite=knownCredentialsRequest", func(t *testing.T) {
+		var passwordIdentity = func(email string) *identity.Identity {
+			i := identity.NewIdentity("")
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"secret":"pst"}`),
+			})
+			i.Traits = identity.Traits(`{"email": "` + email + `"}`)
+			address := identity.NewVerifiableEmailAddress(email, i.ID)
+			i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
+
+			require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
+			return i
+		}
+
+		var oidcIdentity = func(email string) *identity.Identity {
+			i := identity.NewIdentity("")
+			googleID := x.NewUUID().String()
+			i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+				Type:        identity.CredentialsTypeOIDC,
+				Identifiers: []string{"google:" + googleID},
+				Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"google","subject":"` + googleID + `"}]}`),
+			})
+			i.Traits = identity.Traits(`{"email": "` + email + `"}`)
+			address := identity.NewVerifiableEmailAddress(email, i.ID)
+			i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
+
+			require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
+			return i
+		}
+
+		var dualIdentity = func(email string) *identity.Identity {
+			i := identity.NewIdentity("")
+			googleID := x.NewUUID().String()
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"secret":"pst"}`),
+			})
+			i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+				Type:        identity.CredentialsTypeOIDC,
+				Identifiers: []string{"google:" + googleID},
+				Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"google","subject":"` + googleID + `"}]}`),
+			})
+			i.Traits = identity.Traits(`{"email": "` + email + `"}`)
+			address := identity.NewVerifiableEmailAddress(email, i.ID)
+			i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
+
+			require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
+			return i
+		}
+
+		t.Run("case=should return found=true when asked specifically for method=password", func(t *testing.T) {
+			email := "password1-foo@ory.sh"
+			passwordIdentity(email)
+
+			res := send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`", "method": "password"}`))
+			assert.True(t, res.Get("found").Bool(), "should be found")
+			assert.Len(t, res.Get("methods").Array(), 1, "length of methods array should be 1")
+			assert.EqualValues(t, "password", res.Get("methods.0.method").String(), "first method should be password")
+			assert.Empty(t, res.Get("methods.0.provider").String(), "no provider should be specified")
+
+			res = send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`", "method": "oidc"}`))
+			assert.False(t, res.Get("found").Bool(), "should be not found")
+		})
+
+		t.Run("case=should return method=password when asked without a method", func(t *testing.T) {
+			email := "password2-foo@ory.sh"
+			passwordIdentity(email)
+
+			res := send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`"}`))
+			assert.True(t, res.Get("found").Bool(), "should be found")
+			assert.Len(t, res.Get("methods").Array(), 1, "length of methods array should be 1")
+			assert.EqualValues(t, "password", res.Get("methods.0.method").String(), "first method should be password")
+		})
+
+		t.Run("case=should return found=true when asked specifically for method=oidc", func(t *testing.T) {
+			email := "oidc1-foo@ory.sh"
+			oidcIdentity(email)
+
+			res := send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`", "method": "oidc"}`))
+			assert.True(t, res.Get("found").Bool(), "should be found")
+			assert.Len(t, res.Get("methods").Array(), 1, "length of methods array should be 1")
+			assert.EqualValues(t, "oidc", res.Get("methods.0.method").String(), "first method should be oidc")
+			assert.EqualValues(t, "google", res.Get("methods.0.provider").String(), "first provider should be google")
+
+			res = send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`", "method": "password"}`))
+			assert.False(t, res.Get("found").Bool(), "should be not found")
+		})
+
+		t.Run("case=should return method=oidc when asked without a method", func(t *testing.T) {
+			email := "oidc2-foo@ory.sh"
+			oidcIdentity(email)
+
+			res := send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`"}`))
+			assert.True(t, res.Get("found").Bool(), "should be found")
+			assert.Len(t, res.Get("methods").Array(), 1, "length of methods array should be 1")
+			assert.EqualValues(t, "oidc", res.Get("methods.0.method").String(), "first method should be oidc")
+			assert.EqualValues(t, "google", res.Get("methods.0.provider").String(), "first provider should be google")
+		})
+
+		t.Run("case=should find correct method when specified", func(t *testing.T) {
+			email := "oidcpassword1-foo@ory.sh"
+			dualIdentity(email)
+
+			res := send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`"}`))
+			assert.True(t, res.Get("found").Bool(), "should be found")
+			assert.Len(t, res.Get("methods").Array(), 2, "length of methods array should be 2")
+
+			assert.EqualValues(t, "password", res.Get("methods.0.method").String(), "first method should be password")
+			assert.EqualValues(t, "oidc", res.Get("methods.1.method").String(), "second method should be oidc")
+			assert.EqualValues(t, "google", res.Get("methods.1.provider").String(), "second provider should be google")
+		})
+
+		t.Run("case=should return found=false when email has no matching identity", func(t *testing.T) {
+			email := "notfound-foo@ory.sh"
+
+			res := send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`"}`))
+			assert.False(t, res.Get("found").Bool(), "should be not found")
+
+			res = send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`", "method": "password"}`))
+			assert.False(t, res.Get("found").Bool(), "should be not found")
+
+			res = send(t, "POST", "/credentials/known", http.StatusOK, json.RawMessage(`{"identifier": "`+email+`", "method": "oidc"}`))
+			assert.False(t, res.Get("found").Bool(), "should be not found")
+		})
+
+		t.Run("case=should return status=400 when POST body is in incorrect format", func(t *testing.T) {
+			send(t, "POST", "/credentials/known", http.StatusBadRequest, json.RawMessage(`{}`))
+		})
+
+		t.Run("case=should return status=400 when method is not CredentialsTypeOIDC or CredentialsTypePassword", func(t *testing.T) {
+			send(t, "POST", "/credentials/known", http.StatusBadRequest, json.RawMessage(`{"identifier": "nothing", "method": "neither"}`))
+		})
+
+	})
+
 }

@@ -3,15 +3,12 @@ package identity
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/ory/herodot"
 
 	"github.com/tidwall/gjson"
-
-	"github.com/ory/kratos/driver/config"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -108,6 +105,16 @@ func (h *Handler) knownCredentialsOIDC(ctx context.Context, id string) (bool, []
 	return true, result, nil
 }
 
+var ErrSpecifyIdentifier = herodot.DefaultError{
+	ErrorField: "must specify identifier",
+	CodeField:  http.StatusBadRequest,
+}
+
+var ErrInvalidMethod = herodot.DefaultError{
+	ErrorField: "method must be either 'password' or 'oidc'",
+	CodeField:  http.StatusBadRequest,
+}
+
 // swagger:route GET /credentials/known admin knownCredentialsRequest
 //
 // Check if a specified identifier has been previously registered with the specified method, or optionally search
@@ -130,12 +137,12 @@ func (h *Handler) knownCredentials(w http.ResponseWriter, r *http.Request, _ htt
 	}
 
 	if kcr.Identifier == "" {
-		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(errors.New("must specify identifier")))
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, ErrSpecifyIdentifier)
 		return
 	}
 
 	if kcr.Method != "" && kcr.Method != CredentialsTypeOIDC.String() && kcr.Method != CredentialsTypePassword.String() {
-		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(fmt.Errorf("if method is specified, must be either '%s' or '%s'", CredentialsTypePassword, CredentialsTypeOIDC)))
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, ErrInvalidMethod)
 		return
 	}
 
