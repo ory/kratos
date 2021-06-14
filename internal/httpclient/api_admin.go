@@ -1299,7 +1299,13 @@ func (r AdminApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SettingsFlow, 
 
 /*
  * GetSelfServiceSettingsFlow Get Settings Flow
- * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
 but instead 403 or 500 to improve data privacy.
 
@@ -2063,7 +2069,7 @@ func (r AdminApiApiPrometheusRequest) Execute() (*http.Response, error) {
 }
 
 /*
- * Prometheus Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to your deployment like so:
+ * Prometheus Get snapshot metrics from the service. If you're using k8s, you can then add annotations to your deployment like so:
  * ```
 metadata:
 annotations:

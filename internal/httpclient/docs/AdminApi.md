@@ -19,7 +19,7 @@ Method | HTTP request | Description
 [**IsAlive**](AdminApi.md#IsAlive) | **Get** /health/alive | Check HTTP Server Status
 [**IsReady**](AdminApi.md#IsReady) | **Get** /health/ready | Check HTTP Server and Database Status
 [**ListIdentities**](AdminApi.md#ListIdentities) | **Get** /identities | List Identities
-[**Prometheus**](AdminApi.md#Prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Hydra service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
+[**Prometheus**](AdminApi.md#Prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 [**UpdateIdentity**](AdminApi.md#UpdateIdentity) | **Put** /identities/{id} | Update an Identity
 
 
@@ -1017,7 +1017,7 @@ No authorization required
 
 > Prometheus(ctx).Execute()
 
-Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to your deployment like so:
+Get snapshot metrics from the service. If you're using k8s, you can then add annotations to your deployment like so:
 
 
 

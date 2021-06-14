@@ -317,7 +317,7 @@ paths:
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
       summary: |-
-        Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to
+        Get snapshot metrics from the service. If you're using k8s, you can then add annotations to
         your deployment like so:
       tags:
       - admin
@@ -1218,10 +1218,16 @@ paths:
         HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
         Implies that the user needs to re-authenticate.
 
-        Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+        Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
         a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
         a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
         a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+
+        Browser flows with an accept header of `application/json` will not redirect but instead respond with
+        HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+        HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 403 when the page is accessed without a session cookie.
+        HTTP 400 on form validation errors.
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: submitSelfServiceSettingsFlow
@@ -1297,6 +1303,12 @@ paths:
   /self-service/settings/api:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
         You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 
@@ -1313,16 +1325,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: initializeSelfServiceSettingsForNativeApps
-      parameters:
-      - description: The Session Token of the Identity performing the settings flow.
-        explode: false
-        in: header
-        name: X-Session-Token
-        required: false
-        schema:
-          type: string
-        style: simple
+      operationId: initializeSelfServiceSettingsWithoutBrowser
       responses:
         "200":
           content:
@@ -1344,28 +1347,49 @@ paths:
           description: jsonError
       security:
       - sessionToken: []
-      summary: Initialize Settings Flow for Native Apps and API clients
+      summary: Initialize Settings Flow for APIs, Services, Apps, ...
       tags:
       - public
   /self-service/settings/browser:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
         `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
         Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
 
-        :::note
+        If this endpoint is opened as a link in the browser, it will be redirected to
+        `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session
+        was set, the browser will be redirected to the login endpoint.
 
-        This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+        If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
+        or a 403 forbidden error if no valid session was set.
 
-        :::
+        This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: initializeSelfServiceSettingsForBrowsers
       responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/settingsFlow'
+          description: settingsFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
@@ -1380,6 +1404,12 @@ paths:
   /self-service/settings/flows:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
         or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
         but instead 403 or 500 to improve data privacy.
