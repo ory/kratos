@@ -778,7 +778,13 @@ func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SettingsFlow,
 
 /*
  * GetSelfServiceSettingsFlow Get Settings Flow
- * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
 but instead 403 or 500 to improve data privacy.
 
@@ -1974,21 +1980,30 @@ type PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest struct {
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest) Execute() (*SettingsFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceSettingsForBrowsersExecute(r)
 }
 
 /*
  * InitializeSelfServiceSettingsForBrowsers Initialize Settings Flow for Browsers
- * This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
 Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
 
-:::note
+If this endpoint is opened as a link in the browser, it will be redirected to
+`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session
+was set, the browser will be redirected to the login endpoint.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
+or a 403 forbidden error if no valid session was set.
 
-:::
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -2003,19 +2018,21 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsers(ctx context.
 
 /*
  * Execute executes the request
+ * @return SettingsFlow
  */
-func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest) (*SettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *SettingsFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceSettingsForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/settings/browser"
@@ -2043,19 +2060,19 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r Pub
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2063,39 +2080,58 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r Pub
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest struct {
-	ctx           context.Context
-	ApiService    *PublicApiService
-	xSessionToken *string
+type PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest struct {
+	ctx        context.Context
+	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest) XSessionToken(xSessionToken string) PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest {
-	r.xSessionToken = &xSessionToken
-	return r
-}
-
-func (r PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest) Execute() (*SettingsFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceSettingsForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) Execute() (*SettingsFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceSettingsWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceSettingsForNativeApps Initialize Settings Flow for Native Apps and API clients
- * This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
+ * InitializeSelfServiceSettingsWithoutBrowser Initialize Settings Flow for APIs, Services, Apps, ...
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
 You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 
 To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
@@ -2112,10 +2148,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceSettingsForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceSettingsWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2125,7 +2161,7 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForNativeApps(ctx contex
  * Execute executes the request
  * @return SettingsFlow
  */
-func (a *PublicApiService) InitializeSelfServiceSettingsForNativeAppsExecute(r PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest) (*SettingsFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceSettingsWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) (*SettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2135,7 +2171,7 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForNativeAppsExecute(r P
 		localVarReturnValue  *SettingsFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceSettingsForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceSettingsWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2162,9 +2198,6 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForNativeAppsExecute(r P
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	if r.xSessionToken != nil {
-		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -3231,10 +3264,16 @@ HTTP 401 when the endpoint is called without a valid session token.
 HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
 Implies that the user needs to re-authenticate.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
 a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
 a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
 a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+
+Browser flows with an accept header of `application/json` will not redirect but instead respond with
+HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 403 when the page is accessed without a session cookie.
+HTTP 400 on form validation errors.
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().

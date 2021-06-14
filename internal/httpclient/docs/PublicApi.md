@@ -19,7 +19,7 @@ Method | HTTP request | Description
 [**InitializeSelfServiceRegistrationForBrowsers**](PublicApi.md#InitializeSelfServiceRegistrationForBrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for Browsers
 [**InitializeSelfServiceRegistrationWithoutBrowser**](PublicApi.md#InitializeSelfServiceRegistrationWithoutBrowser) | **Get** /self-service/registration/api | Initialize Registration Flow for APIs, Services, Apps, ...
 [**InitializeSelfServiceSettingsForBrowsers**](PublicApi.md#InitializeSelfServiceSettingsForBrowsers) | **Get** /self-service/settings/browser | Initialize Settings Flow for Browsers
-[**InitializeSelfServiceSettingsForNativeApps**](PublicApi.md#InitializeSelfServiceSettingsForNativeApps) | **Get** /self-service/settings/api | Initialize Settings Flow for Native Apps and API clients
+[**InitializeSelfServiceSettingsWithoutBrowser**](PublicApi.md#InitializeSelfServiceSettingsWithoutBrowser) | **Get** /self-service/settings/api | Initialize Settings Flow for APIs, Services, Apps, ...
 [**InitializeSelfServiceVerificationForBrowsers**](PublicApi.md#InitializeSelfServiceVerificationForBrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 [**InitializeSelfServiceVerificationForNativeApps**](PublicApi.md#InitializeSelfServiceVerificationForNativeApps) | **Get** /self-service/verification/api | Initialize Verification Flow for Native Apps and API clients
 [**RevokeSession**](PublicApi.md#RevokeSession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
@@ -936,7 +936,7 @@ No authorization required
 
 ## InitializeSelfServiceSettingsForBrowsers
 
-> InitializeSelfServiceSettingsForBrowsers(ctx).Execute()
+> SettingsFlow InitializeSelfServiceSettingsForBrowsers(ctx).Execute()
 
 Initialize Settings Flow for Browsers
 
@@ -963,6 +963,8 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceSettingsForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceSettingsForBrowsers`: SettingsFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceSettingsForBrowsers`: %v\n", resp)
 }
 ```
 
@@ -977,7 +979,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceSetti
 
 ### Return type
 
- (empty response body)
+[**SettingsFlow**](SettingsFlow.md)
 
 ### Authorization
 
@@ -993,11 +995,11 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceSetti
 [[Back to README]](../README.md)
 
 
-## InitializeSelfServiceSettingsForNativeApps
+## InitializeSelfServiceSettingsWithoutBrowser
 
-> SettingsFlow InitializeSelfServiceSettingsForNativeApps(ctx).XSessionToken(xSessionToken).Execute()
+> SettingsFlow InitializeSelfServiceSettingsWithoutBrowser(ctx).Execute()
 
-Initialize Settings Flow for Native Apps and API clients
+Initialize Settings Flow for APIs, Services, Apps, ...
 
 
 
@@ -1014,32 +1016,27 @@ import (
 )
 
 func main() {
-    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceSettingsForNativeApps(context.Background()).XSessionToken(xSessionToken).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceSettingsWithoutBrowser(context.Background()).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceSettingsForNativeApps``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceSettingsWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `InitializeSelfServiceSettingsForNativeApps`: SettingsFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceSettingsForNativeApps`: %v\n", resp)
+    // response from `InitializeSelfServiceSettingsWithoutBrowser`: SettingsFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceSettingsWithoutBrowser`: %v\n", resp)
 }
 ```
 
 ### Path Parameters
 
-
+This endpoint does not need any parameter.
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiInitializeSelfServiceSettingsForNativeAppsRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiInitializeSelfServiceSettingsWithoutBrowserRequest struct via the builder pattern
 
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **xSessionToken** | **string** | The Session Token of the Identity performing the settings flow. | 
 
 ### Return type
 
