@@ -5,9 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/link"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -61,6 +67,19 @@ func TestAdminStrategy(t *testing.T) {
 		assert.NotEmpty(t, rl.Query().Get("flow"))
 		require.True(t, (*l.ExpiresAt).Before(isBefore))
 	}
+
+	t.Run("no panic on empty body #1384", func(t *testing.T) {
+		ctx := context.Background()
+		s, err := reg.RecoveryStrategies(ctx).Strategy("link")
+		require.NoError(t, err)
+		w := httptest.NewRecorder()
+		r := &http.Request{URL: new(url.URL)}
+		f, err := recovery.NewFlow(reg.Config(ctx), time.Minute, "", r, reg.RecoveryStrategies(ctx), flow.TypeBrowser)
+		require.NoError(t, err)
+		require.NotPanics(t, func() {
+			require.Error(t, s.(*link.Strategy).HandleRecoveryError(w, r, f, nil, errors.New("test")))
+		})
+	})
 
 	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
 		_, _, err := adminSDK.AdminApi.CreateRecoveryLink(context.Background()).CreateRecoveryLink(kratos.CreateRecoveryLink{
