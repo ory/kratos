@@ -15,7 +15,7 @@ func NewKratosClient(endpoint string) *kratos.APIClient {
 func main() {
   c := NewKratosClient("http://127.0.0.1:4433/")
 
-  flow, _, err := c.PublicApi.initializeSelfServiceVerificationForNativeApps(context.Background()).Execute()
+  flow, _, err := c.PublicApi.initializeSelfServiceVerificationWithoutBrowser(context.Background()).Execute()
   if err != nil {
     // ...
   }

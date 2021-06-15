@@ -9,7 +9,7 @@
   "scripts": {
     "gen": "npm run widdershins && cd .. && node ./docs/scripts/fix-api.js ./docs/docs/reference/api.mdx && node ./docs/scripts/config.js docs/config.js && node ./docs/scripts/gen-faq.js",
     "docusaurus": "docusaurus",
-    "widdershins": "widdershins -u .widdershins/templates -e .widdershins/config.json ../spec/api.json -o ./docs/reference/api.mdx",
+    "widdershins": "widdershins -u .widdershins/templates -e .widdershins/config.json ../spec/openapi.json -o ./docs/reference/api.mdx",
     "start": "docusaurus start",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
@@ -19,12 +19,12 @@
     "format:check": "prettier --check ${npm_package_config_prettierTarget}"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.0-alpha.73",
-    "@docusaurus/plugin-content-docs": "2.0.0-alpha.73",
-    "@docusaurus/plugin-content-pages": "2.0.0-alpha.73",
-    "@docusaurus/plugin-sitemap": "2.0.0-alpha.73",
-    "@docusaurus/theme-classic": "2.0.0-alpha.73",
-    "@docusaurus/theme-search-algolia": "2.0.0-alpha.73",
+    "@docusaurus/core": "2.0.0-beta.0",
+    "@docusaurus/plugin-content-docs": "2.0.0-beta.0",
+    "@docusaurus/plugin-content-pages": "2.0.0-beta.0",
+    "@docusaurus/plugin-sitemap": "2.0.0-beta.0",
+    "@docusaurus/theme-classic": "2.0.0-beta.0",
+    "@docusaurus/theme-search-algolia": "2.0.0-beta.0",
     "classnames": "2.3.1",
     "file-loader": "6.2.0",
     "mermaid": "8.9.2",

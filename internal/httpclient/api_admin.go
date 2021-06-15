@@ -993,8 +993,14 @@ func (r AdminApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*RecoveryFlow, 
 }
 
 /*
- * GetSelfServiceRecoveryFlow Get information about a recovery flow
- * This endpoint returns a recovery flow's context with, for example, error details and other information.
+ * GetSelfServiceRecoveryFlow Get Recovery Flow
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a recovery flow's context with, for example, error details and other information.
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1464,7 +1470,13 @@ func (r AdminApiApiGetSelfServiceVerificationFlowRequest) Execute() (*Verificati
 
 /*
  * GetSelfServiceVerificationFlow Get Verification Flow
- * This endpoint returns a verification flow's context with, for example, error details and other information.
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a verification flow's context with, for example, error details and other information.
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().

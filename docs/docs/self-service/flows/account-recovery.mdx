@@ -7,12 +7,14 @@ import useBaseUrl from '@docusaurus/useBaseUrl'
 import Mermaid from '@theme/Mermaid'
 import ApiWarning from '@theme/ApiWarning'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
+import SelfServiceSpaFlow from '@theme/SelfServiceSpaFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
   initBrowserFlow,
   initApiFlow,
+  initSpaFlow,
   getFlow,
   getFlowMethodLinkWithErrors,
   getFlowMethodLinkSuccess,
@@ -205,7 +207,7 @@ where
 - `passed_challenge` is set when the user has clicked the recovery link and
   completed the account recovery.
 
-### Recovery for Browser Clients
+### Recovery for Server-Side Browser Clients
 
 The Recovery Flow for browser clients relies on HTTP redirects between Ory
 Kratos, your Recovery UI, and the end-user's browser:
@@ -233,7 +235,29 @@ selfservice:
       ui_url: http://127.0.0.1:4455/recovery
 ```
 
-### Recovery for API Clients
+### Recovery for Client-Side (AJAX) Browser Clients
+
+The Recovery Flow for client-side browser clients relies on AJAX requests.
+
+:::note
+
+This flow requires AJAX and has all the potential problems with CORS. To make it
+work, you need to ensure that cookies work by setting the correct configuration
+options in your JavaScript code and the CORS headers of the server.
+
+:::
+
+<SelfServiceSpaFlow
+  flows={['recovery']}
+  success="Set session cookie and initialize Settings Flow"
+  interactions={['"Recover account"']}
+/>
+
+To initialize the Recovery Flow, point the Browser to the initialization endpoint:
+
+<CodeTabs items={initSpaFlow} />
+
+### Recovery for API Clients and Clients without Browsers
 
 <ApiWarning />
 
