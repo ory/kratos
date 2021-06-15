@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ory/kratos/corp"
+	"github.com/ory/x/dbal"
 	"os"
 	"path/filepath"
-	"runtime/debug"
 	"testing"
 
 	"github.com/ory/kratos/x/xsql"
@@ -34,6 +35,13 @@ import (
 	"github.com/ory/x/sqlcon/dockertest"
 )
 
+func init() {
+	corp.SetContextualizer(new(corp.ContextNoOp))
+	dbal.RegisterDriver(func() dbal.Driver {
+		return driver.NewRegistryDefault()
+	})
+}
+
 func TestMigrations(t *testing.T) {
 	sqlite, err := pop.NewConnection(&pop.ConnectionDetails{
 		URL: "sqlite3://" + filepath.Join(os.TempDir(), x.NewUUID().String()) + ".sql?_fk=true"})
@@ -57,12 +65,6 @@ func TestMigrations(t *testing.T) {
 
 	var test = func(db string, c *pop.Connection) func(t *testing.T) {
 		return func(t *testing.T) {
-			defer func() {
-				if err := recover(); err != nil {
-					t.Fatalf("recovered: %+v\n\t%s", err, debug.Stack())
-				}
-			}()
-
 			ctx := context.Background()
 			l := logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel))
 
