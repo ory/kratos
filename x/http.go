@@ -32,6 +32,18 @@ func EasyGet(t *testing.T, c *http.Client, url string) (*http.Response, []byte) 
 	return res, body
 }
 
+func EasyGetJSON(t *testing.T, c *http.Client, url string) (*http.Response, []byte) {
+	req, err := http.NewRequest("GET", url, nil)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	res, err := c.Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	require.NoError(t, err)
+	return res, body
+}
+
 func EasyGetBody(t *testing.T, c *http.Client, url string) []byte {
 	_, body := EasyGet(t, c, url) // nolint: bodyclose
 	return body
