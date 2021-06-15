@@ -14,14 +14,10 @@ func NewKratosClient(endpoint string) *kratos.APIClient {
 
 func main() {
   c := NewKratosClient("http://127.0.0.1:4433/")
-
-  sessionToken := "..."
-
-	ctx := context.WithValue(context.Background(), kratos.ContextAccessToken, sessionToken)
-	flow, _, err := c.PublicApi.initializeSelfServiceSettingsForNativeApps(ctx).Execute()
+  flow, _, err := c.PublicApi.initializeSelfServiceRegistrationForNativeApps(context.Background()).Execute()
   if err != nil {
     // ...
   }
 
-  fmt.Printf("%+v", flow)
+  fmt.Printf("%+v", rs.Payload)
 }
