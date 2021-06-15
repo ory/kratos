@@ -388,12 +388,12 @@ type submitSelfServiceSettingsFlowBody struct{}
 //   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
 //     Implies that the user needs to re-authenticate.
 //
-// Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
+// Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
 //   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
 //   - a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
 //   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 //
-// Browser flows with an accept header of `application/json` will not redirect but instead respond with
+// Browser flows with HTTP Header `Accept: application/json` respond with
 //   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
 //   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 403 when the page is accessed without a session cookie.
@@ -438,7 +438,7 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 
 	ss, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
-		if f.Type == flow.TypeBrowser {
+		if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
 			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
 			return
 		}
