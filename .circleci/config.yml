@@ -71,7 +71,8 @@ jobs:
       - run: make test-docs
       - run: make test-coverage
       - name: Upload coverage to Codecov
-        run: bash <(curl -s https://codecov.io/bash)
+        run: |
+          bash <(curl -s https://codecov.io/bash)
 
   test-e2e:
     docker:
