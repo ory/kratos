@@ -461,6 +461,10 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 		panic("RegistryDefault.Init() must not be called more than once.")
 	}
 
+	if corp.GetContextualizer() == nil {
+		panic("Contextualizer has not been set yet.")
+	}
+
 	bc := backoff.NewExponentialBackOff()
 	bc.MaxElapsedTime = time.Minute * 5
 	bc.Reset()
