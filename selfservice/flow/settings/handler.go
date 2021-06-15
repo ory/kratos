@@ -81,7 +81,11 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
+		if x.IsJSONRequest(r) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("Please include a valid session cookie or session token when calling this endpoint.")))
+		} else {
+			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
+		}
 	}))
 
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
@@ -127,9 +131,15 @@ type initializeSelfServiceSettingsForNativeApps struct {
 	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsForNativeApps
+// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsWithoutBrowser
 //
-// Initialize Settings Flow for Native Apps and API clients
+// Initialize Settings Flow for APIs, Services, Apps, ...
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
 // You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
@@ -177,15 +187,24 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 // Initialize Settings Flow for Browsers
 //
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
+//
 // This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
 // Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
 //
-// :::note
+// If this endpoint is opened as a link in the browser, it will be redirected to
+// `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session
+// was set, the browser will be redirected to the login endpoint.
 //
-// This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+// If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
+// or a 403 forbidden error if no valid session was set.
 //
-// :::
+// This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -195,7 +214,9 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       sessionToken:
 //
 //     Responses:
+//       200: settingsFlow
 //       302: emptyResponse
+//       403: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
@@ -210,7 +231,8 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+	redirTo := f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String()
+	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), f, redirTo)
 }
 
 // nolint:deadcode,unused
@@ -238,6 +260,12 @@ type getSelfServiceSettingsFlow struct {
 // swagger:route GET /self-service/settings/flows public admin getSelfServiceSettingsFlow
 //
 // Get Settings Flow
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 // or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
@@ -360,10 +388,16 @@ type submitSelfServiceSettingsFlowBody struct{}
 //   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
 //     Implies that the user needs to re-authenticate.
 //
-// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+// Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
 //   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
 //   - a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
 //   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+//
+// Browser flows with an accept header of `application/json` will not redirect but instead respond with
+//   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 403 when the page is accessed without a session cookie.
+//   - HTTP 400 on form validation errors.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //

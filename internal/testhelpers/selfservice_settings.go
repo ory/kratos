@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tidwall/gjson"
+
 	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/gobuffalo/httptest"
@@ -39,15 +41,30 @@ func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 	return ts
 }
 
-func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SettingsFlow {
+func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.SettingsFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	res, err := client.Get(ts.URL + settings.RouteInitBrowserFlow)
+	req, err := http.NewRequest("GET", ts.URL+settings.RouteInitBrowserFlow, nil)
 	require.NoError(t, err)
+
+	if isSPA {
+		req.Header.Set("Accept", "application/json")
+	}
+
+	res, err := client.Do(req)
+	require.NoError(t, err)
+
+	var flowID string
+	if isSPA {
+		flowID = gjson.GetBytes(x.MustReadAll(res.Body), "id").String()
+	} else {
+		flowID = res.Request.URL.Query().Get("flow")
+	}
+
 	require.NoError(t, res.Body.Close())
 
 	rs, _, err := publicClient.PublicApi.GetSelfServiceSettingsFlow(context.Background()).
-		Id(res.Request.URL.Query().Get("flow")).Execute()
+		Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -57,7 +74,7 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *htt
 func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SettingsFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceSettingsForNativeApps(context.Background()).Execute()
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceSettingsWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -204,14 +221,20 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 func SettingsMakeRequest(
 	t *testing.T,
 	isAPI bool,
+	isSPA bool,
 	f *kratos.SettingsFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
-	require.NoError(t, err)
+	req := NewRequest(t, isSPA || isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values))
+	if isSPA || isAPI {
+		req.Header.Set("Accept", "application/json")
+	}
+
+	res, err := hc.Do(req)
+	require.NoError(t, err, "action: %s", f.Ui.Action)
 	defer res.Body.Close()
 
 	return string(ioutilx.MustReadAll(res.Body)), res
@@ -222,6 +245,7 @@ func SettingsMakeRequest(
 func SubmitSettingsForm(
 	t *testing.T,
 	isAPI bool,
+	isSPA bool,
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
@@ -240,7 +264,7 @@ func SubmitSettingsForm(
 	if isAPI {
 		payload = InitializeSettingsFlowViaAPI(t, hc, publicTS)
 	} else {
-		payload = InitializeSettingsFlowViaBrowser(t, hc, publicTS)
+		payload = InitializeSettingsFlowViaBrowser(t, hc, isSPA, publicTS)
 	}
 
 	time.Sleep(time.Millisecond * 10) // add a bit of delay to allow `1ns` to time out.
@@ -248,7 +272,7 @@ func SubmitSettingsForm(
 	values := SDKFormFieldsToURLValues(payload.Ui.Nodes)
 	withValues(values)
 
-	b, res := SettingsMakeRequest(t, isAPI, payload, hc, EncodeFormAsJSON(t, isAPI, values))
+	b, res := SettingsMakeRequest(t, isAPI, isSPA, payload, hc, EncodeFormAsJSON(t, isAPI || isSPA, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

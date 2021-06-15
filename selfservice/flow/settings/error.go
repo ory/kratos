@@ -78,7 +78,7 @@ func (s *ErrorHandler) reauthenticate(
 	f *Flow,
 	err error,
 ) {
-	if f.Type == flow.TypeAPI {
+	if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -128,7 +128,7 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+		if f.Type == flow.TypeAPI {
 			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
 		} else {
