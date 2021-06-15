@@ -1,15 +1,20 @@
 import { APP_URL, gen, website } from '../../../../helpers'
 
-context('Settings Flow Success', () => {
-  let email = gen.email()
-  let password = gen.password()
+context('Email Profile', () => {
+  describe('Settings Flow Success', () => {
+    before(() => {
+      cy.useConfigProfile('email')
+    })
 
-  const up = (value) => `not-${value}`
-  const down = (value) => value.replace(/not-/, '')
+    let email = gen.email()
+    let password = gen.password()
 
-  before(() => {
-    cy.register({ email, password, fields: { 'traits.website': website } })
-  })
+    const up = (value) => `not-${value}`
+    const down = (value) => value.replace(/not-/, '')
+
+    before(() => {
+      cy.register({email, password, fields: {'traits.website': website}})
+    })
 
   beforeEach(() => {
     cy.clearCookies()
@@ -141,5 +146,6 @@ context('Settings Flow Success', () => {
         email
       )
     })
+  })
   })
 })

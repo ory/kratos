@@ -1,15 +1,20 @@
 import {gen, MOBILE_URL, website} from '../../../../helpers'
 
-context('Registration Flow Errors', () => {
-  beforeEach(() => {
-    cy.visit(MOBILE_URL + "/Registration")
-  })
+context('Mobile Profile', () => {
+  describe('Registration Flow Errors', () => {
+    before(() => {
+      cy.useConfigProfile('mobile')
+    })
 
-  const email = gen.email()
-  const password = gen.password()
+    beforeEach(() => {
+      cy.visit(MOBILE_URL + "/Registration")
+    })
 
-  describe('show errors when invalid signup data is used', () => {
-    it('should show an error when the password has leaked before', () => {
+    const email = gen.email()
+    const password = gen.password()
+
+    describe('show errors when invalid signup data is used', () => {
+      it('should show an error when the password has leaked before', () => {
       cy.get('input[data-testid="traits.email"]').type(email)
       cy.get('input[data-testid="password"]').type('123456')
       cy.get('input[data-testid="traits.website"]').type(website)
@@ -75,6 +80,7 @@ context('Registration Flow Errors', () => {
         'contain.text',
         'length must be >= 10'
       )
+    })
     })
   })
 })

@@ -1,15 +1,21 @@
-import { APP_URL, assertVerifiableAddress, gen } from '../../../../helpers'
+import {APP_URL, assertVerifiableAddress, gen} from '../../../../helpers'
 
-context('Verify', () => {
-  describe('successful flow', () => {
-    let identity
 
+context('Verification Profile', () => {
+  describe('Verify', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('verification')
     })
 
-    beforeEach(() => {
-      identity = gen.identity()
+    describe('successful flow', () => {
+      let identity
+
+      before(() => {
+        cy.deleteMail()
+      })
+
+      beforeEach(() => {
+        identity = gen.identity()
       cy.register(identity)
       cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
@@ -96,12 +102,13 @@ context('Verify', () => {
       cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
       cy.login(identity2)
-      
-      cy.visit(APP_URL + '/self-service/verification/browser', {qs:{return_to: "http://127.0.0.1:4455/verification_callback"}})
+
+      cy.visit(APP_URL + '/self-service/verification/browser', {qs: {return_to: "http://127.0.0.1:4455/verification_callback"}})
       // request verification link for identity
       cy.get('input[name="email"]').type(identity2.email)
       cy.get('button[type="submit"]').click()
-      cy.verifyEmail({ expect: { email: identity2.email, redirectTo: "http://127.0.0.1:4455/verification_callback"} })
+      cy.verifyEmail({expect: {email: identity2.email, redirectTo: "http://127.0.0.1:4455/verification_callback"}})
+    })
     })
   })
 })

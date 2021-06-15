@@ -1,15 +1,20 @@
 import {gen, MOBILE_URL, website} from '../../../../helpers'
 
-context('Settings Flow Errors', () => {
-  let email, password
+context('Mobile Profile', () => {
+  describe('Settings Flow Errors', () => {
+    before(() => {
+      cy.useConfigProfile('mobile')
+    })
 
-  before(() => {
-    email = gen.email()
-    password = gen.password()
-    cy.registerApi({email, password, fields: {'traits.website': website}})
-  })
+    let email, password
 
-  beforeEach(() => {
+    before(() => {
+      email = gen.email()
+      password = gen.password()
+      cy.registerApi({email, password, fields: {'traits.website': website}})
+    })
+
+    beforeEach(() => {
     cy.loginMobile({email, password})
     cy.visit(MOBILE_URL + "/Settings")
   })
@@ -27,5 +32,6 @@ context('Settings Flow Errors', () => {
 
       cy.get('*[data-testid="settings-password"]').should('exist')
     })
+  })
   })
 })

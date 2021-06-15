@@ -1,15 +1,20 @@
 import { APP_URL, gen } from '../../../../helpers'
 
-context('Login Flow Error', () => {
-  beforeEach(() => {
-    cy.visit(APP_URL + '/auth/login')
-  })
+context('Email Profile', () => {
+  describe('Login Flow Error', () => {
+    before(() => {
+      cy.useConfigProfile('email')
+    })
 
-  it('fails when CSRF cookies are missing', () => {
-    cy.clearCookies()
+    beforeEach(() => {
+      cy.visit(APP_URL + '/auth/login')
+    })
 
-    cy.get('input[name="password_identifier"]').type('i-do-not-exist')
-    cy.get('input[name="password"]').type('invalid-password')
+    it('fails when CSRF cookies are missing', () => {
+      cy.clearCookies()
+
+      cy.get('input[name="password_identifier"]').type('i-do-not-exist')
+      cy.get('input[name="password"]').type('invalid-password')
 
     cy.get('button[type="submit"]').click()
 
@@ -49,5 +54,6 @@ context('Login Flow Error', () => {
         'credentials are invalid'
       )
     })
+  })
   })
 })
