@@ -74,9 +74,6 @@ func (p Persister) WithNetworkID(sid uuid.UUID) persistence.Persister {
 }
 
 func (p *Persister) DetermineNetwork(ctx context.Context) (*networkx.Network, error) {
-	if err := p.p.MigrateUp(ctx); err != nil {
-		return nil, err
-	}
 	return p.p.Determine(ctx)
 }
 
