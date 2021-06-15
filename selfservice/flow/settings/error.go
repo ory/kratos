@@ -128,7 +128,7 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		if f.Type == flow.TypeAPI {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
 		} else {
@@ -180,7 +180,7 @@ func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow,
 		return
 	}
 
-	if rr.Type == flow.TypeAPI {
+	if rr.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		s.d.Writer().WriteErrorCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), err)
 	} else {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
