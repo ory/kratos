@@ -472,8 +472,14 @@ func (r PublicApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*RecoveryFlow,
 }
 
 /*
- * GetSelfServiceRecoveryFlow Get information about a recovery flow
- * This endpoint returns a recovery flow's context with, for example, error details and other information.
+ * GetSelfServiceRecoveryFlow Get Recovery Flow
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a recovery flow's context with, for example, error details and other information.
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -943,7 +949,13 @@ func (r PublicApiApiGetSelfServiceVerificationFlowRequest) Execute() (*Verificat
 
 /*
  * GetSelfServiceVerificationFlow Get Verification Flow
- * This endpoint returns a verification flow's context with, for example, error details and other information.
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a verification flow's context with, for example, error details and other information.
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1469,17 +1481,26 @@ type PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest struct {
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest) Execute() (*RecoveryFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceRecoveryForBrowsersExecute(r)
 }
 
 /*
- * InitializeSelfServiceRecoveryForBrowsers Initialize Recovery Flow for Browser Clients
- * This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
+ * InitializeSelfServiceRecoveryForBrowsers Initialize Recovery Flow for Browsers
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 exists, the browser is returned to the configured return URL.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+If this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects
+or a 400 bad request error if the user is already authenticated.
+
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1494,19 +1515,21 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsers(ctx context.
 
 /*
  * Execute executes the request
+ * @return RecoveryFlow
  */
-func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsersExecute(r PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsersExecute(r PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest) (*RecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *RecoveryFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRecoveryForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/recovery/browser"
@@ -1534,19 +1557,19 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsersExecute(r Pub
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1554,33 +1577,58 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsersExecute(r Pub
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest struct {
+type PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest) Execute() (*RecoveryFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceRecoveryForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest) Execute() (*RecoveryFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceRecoveryWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceRecoveryForNativeApps Initialize Recovery Flow for Native Apps and API clients
- * This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
+ * InitializeSelfServiceRecoveryWithoutBrowser Initialize Recovery Flow for APIs, Services, Apps, ...
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 
 If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
@@ -1598,10 +1646,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceRecoveryForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceRecoveryWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -1611,7 +1659,7 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForNativeApps(ctx contex
  * Execute executes the request
  * @return RecoveryFlow
  */
-func (a *PublicApiService) InitializeSelfServiceRecoveryForNativeAppsExecute(r PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest) (*RecoveryFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceRecoveryWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest) (*RecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -1621,7 +1669,7 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForNativeAppsExecute(r P
 		localVarReturnValue  *RecoveryFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRecoveryForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRecoveryWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2260,14 +2308,22 @@ type PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest struct {
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest) Execute() (*VerificationFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceVerificationForBrowsersExecute(r)
 }
 
 /*
  * InitializeSelfServiceVerificationForBrowsers Initialize Verification Flow for Browser Clients
- * This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
+
+If this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
@@ -2284,19 +2340,21 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsers(ctx cont
 
 /*
  * Execute executes the request
+ * @return VerificationFlow
  */
-func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsersExecute(r PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsersExecute(r PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest) (*VerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *VerificationFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceVerificationForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/verification/browser"
@@ -2324,19 +2382,19 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsersExecute(r
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2349,28 +2407,43 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsersExecute(r
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest struct {
+type PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest) Execute() (*VerificationFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceVerificationForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest) Execute() (*VerificationFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceVerificationWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceVerificationForNativeApps Initialize Verification Flow for Native Apps and API clients
- * This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
+ * InitializeSelfServiceVerificationWithoutBrowser Initialize Verification Flow for APIs, Services, Apps, ...
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 
 To fetch an existing verification flow call `/self-service/verification/flows?flow=<flow_id>`.
 
@@ -2386,10 +2459,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceVerificationForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceVerificationWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2399,7 +2472,7 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForNativeApps(ctx co
  * Execute executes the request
  * @return VerificationFlow
  */
-func (a *PublicApiService) InitializeSelfServiceVerificationForNativeAppsExecute(r PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest) (*VerificationFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceVerificationWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest) (*VerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2409,7 +2482,7 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForNativeAppsExecute
 		localVarReturnValue  *VerificationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceVerificationForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceVerificationWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2792,7 +2865,7 @@ func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Body(body map[string]i
 	return r
 }
 
-func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Execute() (*RecoveryFlow, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceRecoveryFlowExecute(r)
 }
 
@@ -2803,9 +2876,9 @@ behaves differently for API and browser flows and has several states:
 
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
 and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
 `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
 works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
@@ -2826,19 +2899,21 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlow(ctx context.Context) Pu
 
 /*
  * Execute executes the request
+ * @return RecoveryFlow
  */
-func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) (*http.Response, error) {
+func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) (*RecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *RecoveryFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceRecoveryFlow")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/recovery"
@@ -2847,7 +2922,7 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSu
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 	if r.flow == nil {
-		return nil, reportError("flow is required and must be specified")
+		return localVarReturnValue, nil, reportError("flow is required and must be specified")
 	}
 
 	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
@@ -2872,19 +2947,19 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSu
 	localVarPostBody = r.body
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2897,24 +2972,33 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSu
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest struct {
@@ -3264,12 +3348,12 @@ HTTP 401 when the endpoint is called without a valid session token.
 HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
 Implies that the user needs to re-authenticate.
 
-Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
+Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
 a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
 a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
 a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 
-Browser flows with an accept header of `application/json` will not redirect but instead respond with
+Browser flows with HTTP Header `Accept: application/json` respond with
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
 HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 403 when the page is accessed without a session cookie.
@@ -3429,7 +3513,7 @@ func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Body(body map[stri
 	return r
 }
 
-func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*VerificationFlow, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceVerificationFlowExecute(r)
 }
 
@@ -3440,9 +3524,9 @@ behaves differently for API and browser flows and has several states:
 
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
 and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
 `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
@@ -3463,19 +3547,21 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlow(ctx context.Context
 
 /*
  * Execute executes the request
+ * @return VerificationFlow
  */
-func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiApiSubmitSelfServiceVerificationFlowRequest) (*http.Response, error) {
+func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiApiSubmitSelfServiceVerificationFlowRequest) (*VerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *VerificationFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceVerificationFlow")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/verification/flows"
@@ -3484,7 +3570,7 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 	if r.flow == nil {
-		return nil, reportError("flow is required and must be specified")
+		return localVarReturnValue, nil, reportError("flow is required and must be specified")
 	}
 
 	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
@@ -3509,19 +3595,19 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 	localVarPostBody = r.body
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -3534,24 +3620,33 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type PublicApiApiToSessionRequest struct {

@@ -90,7 +90,7 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**GetSchema**](docs/AdminApi.md#getschema) | **Get** /schemas/{id} | 
 *AdminApi* | [**GetSelfServiceError**](docs/AdminApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 *AdminApi* | [**GetSelfServiceLoginFlow**](docs/AdminApi.md#getselfserviceloginflow) | **Get** /self-service/login/flows | Get Login Flow
-*AdminApi* | [**GetSelfServiceRecoveryFlow**](docs/AdminApi.md#getselfservicerecoveryflow) | **Get** /self-service/recovery/flows | Get information about a recovery flow
+*AdminApi* | [**GetSelfServiceRecoveryFlow**](docs/AdminApi.md#getselfservicerecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
 *AdminApi* | [**GetSelfServiceRegistrationFlow**](docs/AdminApi.md#getselfserviceregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
 *AdminApi* | [**GetSelfServiceSettingsFlow**](docs/AdminApi.md#getselfservicesettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
 *AdminApi* | [**GetSelfServiceVerificationFlow**](docs/AdminApi.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
@@ -103,21 +103,21 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} | 
 *PublicApi* | [**GetSelfServiceError**](docs/PublicApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 *PublicApi* | [**GetSelfServiceLoginFlow**](docs/PublicApi.md#getselfserviceloginflow) | **Get** /self-service/login/flows | Get Login Flow
-*PublicApi* | [**GetSelfServiceRecoveryFlow**](docs/PublicApi.md#getselfservicerecoveryflow) | **Get** /self-service/recovery/flows | Get information about a recovery flow
+*PublicApi* | [**GetSelfServiceRecoveryFlow**](docs/PublicApi.md#getselfservicerecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
 *PublicApi* | [**GetSelfServiceRegistrationFlow**](docs/PublicApi.md#getselfserviceregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
 *PublicApi* | [**GetSelfServiceSettingsFlow**](docs/PublicApi.md#getselfservicesettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
 *PublicApi* | [**GetSelfServiceVerificationFlow**](docs/PublicApi.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
 *PublicApi* | [**InitializeSelfServiceBrowserLogoutFlow**](docs/PublicApi.md#initializeselfservicebrowserlogoutflow) | **Get** /self-service/browser/flows/logout | Initialize Browser-Based Logout User Flow
 *PublicApi* | [**InitializeSelfServiceLoginForBrowsers**](docs/PublicApi.md#initializeselfserviceloginforbrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceLoginWithoutBrowser**](docs/PublicApi.md#initializeselfserviceloginwithoutbrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
-*PublicApi* | [**InitializeSelfServiceRecoveryForBrowsers**](docs/PublicApi.md#initializeselfservicerecoveryforbrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browser Clients
-*PublicApi* | [**InitializeSelfServiceRecoveryForNativeApps**](docs/PublicApi.md#initializeselfservicerecoveryfornativeapps) | **Get** /self-service/recovery/api | Initialize Recovery Flow for Native Apps and API clients
+*PublicApi* | [**InitializeSelfServiceRecoveryForBrowsers**](docs/PublicApi.md#initializeselfservicerecoveryforbrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browsers
+*PublicApi* | [**InitializeSelfServiceRecoveryWithoutBrowser**](docs/PublicApi.md#initializeselfservicerecoverywithoutbrowser) | **Get** /self-service/recovery/api | Initialize Recovery Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceRegistrationForBrowsers**](docs/PublicApi.md#initializeselfserviceregistrationforbrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceRegistrationWithoutBrowser**](docs/PublicApi.md#initializeselfserviceregistrationwithoutbrowser) | **Get** /self-service/registration/api | Initialize Registration Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceSettingsForBrowsers**](docs/PublicApi.md#initializeselfservicesettingsforbrowsers) | **Get** /self-service/settings/browser | Initialize Settings Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceSettingsWithoutBrowser**](docs/PublicApi.md#initializeselfservicesettingswithoutbrowser) | **Get** /self-service/settings/api | Initialize Settings Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceVerificationForBrowsers**](docs/PublicApi.md#initializeselfserviceverificationforbrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
-*PublicApi* | [**InitializeSelfServiceVerificationForNativeApps**](docs/PublicApi.md#initializeselfserviceverificationfornativeapps) | **Get** /self-service/verification/api | Initialize Verification Flow for Native Apps and API clients
+*PublicApi* | [**InitializeSelfServiceVerificationWithoutBrowser**](docs/PublicApi.md#initializeselfserviceverificationwithoutbrowser) | **Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
 *PublicApi* | [**RevokeSession**](docs/PublicApi.md#revokesession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
 *PublicApi* | [**SubmitSelfServiceLoginFlow**](docs/PublicApi.md#submitselfserviceloginflow) | **Post** /self-service/login | Submit a Login Flow
 *PublicApi* | [**SubmitSelfServiceRecoveryFlow**](docs/PublicApi.md#submitselfservicerecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow

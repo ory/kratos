@@ -735,9 +735,9 @@ paths:
 
         `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
         and works with API- and Browser-initiated flows.
-        For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+        For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
         and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-        For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+        For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
         `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
         works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
         `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
@@ -770,6 +770,12 @@ paths:
               $ref: '#/components/schemas/submitSelfServiceRecoveryFlow'
         x-originalParamName: Body
       responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/recoveryFlow'
+          description: recoveryFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -791,6 +797,12 @@ paths:
   /self-service/recovery/api:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 
         If a valid provided session cookie or session token is provided, a 400 Bad Request error.
@@ -808,7 +820,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-      operationId: initializeSelfServiceRecoveryForNativeApps
+      operationId: initializeSelfServiceRecoveryWithoutBrowser
       responses:
         "200":
           content:
@@ -828,36 +840,63 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Recovery Flow for Native Apps and API clients
+      summary: Initialize Recovery Flow for APIs, Services, Apps, ...
       tags:
       - public
   /self-service/recovery/browser:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
         `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
         exists, the browser is returned to the configured return URL.
 
-        This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+        If this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects
+        or a 400 bad request error if the user is already authenticated.
+
+        This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
       operationId: initializeSelfServiceRecoveryForBrowsers
       responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/recoveryFlow'
+          description: recoveryFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Recovery Flow for Browser Clients
+      summary: Initialize Recovery Flow for Browsers
       tags:
       - public
   /self-service/recovery/flows:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         This endpoint returns a recovery flow's context with, for example, error details and other information.
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
@@ -900,7 +939,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get information about a recovery flow
+      summary: Get Recovery Flow
       tags:
       - public
       - admin
@@ -1218,12 +1257,12 @@ paths:
         HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
         Implies that the user needs to re-authenticate.
 
-        Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
+        Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
         a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
         a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
         a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 
-        Browser flows with an accept header of `application/json` will not redirect but instead respond with
+        Browser flows with HTTP Header `Accept: application/json` respond with
         HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
         HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
         HTTP 403 when the page is accessed without a session cookie.
@@ -1479,6 +1518,12 @@ paths:
   /self-service/verification/api:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 
         To fetch an existing verification flow call `/self-service/verification/flows?flow=<flow_id>`.
@@ -1494,7 +1539,7 @@ paths:
         :::
 
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-      operationId: initializeSelfServiceVerificationForNativeApps
+      operationId: initializeSelfServiceVerificationWithoutBrowser
       responses:
         "200":
           content:
@@ -1514,20 +1559,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Verification Flow for Native Apps and API clients
+      summary: Initialize Verification Flow for APIs, Services, Apps, ...
       tags:
       - public
   /self-service/verification/browser:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
         `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
+
+        If this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.
 
         This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
       operationId: initializeSelfServiceVerificationForBrowsers
       responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/verificationFlow'
+          description: verificationFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -1543,6 +1602,12 @@ paths:
   /self-service/verification/flows:
     get:
       description: |-
+        :::info
+
+        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+        :::
+
         This endpoint returns a verification flow's context with, for example, error details and other information.
 
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
@@ -1596,9 +1661,9 @@ paths:
 
         `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
         and works with API- and Browser-initiated flows.
-        For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+        For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
         and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-        For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+        For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
         `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
         works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
         `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
@@ -1631,6 +1696,12 @@ paths:
               $ref: '#/components/schemas/submitSelfServiceRecoveryFlow'
         x-originalParamName: Body
       responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/verificationFlow'
+          description: verificationFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.

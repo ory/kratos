@@ -68,11 +68,11 @@ func TestVerification(t *testing.T) {
 	}
 
 	var expectValidationError = func(t *testing.T, isAPI, isSPA bool, values func(url.Values)) string {
-		return expect(t, isAPI, isSPA , values, testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK))
+		return expect(t, isAPI, isSPA, values, testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK))
 	}
 
 	var expectSuccess = func(t *testing.T, isAPI, isSPA bool, values func(url.Values)) string {
-		return expect(t, isAPI, isSPA , values, http.StatusOK)
+		return expect(t, isAPI, isSPA, values, http.StatusOK)
 	}
 
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
@@ -264,7 +264,7 @@ func TestVerification(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
-		body := expectSuccess(t, false,false,  func(v url.Values) {
+		body := expectSuccess(t, false, false, func(v url.Values) {
 			v.Set("email", verificationEmail)
 		})
 

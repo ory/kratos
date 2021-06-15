@@ -11,7 +11,7 @@ Method | HTTP request | Description
 [**GetSchema**](AdminApi.md#GetSchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](AdminApi.md#GetSelfServiceError) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 [**GetSelfServiceLoginFlow**](AdminApi.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | Get Login Flow
-[**GetSelfServiceRecoveryFlow**](AdminApi.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | Get information about a recovery flow
+[**GetSelfServiceRecoveryFlow**](AdminApi.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | Get Recovery Flow
 [**GetSelfServiceRegistrationFlow**](AdminApi.md#GetSelfServiceRegistrationFlow) | **Get** /self-service/registration/flows | Get Registration Flow
 [**GetSelfServiceSettingsFlow**](AdminApi.md#GetSelfServiceSettingsFlow) | **Get** /self-service/settings/flows | Get Settings Flow
 [**GetSelfServiceVerificationFlow**](AdminApi.md#GetSelfServiceVerificationFlow) | **Get** /self-service/verification/flows | Get Verification Flow
@@ -500,7 +500,7 @@ No authorization required
 
 > RecoveryFlow GetSelfServiceRecoveryFlow(ctx).Id(id).Execute()
 
-Get information about a recovery flow
+Get Recovery Flow
 
 
 

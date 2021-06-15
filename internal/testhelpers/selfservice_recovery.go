@@ -77,7 +77,7 @@ func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isS
 func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceVerificationForNativeApps(context.Background()).Execute()
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceVerificationWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 

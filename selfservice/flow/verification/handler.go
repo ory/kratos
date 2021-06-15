@@ -167,7 +167,8 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	http.Redirect(w, r, req.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+	redirTo := req.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String()
+	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), req, redirTo)
 }
 
 // nolint:deadcode,unused
