@@ -199,7 +199,7 @@ selfservice:
 
 ### User and Profile Settings for Client-Side (AJAX) Browser Clients
 
-The Setings Flow for client-side browser clients relies on AJAX requests.
+The Settings Flow for client-side browser clients relies on AJAX requests.
 
 :::note
 
@@ -215,7 +215,7 @@ options in your JavaScript code and the CORS headers of the server.
   interactions={['"Save Profile Changes"']}
 />
 
-To initialize the Registration Flow, point the Browser to the initialization
+To initialize the Settings Flow, point the Browser to the initialization
 endpoint:
 
 <CodeTabs items={initSpaFlow} />
@@ -484,8 +484,10 @@ framework:
 
 The form payloads are then submitted to Ory Kratos which follows up with:
 
-- An HTTP 302 Found redirect pointing to the Settings UI for Browser Clients.
-- An `application/json` response for API Clients.
+- An HTTP 302 Found redirect pointing to the Registration UI for Browser
+  Clients;
+- An `application/json` response for API Clients and Client-Side Browser
+  applications (e.g. Single Page Apps).
 
 When validation errors happen, browser clients receive a HTTP 302 Found redirect
 to the Settings Flow UI, containing the Settings Flow ID which includes the

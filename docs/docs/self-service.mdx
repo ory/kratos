@@ -26,7 +26,7 @@ a solvable challenge. The real complexity however hides in the details and
 attack vectors of self-service flows. Most data leaks happen because someone is
 able to exploit
 
-- registration: with attack vectors such as account enumeration (), ...;
+- registration: with attack vectors such as account enumeration, ...;
 - login: phishing, account enumeration, leaked password databases, brute-force,
   ...;
 - user settings: account enumeration, account takeover, ...;
@@ -425,11 +425,88 @@ The flow object has an ID and contains additional information about the flow
 such as the login methods (e.g. "username/password" and "Sign in with Google")
 and their form data.
 
-### Form Rendering & Form Submission
+### Form Rendering
 
-Form rendering and form submission work exactly the same way as the flows for
-server-side browser apps, with the exception of not redirecting to the return
-address but instead replying with a JSON payload.
+Form rendering works the same way as the flows for server-side browser apps.
+
+### Form Submission and Payload Validation
+
+To submit the form, it is recommended to intercept the submission and send the
+form as JSON using `fetch` (see
+["Submit HTML Forms to JSON APIs easily"](https://dev.to/amjadmh73/submit-html-forms-to-json-apis-easily-137l))
+or the [SDK](../sdk.mdx).
+
+The response depends on the result (sign up success, account recovery success,
+form validation error, ...). If a form validation error occurs, the following
+response could be sent:
+
+```json5
+{
+  id: 'f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+  type: 'browser',
+  expires_at: '2021-04-28T09:00:57.10254633Z',
+  issued_at: '2021-04-28T08:50:57.10254633Z',
+  request_url: 'http://127.0.0.1:4433/self-service/login/browser',
+  ui: {
+    action: 'http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+    method: 'POST',
+    nodes: [
+      // ...
+      {
+        type: 'input',
+        group: 'password',
+        attributes: {
+          name: 'password_identifier',
+          type: 'text',
+          value: '',
+          required: true,
+          disabled: false
+        },
+        messages: [
+          {
+            id: 4000001,
+            text: 'length must be >= 1, but got 0',
+            type: 'error'
+          }
+        ],
+        meta: {
+          label: {
+            id: 1070004,
+            text: 'ID',
+            type: 'info'
+          }
+        }
+      },
+      {
+        type: 'input',
+        group: 'password',
+        attributes: {
+          name: 'password',
+          type: 'password',
+          required: true,
+          disabled: false
+        },
+        messages: [
+          {
+            id: 4000001,
+            text: 'length must be >= 1, but got 0',
+            type: 'error'
+          }
+        ],
+        meta: {
+          label: {
+            id: 1070001,
+            text: 'Password',
+            type: 'info'
+          }
+        }
+      }
+      // ...
+    ]
+  },
+  forced: false
+}
+```
 
 ## API Flows
 

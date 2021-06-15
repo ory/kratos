@@ -69,7 +69,8 @@ export const initApiFlow = {
   go: {
     label: 'Go',
     language: 'go',
-    code: require('raw-loader!./samples/api/init.go.txt').default
+    code: require('raw-loader!../../../../../../examples/go/init/settings/main.go')
+      .default
   },
   curlUnauth: {
     label: 'Without Valid Session',
