@@ -108,6 +108,9 @@ func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 		switch v.(type) {
 		case string:
 			t, err := time.Parse(time.RFC3339, updatedAtField.String())
+			if err != nil {
+				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("bad time format in updated_at"))
+			}
 			updatedAt := t.Unix()
 
 			// Unmarshal into generic map, replace the updated_at value with the correct type, then re-marshal.
