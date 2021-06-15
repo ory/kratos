@@ -455,7 +455,7 @@ func (m *RegistryDefault) CanHandle(dsn string) bool {
 		strings.HasPrefix(dsn, "crdb")
 }
 
-func (m *RegistryDefault) Init(ctx context.Context) error {
+func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) error {
 	if m.persister != nil {
 		// The DSN connection can not be hot-reloaded!
 		panic("RegistryDefault.Init() must not be called more than once.")
@@ -464,6 +464,8 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 	if corp.GetContextualizer() == nil {
 		panic("Contextualizer has not been set yet.")
 	}
+
+	o := newOptions(opts)
 
 	bc := backoff.NewExponentialBackOff()
 	bc.MaxElapsedTime = time.Minute * 5
@@ -522,6 +524,11 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 					m.Logger().WithError(err).Warnf("Unable to run migrations, retrying.")
 					return err
 				}
+			}
+
+			if o.skipNetworkInit {
+				m.persister = p
+				return nil
 			}
 
 			net, err := p.DetermineNetwork(ctx)
