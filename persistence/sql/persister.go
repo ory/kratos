@@ -99,6 +99,10 @@ func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
 	return p.mb.Down(ctx, steps)
 }
 
+func (p *Persister) NetworkMigrateUp(ctx context.Context) error {
+	return p.p.MigrateUp(ctx)
+}
+
 func (p *Persister) MigrateUp(ctx context.Context) error {
 	if err := p.p.MigrateUp(ctx); err != nil {
 		return err

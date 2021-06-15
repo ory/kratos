@@ -26,6 +26,7 @@ import (
 
 type Provider interface {
 	Persister() Persister
+	SetPersister(Persister)
 }
 
 type Persister interface {
@@ -47,6 +48,7 @@ type Persister interface {
 	MigrationStatus(c context.Context) (popx.MigrationStatuses, error)
 	MigrateDown(c context.Context, steps int) error
 	MigrateUp(c context.Context) error
+	NetworkMigrateUp(c context.Context) error
 	Migrator() *popx.Migrator
 	GetConnection(ctx context.Context) *pop.Connection
 	Transaction(ctx context.Context, callback func(ctx context.Context, connection *pop.Connection) error) error

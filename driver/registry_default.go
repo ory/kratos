@@ -543,6 +543,10 @@ func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) erro
 	)
 }
 
+func (m *RegistryDefault) SetPersister(p persistence.Persister) {
+	m.persister = p
+}
+
 func (m *RegistryDefault) Courier(ctx context.Context) *courier.Courier {
 	return courier.NewSMTP(m, m.Config(ctx))
 }
