@@ -30,10 +30,6 @@ $(call make-lint-dependency)
 docs/cli: .bin/clidoc
 		clidoc .
 
-.bin/traefik:
-		https://github.com/containous/traefik/releases/download/v2.3.0-rc4/traefik_v2.3.0-rc4_linux_amd64.tar.gz \
-			tar -zxvf traefik_${traefik_version}_linux_${arch}.tar.gz
-
 .bin/ory: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/cli/master/install.sh) -b .bin v0.0.53
 		touch -a -m .bin/ory
