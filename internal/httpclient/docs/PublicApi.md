@@ -999,7 +999,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceSetti
 
 ## InitializeSelfServiceSettingsWithoutBrowser
 
-> SettingsFlow InitializeSelfServiceSettingsWithoutBrowser(ctx).Execute()
+> SettingsFlow InitializeSelfServiceSettingsWithoutBrowser(ctx).XSessionToken(xSessionToken).XSessionCookie(xSessionCookie).Execute()
 
 Initialize Settings Flow for APIs, Services, Apps, ...
 
@@ -1018,10 +1018,12 @@ import (
 )
 
 func main() {
+    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
+    xSessionCookie := "xSessionCookie_example" // string | The Session Cookie of the Identity performing the settings flow. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceSettingsWithoutBrowser(context.Background()).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceSettingsWithoutBrowser(context.Background()).XSessionToken(xSessionToken).XSessionCookie(xSessionCookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceSettingsWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1033,12 +1035,17 @@ func main() {
 
 ### Path Parameters
 
-This endpoint does not need any parameter.
+
 
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiInitializeSelfServiceSettingsWithoutBrowserRequest struct via the builder pattern
 
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **xSessionToken** | **string** | The Session Token of the Identity performing the settings flow. | 
+ **xSessionCookie** | **string** | The Session Cookie of the Identity performing the settings flow. | 
 
 ### Return type
 
@@ -1656,7 +1663,7 @@ No authorization required
 
 ## ToSession
 
-> Session ToSession(ctx).XSessionToken(xSessionToken).Execute()
+> Session ToSession(ctx).XSessionToken(xSessionToken).XSessionCookie(xSessionCookie).Execute()
 
 Check Who the Current HTTP Session Belongs To
 
@@ -1676,10 +1683,11 @@ import (
 
 func main() {
     xSessionToken := "xSessionToken_example" // string |  (optional)
+    xSessionCookie := "xSessionCookie_example" // string |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.ToSession(context.Background()).XSessionToken(xSessionToken).Execute()
+    resp, r, err := apiClient.PublicApi.ToSession(context.Background()).XSessionToken(xSessionToken).XSessionCookie(xSessionCookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.ToSession``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1701,6 +1709,7 @@ Other parameters are passed through a pointer to a apiToSessionRequest struct vi
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **xSessionToken** | **string** |  | 
+ **xSessionCookie** | **string** |  | 
 
 ### Return type
 
@@ -1708,7 +1717,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[sessionCookie](../README.md#sessionCookie)
+No authorization required
 
 ### HTTP request headers
 
