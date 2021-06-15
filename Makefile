@@ -58,11 +58,6 @@ docs: docs/node_modules
 lint: .bin/golangci-lint
 		golangci-lint run -v ./...
 
-.PHONY: cover
-cover:
-		go test ./... -coverprofile=cover.out
-		go tool cover -func=cover.out
-
 .PHONY: mocks
 mocks: .bin/mockgen
 		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
@@ -81,8 +76,7 @@ test:
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-		go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m -tags sqlite
-		test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+		go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
 
 # Generates the SDK
 .PHONY: sdk
