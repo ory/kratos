@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/corp"
-	"github.com/ory/x/dbal"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/ory/kratos/corp"
+	"github.com/ory/x/dbal"
 
 	"github.com/ory/kratos/x/xsql"
 
