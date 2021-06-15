@@ -57,14 +57,26 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 // A single login method and provider.
+//
+// swagger:response knownCredentialsMethod
+// nolint:deadcode,unused
 type knownCredentialsMethod struct {
-	Method   string `json:"method"`
+	// in: body
+	Method string `json:"method"`
+	// in: body
 	Provider string `json:"provider,omitempty"`
 }
 
 // Response object for knownCredentials
+//
+// swagger:response knownCredentialsResponse
+// nolint:deadcode,unused
 type knownCredentialsResponse struct {
-	Found   bool                     `json:"found"`
+	// in: body
+	// required: true
+	Found bool `json:"found"`
+	// in: body
+	// type: array
 	Methods []knownCredentialsMethod `json:"methods,omitempty"`
 }
 
