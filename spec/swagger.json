@@ -1256,6 +1256,20 @@
         ],
         "summary": "Initialize Settings Flow for APIs, Services, Apps, ...",
         "operationId": "initializeSelfServiceSettingsWithoutBrowser",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "name": "X-Session-Token",
+            "in": "header"
+          },
+          {
+            "type": "string",
+            "description": "The Session Cookie of the Identity performing the settings flow.",
+            "name": "X-Session-Cookie",
+            "in": "header"
+          }
+        ],
         "responses": {
           "200": {
             "description": "settingsFlow",
@@ -1615,12 +1629,7 @@
     },
     "/sessions/whoami": {
       "get": {
-        "security": [
-          {
-            "sessionCookie": []
-          }
-        ],
-        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!",
+        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!\n\nThis endpoint authenticates users by checking\n\nif the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;\nif the `Authorization: bearer \u003cory-session-token\u003e` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).\n\nIf none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.",
         "produces": [
           "application/json"
         ],
@@ -1637,6 +1646,11 @@
           {
             "type": "string",
             "name": "X-Session-Token",
+            "in": "header"
+          },
+          {
+            "type": "string",
+            "name": "X-Session-Cookie",
             "in": "header"
           }
         ],

@@ -123,12 +123,17 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 }
 
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceSettingsForNativeApps
-type initializeSelfServiceSettingsForNativeApps struct {
+// swagger:parameters initializeSelfServiceSettingsWithoutBrowser
+type initializeSelfServiceSettingsWithoutBrowser struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// The Session Cookie of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionCookie string `json:"X-Session-Cookie"`
 }
 
 // swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsWithoutBrowser

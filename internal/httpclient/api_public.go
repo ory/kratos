@@ -2163,8 +2163,19 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r Pub
 }
 
 type PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
+	ctx            context.Context
+	ApiService     *PublicApiService
+	xSessionToken  *string
+	xSessionCookie *string
+}
+
+func (r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) XSessionToken(xSessionToken string) PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest {
+	r.xSessionToken = &xSessionToken
+	return r
+}
+func (r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) XSessionCookie(xSessionCookie string) PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest {
+	r.xSessionCookie = &xSessionCookie
+	return r
 }
 
 func (r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) Execute() (*SettingsFlow, *http.Response, error) {
@@ -2246,6 +2257,12 @@ func (a *PublicApiService) InitializeSelfServiceSettingsWithoutBrowserExecute(r 
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	}
+	if r.xSessionCookie != nil {
+		localVarHeaderParams["X-Session-Cookie"] = parameterToString(*r.xSessionCookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -3650,13 +3667,18 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 }
 
 type PublicApiApiToSessionRequest struct {
-	ctx           context.Context
-	ApiService    *PublicApiService
-	xSessionToken *string
+	ctx            context.Context
+	ApiService     *PublicApiService
+	xSessionToken  *string
+	xSessionCookie *string
 }
 
 func (r PublicApiApiToSessionRequest) XSessionToken(xSessionToken string) PublicApiApiToSessionRequest {
 	r.xSessionToken = &xSessionToken
+	return r
+}
+func (r PublicApiApiToSessionRequest) XSessionCookie(xSessionCookie string) PublicApiApiToSessionRequest {
+	r.xSessionCookie = &xSessionCookie
 	return r
 }
 
@@ -3675,6 +3697,15 @@ This endpoint is useful for:
 AJAX calls. Remember to send credentials and set up CORS correctly!
 Reverse proxies and API Gateways
 Server-side calls - use the `X-Session-Token` header!
+
+This endpoint authenticates users by checking
+
+if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
+if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
+if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;
+if the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).
+
+If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiToSessionRequest
 */
@@ -3729,6 +3760,9 @@ func (a *PublicApiService) ToSessionExecute(r PublicApiApiToSessionRequest) (*Se
 	}
 	if r.xSessionToken != nil {
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	}
+	if r.xSessionCookie != nil {
+		localVarHeaderParams["X-Session-Cookie"] = parameterToString(*r.xSessionCookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {

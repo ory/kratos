@@ -1365,6 +1365,23 @@ paths:
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: initializeSelfServiceSettingsWithoutBrowser
+      parameters:
+      - description: The Session Token of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: The Session Cookie of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: X-Session-Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -1766,11 +1783,27 @@ paths:
         AJAX calls. Remember to send credentials and set up CORS correctly!
         Reverse proxies and API Gateways
         Server-side calls - use the `X-Session-Token` header!
+
+        This endpoint authenticates users by checking
+
+        if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
+        if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
+        if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;
+        if the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).
+
+        If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
       operationId: toSession
       parameters:
       - explode: false
         in: header
         name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-Session-Cookie
         required: false
         schema:
           type: string
@@ -1794,8 +1827,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      security:
-      - sessionCookie: []
       summary: Check Who the Current HTTP Session Belongs To
       tags:
       - public
