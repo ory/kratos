@@ -122,7 +122,7 @@ func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 // nolint:deadcode,unused
 // swagger:parameters toSession
-type sessionWhoAmIParameters struct {
+type toSession struct {
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
 
