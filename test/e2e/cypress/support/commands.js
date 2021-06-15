@@ -159,7 +159,6 @@ Cypress.Commands.add(
         })
       })
       .then(({ body }) => {
-        console.log('Registration sequence completed: ', { email, password })
         expect(body.identity.traits.email).to.contain(email)
       })
   }
