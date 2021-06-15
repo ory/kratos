@@ -61,6 +61,18 @@ const updateConfigFile = (cb) => {
   cy.wait(100)
 }
 
+let previousProfile = ''
+Cypress.Commands.add('useConfigProfile', (profile) => {
+  if (profile === previousProfile) {
+    return
+  }
+
+  cy.readFile(`test/e2e/kratos.${profile}.yml`).then((contents) =>
+    cy.writeFile(configFile, contents)
+  )
+  cy.wait(100)
+})
+
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.privileged_session_max_age = '1ms'

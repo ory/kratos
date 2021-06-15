@@ -1,15 +1,21 @@
-import { APP_URL, assertRecoveryAddress, gen } from '../../../../helpers'
+import {APP_URL, assertRecoveryAddress, gen} from '../../../../helpers'
 
-context('Recovery', () => {
-  describe('successful flow', () => {
-    let identity
 
+context('Recovery Profile', () => {
+  describe('Recovery', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('recovery')
     })
 
-    beforeEach(() => {
-      identity = gen.identity()
+    describe('successful flow', () => {
+      let identity
+
+      before(() => {
+        cy.deleteMail()
+      })
+
+      beforeEach(() => {
+        identity = gen.identity()
       cy.register(identity)
       cy.visit(APP_URL + '/recovery')
     })
@@ -48,7 +54,8 @@ context('Recovery', () => {
       cy.get('input[name="password"]').should('be.empty')
 
       cy.logout()
-      cy.login({ email: identity.email, password: newPassword })
+      cy.login({email: identity.email, password: newPassword})
+    })
     })
   })
 })
