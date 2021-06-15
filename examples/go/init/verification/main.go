@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	ory "github.com/ory/kratos-client-go"
 	"log"
+
+	ory "github.com/ory/kratos-client-go"
 )
 
 func sdk(endpoint string) *ory.APIClient {
