@@ -155,7 +155,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...c21bb80a749df7b224a8ac3f15fa62523a78d805) (2021-06-16)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...ecb0a01f61441aa97751943b5e9ddcc28f783d91) (2021-06-16)
 
 
 ### Bug Fixes
@@ -169,6 +169,7 @@
 * Deprecate sessionCookie ([#1428](https://github.com/ory/kratos/issues/1428)) ([eccad74](https://github.com/ory/kratos/commit/eccad741a1702181d4b207aad954a950906a808b)), closes [#1426](https://github.com/ory/kratos/issues/1426)
 * Do not run network migrations when booting ([12bbab9](https://github.com/ory/kratos/commit/12bbab9d3cf788998cd4a9be50ac8c7a9d2232bd)), closes [#1399](https://github.com/ory/kratos/issues/1399)
 * Improve identity list performance ([f76886f](https://github.com/ory/kratos/commit/f76886fe7436f71fbef00081888a2f8d0106ba98)), closes [#1412](https://github.com/ory/kratos/issues/1412)
+* Incorrect openapi specification for verification submission  ([#1431](https://github.com/ory/kratos/issues/1431)) ([ecb0a01](https://github.com/ory/kratos/commit/ecb0a01f61441aa97751943b5e9ddcc28f783d91)), closes [#1368](https://github.com/ory/kratos/issues/1368)
 * Mark ui node message as optional ([#1365](https://github.com/ory/kratos/issues/1365)) ([7b8d59f](https://github.com/ory/kratos/commit/7b8d59f48ed14a6d0672238645d8675d4bf7fd77)), closes [#1361](https://github.com/ory/kratos/issues/1361) [#1362](https://github.com/ory/kratos/issues/1362)
 * Mark verified_at as omitempty ([77b258e](https://github.com/ory/kratos/commit/77b258e57a3d53fe437838a5e9c57805e9c970aa)):
 
