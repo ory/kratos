@@ -155,7 +155,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...abe48a97ee75567979a70f00dd73ff698efcc75d) (2021-06-16)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...c21bb80a749df7b224a8ac3f15fa62523a78d805) (2021-06-16)
 
 
 ### Bug Fixes
@@ -188,6 +188,7 @@
 * Resolve network regressions ([8fc52c0](https://github.com/ory/kratos/commit/8fc52c034ed9978c2a04cc66bccc9b795c9bbefa))
 * Testhelper regressions ([bf3b04f](https://github.com/ory/kratos/commit/bf3b04fd2c7f9162073cb584d6fb0d59e868ecbf))
 * Use correct url in submitSelfServiceVerificationFlow ([ab8a600](https://github.com/ory/kratos/commit/ab8a600080ac0d6a6235806b74c5b9e3dc1c2d60))
+* Use STARTTLS for smtps connections ([#1430](https://github.com/ory/kratos/issues/1430)) ([c21bb80](https://github.com/ory/kratos/commit/c21bb80a749df7b224a8ac3f15fa62523a78d805)), closes [#781](https://github.com/ory/kratos/issues/781)
 * Version schema ([#1359](https://github.com/ory/kratos/issues/1359)) ([8c4bac7](https://github.com/ory/kratos/commit/8c4bac71674e45e440d916c6c947ed018a8ea29a)), closes [#1331](https://github.com/ory/kratos/issues/1331) [#1101](https://github.com/ory/kratos/issues/1101) [ory/hydra#2427](https://github.com/ory/hydra/issues/2427)
 
 
