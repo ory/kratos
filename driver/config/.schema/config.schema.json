@@ -258,7 +258,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook, vk, yandex.",
+          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
           "type": "string",
           "enum": [
             "github",
@@ -269,6 +269,7 @@
             "discord",
             "slack",
             "facebook",
+            "auth0",
             "vk",
             "yandex"
           ],
