@@ -1987,11 +1987,6 @@
         "scheme": "bearer",
         "type": "http"
       },
-      "sessionCookie": {
-        "in": "cookie",
-        "name": "ory_kratos_session",
-        "type": "apiKey"
-      },
       "sessionToken": {
         "scheme": "bearer",
         "type": "http"

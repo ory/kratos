@@ -224,15 +224,6 @@ r, err := client.Service.Operation(auth, args)
 ```
 
 
-### sessionCookie
-
-- **Type**: API key
-- **API key parameter name**: ory_kratos_session
-- **Location**: 
-
-Note, each API key must be added to a map of `map[string]APIKey` where the key is: ory_kratos_session and passed in as the auth context for each request.
-
-
 ### sessionToken
 
 - **Type**: HTTP Bearer token authentication
