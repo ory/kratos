@@ -16,13 +16,6 @@
       email: "hi@ory.sh"
 
 - op: replace
-  path: /components/securitySchemes/sessionCookie
-  value:
-    type: apiKey
-    in: cookie
-    name: ory_kratos_session
-
-- op: replace
   path: /tags
   value:
     - name: admin
