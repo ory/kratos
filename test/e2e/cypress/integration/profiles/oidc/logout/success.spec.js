@@ -1,19 +1,25 @@
 import { APP_URL, gen, password, website } from '../../../../helpers'
 
-context('Login', () => {
-  const email = gen.email()
+context('OIDC Profile', () => {
+  describe('Login', () => {
+    before(() => {
+      cy.useConfigProfile('oidc')
+    })
 
-  before(() => {
-    cy.registerOidc({ email, website })
-  })
+    const email = gen.email()
 
-  beforeEach(() => {
-    cy.visit(APP_URL + '/')
-  })
+    before(() => {
+      cy.registerOidc({email, website})
+    })
 
-  it('should sign out and be able to sign in again', () => {
-    cy.get('a[href*="logout"]').click()
-    cy.noSession()
-    cy.url().should('include', '/auth/login')
+    beforeEach(() => {
+      cy.visit(APP_URL + '/')
+    })
+
+    it('should sign out and be able to sign in again', () => {
+      cy.get('a[href*="logout"]').click()
+      cy.noSession()
+      cy.url().should('include', '/auth/login')
+    })
   })
 })

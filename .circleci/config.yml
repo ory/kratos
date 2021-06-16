@@ -48,6 +48,12 @@ jobs:
       - checkout
       - setup_remote_docker
 
+      - go/load-cache:
+          key: ory-kratos-go-mod-v1
+      - go/mod-download
+      - go/save-cache:
+          key: ory-kratos-go-mod-v1
+
       - prettier/install
       - prettier/check
       - prettier/install:
@@ -59,15 +65,13 @@ jobs:
 
       - golangci/install
       - golangci/lint
-      - go/load-cache
-      - go/mod-download
-      - go/save-cache
       - node/install-packages
       - run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
       - run: make install
       - run: make test-docs
       - run: make test-coverage
-      - run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+      - run: |
+          bash <(curl -s https://codecov.io/bash)
 
   test-e2e:
     docker:

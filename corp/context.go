@@ -16,22 +16,34 @@ type Contextualizer interface {
 	ContextualizeNID(ctx context.Context, fallback uuid.UUID) uuid.UUID
 }
 
-var DefaultContextualizer Contextualizer = noopContextualizer{}
+var c Contextualizer = nil
 
-// These global functions call the respective method on DefaultContextualizer
+func GetContextualizer() Contextualizer {
+	return c
+}
+
+func SetContextualizer(cc Contextualizer) {
+	if _, ok := cc.(*ContextNoOp); ok && c != nil {
+		return
+	}
+
+	c = cc
+}
+
+// These global functions call the respective method on Context
 
 func ContextualizeTableName(ctx context.Context, name string) string {
-	return DefaultContextualizer.ContextualizeTableName(ctx, name)
+	return c.ContextualizeTableName(ctx, name)
 }
 
 func ContextualizeMiddleware(ctx context.Context) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	return DefaultContextualizer.ContextualizeMiddleware(ctx)
+	return c.ContextualizeMiddleware(ctx)
 }
 
 func ContextualizeConfig(ctx context.Context, fb *config.Config) *config.Config {
-	return DefaultContextualizer.ContextualizeConfig(ctx, fb)
+	return c.ContextualizeConfig(ctx, fb)
 }
 
 func ContextualizeNID(ctx context.Context, fallback uuid.UUID) uuid.UUID {
-	return DefaultContextualizer.ContextualizeNID(ctx, fallback)
+	return c.ContextualizeNID(ctx, fallback)
 }

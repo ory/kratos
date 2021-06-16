@@ -4,12 +4,13 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-06-02)](#unreleased-2021-06-02)
+- [Unreleased (2021-06-15)](#unreleased-2021-06-15)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
     - [Tests](#tests)
+    - [Unclassified](#unclassified)
   - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring-1)
@@ -27,14 +28,14 @@
     - [Documentation](#documentation-2)
     - [Features](#features-3)
     - [Tests](#tests-1)
-    - [Unclassified](#unclassified)
+    - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes-1)
   - [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
     - [Bug Fixes](#bug-fixes-4)
     - [Documentation](#documentation-3)
     - [Features](#features-4)
     - [Tests](#tests-2)
-    - [Unclassified](#unclassified-1)
+    - [Unclassified](#unclassified-2)
   - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
     - [Bug Fixes](#bug-fixes-5)
     - [Code Refactoring](#code-refactoring-3)
@@ -54,14 +55,14 @@
     - [Documentation](#documentation-7)
     - [Features](#features-7)
     - [Tests](#tests-5)
-    - [Unclassified](#unclassified-2)
+    - [Unclassified](#unclassified-3)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
     - [Bug Fixes](#bug-fixes-9)
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-8)
     - [Features](#features-8)
     - [Tests](#tests-6)
-    - [Unclassified](#unclassified-3)
+    - [Unclassified](#unclassified-4)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
     - [Bug Fixes](#bug-fixes-10)
@@ -79,14 +80,14 @@
     - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-10)
     - [Features](#features-9)
-    - [Unclassified](#unclassified-4)
+    - [Unclassified](#unclassified-5)
     - [BREAKING CHANGES](#breaking-changes-3)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
     - [Bug Fixes](#bug-fixes-16)
     - [Code Refactoring](#code-refactoring-6)
     - [Documentation](#documentation-11)
     - [Features](#features-10)
-    - [Unclassified](#unclassified-5)
+    - [Unclassified](#unclassified-6)
     - [BREAKING CHANGES](#breaking-changes-4)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-12)
@@ -95,7 +96,7 @@
     - [Code Refactoring](#code-refactoring-7)
     - [Documentation](#documentation-13)
     - [Features](#features-11)
-    - [Unclassified](#unclassified-6)
+    - [Unclassified](#unclassified-7)
     - [BREAKING CHANGES](#breaking-changes-5)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-18)
@@ -116,48 +117,49 @@
     - [Bug Fixes](#bug-fixes-20)
     - [Documentation](#documentation-18)
     - [Features](#features-14)
-    - [Unclassified](#unclassified-7)
+    - [Unclassified](#unclassified-8)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-19)
   - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
-    - [Unclassified](#unclassified-8)
-  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-9)
-  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-10)
-  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
     - [Unclassified](#unclassified-11)
-  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
     - [Unclassified](#unclassified-12)
-  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
     - [Unclassified](#unclassified-13)
-  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
+  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
     - [Unclassified](#unclassified-14)
-  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
+  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
     - [Unclassified](#unclassified-15)
-  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
     - [Unclassified](#unclassified-16)
-  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
     - [Unclassified](#unclassified-17)
+  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+    - [Unclassified](#unclassified-18)
   - [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
   - [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
-    - [Unclassified](#unclassified-18)
+    - [Unclassified](#unclassified-19)
   - [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
   - [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
-    - [Unclassified](#unclassified-19)
+    - [Unclassified](#unclassified-20)
   - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
   - [0.0.1-alpha.2 (2020-01-28)](#001-alpha2-2020-01-28)
   - [0.0.1-alpha.1 (2020-01-28)](#001-alpha1-2020-01-28)
     - [Documentation](#documentation-20)
-    - [Unclassified](#unclassified-20)
+    - [Unclassified](#unclassified-21)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...944d045aa7fc59eadfdd18951f0d4937b1ea79df) (2021-06-02)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...2ffad9ee751471451e2151719a2e70d5f89437b0) (2021-06-15)
 
 
 ### Bug Fixes
 
+* Check filesystem before fallback to bundled templates ([#1401](https://github.com/ory/kratos/issues/1401)) ([22d999e](https://github.com/ory/kratos/commit/22d999e78eb4f67d2f3ba07e62fd28ffb3331d6d))
 * Mark ui node message as optional ([#1365](https://github.com/ory/kratos/issues/1365)) ([7b8d59f](https://github.com/ory/kratos/commit/7b8d59f48ed14a6d0672238645d8675d4bf7fd77)), closes [#1361](https://github.com/ory/kratos/issues/1361) [#1362](https://github.com/ory/kratos/issues/1362)
 * Prometheus metrics fix ([#1299](https://github.com/ory/kratos/issues/1299)) ([ac5d00d](https://github.com/ory/kratos/commit/ac5d00d472a87ab51e7c6834e2cb59f107fc3b3b))
 * Recovery email case sensitive ([#1357](https://github.com/ory/kratos/issues/1357)) ([bce14c4](https://github.com/ory/kratos/commit/bce14c487450bd668859f362b98704644fa4c72a)), closes [#1329](https://github.com/ory/kratos/issues/1329)
@@ -167,6 +169,7 @@
 
 ### Code Refactoring
 
+* Corp package ([#1402](https://github.com/ory/kratos/issues/1402)) ([0202dc5](https://github.com/ory/kratos/commit/0202dc57aacc0d48e4c1ee4e68c91654451f63fa))
 * Introduce DefaultContextualizer in corp package ([#1390](https://github.com/ory/kratos/issues/1390)) ([944d045](https://github.com/ory/kratos/commit/944d045aa7fc59eadfdd18951f0d4937b1ea79df)), closes [#1363](https://github.com/ory/kratos/issues/1363)
 
 
@@ -181,14 +184,24 @@
 
 ### Features
 
-* **identities:** Add a state to identities ([#1312](https://github.com/ory/kratos/issues/1312)) ([d22954e](https://github.com/ory/kratos/commit/d22954e2fdb7b2dd5206651b6dd5cf96185a33ba)), closes [#598](https://github.com/ory/kratos/issues/598)
+* Add vk and yandex providers to oidc providers and documentation ([#1339](https://github.com/ory/kratos/issues/1339)) ([22a3ef9](https://github.com/ory/kratos/commit/22a3ef98181eb5922cc0f1c016d42ce46732d0a2)), closes [#1234](https://github.com/ory/kratos/issues/1234)
 * Include Credentials Metadata in admin api ([#1274](https://github.com/ory/kratos/issues/1274)) ([c8b6219](https://github.com/ory/kratos/commit/c8b62190fca53db4e1b3a4ddb5253fbd2fd46002)), closes [#820](https://github.com/ory/kratos/issues/820)
 * Include Credentials Metadata in admin api Missing changes in handler ([#1366](https://github.com/ory/kratos/issues/1366)) ([a71c220](https://github.com/ory/kratos/commit/a71c2208dedac45d32dab578e62a5e3105c8dee0))
+* Team id in slack oidc ([#1409](https://github.com/ory/kratos/issues/1409)) ([e4d021a](https://github.com/ory/kratos/commit/e4d021a037a6b44f8bd66372e9c260c640e87b9d)), closes [#1408](https://github.com/ory/kratos/issues/1408)
+* **identities:** Add a state to identities ([#1312](https://github.com/ory/kratos/issues/1312)) ([d22954e](https://github.com/ory/kratos/commit/d22954e2fdb7b2dd5206651b6dd5cf96185a33ba)), closes [#598](https://github.com/ory/kratos/issues/598)
 
 
 ### Tests
 
+* **e2e:** Greatly improve test performance ([#1421](https://github.com/ory/kratos/issues/1421)) ([2ffad9e](https://github.com/ory/kratos/commit/2ffad9ee751471451e2151719a2e70d5f89437b0)):
+
+    > Instead of running the individual profiles as separate Cypress instances, we now use one singular instance which updates the Ory Kratos configuration depending on the test context. This ensures that hot-reloading is properly working while also signficantly reducing the amount of time spent on booting up the service dependencies.
 * Add tests for cookie behavior of API and browser endpoints ([d1b1521](https://github.com/ory/kratos/commit/d1b15217867cfb92a615c793b26fad288f5e5742))
+
+
+### Unclassified
+
+* Format ([169c0cd](https://github.com/ory/kratos/commit/169c0cd8d424babef69a52ddf65e2b75ded09a46))
 
 
 

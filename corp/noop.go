@@ -9,22 +9,22 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-type noopContextualizer struct{}
+type ContextNoOp struct{}
 
-func (noopContextualizer) ContextualizeTableName(_ context.Context, name string) string {
+func (*ContextNoOp) ContextualizeTableName(_ context.Context, name string) string {
 	return name
 }
 
-func (noopContextualizer) ContextualizeMiddleware(_ context.Context) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (*ContextNoOp) ContextualizeMiddleware(_ context.Context) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, n http.HandlerFunc) {
 		n(w, r)
 	}
 }
 
-func (noopContextualizer) ContextualizeConfig(ctx context.Context, fb *config.Config) *config.Config {
+func (*ContextNoOp) ContextualizeConfig(ctx context.Context, fb *config.Config) *config.Config {
 	return fb
 }
 
-func (noopContextualizer) ContextualizeNID(_ context.Context, fallback uuid.UUID) uuid.UUID {
+func (*ContextNoOp) ContextualizeNID(_ context.Context, fallback uuid.UUID) uuid.UUID {
 	return fallback
 }

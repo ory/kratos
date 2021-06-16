@@ -81,7 +81,15 @@ func TestGetFlow(t *testing.T) {
 
 		t.Run("case=valid", func(t *testing.T) {
 			t.Run("type=browser", func(t *testing.T) {
-				assertFlowPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+verification.RouteInitBrowserFlow), false)
+				res, body := x.EasyGet(t, endpoint.Client(), public.URL+verification.RouteInitBrowserFlow)
+				require.NotEqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
+				assertFlowPayload(t, body, false)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				res, body := x.EasyGetJSON(t, endpoint.Client(), public.URL+verification.RouteInitBrowserFlow)
+				require.EqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
+				assertFlowPayload(t, body, false)
 			})
 
 			t.Run("type=api", func(t *testing.T) {

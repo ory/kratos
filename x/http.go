@@ -8,6 +8,10 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/golang/gddo/httputil"
+
+	"github.com/ory/herodot"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/x/stringsx"
@@ -21,6 +25,18 @@ func NewTestHTTPRequest(t *testing.T, method, url string, body io.Reader) *http.
 
 func EasyGet(t *testing.T, c *http.Client, url string) (*http.Response, []byte) {
 	res, err := c.Get(url)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	require.NoError(t, err)
+	return res, body
+}
+
+func EasyGetJSON(t *testing.T, c *http.Client, url string) (*http.Response, []byte) {
+	req, err := http.NewRequest("GET", url, nil)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	res, err := c.Do(req)
 	require.NoError(t, err)
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
@@ -86,4 +102,27 @@ type TransportWithHost struct {
 func (ct *TransportWithHost) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Host = ct.host
 	return ct.RoundTripper.RoundTrip(req)
+}
+
+func AcceptToRedirectOrJson(
+	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string,
+) {
+	switch httputil.NegotiateContentType(r, []string{
+		"text/html",
+		"application/json",
+	}, "text/html") {
+	case "application/json":
+		writer.Write(w, r, out)
+	case "text/html":
+		fallthrough
+	default:
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+	}
+}
+
+func AcceptsJSON(r *http.Request) bool {
+	return httputil.NegotiateContentType(r, []string{
+		"text/html",
+		"application/json",
+	}, "text/html") == "application/json"
 }

@@ -1,15 +1,20 @@
 import {APP_URL, gen, website} from '../../../../helpers'
 
-context('Register', () => {
-  beforeEach(() => {
-    cy.clearCookies()
-    cy.visit(APP_URL + '/auth/registration')
-  })
+context('OIDC Profile', () => {
+  describe('Register', () => {
+    before(() => {
+      cy.useConfigProfile('oidc')
+    })
 
-  const shouldSession = (email) => (session) => {
-    const {identity} = session
-    expect(identity.id).to.not.be.empty
-    expect(identity.schema_id).to.equal('default')
+    beforeEach(() => {
+      cy.clearCookies()
+      cy.visit(APP_URL + '/auth/registration')
+    })
+
+    const shouldSession = (email) => (session) => {
+      const {identity} = session
+      expect(identity.id).to.not.be.empty
+      expect(identity.schema_id).to.equal('default')
     expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
     expect(identity.traits.website).to.equal(website)
     expect(identity.traits.email).to.equal(email)
@@ -121,5 +126,6 @@ context('Register', () => {
     cy.get('button[value="hydra"]').click()
 
     cy.session().should(shouldSession(email))
+  })
   })
 })

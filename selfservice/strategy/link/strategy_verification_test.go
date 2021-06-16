@@ -56,23 +56,23 @@ func TestVerification(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToVerify,
 		identity.ManagerAllowWriteProtectedTraits))
 
-	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
+	var expect = func(t *testing.T, isAPI, isSPA bool, values func(url.Values), c int) string {
 		hc := testhelpers.NewDebugClient(t)
 		if !isAPI {
 			hc = testhelpers.NewClientWithCookies(t)
 			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
 		}
 
-		return testhelpers.SubmitVerificationForm(t, isAPI, hc, public, values, c,
-			testhelpers.ExpectURL(isAPI, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI().String()))
+		return testhelpers.SubmitVerificationForm(t, isAPI, isSPA, hc, public, values, c,
+			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI().String()))
 	}
 
-	var expectValidationError = func(t *testing.T, isAPI bool, values func(url.Values)) string {
-		return expect(t, isAPI, values, testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK))
+	var expectValidationError = func(t *testing.T, isAPI, isSPA bool, values func(url.Values)) string {
+		return expect(t, isAPI, isSPA, values, testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK))
 	}
 
-	var expectSuccess = func(t *testing.T, isAPI bool, values func(url.Values)) string {
-		return expect(t, isAPI, values, http.StatusOK)
+	var expectSuccess = func(t *testing.T, isAPI, isSPA bool, values func(url.Values)) string {
+		return expect(t, isAPI, isSPA, values, http.StatusOK)
 	}
 
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
@@ -155,11 +155,15 @@ func TestVerification(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, values))
+			check(t, expectValidationError(t, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectValidationError(t, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, values))
+			check(t, expectValidationError(t, true, false, values))
 		})
 	})
 
@@ -177,11 +181,15 @@ func TestVerification(t *testing.T) {
 			}
 
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, false, values), email)
+				check(t, expectValidationError(t, false, false, values), email)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				check(t, expectValidationError(t, false, true, values), email)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
-				check(t, expectValidationError(t, true, values), email)
+				check(t, expectValidationError(t, true, false, values), email)
 			})
 		}
 	})
@@ -203,18 +211,23 @@ func TestVerification(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			email = x.NewUUID().String() + "@ory.sh"
-			check(t, expectSuccess(t, false, values))
+			check(t, expectSuccess(t, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			email = x.NewUUID().String() + "@ory.sh"
+			check(t, expectSuccess(t, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
 			email = x.NewUUID().String() + "@ory.sh"
-			check(t, expectSuccess(t, true, values))
+			check(t, expectSuccess(t, true, false, values))
 		})
 	})
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeVerificationFlowViaBrowser(t, c, public)
+		f := testhelpers.InitializeVerificationFlowViaBrowser(t, c, false, public)
 		res, err := c.Get(public.URL + verification.RouteSubmitFlow + "?flow=" + f.Id + "&token=i-do-not-exist")
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -251,7 +264,7 @@ func TestVerification(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
-		body := expectSuccess(t, false, func(v url.Values) {
+		body := expectSuccess(t, false, false, func(v url.Values) {
 			v.Set("email", verificationEmail)
 		})
 
@@ -317,11 +330,15 @@ func TestVerification(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectSuccess(t, false, values))
+			check(t, expectSuccess(t, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectSuccess(t, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectSuccess(t, true, values))
+			check(t, expectSuccess(t, true, false, values))
 		})
 	})
 

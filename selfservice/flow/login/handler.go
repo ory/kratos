@@ -97,7 +97,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 }
 
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceLoginForBrowsers initializeSelfServiceLoginForNativeApps
+// swagger:parameters initializeSelfServiceLoginForBrowsers initializeSelfServiceLoginWithoutBrowser
 type initializeSelfServiceBrowserLoginFlow struct {
 	// Refresh a login session
 	//
@@ -109,11 +109,17 @@ type initializeSelfServiceBrowserLoginFlow struct {
 	Refresh bool `json:"refresh"`
 }
 
-// swagger:route GET /self-service/login/api public initializeSelfServiceLoginForNativeApps
+// swagger:route GET /self-service/login/api public initializeSelfServiceLoginWithoutBrowser
 //
-// Initialize Login Flow for Native Apps and API clients
+// Initialize Login Flow for APIs, Services, Apps, ...
 //
-// This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.
+// This endpoint initiates a login flow for API clients that do not use a browser, such as mobile devices, smart TVs, and so on.
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // If a valid provided session cookie or session token is provided, a 400 Bad Request error
 // will be returned unless the URL query parameter `?refresh=true` is set.
@@ -168,20 +174,35 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 
 // swagger:route GET /self-service/login/browser public initializeSelfServiceLoginForBrowsers
 //
-// Initialize Login Flow for browsers
+// Initialize Login Flow for Browsers
 //
-// This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
+// This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate
+// cookies and anti-CSRF measures required for browser-based flows.
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
+//
+// If this endpoint is opened as a link in the browser, it will be redirected to
 // `selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 // exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
 // `?refresh=true` was set.
 //
-// This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+// If this endpoint is called via an AJAX request, the response contains the login flow without a redirect.
+//
+// This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+//
+//     Produces:
+//     - application/json
 //
 //     Schemes: http, https
 //
 //     Responses:
+//       200: loginFlow
 //       302: emptyResponse
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -193,7 +214,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 	// we assume an error means the user has no session
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		http.Redirect(w, r, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
+		x.AcceptToRedirectOrJson(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
 		return
 	}
 
@@ -202,7 +223,12 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
-		http.Redirect(w, r, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
+		x.AcceptToRedirectOrJson(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
+		return
+	}
+
+	if x.IsJSONRequest(r) {
+		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 		return
 	}
 
@@ -215,7 +241,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	http.Redirect(w, r, returnTo.String(), http.StatusFound)
+	http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 }
 
 // nolint:deadcode,unused
@@ -236,6 +262,12 @@ type getSelfServiceLoginFlow struct {
 // Get Login Flow
 //
 // This endpoint returns a login flow's context with, for example, error details and other information.
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -297,6 +329,12 @@ type submitSelfServiceLoginFlowBody struct{}
 //
 // Submit a Login Flow
 //
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
+//
 // Use this endpoint to complete a login flow. This endpoint
 // behaves differently for API and browser flows.
 //
@@ -305,9 +343,14 @@ type submitSelfServiceLoginFlowBody struct{}
 //   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //
-// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+// Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
 //   - a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
 //   - a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+//
+// Browser flows with an accept header of `application/json` will not redirect but instead respond with
+//   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 400 on form validation errors.
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //

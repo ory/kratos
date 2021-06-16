@@ -6,15 +6,21 @@ import {
   verifyHrefPattern,
 } from '../../../../helpers'
 
-context('Verify', () => {
-  describe('error flow', () => {
-    let identity
+
+context('Verification Profile', () => {
+  describe('Verify', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('verification')
     })
 
-    beforeEach(() => {
-      cy.longVerificationLifespan()
+    describe('error flow', () => {
+      let identity
+      before(() => {
+        cy.deleteMail()
+      })
+
+      beforeEach(() => {
+        cy.longVerificationLifespan()
 
       identity = gen.identity()
       cy.register(identity)
@@ -57,9 +63,10 @@ context('Verify', () => {
         cy.visit(link.href + '-not') // add random stuff to the confirm challenge
         cy.log(link.href)
         cy.session().then(
-          assertVerifiableAddress({ isVerified: false, email: identity.email })
+          assertVerifiableAddress({isVerified: false, email: identity.email})
         )
       })
+    })
     })
   })
 })

@@ -166,6 +166,7 @@ sub                 # alphanumeric slack user id
 name                # username
 nickname            # username
 preferred_username  # username
+team                # team id slack user belongs to
 ```
 
 Additionally, the `identity.email` scope will add:
@@ -720,6 +721,178 @@ selfservice:
 Please look at the Google developer documentation which can be found
 [here](https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload)
 .
+
+## VK
+
+**Create VK Application**
+
+Create a [VK OAuth2 Application](https://vk.com/apps?act=manage).
+
+Select "Create"
+
+Select "Platform: Website"
+
+Set the "Website address" to:
+
+```
+https://127.0.0.1:4433
+```
+
+Set the "Base domain" to:
+
+```
+127.0.0.1:4433
+```
+
+Select "Connect Website"
+
+Set the "Authorized redirect URI" to:
+
+```
+https://127.0.0.1:4433/self-service/methods/oidc/callback/vk
+```
+
+The pattern of this URL is:
+
+```
+https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+:::note
+
+While you can use
+[VK as an OIDC identity provider](https://vk.com/dev/authcode_flow_user), VK
+only returns access_token and not id_token. Therefore, Ory Kratos makes a
+request to [VK's API](https://vk.com/dev/users.get) and adds the user info to
+`std.extVar('claims')`.
+
+:::
+
+**Configuring Kratos**
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.vk.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.vk.jsonnet"
+local claims = std.extVar('claims');
+{
+  identity: {
+    traits: {
+      // VK don't provide an email_verified field.
+      //
+      // The email might be empty if the user is not allowed to an email scope.
+      [if "email" in claims then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the VK provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: vk # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: vk
+            client_id: .... # Replace this with the OAuth2 Client ID provided by VK app
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by VK app
+            mapper_url: file:///etc/config/kratos/oidc.vk.jsonnet
+            scope:
+              - email # required for email and email_verified claims in the near future
+```
+
+Next, open the login endpoint of the SecureApp and you should see the VK Login
+option!
+
+## Yandex
+
+**Create Yandex Application**
+
+Create a
+[Yandex OAuth2 Application](https://yandex.com/dev/oauth/doc/dg/tasks/register-client.html).
+
+Select "Platforms: Web services"
+
+Set the "Website address" to:
+
+```
+https://127.0.0.1:4433
+```
+
+Select "Connect Website"
+
+Set the "Callback URI" to:
+
+```
+https://127.0.0.1:4433/self-service/methods/oidc/callback/yandex
+```
+
+The pattern of this URL is:
+
+```
+https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+:::note
+
+While you can use
+[Yandex as an OIDC identity provider](https://yandex.com/dev/oauth/doc/dg/concepts/about.html),
+Yandex only returns access_token and not id_token. Therefore, Ory Kratos makes a
+request to
+[Yandex's API](https://yandex.com/dev/passport/doc/dg/reference/request.html)
+and adds the user info to `std.extVar('claims')`.
+
+:::
+
+**Configuring Kratos**
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.yandex.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.yandex.jsonnet"
+local claims = std.extVar('claims');
+{
+  identity: {
+    traits: {
+      // Yandex don't provide an email_verified field.
+      //
+      // The email might be empty if the user is not allowed to an email scope.
+      [if "email" in claims then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the Yandex provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: yandex # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: yandex
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Yandex app
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Yandex app
+            mapper_url: file:///etc/config/kratos/oidc.yandex.jsonnet
+```
+
+Next, open the login endpoint of the SecureApp and you should see the Yandex
+Login option!
 
 ## LinkedIn
 

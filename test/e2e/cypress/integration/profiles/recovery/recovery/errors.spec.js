@@ -1,15 +1,21 @@
-import { APP_URL, gen, parseHtml } from '../../../../helpers'
+import {APP_URL, gen, parseHtml} from '../../../../helpers'
 
-context('Recovery', () => {
-  describe('error flow', () => {
-    let identity
 
+context('Recovery Profile', () => {
+  describe('Recovery', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('recovery')
     })
 
-    beforeEach(() => {
-      cy.longRecoveryLifespan()
+    describe('error flow', () => {
+      let identity
+
+      before(() => {
+        cy.deleteMail()
+      })
+
+      beforeEach(() => {
+        cy.longRecoveryLifespan()
       cy.visit(APP_URL + '/recovery')
     })
 
@@ -106,6 +112,7 @@ context('Recovery', () => {
         )
         cy.noSession()
       })
+    })
     })
   })
 })

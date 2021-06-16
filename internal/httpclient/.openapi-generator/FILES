@@ -76,7 +76,6 @@ docs/UiNodeAnchorAttributes.md
 docs/UiNodeAttributes.md
 docs/UiNodeImageAttributes.md
 docs/UiNodeInputAttributes.md
-docs/UiNodeInputAttributesValue.md
 docs/UiNodeTextAttributes.md
 docs/UiText.md
 docs/UpdateIdentity.md
@@ -156,7 +155,6 @@ model_ui_node_anchor_attributes.go
 model_ui_node_attributes.go
 model_ui_node_image_attributes.go
 model_ui_node_input_attributes.go
-model_ui_node_input_attributes_value.go
 model_ui_node_text_attributes.go
 model_ui_text.go
 model_update_identity.go

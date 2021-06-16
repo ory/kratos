@@ -19,17 +19,16 @@ import (
 type LoginViaApiResponse struct {
 	Session Session `json:"session"`
 	// The Session Token  A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header:  Authorization: bearer ${session-token}  The session token is only issued for API flows, not for Browser flows!
-	SessionToken string `json:"session_token"`
+	SessionToken *string `json:"session_token,omitempty"`
 }
 
 // NewLoginViaApiResponse instantiates a new LoginViaApiResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLoginViaApiResponse(session Session, sessionToken string) *LoginViaApiResponse {
+func NewLoginViaApiResponse(session Session) *LoginViaApiResponse {
 	this := LoginViaApiResponse{}
 	this.Session = session
-	this.SessionToken = sessionToken
 	return &this
 }
 
@@ -65,28 +64,36 @@ func (o *LoginViaApiResponse) SetSession(v Session) {
 	o.Session = v
 }
 
-// GetSessionToken returns the SessionToken field value
+// GetSessionToken returns the SessionToken field value if set, zero value otherwise.
 func (o *LoginViaApiResponse) GetSessionToken() string {
-	if o == nil {
+	if o == nil || o.SessionToken == nil {
 		var ret string
 		return ret
 	}
-
-	return o.SessionToken
+	return *o.SessionToken
 }
 
-// GetSessionTokenOk returns a tuple with the SessionToken field value
+// GetSessionTokenOk returns a tuple with the SessionToken field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *LoginViaApiResponse) GetSessionTokenOk() (*string, bool) {
-	if o == nil {
+	if o == nil || o.SessionToken == nil {
 		return nil, false
 	}
-	return &o.SessionToken, true
+	return o.SessionToken, true
 }
 
-// SetSessionToken sets field value
+// HasSessionToken returns a boolean if a field has been set.
+func (o *LoginViaApiResponse) HasSessionToken() bool {
+	if o != nil && o.SessionToken != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSessionToken gets a reference to the given string and assigns it to the SessionToken field.
 func (o *LoginViaApiResponse) SetSessionToken(v string) {
-	o.SessionToken = v
+	o.SessionToken = &v
 }
 
 func (o LoginViaApiResponse) MarshalJSON() ([]byte, error) {
@@ -94,7 +101,7 @@ func (o LoginViaApiResponse) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["session"] = o.Session
 	}
-	if true {
+	if o.SessionToken != nil {
 		toSerialize["session_token"] = o.SessionToken
 	}
 	return json.Marshal(toSerialize)

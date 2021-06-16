@@ -81,6 +81,7 @@ func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 		Email:             identity.User.Email,
 		EmailVerified:     true,
 		Picture:           identity.User.Image512,
+		Team:              identity.Team.ID,
 	}
 
 	return claims, nil

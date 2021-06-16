@@ -1,15 +1,20 @@
 import {gen, MOBILE_URL} from '../../../../helpers'
 
-context('Login Flow Errors', () => {
-  beforeEach(() => {
-    cy.visit(MOBILE_URL + "/Login")
-  })
+context('Mobile Profile', () => {
+  describe('Login Flow Errors', () => {
+    before(() => {
+      cy.useConfigProfile('mobile')
+    })
 
-  describe('shows validation errors when invalid signup data is used', () => {
-    it('should show an error when the password_identifier is missing', () => {
+    beforeEach(() => {
+      cy.visit(MOBILE_URL + "/Login")
+    })
 
-      cy.get('input[data-testid="password"]')
-        .type(gen.password())
+    describe('shows validation errors when invalid signup data is used', () => {
+      it('should show an error when the password_identifier is missing', () => {
+
+        cy.get('input[data-testid="password"]')
+          .type(gen.password())
 
       cy.get('div[data-testid="submit-form"]').click()
 
@@ -46,6 +51,7 @@ context('Login Flow Errors', () => {
         'contain.text',
         'credentials are invalid'
       )
+    })
     })
   })
 })
