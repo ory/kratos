@@ -269,6 +269,7 @@ type submitSelfServiceRecoveryFlow struct {
 	Body submitSelfServiceRecoveryFlowBody
 }
 
+// nolint:deadcode,unused
 // swagger:model submitSelfServiceRecoveryFlowBody
 type submitSelfServiceRecoveryFlowBody struct {
 	// Method supports `link` only right now.
