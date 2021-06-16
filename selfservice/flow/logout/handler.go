@@ -16,6 +16,10 @@ const (
 	RouteBrowser = "/self-service/browser/flows/logout"
 )
 
+const (
+	RouteLogout       = "/self-service/logout"
+)
+
 type (
 	handlerDependencies interface {
 		x.CSRFProvider
@@ -36,10 +40,18 @@ func NewHandler(d handlerDependencies) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
-	router.GET(RouteBrowser, h.logout)
+	router.GET(RouteLogoutToken, h.logout)
+
+	router.GET(RouteLogout, h.logout)
 }
 
-// swagger:route GET /self-service/browser/flows/logout public initializeSelfServiceBrowserLogoutFlow
+// swagger:route GET /self-service/logout/urls public generateSelfServiceLogoutUrl
+
+
+
+// swagger:route GET /self-service/logout public submitSelfServiceLogout
+
+// swagger:route POST /self-service/logout public submitSelfServiceLogout
 //
 // Initialize Browser-Based Logout User Flow
 //
@@ -59,8 +71,11 @@ func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 //       302: emptyResponse
 //       500: jsonError
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	_ = h.d.CSRFHandler().RegenerateToken(w, r)
 
+	sid := r.URL.Query().Get("sid")
+	// get session and compare token
+
+	_ = h.d.CSRFHandler().RegenerateToken(w, r)
 	if err := h.d.SessionManager().PurgeFromRequest(r.Context(), w, r); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
