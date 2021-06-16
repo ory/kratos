@@ -40,7 +40,7 @@ func NewInfoRegistrationWith(provider string) *Message {
 func NewInfoRegistrationContinue() *Message {
 	return &Message{
 		ID:   InfoRegistrationContinue,
-		Text: fmt.Sprintf("Continue"),
+		Text: "Continue",
 		Type: Info,
 	}
 }
