@@ -250,14 +250,26 @@ type submitSelfServiceVerificationFlow struct {
 	Flow string `json:"flow"`
 
 	// in: body
-	Body submitSelfServiceRecoveryFlowBody
+	Body submitSelfServiceVerificationFlowBody
 }
 
-// swagger:model submitSelfServiceRecoveryFlow
 // nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowBody struct{}
+// swagger:model submitSelfServiceVerificationFlowBody
+type submitSelfServiceVerificationFlowBody struct {
+	// Method supports `link` only right now.
+	//
+	// enum:
+	// - link
+	// required: true
+	Method string `json:"method"`
 
-// swagger:route POST /self-service/verification/flows public submitSelfServiceVerificationFlow
+	// Email is the email to which to send the verification message to.
+	//
+	// required: true
+	Email string `json:"email"`
+}
+
+// swagger:route POST /self-service/verification public submitSelfServiceVerificationFlow
 //
 // Complete Verification Flow
 //
