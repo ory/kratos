@@ -40,11 +40,11 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
-	dialer :=  &gomail.Dialer{
-		Host:         uri.Hostname(),
-		Port:         int(port),
-		Username:     uri.User.Username(),
-		Password:     password,
+	dialer := &gomail.Dialer{
+		Host:     uri.Hostname(),
+		Port:     int(port),
+		Username: uri.User.Username(),
+		Password: password,
 		// We are setting this to false because it breaks STARTTLS which is the most
 		// common SMTP auto today. SSL is almost never used.
 		SSL:          false,
@@ -64,7 +64,7 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 	}
 
 	return &Courier{
-		d: d,
+		d:      d,
 		Dialer: dialer,
 	}
 }
