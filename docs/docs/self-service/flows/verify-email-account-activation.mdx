@@ -7,12 +7,14 @@ import useBaseUrl from '@docusaurus/useBaseUrl'
 import Mermaid from '@theme/Mermaid'
 import ApiWarning from '@theme/ApiWarning'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
+import SelfServiceSpaFlow from '@theme/SelfServiceSpaFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
   initBrowserFlow,
   initApiFlow,
+  initSpaFlow,
   getFlow,
   getFlowMethodLinkWithErrors,
   getFlowMethodLinkSuccess,
@@ -201,7 +203,7 @@ where
 - `passed_challenge` is set when the user has clicked the verification link and
   completed the account verification.
 
-### Verification for Browser Clients
+### Verification for Server-Side Browser Clients
 
 The Verification Flow for browser clients relies on HTTP redirects between Ory
 Kratos, your Verification UI, and the end-user's browser:
@@ -228,6 +230,29 @@ selfservice:
       # becomes http://127.0.0.1:4455/verification?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
       ui_url: http://127.0.0.1:4455/verification
 ```
+
+### Verification for Client-Side (AJAX) Browser Clients
+
+The Verification Flow for client-side browser clients relies on AJAX requests.
+
+:::note
+
+This flow requires AJAX and has all the potential problems with CORS. To make it
+work, you need to ensure that cookies work by setting the correct configuration
+options in your JavaScript code and the CORS headers of the server.
+
+:::
+
+<SelfServiceSpaFlow
+  flows={['verification']}
+  success="Set verified flag and redirect to successful Verification Flow"
+  interactions={['"Verify Email"']}
+/>
+
+To initialize the Verification Flow, point the Browser to the initialization
+endpoint:
+
+<CodeTabs items={initSpaFlow} />
 
 ### Verification for API Clients
 
@@ -328,9 +353,10 @@ framework:
 
 The form payloads are then submitted to Ory Kratos which follows up with:
 
-- An HTTP 302 Found redirect pointing to the Verification UI for Browser
-  Clients.
-- An `application/json` response for API Clients.
+- An HTTP 302 Found redirect pointing to the Registration UI for Browser
+  Clients;
+- An `application/json` response for API Clients and Client-Side Browser
+  applications (e.g. Single Page Apps).
 
 ### Verification Link via Email
 

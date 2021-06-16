@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-06-14)](#unreleased-2021-06-14)
+- [Unreleased (2021-06-15)](#unreleased-2021-06-15)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -154,7 +154,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...22d999e78eb4f67d2f3ba07e62fd28ffb3331d6d) (2021-06-14)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...2ffad9ee751471451e2151719a2e70d5f89437b0) (2021-06-15)
 
 
 ### Bug Fixes
@@ -193,6 +193,9 @@
 
 ### Tests
 
+* **e2e:** Greatly improve test performance ([#1421](https://github.com/ory/kratos/issues/1421)) ([2ffad9e](https://github.com/ory/kratos/commit/2ffad9ee751471451e2151719a2e70d5f89437b0)):
+
+    > Instead of running the individual profiles as separate Cypress instances, we now use one singular instance which updates the Ory Kratos configuration depending on the test context. This ensures that hot-reloading is properly working while also signficantly reducing the amount of time spent on booting up the service dependencies.
 * Add tests for cookie behavior of API and browser endpoints ([d1b1521](https://github.com/ory/kratos/commit/d1b15217867cfb92a615c793b26fad288f5e5742))
 
 

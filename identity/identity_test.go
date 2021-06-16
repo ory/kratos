@@ -3,7 +3,10 @@ package identity
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"testing"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -98,4 +101,31 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 
 	assert.JSONEq(t, "{\"password\":{\"type\":\"password\",\"identifiers\":null,\"updated_at\":\"0001-01-01T00:00:00Z\",\"created_at\":\"0001-01-01T00:00:00Z\"}}", credentialsInJson.Raw)
 	assert.Equal(t, credentials, i.Credentials, "Original credentials should not be touched by marshalling")
+}
+
+func TestValidateNID(t *testing.T) {
+	nid := x.NewUUID()
+	for k, tc := range []struct {
+		i           *Identity
+		expectedErr bool
+	}{
+		{i: &Identity{NID: nid}},
+		{i: &Identity{NID: nid, RecoveryAddresses: []RecoveryAddress{{NID: x.NewUUID()}}}, expectedErr: true},
+		{i: &Identity{NID: nid, VerifiableAddresses: []VerifiableAddress{{NID: x.NewUUID()}}}, expectedErr: true},
+		{i: &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{CredentialsTypePassword: {NID: x.NewUUID()}}}, expectedErr: true},
+		{i: &Identity{NID: nid, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: x.NewUUID()}}}, expectedErr: true},
+		{i: &Identity{NID: nid, RecoveryAddresses: []RecoveryAddress{{NID: x.NewUUID()}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}}, expectedErr: true},
+		{i: &Identity{NID: nid, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}}, expectedErr: false},
+		{i: &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{CredentialsTypePassword: {NID: x.NewUUID()}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}}, expectedErr: true},
+		{i: &Identity{NID: nid, Credentials: map[CredentialsType]Credentials{CredentialsTypePassword: {NID: nid}}, RecoveryAddresses: []RecoveryAddress{{NID: nid}}, VerifiableAddresses: []VerifiableAddress{{NID: nid}}}},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			err := tc.i.ValidateNID()
+			if tc.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

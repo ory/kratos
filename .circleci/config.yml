@@ -70,7 +70,8 @@ jobs:
       - run: make install
       - run: make test-docs
       - run: make test-coverage
-      - run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+      - run: |
+          bash <(curl -s https://codecov.io/bash)
 
   test-e2e:
     docker:

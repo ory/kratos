@@ -41,6 +41,7 @@ type (
 		nid      uuid.UUID
 		c        *pop.Connection
 		mb       *popx.MigrationBox
+		mbs      popx.MigrationStatuses
 		r        persisterDependencies
 		p        *networkx.Manager
 		isSQLite bool
@@ -73,9 +74,6 @@ func (p Persister) WithNetworkID(sid uuid.UUID) persistence.Persister {
 }
 
 func (p *Persister) DetermineNetwork(ctx context.Context) (*networkx.Network, error) {
-	if err := p.p.MigrateUp(ctx); err != nil {
-		return nil, err
-	}
 	return p.p.Determine(ctx)
 }
 
@@ -84,16 +82,25 @@ func (p *Persister) Connection(ctx context.Context) *pop.Connection {
 }
 
 func (p *Persister) MigrationStatus(ctx context.Context) (popx.MigrationStatuses, error) {
+	if p.mbs != nil {
+		return p.mbs, nil
+	}
+
 	status, err := p.mb.Status(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	p.mbs = status
 	return status, nil
 }
 
 func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
 	return p.mb.Down(ctx, steps)
+}
+
+func (p *Persister) NetworkMigrateUp(ctx context.Context) error {
+	return p.p.MigrateUp(ctx)
 }
 
 func (p *Persister) MigrateUp(ctx context.Context) error {

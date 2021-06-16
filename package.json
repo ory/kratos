@@ -14,7 +14,7 @@
     "text-run": "exit 0"
   },
   "devDependencies": {
-    "cypress": "7.0.0",
+    "cypress": "^7.5.0",
     "dayjs": "^1.10.4",
     "ory-prettier-styles": "1.1.1",
     "prettier": "2.2.1",

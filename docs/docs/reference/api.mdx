@@ -467,7 +467,7 @@ Status Code **200**
 | »» schema_id                                 | string                                                                    | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                                                                                                                                 |
 | »» schema_url                                | string                                                                    | true     | none         | SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url                                                                                                      |
 | »» state                                     | string                                                                    | true     | none         | State is the identity's state.                                                                                                                                                                                         |
-| »» state_changed_at                          | [NullTime](#schemanulltime)(date-time)                                    | false    | none         | none                                                                                                                                                                                                                   |
+| »» state_changed_at                          | [nullTime](#schemanulltime)(date-time)                                    | false    | none         | none                                                                                                                                                                                                                   |
 | »» traits                                    | any                                                                       | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_url`. |
 | »» updated_at                                | string(date-time)                                                         | false    | none         | UpdatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
 | »» verifiable_addresses                      | [[verifiableIdentityAddress](#schemaverifiableidentityaddress)]           | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                                                                                                                                       |
@@ -477,7 +477,7 @@ Status Code **200**
 | »»» updated_at                               | string(date-time)                                                         | false    | none         | When this entry was last updated                                                                                                                                                                                       |
 | »»» value                                    | string                                                                    | true     | none         | The address value<br/><br/>example foo@user.com                                                                                                                                                                        |
 | »»» verified                                 | boolean                                                                   | true     | none         | Indicates if the address has already been verified                                                                                                                                                                     |
-| »»» verified_at                              | [NullTime](#schemanulltime)(date-time)                                    | false    | none         | none                                                                                                                                                                                                                   |
+| »»» verified_at                              | [nullTime](#schemanulltime)(date-time)                                    | false    | none         | none                                                                                                                                                                                                                   |
 | »»» via                                      | [identityVerifiableAddressType](#schemaidentityverifiableaddresstype)     | true     | none         | VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema                                                                                                                        |
 
 ###### Enumerated Values
@@ -1543,7 +1543,7 @@ p JSON.parse(result)
 
 <a id="opIdprometheus"></a>
 
-### Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to
+### Get snapshot metrics from the service. If you're using k8s, you can then add annotations to
 
 your deployment like so:
 
@@ -1562,7 +1562,7 @@ prometheus.io/path: "/metrics/prometheus"
 #### Responses
 
 <a
-  id="get-snapshot-metrics-from-the-hydra-service.-if-you're-using-k8s,-you-can-then-add-annotations-to
+  id="get-snapshot-metrics-from-the-service.-if-you're-using-k8s,-you-can-then-add-annotations-to
 your-deployment-like-so:-responses"
 ></a>
 
@@ -2583,6 +2583,13 @@ Accept: application/json
 
 ```
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 Use this endpoint to complete a login flow. This endpoint behaves differently
 for API and browser flows.
 
@@ -2591,10 +2598,17 @@ HTTP 200 and a application/json body with the session token on success; HTTP 302
 redirect to a fresh login flow if the original flow expired with the appropriate
 error messages set; HTTP 400 on form validation errors.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body
-and responds with a HTTP 302 redirect to the post/after login URL or the
-`return_to` value if it was set and if the login succeeded; a HTTP 302 redirect
-to the login UI URL with the flow ID containing the validation errors otherwise.
+Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or
+`application/json` to be sent in the body and respond with a HTTP 302 redirect
+to the post/after login URL or the `return_to` value if it was set and if the
+login succeeded; a HTTP 302 redirect to the login UI URL with the flow ID
+containing the validation errors otherwise.
+
+Browser flows with an accept header of `application/json` will not redirect but
+instead respond with HTTP 200 and a application/json body with the signed in
+identity and a `Set-Cookie` header on success; HTTP 302 redirect to a fresh
+login flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
 
 More information can be found at
 [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -2847,9 +2861,9 @@ p JSON.parse(result)
 </TabItem>
 </Tabs>
 
-<a id="opIdinitializeSelfServiceLoginForNativeApps"></a>
+<a id="opIdinitializeSelfServiceLoginWithoutBrowser"></a>
 
-### Initialize Login Flow for Native Apps and API clients
+### Initialize Login Flow for APIs, Services, Apps, ...
 
 ```
 GET /self-service/login/api HTTP/1.1
@@ -2857,8 +2871,15 @@ Accept: application/json
 
 ```
 
-This endpoint initiates a login flow for API clients such as mobile devices,
-smart TVs, and so on.
+This endpoint initiates a login flow for API clients that do not use a browser,
+such as mobile devices, smart TVs, and so on.
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
 
 If a valid provided session cookie or session token is provided, a 400 Bad
 Request error will be returned unless the URL query parameter `?refresh=true` is
@@ -2881,7 +2902,7 @@ Native, Objective C, Swift, Java, ...).
 More information can be found at
 [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
-<a id="initialize-login-flow-for-native-apps-and-api-clients-parameters"></a>
+<a id="initialize-login-flow-for-apis,-services,-apps,-...-parameters"></a>
 
 #### Parameters
 
@@ -2898,7 +2919,7 @@ to sign in again. This will reset the authenticated_at time of the session.
 
 #### Responses
 
-<a id="initialize-login-flow-for-native-apps-and-api-clients-responses"></a>
+<a id="initialize-login-flow-for-apis,-services,-apps,-...-responses"></a>
 
 ##### Overview
 
@@ -2947,7 +2968,7 @@ to sign in again. This will reset the authenticated_at time of the session.
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -3102,7 +3123,7 @@ p JSON.parse(result)
 
 <a id="opIdinitializeSelfServiceLoginForBrowsers"></a>
 
-### Initialize Login Flow for browsers
+### Initialize Login Flow for Browsers
 
 ```
 GET /self-service/login/browser HTTP/1.1
@@ -3110,14 +3131,28 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based user login flow. Once initialized, the
-browser will be redirected to `selfservice.flows.login.ui_url` with the flow ID
-set as the query parameter `?flow=`. If a valid user session exists already, the
-browser will be redirected to `urls.default_redirect_url` unless the query
-parameter `?refresh=true` was set.
+This endpoint initializes a browser-based user login flow. This endpoint will
+set the appropriate cookies and anti-CSRF measures required for browser-based
+flows.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers
-(Chrome, Firefox, ...).
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
+If this endpoint is opened as a link in the browser, it will be redirected to
+`selfservice.flows.login.ui_url` with the flow ID set as the query parameter
+`?flow=`. If a valid user session exists already, the browser will be redirected
+to `urls.default_redirect_url` unless the query parameter `?refresh=true` was
+set.
+
+If this endpoint is called via an AJAX request, the response contains the login
+flow without a redirect.
+
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome,
+Firefox, ...) as cookies are needed.
 
 More information can be found at
 [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -3145,24 +3180,73 @@ to sign in again. This will reset the authenticated_at time of the session.
 
 | Status | Meaning                                                                    | Description                                                                                                                   | Schema                        |
 | ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | loginFlow                                                                                                                     | [loginFlow](#schemaloginflow) |
 | 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                          |
 | 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror) |
 
 ##### Examples
 
-###### 500 response
+###### 200 response
 
 ```json
 {
-  "error": {
-    "code": 404,
-    "debug": "SQL field \"foo\" is not a bool.",
-    "details": {},
-    "message": "The resource could not be found",
-    "reason": "User with ID 1234 does not exist.",
-    "request": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-    "status": "Not Found"
-  }
+  "active": "string",
+  "created_at": "2019-08-24T14:15:22Z",
+  "expires_at": "2019-08-24T14:15:22Z",
+  "forced": true,
+  "id": "string",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "request_url": "string",
+  "type": "string",
+  "ui": {
+    "action": "string",
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
+    "method": "string",
+    "nodes": [
+      {
+        "attributes": {
+          "disabled": true,
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          },
+          "name": "string",
+          "pattern": "string",
+          "required": true,
+          "type": "string",
+          "value": null
+        },
+        "group": "string",
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "meta": {
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        },
+        "type": "string"
+      }
+    ]
+  },
+  "updated_at": "2019-08-24T14:15:22Z"
 }
 ```
 
@@ -3305,6 +3389,13 @@ Accept: application/json
 This endpoint returns a login flow's context with, for example, error details
 and other information.
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 More information can be found at
 [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
@@ -3376,7 +3467,7 @@ application (e.g. `/login?flow=abcde`).
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -3546,20 +3637,22 @@ Use this endpoint to complete a recovery flow. This endpoint behaves differently
 for API and browser flows and has several states:
 
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to
-be sent and works with API- and Browser-initiated flows. For API clients it
-either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the
-form is invalid and a HTTP 302 Found redirect with a fresh recovery flow if the
-flow was otherwise invalid (e.g. expired). For Browser clients it returns a HTTP
-302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
-`sent_email` is the success state after `choose_method` for the `link` method
-and allows the user to request another recovery email. It works for both API and
-Browser-initiated flows and returns the same responses as the flow in
-`choose_method` state. `passed_challenge` expects a `token` to be sent in the
-URL query and given the nature of the flow ("sending a recovery link") does not
-have any API capabilities. The server responds with a HTTP 302 Found redirect
-either to the Settings UI URL (if the link was valid) and instructs the user to
-update their password, or a redirect to the Recover UI URL with a new Recovery
-Flow ID which contains an error message that the recovery link was invalid.
+be sent and works with API- and Browser-initiated flows. For API clients and
+Browser clients with HTTP Header `Accept: application/json` it either returns a
+HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid. and
+a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise
+invalid (e.g. expired). For Browser clients without HTTP Header `Accept` or with
+`Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL
+with the Recovery Flow ID appended. `sent_email` is the success state after
+`choose_method` for the `link` method and allows the user to request another
+recovery email. It works for both API and Browser-initiated flows and returns
+the same responses as the flow in `choose_method` state. `passed_challenge`
+expects a `token` to be sent in the URL query and given the nature of the flow
+("sending a recovery link") does not have any API capabilities. The server
+responds with a HTTP 302 Found redirect either to the Settings UI URL (if the
+link was valid) and instructs the user to update their password, or a redirect
+to the Recover UI URL with a new Recovery Flow ID which contains an error
+message that the recovery link was invalid.
 
 More information can be found at
 [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
@@ -3598,13 +3691,14 @@ application (e.g. `/registration?flow=abcde`).
 
 | Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
 | ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | recoveryFlow                                                                                                                  | [recoveryFlow](#schemarecoveryflow) |
 | 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
 | 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | recoveryFlow                                                                                                                  | [recoveryFlow](#schemarecoveryflow) |
 | 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror)       |
 
 ##### Examples
 
-###### 400 response
+###### 200 response
 
 ```json
 {
@@ -3640,7 +3734,7 @@ application (e.g. `/registration?flow=abcde`).
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -3799,15 +3893,22 @@ p JSON.parse(result)
 </TabItem>
 </Tabs>
 
-<a id="opIdinitializeSelfServiceRecoveryForNativeApps"></a>
+<a id="opIdinitializeSelfServiceRecoveryWithoutBrowser"></a>
 
-### Initialize Recovery Flow for Native Apps and API clients
+### Initialize Recovery Flow for APIs, Services, Apps, ...
 
 ```
 GET /self-service/recovery/api HTTP/1.1
 Accept: application/json
 
 ```
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
 
 This endpoint initiates a recovery flow for API clients such as mobile devices,
 smart TVs, and so on.
@@ -3835,7 +3936,7 @@ More information can be found at
 
 #### Responses
 
-<a id="initialize-recovery-flow-for-native-apps-and-api-clients-responses"></a>
+<a id="initialize-recovery-flow-for-apis,-services,-apps,-...-responses"></a>
 
 ##### Overview
 
@@ -3883,7 +3984,7 @@ More information can be found at
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -4037,7 +4138,7 @@ p JSON.parse(result)
 
 <a id="opIdinitializeSelfServiceRecoveryForBrowsers"></a>
 
-### Initialize Recovery Flow for Browser Clients
+### Initialize Recovery Flow for Browsers
 
 ```
 GET /self-service/recovery/browser HTTP/1.1
@@ -4045,43 +4146,102 @@ Accept: application/json
 
 ```
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 This endpoint initializes a browser-based account recovery flow. Once
 initialized, the browser will be redirected to
 `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter
 `?flow=`. If a valid user session exists, the browser is returned to the
 configured return URL.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers
-(Chrome, Firefox, ...).
+If this endpoint is called via an AJAX request, the response contains the
+recovery flow without any redirects or a 400 bad request error if the user is
+already authenticated.
+
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome,
+Firefox, ...) as cookies are needed.
 
 More information can be found at
 [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 
 #### Responses
 
-<a id="initialize-recovery-flow-for-browser-clients-responses"></a>
+<a id="initialize-recovery-flow-for-browsers-responses"></a>
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                        |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                          |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror) |
+| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | recoveryFlow                                                                                                                  | [recoveryFlow](#schemarecoveryflow) |
+| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | jsonError                                                                                                                     | [jsonError](#schemajsonerror)       |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror)       |
 
 ##### Examples
 
-###### 500 response
+###### 200 response
 
 ```json
 {
-  "error": {
-    "code": 404,
-    "debug": "SQL field \"foo\" is not a bool.",
-    "details": {},
-    "message": "The resource could not be found",
-    "reason": "User with ID 1234 does not exist.",
-    "request": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-    "status": "Not Found"
+  "active": "string",
+  "expires_at": "2019-08-24T14:15:22Z",
+  "id": "string",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "request_url": "string",
+  "state": "string",
+  "type": "string",
+  "ui": {
+    "action": "string",
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
+    "method": "string",
+    "nodes": [
+      {
+        "attributes": {
+          "disabled": true,
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          },
+          "name": "string",
+          "pattern": "string",
+          "required": true,
+          "type": "string",
+          "value": null
+        },
+        "group": "string",
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "meta": {
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        },
+        "type": "string"
+      }
+    ]
   }
 }
 ```
@@ -4214,7 +4374,7 @@ p JSON.parse(result)
 
 <a id="opIdgetSelfServiceRecoveryFlow"></a>
 
-### Get information about a recovery flow
+### Get Recovery Flow
 
 ```
 GET /self-service/recovery/flows?id=string HTTP/1.1
@@ -4222,13 +4382,20 @@ Accept: application/json
 
 ```
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 This endpoint returns a recovery flow's context with, for example, error details
 and other information.
 
 More information can be found at
 [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 
-<a id="get-information-about-a-recovery-flow-parameters"></a>
+<a id="get-recovery-flow-parameters"></a>
 
 #### Parameters
 
@@ -4245,7 +4412,7 @@ your application (e.g. `/recovery?flow=abcde`).
 
 #### Responses
 
-<a id="get-information-about-a-recovery-flow-responses"></a>
+<a id="get-recovery-flow-responses"></a>
 
 ##### Overview
 
@@ -4294,7 +4461,7 @@ your application (e.g. `/recovery?flow=abcde`).
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -4566,7 +4733,7 @@ format: uuid
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -4736,6 +4903,13 @@ Accept: application/json
 
 ```
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 Use this endpoint to complete a registration flow by sending an identity's
 traits and password. This endpoint behaves differently for API and browser
 flows.
@@ -4747,11 +4921,17 @@ included; HTTP 302 redirect to a fresh registration flow if the original flow
 expired with the appropriate error messages set; HTTP 400 on form validation
 errors.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body
-and responds with a HTTP 302 redirect to the post/after registration URL or the
-`return_to` value if it was set and if the registration succeeded; a HTTP 302
-redirect to the registration UI URL with the flow ID containing the validation
-errors otherwise.
+Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or
+`application/json` to be sent in the body and respond with a HTTP 302 redirect
+to the post/after registration URL or the `return_to` value if it was set and if
+the registration succeeded; a HTTP 302 redirect to the registration UI URL with
+the flow ID containing the validation errors otherwise.
+
+Browser flows with an accept header of `application/json` will not redirect but
+instead respond with HTTP 200 and a application/json body with the signed in
+identity and a `Set-Cookie` header on success; HTTP 302 redirect to a fresh
+login flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
 
 More information can be found at
 [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -5051,9 +5231,9 @@ p JSON.parse(result)
 </TabItem>
 </Tabs>
 
-<a id="opIdinitializeSelfServiceRegistrationForNativeApps"></a>
+<a id="opIdinitializeSelfServiceRegistrationWithoutBrowser"></a>
 
-### Initialize Registration Flow for Native Apps and API clients
+### Initialize Registration Flow for APIs, Services, Apps, ...
 
 ```
 GET /self-service/registration/api HTTP/1.1
@@ -5063,6 +5243,13 @@ Accept: application/json
 
 This endpoint initiates a registration flow for API clients such as mobile
 devices, smart TVs, and so on.
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
 
 If a valid provided session cookie or session token is provided, a 400 Bad
 Request error will be returned unless the URL query parameter `?refresh=true` is
@@ -5088,7 +5275,7 @@ More information can be found at
 
 #### Responses
 
-<a id="initialize-registration-flow-for-native-apps-and-api-clients-responses"></a>
+<a id="initialize-registration-flow-for-apis,-services,-apps,-...-responses"></a>
 
 ##### Overview
 
@@ -5135,7 +5322,7 @@ More information can be found at
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -5289,7 +5476,7 @@ p JSON.parse(result)
 
 <a id="opIdinitializeSelfServiceRegistrationForBrowsers"></a>
 
-### Initialize Registration Flow for browsers
+### Initialize Registration Flow for Browsers
 
 ```
 GET /self-service/registration/browser HTTP/1.1
@@ -5297,19 +5484,27 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based user registration flow. Once
-initialized, the browser will be redirected to
-`selfservice.flows.registration.ui_url` with the flow ID set as the query
-parameter `?flow=`. If a valid user session exists already, the browser will be
-redirected to `urls.default_redirect_url` unless the query parameter
-`?refresh=true` was set.
+This endpoint initializes a browser-based user registration flow. This endpoint
+will set the appropriate cookies and anti-CSRF measures required for
+browser-based flows.
 
-:::note
+:::info
 
-This endpoint is NOT INTENDED for API clients and only works with browsers
-(Chrome, Firefox, ...).
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
 
 :::
+
+If this endpoint is opened as a link in the browser, it will be redirected to
+`selfservice.flows.registration.ui_url` with the flow ID set as the query
+parameter `?flow=`. If a valid user session exists already, the browser will be
+redirected to `urls.default_redirect_url`.
+
+If this endpoint is called via an AJAX request, the response contains the
+registration flow without a redirect.
+
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome,
+Firefox, ...) as cookies are needed.
 
 More information can be found at
 [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -5320,25 +5515,71 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                        |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                          |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror) |
+| Status | Meaning                                                                    | Description                                                                                                                   | Schema                                      |
+| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | registrationFlow                                                                                                              | [registrationFlow](#schemaregistrationflow) |
+| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                        |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror)               |
 
 ##### Examples
 
-###### 500 response
+###### 200 response
 
 ```json
 {
-  "error": {
-    "code": 404,
-    "debug": "SQL field \"foo\" is not a bool.",
-    "details": {},
-    "message": "The resource could not be found",
-    "reason": "User with ID 1234 does not exist.",
-    "request": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-    "status": "Not Found"
+  "active": "string",
+  "expires_at": "2019-08-24T14:15:22Z",
+  "id": "string",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "request_url": "string",
+  "type": "string",
+  "ui": {
+    "action": "string",
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
+    "method": "string",
+    "nodes": [
+      {
+        "attributes": {
+          "disabled": true,
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          },
+          "name": "string",
+          "pattern": "string",
+          "required": true,
+          "type": "string",
+          "value": null
+        },
+        "group": "string",
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "meta": {
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        },
+        "type": "string"
+      }
+    ]
   }
 }
 ```
@@ -5482,6 +5723,13 @@ Accept: application/json
 This endpoint returns a registration flow's context with, for example, error
 details and other information.
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 More information can be found at
 [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
@@ -5551,7 +5799,7 @@ application (e.g. `/registration?flow=abcde`).
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -5728,12 +5976,18 @@ when the endpoint is called without a valid session token. HTTP 403 when
 `selfservice.flows.settings.privileged_session_max_age` was reached. Implies
 that the user needs to re-authenticate.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body
-and responds with a HTTP 302 redirect to the post/after settings URL or the
-`return_to` value if it was set and if the flow succeeded; a HTTP 302 redirect
-to the Settings UI URL with the flow ID containing the validation errors
-otherwise. a HTTP 302 redirect to the login endpoint when
+Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
+a HTTP 302 redirect to the post/after settings URL or the `return_to` value if
+it was set and if the flow succeeded; a HTTP 302 redirect to the Settings UI URL
+with the flow ID containing the validation errors otherwise. a HTTP 302 redirect
+to the login endpoint when
 `selfservice.flows.settings.privileged_session_max_age` was reached.
+
+Browser flows with HTTP Header `Accept: application/json` respond with HTTP 200
+and a application/json body with the signed in identity and a `Set-Cookie`
+header on success; HTTP 302 redirect to a fresh login flow if the original flow
+expired with the appropriate error messages set; HTTP 403 when the page is
+accessed without a session cookie. HTTP 400 on form validation errors.
 
 More information can be found at
 [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -5872,7 +6126,7 @@ application (e.g. `/settings?flow=abcde`).
             "pattern": "string",
             "required": true,
             "type": "string",
-            "value": "string"
+            "value": null
           },
           "group": "string",
           "messages": [
@@ -6091,16 +6345,24 @@ p JSON.parse(result)
 </TabItem>
 </Tabs>
 
-<a id="opIdinitializeSelfServiceSettingsForNativeApps"></a>
+<a id="opIdinitializeSelfServiceSettingsWithoutBrowser"></a>
 
-### Initialize Settings Flow for Native Apps and API clients
+### Initialize Settings Flow for APIs, Services, Apps, ...
 
 ```
 GET /self-service/settings/api HTTP/1.1
 Accept: application/json
 X-Session-Token: string
+X-Session-Cookie: string
 
 ```
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
 
 This endpoint initiates a settings flow for API clients such as mobile devices,
 smart TVs, and so on. You must provide a valid Ory Kratos Session Token for this
@@ -6124,17 +6386,18 @@ Native, Objective C, Swift, Java, ...).
 More information can be found at
 [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
-<a id="initialize-settings-flow-for-native-apps-and-api-clients-parameters"></a>
+<a id="initialize-settings-flow-for-apis,-services,-apps,-...-parameters"></a>
 
 #### Parameters
 
-| Parameter       | In     | Type   | Required | Description                                                     |
-| --------------- | ------ | ------ | -------- | --------------------------------------------------------------- |
-| X-Session-Token | header | string | false    | The Session Token of the Identity performing the settings flow. |
+| Parameter        | In     | Type   | Required | Description                                                      |
+| ---------------- | ------ | ------ | -------- | ---------------------------------------------------------------- |
+| X-Session-Token  | header | string | false    | The Session Token of the Identity performing the settings flow.  |
+| X-Session-Cookie | header | string | false    | The Session Cookie of the Identity performing the settings flow. |
 
 #### Responses
 
-<a id="initialize-settings-flow-for-native-apps-and-api-clients-responses"></a>
+<a id="initialize-settings-flow-for-apis,-services,-apps,-...-responses"></a>
 
 ##### Overview
 
@@ -6229,7 +6492,7 @@ More information can be found at
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -6269,7 +6532,7 @@ More information can be found at
 
 ```shell
 curl -X GET /self-service/settings/api \
-  -H 'Accept: application/json' \  -H 'X-Session-Token: string' \  -H 'Authorization: Bearer {access-token}'
+  -H 'Accept: application/json' \  -H 'X-Session-Token: string' \  -H 'X-Session-Cookie: string' \  -H 'Authorization: Bearer {access-token}'
 ```
 
 </TabItem>
@@ -6287,6 +6550,7 @@ func main() {
     headers := map[string][]string{
         "Accept": []string{"application/json"},
         "X-Session-Token": []string{"string"},
+        "X-Session-Cookie": []string{"string"},
         "Authorization": []string{"Bearer {access-token}"},
     }
 
@@ -6311,6 +6575,7 @@ const fetch = require('node-fetch')
 const headers = {
   Accept: 'application/json',
   'X-Session-Token': 'string',
+  'X-Session-Cookie': 'string',
   Authorization: 'Bearer {access-token}'
 }
 
@@ -6359,6 +6624,7 @@ import requests
 headers = {
   'Accept': 'application/json',
   'X-Session-Token': 'string',
+  'X-Session-Cookie': 'string',
   'Authorization': 'Bearer {access-token}'
 }
 
@@ -6380,6 +6646,7 @@ require 'json'
 headers = {
   'Accept' => 'application/json',
   'X-Session-Token' => 'string',
+  'X-Session-Cookie' => 'string',
   'Authorization' => 'Bearer {access-token}'
 }
 
@@ -6402,17 +6669,29 @@ Accept: application/json
 
 ```
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 This endpoint initializes a browser-based user settings flow. Once initialized,
 the browser will be redirected to `selfservice.flows.settings.ui_url` with the
 flow ID set as the query parameter `?flow=`. If no valid Ory Kratos Session
 Cookie is included in the request, a login flow will be initialized.
 
-:::note
+If this endpoint is opened as a link in the browser, it will be redirected to
+`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter
+`?flow=`. If no valid user session was set, the browser will be redirected to
+the login endpoint.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers
-(Chrome, Firefox, ...).
+If this endpoint is called via an AJAX request, the response contains the
+settings flow without any redirects or a 403 forbidden error if no valid session
+was set.
 
-:::
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome,
+Firefox, ...) as cookies are needed.
 
 More information can be found at
 [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -6423,25 +6702,120 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                        |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                          |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror) |
+| Status | Meaning                                                                    | Description                                                                                                                   | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsFlow                                                                                                                  | [settingsFlow](#schemasettingsflow) |
+| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | jsonError                                                                                                                     | [jsonError](#schemajsonerror)       |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror)       |
 
 ##### Examples
 
-###### 500 response
+###### 200 response
 
 ```json
 {
-  "error": {
-    "code": 404,
-    "debug": "SQL field \"foo\" is not a bool.",
-    "details": {},
-    "message": "The resource could not be found",
-    "reason": "User with ID 1234 does not exist.",
-    "request": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-    "status": "Not Found"
+  "active": "string",
+  "expires_at": "2019-08-24T14:15:22Z",
+  "id": "string",
+  "identity": {
+    "created_at": "2019-08-24T14:15:22Z",
+    "credentials": {
+      "property1": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "property2": {
+        "config": {},
+        "created_at": "2019-08-24T14:15:22Z",
+        "identifiers": ["string"],
+        "type": "string",
+        "updated_at": "2019-08-24T14:15:22Z"
+      }
+    },
+    "id": "string",
+    "recovery_addresses": [
+      {
+        "created_at": "2019-08-24T14:15:22Z",
+        "id": "string",
+        "updated_at": "2019-08-24T14:15:22Z",
+        "value": "string",
+        "via": "string"
+      }
+    ],
+    "schema_id": "string",
+    "schema_url": "string",
+    "state": "active",
+    "state_changed_at": "2019-08-24T14:15:22Z",
+    "traits": null,
+    "updated_at": "2019-08-24T14:15:22Z",
+    "verifiable_addresses": [
+      {
+        "created_at": "2014-01-01T23:28:56.782Z",
+        "id": "string",
+        "status": "string",
+        "updated_at": "2014-01-01T23:28:56.782Z",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2019-08-24T14:15:22Z",
+        "via": "string"
+      }
+    ]
+  },
+  "issued_at": "2019-08-24T14:15:22Z",
+  "request_url": "string",
+  "state": "string",
+  "type": "string",
+  "ui": {
+    "action": "string",
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
+    "method": "string",
+    "nodes": [
+      {
+        "attributes": {
+          "disabled": true,
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          },
+          "name": "string",
+          "pattern": "string",
+          "required": true,
+          "type": "string",
+          "value": null
+        },
+        "group": "string",
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "meta": {
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        },
+        "type": "string"
+      }
+    ]
   }
 }
 ```
@@ -6590,6 +6964,13 @@ X-Session-Token: string
 
 ```
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 When accessing this endpoint through Ory Kratos' Public API you must ensure that
 either the Ory Kratos Session Cookie or the Ory Kratos Session Token are set.
 The public endpoint does not return 404 status codes but instead 403 or 500 to
@@ -6716,7 +7097,7 @@ application (e.g. `/settings?flow=abcde`).
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -6881,15 +7262,22 @@ p JSON.parse(result)
 </TabItem>
 </Tabs>
 
-<a id="opIdinitializeSelfServiceVerificationForNativeApps"></a>
+<a id="opIdinitializeSelfServiceVerificationWithoutBrowser"></a>
 
-### Initialize Verification Flow for Native Apps and API clients
+### Initialize Verification Flow for APIs, Services, Apps, ...
 
 ```
 GET /self-service/verification/api HTTP/1.1
 Accept: application/json
 
 ```
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
 
 This endpoint initiates a verification flow for API clients such as mobile
 devices, smart TVs, and so on.
@@ -6914,7 +7302,7 @@ More information can be found at
 
 #### Responses
 
-<a id="initialize-verification-flow-for-native-apps-and-api-clients-responses"></a>
+<a id="initialize-verification-flow-for-apis,-services,-apps,-...-responses"></a>
 
 ##### Overview
 
@@ -6962,7 +7350,7 @@ More information can be found at
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -7124,10 +7512,20 @@ Accept: application/json
 
 ```
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 This endpoint initializes a browser-based account verification flow. Once
 initialized, the browser will be redirected to
 `selfservice.flows.verification.ui_url` with the flow ID set as the query
 parameter `?flow=`.
+
+If this endpoint is called via an AJAX request, the response contains the
+recovery flow without any redirects.
 
 This endpoint is NOT INTENDED for API clients and only works with browsers
 (Chrome, Firefox, ...).
@@ -7141,25 +7539,72 @@ More information can be found at
 
 ##### Overview
 
-| Status | Meaning                                                                    | Description                                                                                                                   | Schema                        |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                          |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror) |
+| Status | Meaning                                                                    | Description                                                                                                                   | Schema                                      |
+| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | verificationFlow                                                                                                              | [verificationFlow](#schemaverificationflow) |
+| 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                        |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror)               |
 
 ##### Examples
 
-###### 500 response
+###### 200 response
 
 ```json
 {
-  "error": {
-    "code": 404,
-    "debug": "SQL field \"foo\" is not a bool.",
-    "details": {},
-    "message": "The resource could not be found",
-    "reason": "User with ID 1234 does not exist.",
-    "request": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
-    "status": "Not Found"
+  "active": "string",
+  "expires_at": "2019-08-24T14:15:22Z",
+  "id": "string",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "request_url": "string",
+  "state": "string",
+  "type": "string",
+  "ui": {
+    "action": "string",
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
+    "method": "string",
+    "nodes": [
+      {
+        "attributes": {
+          "disabled": true,
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          },
+          "name": "string",
+          "pattern": "string",
+          "required": true,
+          "type": "string",
+          "value": null
+        },
+        "group": "string",
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "meta": {
+          "label": {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        },
+        "type": "string"
+      }
+    ]
   }
 }
 ```
@@ -7300,6 +7745,13 @@ Accept: application/json
 
 ```
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the
+future.
+
+:::
+
 This endpoint returns a verification flow's context with, for example, error
 details and other information.
 
@@ -7372,7 +7824,7 @@ your application (e.g. `/verification?flow=abcde`).
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -7531,7 +7983,7 @@ p JSON.parse(result)
 ### Complete Verification Flow
 
 ```
-POST /self-service/verification/methods/link?flow=string HTTP/1.1
+POST /self-service/verification/flows?flow=string HTTP/1.1
 Content-Type: application/json
 Accept: application/json
 
@@ -7541,21 +7993,23 @@ Use this endpoint to complete a verification flow. This endpoint behaves
 differently for API and browser flows and has several states:
 
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to
-be sent and works with API- and Browser-initiated flows. For API clients it
-either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the
-form is invalid and a HTTP 302 Found redirect with a fresh verification flow if
-the flow was otherwise invalid (e.g. expired). For Browser clients it returns a
-HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID
-appended. `sent_email` is the success state after `choose_method` when using the
-`link` method and allows the user to request another verification email. It
-works for both API and Browser-initiated flows and returns the same responses as
-the flow in `choose_method` state. `passed_challenge` expects a `token` to be
-sent in the URL query and given the nature of the flow ("sending a verification
-link") does not have any API capabilities. The server responds with a HTTP 302
-Found redirect either to the Settings UI URL (if the link was valid) and
-instructs the user to update their password, or a redirect to the Verification
-UI URL with a new Verification Flow ID which contains an error message that the
-verification link was invalid.
+be sent and works with API- and Browser-initiated flows. For API clients and
+Browser clients with HTTP Header `Accept: application/json` it either returns a
+HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid and
+a HTTP 302 Found redirect with a fresh verification flow if the flow was
+otherwise invalid (e.g. expired). For Browser clients without HTTP Header
+`Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the
+Verification UI URL with the Verification Flow ID appended. `sent_email` is the
+success state after `choose_method` when using the `link` method and allows the
+user to request another verification email. It works for both API and
+Browser-initiated flows and returns the same responses as the flow in
+`choose_method` state. `passed_challenge` expects a `token` to be sent in the
+URL query and given the nature of the flow ("sending a verification link") does
+not have any API capabilities. The server responds with a HTTP 302 Found
+redirect either to the Settings UI URL (if the link was valid) and instructs the
+user to update their password, or a redirect to the Verification UI URL with a
+new Verification Flow ID which contains an error message that the verification
+link was invalid.
 
 More information can be found at
 [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
@@ -7594,13 +8048,14 @@ application (e.g. `/registration?flow=abcde`).
 
 | Status | Meaning                                                                    | Description                                                                                                                   | Schema                                      |
 | ------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | verificationFlow                                                                                                              | [verificationFlow](#schemaverificationflow) |
 | 302    | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201. | None                                        |
 | 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | verificationFlow                                                                                                              | [verificationFlow](#schemaverificationflow) |
 | 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | jsonError                                                                                                                     | [jsonError](#schemajsonerror)               |
 
 ##### Examples
 
-###### 400 response
+###### 200 response
 
 ```json
 {
@@ -7636,7 +8091,7 @@ application (e.g. `/registration?flow=abcde`).
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -7672,7 +8127,7 @@ application (e.g. `/registration?flow=abcde`).
 <TabItem value="shell">
 
 ```shell
-curl -X POST /self-service/verification/methods/link?flow=string \
+curl -X POST /self-service/verification/flows?flow=string \
   -H 'Content-Type: application/json' \  -H 'Accept: application/json'
 ```
 
@@ -7696,7 +8151,7 @@ func main() {
     var body []byte
     // body = ...
 
-    req, err := http.NewRequest("POST", "/self-service/verification/methods/link", bytes.NewBuffer(body))
+    req, err := http.NewRequest("POST", "/self-service/verification/flows", bytes.NewBuffer(body))
     req.Header = headers
 
     client := &http.Client{}
@@ -7716,7 +8171,7 @@ const headers = {
   Accept: 'application/json'
 }
 
-fetch('/self-service/verification/methods/link?flow=string', {
+fetch('/self-service/verification/flows?flow=string', {
   method: 'POST',
   body: input,
   headers
@@ -7732,7 +8187,7 @@ fetch('/self-service/verification/methods/link?flow=string', {
 
 ```java
 // This sample needs improvement.
-URL obj = new URL("/self-service/verification/methods/link?flow=string");
+URL obj = new URL("/self-service/verification/flows?flow=string");
 
 HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 con.setRequestMethod("POST");
@@ -7765,7 +8220,7 @@ headers = {
 }
 
 r = requests.post(
-  '/self-service/verification/methods/link',
+  '/self-service/verification/flows',
   params={
     'flow': 'string'},
   headers = headers)
@@ -7785,7 +8240,7 @@ headers = {
   'Accept' => 'application/json'
 }
 
-result = RestClient.post '/self-service/verification/methods/link',
+result = RestClient.post '/self-service/verification/flows',
   params: {
     'flow' => 'string'}, headers: headers
 
@@ -7999,6 +8454,7 @@ p JSON.parse(result)
 GET /sessions/whoami HTTP/1.1
 Accept: application/json
 X-Session-Token: string
+X-Session-Cookie: string
 
 ```
 
@@ -8013,13 +8469,25 @@ This endpoint is useful for:
 AJAX calls. Remember to send credentials and set up CORS correctly! Reverse
 proxies and API Gateways Server-side calls - use the `X-Session-Token` header!
 
+This endpoint authenticates users by checking
+
+if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie; if
+the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid
+Ory Kratos Session Token; if the `X-Session-Token` HTTP header was set with a
+valid Ory Kratos Session Token; if the `X-Session-Cookie` HTTP header was set
+containing a valid Ory Kratos Session Cookie (only the value!).
+
+If none of these headers are set or the cooke or token are invalid, the endpoint
+returns a HTTP 401 status code.
+
 <a id="check-who-the-current-http-session-belongs-to-parameters"></a>
 
 #### Parameters
 
-| Parameter       | In     | Type   | Required | Description |
-| --------------- | ------ | ------ | -------- | ----------- |
-| X-Session-Token | header | string | false    | none        |
+| Parameter        | In     | Type   | Required | Description |
+| ---------------- | ------ | ------ | -------- | ----------- |
+| X-Session-Token  | header | string | false    | none        |
+| X-Session-Cookie | header | string | false    | none        |
 
 #### Responses
 
@@ -8094,10 +8562,7 @@ proxies and API Gateways Server-side calls - use the `X-Session-Token` header!
 }
 ```
 
-<aside class="warning">
-  To perform this operation, you must be authenticated by means of one of the
-  following methods: sessionCookie
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -8108,7 +8573,7 @@ proxies and API Gateways Server-side calls - use the `X-Session-Token` header!
 
 ```shell
 curl -X GET /sessions/whoami \
-  -H 'Accept: application/json' \  -H 'X-Session-Token: string'
+  -H 'Accept: application/json' \  -H 'X-Session-Token: string' \  -H 'X-Session-Cookie: string'
 ```
 
 </TabItem>
@@ -8126,6 +8591,7 @@ func main() {
     headers := map[string][]string{
         "Accept": []string{"application/json"},
         "X-Session-Token": []string{"string"},
+        "X-Session-Cookie": []string{"string"},
     }
 
     var body []byte
@@ -8148,7 +8614,8 @@ const fetch = require('node-fetch')
 
 const headers = {
   Accept: 'application/json',
-  'X-Session-Token': 'string'
+  'X-Session-Token': 'string',
+  'X-Session-Cookie': 'string'
 }
 
 fetch('/sessions/whoami', {
@@ -8195,7 +8662,8 @@ import requests
 
 headers = {
   'Accept': 'application/json',
-  'X-Session-Token': 'string'
+  'X-Session-Token': 'string',
+  'X-Session-Cookie': 'string'
 }
 
 r = requests.get(
@@ -8215,7 +8683,8 @@ require 'json'
 
 headers = {
   'Accept' => 'application/json',
-  'X-Session-Token' => 'string'
+  'X-Session-Token' => 'string',
+  'X-Session-Cookie' => 'string'
 }
 
 result = RestClient.get '/sessions/whoami',
@@ -8608,24 +9077,6 @@ _A Node's Meta Information_
 | Name  | Type                    | Required | Restrictions | Description |
 | ----- | ----------------------- | -------- | ------------ | ----------- |
 | label | [uiText](#schemauitext) | false    | none         | none        |
-
-<a id="tocSnulltime"></a>
-
-#### NullTime
-
-<a id="schemanulltime"></a>
-
-```json
-"2019-08-24T14:15:22Z"
-```
-
-_NullTime implements sql.NullTime functionality._
-
-#### Properties
-
-| Name                                            | Type              | Required | Restrictions | Description |
-| ----------------------------------------------- | ----------------- | -------- | ------------ | ----------- |
-| NullTime implements sql.NullTime functionality. | string(date-time) | false    | none         | none        |
 
 <a id="tocSplugin"></a>
 
@@ -9514,7 +9965,7 @@ _Identity represents an Ory Kratos identity_
 | schema_id                  | string                                                          | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                                                                                                                                 |
 | schema_url                 | string                                                          | true     | none         | SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url                                                                                                      |
 | state                      | string                                                          | true     | none         | State is the identity's state.                                                                                                                                                                                         |
-| state_changed_at           | [NullTime](#schemanulltime)                                     | false    | none         | none                                                                                                                                                                                                                   |
+| state_changed_at           | [nullTime](#schemanulltime)                                     | false    | none         | none                                                                                                                                                                                                                   |
 | traits                     | [identityTraits](#schemaidentitytraits)                         | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_url`. |
 | updated_at                 | string(date-time)                                               | false    | none         | UpdatedAt is a helper struct field for gobuffalo.pop.                                                                                                                                                                  |
 | verifiable_addresses       | [[verifiableIdentityAddress](#schemaverifiableidentityaddress)] | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                                                                                                                                       |
@@ -9695,7 +10146,7 @@ _None_
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -9812,7 +10263,42 @@ _The Response for Login Flows via API_
 | Name          | Type                      | Required | Restrictions | Description                                                                                                                                                                                                                                                            |
 | ------------- | ------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | session       | [session](#schemasession) | true     | none         | none                                                                                                                                                                                                                                                                   |
-| session_token | string                    | true     | none         | The Session Token<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer ${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows! |
+| session_token | string                    | false    | none         | The Session Token<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer ${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows! |
+
+<a id="tocSnulljsonrawmessage"></a>
+
+#### nullJsonRawMessage
+
+<a id="schemanulljsonrawmessage"></a>
+
+```json
+{}
+```
+
+_NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL,
+and Swagger and is NULLable-_
+
+#### Properties
+
+_None_
+
+<a id="tocSnulltime"></a>
+
+#### nullTime
+
+<a id="schemanulltime"></a>
+
+```json
+"2019-08-24T14:15:22Z"
+```
+
+_NullTime implements sql.NullTime functionality._
+
+#### Properties
+
+| Name                                            | Type              | Required | Restrictions | Description |
+| ----------------------------------------------- | ----------------- | -------- | ------------ | ----------- |
+| NullTime implements sql.NullTime functionality. | string(date-time) | false    | none         | none        |
 
 <a id="tocSrecoveryflow"></a>
 
@@ -9854,7 +10340,7 @@ _The Response for Login Flows via API_
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -9954,7 +10440,7 @@ _A Recovery Flow_
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -10113,7 +10599,7 @@ _The Response for Registration Flows via API_
 | ------------- | --------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | identity      | [identity](#schemaidentity) | true     | none         | An identity can be a real human, a service, an IoT device - everything that<br/>can be described as an "actor" in a system.                                                                                                                                                                                                                                             |
 | session       | [session](#schemasession)   | false    | none         | none                                                                                                                                                                                                                                                                                                                                                                    |
-| session_token | string                      | true     | none         | The Session Token<br/><br/>This field is only set when the session hook is configured as a post-registration hook.<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer ${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows! |
+| session_token | string                      | false    | none         | The Session Token<br/><br/>This field is only set when the session hook is configured as a post-registration hook.<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer ${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrevokesession"></a>
 
@@ -10318,7 +10804,7 @@ _The Response for Registration Flows via API_
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [
@@ -10392,7 +10878,7 @@ _Flow represents a Settings Flow_
         "pattern": "string",
         "required": true,
         "type": "string",
-        "value": "string"
+        "value": null
       },
       "group": "string",
       "messages": [
@@ -10514,7 +11000,7 @@ _Flow represents a Settings Flow_
             "pattern": "string",
             "required": true,
             "type": "string",
-            "value": "string"
+            "value": null
           },
           "group": "string",
           "messages": [
@@ -10873,7 +11359,7 @@ _nolint:deadcode,unused_
         "pattern": "string",
         "required": true,
         "type": "string",
-        "value": "string"
+        "value": null
       },
       "group": "string",
       "messages": [
@@ -10930,7 +11416,7 @@ and JSON requests_
     "pattern": "string",
     "required": true,
     "type": "string",
-    "value": "string"
+    "value": null
   },
   "group": "string",
   "messages": [
@@ -11011,7 +11497,7 @@ _AnchorAttributes represents the attributes of an anchor node._
   "pattern": "string",
   "required": true,
   "type": "string",
-  "value": "string"
+  "value": null
 }
 ```
 
@@ -11118,7 +11604,7 @@ _ImageAttributes represents the attributes of an image node._
   "pattern": "string",
   "required": true,
   "type": "string",
-  "value": "string"
+  "value": null
 }
 ```
 
@@ -11126,45 +11612,15 @@ _InputAttributes represents the attributes of an input node_
 
 #### Properties
 
-| Name     | Type                                                            | Required | Restrictions | Description                                       |
-| -------- | --------------------------------------------------------------- | -------- | ------------ | ------------------------------------------------- |
-| disabled | boolean                                                         | true     | none         | Sets the input's disabled field to true or false. |
-| label    | [uiText](#schemauitext)                                         | false    | none         | none                                              |
-| name     | string                                                          | true     | none         | The input's element name.                         |
-| pattern  | string                                                          | false    | none         | The input's pattern.                              |
-| required | boolean                                                         | false    | none         | Mark this input field as required.                |
-| type     | [uiNodeInputAttributeType](#schemauinodeinputattributetype)     | true     | none         | none                                              |
-| value    | [uiNodeInputAttributesValue](#schemauinodeinputattributesvalue) | false    | none         | The input's value.                                |
-
-<a id="tocSuinodeinputattributesvalue"></a>
-
-#### uiNodeInputAttributesValue
-
-<a id="schemauinodeinputattributesvalue"></a>
-
-```json
-"string"
-```
-
-#### Properties
-
-_oneOf_
-
-| Name        | Type   | Required | Restrictions | Description |
-| ----------- | ------ | -------- | ------------ | ----------- |
-| _anonymous_ | string | false    | none         | none        |
-
-_xor_
-
-| Name        | Type   | Required | Restrictions | Description |
-| ----------- | ------ | -------- | ------------ | ----------- |
-| _anonymous_ | number | false    | none         | none        |
-
-_xor_
-
-| Name        | Type    | Required | Restrictions | Description |
-| ----------- | ------- | -------- | ------------ | ----------- |
-| _anonymous_ | boolean | false    | none         | none        |
+| Name     | Type                                                        | Required | Restrictions | Description                                       |
+| -------- | ----------------------------------------------------------- | -------- | ------------ | ------------------------------------------------- |
+| disabled | boolean                                                     | true     | none         | Sets the input's disabled field to true or false. |
+| label    | [uiText](#schemauitext)                                     | false    | none         | none                                              |
+| name     | string                                                      | true     | none         | The input's element name.                         |
+| pattern  | string                                                      | false    | none         | The input's pattern.                              |
+| required | boolean                                                     | false    | none         | Mark this input field as required.                |
+| type     | [uiNodeInputAttributeType](#schemauinodeinputattributetype) | true     | none         | none                                              |
+| value    | any                                                         | false    | none         | The input's value.                                |
 
 <a id="tocSuinodetextattributes"></a>
 
@@ -11228,7 +11684,7 @@ _TextAttributes represents the attributes of a text node._
       "pattern": "string",
       "required": true,
       "type": "string",
-      "value": "string"
+      "value": null
     },
     "group": "string",
     "messages": [
@@ -11381,7 +11837,7 @@ _VerifiableAddress is an identity's verifiable address_
 | updated_at  | string(date-time)                                                         | false    | none         | When this entry was last updated                                                                  |
 | value       | string                                                                    | true     | none         | The address value<br/><br/>example foo@user.com                                                   |
 | verified    | boolean                                                                   | true     | none         | Indicates if the address has already been verified                                                |
-| verified_at | [NullTime](#schemanulltime)                                               | false    | none         | none                                                                                              |
+| verified_at | [nullTime](#schemanulltime)                                               | false    | none         | none                                                                                              |
 | via         | [identityVerifiableAddressType](#schemaidentityverifiableaddresstype)     | true     | none         | VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema   |
 
 <a id="tocSverificationflow"></a>
@@ -11424,7 +11880,7 @@ _VerifiableAddress is an identity's verifiable address_
           "pattern": "string",
           "required": true,
           "type": "string",
-          "value": "string"
+          "value": null
         },
         "group": "string",
         "messages": [

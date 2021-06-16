@@ -65,18 +65,32 @@ func TestInitFlow(t *testing.T) {
 		return res, body
 	}
 
-	initFlow := func(t *testing.T, query url.Values, isAPI bool) (*http.Response, []byte) {
+	initFlowWithAccept := func(t *testing.T, query url.Values, isAPI bool, accept string) (*http.Response, []byte) {
 		route := login.RouteInitBrowserFlow
 		if isAPI {
 			route = login.RouteInitAPIFlow
 		}
 		c := ts.Client()
-		res, err := c.Get(ts.URL + route + "?" + query.Encode())
+		req, err := http.NewRequest("GET", ts.URL+route+"?"+query.Encode(), nil)
+		require.NoError(t, err)
+		if accept != "" {
+			req.Header.Set("Accept", accept)
+		}
+
+		res, err := c.Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
+	}
+
+	initFlow := func(t *testing.T, query url.Values, isAPI bool) (*http.Response, []byte) {
+		return initFlowWithAccept(t, query, isAPI, "")
+	}
+
+	initSPAFlow := func(t *testing.T, query url.Values) (*http.Response, []byte) {
+		return initFlowWithAccept(t, query, false, "application/json")
 	}
 
 	t.Run("flow=api", func(t *testing.T) {
@@ -116,6 +130,12 @@ func TestInitFlow(t *testing.T) {
 			res, body := initFlow(t, url.Values{}, false)
 			assertion(body, false, false)
 			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+		})
+
+		t.Run("case=makes request with JSON", func(t *testing.T) {
+			res, body := initSPAFlow(t, url.Values{})
+			assertion(body, false, false)
+			assert.NotContains(t, res.Request.URL.String(), loginTS.URL)
 		})
 
 		t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {

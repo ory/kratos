@@ -96,6 +96,12 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 		return token
 	}
 
+	if cookie := r.Header.Get("X-Session-Cookie"); len(cookie) > 0 {
+		rr := *r
+		r = &rr
+		r.Header = http.Header{"Cookie": []string{s.cookieName(r.Context()) + "=" + cookie}}
+	}
+
 	cookie, err := s.r.CookieManager(r.Context()).Get(r, s.cookieName(r.Context()))
 	if err != nil {
 		token, _ := bearerTokenFromRequest(r)

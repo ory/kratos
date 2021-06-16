@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/x/assertx"
 
 	kratos "github.com/ory/kratos-client-go"
@@ -20,7 +22,6 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
@@ -36,12 +37,25 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
-	res, err := client.Get(ts.URL + registration.RouteInitBrowserFlow)
+func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool) *kratos.RegistrationFlow {
+	req, err := http.NewRequest("GET", ts.URL+registration.RouteInitBrowserFlow, nil)
 	require.NoError(t, err)
+
+	if isSPA {
+		req.Header.Set("Accept", "application/json")
+	}
+
+	res, err := client.Do(req)
+	require.NoError(t, err)
+	body := x.MustReadAll(res.Body)
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	flowID := res.Request.URL.Query().Get("flow")
+	if isSPA {
+		flowID = gjson.GetBytes(body, "id").String()
+	}
+
+	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -49,7 +63,7 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 }
 
 func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
-	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.InitializeSelfServiceRegistrationForNativeApps(context.Background()).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.InitializeSelfServiceRegistrationWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs
@@ -58,13 +72,19 @@ func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *htt
 func RegistrationMakeRequest(
 	t *testing.T,
 	isAPI bool,
+	isSPA bool,
 	f *kratos.RegistrationFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
+	req := NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values))
+	if isSPA {
+		req.Header.Set("Accept", "application/json")
+	}
+
+	res, err := hc.Do(req)
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -80,7 +100,7 @@ func SubmitRegistrationForm(
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
-	method identity.CredentialsType,
+	isSPA bool,
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
@@ -93,14 +113,14 @@ func SubmitRegistrationForm(
 	if isAPI {
 		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS)
 	} else {
-		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS)
+		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS, isSPA)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
 	values := SDKFormFieldsToURLValues(payload.Ui.Nodes)
 	withValues(values)
-	b, res := RegistrationMakeRequest(t, isAPI, payload, hc, EncodeFormAsJSON(t, isAPI, values))
+	b, res := RegistrationMakeRequest(t, isAPI, isSPA, payload, hc, EncodeFormAsJSON(t, isAPI, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, assertx.PrettifyJSONPayload(t, b))
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, b))
 	return b

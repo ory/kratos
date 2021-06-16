@@ -1,15 +1,20 @@
 import { APP_URL } from '../../../../helpers'
 
-context('Registration Flow UI', () => {
-  beforeEach(() => {
-    cy.visit(APP_URL + '/auth/registration')
-  })
+context('Email Profile', () => {
+  describe('Registration Flow UI', () => {
+    before(() => {
+      cy.useConfigProfile('email')
+    })
 
-  describe('use ui elements', () => {
-    it('should use the json schema titles', () => {
-      cy.get('input[name="traits.email"]').siblings('span').should('contain.text', 'Your E-Mail')
-      cy.get('input[name="traits.website"]').siblings('span').should('contain.text', 'Your website')
-      cy.get('button[value="password"]').should('contain.text', 'Sign up')
+    beforeEach(() => {
+      cy.visit(APP_URL + '/auth/registration')
+    })
+
+    describe('use ui elements', () => {
+      it('should use the json schema titles', () => {
+        cy.get('input[name="traits.email"]').siblings('span').should('contain.text', 'Your E-Mail')
+        cy.get('input[name="traits.website"]').siblings('span').should('contain.text', 'Your website')
+        cy.get('button[value="password"]').should('contain.text', 'Sign up')
     })
 
     it('clicks the visibility toggle to show the password', () => {
@@ -21,10 +26,11 @@ context('Registration Flow UI', () => {
       cy.get('input[name="password"]').should('have.prop', 'type', 'password')
     })
 
-    it('clicks the log in link', () => {
-      cy.get('a[href*="auth/login"]').click()
-      cy.location('pathname').should('include', 'auth/login')
-      cy.location('search').should('not.be.empty', 'request')
+      it('clicks the log in link', () => {
+        cy.get('a[href*="auth/login"]').click()
+        cy.location('pathname').should('include', 'auth/login')
+        cy.location('search').should('not.be.empty', 'request')
+      })
     })
   })
 })
