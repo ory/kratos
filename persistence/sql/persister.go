@@ -91,7 +91,10 @@ func (p *Persister) MigrationStatus(ctx context.Context) (popx.MigrationStatuses
 		return nil, err
 	}
 
-	p.mbs = status
+	if !status.HasPending() {
+		p.mbs = status
+	}
+
 	return status, nil
 }
 
