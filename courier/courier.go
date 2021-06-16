@@ -61,6 +61,10 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 
 		// Since uri.Scheme is smtps we should make TLS mandatory:
 		dialer.StartTLSPolicy = gomail.MandatoryStartTLS
+
+		if legacySsl, _ := strconv.ParseBool(uri.Query().Get("legacy_ssl")); legacySsl {
+			dialer.SSL = true
+		}
 	}
 
 	return &Courier{
