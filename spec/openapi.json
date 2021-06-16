@@ -1547,6 +1547,7 @@
         "type": "object"
       },
       "submitSelfServiceRecoveryFlowBody": {
+        "description": "nolint:deadcode,unused",
         "properties": {
           "email": {
             "description": "Email is the email to which to send the Recovery message to.",
@@ -1661,6 +1662,7 @@
         "type": "object"
       },
       "submitSelfServiceVerificationFlowBody": {
+        "description": "nolint:deadcode,unused",
         "properties": {
           "email": {
             "description": "Email is the email to which to send the verification message to.",

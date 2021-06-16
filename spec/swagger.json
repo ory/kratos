@@ -3200,6 +3200,7 @@
       }
     },
     "submitSelfServiceRecoveryFlowBody": {
+      "description": "nolint:deadcode,unused",
       "type": "object",
       "required": [
         "method",
@@ -3303,6 +3304,7 @@
       }
     },
     "submitSelfServiceVerificationFlowBody": {
+      "description": "nolint:deadcode,unused",
       "type": "object",
       "required": [
         "method",
