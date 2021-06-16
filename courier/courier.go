@@ -40,28 +40,32 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
-	var ssl bool
-	var tlsConfig *tls.Config
+	dialer :=  &gomail.Dialer{
+		Host:         uri.Hostname(),
+		Port:         int(port),
+		Username:     uri.User.Username(),
+		Password:     password,
+		// We are setting this to false because it breaks STARTTLS which is the most
+		// common SMTP auto today. SSL is almost never used.
+		SSL:          false,
+		Timeout:      time.Second * 10,
+		RetryFailure: true,
+	}
+
+	//var ssl bool
+	//var tlsConfig *tls.Config
 	if uri.Scheme == "smtps" {
-		ssl = true
 		sslSkipVerify, _ := strconv.ParseBool(uri.Query().Get("skip_ssl_verify"))
 		// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
-		tlsConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, ServerName: uri.Hostname()}
+		dialer.TLSConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, ServerName: uri.Hostname()}
+
+		// Since uri.Scheme is smtps we should make TLS mandatory:
+		dialer.StartTLSPolicy = gomail.MandatoryStartTLS
 	}
 
 	return &Courier{
 		d: d,
-		Dialer: &gomail.Dialer{
-			/* #nosec we need to support SMTP servers without TLS */
-			TLSConfig:    tlsConfig,
-			Host:         uri.Hostname(),
-			Port:         int(port),
-			Username:     uri.User.Username(),
-			Password:     password,
-			SSL:          ssl,
-			Timeout:      time.Second * 10,
-			RetryFailure: true,
-		},
+		Dialer: dialer,
 	}
 }
 
