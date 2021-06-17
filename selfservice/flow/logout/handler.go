@@ -53,7 +53,7 @@ func NewHandler(d handlerDependencies) *Handler {
 func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 	h.d.CSRFHandler().ExemptPath(RouteAPIFlow)
 
-	router.GET(RouteInitBrowserFlow, h.initBrowserFlow)
+	router.GET(RouteInitBrowserFlow, h.initializeSelfServiceLogoutForBrowsers)
 	router.DELETE(RouteAPIFlow, h.submitSelfServiceLogoutFlowWithoutBrowser)
 	router.GET(RouteSubmitFlow, h.submitLogout)
 }
@@ -64,6 +64,13 @@ type logoutURL struct {
 	//
 	// format: uri
 	LogoutURL string `json:"logout_url"`
+}
+
+// swagger:parameters initializeSelfServiceLogoutForBrowsers
+// nolint:deadcode,unused
+type initializeSelfServiceLogoutForBrowsers struct {
+	// in: header
+	SessionCookie string `json:"X-Session-Cookie"`
 }
 
 // swagger:route GET /self-service/logout/browser public initializeSelfServiceLogoutForBrowsers
@@ -98,7 +105,7 @@ type logoutURL struct {
 //       200: logoutUrl
 //       401: jsonError
 //       500: jsonError
-func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) initializeSelfServiceLogoutForBrowsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)

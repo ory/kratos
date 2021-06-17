@@ -1209,6 +1209,15 @@
         ],
         "type": "object"
       },
+      "logoutUrl": {
+        "properties": {
+          "logout_url": {
+            "description": "LogoutURL can be opened in a browser to\n\nformat: uri",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "nullJsonRawMessage": {
         "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
         "type": "object"
@@ -1337,18 +1346,6 @@
         ],
         "type": "object"
       },
-      "revokeSession": {
-        "properties": {
-          "session_token": {
-            "description": "The Session Token\n\nInvalidate this session token.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "session_token"
-        ],
-        "type": "object"
-      },
       "selfServiceErrorContainer": {
         "properties": {
           "created_at": {
@@ -1379,15 +1376,19 @@
         "type": "object"
       },
       "session": {
+        "description": "A Session",
         "properties": {
           "active": {
+            "description": "Whether or not the session is active.",
             "type": "boolean"
           },
           "authenticated_at": {
+            "description": "The Session Authentication Timestamp\n\nWhen this session was authenticated at.",
             "format": "date-time",
             "type": "string"
           },
           "expires_at": {
+            "description": "The Session Expiry\n\nWhen this session expires at.",
             "format": "date-time",
             "type": "string"
           },
@@ -1398,15 +1399,13 @@
             "$ref": "#/components/schemas/identity"
           },
           "issued_at": {
+            "description": "The Session Issuance Timestamp\n\nWhen this session was authenticated at.",
             "format": "date-time",
             "type": "string"
           }
         },
         "required": [
           "id",
-          "expires_at",
-          "authenticated_at",
-          "issued_at",
           "identity"
         ],
         "type": "object"
@@ -1544,6 +1543,19 @@
           }
         },
         "title": "submitSelfServiceLoginFlowWithPasswordMethod is used to decode the login form payload.",
+        "type": "object"
+      },
+      "submitSelfServiceLogoutFlowWithoutBrowserBody": {
+        "description": "nolint:deadcode,unused",
+        "properties": {
+          "session_token": {
+            "description": "The Session Token\n\nInvalidate this session token.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_token"
+        ],
         "type": "object"
       },
       "submitSelfServiceRecoveryFlowBody": {
@@ -2537,31 +2549,6 @@
         ]
       }
     },
-    "/self-service/browser/flows/logout": {
-      "get": {
-        "description": "This endpoint initializes a logout flow.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nOn successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request\nor fall back to `urls.default_return_to`.\n\nMore information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).",
-        "operationId": "initializeSelfServiceBrowserLogoutFlow",
-        "responses": {
-          "302": {
-            "$ref": "#/components/responses/emptyResponse"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          }
-        },
-        "summary": "Initialize Browser-Based Logout User Flow",
-        "tags": [
-          "public"
-        ]
-      }
-    },
     "/self-service/errors": {
       "get": {
         "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nThis endpoint supports stub values to help you implement the error UI:\n\n`?error=stub:500` - returns a stub 500 (Internal Server Error) error.\n\nMore information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
@@ -2858,6 +2845,131 @@
         "tags": [
           "public",
           "admin"
+        ]
+      }
+    },
+    "/self-service/logout": {
+      "post": {
+        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint logs out an identity in a self-service manner.\n\nIf the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)\nto the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.\n\nIf the `Accept` HTTP header is set to `application/json`, a 204 No Content response\nwill be sent on successful logout instead.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...). For API clients you can\ncall the `/self-service/logout/api` URL directly with the Ory Session Token.\n\n:::\n\nMore information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).",
+        "operationId": "submitSelfServiceLogoutFlow",
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "302": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "summary": "Complete Self-Service Logout",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/logout/api": {
+      "delete": {
+        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to log out an identity using an Ory Session Token. If the Ory Session Token was successfully\nrevoked, the server returns a 204 No Content response. A 204 No Content response is also sent when\nthe Ory Session Token has been revoked already before.\n\nIf the Ory Session Token is malformed or does not exist a 403 Forbidden response will be returned.\n\nThis endpoint does not remove any HTTP\nCookies - use the Browser-Based Self-Service Logout Flow instead.",
+        "operationId": "submitSelfServiceLogoutFlowWithoutBrowser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/submitSelfServiceLogoutFlowWithoutBrowserBody"
+              }
+            }
+          },
+          "required": true,
+          "x-originalParamName": "Body"
+        },
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "summary": "Perform Logout for APIs, Services, Apps, ...",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/self-service/logout/browser": {
+      "get": {
+        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...). For API clients you can\ncall the `/self-service/logout/api` URL directly with the Ory Session Token.\n\n:::\n\nThe URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns\na 401 error.",
+        "operationId": "initializeSelfServiceLogoutForBrowsers",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Session-Cookie",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/logoutUrl"
+                }
+              }
+            },
+            "description": "logoutUrl"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "summary": "Initialize Logout Flow for Browsers",
+        "tags": [
+          "public"
         ]
       }
     },
@@ -3888,52 +4000,6 @@
         "tags": [
           "public",
           "admin"
-        ]
-      }
-    },
-    "/sessions": {
-      "delete": {
-        "description": "Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients\nsuch as mobile apps to log the user out of the system and invalidate the session.\n\nThis endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.",
-        "operationId": "revokeSession",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/revokeSession"
-              }
-            }
-          },
-          "required": true,
-          "x-originalParamName": "Body"
-        },
-        "responses": {
-          "204": {
-            "$ref": "#/components/responses/emptyResponse"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/jsonError"
-                }
-              }
-            },
-            "description": "jsonError"
-          }
-        },
-        "summary": "Initialize Logout Flow for API Clients - Revoke a Session",
-        "tags": [
-          "public"
         ]
       }
     },

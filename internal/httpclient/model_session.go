@@ -16,27 +16,28 @@ import (
 	"time"
 )
 
-// Session struct for Session
+// Session A Session
 type Session struct {
-	Active          *bool     `json:"active,omitempty"`
-	AuthenticatedAt time.Time `json:"authenticated_at"`
-	ExpiresAt       time.Time `json:"expires_at"`
-	Id              string    `json:"id"`
-	Identity        Identity  `json:"identity"`
-	IssuedAt        time.Time `json:"issued_at"`
+	// Whether or not the session is active.
+	Active *bool `json:"active,omitempty"`
+	// The Session Authentication Timestamp  When this session was authenticated at.
+	AuthenticatedAt *time.Time `json:"authenticated_at,omitempty"`
+	// The Session Expiry  When this session expires at.
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	Id        string     `json:"id"`
+	Identity  Identity   `json:"identity"`
+	// The Session Issuance Timestamp  When this session was authenticated at.
+	IssuedAt *time.Time `json:"issued_at,omitempty"`
 }
 
 // NewSession instantiates a new Session object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSession(authenticatedAt time.Time, expiresAt time.Time, id string, identity Identity, issuedAt time.Time) *Session {
+func NewSession(id string, identity Identity) *Session {
 	this := Session{}
-	this.AuthenticatedAt = authenticatedAt
-	this.ExpiresAt = expiresAt
 	this.Id = id
 	this.Identity = identity
-	this.IssuedAt = issuedAt
 	return &this
 }
 
@@ -80,52 +81,68 @@ func (o *Session) SetActive(v bool) {
 	o.Active = &v
 }
 
-// GetAuthenticatedAt returns the AuthenticatedAt field value
+// GetAuthenticatedAt returns the AuthenticatedAt field value if set, zero value otherwise.
 func (o *Session) GetAuthenticatedAt() time.Time {
-	if o == nil {
+	if o == nil || o.AuthenticatedAt == nil {
 		var ret time.Time
 		return ret
 	}
-
-	return o.AuthenticatedAt
+	return *o.AuthenticatedAt
 }
 
-// GetAuthenticatedAtOk returns a tuple with the AuthenticatedAt field value
+// GetAuthenticatedAtOk returns a tuple with the AuthenticatedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *Session) GetAuthenticatedAtOk() (*time.Time, bool) {
-	if o == nil {
+	if o == nil || o.AuthenticatedAt == nil {
 		return nil, false
 	}
-	return &o.AuthenticatedAt, true
+	return o.AuthenticatedAt, true
 }
 
-// SetAuthenticatedAt sets field value
+// HasAuthenticatedAt returns a boolean if a field has been set.
+func (o *Session) HasAuthenticatedAt() bool {
+	if o != nil && o.AuthenticatedAt != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAuthenticatedAt gets a reference to the given time.Time and assigns it to the AuthenticatedAt field.
 func (o *Session) SetAuthenticatedAt(v time.Time) {
-	o.AuthenticatedAt = v
+	o.AuthenticatedAt = &v
 }
 
-// GetExpiresAt returns the ExpiresAt field value
+// GetExpiresAt returns the ExpiresAt field value if set, zero value otherwise.
 func (o *Session) GetExpiresAt() time.Time {
-	if o == nil {
+	if o == nil || o.ExpiresAt == nil {
 		var ret time.Time
 		return ret
 	}
-
-	return o.ExpiresAt
+	return *o.ExpiresAt
 }
 
-// GetExpiresAtOk returns a tuple with the ExpiresAt field value
+// GetExpiresAtOk returns a tuple with the ExpiresAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *Session) GetExpiresAtOk() (*time.Time, bool) {
-	if o == nil {
+	if o == nil || o.ExpiresAt == nil {
 		return nil, false
 	}
-	return &o.ExpiresAt, true
+	return o.ExpiresAt, true
 }
 
-// SetExpiresAt sets field value
+// HasExpiresAt returns a boolean if a field has been set.
+func (o *Session) HasExpiresAt() bool {
+	if o != nil && o.ExpiresAt != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetExpiresAt gets a reference to the given time.Time and assigns it to the ExpiresAt field.
 func (o *Session) SetExpiresAt(v time.Time) {
-	o.ExpiresAt = v
+	o.ExpiresAt = &v
 }
 
 // GetId returns the Id field value
@@ -176,28 +193,36 @@ func (o *Session) SetIdentity(v Identity) {
 	o.Identity = v
 }
 
-// GetIssuedAt returns the IssuedAt field value
+// GetIssuedAt returns the IssuedAt field value if set, zero value otherwise.
 func (o *Session) GetIssuedAt() time.Time {
-	if o == nil {
+	if o == nil || o.IssuedAt == nil {
 		var ret time.Time
 		return ret
 	}
-
-	return o.IssuedAt
+	return *o.IssuedAt
 }
 
-// GetIssuedAtOk returns a tuple with the IssuedAt field value
+// GetIssuedAtOk returns a tuple with the IssuedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *Session) GetIssuedAtOk() (*time.Time, bool) {
-	if o == nil {
+	if o == nil || o.IssuedAt == nil {
 		return nil, false
 	}
-	return &o.IssuedAt, true
+	return o.IssuedAt, true
 }
 
-// SetIssuedAt sets field value
+// HasIssuedAt returns a boolean if a field has been set.
+func (o *Session) HasIssuedAt() bool {
+	if o != nil && o.IssuedAt != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIssuedAt gets a reference to the given time.Time and assigns it to the IssuedAt field.
 func (o *Session) SetIssuedAt(v time.Time) {
-	o.IssuedAt = v
+	o.IssuedAt = &v
 }
 
 func (o Session) MarshalJSON() ([]byte, error) {
@@ -205,10 +230,10 @@ func (o Session) MarshalJSON() ([]byte, error) {
 	if o.Active != nil {
 		toSerialize["active"] = o.Active
 	}
-	if true {
+	if o.AuthenticatedAt != nil {
 		toSerialize["authenticated_at"] = o.AuthenticatedAt
 	}
-	if true {
+	if o.ExpiresAt != nil {
 		toSerialize["expires_at"] = o.ExpiresAt
 	}
 	if true {
@@ -217,7 +242,7 @@ func (o Session) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["identity"] = o.Identity
 	}
-	if true {
+	if o.IssuedAt != nil {
 		toSerialize["issued_at"] = o.IssuedAt
 	}
 	return json.Marshal(toSerialize)

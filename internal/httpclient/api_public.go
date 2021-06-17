@@ -1080,113 +1080,6 @@ func (a *PublicApiService) GetSelfServiceVerificationFlowExecute(r PublicApiApiG
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-}
-
-func (r PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest) Execute() (*http.Response, error) {
-	return r.ApiService.InitializeSelfServiceBrowserLogoutFlowExecute(r)
-}
-
-/*
- * InitializeSelfServiceBrowserLogoutFlow Initialize Browser-Based Logout User Flow
- * This endpoint initializes a logout flow.
-
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
-
-On successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request
-or fall back to `urls.default_return_to`.
-
-More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest
-*/
-func (a *PublicApiService) InitializeSelfServiceBrowserLogoutFlow(ctx context.Context) PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest {
-	return PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *PublicApiService) InitializeSelfServiceBrowserLogoutFlowExecute(r PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceBrowserLogoutFlow")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/self-service/browser/flows/logout"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
-}
-
 type PublicApiApiInitializeSelfServiceLoginForBrowsersRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
@@ -1443,6 +1336,152 @@ func (a *PublicApiService) InitializeSelfServiceLoginWithoutBrowserExecute(r Pub
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type PublicApiApiInitializeSelfServiceLogoutForBrowsersRequest struct {
+	ctx            context.Context
+	ApiService     *PublicApiService
+	xSessionCookie *string
+}
+
+func (r PublicApiApiInitializeSelfServiceLogoutForBrowsersRequest) XSessionCookie(xSessionCookie string) PublicApiApiInitializeSelfServiceLogoutForBrowsersRequest {
+	r.xSessionCookie = &xSessionCookie
+	return r
+}
+
+func (r PublicApiApiInitializeSelfServiceLogoutForBrowsersRequest) Execute() (*LogoutUrl, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceLogoutForBrowsersExecute(r)
+}
+
+/*
+ * InitializeSelfServiceLogoutForBrowsers Initialize Logout Flow for Browsers
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.
+
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...). For API clients you can
+call the `/self-service/logout/api` URL directly with the Ory Session Token.
+
+:::
+
+The URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns
+a 401 error.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiInitializeSelfServiceLogoutForBrowsersRequest
+*/
+func (a *PublicApiService) InitializeSelfServiceLogoutForBrowsers(ctx context.Context) PublicApiApiInitializeSelfServiceLogoutForBrowsersRequest {
+	return PublicApiApiInitializeSelfServiceLogoutForBrowsersRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return LogoutUrl
+ */
+func (a *PublicApiService) InitializeSelfServiceLogoutForBrowsersExecute(r PublicApiApiInitializeSelfServiceLogoutForBrowsersRequest) (*LogoutUrl, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *LogoutUrl
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceLogoutForBrowsers")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/logout/browser"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.xSessionCookie != nil {
+		localVarHeaderParams["X-Session-Cookie"] = parameterToString(*r.xSessionCookie, "")
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
@@ -2583,129 +2622,6 @@ func (a *PublicApiService) InitializeSelfServiceVerificationWithoutBrowserExecut
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiRevokeSessionRequest struct {
-	ctx           context.Context
-	ApiService    *PublicApiService
-	revokeSession *RevokeSession
-}
-
-func (r PublicApiApiRevokeSessionRequest) RevokeSession(revokeSession RevokeSession) PublicApiApiRevokeSessionRequest {
-	r.revokeSession = &revokeSession
-	return r
-}
-
-func (r PublicApiApiRevokeSessionRequest) Execute() (*http.Response, error) {
-	return r.ApiService.RevokeSessionExecute(r)
-}
-
-/*
- * RevokeSession Initialize Logout Flow for API Clients - Revoke a Session
- * Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
-such as mobile apps to log the user out of the system and invalidate the session.
-
-This endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiRevokeSessionRequest
-*/
-func (a *PublicApiService) RevokeSession(ctx context.Context) PublicApiApiRevokeSessionRequest {
-	return PublicApiApiRevokeSessionRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *PublicApiService) RevokeSessionExecute(r PublicApiApiRevokeSessionRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.RevokeSession")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/sessions"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-	if r.revokeSession == nil {
-		return nil, reportError("revokeSession is required and must be specified")
-	}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	localVarPostBody = r.revokeSession
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
-}
-
 type PublicApiApiSubmitSelfServiceLoginFlowRequest struct {
 	ctx                        context.Context
 	ApiService                 *PublicApiService
@@ -2864,6 +2780,260 @@ func (a *PublicApiService) SubmitSelfServiceLoginFlowExecute(r PublicApiApiSubmi
 	}
 
 	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type PublicApiApiSubmitSelfServiceLogoutFlowRequest struct {
+	ctx        context.Context
+	ApiService *PublicApiService
+}
+
+func (r PublicApiApiSubmitSelfServiceLogoutFlowRequest) Execute() (*http.Response, error) {
+	return r.ApiService.SubmitSelfServiceLogoutFlowExecute(r)
+}
+
+/*
+ * SubmitSelfServiceLogoutFlow Complete Self-Service Logout
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint logs out an identity in a self-service manner.
+
+If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
+
+If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
+will be sent on successful logout instead.
+
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...). For API clients you can
+call the `/self-service/logout/api` URL directly with the Ory Session Token.
+
+:::
+
+More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiSubmitSelfServiceLogoutFlowRequest
+*/
+func (a *PublicApiService) SubmitSelfServiceLogoutFlow(ctx context.Context) PublicApiApiSubmitSelfServiceLogoutFlowRequest {
+	return PublicApiApiSubmitSelfServiceLogoutFlowRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *PublicApiService) SubmitSelfServiceLogoutFlowExecute(r PublicApiApiSubmitSelfServiceLogoutFlowRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPost
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceLogoutFlow")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/logout"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
+}
+
+type PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest struct {
+	ctx                                           context.Context
+	ApiService                                    *PublicApiService
+	submitSelfServiceLogoutFlowWithoutBrowserBody *SubmitSelfServiceLogoutFlowWithoutBrowserBody
+}
+
+func (r PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) SubmitSelfServiceLogoutFlowWithoutBrowserBody(submitSelfServiceLogoutFlowWithoutBrowserBody SubmitSelfServiceLogoutFlowWithoutBrowserBody) PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest {
+	r.submitSelfServiceLogoutFlowWithoutBrowserBody = &submitSelfServiceLogoutFlowWithoutBrowserBody
+	return r
+}
+
+func (r PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) Execute() (*http.Response, error) {
+	return r.ApiService.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r)
+}
+
+/*
+ * SubmitSelfServiceLogoutFlowWithoutBrowser Perform Logout for APIs, Services, Apps, ...
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+Use this endpoint to log out an identity using an Ory Session Token. If the Ory Session Token was successfully
+revoked, the server returns a 204 No Content response. A 204 No Content response is also sent when
+the Ory Session Token has been revoked already before.
+
+If the Ory Session Token is malformed or does not exist a 403 Forbidden response will be returned.
+
+This endpoint does not remove any HTTP
+Cookies - use the Browser-Based Self-Service Logout Flow instead.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest
+*/
+func (a *PublicApiService) SubmitSelfServiceLogoutFlowWithoutBrowser(ctx context.Context) PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest {
+	return PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *PublicApiService) SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodDelete
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceLogoutFlowWithoutBrowser")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/logout/api"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.submitSelfServiceLogoutFlowWithoutBrowserBody == nil {
+		return nil, reportError("submitSelfServiceLogoutFlowWithoutBrowserBody is required and must be specified")
+	}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.submitSelfServiceLogoutFlowWithoutBrowserBody
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
 }
 
 type PublicApiApiSubmitSelfServiceRecoveryFlowRequest struct {
