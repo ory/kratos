@@ -13,8 +13,6 @@ Something is not working.
 
 #### Issues
 
-- [ ] Unmable to use Auth0 as a generic OIDC provider
-      ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [ ] Refresh Sessions Without Having to Log In Again
       ([kratos#615](https://github.com/ory/kratos/issues/615)) -
       [@hackerman](https://github.com/aeneasr)
@@ -33,6 +31,8 @@ Something is not working.
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [ ] Recovery link doesn't log out existing users
       ([kratos#1077](https://github.com/ory/kratos/issues/1077))
+- [x] Unmable to use Auth0 as a generic OIDC provider
+      ([kratos#609](https://github.com/ory/kratos/issues/609))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -145,18 +145,14 @@ Something is not working.
 
 #### Issues
 
-- [ ] Investigate why smtps fails but smtp does not
-      ([kratos#781](https://github.com/ory/kratos/issues/781)) -
-      [@hackerman](https://github.com/aeneasr)
-- [ ] Verification submission endpoint (submitSelfServiceVerificationFlow) still
-      requires CSRF cookie for API flows
-      ([kratos#1368](https://github.com/ory/kratos/issues/1368)) -
-      [@hackerman](https://github.com/aeneasr)
-- [ ] Social sign uop should reduce confusion on sign up button
-      ([kratos#1422](https://github.com/ory/kratos/issues/1422)) -
+- [ ] Update profile with field error returning 502
+      ([kratos#1425](https://github.com/ory/kratos/issues/1425)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
+- [x] Investigate why smtps fails but smtp does not
+      ([kratos#781](https://github.com/ory/kratos/issues/781)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Reloading config values does not work
       ([kratos#804](https://github.com/ory/kratos/issues/804)) -
       [@hackerman](https://github.com/aeneasr)
@@ -170,6 +166,28 @@ Something is not working.
 - [x] No email validation for /verify and /recovery page. email queue is
       backlogged with invalid emails.
       ([kratos#1285](https://github.com/ory/kratos/issues/1285))
+- [x] Verification submission endpoint (submitSelfServiceVerificationFlow) still
+      requires CSRF cookie for API flows
+      ([kratos#1368](https://github.com/ory/kratos/issues/1368)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Social sign uop should reduce confusion on sign up button
+      ([kratos#1422](https://github.com/ory/kratos/issues/1422)) -
+      [@hackerman](https://github.com/aeneasr)
+
+#### Pull Requests
+
+- [x] fix: continue button for oidc registration step
+      ([kratos#1427](https://github.com/ory/kratos/pull/1427)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] fix: deprecate sessionCookie
+      ([kratos#1428](https://github.com/ory/kratos/pull/1428)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] fix: use STARTTLS for smtps connections
+      ([kratos#1430](https://github.com/ory/kratos/pull/1430)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] fix: incorrect openapi specification for verification submission
+      ([kratos#1431](https://github.com/ory/kratos/pull/1431)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -177,9 +195,6 @@ New feature or request.
 
 #### Issues
 
-- [ ] Implement React SPA sample app
-      ([kratos#668](https://github.com/ory/kratos/issues/668)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Prevent accidental leak of PII when Copy & Pasting of Flow URLs which
       include Flow IDs
       ([kratos#1282](https://github.com/ory/kratos/issues/1282)) -
@@ -194,6 +209,9 @@ New feature or request.
       ([kratos#271](https://github.com/ory/kratos/issues/271))
 - [x] Implement Security Questions MFA
       ([kratos#469](https://github.com/ory/kratos/issues/469))
+- [x] Implement React SPA sample app
+      ([kratos#668](https://github.com/ory/kratos/issues/668)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Double slash in URLs causes CSRF issues
       ([kratos#779](https://github.com/ory/kratos/issues/779))
 - [x] CSRF failure should start a new login/registration flow
@@ -202,7 +220,7 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] feat: APIs for native integration with AJAX / SPAs / ReactJS / NextJS /
+- [x] feat: APIs for native integration with AJAX / SPAs / ReactJS / NextJS /
       ... ([kratos#1367](https://github.com/ory/kratos/pull/1367)) -
       [@hackerman](https://github.com/aeneasr)
 
@@ -225,6 +243,6 @@ Blocks milestones or other issues or pulls.
 
 #### Pull Requests
 
-- [ ] feat: APIs for native integration with AJAX / SPAs / ReactJS / NextJS /
+- [x] feat: APIs for native integration with AJAX / SPAs / ReactJS / NextJS /
       ... ([kratos#1367](https://github.com/ory/kratos/pull/1367)) -
       [@hackerman](https://github.com/aeneasr)
