@@ -155,7 +155,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...154c26f6da4bb7040deabdc352c90cdae42c69fe) (2021-06-17)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...826ed1a6deafdc2631a5c72f0bfacc91b06a3435) (2021-06-17)
 
 
 ### Bug Fixes
@@ -260,6 +260,7 @@
 
 ### Unclassified
 
+* add CoC shield (#1439) ([826ed1a](https://github.com/ory/kratos/commit/826ed1a6deafdc2631a5c72f0bfacc91b06a3435)), closes [#1439](https://github.com/ory/kratos/issues/1439)
 * u ([b03549b](https://github.com/ory/kratos/commit/b03549b6340ec0bf4f9d741ce145ca90bbc09968))
 * Format ([5cc9fc3](https://github.com/ory/kratos/commit/5cc9fc3a6e91a96225d016d60c8da5cef647ac18))
 * u ([318a31d](https://github.com/ory/kratos/commit/318a31d400b97653b4f377c67df4ae0afea189d9))
