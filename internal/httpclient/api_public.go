@@ -2867,18 +2867,18 @@ func (a *PublicApiService) SubmitSelfServiceLoginFlowExecute(r PublicApiApiSubmi
 }
 
 type PublicApiApiSubmitSelfServiceRecoveryFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-	flow       *string
-	body       *map[string]interface{}
+	ctx                               context.Context
+	ApiService                        *PublicApiService
+	flow                              *string
+	submitSelfServiceRecoveryFlowBody *SubmitSelfServiceRecoveryFlowBody
 }
 
 func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
 	r.flow = &flow
 	return r
 }
-func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Body(body map[string]interface{}) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
-	r.body = &body
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) SubmitSelfServiceRecoveryFlowBody(submitSelfServiceRecoveryFlowBody SubmitSelfServiceRecoveryFlowBody) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
+	r.submitSelfServiceRecoveryFlowBody = &submitSelfServiceRecoveryFlowBody
 	return r
 }
 
@@ -2961,7 +2961,7 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSu
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.body
+	localVarPostBody = r.submitSelfServiceRecoveryFlowBody
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -3515,18 +3515,18 @@ func (a *PublicApiService) SubmitSelfServiceSettingsFlowExecute(r PublicApiApiSu
 }
 
 type PublicApiApiSubmitSelfServiceVerificationFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-	flow       *string
-	body       *map[string]interface{}
+	ctx                                   context.Context
+	ApiService                            *PublicApiService
+	flow                                  *string
+	submitSelfServiceVerificationFlowBody *SubmitSelfServiceVerificationFlowBody
 }
 
 func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
 	r.flow = &flow
 	return r
 }
-func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Body(body map[string]interface{}) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
-	r.body = &body
+func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) SubmitSelfServiceVerificationFlowBody(submitSelfServiceVerificationFlowBody SubmitSelfServiceVerificationFlowBody) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
+	r.submitSelfServiceVerificationFlowBody = &submitSelfServiceVerificationFlowBody
 	return r
 }
 
@@ -3581,7 +3581,7 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/self-service/verification/flows"
+	localVarPath := localBasePath + "/self-service/verification"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -3609,7 +3609,7 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.body
+	localVarPostBody = r.submitSelfServiceVerificationFlowBody
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err

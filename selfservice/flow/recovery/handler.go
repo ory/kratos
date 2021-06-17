@@ -269,9 +269,21 @@ type submitSelfServiceRecoveryFlow struct {
 	Body submitSelfServiceRecoveryFlowBody
 }
 
-// swagger:model submitSelfServiceRecoveryFlow
 // nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowBody struct{}
+// swagger:model submitSelfServiceRecoveryFlowBody
+type submitSelfServiceRecoveryFlowBody struct {
+	// Method supports `link` only right now.
+	//
+	// enum:
+	// - link
+	// required: true
+	Method string `json:"method"`
+
+	// Email is the email to which to send the Recovery message to.
+	//
+	// required: true
+	Email string `json:"email"`
+}
 
 // swagger:route POST /self-service/recovery public submitSelfServiceRecoveryFlow
 //
