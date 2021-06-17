@@ -933,7 +933,7 @@
                 "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false"
               ],
               "type": "string",
-              "format": "uri"
+              "pattern": "^smtps?:\\/\\/.*"
             },
             "from_address": {
               "title": "SMTP Sender Address",
