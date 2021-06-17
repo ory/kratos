@@ -155,13 +155,14 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...826ed1a6deafdc2631a5c72f0bfacc91b06a3435) (2021-06-17)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...5ab1e8f17bcbc229fada2c584b2c1f576b819761) (2021-06-17)
 
 
 ### Bug Fixes
 
 * Add json detection to setting error subbranches ([fb83dcb](https://github.com/ory/kratos/commit/fb83dcb8ae7463079ddb33c04673cf4556f6058c))
 * Cache migration status ([5be2f14](https://github.com/ory/kratos/commit/5be2f149cd79ddfbe8496eccf5d5aacb6a9a0b8e)), closes [#1337](https://github.com/ory/kratos/issues/1337)
+* Change SMTP config validation from URI to a Regex pattern ([#1436](https://github.com/ory/kratos/issues/1436)) ([5ab1e8f](https://github.com/ory/kratos/commit/5ab1e8f17bcbc229fada2c584b2c1f576b819761)), closes [#1435](https://github.com/ory/kratos/issues/1435)
 * Check filesystem before fallback to bundled templates ([#1401](https://github.com/ory/kratos/issues/1401)) ([22d999e](https://github.com/ory/kratos/commit/22d999e78eb4f67d2f3ba07e62fd28ffb3331d6d))
 * Continue button for oidc registration step ([2aad5ac](https://github.com/ory/kratos/commit/2aad5ac8f7055f39f4f434d26fbca74cdbe75337)), closes [#1422](https://github.com/ory/kratos/issues/1422) [#1320](https://github.com/ory/kratos/issues/1320):
 
