@@ -53,6 +53,11 @@ func (m *Manager) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 // Forward is a simple helper that saves all errors in the store and forwards the HTTP Request
 // to the error url, appending the error ID.
 func (m *Manager) Forward(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
+	if x.IsJSONRequest(r) {
+		m.d.Writer().WriteError(w, r, err)
+		return
+	}
+
 	to, errCreate := m.Create(ctx, w, r, err)
 	if errCreate != nil {
 		// Everything failed. Resort to standard error output.

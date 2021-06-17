@@ -57,8 +57,8 @@ type Session struct {
 	// The Session Token
 	//
 	// The token of this session.
-	Token     string    `json:"-" db:"token"`
-	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+	Token string    `json:"-" db:"token"`
+	NID   uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
 func (s Session) TableName(ctx context.Context) string {
