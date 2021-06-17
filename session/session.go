@@ -15,20 +15,31 @@ import (
 
 var ErrIdentityDisabled = herodot.ErrUnauthorized.WithError("identity is disabled").WithReason("This account was disabled.")
 
+// A Session
+//
 // swagger:model session
 type Session struct {
+	// Session ID
+	//
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
+	// Whether or not the session is active.
 	Active bool `json:"active" db:"active"`
 
-	// required: true
+	// The Session Expiry
+	//
+	// When this session expires at.
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at" faker:"time_type"`
 
-	// required: true
+	// The Session Authentication Timestamp
+	//
+	// When this session was authenticated at.
 	AuthenticatedAt time.Time `json:"authenticated_at" db:"authenticated_at" faker:"time_type"`
 
-	// required: true
+	// The Session Issuance Timestamp
+	//
+	// When this session was authenticated at.
 	IssuedAt time.Time `json:"issued_at" db:"issued_at" faker:"time_type"`
 
 	// required: true
@@ -36,10 +47,16 @@ type Session struct {
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
+
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
+
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
+
+	// The Session Token
+	//
+	// The token of this session.
 	Token     string    `json:"-" db:"token"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
