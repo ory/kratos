@@ -619,3 +619,36 @@ func TestViperProvider_ParseURIOrFail(t *testing.T) {
 		})
 	}
 }
+
+func TestViperProvider_HaveIBeenPwned(t *testing.T) {
+	p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
+	t.Run("case=hipb: host", func(t *testing.T) {
+		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedHost, "foo.bar")
+		assert.Equal(t, p.PasswordPolicyConfig().HaveIBeenPwnedHost, "foo.bar")
+	})
+
+	t.Run("case=hibp: enabled", func(t *testing.T) {
+		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, true)
+		assert.Equal(t, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled, true)
+	})
+
+	t.Run("case=hibp: enabled", func(t *testing.T) {
+		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
+		assert.Equal(t, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled, false)
+	})
+
+	t.Run("case=hibp: max)breaches", func(t *testing.T) {
+		p.MustSet(config.ViperKeyPasswordMaxBreaches, 10)
+		assert.Equal(t, p.PasswordPolicyConfig().MaxBreaches, 10)
+	})
+
+	t.Run("case=hibp: ignore_network_errors", func(t *testing.T) {
+		p.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
+		assert.Equal(t, p.PasswordPolicyConfig().IgnoreNetworkErrors, true)
+	})
+
+	t.Run("case=hibp: ignore_network_errors", func(t *testing.T) {
+		p.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+		assert.Equal(t, p.PasswordPolicyConfig().IgnoreNetworkErrors, false)
+	})
+}
