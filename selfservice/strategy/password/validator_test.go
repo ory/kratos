@@ -211,7 +211,7 @@ func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	fakeClient := NewFakeHTTPClient()
 	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
 
-	t.Run("case=should send request to test server", func(t *testing.T) {
+	t.Run("case=should not send request to test server", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		require.NoError(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
 		require.Empty(t, fakeClient.RequestedURLs())
