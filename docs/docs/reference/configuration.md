@@ -903,7 +903,8 @@ selfservice:
 
         ## Custom haveibeenpwned host ##
         #
-        # Allows changing the default HIBP host to a self hosted version.
+        # Allows changing the default HIBP host to a self hosted version. Set to empty string
+        # to disable this check altogether.
         #
         # Default value: api.pwnedpasswords.com
         #
