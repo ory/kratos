@@ -158,7 +158,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 
 	passwordPolicyConfig := s.reg.Config(ctx).PasswordPolicyConfig()
 
-	if len(passwordPolicyConfig.HaveIBeenPwnedHost) == 0 {
+	if !passwordPolicyConfig.HaveIBeenPwnedEnabled {
 		return nil
 	}
 

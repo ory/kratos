@@ -203,7 +203,7 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	s := password.NewDefaultPasswordValidatorStrategy(reg)
-	conf.MustSet(config.ViperKeyPasswordHaveIBeenPwnedHost, "")
+	conf.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
 
 	fakeClient := NewFakeHTTPClient()
 	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))

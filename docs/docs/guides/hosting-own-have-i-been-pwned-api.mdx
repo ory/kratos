@@ -27,6 +27,17 @@ selfservice:
 An example of a minimal self-hosted, k-anonymity enabled HiBP API
 [can be found in this repository](https://github.com/radekg/hibp).
 
+Alternatively, this feature can be disabled altogether, when configured as 
+follows:
+
+```yaml title="path/to/kratos/config.yml
+selfservice:
+  methods:
+    password:
+      config:
+        haveibeenpwned_enabled: false
+```
+
 :::note
 
 Ory Kratos `haveibeenpwned_host` setting does not allow configuring the

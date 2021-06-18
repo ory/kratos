@@ -901,10 +901,23 @@ selfservice:
         #
         ignore_network_errors: false
 
+        ## Enable or Disable the HaveIBeenPwned API ##
+        #
+        # If set to false the password validation does not utilize the Have I Been Pwnd API.
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_ENABLED=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_ENABLED=<value>
+        #
+        haveibeenpwned_enabled: true
+
         ## Custom haveibeenpwned host ##
         #
-        # Allows changing the default HIBP host to a self hosted version. Set to empty string
-        # to disable this check altogether.
+        # Allows changing the default HIBP host to a self hosted version.
         #
         # Default value: api.pwnedpasswords.com
         #
