@@ -113,6 +113,12 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Include changelog in docs navigation
+      ([kratos#1443](https://github.com/ory/kratos/issues/1443)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Include release notes in CHANGELOG.md
+      ([kratos#1442](https://github.com/ory/kratos/issues/1442)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
