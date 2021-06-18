@@ -1,76 +1,8 @@
-# Changelog
-
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Unreleased (2021-06-18)](#unreleased-2021-06-18)
-  - [Breaking Changes](#breaking-changes)
-    - [Bug Fixes](#bug-fixes)
-    - [Code Refactoring](#code-refactoring)
-    - [Documentation](#documentation)
-    - [Features](#features)
-    - [Tests](#tests)
-    - [Unclassified](#unclassified)
-- [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
-  - [Breaking Changes](#breaking-changes-1)
-    - [Bug Fixes](#bug-fixes-1)
-    - [Code Generation](#code-generation)
-    - [Code Refactoring](#code-refactoring-1)
-- [0.6.2-alpha.1 (2021-05-14)](#062-alpha1-2021-05-14)
-    - [Code Generation](#code-generation-1)
-    - [Documentation](#documentation-1)
-- [0.6.1-alpha.1 (2021-05-11)](#061-alpha1-2021-05-11)
-    - [Code Generation](#code-generation-2)
-    - [Features](#features-1)
-- [0.6.0-alpha.2 (2021-05-07)](#060-alpha2-2021-05-07)
-    - [Bug Fixes](#bug-fixes-2)
-    - [Code Generation](#code-generation-3)
-    - [Features](#features-2)
-- [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
-  - [Breaking Changes](#breaking-changes-2)
-    - [Bug Fixes](#bug-fixes-3)
-    - [Code Generation](#code-generation-4)
-    - [Code Refactoring](#code-refactoring-2)
-    - [Documentation](#documentation-2)
-    - [Features](#features-3)
-    - [Tests](#tests-1)
-    - [Unclassified](#unclassified-1)
-- [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
-    - [Bug Fixes](#bug-fixes-4)
-    - [Code Generation](#code-generation-5)
-    - [Documentation](#documentation-3)
-    - [Features](#features-4)
-    - [Tests](#tests-2)
-    - [Unclassified](#unclassified-2)
-- [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
-    - [Bug Fixes](#bug-fixes-5)
-    - [Code Generation](#code-generation-6)
-    - [Code Refactoring](#code-refactoring-3)
-    - [Documentation](#documentation-4)
-    - [Features](#features-5)
-- [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
-    - [Bug Fixes](#bug-fixes-6)
-    - [Code Generation](#code-generation-7)
-    - [Documentation](#documentation-5)
-    - [Features](#features-6)
-    - [Tests](#tests-3)
-- [0.5.2-alpha.1 (2020-10-22)](#052-alpha1-2020-10-22)
-    - [Bug Fixes](#bug-fixes-7)
-    - [Code Generation](#code-generation-8)
-    - [Documentation](#documentation-6)
-    - [Tests](#tests-4)
-- [0.5.1-alpha.1 (2020-10-20)](#051-alpha1-2020-10-20)
-    - [Bug Fixes](#bug-fixes-8)
-    - [Code Generation](#code-generation-9)
-    - [Documentation](#documentation-7)
-    - [Features](#features-7)
-    - [Tests](#tests-5)
-    - [Unclassified](#unclassified-3)
-- [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
-  - [Breaking Changes](#breaking-changes-3)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+---
+id: changelog
+title: Changelog
+custom_edit_url: null
+---
 
 # [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...5ab1e8f17bcbc229fada2c584b2c1f576b819761) (2021-06-18)
 ## Breaking Changes
