@@ -287,5 +287,4 @@ func (h *Handler) completeLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, ret.String(), http.StatusSeeOther)
-	return
 }
