@@ -793,7 +793,7 @@
           "public"
         ],
         "summary": "Initialize Logout Flow for Browsers",
-        "operationId": "initializeSelfServiceLogoutForBrowsers",
+        "operationId": "createSelfServiceLogoutUrlForBrowsers",
         "parameters": [
           {
             "type": "string",

@@ -189,7 +189,9 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 				login.RouteGetFlow,
 				login.RouteSubmitFlow,
 
-				logout.RouteBrowser,
+				logout.RouteInitBrowserFlow,
+				logout.RouteSubmitFlow,
+				logout.RouteAPIFlow,
 
 				registration.RouteInitBrowserFlow,
 				registration.RouteInitAPIFlow,

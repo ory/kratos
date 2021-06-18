@@ -1,6 +1,6 @@
 export const initBrowserFlow = {
   curl: {
-    label: 'Raw HTTP',
+    label: 'curl',
     language: 'shell',
     code: require('raw-loader!./samples/browser/init.curl.txt').default
   },
@@ -11,14 +11,14 @@ export const initBrowserFlow = {
   },
   node: {
     label: 'NodeJS (ExpressJS, ...)',
-    language: 'html',
+    language: 'js',
     code: require('raw-loader!./samples/browser/init.js.txt').default
   }
 }
 
 export const initSpaFlow = {
   curl: {
-    label: 'Raw HTTP',
+    label: 'curl',
     language: 'shell',
     code: require('raw-loader!./samples/browser/init.curl.ajax.txt').default
   },
@@ -31,7 +31,7 @@ export const initSpaFlow = {
 
 export const getFlow = {
   curl: {
-    label: 'Raw HTTP',
+    label: 'curl',
     language: 'shell',
     code: require('raw-loader!./samples/get.curl.txt').default
   },
@@ -49,7 +49,7 @@ export const getFlow = {
 
 export const initApiFlow = {
   curl: {
-    label: 'Raw HTTP',
+    label: 'curl',
     language: 'shell',
     code: require('raw-loader!./samples/api/init.curl.txt').default
   },

@@ -1,7 +1,6 @@
 package session_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -14,9 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	. "github.com/ory/kratos/session"
@@ -77,26 +74,6 @@ func TestSessionWhoAmI(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestSessionRevoke(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	publicTS, _ := testhelpers.NewKratosServer(t, reg)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/identity.schema.json")
-	i := &identity.Identity{Traits: identity.Traits(`{"baz":"bar"}`)}
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-	sess, _ := NewActiveSession(i, conf, time.Now())
-	require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), sess))
-
-	sdk := testhelpers.NewSDKClient(publicTS)
-	_, err := sdk.PublicApi.RevokeSession(context.Background()).RevokeSession(kratos.RevokeSession{
-		SessionToken: sess.Token}).Execute()
-	require.NoError(t, err)
-
-	actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
-	require.NoError(t, err)
-	assert.False(t, actual.Active)
-	assert.False(t, actual.IsActive())
 }
 
 func TestIsNotAuthenticatedSecurecookie(t *testing.T) {

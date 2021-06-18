@@ -51,9 +51,9 @@ func NewHandler(d handlerDependencies) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
-	h.d.CSRFHandler().ExemptPath(RouteAPIFlow)
+	h.d.CSRFHandler().IgnorePath(RouteAPIFlow)
 
-	router.GET(RouteInitBrowserFlow, h.initializeSelfServiceLogoutForBrowsers)
+	router.GET(RouteInitBrowserFlow, h.createSelfServiceLogoutUrlForBrowsers)
 	router.DELETE(RouteAPIFlow, h.submitSelfServiceLogoutFlowWithoutBrowser)
 	router.GET(RouteSubmitFlow, h.submitLogout)
 }
@@ -66,14 +66,14 @@ type logoutURL struct {
 	LogoutURL string `json:"logout_url"`
 }
 
-// swagger:parameters initializeSelfServiceLogoutForBrowsers
+// swagger:parameters createSelfServiceLogoutUrlForBrowsers
 // nolint:deadcode,unused
-type initializeSelfServiceLogoutForBrowsers struct {
+type createSelfServiceLogoutUrlForBrowsers struct {
 	// in: header
 	SessionCookie string `json:"X-Session-Cookie"`
 }
 
-// swagger:route GET /self-service/logout/browser public initializeSelfServiceLogoutForBrowsers
+// swagger:route GET /self-service/logout/browser public createSelfServiceLogoutUrlForBrowsers
 //
 // Initialize Logout Flow for Browsers
 //
@@ -105,7 +105,7 @@ type initializeSelfServiceLogoutForBrowsers struct {
 //       200: logoutUrl
 //       401: jsonError
 //       500: jsonError
-func (h *Handler) initializeSelfServiceLogoutForBrowsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -114,7 +114,7 @@ func (h *Handler) initializeSelfServiceLogoutForBrowsers(w http.ResponseWriter, 
 
 	h.d.Writer().Write(w, r, &logoutURL{
 		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteSubmitFlow),
-			url.Values{"session_token": {sess.Token}}).String(),
+			url.Values{"token": {sess.LogoutToken}}).String(),
 	})
 }
 
@@ -193,13 +193,13 @@ func (h *Handler) submitSelfServiceLogoutFlowWithoutBrowser(w http.ResponseWrite
 // nolint:deadcode,unused
 // swagger:parameters submitSelfServiceLogout
 type submitSelfServiceLogout struct {
-	// A Valid Session Token
+	// A Valid Logout Token
 	//
-	// If you do not have a session token because you only have a session cookie,
+	// If you do not have a logout token because you only have a session cookie,
 	// call `/self-service/logout/urls` to generate a URL for this endpoint.
 	//
 	// in: path
-	SessionToken string `json:"session_token"`
+	Token string `json:"token"`
 }
 
 // swagger:route POST /self-service/logout public submitSelfServiceLogoutFlow
@@ -240,9 +240,9 @@ type submitSelfServiceLogout struct {
 //       204: emptyResponse
 //       500: jsonError
 func (h *Handler) submitLogout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	token := r.URL.Query().Get("session_token")
-	if len(token) == 0 {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Please include a session_token in the URL query.")))
+	expected := r.URL.Query().Get("token")
+	if len(expected) == 0 {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Please include a token in the URL query.")))
 		return
 	}
 
@@ -255,12 +255,12 @@ func (h *Handler) submitLogout(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	if sess.Token != token {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrForbidden.WithReason("Unable to log out because the session token in the URL query does not match the session cookie.")))
+	if sess.LogoutToken != expected {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrForbidden.WithReason("Unable to log out because the logout token in the URL query does not match the session cookie.")))
 		return
 	}
 
-	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), token); err != nil {
+	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), sess.Token); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}

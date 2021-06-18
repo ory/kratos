@@ -87,7 +87,7 @@ func TestLogout(t *testing.T) {
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
 		logoutUrl = gjson.GetBytes(body, "logout_url").String()
-		assert.Contains(t, logoutUrl, public.URL+"/self-service/logout?session_token=", "%s", body)
+		assert.Contains(t, logoutUrl, public.URL+"/self-service/logout?token=", "%s", body)
 		return
 	}
 
@@ -138,7 +138,7 @@ func TestLogout(t *testing.T) {
 			body, res := makeBrowserLogout(t, hc, public.URL+"/self-service/logout")
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Please include a session_token in the URL query.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
+			assert.EqualValues(t, "Please include a token in the URL query.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
 		})
 
 		t.Run("type=ajax", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestLogout(t *testing.T) {
 			body, res := testhelpers.HTTPRequestJSON(t, hc, "GET", public.URL+"/self-service/logout", nil)
 			assert.EqualValues(t, public.URL+"/self-service/logout", res.Request.URL.String())
 			assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Please include a session_token in the URL query.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			assert.EqualValues(t, "Please include a token in the URL query.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
 		})
 	})
 
@@ -178,7 +178,7 @@ func TestLogout(t *testing.T) {
 			body, res := makeBrowserLogout(t, otherUser, logoutUrl)
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Unable to log out because the session token in the URL query does not match the session cookie.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
+			assert.EqualValues(t, "Unable to log out because the logout token in the URL query does not match the session cookie.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
 		})
 
 		t.Run("type=ajax", func(t *testing.T) {
@@ -188,7 +188,7 @@ func TestLogout(t *testing.T) {
 			body, res := testhelpers.HTTPRequestJSON(t, otherUser, "GET", logoutUrl, nil)
 			assert.EqualValues(t, logoutUrl, res.Request.URL.String())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Unable to log out because the session token in the URL query does not match the session cookie.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			assert.EqualValues(t, "Unable to log out because the logout token in the URL query does not match the session cookie.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
 		})
 	})
 
@@ -199,7 +199,7 @@ func TestLogout(t *testing.T) {
 			body, res := makeBrowserLogout(t, hc, logoutUrl+"invalid")
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Unable to log out because the session token in the URL query does not match the session cookie.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
+			assert.EqualValues(t, "Unable to log out because the logout token in the URL query does not match the session cookie.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
 		})
 
 		t.Run("type=ajax", func(t *testing.T) {
@@ -208,7 +208,7 @@ func TestLogout(t *testing.T) {
 			body, res := testhelpers.HTTPRequestJSON(t, hc, "GET", logoutUrl+"invalid", nil)
 			assert.EqualValues(t, logoutUrl+"invalid", res.Request.URL.String())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Unable to log out because the session token in the URL query does not match the session cookie.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			assert.EqualValues(t, "Unable to log out because the logout token in the URL query does not match the session cookie.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
 		})
 	})
 

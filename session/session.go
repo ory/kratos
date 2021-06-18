@@ -42,6 +42,11 @@ type Session struct {
 	// When this session was authenticated at.
 	IssuedAt time.Time `json:"issued_at" db:"issued_at" faker:"time_type"`
 
+	// The Logout Token
+	//
+	// Use this token to log out a user.
+	LogoutToken string `json:"-" db:"logout_token"`
+
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
@@ -80,6 +85,7 @@ func NewActiveSession(i *identity.Identity, c interface {
 		Identity:        i,
 		IdentityID:      i.ID,
 		Token:           randx.MustString(32, randx.AlphaNum),
+		LogoutToken:     randx.MustString(32, randx.AlphaNum),
 		Active:          true,
 	}, nil
 }

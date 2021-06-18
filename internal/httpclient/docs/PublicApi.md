@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**CreateSelfServiceLogoutUrlForBrowsers**](PublicApi.md#CreateSelfServiceLogoutUrlForBrowsers) | **Get** /self-service/logout/browser | Initialize Logout Flow for Browsers
 [**GetSchema**](PublicApi.md#GetSchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](PublicApi.md#GetSelfServiceError) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 [**GetSelfServiceLoginFlow**](PublicApi.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | Get Login Flow
@@ -13,7 +14,6 @@ Method | HTTP request | Description
 [**GetSelfServiceVerificationFlow**](PublicApi.md#GetSelfServiceVerificationFlow) | **Get** /self-service/verification/flows | Get Verification Flow
 [**InitializeSelfServiceLoginForBrowsers**](PublicApi.md#InitializeSelfServiceLoginForBrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
 [**InitializeSelfServiceLoginWithoutBrowser**](PublicApi.md#InitializeSelfServiceLoginWithoutBrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
-[**InitializeSelfServiceLogoutForBrowsers**](PublicApi.md#InitializeSelfServiceLogoutForBrowsers) | **Get** /self-service/logout/browser | Initialize Logout Flow for Browsers
 [**InitializeSelfServiceRecoveryForBrowsers**](PublicApi.md#InitializeSelfServiceRecoveryForBrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browsers
 [**InitializeSelfServiceRecoveryWithoutBrowser**](PublicApi.md#InitializeSelfServiceRecoveryWithoutBrowser) | **Get** /self-service/recovery/api | Initialize Recovery Flow for APIs, Services, Apps, ...
 [**InitializeSelfServiceRegistrationForBrowsers**](PublicApi.md#InitializeSelfServiceRegistrationForBrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for Browsers
@@ -32,6 +32,72 @@ Method | HTTP request | Description
 [**SubmitSelfServiceVerificationFlow**](PublicApi.md#SubmitSelfServiceVerificationFlow) | **Post** /self-service/verification | Complete Verification Flow
 [**ToSession**](PublicApi.md#ToSession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
+
+
+## CreateSelfServiceLogoutUrlForBrowsers
+
+> LogoutUrl CreateSelfServiceLogoutUrlForBrowsers(ctx).XSessionCookie(xSessionCookie).Execute()
+
+Initialize Logout Flow for Browsers
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    xSessionCookie := "xSessionCookie_example" // string |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.CreateSelfServiceLogoutUrlForBrowsers(context.Background()).XSessionCookie(xSessionCookie).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CreateSelfServiceLogoutUrlForBrowsers``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `CreateSelfServiceLogoutUrlForBrowsers`: LogoutUrl
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.CreateSelfServiceLogoutUrlForBrowsers`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiCreateSelfServiceLogoutUrlForBrowsersRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **xSessionCookie** | **string** |  | 
+
+### Return type
+
+[**LogoutUrl**](LogoutUrl.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## GetSchema
@@ -619,72 +685,6 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**LoginFlow**](LoginFlow.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## InitializeSelfServiceLogoutForBrowsers
-
-> LogoutUrl InitializeSelfServiceLogoutForBrowsers(ctx).XSessionCookie(xSessionCookie).Execute()
-
-Initialize Logout Flow for Browsers
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-    xSessionCookie := "xSessionCookie_example" // string |  (optional)
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceLogoutForBrowsers(context.Background()).XSessionCookie(xSessionCookie).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceLogoutForBrowsers``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-    // response from `InitializeSelfServiceLogoutForBrowsers`: LogoutUrl
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceLogoutForBrowsers`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiInitializeSelfServiceLogoutForBrowsersRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **xSessionCookie** | **string** |  | 
-
-### Return type
-
-[**LogoutUrl**](LogoutUrl.md)
 
 ### Authorization
 

@@ -100,6 +100,7 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**ListIdentities**](docs/AdminApi.md#listidentities) | **Get** /identities | List Identities
 *AdminApi* | [**Prometheus**](docs/AdminApi.md#prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 *AdminApi* | [**UpdateIdentity**](docs/AdminApi.md#updateidentity) | **Put** /identities/{id} | Update an Identity
+*PublicApi* | [**CreateSelfServiceLogoutUrlForBrowsers**](docs/PublicApi.md#createselfservicelogouturlforbrowsers) | **Get** /self-service/logout/browser | Initialize Logout Flow for Browsers
 *PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} | 
 *PublicApi* | [**GetSelfServiceError**](docs/PublicApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 *PublicApi* | [**GetSelfServiceLoginFlow**](docs/PublicApi.md#getselfserviceloginflow) | **Get** /self-service/login/flows | Get Login Flow
@@ -109,7 +110,6 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**GetSelfServiceVerificationFlow**](docs/PublicApi.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
 *PublicApi* | [**InitializeSelfServiceLoginForBrowsers**](docs/PublicApi.md#initializeselfserviceloginforbrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceLoginWithoutBrowser**](docs/PublicApi.md#initializeselfserviceloginwithoutbrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
-*PublicApi* | [**InitializeSelfServiceLogoutForBrowsers**](docs/PublicApi.md#initializeselfservicelogoutforbrowsers) | **Get** /self-service/logout/browser | Initialize Logout Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceRecoveryForBrowsers**](docs/PublicApi.md#initializeselfservicerecoveryforbrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceRecoveryWithoutBrowser**](docs/PublicApi.md#initializeselfservicerecoverywithoutbrowser) | **Get** /self-service/recovery/api | Initialize Recovery Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceRegistrationForBrowsers**](docs/PublicApi.md#initializeselfserviceregistrationforbrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for Browsers

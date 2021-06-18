@@ -2925,7 +2925,7 @@
     "/self-service/logout/browser": {
       "get": {
         "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...). For API clients you can\ncall the `/self-service/logout/api` URL directly with the Ory Session Token.\n\n:::\n\nThe URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns\na 401 error.",
-        "operationId": "initializeSelfServiceLogoutForBrowsers",
+        "operationId": "createSelfServiceLogoutUrlForBrowsers",
         "parameters": [
           {
             "in": "header",
