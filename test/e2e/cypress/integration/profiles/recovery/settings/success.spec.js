@@ -1,15 +1,20 @@
 import { APP_URL, assertRecoveryAddress, gen } from '../../../../helpers'
 
-context('Recovery', () => {
-  describe('settings flow', () => {
-    let identity
-
+context('Recovery Profile', () => {
+  describe('Recovery', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('recovery')
     })
 
-    beforeEach(() => {
-      identity = gen.identity()
+    describe('settings flow', () => {
+      let identity
+
+      before(() => {
+        cy.deleteMail()
+      })
+
+      beforeEach(() => {
+        identity = gen.identity()
       cy.register(identity)
       cy.login(identity)
       cy.visit(APP_URL + '/settings')
@@ -30,11 +35,12 @@ context('Recovery', () => {
         email
       )
 
-      cy.session().should(assertRecoveryAddress({ email }))
+      cy.session().should(assertRecoveryAddress({email}))
     })
 
-    xit('should not show an immediate error when a recovery address already exists', () => {
-      // account enumeration prevention, needs to be implemented.
+      xit('should not show an immediate error when a recovery address already exists', () => {
+        // account enumeration prevention, needs to be implemented.
+      })
     })
   })
 })

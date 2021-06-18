@@ -1,15 +1,21 @@
-import { APP_URL, assertVerifiableAddress, gen } from '../../../../helpers'
+import {APP_URL, assertVerifiableAddress, gen} from '../../../../helpers'
 
-context('Settings', () => {
-  describe('successful flow', () => {
-    let identity
 
+context('Verification Profile', () => {
+  describe('Settings', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('verification')
     })
 
-    beforeEach(() => {
-      identity = gen.identity()
+    describe('successful flow', () => {
+      let identity
+
+      before(() => {
+        cy.deleteMail()
+      })
+
+      beforeEach(() => {
+        identity = gen.identity()
       cy.register(identity)
       cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
@@ -31,13 +37,14 @@ context('Settings', () => {
       )
       cy.session().then(assertVerifiableAddress({ isVerified: false, email }))
 
-      cy.verifyEmail({ expect: { email } })
+      cy.verifyEmail({expect: {email}})
 
       cy.location('pathname').should('eq', '/')
     })
 
-    xit('should should be able to allow or deny (and revert?) the address change', () => {
-      // FIXME https://github.com/ory/kratos/issues/292
+      xit('should should be able to allow or deny (and revert?) the address change', () => {
+        // FIXME https://github.com/ory/kratos/issues/292
+      })
     })
   })
 })

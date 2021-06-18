@@ -5,9 +5,8 @@ import (
 	"embed"
 	"io"
 	"os"
+	"path"
 	"text/template"
-
-	_ "embed"
 
 	"github.com/Masterminds/sprig/v3"
 	lru "github.com/hashicorp/golang-lru"
@@ -19,43 +18,46 @@ var templates embed.FS
 
 var cache, _ = lru.New(16)
 
-func loadTextTemplate(path string, model interface{}) (string, error) {
-	var b bytes.Buffer
-
-	if t, found := cache.Get(path); found {
-		var tb bytes.Buffer
-		if err := t.(*template.Template).ExecuteTemplate(&tb, path, model); err != nil {
-			return "", errors.WithStack(err)
-		}
-		return tb.String(), nil
+func loadTemplate(osdir, name string) (*template.Template, error) {
+	if t, found := cache.Get(name); found {
+		return t.(*template.Template), nil
 	}
 
-	if file, err := templates.Open(path); err == nil {
-		defer file.Close()
-		if _, err := io.Copy(&b, file); err != nil {
-			return "", errors.WithStack(err)
-		}
-	} else {
-		file, err := os.Open(path)
-		if err != nil {
-			return "", errors.WithStack(err)
-		}
-		defer file.Close()
-		if _, err := io.Copy(&b, file); err != nil {
-			return "", errors.WithStack(err)
-		}
-	}
-
-	t, err := template.New(path).Funcs(sprig.TxtFuncMap()).Parse(b.String())
+	file, err := os.DirFS(osdir).Open(name)
 	if err != nil {
-		return "", errors.WithStack(err)
+		// try to fallback to bundled templates
+		var fallbackErr error
+		file, fallbackErr = templates.Open(path.Join("courier/builtin/templates", name))
+		if fallbackErr != nil {
+			// return original error from os.DirFS
+			return nil, errors.WithStack(err)
+		}
 	}
 
-	_ = cache.Add(path, t)
+	defer file.Close()
+
+	var b bytes.Buffer
+	if _, err := io.Copy(&b, file); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	t, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(b.String())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	_ = cache.Add(name, t)
+	return t, nil
+}
+
+func loadTextTemplate(osdir, name string, model interface{}) (string, error) {
+	t, err := loadTemplate(osdir, name)
+	if err != nil {
+		return "", err
+	}
 	var tb bytes.Buffer
-	if err := t.ExecuteTemplate(&tb, path, model); err != nil {
+	if err := t.ExecuteTemplate(&tb, name, model); err != nil {
 		return "", errors.WithStack(err)
 	}
-
 	return tb.String(), nil
 }

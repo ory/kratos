@@ -11,9 +11,14 @@ your profile and sign up yourself.
 
 import ApiWarning from '@theme/ApiWarning'
 import CodeTabs from '@theme/Code/CodeTabs'
-import { initApiFlow, initBrowserFlow } from './self-service/flows/code/login'
+import {
+  initApiFlow,
+  initSpaFlow,
+  initBrowserFlow
+} from './self-service/flows/code/login'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
+import SelfServiceSpaFlow from '@theme/SelfServiceSpaFlow'
 
 Most believe that user management systems are easy to implement because picking
 the right password hashing algorithm and sending an account verification code is
@@ -21,7 +26,7 @@ a solvable challenge. The real complexity however hides in the details and
 attack vectors of self-service flows. Most data leaks happen because someone is
 able to exploit
 
-- registration: with attack vectors such as account enumeration (), ...;
+- registration: with attack vectors such as account enumeration, ...;
 - login: phishing, account enumeration, leaked password databases, brute-force,
   ...;
 - user settings: account enumeration, account takeover, ...;
@@ -84,7 +89,7 @@ API endpoints.
 
 <ApiWarning />
 
-## Browser Flows
+## Browser Flows for Server-Side Apps: NodeJS, Java Server Pages, ...
 
 Browser-based flows make use of three core HTTP technologies:
 
@@ -386,15 +391,132 @@ specified redirect URL and sets a session cookie. The registration flow also
 redirects to a specified redirect URL but only creates the user in the database
 and might issue a session cookie if configured to do so.
 
+## Browser Flows for Client-Side Apps: Single-Page-Apps, SPAs, ...
+
+Browser-based flows also support Client Side applications such as
+Single-Page-Apps (ReactJS, AngularJS, NextJS, ...) that use AJAX to perform
+requests.
+
+Ory Kratos identifies SPA requests by checking if the `Accept` HTTP Header is
+set to `application/json`.
+
+If it is, these flows act like an API flow and respond with JSON instead of HTTP
+redirects while still setting and requiring the necessary cookies for CSRF,
+sessions, and more:
+
+- Initialization **without redirect** using an AJAX request;
+- Form rendering using HTML;
+- Form submission as `application/json` and payload validation.
+
+The high-level sequence diagram for API flows looks as follows:
+
+<SelfServiceSpaFlow />
+
+### Initialization
+
+The AJAX client (e.g. NextJS app) makes a request to the flow's initialization
+endpoint (e.g.`/self-service/login/browser`,
+`/self-service/registration/browser`, ...):
+
+<CodeTabs items={initSpaFlow} />
+
+The initialization endpoint creates a flow object and stores it in the database.
+The flow object has an ID and contains additional information about the flow
+such as the login methods (e.g. "username/password" and "Sign in with Google")
+and their form data.
+
+### Form Rendering
+
+Form rendering works the same way as the flows for server-side browser apps.
+
+### Form Submission and Payload Validation
+
+To submit the form, it is recommended to intercept the submission and send the
+form as JSON using `fetch` (see
+["Submit HTML Forms to JSON APIs easily"](https://dev.to/amjadmh73/submit-html-forms-to-json-apis-easily-137l))
+or the [SDK](sdk.mdx).
+
+The response depends on the result (sign up success, account recovery success,
+form validation error, ...). If a form validation error occurs, the following
+response could be sent:
+
+```json5
+{
+  id: 'f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+  type: 'browser',
+  expires_at: '2021-04-28T09:00:57.10254633Z',
+  issued_at: '2021-04-28T08:50:57.10254633Z',
+  request_url: 'http://127.0.0.1:4433/self-service/login/browser',
+  ui: {
+    action: 'http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+    method: 'POST',
+    nodes: [
+      // ...
+      {
+        type: 'input',
+        group: 'password',
+        attributes: {
+          name: 'password_identifier',
+          type: 'text',
+          value: '',
+          required: true,
+          disabled: false
+        },
+        messages: [
+          {
+            id: 4000001,
+            text: 'length must be >= 1, but got 0',
+            type: 'error'
+          }
+        ],
+        meta: {
+          label: {
+            id: 1070004,
+            text: 'ID',
+            type: 'info'
+          }
+        }
+      },
+      {
+        type: 'input',
+        group: 'password',
+        attributes: {
+          name: 'password',
+          type: 'password',
+          required: true,
+          disabled: false
+        },
+        messages: [
+          {
+            id: 4000001,
+            text: 'length must be >= 1, but got 0',
+            type: 'error'
+          }
+        ],
+        meta: {
+          label: {
+            id: 1070001,
+            text: 'Password',
+            type: 'info'
+          }
+        }
+      }
+      // ...
+    ]
+  },
+  forced: false
+}
+```
+
 ## API Flows
 
 <ApiWarning />
 
 API flows have three stages:
 
-- Initialization **without redirect**
-- Form rendering using e.g. native iOS, Android, ... components
-- Form submission as `application/json` and payload validation
+- Initialization **without redirect**;
+- Form rendering using e.g. native iOS, Android, ... components;
+- Form submission as `application/json` and payload validation.
 
 The high-level sequence diagram for API flows looks as follows:
 

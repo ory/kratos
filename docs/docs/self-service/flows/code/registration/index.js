@@ -27,20 +27,23 @@ export const initBrowserFlow = {
     language: 'html',
     code: require('raw-loader!./samples/browser/init.html.txt').default
   },
-  jsx: {
-    label: 'ReactJS',
-    language: 'js',
-    code: require('raw-loader!./samples/browser/init.jsx.txt').default
-  },
   node: {
-    label: 'ExpressJS',
+    label: 'NodeJS (ExpressJS, ...)',
     language: 'html',
     code: require('raw-loader!./samples/browser/init.js.txt').default
+  }
+}
+
+export const initSpaFlow = {
+  curl: {
+    label: 'Raw HTTP',
+    language: 'shell',
+    code: require('raw-loader!./samples/browser/init.curl.ajax.txt').default
   },
-  angular: {
-    label: 'Angular',
+  jsx: {
+    label: 'AJAX (React, Next, Angular, ...)',
     language: 'js',
-    code: require('raw-loader!./samples/browser/init.ng.html.txt').default
+    code: require('raw-loader!./samples/browser/init.ajax.txt').default
   }
 }
 
@@ -58,7 +61,8 @@ export const initApiFlow = {
   go: {
     label: 'Go',
     language: 'go',
-    code: require('raw-loader!./samples/api/init.go.txt').default
+    code: require('raw-loader!../../../../../../examples/go/init/registration/main.go')
+      .default
   }
 }
 

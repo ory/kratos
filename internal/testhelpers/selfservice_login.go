@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +18,6 @@ import (
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/ioutilx"
@@ -27,6 +29,7 @@ func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Serve
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
+	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", -1)
 	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
@@ -36,12 +39,13 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
+	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", -1)
 	c.MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
 
-func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *kratos.LoginFlow {
+func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	q := ""
@@ -49,11 +53,24 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		q = "?refresh=true"
 	}
 
-	res, err := client.Get(ts.URL + login.RouteInitBrowserFlow + q)
+	req, err := http.NewRequest("GET", ts.URL+login.RouteInitBrowserFlow+q, nil)
 	require.NoError(t, err)
+
+	if isSPA {
+		req.Header.Set("Accept", "application/json")
+	}
+
+	res, err := client.Do(req)
+	require.NoError(t, err)
+	body := x.MustReadAll(res.Body)
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	flowID := res.Request.URL.Query().Get("flow")
+	if isSPA {
+		flowID = gjson.GetBytes(body, "id").String()
+	}
+
+	rs, _, err := publicClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -63,7 +80,7 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceLoginForNativeApps(context.Background()).Refresh(forced).Execute()
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceLoginWithoutBrowser(context.Background()).Refresh(forced).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -73,13 +90,19 @@ func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.S
 func LoginMakeRequest(
 	t *testing.T,
 	isAPI bool,
+	isSPA bool,
 	f *kratos.LoginFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
+	req := NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values))
+	if isSPA && !isAPI {
+		req.Header.Set("Accept", "application/json")
+	}
+
+	res, err := hc.Do(req)
 	require.NoError(t, err, "action: %s", f.Ui.Action)
 	defer res.Body.Close()
 
@@ -95,7 +118,7 @@ func SubmitLoginForm(
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
-	method identity.CredentialsType,
+	isSPA bool,
 	forced bool,
 	expectedStatusCode int,
 	expectedURL string,
@@ -112,16 +135,18 @@ func SubmitLoginForm(
 	if isAPI {
 		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced)
 	} else {
-		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced)
+		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced, isSPA)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
 	payload := SDKFormFieldsToURLValues(f.Ui.Nodes)
 	withValues(payload)
-	b, res := LoginMakeRequest(t, isAPI, f, hc, EncodeFormAsJSON(t, isAPI, payload))
+	b, res := LoginMakeRequest(t, isAPI, isSPA, f, hc, EncodeFormAsJSON(t, isAPI, payload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
+
+	t.Logf("%+v", res.Header)
 
 	return b
 }

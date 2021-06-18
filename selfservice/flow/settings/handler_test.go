@@ -2,6 +2,7 @@ package settings_test
 
 import (
 	"context"
+	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
@@ -47,11 +48,49 @@ func TestHandler(t *testing.T) {
 		"primary":   primaryIdentity,
 		"secondary": {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
 
+	testhelpers.NewSettingsUIFlowEchoServer(t, reg)
+
 	primaryUser, otherUser := clients["primary"], clients["secondary"]
 	newExpiredFlow := func() *settings.Flow {
 		return settings.NewFlow(conf, -time.Minute,
 			&http.Request{URL: urlx.ParseOrPanic(publicTS.URL + login.RouteInitBrowserFlow)},
 			primaryIdentity, flow.TypeBrowser)
+	}
+
+	assertion := func(t *testing.T, body []byte, isApi bool) {
+		if isApi {
+			assert.Equal(t, "api", gjson.GetBytes(body, "type").String())
+		} else {
+			assert.Equal(t, "browser", gjson.GetBytes(body, "type").String())
+		}
+	}
+
+	initAuthenticatedFlow := func(t *testing.T, hc *http.Client, isAPI bool, isSPA bool) (*http.Response, []byte) {
+		route := settings.RouteInitBrowserFlow
+		if isAPI {
+			route = settings.RouteInitAPIFlow
+		}
+		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
+		if isSPA {
+			req.Header.Set("Accept", "application/json")
+		}
+		res, err := hc.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		if isAPI {
+			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
+		}
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		return res, body
+	}
+
+	initFlow := func(t *testing.T, hc *http.Client, isAPI bool) (*http.Response, []byte) {
+		return initAuthenticatedFlow(t, hc, isAPI, false)
+	}
+
+	initSPAFlow := func(t *testing.T, hc *http.Client) (*http.Response, []byte) {
+		return initAuthenticatedFlow(t, hc, false, true)
 	}
 
 	t.Run("daemon=admin", func(t *testing.T) {
@@ -76,6 +115,25 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
+		t.Run("description=init a flow as API", func(t *testing.T) {
+			user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+			res, body := initFlow(t, user1, true)
+			assert.Contains(t, res.Request.URL.String(), settings.RouteInitAPIFlow)
+			assertion(t, body, true)
+		})
+		t.Run("description=init a flow as browser", func(t *testing.T) {
+			user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+			res, body := initFlow(t, user1, false)
+			assert.Contains(t, res.Request.URL.String(), reg.Config(context.Background()).SelfServiceFlowSettingsUI().String())
+			assertion(t, body, false)
+		})
+		t.Run("description=init a flow as SPA", func(t *testing.T) {
+			user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+			res, body := initSPAFlow(t, user1)
+			assert.Contains(t, res.Request.URL.String(), settings.RouteInitBrowserFlow)
+			assertion(t, body, false)
+		})
+
 		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
 			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)

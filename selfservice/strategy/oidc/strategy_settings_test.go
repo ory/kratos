@@ -140,7 +140,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var newProfileFlow = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
 		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
-			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Id)))
+			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS).Id)))
 		require.NoError(t, err)
 		assert.Empty(t, req.Active)
 
@@ -160,7 +160,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	// does the same as new profile request but uses the SDK
 	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
-		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS)
+		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS)
 	}
 
 	t.Run("case=should not be able to continue a flow with a malformed ID", func(t *testing.T) {

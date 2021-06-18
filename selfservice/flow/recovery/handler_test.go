@@ -74,12 +74,15 @@ func TestInitFlow(t *testing.T) {
 		}
 	}
 
-	initAuthenticatedFlow := func(t *testing.T, isAPI bool) (*http.Response, []byte) {
+	initAuthenticatedFlow := func(t *testing.T, isAPI, isSPA bool) (*http.Response, []byte) {
 		route := recovery.RouteInitBrowserFlow
 		if isAPI {
 			route = recovery.RouteInitAPIFlow
 		}
 		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
+		if isSPA {
+			req.Header.Set("Accept", "application/json")
+		}
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
@@ -101,6 +104,21 @@ func TestInitFlow(t *testing.T) {
 		return res, body
 	}
 
+	initSPAFlow := func(t *testing.T, hc *http.Client, isSPA bool) (*http.Response, []byte) {
+		route := recovery.RouteInitBrowserFlow
+		c := publicTS.Client()
+		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
+		if isSPA {
+			req.Header.Set("Accept", "application/json")
+		}
+		res, err := c.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		return res, body
+	}
+
 	t.Run("flow=api", func(t *testing.T) {
 		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
 			res, body := initFlow(t, true)
@@ -109,7 +127,21 @@ func TestInitFlow(t *testing.T) {
 		})
 
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
-			res, body := initAuthenticatedFlow(t, true)
+			res, body := initAuthenticatedFlow(t, true, false)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+	})
+
+	t.Run("flow=spa", func(t *testing.T) {
+		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
+			res, body := initSPAFlow(t, new(http.Client), true)
+			assert.Contains(t, res.Request.URL.String(), recovery.RouteInitBrowserFlow)
+			assertion(body, false, false)
+		})
+
+		t.Run("case=fails on authenticated request", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, false, true)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
@@ -122,7 +154,7 @@ func TestInitFlow(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), recoveryTS.URL)
 		})
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
-			res, _ := initAuthenticatedFlow(t, false)
+			res, _ := initAuthenticatedFlow(t, false, false)
 			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 		})
 	})

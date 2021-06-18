@@ -259,3 +259,30 @@ func (i IdentityWithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
 	}
 	return result, nil
 }
+
+func (i *Identity) ValidateNID() error {
+	expected := i.NID
+	if expected == uuid.Nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))
+	}
+
+	for _, r := range i.RecoveryAddresses {
+		if r.NID != expected {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for recovery addresses."))
+		}
+	}
+
+	for _, r := range i.VerifiableAddresses {
+		if r.NID != expected {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for verifiable addresses."))
+		}
+	}
+
+	for _, r := range i.Credentials {
+		if r.NID != expected {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for credentials."))
+		}
+	}
+
+	return nil
+}

@@ -1,5 +1,6 @@
 package settings
 
+// swagger:enum
 type State string
 
 const (

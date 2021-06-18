@@ -123,67 +123,75 @@ func TestHandleError(t *testing.T) {
 		assert.Contains(t, string(body), "system error")
 	})
 
-	t.Run("flow=api", func(t *testing.T) {
-		t.Run("case=expired error", func(t *testing.T) {
-			t.Cleanup(reset)
+	for _, tc := range []struct {
+		n string
+		t flow.Type
+	}{
+		{"api", flow.TypeAPI},
+		{"spa", flow.TypeBrowser},
+	} {
+		t.Run("flow="+tc.n, func(t *testing.T) {
+			t.Run("case=expired error", func(t *testing.T) {
+				t.Cleanup(reset)
 
-			// This needs an authenticated client in order to call the RouteGetFlow endpoint
-			s, err := session.NewActiveSession(&id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now())
-			require.NoError(t, err)
-			c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
+				// This needs an authenticated client in order to call the RouteGetFlow endpoint
+				s, err := session.NewActiveSession(&id, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now())
+				require.NoError(t, err)
+				c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 
-			settingsFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = settings.NewFlowExpiredError(expiredAnHourAgo)
-			flowMethod = settings.StrategyProfile
+				settingsFlow = newFlow(t, time.Minute, tc.t)
+				flowError = settings.NewFlowExpiredError(expiredAnHourAgo)
+				flowMethod = settings.StrategyProfile
 
-			res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.Contains(t, res.Request.URL.String(), public.URL+settings.RouteGetFlow)
+				res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Contains(t, res.Request.URL.String(), public.URL+settings.RouteGetFlow)
 
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			require.Equal(t, http.StatusOK, res.StatusCode, "%+v\n\t%s", res.Request, body)
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusOK, res.StatusCode, "%+v\n\t%s", res.Request, body)
 
-			assert.Equal(t, int(text.ErrorValidationSettingsFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
-			assert.NotEqual(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
+				assert.Equal(t, int(text.ErrorValidationSettingsFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
+				assert.NotEqual(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
+			})
+
+			t.Run("case=validation error", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				settingsFlow = newFlow(t, time.Minute, tc.t)
+				flowError = schema.NewInvalidCredentialsError()
+				flowMethod = settings.StrategyProfile
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
+				assert.Equal(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
+			})
+
+			t.Run("case=generic error", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				settingsFlow = newFlow(t, time.Minute, tc.t)
+				flowError = herodot.ErrInternalServerError.WithReason("system error")
+				flowMethod = settings.StrategyProfile
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
+			})
 		})
-
-		t.Run("case=validation error", func(t *testing.T) {
-			t.Cleanup(reset)
-
-			settingsFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = schema.NewInvalidCredentialsError()
-			flowMethod = settings.StrategyProfile
-
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.Equal(t, http.StatusBadRequest, res.StatusCode)
-
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
-			assert.Equal(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
-		})
-
-		t.Run("case=generic error", func(t *testing.T) {
-			t.Cleanup(reset)
-
-			settingsFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			flowMethod = settings.StrategyProfile
-
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.Equal(t, http.StatusInternalServerError, res.StatusCode)
-
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
-		})
-	})
+	}
 
 	t.Run("flow=browser", func(t *testing.T) {
 		expectSettingsUI := func(t *testing.T) (*kratos.SettingsFlow, *http.Response) {

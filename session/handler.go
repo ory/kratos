@@ -122,9 +122,12 @@ func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 // nolint:deadcode,unused
 // swagger:parameters toSession
-type sessionWhoAmIParameters struct {
+type toSession struct {
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// in: header
+	SessionCookie string `json:"X-Session-Cookie"`
 }
 
 // swagger:route GET /sessions/whoami public toSession
@@ -141,13 +144,19 @@ type sessionWhoAmIParameters struct {
 // - Reverse proxies and API Gateways
 // - Server-side calls - use the `X-Session-Token` header!
 //
+// This endpoint authenticates users by checking
+//
+// - if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
+// - if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
+// - if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;
+// - if the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).
+//
+// If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+//
 //     Produces:
 //     - application/json
 //
 //     Schemes: http, https
-//
-//     Security:
-//       sessionCookie:
 //
 //     Responses:
 //       200: session

@@ -1,5 +1,6 @@
 curl -s -v -X GET \
-  -H "Accept: text/html"  \
+  -H "Accept: application/json"  \
+  -H "Origin: http://127.0.0.1:4433"  \
   http://127.0.0.1:4433/self-service/login/browser
 
 > GET /self-service/login/browser HTTP/1.1
