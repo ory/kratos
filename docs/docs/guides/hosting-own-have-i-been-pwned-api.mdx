@@ -27,20 +27,28 @@ selfservice:
 An example of a minimal self-hosted, k-anonymity enabled HiBP API
 [can be found in this repository](https://github.com/radekg/hibp).
 
-Alternatively, this feature can be disabled altogether. Note however that by doing so
-you will significantly decrease the security of the service and not follow [NIST guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html):
+Alternatively, this feature can be disabled altogether. Note however that by
+doing so you will significantly decrease the security of the service and not
+follow [NIST guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html):
 
-> When processing requests to establish and change memorized secrets, verifiers SHALL compare the prospective secrets against a list that contains values known to be commonly-used, expected, or compromised. For example, the list MAY include, but is not limited to:
-> 
+> When processing requests to establish and change memorized secrets, verifiers
+> SHALL compare the prospective secrets against a list that contains values
+> known to be commonly-used, expected, or compromised. For example, the list MAY
+> include, but is not limited to:
+>
 > 1. Passwords obtained from previous breach corpuses.
 > 2. Dictionary words.
 > 3. Repetitive or sequential characters (e.g. ‘aaaaaa’, ‘1234abcd’).
-> 4. Context-specific words, such as the name of the service, the username, and derivatives thereof.
-> 
-> If the chosen secret is found in the list, the CSP or verifier SHALL advise the subscriber that they need to select a different secret, SHALL provide the reason for rejection, and SHALL require the subscriber to choose a different value.
+> 4. Context-specific words, such as the name of the service, the username, and
+>    derivatives thereof.
+>
+> If the chosen secret is found in the list, the CSP or verifier SHALL advise
+> the subscriber that they need to select a different secret, SHALL provide the
+> reason for rejection, and SHALL require the subscriber to choose a different
+> value.
 
-Disabling the feature will effectively remove checks for the points 1.-3.
-The feature can be disabled by setting the following configuration values: 
+Disabling the feature will effectively remove checks for the points 1.-3. The
+feature can be disabled by setting the following configuration values:
 
 ```yaml title="path/to/kratos/config.yml
 selfservice:
