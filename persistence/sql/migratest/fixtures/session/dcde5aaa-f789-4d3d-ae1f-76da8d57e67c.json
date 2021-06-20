@@ -1,0 +1,31 @@
+{
+  "id": "dcde5aaa-f789-4d3d-ae1f-76da8d57e67c",
+  "active": true,
+  "expires_at": "2013-10-07T08:23:19Z",
+  "authenticated_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "identity": {
+    "id": "5ff66179-c240-4703-b0d8-494592cefff5",
+    "schema_id": "default",
+    "schema_url": "https://www.ory.sh/schemas/default",
+    "state": "active",
+    "state_changed_at": null,
+    "traits": {
+      "email": "bazbar@ory.sh"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "45e867e9-2745-4f16-8dd4-84334a252b61",
+        "value": "foo@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null,
+        "created_at": "2013-10-07T08:23:19Z",
+        "updated_at": "2013-10-07T08:23:19Z"
+      }
+    ],
+    "created_at": "2013-10-07T08:23:19Z",
+    "updated_at": "2013-10-07T08:23:19Z"
+  }
+}

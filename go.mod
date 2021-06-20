@@ -10,11 +10,11 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 
 replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
-replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.20210412125924-f5ad9021d6ac
+replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.20210608105745-bb07a373cc0e
 
-replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7
+replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 
-replace github.com/ory/x => github.com/ory/x v0.0.250
+replace github.com/ory/x => github.com/ory/x v0.0.255
 
 require (
 	github.com/DataDog/datadog-go v4.7.0+incompatible // indirect

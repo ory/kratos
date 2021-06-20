@@ -100,6 +100,7 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**ListIdentities**](docs/AdminApi.md#listidentities) | **Get** /identities | List Identities
 *AdminApi* | [**Prometheus**](docs/AdminApi.md#prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 *AdminApi* | [**UpdateIdentity**](docs/AdminApi.md#updateidentity) | **Put** /identities/{id} | Update an Identity
+*PublicApi* | [**CreateSelfServiceLogoutUrlForBrowsers**](docs/PublicApi.md#createselfservicelogouturlforbrowsers) | **Get** /self-service/logout/browser | Initialize Logout Flow for Browsers
 *PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} | 
 *PublicApi* | [**GetSelfServiceError**](docs/PublicApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 *PublicApi* | [**GetSelfServiceLoginFlow**](docs/PublicApi.md#getselfserviceloginflow) | **Get** /self-service/login/flows | Get Login Flow
@@ -107,7 +108,6 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**GetSelfServiceRegistrationFlow**](docs/PublicApi.md#getselfserviceregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
 *PublicApi* | [**GetSelfServiceSettingsFlow**](docs/PublicApi.md#getselfservicesettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
 *PublicApi* | [**GetSelfServiceVerificationFlow**](docs/PublicApi.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
-*PublicApi* | [**InitializeSelfServiceBrowserLogoutFlow**](docs/PublicApi.md#initializeselfservicebrowserlogoutflow) | **Get** /self-service/browser/flows/logout | Initialize Browser-Based Logout User Flow
 *PublicApi* | [**InitializeSelfServiceLoginForBrowsers**](docs/PublicApi.md#initializeselfserviceloginforbrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceLoginWithoutBrowser**](docs/PublicApi.md#initializeselfserviceloginwithoutbrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceRecoveryForBrowsers**](docs/PublicApi.md#initializeselfservicerecoveryforbrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browsers
@@ -118,8 +118,9 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**InitializeSelfServiceSettingsWithoutBrowser**](docs/PublicApi.md#initializeselfservicesettingswithoutbrowser) | **Get** /self-service/settings/api | Initialize Settings Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceVerificationForBrowsers**](docs/PublicApi.md#initializeselfserviceverificationforbrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 *PublicApi* | [**InitializeSelfServiceVerificationWithoutBrowser**](docs/PublicApi.md#initializeselfserviceverificationwithoutbrowser) | **Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
-*PublicApi* | [**RevokeSession**](docs/PublicApi.md#revokesession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
 *PublicApi* | [**SubmitSelfServiceLoginFlow**](docs/PublicApi.md#submitselfserviceloginflow) | **Post** /self-service/login | Submit a Login Flow
+*PublicApi* | [**SubmitSelfServiceLogoutFlow**](docs/PublicApi.md#submitselfservicelogoutflow) | **Post** /self-service/logout | Complete Self-Service Logout
+*PublicApi* | [**SubmitSelfServiceLogoutFlowWithoutBrowser**](docs/PublicApi.md#submitselfservicelogoutflowwithoutbrowser) | **Delete** /self-service/logout/api | Perform Logout for APIs, Services, Apps, ...
 *PublicApi* | [**SubmitSelfServiceRecoveryFlow**](docs/PublicApi.md#submitselfservicerecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
 *PublicApi* | [**SubmitSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#submitselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 *PublicApi* | [**SubmitSelfServiceRegistrationFlow**](docs/PublicApi.md#submitselfserviceregistrationflow) | **Post** /self-service/registration | Submit a Registration Flow
@@ -155,6 +156,7 @@ Class | Method | HTTP request | Description
  - [JsonError](docs/JsonError.md)
  - [LoginFlow](docs/LoginFlow.md)
  - [LoginViaApiResponse](docs/LoginViaApiResponse.md)
+ - [LogoutUrl](docs/LogoutUrl.md)
  - [Meta](docs/Meta.md)
  - [Plugin](docs/Plugin.md)
  - [PluginConfig](docs/PluginConfig.md)
@@ -175,7 +177,6 @@ Class | Method | HTTP request | Description
  - [RecoveryLink](docs/RecoveryLink.md)
  - [RegistrationFlow](docs/RegistrationFlow.md)
  - [RegistrationViaApiResponse](docs/RegistrationViaApiResponse.md)
- - [RevokeSession](docs/RevokeSession.md)
  - [SelfServiceErrorContainer](docs/SelfServiceErrorContainer.md)
  - [ServiceUpdateResponse](docs/ServiceUpdateResponse.md)
  - [Session](docs/Session.md)
@@ -185,6 +186,7 @@ Class | Method | HTTP request | Description
  - [SubmitSelfServiceBrowserSettingsOIDCFlowPayload](docs/SubmitSelfServiceBrowserSettingsOIDCFlowPayload.md)
  - [SubmitSelfServiceLoginFlow](docs/SubmitSelfServiceLoginFlow.md)
  - [SubmitSelfServiceLoginFlowWithPasswordMethod](docs/SubmitSelfServiceLoginFlowWithPasswordMethod.md)
+ - [SubmitSelfServiceLogoutFlowWithoutBrowserBody](docs/SubmitSelfServiceLogoutFlowWithoutBrowserBody.md)
  - [SubmitSelfServiceRecoveryFlowBody](docs/SubmitSelfServiceRecoveryFlowBody.md)
  - [SubmitSelfServiceRecoveryFlowWithLinkMethod](docs/SubmitSelfServiceRecoveryFlowWithLinkMethod.md)
  - [SubmitSelfServiceRegistrationFlow](docs/SubmitSelfServiceRegistrationFlow.md)

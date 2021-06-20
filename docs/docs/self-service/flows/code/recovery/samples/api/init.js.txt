@@ -4,5 +4,5 @@ const kratos = new PublicApi(new Configuration({ basePath: 'http://127.0.0.1:443
 
 kratos.initializeSelfServiceRecoveryWithoutBrowser()
   .then(({ data: flow }) => {
-    console.log(flow) // see the Raw HTTP tab for the payload
+    console.log(flow) // see the curl tab for the payload
   })

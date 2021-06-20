@@ -6,24 +6,20 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/ory/kratos/examples/go/pkg"
+
 	ory "github.com/ory/kratos-client-go"
 )
 
-func sdk(endpoint string) *ory.APIClient {
-	conf := ory.NewConfiguration()
-	conf.Servers = ory.ServerConfigurations{{URL: endpoint}}
-	return ory.NewAPIClient(conf)
-}
+// If you use Open Source this would be:
+//
+//var client = pkg.NewSDKForSelfHosted("http://127.0.0.1:4433")
+var client = pkg.NewSDK("playground")
 
 func initVerification() *ory.VerificationFlow {
 	ctx := context.Background()
 
-	// If you use Open Source this would be:
-	//
-	// c := sdk("https://127.0.0.1:4433")
-	c := sdk("https://playground.projects.oryapis.com/api/kratos/public")
-
-	flow, _, err := c.PublicApi.InitializeSelfServiceVerificationWithoutBrowser(ctx).Execute()
+	flow, _, err := client.PublicApi.InitializeSelfServiceVerificationWithoutBrowser(ctx).Execute()
 	if err != nil {
 		log.Fatalf("An error ocurred: %s\n", err)
 	}

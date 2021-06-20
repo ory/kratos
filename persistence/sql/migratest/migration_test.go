@@ -154,7 +154,8 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						found = append(found, id.ID.String())
 						actual, err := d.SessionPersister().GetSession(context.Background(), id.ID)
-						require.NoError(t, err)
+						require.NoErrorf(t, err, "Trying to get session: %s", id.ID)
+						require.NotEmpty(t, actual.LogoutToken, "check if migrations have generated a logout token for existing sessions")
 						migratest.CompareWithFixture(t, actual, "session", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "session"), found)
