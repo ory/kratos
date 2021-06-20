@@ -47,10 +47,10 @@ with the SDK breaking changes for now.
 - Continue button for oidc registration step
   ([2aad5ac](https://github.com/ory/kratos/commit/2aad5ac8f7055f39f4f434d26fbca74cdbe75337)),
   closes [#1422](https://github.com/ory/kratos/issues/1422)
-  [#1320](https://github.com/ory/kratos/issues/1320):
-  When signing up with an OIDC provider and the traits model is missing some
-  fields, the submit button shows all OIDC options. Instead, it should show just
-  one option called "Continue".
+  [#1320](https://github.com/ory/kratos/issues/1320): When signing up with an
+  OIDC provider and the traits model is missing some fields, the submit button
+  shows all OIDC options. Instead, it should show just one option called
+  "Continue".
 - Deprecate sessionCookie ([#1428](https://github.com/ory/kratos/issues/1428))
   ([eccad74](https://github.com/ory/kratos/commit/eccad741a1702181d4b207aad954a950906a808b)),
   closes [#1426](https://github.com/ory/kratos/issues/1426)
@@ -176,11 +176,11 @@ with the SDK breaking changes for now.
 - Natively support SPA for login flows
   ([6ff67af](https://github.com/ory/kratos/commit/6ff67afa8b0fc0a95cec44d3dda2cbc1987b51dd)),
   closes [#1138](https://github.com/ory/kratos/issues/1138)
-  [#668](https://github.com/ory/kratos/issues/668):
-  This patch adds the long-awaited capabilities for natively working with SPAs
-  and AJAX requests. Previously, requests to the `/self-service/login/browser`
-  endpoint would always end up in a redirect. Now, if the `Accept` header is set
-  to `application/json`, the login flow will be returned as JSON instead.
+  [#668](https://github.com/ory/kratos/issues/668): This patch adds the
+  long-awaited capabilities for natively working with SPAs and AJAX requests.
+  Previously, requests to the `/self-service/login/browser` endpoint would
+  always end up in a redirect. Now, if the `Accept` header is set to
+  `application/json`, the login flow will be returned as JSON instead.
   Accordingly, changes to the error and submission flow have been made to
   support `application/json` content types and SPA / AJAX requests.
 - Natively support SPA for recovery flows
@@ -195,14 +195,13 @@ with the SDK breaking changes for now.
 - Natively support SPA for registration flows
   ([57d3c57](https://github.com/ory/kratos/commit/57d3c5786a88f0648e7fa57f181f060a057ec19f)),
   closes [#1138](https://github.com/ory/kratos/issues/1138)
-  [#668](https://github.com/ory/kratos/issues/668):
-  This patch adds the long-awaited capabilities for natively working with SPAs
-  and AJAX requests. Previously, requests to the
-  `/self-service/registration/browser` endpoint would always end up in a
-  redirect. Now, if the `Accept` header is set to `application/json`, the
-  registration flow will be returned as JSON instead. Accordingly, changes to
-  the error and submission flow have been made to support `application/json`
-  content types and SPA / AJAX requests.
+  [#668](https://github.com/ory/kratos/issues/668): This patch adds the
+  long-awaited capabilities for natively working with SPAs and AJAX requests.
+  Previously, requests to the `/self-service/registration/browser` endpoint
+  would always end up in a redirect. Now, if the `Accept` header is set to
+  `application/json`, the registration flow will be returned as JSON instead.
+  Accordingly, changes to the error and submission flow have been made to
+  support `application/json` content types and SPA / AJAX requests.
 - Natively support SPA for settings flows
   ([ea4395e](https://github.com/ory/kratos/commit/ea4395ed25d5668e4ce365336cd7a5e13e0ba1cc)):
   This patch adds the long-awaited capabilities for natively working with SPAs
@@ -1002,8 +1001,8 @@ because the validation process has improved significantly.
   ([#1024](https://github.com/ory/kratos/issues/1024))
   ([5396a82](https://github.com/ory/kratos/commit/5396a82c34eef5d42444b5c4371bd4f820fe3eb0)),
   closes [#652](https://github.com/ory/kratos/issues/652)
-  [#732](https://github.com/ory/kratos/issues/732):
-  Fixes the courier message dequeuing race condition by modifying
+  [#732](https://github.com/ory/kratos/issues/732): Fixes the courier message
+  dequeuing race condition by modifying
   `*sql.Persister.NextMessages(ctx context.Context, limit uint8)` to retrieve
   only messages with status `MessageStatusQueued` and update the status of the
   retrieved messages to `MessageStatusProcessing` within a transaction. On
@@ -1073,10 +1072,10 @@ because the validation process has improved significantly.
   ([2588fb4](https://github.com/ory/kratos/commit/2588fb489d76939aeec2986d30fde9075b373831)):
   This patch introduces a new SQL transaction model for running SQL migrations.
   This fix is particularly targeted at CockroachDB which has limited support for
-  mixing DDL and DML statements.
-  Previously it could happen that migrations failure needed manual intervention.
-  This has now been resolved. The new migration model is compatible with the old
-  one and should work without a problem.
+  mixing DDL and DML statements. Previously it could happen that migrations
+  failure needed manual intervention. This has now been resolved. The new
+  migration model is compatible with the old one and should work without a
+  problem.
 - Pass down context to registry
   ([0879446](https://github.com/ory/kratos/commit/08794461ed95965a9e5460ded2b4c04ab0f5e2e8))
 - Re-enable SDK generation
@@ -1108,9 +1107,9 @@ because the validation process has improved significantly.
   ([30a8cee](https://github.com/ory/kratos/commit/30a8cee22238d9f400e6d315a9bc99f710945f81))
 - Remove verify hook
   ([98cfec6](https://github.com/ory/kratos/commit/98cfec6d72c2e7bf2db2e8dd6f8875e885923ba8)),
-  closes [#1302](https://github.com/ory/kratos/issues/1302):
-  The verify hook is automatically used when verification is enabled and has
-  been removed as a configuration option.
+  closes [#1302](https://github.com/ory/kratos/issues/1302): The verify hook is
+  automatically used when verification is enabled and has been removed as a
+  configuration option.
 - Replace jwt module ([#1254](https://github.com/ory/kratos/issues/1254))
   ([3803c8c](https://github.com/ory/kratos/commit/3803c8ce43e35c51a9c1d7ab55bc662c398cf0d8)),
   closes [#1250](https://github.com/ory/kratos/issues/1250)
@@ -1214,9 +1213,8 @@ because the validation process has improved significantly.
   ([fc42ece](https://github.com/ory/kratos/commit/fc42ece24107dcb6e6a416cc54a2fb5de524fd94))
 - Improve Argon2 tooling ([#961](https://github.com/ory/kratos/issues/961))
   ([3151187](https://github.com/ory/kratos/commit/315118720419194be8baf5e5e64d7bf190179568)),
-  closes [#955](https://github.com/ory/kratos/issues/955):
-  This adds a load testing CLI that allows to adjust the hasher parameters under
-  simulated load.
+  closes [#955](https://github.com/ory/kratos/issues/955): This adds a load
+  testing CLI that allows to adjust the hasher parameters under simulated load.
 - Move faker to exportable module
   ([09f8ae5](https://github.com/ory/kratos/commit/09f8ae5755c9978574e91676bf5df6a23a2feb78))
 - Move migratest helpers to ory/x
@@ -1444,8 +1442,8 @@ because the validation process has improved significantly.
   This patch adds the ability to use BCrypt instead of Argon2id for password
   hashing. We recommend using BCrypt for web workloads where password hashing
   should take around 200ms. For workloads where login takes >= 2 seconds, we
-  recommend to continue using Argon2id.
-  To use bcrypt for password hashing, set your config as follows:
+  recommend to continue using Argon2id. To use bcrypt for password hashing, set
+  your config as follows:
   ```
   hashers:
   bcrypt:
@@ -1470,14 +1468,13 @@ because the validation process has improved significantly.
   ([#1062](https://github.com/ory/kratos/issues/1062))
   ([500b8ba](https://github.com/ory/kratos/commit/500b8bacd9fd541afd053f42fec66443cfebabda)),
   closes [#1033](https://github.com/ory/kratos/issues/1033)
-  [#1024](https://github.com/ory/kratos/issues/1024):
-  BREACKING CHANGES: This patch moves the courier watcher (responsible for
-  sending mail) to its own foreground worker, which can be executed as a, for
-  example, Kubernetes job.
-  It is still possible to have the previous behaviour which would run the worker
-  as a background task when running `kratos serve` by using the
-  `--watch-courier` flag.
-  To run the foreground worker, use `kratos courier watch -c your/config.yaml`.
+  [#1024](https://github.com/ory/kratos/issues/1024): BREACKING CHANGES: This
+  patch moves the courier watcher (responsible for sending mail) to its own
+  foreground worker, which can be executed as a, for example, Kubernetes job. It
+  is still possible to have the previous behaviour which would run the worker as
+  a background task when running `kratos serve` by using the `--watch-courier`
+  flag. To run the foreground worker, use
+  `kratos courier watch -c your/config.yaml`.
 - Do not enforce bcrypt 12 for dev envs
   ([bbf44d8](https://github.com/ory/kratos/commit/bbf44d887ae5cdb5975516149c74b3ba10896209))
 - Email input validation ([#1287](https://github.com/ory/kratos/issues/1287))
@@ -1518,10 +1515,10 @@ because the validation process has improved significantly.
   - grouping UI nodes (e.g. keep password and oidc nodes together)
   - labeling UI nodes (e.g. "Sign in with GitHub")
   - using the "title" attribute from the identity schema to label trait fields
-  This greatly simplifies front-end code on your end and makes it even easier to
-  integrate with Ory Kratos! If you want a custom experience with e.g.
-  translations or other things you can always adjust this in your UI
-  integration!
+    This greatly simplifies front-end code on your end and makes it even easier
+    to integrate with Ory Kratos! If you want a custom experience with e.g.
+    translations or other things you can always adjust this in your UI
+    integration!
 - Support base64 inline schemas
   ([815a248](https://github.com/ory/kratos/commit/815a24890a118f4128ac083241a93d8df27042f7))
 - Support contextual csrf cookies
@@ -1537,14 +1534,12 @@ because the validation process has improved significantly.
 - Web hooks support (recovery)
   ([#1289](https://github.com/ory/kratos/issues/1289))
   ([3e181fe](https://github.com/ory/kratos/commit/3e181fe3d7750a715ab31eb8347fbb4bdb89d6e6)),
-  closes [#271](https://github.com/ory/kratos/issues/271):
-  feat: web hooks for self-service flows
-  This feature adds the ability to define web-hooks using a mixture of
-  configuration and JsonNet. This allows integration with services like
-  Mailchimp, Stripe, CRMs, and all other APIs that support REST requests.
+  closes [#271](https://github.com/ory/kratos/issues/271): feat: web hooks for
+  self-service flows This feature adds the ability to define web-hooks using a
+  mixture of configuration and JsonNet. This allows integration with services
+  like Mailchimp, Stripe, CRMs, and all other APIs that support REST requests.
   Additional to these new changes it is now possible to define hooks for
-  verification and recovery as well!
-  For more information, head over to the
+  verification and recovery as well! For more information, head over to the
   [hooks documentation](https://www.ory.sh/kratos/docs/self-service/hooks).
 - **courier:** Allow sending individual messages
   ([cbb2c0b](https://github.com/ory/kratos/commit/cbb2c0bef63323a177589e9d2a809c84b4f1acdd))
@@ -1661,9 +1656,8 @@ this release, we focused on improving production stability!
   ([#888](https://github.com/ory/kratos/issues/888))
   ([7a00483](https://github.com/ory/kratos/commit/7a00483908bb623efdf281e76005c4485ea6b1ab)),
   closes [#450](https://github.com/ory/kratos/issues/450)
-  [#316](https://github.com/ory/kratos/issues/316):
-  Allows configuring password breach thresholds and optionally enforces checks
-  against the HIBP API.
+  [#316](https://github.com/ory/kratos/issues/316): Allows configuring password
+  breach thresholds and optionally enforces checks against the HIBP API.
 - Remove obsolete types ([#887](https://github.com/ory/kratos/issues/887))
   ([b8bac7a](https://github.com/ory/kratos/commit/b8bac7aa56c16cd98f76a95a5e0d01fb1bbde6b7)),
   closes [#716](https://github.com/ory/kratos/issues/716)
@@ -1690,8 +1684,8 @@ this release, we focused on improving production stability!
   ([1735ca2](https://github.com/ory/kratos/commit/1735ca2ced104971de4e97524d0a23d57ba045f2))
 - Add recovery flow ([#868](https://github.com/ory/kratos/issues/868))
   ([d95cfe9](https://github.com/ory/kratos/commit/d95cfe9759d3ffc08c24048a064c0c800abdf4b4)),
-  closes [#864](https://github.com/ory/kratos/issues/864):
-  Added a short section for the recovery flow on managing-user-identities.
+  closes [#864](https://github.com/ory/kratos/issues/864): Added a short section
+  for the recovery flow on managing-user-identities.
 - Fix account recovery click instruction
   ([#870](https://github.com/ory/kratos/issues/870))
   ([383de9e](https://github.com/ory/kratos/commit/383de9ecf6f6504dbb9c20fb4cb984e934f0751e))
@@ -1802,10 +1796,11 @@ blog article for more insights!
   ([ca5a69b](https://github.com/ory/kratos/commit/ca5a69b798635d0e5361fd5b0cc369b035dca738)),
   closes [#723](https://github.com/ory/kratos/issues/723)
   [#572](https://github.com/ory/kratos/issues/572)
-  [#647](https://github.com/ory/kratos/issues/647):
-  This patch adds the new command "hashers argon2 calibrate" which allows one to
-  pick the desired hashing time for password hashing and then chooses the
-  optimal parameters for the hardware the command is running on:
+  [#647](https://github.com/ory/kratos/issues/647): This patch adds the new
+  command "hashers argon2 calibrate" which allows one to pick the desired
+  hashing time for password hashing and then chooses the optimal parameters for
+  the hardware the command is running on:
+
   ```
   $ kratos hashers argon2 calibrate 500ms
   Increasing memory to get over 500ms:
@@ -1853,8 +1848,8 @@ Profile App"!
   ([4d97a95](https://github.com/ory/kratos/commit/4d97a95d084ea99f5aca158609e197acd256cdd7))
 - Ignore unsupported migration dialects
   ([12bb8d1](https://github.com/ory/kratos/commit/12bb8d14ae1edef18591996411be67d5693e5101)),
-  closes [#778](https://github.com/ory/kratos/issues/778):
-  Skips sqlite3 migrations when support is lacking.
+  closes [#778](https://github.com/ory/kratos/issues/778): Skips sqlite3
+  migrations when support is lacking.
 - Improve semver regex
   ([584c0b5](https://github.com/ory/kratos/commit/584c0b5043e85e88ac2648cf699d60fed3e775a9))
 - Properly set nosurf context even when ignored
