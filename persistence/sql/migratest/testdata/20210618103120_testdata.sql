@@ -1,0 +1,2 @@
+INSERT INTO sessions (id, nid, issued_at, expires_at, authenticated_at,created_at,updated_at, token, identity_id, active, logout_token)
+VALUES ('dcde5aaa-f789-4d3d-ae1f-76da8d57e67c','884f556e-eb3a-4b9f-bee3-11345642c6c0','2013-10-07 08:23:19','2013-10-07 08:23:19','2013-10-07 08:23:19','2013-10-07 08:23:19','2013-10-07 08:23:19', 'eVwBt7UWPweVwBt7UWPw', '5ff66179-c240-4703-b0d8-494592cefff5', true, '123eVwBt7UWPweVwBt7UWPw')

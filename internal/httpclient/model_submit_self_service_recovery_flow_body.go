@@ -15,7 +15,7 @@ import (
 	"encoding/json"
 )
 
-// SubmitSelfServiceRecoveryFlowBody struct for SubmitSelfServiceRecoveryFlowBody
+// SubmitSelfServiceRecoveryFlowBody nolint:deadcode,unused
 type SubmitSelfServiceRecoveryFlowBody struct {
 	// Email is the email to which to send the Recovery message to.
 	Email string `json:"email"`

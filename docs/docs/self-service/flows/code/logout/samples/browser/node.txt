@@ -1,0 +1,14 @@
+import { Configuration, PublicApi } from '@ory/kratos-client';
+const kratos = new PublicApi(new Configuration({ basePath: 'http://127.0.0.1:4433/' }));
+
+const flowId = '' // usually something like: req.query.flow
+
+const route = (req: Request, res: Response) => {
+  kratos.createSelfServiceLogoutUrlForBrowsers(req.cookies['ory_kratos_session']).then(({data}) => {
+    .then(({ data }) => {
+      console.log(data.logout_url) // The logout URL
+
+      // You can render the logout URL like so:
+      // <a href="{{data.logout_url}}>Logout</a>
+    })
+}

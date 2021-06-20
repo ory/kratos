@@ -1,0 +1,18 @@
+add_column("sessions", "logout_token", "string", {"size": 32, "null": true})
+
+{{ if .IsSQLite }}
+sql("UPDATE sessions SET logout_token = token")
+{{ end }}
+
+{{ if .IsMySQL }}
+sql("UPDATE sessions SET logout_token = token")
+{{ end }}
+
+{{ if or .IsPostgreSQL .IsCockroach }}
+  sql("UPDATE sessions SET logout_token = token")
+{{ end }}
+
+change_column("sessions", "logout_token", "string", {"size": 32, "null": false})
+
+add_index("sessions", "logout_token", {"unique": true, "name": "sessions_logout_token_uq_idx"})
+add_index("sessions", "logout_token", {"name": "sessions_logout_token_idx" })

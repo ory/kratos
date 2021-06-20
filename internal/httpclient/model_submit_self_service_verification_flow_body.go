@@ -15,7 +15,7 @@ import (
 	"encoding/json"
 )
 
-// SubmitSelfServiceVerificationFlowBody struct for SubmitSelfServiceVerificationFlowBody
+// SubmitSelfServiceVerificationFlowBody nolint:deadcode,unused
 type SubmitSelfServiceVerificationFlowBody struct {
 	// Email is the email to which to send the verification message to.
 	Email string `json:"email"`
