@@ -1,15 +1,20 @@
 import {gen, MOBILE_URL, website} from '../../../../helpers'
 
-context('Login Flow Success', () => {
-  const up = (value) => `not-${value}`
-
-  describe('password', () => {
-    const email = gen.email()
-    const password = gen.password()
-
+context('Mobile Profile', () => {
+  describe('Login Flow Success', () => {
     before(() => {
-      cy.registerApi({email, password, fields: {'traits.website': website}})
+      cy.useConfigProfile('mobile')
     })
+
+    const up = (value) => `not-${value}`
+
+    describe('password', () => {
+      const email = gen.email()
+      const password = gen.password()
+
+      before(() => {
+        cy.registerApi({email, password, fields: {'traits.website': website}})
+      })
 
     beforeEach(() => {
       cy.loginMobile({email, password})
@@ -65,5 +70,6 @@ context('Login Flow Success', () => {
       cy.visit(MOBILE_URL + "/Home")
       cy.get('[data-testid="session-content"]').should('contain', newEmail)
     })
+  })
   })
 })

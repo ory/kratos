@@ -1,15 +1,20 @@
 import { APP_URL, gen } from '../../../../helpers'
 
-context('Registration Flow Errors', () => {
-  beforeEach(() => {
-    cy.visit(APP_URL + '/auth/registration')
-  })
+context('Email Profile', () => {
+  describe('Registration Flow Errors', () => {
+    before(() => {
+      cy.useConfigProfile('email')
+    })
 
-  const identity = gen.email()
-  const password = gen.password()
+    beforeEach(() => {
+      cy.visit(APP_URL + '/auth/registration')
+    })
 
-  it('fails when CSRF cookies are missing', () => {
-    cy.clearCookies()
+    const identity = gen.email()
+    const password = gen.password()
+
+    it('fails when CSRF cookies are missing', () => {
+      cy.clearCookies()
 
     cy.get('input[name="traits.website"]').type('https://www.ory.sh')
     cy.get('input[name="traits.email"]')
@@ -97,5 +102,6 @@ context('Registration Flow Errors', () => {
         'length must be >= 10'
       )
     })
+  })
   })
 })

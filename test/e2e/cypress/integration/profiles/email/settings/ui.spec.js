@@ -1,14 +1,20 @@
 const {APP_URL, gen} = require('../../../../helpers')
-context('Settings Flow UI', () => {
-  beforeEach(() => {
-    const identity = gen.identity()
-    cy.register({
-      ...identity,
-      fields: {'traits.website': 'https://www.ory.sh/'},
+
+context('Email Profile', () => {
+  describe('Settings Flow UI', () => {
+    before(() => {
+      cy.useConfigProfile('email')
     })
-    cy.login(identity)
-    cy.visit(APP_URL)
-  })
+
+    beforeEach(() => {
+      const identity = gen.identity()
+      cy.register({
+        ...identity,
+        fields: {'traits.website': 'https://www.ory.sh/'},
+      })
+      cy.login(identity)
+      cy.visit(APP_URL)
+    })
 
   describe('use ui elements', () => {
     it('should use the json schema titles', () => {
@@ -25,5 +31,6 @@ context('Settings Flow UI', () => {
       cy.location('pathname').should('include', 'settings')
       cy.location('search').should('not.be.empty', 'request')
     })
+  })
   })
 })

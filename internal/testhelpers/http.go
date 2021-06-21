@@ -39,6 +39,14 @@ func NewHTTPGetJSONRequest(t *testing.T, url string) *http.Request {
 	return req
 }
 
+func NewHTTPGetAJAXRequest(t *testing.T, url string) *http.Request {
+	req, err := http.NewRequest("GET", url, nil)
+	require.NoError(t, err)
+
+	req.Header.Set("Accept", "application/json")
+	return req
+}
+
 func NewHTTPDeleteJSONRequest(t *testing.T, url string, in interface{}) *http.Request {
 	var body bytes.Buffer
 	require.NoError(t, json.NewEncoder(&body).Encode(in))

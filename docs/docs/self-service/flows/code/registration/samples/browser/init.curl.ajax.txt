@@ -1,0 +1,116 @@
+$ curl -s -v -X GET \
+  -H "Accept: application/json"  \
+  -H "Origin: http://127.0.0.1:4433"  \
+  http://127.0.0.1:4433/self-service/registration/browser | jq
+
+> GET /self-service/registration/browser HTTP/1.1
+> Host: 127.0.0.1:4433
+> User-Agent: curl/7.64.1
+> Accept: application/json
+> Origin: http://127.0.0.1:4433
+
+< HTTP/1.1 200 OK
+< Cache-Control: private, no-cache, no-store, must-revalidate
+< Content-Type: application/json; charset=utf-8
+< Set-Cookie: aHR0cDovLzEyNy4wLjAuMTo0NDU1Lw_csrf_token=aXKkQQJ6O44HGR/ttxxK+3hrypxIE9AX1jxMw7x35D4=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly; SameSite=Lax
+< Vary: Cookie
+< Date: Fri, 21 May 2021 08:34:58 GMT
+< Content-Length: 1384
+
+{
+  "id": "2faebfee-f4b1-429f-8884-89ebe98caf54",
+  "type": "browser",
+  "expires_at": "2021-05-21T09:34:58.22891Z",
+  "issued_at": "2021-05-21T08:34:58.22891Z",
+  "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4455/self-service/registration?flow=2faebfee-f4b1-429f-8884-89ebe98caf54",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "tQ6VpLXWg1OeKlXGWIQsPxJb909ODyEoJpQ+cDu/fvHcfDHlt6y43ZkzSivvmGbEajA90wYc8T/wqHKzh8iazw==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.email",
+          "type": "email",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "Your E-Mail",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "password",
+          "type": "password",
+          "required": true,
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070001,
+            "text": "Password",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "traits.website",
+          "type": "url",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1070002,
+            "text": "Your website",
+            "type": "info"
+          }
+        }
+      },
+      {
+        "type": "input",
+        "group": "password",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "password",
+          "disabled": false
+        },
+        "messages": null,
+        "meta": {
+          "label": {
+            "id": 1040001,
+            "text": "Sign up",
+            "type": "info",
+            "context": {}
+          }
+        }
+      }
+    ]
+  }
+}

@@ -3,7 +3,7 @@ id: production
 title: Going to Production
 ---
 
-:::warn
+:::warning
 
 This document is still in development.
 

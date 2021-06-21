@@ -1,6 +1,6 @@
 export const getFlow = {
   curl: {
-    label: 'Raw HTTP',
+    label: 'curl',
     language: 'shell',
     code: require('raw-loader!./samples/get.curl.txt').default
   },
@@ -18,7 +18,7 @@ export const getFlow = {
 
 export const initBrowserFlow = {
   curl: {
-    label: 'Raw HTTP',
+    label: 'curl',
     language: 'shell',
     code: require('raw-loader!./samples/browser/init.curl.txt').default
   },
@@ -27,26 +27,29 @@ export const initBrowserFlow = {
     language: 'html',
     code: require('raw-loader!./samples/browser/init.html.txt').default
   },
-  jsx: {
-    label: 'ReactJS',
-    language: 'js',
-    code: require('raw-loader!./samples/browser/init.jsx.txt').default
-  },
   node: {
-    label: 'ExpressJS',
+    label: 'NodeJS (ExpressJS, ...)',
     language: 'html',
     code: require('raw-loader!./samples/browser/init.js.txt').default
+  }
+}
+
+export const initSpaFlow = {
+  curl: {
+    label: 'curl',
+    language: 'shell',
+    code: require('raw-loader!./samples/browser/init.curl.ajax.txt').default
   },
-  angular: {
-    label: 'Angular',
+  jsx: {
+    label: 'AJAX (React, Next, Angular, ...)',
     language: 'js',
-    code: require('raw-loader!./samples/browser/init.ng.html.txt').default
+    code: require('raw-loader!./samples/browser/init.ajax.txt').default
   }
 }
 
 export const initApiFlow = {
   curl: {
-    label: 'Raw HTTP',
+    label: 'curl',
     language: 'shell',
     code: require('raw-loader!./samples/api/init.curl.txt').default
   },
@@ -58,7 +61,8 @@ export const initApiFlow = {
   go: {
     label: 'Go',
     language: 'go',
-    code: require('raw-loader!./samples/api/init.go.txt').default
+    code: require('raw-loader!../../../../../../examples/go/init/recovery/main.go')
+      .default
   }
 }
 

@@ -1,15 +1,20 @@
 import {APP_URL, gen} from '../../../../helpers'
 
-context('Registration Flow Success', () => {
-  beforeEach(() => {
-    cy.visit(APP_URL + '/auth/registration')
-  })
+context('Email Profile', () => {
+  describe('Registration Flow Success', () => {
+    before(() => {
+      cy.useConfigProfile('email')
+    })
 
-  it('should sign up and be logged in', () => {
-    const email = gen.email()
-    const password = gen.password()
-    const website = 'https://www.ory.sh/'
-    cy.get('input[name="traits"]').should('not.exist')
+    beforeEach(() => {
+      cy.visit(APP_URL + '/auth/registration')
+    })
+
+    it('should sign up and be logged in', () => {
+      const email = gen.email()
+      const password = gen.password()
+      const website = 'https://www.ory.sh/'
+      cy.get('input[name="traits"]').should('not.exist')
     cy.get('input[name="traits.email"]').type(email)
     cy.get('input[name="traits.website').type(website)
     cy.get('input[name="password"]').type(password)
@@ -26,6 +31,7 @@ context('Registration Flow Success', () => {
       expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
       expect(identity.traits.website).to.equal(website)
       expect(identity.traits.email).to.equal(email)
+    })
     })
   })
 })

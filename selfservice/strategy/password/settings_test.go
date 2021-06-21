@@ -95,6 +95,14 @@ func TestSettings(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
 		})
 
+		t.Run("type=spa", func(t *testing.T) {
+			res, err := c.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/json"))
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
+			assert.Contains(t, res.Request.URL.String(), settings.RouteSubmitFlow)
+		})
+
 		t.Run("type=api", func(t *testing.T) {
 			res, err := c.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(`{"foo":"bar"}`), "application/json"))
 			require.NoError(t, err)
@@ -104,10 +112,10 @@ func TestSettings(t *testing.T) {
 		})
 	})
 
-	var expectValidationError = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
-		return testhelpers.SubmitSettingsForm(t, isAPI, hc, publicTS, values,
-			testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
-			testhelpers.ExpectURL(isAPI, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI().String()))
+	var expectValidationError = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+		return testhelpers.SubmitSettingsForm(t, isAPI, isSPA, hc, publicTS, values,
+			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI().String()))
 	}
 
 	t.Run("description=should fail if password violates policy", func(t *testing.T) {
@@ -126,11 +134,15 @@ func TestSettings(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				check(t, expectValidationError(t, true, apiUser1, payload))
+				check(t, expectValidationError(t, true, false, apiUser1, payload))
+			})
+
+			t.Run("spa=spa", func(t *testing.T) {
+				check(t, expectValidationError(t, false, true, browserUser1, payload))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, false, browserUser1, payload))
+				check(t, expectValidationError(t, false, false, browserUser1, payload))
 			})
 		})
 
@@ -148,13 +160,19 @@ func TestSettings(t *testing.T) {
 			}
 
 			t.Run("type=api/expected=an error because reauth can not be initialized for API clients", func(t *testing.T) {
-				actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
+				actual := testhelpers.SubmitSettingsForm(t, true, false, apiUser1, publicTS, payload,
+					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
+				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				actual := testhelpers.SubmitSettingsForm(t, false, true, browserUser1, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
 				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, false, browserUser1, payload))
+				check(t, expectValidationError(t, false, false, browserUser1, payload))
 			})
 		})
 	})
@@ -165,17 +183,27 @@ func TestSettings(t *testing.T) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			values.Set("method", "password")
 			values.Set("password", x.NewUUID().String())
-			actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser2, testhelpers.EncodeFormAsJSON(t, true, values))
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiUser2, testhelpers.EncodeFormAsJSON(t, true, values))
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "initiated by another person", "%s", actual)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, true, publicTS)
+			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			values.Set("method", "password")
+			values.Set("password", x.NewUUID().String())
+			actual, res := testhelpers.SettingsMakeRequest(t, false, true, f, browserUser2, values.Encode())
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "initiated by another person", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			values.Set("method", "password")
 			values.Set("password", x.NewUUID().String())
-			actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser2, values.Encode())
+			actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser2, values.Encode())
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "initiated by another person", "%s", actual)
 		})
@@ -194,27 +222,45 @@ func TestSettings(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload, http.StatusOK, publicTS.URL+settings.RouteSubmitFlow)
+			actual := testhelpers.SubmitSettingsForm(t, true, false, apiUser1, publicTS, payload, http.StatusOK, publicTS.URL+settings.RouteSubmitFlow)
+			check(t, gjson.Get(actual, "flow").Raw)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			actual := testhelpers.SubmitSettingsForm(t, false, true, browserUser1, publicTS, payload, http.StatusOK, publicTS.URL+settings.RouteSubmitFlow)
 			check(t, gjson.Get(actual, "flow").Raw)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload, http.StatusOK, conf.SelfServiceFlowSettingsUI().String()))
+			check(t, testhelpers.SubmitSettingsForm(t, false, false, browserUser1, publicTS, payload, http.StatusOK, conf.SelfServiceFlowSettingsUI().String()))
 		})
 	})
 
 	t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
-		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "password")
 		values.Set("password", x.NewUUID().String())
 		values.Set("csrf_token", "invalid_token")
 
-		actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser1, values.Encode())
+		actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser1, values.Encode())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceErrorUI))
 
 		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
+	})
+
+	t.Run("case=should pass even without CSRF token/type=spa", func(t *testing.T) {
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, true, publicTS)
+		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		values.Set("method", "password")
+		values.Set("password", x.NewUUID().String())
+		values.Set("csrf_token", "invalid_token")
+		actual, res := testhelpers.SettingsMakeRequest(t, false, true, f, browserUser1, testhelpers.EncodeFormAsJSON(t, true, values))
+		assert.Equal(t, http.StatusForbidden, res.StatusCode)
+
+		assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 	})
 
 	t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
@@ -223,7 +269,7 @@ func TestSettings(t *testing.T) {
 		values.Set("method", "password")
 		values.Set("password", x.NewUUID().String())
 		values.Set("csrf_token", "invalid_token")
-		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, testhelpers.EncodeFormAsJSON(t, true, values))
+		actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiUser1, testhelpers.EncodeFormAsJSON(t, true, values))
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
 		assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
@@ -267,9 +313,9 @@ func TestSettings(t *testing.T) {
 		}
 	})
 
-	var expectSuccess = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
-		return testhelpers.SubmitSettingsForm(t, isAPI, hc, publicTS, values, http.StatusOK,
-			testhelpers.ExpectURL(isAPI, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI().String()))
+	var expectSuccess = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+		return testhelpers.SubmitSettingsForm(t, isAPI, isSPA, hc, publicTS, values, http.StatusOK,
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+settings.RouteSubmitFlow, conf.SelfServiceFlowSettingsUI().String()))
 	}
 
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
@@ -291,12 +337,17 @@ func TestSettings(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := expectSuccess(t, true, apiUser2, payload)
+			actual := expectSuccess(t, true, false, apiUser2, payload)
 			check(t, gjson.Get(actual, "flow").Raw, apiIdentity2)
 		})
 
+		t.Run("type=spa", func(t *testing.T) {
+			actual := expectSuccess(t, false, true, browserUser2, payload)
+			check(t, gjson.Get(actual, "flow").Raw, browserIdentity2)
+		})
+
 		t.Run("type=browser", func(t *testing.T) {
-			actual := expectSuccess(t, false, browserUser2, payload)
+			actual := expectSuccess(t, false, false, browserUser2, payload)
 			check(t, actual, browserIdentity2)
 		})
 	})
@@ -312,7 +363,7 @@ func TestSettings(t *testing.T) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			values.Set("method", "password")
 			values.Set("password", randx.MustString(16, randx.AlphaNum))
-			_, res := testhelpers.SettingsMakeRequest(t, isAPI, f, c, testhelpers.EncodeFormAsJSON(t, isAPI, values))
+			_, res := testhelpers.SettingsMakeRequest(t, isAPI, false, f, c, testhelpers.EncodeFormAsJSON(t, isAPI, values))
 			require.EqualValues(t, rts.URL+"/return-ts", res.Request.URL.String())
 
 			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), browserIdentity1.ID)
@@ -327,8 +378,12 @@ func TestSettings(t *testing.T) {
 			t.Skip("Post-registration redirects do not work for API flows and are thus not tested here.")
 		})
 
+		t.Run("type=spa", func(t *testing.T) {
+			t.Skip("Post-registration redirects do not work for API flows and are thus not tested here.")
+		})
+
 		t.Run("type=browser", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
+			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, false, publicTS)
 			run(t, rs, false, browserUser1, browserIdentity1)
 		})
 	})

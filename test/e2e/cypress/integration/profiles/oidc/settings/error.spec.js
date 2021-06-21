@@ -1,15 +1,20 @@
 import { APP_URL, gen, website } from '../../../../helpers'
 
-context('Settings', () => {
-  const up = (value) => `not-${value}`
-  const down = (value) => value.replace(/not-/, '')
-  let email
+context('OIDC Profile', () => {
+  describe('Settings', () => {
+    before(() => {
+      cy.useConfigProfile('oidc')
+    })
 
-  beforeEach(() => {
-    cy.clearCookies()
-    email = gen.email()
+    const up = (value) => `not-${value}`
+    const down = (value) => value.replace(/not-/, '')
+    let email
 
-    cy.registerOidc({ email, expectSession: true, website })
+    beforeEach(() => {
+      cy.clearCookies()
+      email = gen.email()
+
+      cy.registerOidc({email, expectSession: true, website})
     cy.visit(APP_URL + '/settings')
   })
 
@@ -24,5 +29,6 @@ context('Settings', () => {
         'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
       )
     })
+  })
   })
 })

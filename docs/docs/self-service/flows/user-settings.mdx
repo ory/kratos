@@ -7,11 +7,13 @@ import Mermaid from '@theme/Mermaid'
 import ApiWarning from '@theme/ApiWarning'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
+import SelfServiceSpaFlow from '@theme/SelfServiceSpaFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
   initBrowserFlow,
   initApiFlow,
+  initSpaFlow,
   getFlow,
   getFlowMethodPasswordWithErrors,
   getFlowMethodProfileWithErrors,
@@ -167,7 +169,7 @@ sessionToken=$(echo $session | jq -r '.session_token')
 echo $sessionToken
 ```
 
-### Profile Updates for Browser Clients
+### User and Profile Settings for Server-Side Browser Clients
 
 The settings flow for browser clients relies on HTTP redirects between Ory
 Kratos, your Settings UI, and the end-user's browser:
@@ -195,7 +197,30 @@ selfservice:
       ui_url: http://127.0.0.1:4455/settings
 ```
 
-### Settings for API Clients
+### User and Profile Settings for Client-Side (AJAX) Browser Clients
+
+The Settings Flow for client-side browser clients relies on AJAX requests.
+
+:::note
+
+This flow requires AJAX and has all the potential problems with CORS. To make it
+work, you need to ensure that cookies work by setting the correct configuration
+options in your JavaScript code and the CORS headers of the server.
+
+:::
+
+<SelfServiceSpaFlow
+  flows={['settings']}
+  success="Identity Updated and HTTP 200 OK"
+  interactions={['"Save Profile Changes"']}
+/>
+
+To initialize the Settings Flow, point the Browser to the initialization
+endpoint:
+
+<CodeTabs items={initSpaFlow} />
+
+### User and Profile Settings Updates for API Clients and Clients without Browsers
 
 <ApiWarning />
 
@@ -459,8 +484,10 @@ framework:
 
 The form payloads are then submitted to Ory Kratos which follows up with:
 
-- An HTTP 302 Found redirect pointing to the Settings UI for Browser Clients.
-- An `application/json` response for API Clients.
+- An HTTP 302 Found redirect pointing to the Registration UI for Browser
+  Clients;
+- An `application/json` response for API Clients and Client-Side Browser
+  applications (e.g. Single Page Apps).
 
 When validation errors happen, browser clients receive a HTTP 302 Found redirect
 to the Settings Flow UI, containing the Settings Flow ID which includes the
@@ -501,7 +528,7 @@ error in the future (tracked as
 
 Completing the settings update behaves differently for Browser and API Clients.
 
-### Browser Clients
+### Server-Side Browser Clients
 
 When the profile update is completed successfully, Ory Kratos responds with a
 HTTP 302 Redirect to the Settings UI which now contains the success state
@@ -687,7 +714,73 @@ You may also
 [configure a redirect URL](../../concepts/browser-redirect-flow-completion)
 instead which would send the end-user to that configured URL.
 
-### API Clients
+### Client-Side Browser Clients
+
+When the update is completed successfully, Ory Kratos response with a HTTP 200
+OK message containing the updated identity:
+
+```shell script
+$ password=ByS8NWuFSkDgMjbe
+
+$ actionUrl=$(curl -s -H "Accept: application/json" \
+  -H "Authorization: bearer $sessionToken" \
+  'http://127.0.0.1:4433/self-service/settings/browser' | jq -r '.ui.action')
+
+$ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
+    -H "Authorization: bearer $sessionToken" \
+    -d '{"password": "'$password'", "method": "password"}' \
+    "$actionUrl" | jq
+
+{
+  "id": "f71743cd-700d-4a30-9275-8edc90de07cc",
+  "type": "browser",
+  "expires_at": "2021-04-28T12:39:36.804397011Z",
+  "issued_at": "2021-04-28T11:39:36.804397011Z",
+  "request_url": "http://127.0.0.1:4433/self-service/settings/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4433/self-service/settings?flow=f71743cd-700d-4a30-9275-8edc90de07cc",
+    "method": "POST",
+    "nodes": [
+      // ...
+    ],
+    "messages": [
+      {
+        "id": 1050001,
+        "text": "Your changes have been saved!",
+        "type": "info"
+      }
+    ]
+  },
+  "identity": {
+    "id": "5b23b651-c186-4398-8717-f15ac72cbc7e",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "example.user@ory.sh"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "d2214ea2-8b0e-49c0-a9e0-9998ea4527aa",
+        "value": "example.user@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "29ef1378-0f13-4f2e-a9cf-683320771d5b",
+        "value": "example.user@ory.sh",
+        "via": "email"
+      }
+    ]
+  },
+  "state": "success"
+}
+```
+
+### API Clients and Clients without Browsers
 
 For API Clients, Ory Kratos responds with a JSON payload which includes the
 updated identity:

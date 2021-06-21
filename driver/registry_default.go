@@ -159,7 +159,6 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.SchemaHandler().RegisterAdminRoutes(router)
 	m.SettingsHandler().RegisterAdminRoutes(router)
 	m.IdentityHandler().RegisterAdminRoutes(router)
-	m.SessionHandler().RegisterAdminRoutes(router)
 	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
 
 	m.RecoveryHandler().RegisterAdminRoutes(router)
@@ -455,11 +454,17 @@ func (m *RegistryDefault) CanHandle(dsn string) bool {
 		strings.HasPrefix(dsn, "crdb")
 }
 
-func (m *RegistryDefault) Init(ctx context.Context) error {
+func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) error {
 	if m.persister != nil {
 		// The DSN connection can not be hot-reloaded!
 		panic("RegistryDefault.Init() must not be called more than once.")
 	}
+
+	if corp.GetContextualizer() == nil {
+		panic("Contextualizer has not been set yet.")
+	}
+
+	o := newOptions(opts)
 
 	bc := backoff.NewExponentialBackOff()
 	bc.MaxElapsedTime = time.Minute * 5
@@ -511,12 +516,6 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 				return err
 			}
 
-			net, err := p.DetermineNetwork(ctx)
-			if err != nil {
-				m.Logger().WithError(err).Warnf("Unable to determine network, retrying.")
-				return err
-			}
-
 			// if dsn is memory we have to run the migrations on every start
 			if dbal.IsMemorySQLite(m.Config(ctx).DSN()) || m.Config(ctx).DSN() == dbal.SQLiteInMemory || m.Config(ctx).DSN() == dbal.SQLiteSharedInMemory || m.Config(ctx).DSN() == "memory" {
 				m.Logger().Infoln("Ory Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
@@ -526,10 +525,25 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 				}
 			}
 
+			if o.skipNetworkInit {
+				m.persister = p
+				return nil
+			}
+
+			net, err := p.DetermineNetwork(ctx)
+			if err != nil {
+				m.Logger().WithError(err).Warnf("Unable to determine network, retrying.")
+				return err
+			}
+
 			m.persister = p.WithNetworkID(net.ID)
 			return nil
 		}, bc),
 	)
+}
+
+func (m *RegistryDefault) SetPersister(p persistence.Persister) {
+	m.persister = p
 }
 
 func (m *RegistryDefault) Courier(ctx context.Context) *courier.Courier {

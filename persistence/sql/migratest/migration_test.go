@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime/debug"
 	"testing"
+
+	"github.com/ory/kratos/corp"
+	"github.com/ory/x/dbal"
+
+	"github.com/ory/kratos/x/xsql"
 
 	"github.com/ory/x/migratest"
 
@@ -17,7 +21,6 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -32,6 +35,13 @@ import (
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
 )
+
+func init() {
+	corp.SetContextualizer(new(corp.ContextNoOp))
+	dbal.RegisterDriver(func() dbal.Driver {
+		return driver.NewRegistryDefault()
+	})
+}
 
 func TestMigrations(t *testing.T) {
 	sqlite, err := pop.NewConnection(&pop.ConnectionDetails{
@@ -56,22 +66,16 @@ func TestMigrations(t *testing.T) {
 
 	var test = func(db string, c *pop.Connection) func(t *testing.T) {
 		return func(t *testing.T) {
-			defer func() {
-				if err := recover(); err != nil {
-					t.Fatalf("recovered: %+v\n\t%s", err, debug.Stack())
-				}
-			}()
-
 			ctx := context.Background()
 			l := logrusx.New("", "", logrusx.ForceLevel(logrus.DebugLevel))
 
 			t.Logf("Cleaning up before migrations")
 			_ = os.Remove("../migrations/sql/schema.sql")
-			testhelpers.CleanSQL(t, c)
+			xsql.CleanSQL(t, c)
 
 			t.Cleanup(func() {
 				t.Logf("Cleaning up after migrations")
-				testhelpers.CleanSQL(t, c)
+				xsql.CleanSQL(t, c)
 				require.NoError(t, c.Close())
 			})
 
@@ -150,7 +154,8 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						found = append(found, id.ID.String())
 						actual, err := d.SessionPersister().GetSession(context.Background(), id.ID)
-						require.NoError(t, err)
+						require.NoErrorf(t, err, "Trying to get session: %s", id.ID)
+						require.NotEmpty(t, actual.LogoutToken, "check if migrations have generated a logout token for existing sessions")
 						migratest.CompareWithFixture(t, actual, "session", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "session"), found)
