@@ -246,7 +246,9 @@ func TestHandleError(t *testing.T) {
 
 		t.Run("case=inaccessible public URL", func(t *testing.T) {
 			t.Cleanup(reset)
-			defer t.Cleanup(reset)
+
+			// Since WriteFlowError is invoked directly by the /error handler above,
+			// manipulate the schema's URL directly to a bad URL.
 			id.SchemaURL = "http://some.random.url"
 
 			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
