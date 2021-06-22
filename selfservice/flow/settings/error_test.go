@@ -244,6 +244,21 @@ func TestHandleError(t *testing.T) {
 			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Ui.Messages[0].Id), x.MustEncodeJSON(t, lf))
 		})
 
+		t.Run("case=inaccessible public URL", func(t *testing.T) {
+			t.Cleanup(reset)
+			defer t.Cleanup(reset)
+			id.SchemaURL = "http://some.random.url"
+
+			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+			flowError = schema.NewInvalidCredentialsError()
+			flowMethod = settings.StrategyProfile
+
+			lf, _ := expectSettingsUI(t)
+			require.NotEmpty(t, lf.Ui, x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.Ui.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Ui.Messages[0].Id), x.MustEncodeJSON(t, lf))
+		})
+
 		t.Run("case=generic error", func(t *testing.T) {
 			t.Cleanup(reset)
 
