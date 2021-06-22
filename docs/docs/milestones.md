@@ -31,6 +31,12 @@ Something is not working.
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [ ] Recovery link doesn't log out existing users
       ([kratos#1077](https://github.com/ory/kratos/issues/1077))
+- [ ] Email verification link is automatically opened by mail provider
+      ([kratos#1202](https://github.com/ory/kratos/issues/1202))
+- [ ] recovery link is open by email app
+      ([kratos#1142](https://github.com/ory/kratos/issues/1142))
+- [ ] Relative path in ui_url or default_browser_return_url cause runtime crash
+      ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 
@@ -94,6 +100,8 @@ New feature or request.
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [ ] Implement immutable keyword in JSON Schema for Identity Traits
       ([kratos#117](https://github.com/ory/kratos/issues/117))
+- [ ] Write new recovery and verification strategy that does not rely on links
+      ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
@@ -154,6 +162,12 @@ Something is not working.
 - [ ] Update profile with field error returning 502
       ([kratos#1425](https://github.com/ory/kratos/issues/1425)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Verification does not include success message
+      ([kratos#1450](https://github.com/ory/kratos/issues/1450)) -
+      [@Alano Terblanche](https://github.com/Benehiko)
+- [ ] fix: settings flow error handle should access schemas using configured
+      "local" URLs instead of public URLs
+      ([kratos#1448](https://github.com/ory/kratos/issues/1448))
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] Investigate why smtps fails but smtp does not
