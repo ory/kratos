@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	ErrInvalidCSRFToken = herodot.ErrBadRequest.WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
+	ErrInvalidCSRFToken = herodot.ErrForbidden.WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
 				WithDetail("docs", "https://www.ory.sh/kratos/docs/debug/csrf").
 				WithReason("The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
 	ErrGone = herodot.DefaultError{
@@ -142,14 +142,44 @@ func NosurfBaseCookieHandler(reg interface {
 	}
 }
 
+func CSRFErrorReason(r *http.Request, reg interface {
+	config.Provider
+}) error {
+	// Is it an AJAX request?
+	isAjax := len(r.Header.Get("Origin")) == 0
+
+	if len(r.Header.Get("Cookie")) == 0 {
+		if isAjax {
+			return errors.WithStack(ErrInvalidCSRFTokenAJAXNoCookies)
+		}
+		return errors.WithStack(ErrInvalidCSRFTokenServerNoCookies)
+	} else if _, err := r.Cookie(CSRFCookieName(reg, r)); errors.Is(err, http.ErrNoCookie) {
+		if isAjax {
+			return errors.WithStack(ErrInvalidCSRFTokenAJAXCookieMissing)
+		}
+		return errors.WithStack(ErrInvalidCSRFTokenServerCookieMissing)
+	} else if len(r.Form.Get("csrf_token")+r.Header.Get(nosurf.HeaderName)) == 0 {
+		if isAjax {
+			return errors.WithStack(ErrInvalidCSRFTokenAJAXTokenNotSent)
+		}
+		return errors.WithStack(ErrInvalidCSRFTokenServerTokenNotSent)
+	}
+
+	if isAjax {
+		return errors.WithStack(ErrInvalidCSRFTokenAJAXTokenMismatch)
+	}
+	return errors.WithStack(ErrInvalidCSRFTokenServerTokenMismatch)
+}
+
 func CSRFFailureHandler(reg interface {
 	config.Provider
 	LoggingProvider
 	WriterProvider
 }) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		err := CSRFErrorReason(r, reg)
 		reg.Logger().
+			WithError(err).
 			WithField("result", nosurf.VerifyToken(nosurf.Token(r), r.Form.Get("csrf_token"))).
 			WithField("expected_token", nosurf.Token(r)).
 			WithField("received_cookies", r.Cookies()).
@@ -158,37 +188,7 @@ func CSRFFailureHandler(reg interface {
 			WithField("received_token_header", r.Header.Get(nosurf.HeaderName)).
 			Warn("A request failed due to a missing or invalid csrf_token value")
 
-		// Is it an AJAX request?
-		isAjax := len(r.Header.Get("Origin")) == 0
-
-		if len(r.Header.Get("Cookie")) == 0 {
-			if isAjax {
-				reg.Writer().WriteError(w, r, errors.WithStack(ErrInvalidCSRFTokenAJAXNoCookies))
-			} else {
-				reg.Writer().WriteError(w, r, errors.WithStack(ErrInvalidCSRFTokenServerNoCookies))
-			}
-			return
-		} else if _, err := r.Cookie(CSRFCookieName(reg, r)); errors.Is(err, http.ErrNoCookie) {
-			if isAjax {
-				reg.Writer().WriteError(w, r, errors.WithStack(ErrInvalidCSRFTokenAJAXCookieMissing))
-			} else {
-				reg.Writer().WriteError(w, r, errors.WithStack(ErrInvalidCSRFTokenServerCookieMissing))
-			}
-			return
-		} else if len(r.Form.Get("csrf_token")+r.Header.Get(nosurf.HeaderName)) == 0 {
-			if isAjax {
-				reg.Writer().WriteError(w, r, errors.WithStack(ErrInvalidCSRFTokenAJAXTokenNotSent))
-			} else {
-				reg.Writer().WriteError(w, r, errors.WithStack(ErrInvalidCSRFTokenServerTokenNotSent))
-			}
-			return
-		}
-
-		if isAjax {
-			reg.Writer().WriteError(w, r, errors.WithStack(ErrInvalidCSRFTokenAJAXTokenMismatch))
-		} else {
-			reg.Writer().WriteError(w, r, errors.WithStack(ErrInvalidCSRFTokenServerTokenMismatch))
-		}
+		reg.Writer().WriteError(w, r, err)
 	}
 }
 

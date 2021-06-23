@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/nosurf"
+
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlcon"
@@ -69,9 +71,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteSubmitFlow, h.submitFlow)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetch)
-}
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {}
 
 // swagger:route GET /self-service/verification/api public initializeSelfServiceVerificationWithoutBrowser
 //
@@ -182,9 +182,18 @@ type getSelfServiceVerificationFlowParameters struct {
 	// required: true
 	// in: query
 	FlowID string `json:"id"`
+
+	// HTTP Cookie
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookies"`
 }
 
-// swagger:route GET /self-service/verification/flows public admin getSelfServiceVerificationFlow
+// swagger:route GET /self-service/verification/flows public getSelfServiceVerificationFlow
 //
 // Get Verification Flow
 //
@@ -195,6 +204,20 @@ type getSelfServiceVerificationFlowParameters struct {
 // :::
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
+//
+// Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+// For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+//
+// If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+// and you need to forward the incoming HTTP Cookie header to this endpoint:
+//
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getSelfServiceVerificationFlow(req.header.get('cookie'), req.query['flow'])
+//
+//    res.render('verification', flow)
+//	})
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
@@ -218,6 +241,14 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	req, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), rid)
 	if err != nil {
 		h.d.Writer().Write(w, r, req)
+		return
+	}
+
+	// Browser flows must include the CSRF token
+	//
+	// Resolves: https://github.com/ory/kratos/issues/1282
+	if req.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), req.CSRFToken) {
+		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
 		return
 	}
 

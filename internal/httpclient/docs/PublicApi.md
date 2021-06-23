@@ -238,7 +238,7 @@ No authorization required
 
 ## GetSelfServiceLoginFlow
 
-> LoginFlow GetSelfServiceLoginFlow(ctx).Id(id).Execute()
+> LoginFlow GetSelfServiceLoginFlow(ctx).Id(id).Cookies(cookies).Execute()
 
 Get Login Flow
 
@@ -258,10 +258,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Login Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/login?flow=abcde`).
+    cookies := "cookies_example" // string | HTTP Cookie  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(id).Cookies(cookies).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceLoginFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -283,6 +284,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceLoginFlowReq
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Login Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/login?flow&#x3D;abcde&#x60;). | 
+ **cookies** | **string** | HTTP Cookie  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 

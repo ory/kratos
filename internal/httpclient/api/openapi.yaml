@@ -643,13 +643,28 @@ paths:
   /self-service/login/flows:
     get:
       description: |-
-        This endpoint returns a login flow's context with, for example, error details and other information.
-
         :::info
 
         This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
         :::
+
+        This endpoint returns a login flow's context with, for example, error details and other information.
+
+        Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+        For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+        If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+        and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+        ```js
+        pseudo-code example
+        router.get('/login', async function (req, res) {
+        const flow = await client.getSelfServiceLoginFlow(req.header.get('cookie'), req.query['flow'])
+
+        res.render('login', flow)
+        })
+        ```
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: getSelfServiceLoginFlow
@@ -666,6 +681,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookie
+
+          When using the SDK on the server side you must include the HTTP Cookie Header
+          originally sent to your HTTP handler here.
+        explode: false
+        in: header
+        name: cookies
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -700,7 +727,6 @@ paths:
       summary: Get Login Flow
       tags:
       - public
-      - admin
   /self-service/logout:
     post:
       description: |-
@@ -1012,6 +1038,21 @@ paths:
 
         This endpoint returns a recovery flow's context with, for example, error details and other information.
 
+        Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+        For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+        If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+        and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+        ```js
+        pseudo-code example
+        router.get('/recovery', async function (req, res) {
+        const flow = await client.getSelfServiceRecoveryFlow(req.header.get('cookie'), req.query['flow'])
+
+        res.render('recovery', flow)
+        })
+        ```
+
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
       operationId: getSelfServiceRecoveryFlow
       parameters:
@@ -1055,7 +1096,6 @@ paths:
       summary: Get Recovery Flow
       tags:
       - public
-      - admin
   /self-service/recovery/methods/link:
     post:
       description: |-
@@ -1298,13 +1338,28 @@ paths:
   /self-service/registration/flows:
     get:
       description: |-
-        This endpoint returns a registration flow's context with, for example, error details and other information.
-
         :::info
 
         This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
         :::
+
+        This endpoint returns a registration flow's context with, for example, error details and other information.
+
+        Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+        For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+        If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+        and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+        ```js
+        pseudo-code example
+        router.get('/registration', async function (req, res) {
+        const flow = await client.getSelfServiceRegistrationFlow(req.header.get('cookie'), req.query['flow'])
+
+        res.render('registration', flow)
+        })
+        ```
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: getSelfServiceRegistrationFlow
@@ -1355,7 +1410,6 @@ paths:
       summary: Get Registration Flow
       tags:
       - public
-      - admin
   /self-service/settings:
     post:
       description: |-
@@ -1644,7 +1698,6 @@ paths:
       summary: Get Settings Flow
       tags:
       - public
-      - admin
   /self-service/verification:
     post:
       description: |-
@@ -1807,6 +1860,20 @@ paths:
 
         This endpoint returns a verification flow's context with, for example, error details and other information.
 
+        Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+        For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+        If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+        and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+        ```js
+        pseudo-code example
+        router.get('/recovery', async function (req, res) {
+        const flow = await client.getSelfServiceVerificationFlow(req.header.get('cookie'), req.query['flow'])
+
+        res.render('verification', flow)
+        })
+
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
       operationId: getSelfServiceVerificationFlow
       parameters:
@@ -1850,7 +1917,6 @@ paths:
       summary: Get Verification Flow
       tags:
       - public
-      - admin
   /sessions/whoami:
     get:
       description: |-

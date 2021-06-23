@@ -448,10 +448,15 @@ type PublicApiApiGetSelfServiceLoginFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookies    *string
 }
 
 func (r PublicApiApiGetSelfServiceLoginFlowRequest) Id(id string) PublicApiApiGetSelfServiceLoginFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceLoginFlowRequest) Cookies(cookies string) PublicApiApiGetSelfServiceLoginFlowRequest {
+	r.cookies = &cookies
 	return r
 }
 
@@ -461,13 +466,28 @@ func (r PublicApiApiGetSelfServiceLoginFlowRequest) Execute() (*LoginFlow, *http
 
 /*
  * GetSelfServiceLoginFlow Get Login Flow
- * This endpoint returns a login flow's context with, for example, error details and other information.
-
-:::info
+ * :::info
 
 This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
 :::
+
+This endpoint returns a login flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/login', async function (req, res) {
+const flow = await client.getSelfServiceLoginFlow(req.header.get('cookie'), req.query['flow'])
+
+res.render('login', flow)
+})
+```
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -525,6 +545,9 @@ func (a *PublicApiService) GetSelfServiceLoginFlowExecute(r PublicApiApiGetSelfS
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookies != nil {
+		localVarHeaderParams["cookies"] = parameterToString(*r.cookies, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -626,6 +649,21 @@ This endpoint is EXPERIMENTAL and subject to potential breaking changes in the f
 :::
 
 This endpoint returns a recovery flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/recovery', async function (req, res) {
+const flow = await client.getSelfServiceRecoveryFlow(req.header.get('cookie'), req.query['flow'])
+
+res.render('recovery', flow)
+})
+```
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -767,13 +805,28 @@ func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*Registrat
 
 /*
  * GetSelfServiceRegistrationFlow Get Registration Flow
- * This endpoint returns a registration flow's context with, for example, error details and other information.
-
-:::info
+ * :::info
 
 This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
 :::
+
+This endpoint returns a registration flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/registration', async function (req, res) {
+const flow = await client.getSelfServiceRegistrationFlow(req.header.get('cookie'), req.query['flow'])
+
+res.render('registration', flow)
+})
+```
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1102,6 +1155,20 @@ This endpoint is EXPERIMENTAL and subject to potential breaking changes in the f
 :::
 
 This endpoint returns a verification flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/recovery', async function (req, res) {
+const flow = await client.getSelfServiceVerificationFlow(req.header.get('cookie'), req.query['flow'])
+
+res.render('verification', flow)
+})
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().

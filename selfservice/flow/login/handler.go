@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/nosurf"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
@@ -69,9 +71,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteSubmitFlow, h.submitFlow)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetchFlow)
-}
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {}
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
 	conf := h.d.Config(r.Context())
@@ -145,8 +145,8 @@ type initializeSelfServiceBrowserLoginFlow struct {
 //
 //     Responses:
 //       200: loginFlow
-//       500: jsonError
 //       400: jsonError
+//       500: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	a, err := h.NewLoginFlow(w, r, flow.TypeAPI)
 	if err != nil {
@@ -255,19 +255,43 @@ type getSelfServiceLoginFlow struct {
 	// required: true
 	// in: query
 	ID string `json:"id"`
+
+	// HTTP Cookie
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookies"`
 }
 
-// swagger:route GET /self-service/login/flows public admin getSelfServiceLoginFlow
+// swagger:route GET /self-service/login/flows public getSelfServiceLoginFlow
 //
 // Get Login Flow
-//
-// This endpoint returns a login flow's context with, for example, error details and other information.
 //
 // :::info
 //
 // This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 //
 // :::
+//
+// This endpoint returns a login flow's context with, for example, error details and other information.
+//
+// Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+// For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+//
+// If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+// and you need to forward the incoming HTTP Cookie header to this endpoint:
+//
+//	```js
+//	// pseudo-code example
+//	router.get('/login', async function (req, res) {
+//	  const flow = await client.getSelfServiceLoginFlow(req.header.get('cookie'), req.query['flow'])
+//
+//    res.render('login', flow)
+//	})
+//	```
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -286,6 +310,14 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 	ar, err := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	// Browser flows must include the CSRF token
+	//
+	// Resolves: https://github.com/ory/kratos/issues/1282
+	if ar.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
+		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
 		return
 	}
 
