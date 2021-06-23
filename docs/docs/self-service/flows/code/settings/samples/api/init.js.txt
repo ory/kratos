@@ -1,11 +1,7 @@
 import { Configuration, PublicApi } from '@ory/kratos-client';
+const kratos = new PublicApi(new Configuration({ basePath: 'http://127.0.0.1:4433/' }));
 
-const kratos = new PublicApi(new Configuration({
-  basePath: 'http://127.0.0.1:4433/',
-  apiKey: 'the-session-token'
-}));
-
-kratos.initializeSelfServiceSettingsForNativeApps()
+kratos.initializeSelfServiceRegistrationWithoutBrowser()
   .then(({ data: flow }) => {
-    console.log(flow) // see the Raw HTTP tab for the payload
+    console.log(flow) // see the curl tab for the payload
   })

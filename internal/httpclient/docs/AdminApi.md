@@ -11,7 +11,7 @@ Method | HTTP request | Description
 [**GetSchema**](AdminApi.md#GetSchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](AdminApi.md#GetSelfServiceError) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 [**GetSelfServiceLoginFlow**](AdminApi.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | Get Login Flow
-[**GetSelfServiceRecoveryFlow**](AdminApi.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | Get information about a recovery flow
+[**GetSelfServiceRecoveryFlow**](AdminApi.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | Get Recovery Flow
 [**GetSelfServiceRegistrationFlow**](AdminApi.md#GetSelfServiceRegistrationFlow) | **Get** /self-service/registration/flows | Get Registration Flow
 [**GetSelfServiceSettingsFlow**](AdminApi.md#GetSelfServiceSettingsFlow) | **Get** /self-service/settings/flows | Get Settings Flow
 [**GetSelfServiceVerificationFlow**](AdminApi.md#GetSelfServiceVerificationFlow) | **Get** /self-service/verification/flows | Get Verification Flow
@@ -19,7 +19,7 @@ Method | HTTP request | Description
 [**IsAlive**](AdminApi.md#IsAlive) | **Get** /health/alive | Check HTTP Server Status
 [**IsReady**](AdminApi.md#IsReady) | **Get** /health/ready | Check HTTP Server and Database Status
 [**ListIdentities**](AdminApi.md#ListIdentities) | **Get** /identities | List Identities
-[**Prometheus**](AdminApi.md#Prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the Hydra service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
+[**Prometheus**](AdminApi.md#Prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 [**UpdateIdentity**](AdminApi.md#UpdateIdentity) | **Put** /identities/{id} | Update an Identity
 
 
@@ -500,7 +500,7 @@ No authorization required
 
 > RecoveryFlow GetSelfServiceRecoveryFlow(ctx).Id(id).Execute()
 
-Get information about a recovery flow
+Get Recovery Flow
 
 
 
@@ -1017,7 +1017,7 @@ No authorization required
 
 > Prometheus(ctx).Execute()
 
-Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to your deployment like so:
+Get snapshot metrics from the service. If you're using k8s, you can then add annotations to your deployment like so:
 
 
 

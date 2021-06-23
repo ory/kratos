@@ -270,28 +270,28 @@ type submitSelfServiceRecoveryFlowWithLinkMethod struct {
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
 	body, err := s.decodeRecovery(r)
 	if err != nil {
-		return s.handleRecoveryError(w, r, nil, body, err)
+		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
 
 	if len(body.Token) > 0 {
 		if err := flow.MethodEnabledAndAllowed(r.Context(), s.RecoveryStrategyID(), s.RecoveryStrategyID(), s.d); err != nil {
-			return s.handleRecoveryError(w, r, nil, body, err)
+			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 
 		return s.recoveryUseToken(w, r, body)
 	}
 
 	if err := flow.MethodEnabledAndAllowed(r.Context(), s.RecoveryStrategyID(), body.Method, s.d); err != nil {
-		return s.handleRecoveryError(w, r, nil, body, err)
+		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
 
 	req, err := s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), x.ParseUUID(body.Flow))
 	if err != nil {
-		return s.handleRecoveryError(w, r, req, body, err)
+		return s.HandleRecoveryError(w, r, req, body, err)
 	}
 
 	if err := req.Valid(); err != nil {
-		return s.handleRecoveryError(w, r, req, body, err)
+		return s.HandleRecoveryError(w, r, req, body, err)
 	}
 
 	switch req.State {
@@ -310,7 +310,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, f *recovery.Flow, recoveredID uuid.UUID) error {
 	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), recoveredID)
 	if err != nil {
-		return s.handleRecoveryError(w, r, f, nil, err)
+		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
 	f.UI.Messages.Clear()
@@ -320,26 +320,26 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		Valid: true,
 	}
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
-		return s.handleRecoveryError(w, r, f, nil, err)
+		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
 	sess, _ := session.NewActiveSession(recovered, s.d.Config(r.Context()), time.Now().UTC())
 	if err := s.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, sess); err != nil {
-		return s.handleRecoveryError(w, r, f, nil, err)
+		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
 	sf, err := s.d.SettingsHandler().NewFlow(w, r, sess.Identity, flow.TypeBrowser)
 	if err != nil {
-		return s.handleRecoveryError(w, r, f, nil, err)
+		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
 	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
-		return s.handleRecoveryError(w, r, f, nil, err)
+		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
 	sf.UI.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge())))
 	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), sf); err != nil {
-		return s.handleRecoveryError(w, r, f, nil, err)
+		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
 	http.Redirect(w, r, sf.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
@@ -353,7 +353,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 			return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed())
 		}
 
-		return s.handleRecoveryError(w, r, nil, body, err)
+		return s.HandleRecoveryError(w, r, nil, body, err)
 	}
 
 	var f *recovery.Flow
@@ -361,21 +361,21 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 		f, err = recovery.NewFlow(s.d.Config(r.Context()), time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r),
 			r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 		if err != nil {
-			return s.handleRecoveryError(w, r, nil, body, err)
+			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), f); err != nil {
-			return s.handleRecoveryError(w, r, nil, body, err)
+			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 	} else {
 		f, err = s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), token.FlowID.UUID)
 		if err != nil {
-			return s.handleRecoveryError(w, r, nil, body, err)
+			return s.HandleRecoveryError(w, r, nil, body, err)
 		}
 	}
 
 	if err := token.Valid(); err != nil {
-		return s.handleRecoveryError(w, r, f, body, err)
+		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
 	return s.recoveryIssueSession(w, r, f, token.RecoveryAddress.IdentityID)
@@ -407,20 +407,20 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.Request, req *recovery.Flow) error {
 	body, err := s.decodeRecovery(r)
 	if err != nil {
-		return s.handleRecoveryError(w, r, req, body, err)
+		return s.HandleRecoveryError(w, r, req, body, err)
 	}
 
 	if len(body.Email) == 0 {
-		return s.handleRecoveryError(w, r, req, body, schema.NewRequiredError("#/email", "email"))
+		return s.HandleRecoveryError(w, r, req, body, schema.NewRequiredError("#/email", "email"))
 	}
 
 	if err := flow.EnsureCSRF(r, req.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.CSRFToken); err != nil {
-		return s.handleRecoveryError(w, r, req, body, err)
+		return s.HandleRecoveryError(w, r, req, body, err)
 	}
 
 	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, req, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
-			return s.handleRecoveryError(w, r, req, body, err)
+			return s.HandleRecoveryError(w, r, req, body, err)
 		}
 		// Continue execution
 	}
@@ -436,19 +436,24 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	req.State = recovery.StateEmailSent
 	req.UI.Messages.Set(text.NewRecoveryEmailSent())
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), req); err != nil {
-		return s.handleRecoveryError(w, r, req, body, err)
+		return s.HandleRecoveryError(w, r, req, body, err)
 	}
 
 	return nil
 }
 
-func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *recoverySubmitPayload, err error) error {
+func (s *Strategy) HandleRecoveryError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *recoverySubmitPayload, err error) error {
 	if req != nil {
+		email := ""
+		if body != nil {
+			email = body.Email
+		}
+
 		req.UI.Reset("email")
 		req.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		req.UI.GetNodes().Upsert(
 			// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
-			node.NewInputField("email", body.Email, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+			node.NewInputField("email", email, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 		)
 	}
 

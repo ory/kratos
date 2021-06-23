@@ -838,6 +838,12 @@ func (r AdminApiApiGetSelfServiceLoginFlowRequest) Execute() (*LoginFlow, *http.
  * GetSelfServiceLoginFlow Get Login Flow
  * This endpoint returns a login flow's context with, for example, error details and other information.
 
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return AdminApiApiGetSelfServiceLoginFlowRequest
@@ -987,8 +993,14 @@ func (r AdminApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*RecoveryFlow, 
 }
 
 /*
- * GetSelfServiceRecoveryFlow Get information about a recovery flow
- * This endpoint returns a recovery flow's context with, for example, error details and other information.
+ * GetSelfServiceRecoveryFlow Get Recovery Flow
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a recovery flow's context with, for example, error details and other information.
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1131,6 +1143,12 @@ func (r AdminApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*Registrati
 /*
  * GetSelfServiceRegistrationFlow Get Registration Flow
  * This endpoint returns a registration flow's context with, for example, error details and other information.
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1287,7 +1305,13 @@ func (r AdminApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SettingsFlow, 
 
 /*
  * GetSelfServiceSettingsFlow Get Settings Flow
- * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
 but instead 403 or 500 to improve data privacy.
 
@@ -1446,7 +1470,13 @@ func (r AdminApiApiGetSelfServiceVerificationFlowRequest) Execute() (*Verificati
 
 /*
  * GetSelfServiceVerificationFlow Get Verification Flow
- * This endpoint returns a verification flow's context with, for example, error details and other information.
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a verification flow's context with, for example, error details and other information.
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -2051,7 +2081,7 @@ func (r AdminApiApiPrometheusRequest) Execute() (*http.Response, error) {
 }
 
 /*
- * Prometheus Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to your deployment like so:
+ * Prometheus Get snapshot metrics from the service. If you're using k8s, you can then add annotations to your deployment like so:
  * ```
 metadata:
 annotations:

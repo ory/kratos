@@ -25,6 +25,8 @@ type Configuration struct {
 	// - discord
 	// - slack
 	// - facebook
+	// - vk
+	// - yandex
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.
@@ -108,6 +110,12 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderSlack(&p, public), nil
 			case addProviderName("facebook"):
 				return NewProviderFacebook(&p, public), nil
+			case addProviderName("auth0"):
+				return NewProviderAuth0(&p, public), nil
+			case addProviderName("vk"):
+				return NewProviderVK(&p, public), nil
+			case addProviderName("yandex"):
+				return NewProviderYandex(&p, public), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}

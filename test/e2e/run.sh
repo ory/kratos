@@ -66,7 +66,6 @@ esac
 done
 
 run() {
-  profile=$2
   killall kratos || true
   killall node || true
   killall hydra || true
@@ -142,8 +141,11 @@ run() {
     $kratos migrate sql -e --yes
   fi
 
-  yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
-  ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
+  for profile in email mobile oidc recovery verification; do
+    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
+    cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
+  done
+  ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
   npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
@@ -154,12 +156,12 @@ run() {
     http-get://127.0.0.1:4437/mail
 
   if [[ $dev = "yes" ]]; then
-    npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
+    npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration"
   else
     if [ -z ${CYPRESS_RECORD_KEY+x} ]; then
-      npm run test -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
+      npm run test -- --config integrationFolder="test/e2e/cypress/integration"
     else
-      npm run test -- --record --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
+      npm run test -- --record --config integrationFolder="test/e2e/cypress/integration"
     fi
   fi
 }
@@ -196,13 +198,7 @@ To run the tests just pick a database name:
 
 To run e2e tests in dev mode (useful for writing them), run:
 
-  $0 --dev <database> <profile>
-
-  Supported profiles are 'email', 'verification', 'oidc', 'recovery':
-
-    $0 --dev <database> email
-    $0 --dev <database> verification
-    ...
+  $0 --dev <database>
 
 If you are making changes to the kratos-selfservice-ui-node
 project as well, point the 'NODE_UI_PATH' environment variable to
@@ -212,13 +208,6 @@ the path where the kratos-selfservice-ui-node project is checked out:
   export RN_UI_PATH=$HOME/workspace/kratos-selfservice-ui-react-native
   $0 ..."
 }
-
-if [[ $dev = "yes" ]]; then
-  if [ -z ${2+x} ]; then
-    usage
-    exit 1
-  fi
-fi
 
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 export TEST_DATABASE_MEMOry="memory"
@@ -245,12 +234,4 @@ case "$1" in
             exit 1
 esac
 
-if [[ $dev = "yes" ]]; then
-  run "${db}" "$2"
-else
-  run "${db}" email
-  run "${db}" verification
-  run "${db}" oidc
-  run "${db}" recovery
-  run "${db}" mobile
-fi
+run "${db}"

@@ -61,6 +61,18 @@ const updateConfigFile = (cb) => {
   cy.wait(100)
 }
 
+let previousProfile = ''
+Cypress.Commands.add('useConfigProfile', (profile) => {
+  if (profile === previousProfile) {
+    return
+  }
+
+  cy.readFile(`test/e2e/kratos.${profile}.yml`).then((contents) =>
+    cy.writeFile(configFile, contents)
+  )
+  cy.wait(100)
+})
+
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.privileged_session_max_age = '1ms'
@@ -114,21 +126,23 @@ Cypress.Commands.add(
     cy.visit(APP_URL)
     cy.clearCookies()
 
+    //
+    // cy.request({
+    //   url: APP_URL + '/self-service/registration/browser',
+    //   followRedirect: false,
+    //   headers: {
+    //     'Accept': 'application/json'
+    //   },
+    //   qs: query
+    // })
     cy.request({
       url: APP_URL + '/self-service/registration/browser',
       followRedirect: false,
+      headers: {
+        Accept: 'application/json'
+      },
       qs: query
     })
-      .then(({ redirectedToUrl }) => {
-        expect(redirectedToUrl).to.contain(APP_URL + '/auth/registration?flow=')
-        const flow = redirectedToUrl.replace(
-          APP_URL + '/auth/registration?flow=',
-          ''
-        )
-        return cy.request(
-          APP_URL + '/self-service/registration/flows?id=' + flow
-        )
-      })
       .then(({ body, status }) => {
         expect(status).to.eq(200)
         const form = body.ui
@@ -144,11 +158,8 @@ Cypress.Commands.add(
           followRedirect: false
         })
       })
-      .then((res) => {
-        console.log('Registration sequence completed: ', { email, password })
-        expect(res.redirectedToUrl).to.not.contain(
-          APP_URL + '/auth/registration?flow='
-        )
+      .then(({ body }) => {
+        expect(body.identity.traits.email).to.contain(email)
       })
   }
 )
@@ -257,13 +268,12 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
   cy.longPrivilegedSessionTime()
   cy.request({
     url: APP_URL + '/self-service/login/browser',
-    followRedirect: false
+    followRedirect: false,
+    failOnStatusCode: false,
+    headers: {
+      Accept: 'application/json'
+    }
   })
-    .then(({ redirectedToUrl }) => {
-      expect(redirectedToUrl).to.contain(APP_URL + '/auth/login?flow=')
-      const flow = redirectedToUrl.replace(APP_URL + '/auth/login?flow=', '')
-      return cy.request(APP_URL + '/self-service/login/flows?id=' + flow)
-    })
     .then(({ body, status }) => {
       expect(status).to.eq(200)
       const form = body.ui
@@ -274,19 +284,21 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
           password,
           method: 'password'
         }),
+        headers: {
+          Accept: 'application/json'
+        },
         url: form.action,
-        followRedirect: false
+        followRedirect: false,
+        failOnStatusCode: false
       })
     })
-    .then((res) => {
+    .then(({ status }) => {
       console.log('Login sequence completed: ', { email, password })
       if (expectSession) {
-        expect(res.redirectedToUrl).to.not.contain(
-          APP_URL + '/auth/login?flow='
-        )
+        expect(status).to.eq(200)
         return cy.session()
       } else {
-        expect(res.redirectedToUrl).to.contain(APP_URL + '/auth/login?flow=')
+        expect(status).to.not.eq(200)
         return cy.noSession()
       }
     })

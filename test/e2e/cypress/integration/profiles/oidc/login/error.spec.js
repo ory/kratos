@@ -1,15 +1,20 @@
 import { APP_URL, gen, website } from '../../../../helpers'
 
-context('Login', () => {
-  beforeEach(() => {
-    cy.clearCookies()
-    cy.visit(APP_URL + '/auth/login')
-  })
+context('OIDC Profile', () => {
+  describe('Login', () => {
+    before(() => {
+      cy.useConfigProfile('oidc')
+    })
 
-  it('should fail when the login request is rejected', () => {
-    const email = gen.email()
-    cy.get('button[value="hydra"]').click()
-    cy.get('#reject').click()
+    beforeEach(() => {
+      cy.clearCookies()
+      cy.visit(APP_URL + '/auth/login')
+    })
+
+    it('should fail when the login request is rejected', () => {
+      const email = gen.email()
+      cy.get('button[value="hydra"]').click()
+      cy.get('#reject').click()
     cy.location('pathname').should('equal', '/auth/login')
     cy.get('.messages .message').should(
       'contain.text',
@@ -41,5 +46,6 @@ context('Login', () => {
     cy.get('#accept').click()
     cy.location('pathname').should('equal', '/auth/login')
     cy.get('.messages .message').should('contain.text', 'no id_token')
+  })
   })
 })

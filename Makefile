@@ -30,12 +30,9 @@ $(call make-lint-dependency)
 docs/cli: .bin/clidoc
 		clidoc .
 
-.bin/traefik:
-		https://github.com/containous/traefik/releases/download/v2.3.0-rc4/traefik_v2.3.0-rc4_linux_amd64.tar.gz \
-			tar -zxvf traefik_${traefik_version}_linux_${arch}.tar.gz
-
-.bin/cli: go.mod go.sum Makefile
-		go build -o .bin/cli -tags sqlite github.com/ory/cli
+.bin/ory: Makefile
+		bash <(curl https://raw.githubusercontent.com/ory/cli/master/install.sh) -b .bin v0.0.53
+		touch -a -m .bin/ory
 
 node_modules: package.json Makefile
 		npm ci
@@ -57,11 +54,6 @@ docs: docs/node_modules
 lint: .bin/golangci-lint
 		golangci-lint run -v ./...
 
-.PHONY: cover
-cover:
-		go test ./... -coverprofile=cover.out
-		go tool cover -func=cover.out
-
 .PHONY: mocks
 mocks: .bin/mockgen
 		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
@@ -80,17 +72,16 @@ test:
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-		go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m -tags sqlite
-		test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+		go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
 
 # Generates the SDK
 .PHONY: sdk
-sdk: .bin/swagger .bin/cli node_modules
+sdk: .bin/swagger .bin/ory node_modules
 		swagger generate spec -m -o spec/swagger.json -x github.com/ory/kratos-client-go
-		cli dev swagger sanitize ./spec/swagger.json
+		ory dev swagger sanitize ./spec/swagger.json
 		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
-				cli dev openapi migrate \
+				ory dev openapi migrate \
 					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
 					-p file://.schema/openapi/patches/meta.yaml \
 					-p file://.schema/openapi/patches/schema.yaml \
@@ -148,16 +139,16 @@ test-e2e: node_modules test-resetdb
 		test/e2e/run.sh mysql
 
 .PHONY: migrations-sync
-migrations-sync: .bin/cli
-		cli dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
+migrations-sync: .bin/ory
+		ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
 
 .PHONY: migrations-render
-migrations-render: .bin/cli
-		cli dev pop migration render persistence/sql/migrations/templates persistence/sql/migrations/sql
+migrations-render: .bin/ory
+		ory dev pop migration render persistence/sql/migrations/templates persistence/sql/migrations/sql
 
 .PHONY: migrations-render-replace
-migrations-render-replace: .bin/cli
-		cli dev pop migration render -r persistence/sql/migrations/templates persistence/sql/migrations/sql
+migrations-render-replace: .bin/ory
+		ory dev pop migration render -r persistence/sql/migrations/templates persistence/sql/migrations/sql
 
 .PHONY: migratest-refresh
 migratest-refresh:

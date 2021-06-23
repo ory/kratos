@@ -17,7 +17,14 @@ func NewKratosServer(t *testing.T, reg driver.Registry) (public, admin *httptest
 }
 
 func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
-	rp, ra := x.NewRouterPublic(), x.NewRouterAdmin()
+	public, admin, _, _ = NewKratosServerWithCSRFAndRouters(t, reg)
+	return
+}
+
+func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (public, admin *httptest.Server, rp *x.RouterPublic, ra *x.RouterAdmin) {
+	rp, ra = x.NewRouterPublic(), x.NewRouterAdmin()
+	csrfHandler := x.NewTestCSRFHandler(rp, reg)
+	reg.WithCSRFHandler(csrfHandler)
 	public = httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
 	admin = httptest.NewServer(ra)
 

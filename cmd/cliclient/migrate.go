@@ -27,7 +27,7 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 	var d driver.Registry
 
 	if flagx.MustGetBool(cmd, "read-from-env") {
-		d = driver.New(
+		d = driver.NewWithoutInit(
 			cmd.Context(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation())
@@ -44,12 +44,15 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 			return
 		}
-		d = driver.New(
+		d = driver.NewWithoutInit(
 			cmd.Context(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation(),
 			configx.WithValue(config.ViperKeyDSN, args[0]))
 	}
+
+	err := d.Init(cmd.Context(), driver.SkipNetworkInit)
+	cmdx.Must(err, "An error occurred planning migrations: %s", err)
 
 	var plan bytes.Buffer
 	statuses, err := d.Persister().MigrationStatus(cmd.Context())

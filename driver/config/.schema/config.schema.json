@@ -258,7 +258,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook.",
+          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
           "type": "string",
           "enum": [
             "github",
@@ -268,7 +268,10 @@
             "microsoft",
             "discord",
             "slack",
-            "facebook"
+            "facebook",
+            "auth0",
+            "vk",
+            "yandex"
           ],
           "examples": [
             "google"
@@ -930,7 +933,7 @@
                 "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false"
               ],
               "type": "string",
-              "format": "uri"
+              "pattern": "^smtps?:\\/\\/.*"
             },
             "from_address": {
               "title": "SMTP Sender Address",
@@ -1197,12 +1200,13 @@
       "properties": {
         "provider": {
           "type": "string",
-          "description": "Set this to the tracing backend you wish to use. Supports Jaeger, Zipkin and DataDog. If omitted or empty, tracing will be disabled. Use environment variables to configure DataDog (see https://docs.datadoghq.com/tracing/setup/go/#configuration).",
+          "description": "Set this to the tracing backend you wish to use. Supports Jaeger, Zipkin, DataDog, elastic-apm and instana. If omitted or empty, tracing will be disabled. Use environment variables to configure DataDog (see https://docs.datadoghq.com/tracing/setup/go/#configuration).",
           "enum": [
             "jaeger",
             "zipkin",
             "datadog",
-            "elastic-apm"
+            "elastic-apm",
+            "instana"
           ],
           "examples": [
             "jaeger"

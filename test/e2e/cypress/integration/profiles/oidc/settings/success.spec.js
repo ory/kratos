@@ -1,15 +1,21 @@
 import {APP_URL, gen, website} from '../../../../helpers'
 
-context('Settings', () => {
-  let email
 
-  const hydraReauthFails = () => {
-    cy.clearCookies()
-    cy.visit(APP_URL + '/auth/login')
-    cy.get('button[value="hydra"]').click()
+context('OIDC Profile', () => {
+  describe('Settings', () => {
+    before(() => {
+      cy.useConfigProfile('oidc')
+    })
 
-    cy.get('#username').type(email)
-    cy.get('#remember').click()
+    let email
+
+    const hydraReauthFails = () => {
+      cy.clearCookies()
+      cy.visit(APP_URL + '/auth/login')
+      cy.get('button[value="hydra"]').click()
+
+      cy.get('#username').type(email)
+      cy.get('#remember').click()
     cy.get('#accept').click()
 
     cy.get('input[name="traits.website"]').clear().type(website)
@@ -151,5 +157,6 @@ context('Settings', () => {
 
       hydraReauthFails()
     })
+  })
   })
 })
