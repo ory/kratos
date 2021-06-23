@@ -624,31 +624,31 @@ func TestViperProvider_HaveIBeenPwned(t *testing.T) {
 	p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
 	t.Run("case=hipb: host", func(t *testing.T) {
 		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedHost, "foo.bar")
-		assert.Equal(t, p.PasswordPolicyConfig().HaveIBeenPwnedHost, "foo.bar")
+		assert.Equal(t, "foo.bar", p.PasswordPolicyConfig().HaveIBeenPwnedHost)
 	})
 
 	t.Run("case=hibp: enabled", func(t *testing.T) {
 		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, true)
-		assert.Equal(t, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled, true)
+		assert.Equal(t, true, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled)
 	})
 
 	t.Run("case=hibp: enabled", func(t *testing.T) {
 		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
-		assert.Equal(t, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled, false)
+		assert.Equal(t, false, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled)
 	})
 
-	t.Run("case=hibp: max)breaches", func(t *testing.T) {
+	t.Run("case=hibp: max_breaches", func(t *testing.T) {
 		p.MustSet(config.ViperKeyPasswordMaxBreaches, 10)
-		assert.Equal(t, p.PasswordPolicyConfig().MaxBreaches, 10)
+		assert.Equal(t, uint(10), p.PasswordPolicyConfig().MaxBreaches)
 	})
 
 	t.Run("case=hibp: ignore_network_errors", func(t *testing.T) {
 		p.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
-		assert.Equal(t, p.PasswordPolicyConfig().IgnoreNetworkErrors, true)
+		assert.Equal(t, true, p.PasswordPolicyConfig().IgnoreNetworkErrors)
 	})
 
 	t.Run("case=hibp: ignore_network_errors", func(t *testing.T) {
 		p.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
-		assert.Equal(t, p.PasswordPolicyConfig().IgnoreNetworkErrors, false)
+		assert.Equal(t, false, p.PasswordPolicyConfig().IgnoreNetworkErrors)
 	})
 }
