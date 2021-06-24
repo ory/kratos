@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-06-22)](#unreleased-2021-06-22)
+- [Unreleased (2021-06-24)](#unreleased-2021-06-24)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -70,7 +70,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...0fa3a539fbe1ae498434b200c3b636de10d73a7c) (2021-06-22)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...0fa3a539fbe1ae498434b200c3b636de10d73a7c) (2021-06-24)
 ## Breaking Changes
 
 This patch refactors the logout functionality for browsers and APIs. It adds increased security and DoS-defenses to the logout flow.
