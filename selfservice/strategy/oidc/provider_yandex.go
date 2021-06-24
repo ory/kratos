@@ -96,7 +96,7 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		user.Picture = ""
 	}
 
-	return &Claims{
+	basicClaims := BasicClaims{
 		Issuer:     u.String(),
 		Subject:    user.Id,
 		GivenName:  user.FirstName,
@@ -105,5 +105,7 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		Email:      user.Email,
 		Gender:     user.Gender,
 		Birthdate:  user.BirthDay,
-	}, nil
+	}
+	claims := toClaims(basicClaims)
+	return &claims, nil
 }

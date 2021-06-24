@@ -111,7 +111,7 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token) (*Claim
 		gender = "male"
 	}
 
-	return &Claims{
+	basicClaims := BasicClaims{
 		Issuer:     u.String(),
 		Subject:    strconv.Itoa(user.Id),
 		GivenName:  user.FirstName,
@@ -121,5 +121,7 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token) (*Claim
 		Email:      user.Email,
 		Gender:     gender,
 		Birthdate:  user.BirthDay,
-	}, nil
+	}
+	claims := toClaims(basicClaims)
+	return &claims, nil
 }

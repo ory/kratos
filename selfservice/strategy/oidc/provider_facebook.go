@@ -94,7 +94,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token) (
 		user.EmailVerified = true
 	}
 
-	return &Claims{
+	basicClaims := BasicClaims{
 		Issuer:            u.String(),
 		Subject:           user.Id,
 		Name:              user.Name,
@@ -108,5 +108,8 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token) (
 		EmailVerified:     user.EmailVerified,
 		Gender:            user.Gender,
 		Birthdate:         user.BirthDay,
-	}, nil
+	}
+
+	claims := toClaims(basicClaims)
+	return &claims, nil
 }
