@@ -240,6 +240,9 @@ New feature or request.
 
 #### Pull Requests
 
+- [ ] feat: anti-CSRF measures when fetching flows
+      ([kratos#1458](https://github.com/ory/kratos/pull/1458)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] feat: APIs for native integration with AJAX / SPAs / ReactJS / NextJS /
       ... ([kratos#1367](https://github.com/ory/kratos/pull/1367)) -
       [@hackerman](https://github.com/aeneasr)
