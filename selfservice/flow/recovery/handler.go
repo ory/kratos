@@ -199,6 +199,15 @@ type getSelfServiceRecoveryFlowParameters struct {
 	// required: true
 	// in: query
 	FlowID string `json:"id"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookie"`
 }
 
 // swagger:route GET /self-service/recovery/flows public getSelfServiceRecoveryFlow
@@ -222,7 +231,7 @@ type getSelfServiceRecoveryFlowParameters struct {
 //	```js
 //	// pseudo-code example
 //	router.get('/recovery', async function (req, res) {
-//	  const flow = await client.getSelfServiceRecoveryFlow(req.header.get('cookie'), req.query['flow'])
+//	  const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
 //
 //    res.render('recovery', flow)
 //	})

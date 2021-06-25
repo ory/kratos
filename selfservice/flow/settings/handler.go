@@ -250,15 +250,29 @@ type getSelfServiceSettingsFlowParameters struct {
 	// required: true
 	// in: query
 	ID string `json:"id"`
+
+	// The Session Token
+	//
+	// When using the SDK in an app without a browser, please include the
+	// session token here.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here. You only need to do this for browser-
+	// based flows.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookie"`
 }
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceSettingsFlow
 type getSelfServiceSettingsFlow struct {
-	// The Session Token of the Identity performing the settings flow.
-	//
-	// in: header
-	SessionToken string `json:"X-Session-Token"`
 }
 
 // swagger:route GET /self-service/settings/flows public getSelfServiceSettingsFlow

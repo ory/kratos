@@ -660,7 +660,7 @@ paths:
         ```js
         pseudo-code example
         router.get('/login', async function (req, res) {
-        const flow = await client.getSelfServiceLoginFlow(req.header.get('cookie'), req.query['flow'])
+        const flow = await client.getSelfServiceLoginFlow(req.header('cookie'), req.query['flow'])
 
         res.render('login', flow)
         })
@@ -682,13 +682,13 @@ paths:
           type: string
         style: form
       - description: |-
-          HTTP Cookie
+          HTTP Cookies
 
           When using the SDK on the server side you must include the HTTP Cookie Header
           originally sent to your HTTP handler here.
         explode: false
         in: header
-        name: cookies
+        name: cookie
         required: false
         schema:
           type: string
@@ -835,11 +835,18 @@ paths:
 
         The URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns
         a 401 error.
+
+        When calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.
       operationId: createSelfServiceLogoutUrlForBrowsers
       parameters:
-      - explode: false
+      - description: |-
+          HTTP Cookies
+
+          If you call this endpoint from a backend, please include the
+          original Cookie header in the request.
+        explode: false
         in: header
-        name: X-Session-Cookie
+        name: cookie
         required: false
         schema:
           type: string
@@ -1047,7 +1054,7 @@ paths:
         ```js
         pseudo-code example
         router.get('/recovery', async function (req, res) {
-        const flow = await client.getSelfServiceRecoveryFlow(req.header.get('cookie'), req.query['flow'])
+        const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
 
         res.render('recovery', flow)
         })
@@ -1068,6 +1075,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK on the server side you must include the HTTP Cookie Header
+          originally sent to your HTTP handler here.
+        explode: false
+        in: header
+        name: cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -1355,7 +1374,7 @@ paths:
         ```js
         pseudo-code example
         router.get('/registration', async function (req, res) {
-        const flow = await client.getSelfServiceRegistrationFlow(req.header.get('cookie'), req.query['flow'])
+        const flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])
 
         res.render('registration', flow)
         })
@@ -1376,6 +1395,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK on the server side you must include the HTTP Cookie Header
+          originally sent to your HTTP handler here.
+        explode: false
+        in: header
+        name: cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -1654,10 +1685,27 @@ paths:
         schema:
           type: string
         style: form
-      - description: The Session Token of the Identity performing the settings flow.
+      - description: |-
+          The Session Token
+
+          When using the SDK in an app without a browser, please include the
+          session token here.
         explode: false
         in: header
         name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK on the server side you must include the HTTP Cookie Header
+          originally sent to your HTTP handler here. You only need to do this for browser-
+          based flows.
+        explode: false
+        in: header
+        name: cookie
         required: false
         schema:
           type: string
@@ -1869,7 +1917,7 @@ paths:
         ```js
         pseudo-code example
         router.get('/recovery', async function (req, res) {
-        const flow = await client.getSelfServiceVerificationFlow(req.header.get('cookie'), req.query['flow'])
+        const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
 
         res.render('verification', flow)
         })
@@ -1889,6 +1937,18 @@ paths:
         schema:
           type: string
         style: form
+      - description: |-
+          HTTP Cookies
+
+          When using the SDK on the server side you must include the HTTP Cookie Header
+          originally sent to your HTTP handler here.
+        explode: false
+        in: header
+        name: cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:

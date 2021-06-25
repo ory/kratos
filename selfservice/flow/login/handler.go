@@ -256,14 +256,14 @@ type getSelfServiceLoginFlow struct {
 	// in: query
 	ID string `json:"id"`
 
-	// HTTP Cookie
+	// HTTP Cookies
 	//
 	// When using the SDK on the server side you must include the HTTP Cookie Header
 	// originally sent to your HTTP handler here.
 	//
 	// in: header
 	// name: Cookie
-	Cookies string `json:"cookies"`
+	Cookies string `json:"cookie"`
 }
 
 // swagger:route GET /self-service/login/flows public getSelfServiceLoginFlow
@@ -287,7 +287,7 @@ type getSelfServiceLoginFlow struct {
 //	```js
 //	// pseudo-code example
 //	router.get('/login', async function (req, res) {
-//	  const flow = await client.getSelfServiceLoginFlow(req.header.get('cookie'), req.query['flow'])
+//	  const flow = await client.getSelfServiceLoginFlow(req.header('cookie'), req.query['flow'])
 //
 //    res.render('login', flow)
 //	})
