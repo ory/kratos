@@ -156,6 +156,12 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 		return errors.Errorf("the password is too similar to the user identifier")
 	}
 
+	passwordPolicyConfig := s.reg.Config(ctx).PasswordPolicyConfig()
+
+	if !passwordPolicyConfig.HaveIBeenPwnedEnabled {
+		return nil
+	}
+
 	/* #nosec G401 sha1 is used for k-anonymity */
 	h := sha1.New()
 	if _, err := h.Write([]byte(password)); err != nil {
@@ -166,8 +172,6 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 	s.RLock()
 	c, ok := s.hashes[b20(hpw)]
 	s.RUnlock()
-
-	passwordPolicyConfig := s.reg.Config(ctx).PasswordPolicyConfig()
 
 	if !ok {
 		err := s.fetch(hpw, passwordPolicyConfig.HaveIBeenPwnedHost)
