@@ -157,7 +157,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	n.UseHandler(router)
 	certs := c.GetTSLCertificatesForAdmin()
 	server := graceful.WithDefaults(&http.Server{
-		Handler: context.ClearHandler(n),
+		Handler:   context.ClearHandler(n),
 		TLSConfig: &tls.Config{Certificates: certs},
 	})
 	addr := c.AdminListenOn()
