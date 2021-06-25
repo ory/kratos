@@ -892,6 +892,12 @@
                       "type": "string",
                       "default": "api.pwnedpasswords.com"
                     },
+                    "haveibeenpwned_enabled": {
+                      "title": "Enable the HaveIBeenPwned API",
+                      "description": "If set to false the password validation does not utilize the Have I Been Pwnd API.",
+                      "type": "boolean",
+                      "default": true
+                    },
                     "max_breaches": {
                       "title": "Allow Password Breaches",
                       "description": "Defines how often a password may have been breached before it is rejected.",
