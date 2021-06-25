@@ -117,6 +117,7 @@ const (
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
+	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
@@ -160,9 +161,10 @@ type (
 		URL string `json:"url"`
 	}
 	PasswordPolicy struct {
-		HaveIBeenPwnedHost  string `json:"haveibeenpwned_host"`
-		MaxBreaches         uint   `json:"max_breaches"`
-		IgnoreNetworkErrors bool   `json:"ignore_network_errors"`
+		HaveIBeenPwnedHost    string `json:"haveibeenpwned_host"`
+		HaveIBeenPwnedEnabled bool   `json:"haveibeenpwned_enabled"`
+		MaxBreaches           uint   `json:"max_breaches"`
+		IgnoreNetworkErrors   bool   `json:"ignore_network_errors"`
 	}
 	Schemas []Schema
 	Config  struct {
@@ -838,9 +840,10 @@ func (p *Config) ConfigVersion() string {
 
 func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 	return &PasswordPolicy{
-		HaveIBeenPwnedHost:  p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
-		MaxBreaches:         uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
-		IgnoreNetworkErrors: p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+		HaveIBeenPwnedHost:    p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
+		HaveIBeenPwnedEnabled: p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
+		MaxBreaches:           uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
+		IgnoreNetworkErrors:   p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
 	}
 }
 
