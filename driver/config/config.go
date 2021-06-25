@@ -3,8 +3,10 @@ package config
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/tlsx"
 	"net"
 	"net/http"
 	"net/url"
@@ -54,12 +56,20 @@ const (
 	ViperKeyPublicSocketOwner                                       = "serve.public.socket.owner"
 	ViperKeyPublicSocketGroup                                       = "serve.public.socket.group"
 	ViperKeyPublicSocketMode                                        = "serve.public.socket.mode"
+	ViperKeyPublicTLSCertBase64                                     = "serve.public.tls.cert.base64"
+	ViperKeyPublicTLSKeyBase64                                      = "serve.public.tls.key.base64"
+	ViperKeyPublicTLSCertPath                                       = "serve.public.tls.cert.path"
+	ViperKeyPublicTLSKeyPath                                        = "serve.public.tls.key.path"
 	ViperKeyAdminBaseURL                                            = "serve.admin.base_url"
 	ViperKeyAdminPort                                               = "serve.admin.port"
 	ViperKeyAdminHost                                               = "serve.admin.host"
 	ViperKeyAdminSocketOwner                                        = "serve.admin.socket.owner"
 	ViperKeyAdminSocketGroup                                        = "serve.admin.socket.group"
 	ViperKeyAdminSocketMode                                         = "serve.admin.socket.mode"
+	ViperKeyAdminTLSCertBase64                                      = "serve.admin.tls.cert.base64"
+	ViperKeyAdminTLSKeyBase64                                       = "serve.admin.tls.key.base64"
+	ViperKeyAdminTLSCertPath                                        = "serve.admin.tls.cert.path"
+	ViperKeyAdminTLSKeyPath                                         = "serve.admin.tls.key.path"
 	ViperKeySessionLifespan                                         = "session.lifespan"
 	ViperKeySessionSameSite                                         = "session.cookie.same_site"
 	ViperKeySessionDomain                                           = "session.cookie.domain"
@@ -843,4 +853,40 @@ func (p *Config) HasherPasswordHashingAlgorithm() string {
 	default:
 		return configValue
 	}
+}
+
+func (p *Config) GetTSLCertificatesForPublic() []tls.Certificate {
+	return p.getTSLCertificates(
+		"public",
+		p.p.String(ViperKeyPublicTLSCertBase64),
+		p.p.String(ViperKeyPublicTLSKeyBase64),
+		p.p.String(ViperKeyPublicTLSCertPath),
+		p.p.String(ViperKeyPublicTLSKeyPath),
+	)
+}
+
+func (p *Config) GetTSLCertificatesForAdmin() []tls.Certificate {
+	return p.getTSLCertificates(
+		"admin",
+		p.p.String(ViperKeyAdminTLSCertBase64),
+		p.p.String(ViperKeyAdminTLSKeyBase64),
+		p.p.String(ViperKeyAdminTLSCertPath),
+		p.p.String(ViperKeyAdminTLSKeyPath),
+	)
+}
+
+func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, keyPath string) []tls.Certificate {
+	cert, err := tlsx.Certificate(certBase64, keyBase64, certPath, keyPath)
+
+	fmt.Println(daemon, certBase64, keyBase64, certPath, keyPath)
+
+	if err == nil {
+		p.l.Infof("Setting up HTTPS for %s", daemon)
+		return cert
+	} else if errors.Cause(err) != tlsx.ErrNoCertificatesConfigured {
+		p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+	}
+
+	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
+	return nil
 }

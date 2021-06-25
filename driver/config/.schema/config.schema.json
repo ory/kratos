@@ -555,6 +555,51 @@
         }
       },
       "additionalProperties": false
+    },
+    "tlsxSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path to PEM-encoded Fle",
+          "type": "string",
+          "examples": [
+            "path/to/file.pem"
+          ]
+        },
+        "base64": {
+          "title": "Base64 Encoded Inline",
+          "description": "The base64 string of the PEM-encoded file content. Can be generated using for example `base64 -i path/to/file.pem`.",
+          "type": "string",
+          "examples": [
+            "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXG5NSUlEWlRDQ0FrMmdBd0lCQWdJRVY1eE90REFOQmdr..."
+          ]
+        }
+      }
+    },
+    "tlsx": {
+      "title": "HTTPS",
+      "description": "Configure HTTP over TLS (HTTPS). All options can also be set using environment variables by replacing dots (`.`) with underscores (`_`) and uppercasing the key. For example, `some.prefix.tls.key.path` becomes `export SOME_PREFIX_TLS_KEY_PATH`. If all keys are left undefined, TLS will be disabled.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "title": "Private Key (PEM)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/tlsxSource"
+            }
+          ]
+        },
+        "cert": {
+          "title": "TLS Certificate (PEM)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/tlsxSource"
+            }
+          ]
+        }
+      }
     }
   },
   "properties": {
@@ -996,6 +1041,9 @@
             },
             "socket": {
               "$ref": "#/definitions/socket"
+            },
+            "tls": {
+              "$ref": "#/definitions/tlsx"
             }
           },
           "additionalProperties": false
@@ -1186,6 +1234,9 @@
             },
             "socket": {
               "$ref": "#/definitions/socket"
+            },
+            "tls": {
+              "$ref": "#/definitions/tlsx"
             }
           },
           "additionalProperties": false
