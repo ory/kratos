@@ -110,7 +110,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	certs := c.GetTSLCertificatesForPublic()
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   context.ClearHandler(handler),
-		TLSConfig: &tls.Config{Certificates: certs},
+		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
 	})
 	addr := c.PublicListenOn()
 
@@ -158,7 +158,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	certs := c.GetTSLCertificatesForAdmin()
 	server := graceful.WithDefaults(&http.Server{
 		Handler:   context.ClearHandler(n),
-		TLSConfig: &tls.Config{Certificates: certs},
+		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
 	})
 	addr := c.AdminListenOn()
 
