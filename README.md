@@ -367,7 +367,7 @@ We encourage all contributions and encourage you to read our [contribution guide
 
 #### Dependencies
 
-You need Go 1.13+ with `GO111MODULE=on` and (for the test suites):
+You need Go 1.16+ and (for the test suites):
 
 - Docker and Docker Compose
 - Makefile
