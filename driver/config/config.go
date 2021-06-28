@@ -886,7 +886,7 @@ func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, key
 	if err == nil {
 		p.l.Infof("Setting up HTTPS for %s", daemon)
 		return cert
-	} else if errors.Cause(err) != tlsx.ErrNoCertificatesConfigured {
+	} else if !errors.Is(err, tlsx.ErrNoCertificatesConfigured) {
 		p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
 	}
 
