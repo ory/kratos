@@ -882,7 +882,6 @@ func (p *Config) GetTSLCertificatesForAdmin() []tls.Certificate {
 func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, keyPath string) []tls.Certificate {
 	cert, err := tlsx.Certificate(certBase64, keyBase64, certPath, keyPath)
 
-	fmt.Println(daemon, certBase64, keyBase64, certPath, keyPath)
 
 	if err == nil {
 		p.l.Infof("Setting up HTTPS for %s", daemon)
