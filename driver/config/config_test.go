@@ -1,13 +1,21 @@
 package config_test
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/ory/x/tlsx"
 
 	"github.com/ory/x/configx"
 
@@ -651,4 +659,163 @@ func TestViperProvider_HaveIBeenPwned(t *testing.T) {
 		p.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		assert.Equal(t, false, p.PasswordPolicyConfig().IgnoreNetworkErrors)
 	})
+}
+
+func TestLoadingTLSConfig(t *testing.T) {
+	certPath := "/tmp/test_cert.pem"
+	keyPath := "/tmp/test_key.pem"
+
+	generateTLSCertificateFiles(t, certPath, keyPath)
+
+	certRaw, err := ioutil.ReadFile(certPath)
+	assert.Nil(t, err)
+
+	keyRaw, err := ioutil.ReadFile(keyPath)
+	assert.Nil(t, err)
+
+	certBase64 := base64.StdEncoding.EncodeToString(certRaw)
+	keyBase64 := base64.StdEncoding.EncodeToString(keyRaw)
+
+	t.Run("case=public: loading inline base64 certificate", func(t *testing.T) {
+		logger := logrusx.New("", "")
+		logger.Logger.ExitFunc = func(code int) { panic("") }
+		hook := new(test.Hook)
+		logger.Logger.Hooks.Add(hook)
+
+		p := config.MustNew(t, logger, configx.SkipValidation())
+		p.MustSet(config.ViperKeyPublicTLSKeyBase64, keyBase64)
+		p.MustSet(config.ViperKeyPublicTLSCertBase64, certBase64)
+		assert.NotNil(t, p.GetTSLCertificatesForPublic())
+		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
+	})
+
+	t.Run("case=public: loading certificate from a file", func(t *testing.T) {
+		logger := logrusx.New("", "")
+		logger.Logger.ExitFunc = func(code int) { panic("") }
+		hook := new(test.Hook)
+		logger.Logger.Hooks.Add(hook)
+
+		p := config.MustNew(t, logger, configx.SkipValidation())
+		p.MustSet(config.ViperKeyPublicTLSKeyPath, keyPath)
+		p.MustSet(config.ViperKeyPublicTLSCertPath, certPath)
+		assert.NotNil(t, p.GetTSLCertificatesForPublic())
+		assert.Equal(t, "Setting up HTTPS for public", hook.LastEntry().Message)
+	})
+
+	t.Run("case=public: failing to load inline base64 certificate", func(t *testing.T) {
+		logger := logrusx.New("", "")
+		logger.Logger.ExitFunc = func(code int) {}
+		hook := new(test.Hook)
+		logger.Logger.Hooks.Add(hook)
+
+		p := config.MustNew(t, logger, configx.SkipValidation())
+		p.MustSet(config.ViperKeyPublicTLSKeyBase64, "empty")
+		p.MustSet(config.ViperKeyPublicTLSCertBase64, certBase64)
+		assert.Nil(t, p.GetTSLCertificatesForPublic())
+		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+	})
+
+	t.Run("case=public: failing to load certificate from a file", func(t *testing.T) {
+		logger := logrusx.New("", "")
+		logger.Logger.ExitFunc = func(code int) {}
+		hook := new(test.Hook)
+		logger.Logger.Hooks.Add(hook)
+
+		p := config.MustNew(t, logger, configx.SkipValidation())
+		p.MustSet(config.ViperKeyPublicTLSKeyPath, "/dev/null")
+		p.MustSet(config.ViperKeyPublicTLSCertPath, certPath)
+		assert.Nil(t, p.GetTSLCertificatesForPublic())
+		assert.Equal(t, "TLS has not been configured for public, skipping", hook.LastEntry().Message)
+	})
+
+	t.Run("case=admin: loading inline base64 certificate", func(t *testing.T) {
+		logger := logrusx.New("", "")
+		logger.Logger.ExitFunc = func(code int) { panic("") }
+		hook := new(test.Hook)
+		logger.Logger.Hooks.Add(hook)
+
+		p := config.MustNew(t, logger, configx.SkipValidation())
+		p.MustSet(config.ViperKeyAdminTLSKeyBase64, keyBase64)
+		p.MustSet(config.ViperKeyAdminTLSCertBase64, certBase64)
+		assert.NotNil(t, p.GetTSLCertificatesForAdmin())
+		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
+	})
+
+	t.Run("case=admin: loading certificate from a file", func(t *testing.T) {
+		logger := logrusx.New("", "")
+		logger.Logger.ExitFunc = func(code int) { panic("") }
+		hook := new(test.Hook)
+		logger.Logger.Hooks.Add(hook)
+
+		p := config.MustNew(t, logger, configx.SkipValidation())
+		p.MustSet(config.ViperKeyAdminTLSKeyPath, keyPath)
+		p.MustSet(config.ViperKeyAdminTLSCertPath, certPath)
+		assert.NotNil(t, p.GetTSLCertificatesForAdmin())
+		assert.Equal(t, "Setting up HTTPS for admin", hook.LastEntry().Message)
+	})
+
+	t.Run("case=admin: failing to load inline base64 certificate", func(t *testing.T) {
+		logger := logrusx.New("", "")
+		logger.Logger.ExitFunc = func(code int) {}
+		hook := new(test.Hook)
+		logger.Logger.Hooks.Add(hook)
+
+		p := config.MustNew(t, logger, configx.SkipValidation())
+		p.MustSet(config.ViperKeyAdminTLSKeyBase64, "empty")
+		p.MustSet(config.ViperKeyAdminTLSCertBase64, certBase64)
+		assert.Nil(t, p.GetTSLCertificatesForAdmin())
+		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+	})
+
+	t.Run("case=admin: failing to load certificate from a file", func(t *testing.T) {
+		logger := logrusx.New("", "")
+		logger.Logger.ExitFunc = func(code int) {}
+		hook := new(test.Hook)
+		logger.Logger.Hooks.Add(hook)
+
+		p := config.MustNew(t, logger, configx.SkipValidation())
+		p.MustSet(config.ViperKeyAdminTLSKeyPath, "/dev/null")
+		p.MustSet(config.ViperKeyAdminTLSCertPath, certPath)
+		assert.Nil(t, p.GetTSLCertificatesForAdmin())
+		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+	})
+
+}
+
+func generateTLSCertificateFiles(t *testing.T, certPath, keyPath string) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.Nil(t, err)
+
+	cert, err := tlsx.CreateSelfSignedCertificate(privateKey)
+	assert.Nil(t, err)
+
+	derBytes := cert.Raw
+
+	certOut, err := os.Create(certPath)
+	if err != nil {
+		t.Errorf("Failed to open cert.pem for writing: %v", err)
+	}
+	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		t.Errorf("Failed to write data to cert.pem: %v", err)
+	}
+	if err := certOut.Close(); err != nil {
+		t.Errorf("Error closing cert.pem: %v", err)
+	}
+	t.Logf("wrote cert.pem")
+
+	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		t.Errorf("Failed to open key.pem for writing: %v", err)
+	}
+	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		t.Errorf("Unable to marshal private key: %v", err)
+	}
+	if err := pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes}); err != nil {
+		t.Errorf("Failed to write data to key.pem: %v", err)
+	}
+	if err := keyOut.Close(); err != nil {
+		t.Errorf("Error closing key.pem: %v", err)
+	}
+	t.Logf("wrote key.pem")
 }
