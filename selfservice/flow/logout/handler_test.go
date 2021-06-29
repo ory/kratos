@@ -101,7 +101,7 @@ func TestLogout(t *testing.T) {
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 			body := x.MustReadAll(res.Body)
-			assert.EqualValues(t, "CSRF token is missing or invalid.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {

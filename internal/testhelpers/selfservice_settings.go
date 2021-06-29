@@ -145,7 +145,7 @@ func NewSettingsUIEchoServer(t *testing.T, reg *driver.RegistryDefault) *httptes
 	return ts
 }
 
-func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *kratos.APIClient, conf *config.Config) *httptest.Server {
+func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClient, conf *config.Config) *httptest.Server {
 	var called int
 	loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, 0, called)
@@ -153,7 +153,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *kratos.APIClient
 
 		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-		res, _, err := adminClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
+		res, _, err := publicClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
 
 		require.NoError(t, err)
 		require.NotEmpty(t, res.RequestUrl)
