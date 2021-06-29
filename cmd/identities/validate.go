@@ -37,7 +37,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 		}
 
 		for src, i := range is {
-			err = validateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
+			err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
 				return c.PublicApi.GetSchema(ctx, id).Execute()
 			})
 			if err != nil {
@@ -54,12 +54,12 @@ var schemas = make(map[string]*jsonschema.Schema)
 
 const createIdentityPath = "openapi.json#/components/schemas/createIdentity"
 
-type schemaGetter = func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error)
+type SchemaGetter = func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error)
 
-// validateIdentity validates the json payload fc against
+// ValidateIdentity validates the json payload fc against
 // 1. the swagger payload definition and
 // 2. the remote custom identity schema.
-func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaGetter) error {
+func ValidateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema SchemaGetter) error {
 	swaggerSchema, ok := schemas[createIdentityPath]
 	if !ok {
 		// add swagger schema

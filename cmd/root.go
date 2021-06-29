@@ -22,31 +22,34 @@ import (
 )
 
 // RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
-	Use: "kratos",
+func NewRootCmd() (cmd *cobra.Command) {
+	cmd = &cobra.Command{
+		Use: "kratos",
+	}
+	identities.RegisterCommandRecursive(cmd)
+	identities.RegisterFlags()
+
+	jsonnet.RegisterCommandRecursive(cmd)
+	serve.RegisterCommandRecursive(cmd)
+	migrate.RegisterCommandRecursive(cmd)
+	remote.RegisterCommandRecursive(cmd)
+	hashers.RegisterCommandRecursive(cmd)
+	courier.RegisterCommandRecursive(cmd)
+
+	cmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
+
+	return cmd
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the RootCmd.
 func Execute() {
-	if err := RootCmd.Execute(); err != nil {
+	c := NewRootCmd()
+
+	if err := c.Execute(); err != nil {
 		if !errors.Is(err, cmdx.ErrNoPrintButFail) {
-			_, _ = fmt.Fprintln(RootCmd.ErrOrStderr(), err)
+			_, _ = fmt.Fprintln(c.ErrOrStderr(), err)
 		}
 		os.Exit(1)
 	}
-}
-
-func init() {
-	identities.RegisterCommandRecursive(RootCmd)
-	identities.RegisterFlags()
-
-	jsonnet.RegisterCommandRecursive(RootCmd)
-	serve.RegisterCommandRecursive(RootCmd)
-	migrate.RegisterCommandRecursive(RootCmd)
-	remote.RegisterCommandRecursive(RootCmd)
-	hashers.RegisterCommandRecursive(RootCmd)
-	courier.RegisterCommandRecursive(RootCmd)
-
-	RootCmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
 }

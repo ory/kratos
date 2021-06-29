@@ -1,9 +1,11 @@
-package identities
+package identities_test
 
 import (
 	"context"
 	"encoding/json"
 	"testing"
+
+	"github.com/ory/kratos/cmd/identities"
 
 	"github.com/ory/x/assertx"
 
@@ -17,13 +19,13 @@ import (
 )
 
 func TestGetCmd(t *testing.T) {
-	reg := setup(t, GetCmd)
+	reg := setup(t, identities.GetCmd)
 
 	t.Run("case=gets a single identity", func(t *testing.T) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
-		stdOut := execNoErr(t, GetCmd, i.ID.String())
+		stdOut := execNoErr(t, identities.GetCmd, i.ID.String())
 
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
@@ -34,7 +36,7 @@ func TestGetCmd(t *testing.T) {
 	t.Run("case=gets three identities", func(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 3)
 
-		stdOut := execNoErr(t, GetCmd, ids...)
+		stdOut := execNoErr(t, identities.GetCmd, ids...)
 
 		isj, err := json.Marshal(is)
 		require.NoError(t, err)
@@ -43,7 +45,7 @@ func TestGetCmd(t *testing.T) {
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
-		stdErr := execErr(t, GetCmd, x.NewUUID().String())
+		stdErr := execErr(t, identities.GetCmd, x.NewUUID().String())
 
 		assert.Contains(t, stdErr, "404 Not Found", stdErr)
 	})

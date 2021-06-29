@@ -1,9 +1,11 @@
-package identities
+package identities_test
 
 import (
 	"context"
 	"strings"
 	"testing"
+
+	"github.com/ory/kratos/cmd/identities"
 
 	"github.com/ory/x/cmdx"
 
@@ -14,8 +16,8 @@ import (
 )
 
 func TestListCmd(t *testing.T) {
-	reg := setup(t, ListCmd)
-	require.NoError(t, ListCmd.Flags().Set(cmdx.FlagQuiet, "true"))
+	reg := setup(t, identities.ListCmd)
+	require.NoError(t, identities.ListCmd.Flags().Set(cmdx.FlagQuiet, "true"))
 
 	var deleteIdentities = func(t *testing.T, is []*identity.Identity) {
 		for _, i := range is {
@@ -27,7 +29,7 @@ func TestListCmd(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 5)
 		defer deleteIdentities(t, is)
 
-		stdOut := execNoErr(t, ListCmd)
+		stdOut := execNoErr(t, identities.ListCmd)
 
 		for _, i := range ids {
 			assert.Contains(t, stdOut, i)
@@ -38,8 +40,8 @@ func TestListCmd(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 6)
 		defer deleteIdentities(t, is)
 
-		stdoutP1 := execNoErr(t, ListCmd, "1", "3")
-		stdoutP2 := execNoErr(t, ListCmd, "2", "3")
+		stdoutP1 := execNoErr(t, identities.ListCmd, "1", "3")
+		stdoutP2 := execNoErr(t, identities.ListCmd, "2", "3")
 
 		for _, id := range ids {
 			// exactly one of page 1 and 2 should contain the id
