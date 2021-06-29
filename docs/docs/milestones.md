@@ -165,9 +165,6 @@ Something is not working.
 - [ ] Verification does not include success message
       ([kratos#1450](https://github.com/ory/kratos/issues/1450)) -
       [@Alano Terblanche](https://github.com/Benehiko)
-- [ ] fix: settings flow error handle should access schemas using configured
-      "local" URLs instead of public URLs
-      ([kratos#1448](https://github.com/ory/kratos/issues/1448))
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] Investigate why smtps fails but smtp does not
@@ -193,6 +190,9 @@ Something is not working.
 - [x] Social sign uop should reduce confusion on sign up button
       ([kratos#1422](https://github.com/ory/kratos/issues/1422)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] fix: settings flow error handle should access schemas using configured
+      "local" URLs instead of public URLs
+      ([kratos#1448](https://github.com/ory/kratos/issues/1448))
 
 #### Pull Requests
 
