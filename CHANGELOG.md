@@ -1,4 +1,187 @@
-# [](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...v) (2021-06-25)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Unreleased (2021-06-28)](#unreleased-2021-06-28)
+  - [Breaking Changes](#breaking-changes)
+    - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
+    - [Documentation](#documentation)
+    - [Features](#features)
+    - [Tests](#tests)
+    - [Unclassified](#unclassified)
+- [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
+  - [Breaking Changes](#breaking-changes-1)
+    - [Bug Fixes](#bug-fixes-1)
+    - [Code Generation](#code-generation)
+    - [Code Refactoring](#code-refactoring-1)
+- [0.6.2-alpha.1 (2021-05-14)](#062-alpha1-2021-05-14)
+    - [Code Generation](#code-generation-1)
+    - [Documentation](#documentation-1)
+- [0.6.1-alpha.1 (2021-05-11)](#061-alpha1-2021-05-11)
+    - [Code Generation](#code-generation-2)
+    - [Features](#features-1)
+- [0.6.0-alpha.2 (2021-05-07)](#060-alpha2-2021-05-07)
+    - [Bug Fixes](#bug-fixes-2)
+    - [Code Generation](#code-generation-3)
+    - [Features](#features-2)
+- [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
+  - [Breaking Changes](#breaking-changes-2)
+    - [Bug Fixes](#bug-fixes-3)
+    - [Code Generation](#code-generation-4)
+    - [Code Refactoring](#code-refactoring-2)
+    - [Documentation](#documentation-2)
+    - [Features](#features-3)
+    - [Tests](#tests-1)
+    - [Unclassified](#unclassified-1)
+- [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
+    - [Bug Fixes](#bug-fixes-4)
+    - [Code Generation](#code-generation-5)
+    - [Documentation](#documentation-3)
+    - [Features](#features-4)
+    - [Tests](#tests-2)
+    - [Unclassified](#unclassified-2)
+- [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
+    - [Bug Fixes](#bug-fixes-5)
+    - [Code Generation](#code-generation-6)
+    - [Code Refactoring](#code-refactoring-3)
+    - [Documentation](#documentation-4)
+    - [Features](#features-5)
+- [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
+    - [Bug Fixes](#bug-fixes-6)
+    - [Code Generation](#code-generation-7)
+    - [Documentation](#documentation-5)
+    - [Features](#features-6)
+    - [Tests](#tests-3)
+- [0.5.2-alpha.1 (2020-10-22)](#052-alpha1-2020-10-22)
+    - [Bug Fixes](#bug-fixes-7)
+    - [Code Generation](#code-generation-8)
+    - [Documentation](#documentation-6)
+    - [Tests](#tests-4)
+- [0.5.1-alpha.1 (2020-10-20)](#051-alpha1-2020-10-20)
+    - [Bug Fixes](#bug-fixes-8)
+    - [Code Generation](#code-generation-9)
+    - [Documentation](#documentation-7)
+    - [Features](#features-7)
+    - [Tests](#tests-5)
+    - [Unclassified](#unclassified-3)
+- [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
+  - [Breaking Changes](#breaking-changes-3)
+    - [Bug Fixes](#bug-fixes-9)
+    - [Code Generation](#code-generation-10)
+    - [Code Refactoring](#code-refactoring-4)
+    - [Documentation](#documentation-8)
+    - [Features](#features-8)
+    - [Tests](#tests-6)
+    - [Unclassified](#unclassified-4)
+- [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
+    - [Bug Fixes](#bug-fixes-10)
+    - [Code Generation](#code-generation-11)
+- [0.4.5-alpha.1 (2020-07-13)](#045-alpha1-2020-07-13)
+    - [Bug Fixes](#bug-fixes-11)
+    - [Code Generation](#code-generation-12)
+- [0.4.4-alpha.1 (2020-07-10)](#044-alpha1-2020-07-10)
+    - [Bug Fixes](#bug-fixes-12)
+    - [Code Generation](#code-generation-13)
+    - [Documentation](#documentation-9)
+- [0.4.3-alpha.1 (2020-07-08)](#043-alpha1-2020-07-08)
+    - [Bug Fixes](#bug-fixes-13)
+    - [Code Generation](#code-generation-14)
+- [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
+    - [Bug Fixes](#bug-fixes-14)
+    - [Code Generation](#code-generation-15)
+- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+  - [Breaking Changes](#breaking-changes-4)
+    - [Bug Fixes](#bug-fixes-15)
+    - [Code Generation](#code-generation-16)
+    - [Code Refactoring](#code-refactoring-5)
+    - [Documentation](#documentation-10)
+    - [Features](#features-9)
+    - [Unclassified](#unclassified-5)
+- [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
+  - [Breaking Changes](#breaking-changes-5)
+    - [Bug Fixes](#bug-fixes-16)
+    - [Chores](#chores)
+    - [Code Refactoring](#code-refactoring-6)
+    - [Documentation](#documentation-11)
+    - [Features](#features-10)
+    - [Unclassified](#unclassified-6)
+- [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
+    - [Chores](#chores-1)
+    - [Documentation](#documentation-12)
+- [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
+  - [Breaking Changes](#breaking-changes-6)
+    - [Bug Fixes](#bug-fixes-17)
+    - [Chores](#chores-2)
+    - [Code Refactoring](#code-refactoring-7)
+    - [Documentation](#documentation-13)
+    - [Features](#features-11)
+    - [Unclassified](#unclassified-7)
+- [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
+    - [Bug Fixes](#bug-fixes-18)
+    - [Code Refactoring](#code-refactoring-8)
+    - [Documentation](#documentation-14)
+- [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
+    - [Bug Fixes](#bug-fixes-19)
+    - [Code Refactoring](#code-refactoring-9)
+    - [Documentation](#documentation-15)
+    - [Features](#features-12)
+- [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
+    - [Documentation](#documentation-16)
+    - [Features](#features-13)
+- [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
+    - [Continuous Integration](#continuous-integration)
+    - [Documentation](#documentation-17)
+- [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
+    - [Continuous Integration](#continuous-integration-1)
+- [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
+    - [Bug Fixes](#bug-fixes-20)
+    - [Documentation](#documentation-18)
+    - [Features](#features-14)
+    - [Unclassified](#unclassified-8)
+- [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
+    - [Documentation](#documentation-19)
+- [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
+    - [Unclassified](#unclassified-9)
+- [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
+    - [Unclassified](#unclassified-10)
+- [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+    - [Unclassified](#unclassified-11)
+- [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+    - [Unclassified](#unclassified-12)
+- [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+    - [Unclassified](#unclassified-13)
+- [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+    - [Unclassified](#unclassified-14)
+- [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
+    - [Continuous Integration](#continuous-integration-2)
+    - [Unclassified](#unclassified-15)
+- [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
+    - [Unclassified](#unclassified-16)
+- [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+    - [Unclassified](#unclassified-17)
+- [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+    - [Unclassified](#unclassified-18)
+- [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
+    - [Continuous Integration](#continuous-integration-3)
+- [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
+    - [Unclassified](#unclassified-19)
+- [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
+    - [Continuous Integration](#continuous-integration-4)
+- [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
+    - [Continuous Integration](#continuous-integration-5)
+    - [Unclassified](#unclassified-20)
+- [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
+    - [Continuous Integration](#continuous-integration-6)
+- [0.0.1-alpha.2 (2020-01-28)](#001-alpha2-2020-01-28)
+    - [Continuous Integration](#continuous-integration-7)
+- [0.0.1-alpha.1 (2020-01-28)](#001-alpha1-2020-01-28)
+    - [Documentation](#documentation-20)
+    - [Unclassified](#unclassified-21)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...a0038853f30cd7d139d42d1d4601c8cf49d03934) (2021-06-28)
 ## Breaking Changes
 
 This patch refactors the logout functionality for browsers and APIs. It adds increased security and DoS-defenses to the logout flow.
@@ -7,21 +190,15 @@ Previously, calling `GET /self-service/browser/flows/logout` would remove the se
 
 Additionally, the endpoint `DELETE /sessions` has been moved to `DELETE /self-service/logout/api`. Payloads and responses stay equal. The SDK method `revokeSession` has been renamed to `submitSelfServiceLogoutFlowWithoutBrowser`.
 
-
 We listened to your feedback and have improved the naming of the SDK method `initializeSelfServiceRecoveryForNativeApps` to better match what it does: `initializeSelfServiceRecoveryWithoutBrowser`. As in the previous release you may still use the old SDK if you do not want to deal with the SDK breaking changes for now.
-
 
 We listened to your feedback and have improved the naming of the SDK method `initializeSelfServiceVerificationForNativeApps` to better match what it does: `initializeSelfServiceVerificationWithoutBrowser`. As in the previous release you may still use the old SDK if you do not want to deal with the SDK breaking changes for now.
 
-
 We listened to your feedback and have improved the naming of the SDK method `initializeSelfServiceSettingsForNativeApps` to better match what it does: `initializeSelfServiceSettingsWithoutBrowser`. As in the previous release you may still use the old SDK if you do not want to deal with the SDK breaking changes for now.
-
 
 We listened to your feedback and have improved the naming of the SDK method `initializeSelfServiceregistrationForNativeApps` to better match what it does: `initializeSelfServiceregistrationWithoutBrowser`. As in the previous release you may still use the old SDK if you do not want to deal with the SDK breaking changes for now.
 
-
 We listened to your feedback and have improved the naming of the SDK method `initializeSelfServiceLoginForNativeApps` to better match what it does: `initializeSelfServiceLoginWithoutBrowser`. As in the previous release you may still use the old SDK if you do not want to deal with the SDK breaking changes for now.
-
 
 
 
@@ -49,6 +226,7 @@ We listened to your feedback and have improved the naming of the SDK method `ini
 * Panic on error in issue session ([5fbd855](https://github.com/ory/kratos/commit/5fbd8557e1f907dd400bfcd26c187db16dc344ba)), closes [#1384](https://github.com/ory/kratos/issues/1384)
 * Prometheus metrics fix ([#1299](https://github.com/ory/kratos/issues/1299)) ([ac5d00d](https://github.com/ory/kratos/commit/ac5d00d472a87ab51e7c6834e2cb59f107fc3b3b))
 * Recovery email case sensitive ([#1357](https://github.com/ory/kratos/issues/1357)) ([bce14c4](https://github.com/ory/kratos/commit/bce14c487450bd668859f362b98704644fa4c72a)), closes [#1329](https://github.com/ory/kratos/issues/1329)
+* Remove obsolete ADD for corp module ([#1455](https://github.com/ory/kratos/issues/1455)) ([0fa3a53](https://github.com/ory/kratos/commit/0fa3a539fbe1ae498434b200c3b636de10d73a7c))
 * Remove typing from node.attribute.value ([63a5e08](https://github.com/ory/kratos/commit/63a5e08afab76dafbfe13e6126e165af28492aad)):
 
     Closes https://github.com/ory/sdk/issues/75
@@ -61,6 +239,7 @@ We listened to your feedback and have improved the naming of the SDK method `ini
 * Resolve network regressions ([8fc52c0](https://github.com/ory/kratos/commit/8fc52c034ed9978c2a04cc66bccc9b795c9bbefa))
 * Testhelper regressions ([bf3b04f](https://github.com/ory/kratos/commit/bf3b04fd2c7f9162073cb584d6fb0d59e868ecbf))
 * Use correct url in submitSelfServiceVerificationFlow ([ab8a600](https://github.com/ory/kratos/commit/ab8a600080ac0d6a6235806b74c5b9e3dc1c2d60))
+* Use local schema URL for sorting UI nodes ([#1449](https://github.com/ory/kratos/issues/1449)) ([a003885](https://github.com/ory/kratos/commit/a0038853f30cd7d139d42d1d4601c8cf49d03934))
 * Use STARTTLS for smtps connections ([#1430](https://github.com/ory/kratos/issues/1430)) ([c21bb80](https://github.com/ory/kratos/commit/c21bb80a749df7b224a8ac3f15fa62523a78d805)), closes [#781](https://github.com/ory/kratos/issues/781)
 * Version schema ([#1359](https://github.com/ory/kratos/issues/1359)) ([8c4bac7](https://github.com/ory/kratos/commit/8c4bac71674e45e440d916c6c947ed018a8ea29a)), closes [#1331](https://github.com/ory/kratos/issues/1331) [#1101](https://github.com/ory/kratos/issues/1101) [ory/hydra#2427](https://github.com/ory/hydra/issues/2427)
 
@@ -82,6 +261,7 @@ We listened to your feedback and have improved the naming of the SDK method `ini
 * Update docs for all flows ([d29ea69](https://github.com/ory/kratos/commit/d29ea69f6bb908b529502030942b1ced52227372))
 * Update documentation for plaintext templates ([#1369](https://github.com/ory/kratos/issues/1369)) ([419784d](https://github.com/ory/kratos/commit/419784dd0d4ddc338830ed0d77a7d99f8f440777)), closes [#1351](https://github.com/ory/kratos/issues/1351)
 * Update path ([f0384d9](https://github.com/ory/kratos/commit/f0384d9c11085230fd16290c524d22fac6002870))
+* Update README.md Go instructions ([#1464](https://github.com/ory/kratos/issues/1464)) ([8db4b4a](https://github.com/ory/kratos/commit/8db4b4a966c5c418cf9d9169b66d7dacff256113))
 * Update sdk use ([bcb8c06](https://github.com/ory/kratos/commit/bcb8c06ee324c639e548fc06315d9e952f470582))
 * Use correct path ([#1333](https://github.com/ory/kratos/issues/1333)) ([e401135](https://github.com/ory/kratos/commit/e401135cf415d7e3e6a8ca463dd47e46fe399b33))
 
@@ -90,7 +270,10 @@ We listened to your feedback and have improved the naming of the SDK method `ini
 * Add GetContextualizer ([ac32717](https://github.com/ory/kratos/commit/ac3271742c9c2b968b08dd2b35a5d120c5befcd9))
 * Add instana as possible tracing provider ([#1429](https://github.com/ory/kratos/issues/1429)) ([abe48a9](https://github.com/ory/kratos/commit/abe48a97ee75567979a70f00dd73ff698efcc75d)), closes [#1385](https://github.com/ory/kratos/issues/1385)
 * Add vk and yandex providers to oidc providers and documentation ([#1339](https://github.com/ory/kratos/issues/1339)) ([22a3ef9](https://github.com/ory/kratos/commit/22a3ef98181eb5922cc0f1c016d42ce46732d0a2)), closes [#1234](https://github.com/ory/kratos/issues/1234)
-* Give good explanations why CSRF fails in the default handler ([71c6043](https://github.com/ory/kratos/commit/71c604301aa78e9c52b996a2af6ee95805432fa4))
+* Disable HaveIBeenPwned validation when HaveIBeenPwnedEnabled is set to false ([#1445](https://github.com/ory/kratos/issues/1445)) ([44002f4](https://github.com/ory/kratos/commit/44002f4fa93b40a6bb18f1e759bb416d082cec08)), closes [#316](https://github.com/ory/kratos/issues/316):
+
+    This patch introduces an option to disable HaveIBeenPwned checks in environments where outbound network calls are disabled.
+
 * Improve contextualization in serve/daemon ([f83cd35](https://github.com/ory/kratos/commit/f83cd355422fb4b422f703406473bda914d8419c))
 * Include Credentials Metadata in admin api ([#1274](https://github.com/ory/kratos/issues/1274)) ([c8b6219](https://github.com/ory/kratos/commit/c8b62190fca53db4e1b3a4ddb5253fbd2fd46002)), closes [#820](https://github.com/ory/kratos/issues/820)
 * Include Credentials Metadata in admin api Missing changes in handler ([#1366](https://github.com/ory/kratos/issues/1366)) ([a71c220](https://github.com/ory/kratos/commit/a71c2208dedac45d32dab578e62a5e3105c8dee0))
@@ -115,7 +298,6 @@ We listened to your feedback and have improved the naming of the SDK method `ini
     This patch adds the long-awaited capabilities for natively working with SPAs and AJAX requests. Previously, requests to the `/self-service/verification/browser` endpoint would always end up in a redirect. Now, if the `Accept` header is set to `application/json`, the registration flow will be returned as JSON instead. Accordingly, changes to the error and submission flow have been made to support `application/json` content types and SPA / AJAX requests.
 
 * Protect logout against CSRF ([#1433](https://github.com/ory/kratos/issues/1433)) ([1a7a74c](https://github.com/ory/kratos/commit/1a7a74c3fe425f139a87bb68fbc07f8862c00e58)), closes [#142](https://github.com/ory/kratos/issues/142)
-* Require anti-csrf cookies for all flows ([9a78544](https://github.com/ory/kratos/commit/9a78544c55a8078616f3fb69e10fd21685440ff0)), closes [#1282](https://github.com/ory/kratos/issues/1282)
 * Sign in with Auth0 ([#1352](https://github.com/ory/kratos/issues/1352)) ([f618a53](https://github.com/ory/kratos/commit/f618a53fb971ad16121aa8728cfec54253bb3f44)), closes [#609](https://github.com/ory/kratos/issues/609)
 * Support api in settings error ([23105db](https://github.com/ory/kratos/commit/23105dbb836d920b8766536b65de58932f53d6f6))
 * Support reading session token from X-Session-Token HTTP header ([dcaefd9](https://github.com/ory/kratos/commit/dcaefd94a0b2cf819424f2e10b3bdae63b256726))
@@ -151,7 +333,6 @@ This release addresses some minor bugs and improves the SDK experience. Please b
 
 
 
-
 ## Breaking Changes
 
 Unfortunately, some method signatures have changed in the SDKs. Below is a list of changed entries:
@@ -169,7 +350,6 @@ Unfortunately, some method signatures have changed in the SDKs. Below is a list 
    - `initializeSelfServiceVerificationViaAPIFlow` -> `initializeSelfServiceVerificationForNativeApps`
    - `initializeSelfServiceVerificationViaBrowserFlow` -> `initializeSelfServiceVerificationForBrowsers`
 - Some type names have changed, for example `traits` -> `identityTraits`.
-
 
 
 
@@ -201,7 +381,6 @@ Resolves an issue in the Go SDK.
 
 
 
-
 ### Code Generation
 
 * Pin v0.6.2-alpha.1 release commit ([99c1b1d](https://github.com/ory/kratos/commit/99c1b1d674df3bd8263f7cbf1ed2bdfae6281f69))
@@ -219,7 +398,6 @@ This release primarily addresses issues in the SDK CI pipeline.
 
 
 
-
 ### Code Generation
 
 * Pin v0.6.1-alpha.1 release commit ([1df82da](https://github.com/ory/kratos/commit/1df82daaf3f9cfd3a470d7c9bf8d96abbd52b872))
@@ -232,7 +410,6 @@ This release primarily addresses issues in the SDK CI pipeline.
 # [0.6.0-alpha.2](https://github.com/ory/kratos/compare/v0.6.0-alpha.1...v0.6.0-alpha.2) (2021-05-07)
 
 This release addresses issues with the SDK pipeline and also closes a bug related to email sending.
-
 
 
 
@@ -630,55 +807,44 @@ Thank you for being a part of our community!
 
 
 
-
 ## Breaking Changes
 
 BCrypt is now the default hashing alogrithm. If you wish to continue using Argon2id please set `hashers.algorithm` to `argon2`.
-
 
 This implies a significant breaking change in the verification flow payload. Please consult the new ui documentation. In essence, the login flow's `methods` key was replaced with a generic `ui` key which provides information for the UI that needs to be rendered.
 
 To apply this patch you must apply SQL migrations. These migrations will drop the flow method table implying that all verification flows that are ongoing will become invalid. We recommend purging the flow table manually as well after this migration has been applied, if you have users doing at least one self-service flow per minute.
 
-
 This implies a significant breaking change in the recovery flow payload. Please consult the new ui documentation. In essence, the login flow's `methods` key was replaced with a generic `ui` key which provides information for the UI that needs to be rendered.
 
 To apply this patch you must apply SQL migrations. These migrations will drop the flow method table implying that all recovery flows that are ongoing will become invalid. We recommend purging the flow table manually as well after this migration has been applied, if you have users doing at least one self-service flow per minute.
-
 
 This implies a significant breaking change in the settings flow payload. Please consult the new ui documentation. In essence, the login flow's `methods` key was replaced with a generic `ui` key which provides information for the UI that needs to be rendered.
 
 To apply this patch you must apply SQL migrations. These migrations will drop the flow method table implying that all settings flows that are ongoing will become invalid. We recommend purging the flow table manually as well after this migration has been applied, if you have users doing at least one self-service flow per minute.
 
-
 This implies a significant breaking change in the registration flow payload. Please consult the new ui documentation. In essence, the login flow's `methods` key was replaced with a generic `ui` key which provides information for the UI that needs to be rendered.
 
 To apply this patch you must apply SQL migrations. These migrations will drop the flow method table implying that all registration flows that are ongoing will become invalid. We recommend purging the flow table manually as well after this migration has been applied, if you have users doing at least one self-service flow per minute.
-
 
 This implies a significant breaking change in the login flow payload. Please consult the new ui documentation. In essence, the login flow's `methods` key was replaced with a generic `ui` key which provides information for the UI that needs to be rendered.
 
 To apply this patch you must apply SQL migrations. These migrations will drop the flow method table implying that all login flows that are ongoing will become invalid. We recommend purging the flow table manually as well after this migration has been applied, if you have users doing at least one self-service flow per minute.
 
-
 This change introduces a new feature: UI Nodes. Previously, all self-service flows (login, registration, ...) included form fields (e.g. `methods.password.config.fields`). However, these form fields lacked support for other types of UI elements such as links (for e.g. "Sign in with Google"), images (e.g. QR codes), javascript (e.g. WebAuthn), or text (e.g. recovery codes). With this patch, these new features have been introduced. Please be aware that this introduces significant breaking changes which you will need to adopt to in your UI. Please refer to the most recent documentation to see what has changed. Conceptionally, most things stayed the same - you do however need to update how you access and render the form fields.
 
 Please be also aware that this patch includes SQL migrations which **purge existing self-service forms** from the database. This means that users will need to re-start the login/registration/... flow after the SQL migrations have been applied! If you wish to keep these records, make a back up of your database prior!
 
-
 This change introduces a new feature: UI Nodes. Previously, all self-service flows (login, registration, ...) included form fields (e.g. `methods.password.config.fields`). However, these form fields lacked support for other types of UI elements such as links (for e.g. "Sign in with Google"), images (e.g. QR codes), javascript (e.g. WebAuthn), or text (e.g. recovery codes). With this patch, these new features have been introduced. Please be aware that this introduces significant breaking changes which you will need to adopt to in your UI. Please refer to the most recent documentation to see what has changed. Conceptionally, most things stayed the same - you do however need to update how you access and render the form fields.
 
 Please be also aware that this patch includes SQL migrations which **purge existing self-service forms** from the database. This means that users will need to re-start the login/registration/... flow after the SQL migrations have been applied! If you wish to keep these records, make a back up of your database prior!
-
 
 The configuration value for `hashers.argon2.memory` is now a string representation of the memory amount including the unit of measurement. To convert the value divide your current setting (KB) by 1024 to get a result in MB or 1048576 to get a result in GB. Example: `131072` would now become `128MB`.
 
 Co-authored-by: aeneasr <3372410+aeneasr@users.noreply.github.com>
 Co-authored-by: aeneasr <aeneas@ory.sh>
 
-
 Please run SQL migrations when applying this patch.
-
 
 The following configuration keys were updated:
 
@@ -687,7 +853,6 @@ selfservice.methods.password.config.max_breaches
 ```
 - `password.max_breaches` -> `selfservice.methods.password.config.max_breaches`
 - `password.ignore_network_errors` -> `selfservice.methods.password.config.ignore_network_errors`
-
 
 After battling with [spf13/viper](https://github.com/spf13/viper) for several years we finally found a viable alternative with [knadh/koanf](https://github.com/knadh/koanf). The complete internal configuration infrastructure has changed, with several highlights:
 
@@ -698,7 +863,6 @@ After battling with [spf13/viper](https://github.com/spf13/viper) for several ye
 5. Configuration values are now sent to the tracer (e.g. Jaeger) if tracing is enabled.
 
 Please be aware that ORY Kratos might complain about an invalid configuration, because the validation process has improved significantly.
-
 
 
 
@@ -1086,7 +1250,6 @@ The ORY Community is proud to present you the next iteration of ORY Kratos. In t
 
 
 
-
 ### Bug Fixes
 
 * CSRF token is required when using the Revoke Session API endpoint ([#839](https://github.com/ory/kratos/issues/839)) ([d3218a0](https://github.com/ory/kratos/commit/d3218a0f23de7293b0a4a966ad21369a92b68b1a)), closes [#838](https://github.com/ory/kratos/issues/838)
@@ -1142,7 +1305,6 @@ The ORY Community is proud to present you the next iteration of ORY Kratos. In t
 # [0.5.4-alpha.1](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...v0.5.4-alpha.1) (2020-11-11)
 
 This release introduces the new CLI command `kratos hashers argon2 calibrate 500ms`. This command will choose the best parameterization for Argon2. Check out the [Choose Argon2 Parameters for Secure Password Hashing and Login](https://www.ory.sh/choose-recommended-argon2-parameters-password-hashing/) blog article for more insights!
-
 
 
 
@@ -1216,7 +1378,6 @@ Further improvements to default config values have been made and a full end-to-e
 
 
 
-
 ### Bug Fixes
 
 * Add "x-session-token" to default allowed headers ([3c912e4](https://github.com/ory/kratos/commit/3c912e4c7d46fd45c00cabb68ed7770bd44f7d07))
@@ -1267,7 +1428,6 @@ This release addresses bugs and user experience issues.
 
 
 
-
 ### Bug Fixes
 
 * Add debug quickstart yml ([#780](https://github.com/ory/kratos/issues/780)) ([16e6b4d](https://github.com/ory/kratos/commit/16e6b4d76d297182ea9a1f5dc6367570f02f7b42))
@@ -1295,7 +1455,6 @@ This release addresses bugs and user experience issues.
 # [0.5.1-alpha.1](https://github.com/ory/kratos/compare/v0.5.0-alpha.1...v0.5.1-alpha.1) (2020-10-20)
 
 This release resolves an issue where ORY Kratos Docker Images without CGO and SQLite support would fail to boot even when SQLite was not used as a data source.
-
 
 
 
@@ -1386,19 +1545,15 @@ Have fun exploring the new release, we hope you like it! If you haven't already,
 
 
 
-
 ## Breaking Changes
 
 The "common" keyword has been removed from the Swagger 2.0 spec which deprecates the `common` module / package / class (depending on the generated SDK). Please use `public` or `admin` instead!
 
 Additionally, the SDK for TypeScript now uses the `fetch` API which allows the SDK to be used in both client-side as well as server-side contexts. Please note that several methods and parameters in the generated TypeScript SDK have changed. Please check the TypeScript results to see what needs to be changed!
 
-
 This patch changes the OpenID Connect and OAuth2 ("Sign in with Google, Facebook, ...") Callback URL from `http(s)://<kratos-public>/self-service/browser/flows/strategies/oidc/<provider>` to `http(s)://<kratos-public>/self-service/methods/oidc/<provider>`. To apply this patch, you need to update these URLs at the OAuth2 Client configuration pages of the individual OpenID Conenct providers (e.g. GitHub, Google).
 
-
 Configuration key `selfservice.strategies` was renamed to `selfservice.methods`.
-
 
 This patch significantly changes how email verification works. The Verification Flow no longer uses its own system but now re-uses the API and Browser flows and flow methods established in other components such as login, recovery, registration.
 
@@ -1407,9 +1562,7 @@ Due to the many changes these patch notes does not cover how to upgrade this par
 This patch changes the SQL schema and thus requires running the SQL Migration command (e.g. `... migrate sql`).
 Never apply SQL migrations without backing up your database prior.
 
-
 Configuration items `selfservice.flows.<name>.request_lifespan` have been renamed to `selfservice.flows.<name>.lifespan` to match the new flow semantics.
-
 
 Wording has changed from "Self-Service Recovery Request" to "Self-Service Recovery Flow" to follow community feedback and practice already applied in the documentation. Additionally, fetching a recovery flow over the public API no longer requires Anti-CSRF cookies to be sent.
 
@@ -1434,7 +1587,6 @@ As part of this change SDK methods have been renamed:
 ```
 
 This patch requires you to run SQL migrations.
-
 
 Wording has changed from "Self-Service Settings Request" to "Self-Service Settings Flow" to follow community feedback and practice already applied in the documentation.
 
@@ -1469,9 +1621,7 @@ As part of this change SDK methods have been renamed:
 
 This patch requires you to run SQL migrations.
 
-
 This patch makes the reverse proxy functionality required in prior versions of the self-service UI example obsolete. All examples work now with a simple set up and documentation has been added to assist in subdomain scenarios.
-
 
 The session field `sid` has been renamed to `id` to stay consistent with other APIs which also use `id` terminology to clarify identifiers. The payload of, for example, `/session/whoami` has changed as follows:
 
@@ -1485,7 +1635,6 @@ The session field `sid` has been renamed to `id` to stay consistent with other A
     }
   }
 ```
-
 
 Wording has changed from "Self-Service Registration Request" to "Self-Service Registration Flow" to follow community feedback and practice already applied in the documentation. Additionally, fetching a login flow over the public API no longer requires Anti-CSRF cookies to be sent.
 
@@ -1512,9 +1661,7 @@ As part of this change SDK methods have been renamed:
 
 This patch requires you to run SQL migrations.
 
-
 Existing login sessions will no longer be valid because the session cookie data model changed. If you apply this patch, your users will need to sign in again.
-
 
 Wording has changed from "Self-Service Login Request" to "Self-Service Login Flow" to follow community feedback and practice already applied in the documentation. Additionally, fetching a login flow over the public API no longer requires Anti-CSRF cookies to be sent.
 
@@ -1541,9 +1688,7 @@ As part of this change SDK methods have been renamed:
 
 This patch requires you to run SQL migrations.
 
-
 Configuraiton value `session.cookie_same_site` has moved to `session.cookie.same_site`. There was no functional change.
-
 
 
 
@@ -1955,7 +2100,6 @@ Resolves build and install issues and includes a few bugfixes.
 
 
 
-
 ### Bug Fixes
 
 * Use proper binary name in dockerfile ([d36bbb0](https://github.com/ory/kratos/commit/d36bbb0875177ccd68747f4a17e59c981a7a6464))
@@ -1971,7 +2115,6 @@ Resolves build and install issues and includes a few bugfixes.
 # [0.4.5-alpha.1](https://github.com/ory/kratos/compare/v0.4.4-alpha.1...v0.4.5-alpha.1) (2020-07-13)
 
 Resolves build and install issues and includes a few bugfixes.
-
 
 
 
@@ -1993,7 +2136,6 @@ Resolves build and install issues and includes a few bugfixes.
 # [0.4.4-alpha.1](https://github.com/ory/kratos/compare/v0.4.3-alpha.1...v0.4.4-alpha.1) (2020-07-10)
 
 The purpose of this release is to resolve issues with install scripts, homebrew, and scoop.
-
 
 
 
@@ -2039,7 +2181,6 @@ Before upgrading, please make a backup of your database and read the section "Br
 
 
 
-
 ### Bug Fixes
 
 * Resolve goreleaser build issues ([223571b](https://github.com/ory/kratos/commit/223571bca15f507067d20bedb104923331f88e59))
@@ -2076,7 +2217,6 @@ Before upgrading, please make a backup of your database and read the section "Br
 
 
 
-
 ### Bug Fixes
 
 * Ignore pkged generated files ([1d385e4](https://github.com/ory/kratos/commit/1d385e4d1a004405099242c3003006d1713a24c6))
@@ -2107,7 +2247,6 @@ There have been many improvements and bugfixes merged. The biggest changes are:
 10. ORY Kratos now supports login with Azure AD and the Microsoft Identity Platform.
 
 Before upgrading, please make a backup of your database and read the section "Breaking Changes" with care! This release requires running SQL migrations when upgrading!
-
 
 
 
@@ -2222,7 +2361,6 @@ You also need to remove the `traits` key from your ORY Kratos config like this:
 ```
 
 Do not forget to also update environment variables for the Identity JSON Schema as well if set.
-
 
 To address these refactorings, the configuration had to be changed and with breaking changes
 as keys have moved or have been removed.
@@ -2475,22 +2613,17 @@ You are still required to mark a field as verifiable in your Identity JSON Schem
 +        default_browser_return_url: https://self-service/verification/return_to
 ```
 
-
 Replaces the `update_successful` field of the settings request
 with a field called `state` which can be either `show_form` or `success`.
 
-
 Flows, request methods, form fields have had a key errors to show e.g. validation errors such as ("not an email address", "incorrect username/password", and so on. The `errors` key is now called `messages`. Each message now has a `type` which can be `error` or `info`, an `id` which can be used to translate messages, a `text` (which was previously errors[*].message). This affects all login, request, settings, and recovery flows and methods.
 
-
 To refresh a login session it is now required to append `refresh=true` instead of `prompt=login` as the second has implications for revoking an existing issue and might be confusing when used in combination with OpenID Connect.
-
 
 * Applying this patch requires running SQL Migrations.
 * The field `identity.addresses` has moved to `identity.verifiable_addresses`.
 * Configuration key `selfservice.verification.link_lifespan`
 has been merged with  `selfservice.verification.request_lifespan`.
-
 
 
 
@@ -2676,14 +2809,11 @@ This release concludes over 50 commits and 16.000 lines of code changed.
 
 
 
-
 ## Breaking Changes
 
 If you upgrade and have existing Social Sign In connections, it will no longer be possible to use them to sign in. Because the oidc strategy was undocumented and not officially released we do not provide an upgrade guide. If you run into this issue on a production system you may need to use SQL to change the config of those identities. If this is a real issue for you that you're unable to solve, please create an issue on GitHub.
 
-
 This is a breaking change as previous OIDC configurations will not work. Please consult the newly written documentation on OpenID Connect to learn how to use OIDC in your login and registration flows. Since the OIDC feature was not publicly broadcasted yet we have chosen not to provide an upgrade path. If you have issues, please reach out on the forums or slack.
-
 
 
 
@@ -2766,7 +2896,6 @@ This is a breaking change as previous OIDC configurations will not work. Please 
 # [0.2.1-alpha.1](https://github.com/ory/kratos/compare/v0.2.0-alpha.2...v0.2.1-alpha.1) (2020-05-05)
 
 Resolves a bug in the kratos-selfservice-ui-node application.
-
 
 
 
@@ -2859,7 +2988,6 @@ We added tons of end-to-end and integration tests to find and fix pesky bugs.
 
 
 
-
 ## Breaking Changes
 
 Please remove the `redirect` hook from both login,
@@ -2872,14 +3000,11 @@ instead of
 Hooks are now identified by `hook:` instead of `job:`. Please
 rename those sections accordingly.
 
-
 Several profile-related URLs have and payloads been updated. Please consult the most recent documentation.
-
 
 The payloads of the Profile Management Request API
 that previously were set in `{ "methods": { "traits": { ... } }}` have now moved to
 `{ "methods": { "profile": { ... } }}`.
-
 
 This patch introduces a refactor that is needed
 for the profile management API to be capable of handling (password,
@@ -2892,7 +3017,6 @@ that previously were set in `{"form": {...} }` have now moved to
 In the future, as more credential updates are handled, there will
 be additional keys in the forms key
 `{"methods": { "traits": { ... }, "password": { ... } }}`.
-
 
 
 
@@ -3117,7 +3241,6 @@ docs: Regenerate and update changelog
 
 
 
-
 ### Bug Fixes
 
 * Add verify return to address ([#252](https://github.com/ory/kratos/issues/252)) ([64ab9e5](https://github.com/ory/kratos/commit/64ab9e510e6b65f9dd16fdfaadfd24785dab0c93))
@@ -3142,7 +3265,6 @@ docs: Regenerate and update changelog
 # [0.1.0-alpha.6](https://github.com/ory/kratos/compare/v0.1.0-alpha.5...v0.1.0-alpha.6) (2020-02-16)
 
 feat: Add verification to quickstart (#251)
-
 
 
 
@@ -3189,7 +3311,6 @@ docs: Regenerate and update changelog
 
 
 
-
 ### Documentation
 
 * Regenerate and update changelog ([e87e9c9](https://github.com/ory/kratos/commit/e87e9c9ec9cf55351439ab16a778f3ea303ec646))
@@ -3204,7 +3325,6 @@ docs: Regenerate and update changelog
 # [0.1.0-alpha.4](https://github.com/ory/kratos/compare/v0.1.0-alpha.3...v0.1.0-alpha.4) (2020-02-06)
 
 ci: Bump ory/sdk to 0.1.22
-
 
 
 
@@ -3225,7 +3345,6 @@ ci: Bump ory/sdk orb
 
 
 
-
 ### Continuous Integration
 
 * Bump ory/sdk orb ([65b2ca0](https://github.com/ory/kratos/commit/65b2ca0b8a1da8249aa4b4cb439b1d63aecaf8e0))
@@ -3234,7 +3353,6 @@ ci: Bump ory/sdk orb
 # [0.1.0-alpha.2](https://github.com/ory/kratos/compare/v0.1.0-alpha.1...v0.1.0-alpha.2) (2020-02-03)
 
 docs: Regenerate and update changelog
-
 
 
 
@@ -3289,7 +3407,6 @@ Signed-off-by: aeneasr <aeneas@ory.sh>
 
 
 
-
 ### Documentation
 
 * Updates issue and pull request templates ([#215](https://github.com/ory/kratos/issues/215)) ([10c45f2](https://github.com/ory/kratos/commit/10c45f23e11abba1ca82095548769cd923a6a6a6))
@@ -3303,7 +3420,6 @@ Update permissions in SQLite Dockerfile
 
 
 
-
 ### Unclassified
 
 * Update permissions in SQLite Dockerfile ([1266e53](https://github.com/ory/kratos/commit/1266e533ac9a1f6ec375980cadce9755998f9fe6))
@@ -3312,7 +3428,6 @@ Update permissions in SQLite Dockerfile
 # [0.0.3-alpha.14](https://github.com/ory/kratos/compare/v0.0.3-alpha.13...v0.0.3-alpha.14) (2020-01-31)
 
 Update README.md
-
 
 
 
@@ -3331,7 +3446,6 @@ Allow mounting SQLite in /home/ory/sqlite (#212)
 
 
 
-
 ### Unclassified
 
 * Allow mounting SQLite in /home/ory/sqlite (#212) ([2fe8c0f](https://github.com/ory/kratos/commit/2fe8c0f752e870028d68e8593a46c0902f673a65)), closes [#212](https://github.com/ory/kratos/issues/212)
@@ -3342,7 +3456,6 @@ Allow mounting SQLite in /home/ory/sqlite (#212)
 Clean up cmd and resolve packr2 issues (#211)
 
 This patch addresses issues with the build pipeline caused by an invalid import. Profiling was also added.
-
 
 
 
@@ -3364,7 +3477,6 @@ Update README
 
 
 
-
 ### Unclassified
 
 * Update README ([35a310d](https://github.com/ory/kratos/commit/35a310d6de52fa74ad8728b1df67f88ce900aa61))
@@ -3380,7 +3492,6 @@ Use correct project root in Dockerfile
 
 
 
-
 ### Unclassified
 
 * Use correct project root in Dockerfile ([3528758](https://github.com/ory/kratos/commit/352875878c74d15b522336b518df339c8ad48e49))
@@ -3390,7 +3501,6 @@ Use correct project root in Dockerfile
 # [0.0.3-alpha.5](https://github.com/ory/kratos/compare/v0.0.3-alpha.4...v0.0.3-alpha.5) (2020-01-30)
 
 ci: Resolve final docker build issues (#210)
-
 
 
 
@@ -3415,7 +3525,6 @@ Update CHANGELOG [ci skip]
 
 
 
-
 ### Unclassified
 
 * Update CHANGELOG [ci skip] ([018c229](https://github.com/ory/kratos/commit/018c229c4cff62e47c1154ca29ab9c70766a43e5))
@@ -3435,7 +3544,6 @@ Resolve goreleaser build issues (#208)
 
 
 
-
 ### Unclassified
 
 * Resolve goreleaser build issues (#208) ([d59a08a](https://github.com/ory/kratos/commit/d59a08a0ef680a984352d7f5068626cc1958185a)), closes [#208](https://github.com/ory/kratos/issues/208)
@@ -3444,7 +3552,6 @@ Resolve goreleaser build issues (#208)
 # [0.0.3-alpha.1](https://github.com/ory/kratos/compare/v0.0.1-alpha.9...v0.0.3-alpha.1) (2020-01-30)
 
 Update CHANGELOG [ci skip]
-
 
 
 
@@ -3472,7 +3579,6 @@ ci: Bump goreleaser orb
 
 
 
-
 ### Continuous Integration
 
 * Bump goreleaser orb ([29cd754](https://github.com/ory/kratos/commit/29cd754d33ec2f800730bd007f17fc0ce53a51eb))
@@ -3481,7 +3587,6 @@ ci: Bump goreleaser orb
 # [0.0.2-alpha.1](https://github.com/ory/kratos/compare/v0.0.1-alpha.8...v0.0.2-alpha.1) (2020-01-29)
 
 Use correct build archive for homebrew
-
 
 
 
@@ -3498,7 +3603,6 @@ ci: Bump goreleaser orb
 
 
 
-
 ### Continuous Integration
 
 * Bump goreleaser orb ([018c94c](https://github.com/ory/kratos/commit/018c94ccc9e833f28f827fd10d607a7a1c954ac5))
@@ -3507,7 +3611,6 @@ ci: Bump goreleaser orb
 # [0.0.1-alpha.5](https://github.com/ory/kratos/compare/v0.0.1-alpha.3...v0.0.1-alpha.5) (2020-01-29)
 
 ci: Bump goreleaser dependency
-
 
 
 
@@ -3531,7 +3634,6 @@ ci: Only compile goarmv7
 
 
 
-
 ### Continuous Integration
 
 * Only compile goarmv7 ([d8e7ec7](https://github.com/ory/kratos/commit/d8e7ec788d1b43bcbbe221becde3432fdbf28e9b))
@@ -3540,7 +3642,6 @@ ci: Only compile goarmv7
 # [0.0.1-alpha.2](https://github.com/ory/kratos/compare/v0.0.1-alpha.1...v0.0.1-alpha.2) (2020-01-28)
 
 ci: Use CGO_ENABLED=1
-
 
 
 
@@ -3556,7 +3657,6 @@ ci: Use CGO_ENABLED=1
 session: Inject Identity Traits JSON Schema
 
 Closes #189
-
 
 
 

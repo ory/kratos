@@ -200,6 +200,20 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 	})
 }
 
+func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s := password.NewDefaultPasswordValidatorStrategy(reg)
+	conf.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
+
+	fakeClient := NewFakeHTTPClient()
+	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithClient(&fakeClient.Client), httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
+
+	t.Run("case=should not send request to test server", func(t *testing.T) {
+		require.NoError(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
+		require.Empty(t, fakeClient.RequestedURLs())
+	})
+}
+
 type fakeValidatorAPI struct{}
 
 func (api *fakeValidatorAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
