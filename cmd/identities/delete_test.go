@@ -18,14 +18,15 @@ import (
 )
 
 func TestDeleteCmd(t *testing.T) {
-	reg := setup(t, identities.DeleteCmd)
+	c := identities.NewDeleteCmd()
+	reg := setup(t, c)
 
 	t.Run("case=deletes successfully", func(t *testing.T) {
 		// create identity to delete
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
-		stdOut := execNoErr(t, identities.DeleteCmd, i.ID.String())
+		stdOut := execNoErr(t, c, i.ID.String())
 
 		// expect ID and no error
 		assert.Equal(t, i.ID.String()+"\n", stdOut)
@@ -38,7 +39,7 @@ func TestDeleteCmd(t *testing.T) {
 	t.Run("case=deletes three identities", func(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 3)
 
-		stdOut := execNoErr(t, identities.DeleteCmd, ids...)
+		stdOut := execNoErr(t, c, ids...)
 
 		assert.Equal(t, strings.Join(ids, "\n")+"\n", stdOut)
 
@@ -49,7 +50,7 @@ func TestDeleteCmd(t *testing.T) {
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
-		stdErr := execErr(t, identities.DeleteCmd, x.NewUUID().String())
+		stdErr := execErr(t, c, x.NewUUID().String())
 
 		assert.Contains(t, stdErr, "404 Not Found", stdErr)
 	})

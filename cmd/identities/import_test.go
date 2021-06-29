@@ -21,7 +21,8 @@ import (
 )
 
 func TestImportCmd(t *testing.T) {
-	reg := setup(t, identities.ImportCmd)
+	c := identities.NewImportCmd()
+	reg := setup(t, c)
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
 		i := kratos.CreateIdentity{
@@ -36,7 +37,7 @@ func TestImportCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, f.Close())
 
-		stdOut := execNoErr(t, identities.ImportCmd, f.Name())
+		stdOut := execNoErr(t, c, f.Name())
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)
@@ -63,7 +64,7 @@ func TestImportCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, f.Close())
 
-		stdOut := execNoErr(t, identities.ImportCmd, f.Name())
+		stdOut := execNoErr(t, c, f.Name())
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
@@ -90,7 +91,7 @@ func TestImportCmd(t *testing.T) {
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
 
-		stdOut, stdErr, err := exec(identities.ImportCmd, bytes.NewBuffer(ij))
+		stdOut, stdErr, err := exec(c, bytes.NewBuffer(ij))
 		require.NoError(t, err, "%s %s", stdOut, stdErr)
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
@@ -112,7 +113,7 @@ func TestImportCmd(t *testing.T) {
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
 
-		stdOut, stdErr, err := exec(identities.ImportCmd, bytes.NewBuffer(ij))
+		stdOut, stdErr, err := exec(c, bytes.NewBuffer(ij))
 		require.NoError(t, err, "%s %s", stdOut, stdErr)
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
@@ -123,7 +124,7 @@ func TestImportCmd(t *testing.T) {
 
 	t.Run("case=fails to import invalid identity", func(t *testing.T) {
 		// validation is further tested with the validate command
-		stdOut, stdErr, err := exec(identities.ImportCmd, bytes.NewBufferString("{}"))
+		stdOut, stdErr, err := exec(c, bytes.NewBufferString("{}"))
 		assert.True(t, errors.Is(err, cmdx.ErrNoPrintButFail))
 		assert.Contains(t, stdErr, "STD_IN[0]: not valid")
 		assert.Len(t, stdOut, 0)

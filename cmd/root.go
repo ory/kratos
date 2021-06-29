@@ -27,7 +27,6 @@ func NewRootCmd() (cmd *cobra.Command) {
 		Use: "kratos",
 	}
 	identities.RegisterCommandRecursive(cmd)
-	identities.RegisterFlags()
 
 	jsonnet.RegisterCommandRecursive(cmd)
 	serve.RegisterCommandRecursive(cmd)
