@@ -121,6 +121,14 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 		WithField("identity_id", i.ID).
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an Ory Kratos Session Cookie.")
+
+	if x.IsJSONRequest(r) {
+		// Browser flows rely on cookies. Adding tokens in the mix will confuse consumers.
+		s.Token = ""
+		e.d.Writer().Write(w, r, &APIFlowResponse{Session: s})
+		return nil
+	}
+
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
 		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(a.Active.String())))
 }

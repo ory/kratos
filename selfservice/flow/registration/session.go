@@ -19,8 +19,6 @@ type APIFlowResponse struct {
 	// 		Authorization: bearer ${session-token}
 	//
 	// The session token is only issued for API flows, not for Browser flows!
-	//
-	// required: true
 	Token string `json:"session_token,omitempty"`
 
 	// The Session

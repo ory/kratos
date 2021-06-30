@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/urlx"
+
 	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/ory/x/ioutilx"
@@ -88,7 +90,7 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
 
-			body, res := testhelpers.LoginMakeRequest(t, true, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
+			body, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 			assert.Contains(t, body, `Expected JSON sent in request body to be an object but got: Number`)
@@ -96,10 +98,20 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
 
-			body, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
+			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
+			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "invalid URL escape", "%s", body)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			browserClient := testhelpers.NewClientWithCookies(t)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true)
+
+			body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "invalid URL escape", "%s", body)
 		})
@@ -118,7 +130,7 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual, res := testhelpers.LoginMakeRequest(t, true, fakeFlow, apiClient, "{}")
+			actual, res := testhelpers.LoginMakeRequest(t, true, false, fakeFlow, apiClient, "{}")
 			assert.Len(t, res.Cookies(), 0)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			check(t, gjson.Get(actual, "error").Raw)
@@ -126,9 +138,16 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			actual, res := testhelpers.LoginMakeRequest(t, false, fakeFlow, browserClient, "")
+			actual, res := testhelpers.LoginMakeRequest(t, false, false, fakeFlow, browserClient, "")
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			check(t, gjson.Get(actual, "0").Raw)
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			actual, res := testhelpers.LoginMakeRequest(t, false, true, fakeFlow, apiClient, "{}")
+			assert.Len(t, res.Cookies(), 0)
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+			check(t, gjson.Get(actual, "error").Raw)
 		})
 	})
 
@@ -147,7 +166,7 @@ func TestCompleteLogin(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
 
 			time.Sleep(time.Millisecond * 60)
-			actual, res := testhelpers.LoginMakeRequest(t, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+			actual, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteGetFlow)
 			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
 			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
@@ -155,11 +174,22 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
 
 			time.Sleep(time.Millisecond * 60)
-			actual, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values.Encode())
+			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
+			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
+		})
+
+		t.Run("type=SPA", func(t *testing.T) {
+			browserClient := testhelpers.NewClientWithCookies(t)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true)
+
+			time.Sleep(time.Millisecond * 60)
+			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteGetFlow)
 			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
 			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
 		})
@@ -175,18 +205,28 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
 
-			actual, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values.Encode())
+			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
 				json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
 		})
 
+		t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {
+			browserClient := testhelpers.NewClientWithCookies(t)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true)
+
+			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values.Encode())
+			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
+			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+				json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
+		})
+
 		t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
 
-			actual, res := testhelpers.LoginMakeRequest(t, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+			actual, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 			assert.Contains(t, actual, "provided credentials are invalid")
 		})
@@ -227,11 +267,11 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	var expectValidationError = func(t *testing.T, isAPI, forced bool, values func(url.Values)) string {
+	var expectValidationError = func(t *testing.T, isAPI, forced, isSPA bool, values func(url.Values)) string {
 		return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
-			identity.CredentialsTypePassword, forced,
-			testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
-			testhelpers.ExpectURL(isAPI, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI().String()))
+			isSPA, forced,
+			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI().String()))
 	}
 
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
@@ -251,12 +291,17 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			start := time.Now()
-			check(t, expectValidationError(t, false, false, values), start)
+			check(t, expectValidationError(t, false, false, false, values), start)
+		})
+
+		t.Run("type=SPA", func(t *testing.T) {
+			start := time.Now()
+			check(t, expectValidationError(t, false, false, true, values), start)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
 			start := time.Now()
-			check(t, expectValidationError(t, true, false, values), start)
+			check(t, expectValidationError(t, true, false, false, values), start)
 		})
 	})
 
@@ -279,11 +324,15 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, false, values))
+			check(t, expectValidationError(t, false, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectValidationError(t, false, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, false, values))
+			check(t, expectValidationError(t, true, false, false, values))
 		})
 	})
 
@@ -307,11 +356,11 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, false, values))
+			check(t, expectValidationError(t, false, false, false, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, false, values))
+			check(t, expectValidationError(t, true, false, false, values))
 		})
 	})
 
@@ -335,11 +384,15 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, false, values))
+			check(t, expectValidationError(t, false, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectValidationError(t, true, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, false, values))
+			check(t, expectValidationError(t, true, false, false, values))
 		})
 	})
 
@@ -368,11 +421,14 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, false, values))
+			check(t, expectValidationError(t, false, false, false, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, false, values))
+			check(t, expectValidationError(t, true, false, false, values))
+		})
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectValidationError(t, true, false, true, values))
 		})
 	})
 
@@ -389,7 +445,7 @@ func TestCompleteLogin(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 
 			body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
-				identity.CredentialsTypePassword, false, http.StatusOK, redirTS.URL)
+				false, false, http.StatusOK, redirTS.URL)
 
 			assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 
@@ -421,9 +477,46 @@ func TestCompleteLogin(t *testing.T) {
 			})
 		})
 
+		t.Run("type=spa", func(t *testing.T) {
+			hc := testhelpers.NewClientWithCookies(t)
+
+			body := testhelpers.SubmitLoginForm(t, false, hc, publicTS, values,
+				true, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow)
+
+			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.subject").String(), "%s", body)
+			assert.Empty(t, gjson.Get(body, "session_token").String(), "%s", body)
+			assert.Empty(t, gjson.Get(body, "session.token").String(), "%s", body)
+
+			// Was the session cookie set?
+			require.NotEmpty(t, hc.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL)), "%+v", hc.Jar)
+
+			t.Run("retry with different refresh", func(t *testing.T) {
+				t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
+					res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow))
+					require.NoError(t, err)
+					defer res.Body.Close()
+					body := ioutilx.MustReadAll(res.Body)
+
+					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
+					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+				})
+
+				t.Run("show UI and hint at username", func(t *testing.T) {
+					res, err := hc.Do(testhelpers.NewHTTPGetAJAXRequest(t, publicTS.URL+login.RouteInitBrowserFlow+"?refresh=true"))
+					require.NoError(t, err)
+					defer res.Body.Close()
+					body := ioutilx.MustReadAll(res.Body)
+
+					assert.True(t, gjson.GetBytes(body, "forced").Bool())
+					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password_identifier).attributes.value").String(), "%s", body)
+					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
+				})
+			})
+		})
+
 		t.Run("type=api", func(t *testing.T) {
 			body := testhelpers.SubmitLoginForm(t, true, nil, publicTS, values,
-				identity.CredentialsTypePassword, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow)
+				false, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow)
 
 			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.subject").String(), "%s", body)
 			st := gjson.Get(body, "session_token").String()
@@ -494,19 +587,19 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
 
-			actual, _ := testhelpers.LoginMakeRequest(t, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesFirst(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes))))
+			actual, _ := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesFirst(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes))))
 			checkFirst(t, actual)
-			actual, _ = testhelpers.LoginMakeRequest(t, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesSecond(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes))))
+			actual, _ = testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesSecond(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes))))
 			checkSecond(t, actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
 
-			actual, _ := testhelpers.LoginMakeRequest(t, false, f, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)).Encode())
+			actual, _ := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)).Encode())
 			checkFirst(t, actual)
-			actual, _ = testhelpers.LoginMakeRequest(t, false, f, browserClient, valuesSecond(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)).Encode())
+			actual, _ = testhelpers.LoginMakeRequest(t, false, false, f, browserClient, valuesSecond(testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)).Encode())
 			checkSecond(t, actual)
 		})
 	})
@@ -516,16 +609,16 @@ func TestCompleteLogin(t *testing.T) {
 		createIdentity(identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
 
 		values := url.Values{"method": {"password"}, "password_identifier": {identifier},
 			"password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
-		body1, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
+		body1, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
-		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true)
-		body2, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
+		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true, false)
+		body2, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
 		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
@@ -537,15 +630,15 @@ func TestCompleteLogin(t *testing.T) {
 		createIdentity(identifier, pwd)
 
 		browserClient := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false)
 
 		values := url.Values{"method": {"password"}, "password_identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
-		_, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
+		_, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
-		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true)
-		body2, res := testhelpers.LoginMakeRequest(t, false, f, browserClient, values)
+		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true, false)
+		body2, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
 
 		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
 	})

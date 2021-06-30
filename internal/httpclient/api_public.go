@@ -28,6 +28,154 @@ var (
 // PublicApiService PublicApi service
 type PublicApiService service
 
+type PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest struct {
+	ctx        context.Context
+	ApiService *PublicApiService
+	cookie     *string
+}
+
+func (r PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest) Cookie(cookie string) PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest {
+	r.cookie = &cookie
+	return r
+}
+
+func (r PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest) Execute() (*LogoutUrl, *http.Response, error) {
+	return r.ApiService.CreateSelfServiceLogoutUrlForBrowsersExecute(r)
+}
+
+/*
+ * CreateSelfServiceLogoutUrlForBrowsers Initialize Logout Flow for Browsers
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.
+
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...). For API clients you can
+call the `/self-service/logout/api` URL directly with the Ory Session Token.
+
+:::
+
+The URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns
+a 401 error.
+
+When calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest
+*/
+func (a *PublicApiService) CreateSelfServiceLogoutUrlForBrowsers(ctx context.Context) PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest {
+	return PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return LogoutUrl
+ */
+func (a *PublicApiService) CreateSelfServiceLogoutUrlForBrowsersExecute(r PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest) (*LogoutUrl, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *LogoutUrl
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.CreateSelfServiceLogoutUrlForBrowsers")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/logout/browser"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type PublicApiApiGetSchemaRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
@@ -302,10 +450,15 @@ type PublicApiApiGetSelfServiceLoginFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookie     *string
 }
 
 func (r PublicApiApiGetSelfServiceLoginFlowRequest) Id(id string) PublicApiApiGetSelfServiceLoginFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceLoginFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceLoginFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -315,7 +468,28 @@ func (r PublicApiApiGetSelfServiceLoginFlowRequest) Execute() (*LoginFlow, *http
 
 /*
  * GetSelfServiceLoginFlow Get Login Flow
- * This endpoint returns a login flow's context with, for example, error details and other information.
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a login flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/login', async function (req, res) {
+const flow = await client.getSelfServiceLoginFlow(req.header('cookie'), req.query['flow'])
+
+res.render('login', flow)
+})
+```
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -373,6 +547,9 @@ func (a *PublicApiService) GetSelfServiceLoginFlowExecute(r PublicApiApiGetSelfS
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -454,10 +631,15 @@ type PublicApiApiGetSelfServiceRecoveryFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookie     *string
 }
 
 func (r PublicApiApiGetSelfServiceRecoveryFlowRequest) Id(id string) PublicApiApiGetSelfServiceRecoveryFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceRecoveryFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceRecoveryFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -466,8 +648,29 @@ func (r PublicApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*RecoveryFlow,
 }
 
 /*
- * GetSelfServiceRecoveryFlow Get information about a recovery flow
- * This endpoint returns a recovery flow's context with, for example, error details and other information.
+ * GetSelfServiceRecoveryFlow Get Recovery Flow
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a recovery flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/recovery', async function (req, res) {
+const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
+
+res.render('recovery', flow)
+})
+```
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -525,6 +728,9 @@ func (a *PublicApiService) GetSelfServiceRecoveryFlowExecute(r PublicApiApiGetSe
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -596,10 +802,15 @@ type PublicApiApiGetSelfServiceRegistrationFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookie     *string
 }
 
 func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Id(id string) PublicApiApiGetSelfServiceRegistrationFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceRegistrationFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -609,7 +820,28 @@ func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*Registrat
 
 /*
  * GetSelfServiceRegistrationFlow Get Registration Flow
- * This endpoint returns a registration flow's context with, for example, error details and other information.
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a registration flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/registration', async function (req, res) {
+const flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])
+
+res.render('registration', flow)
+})
+```
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -667,6 +899,9 @@ func (a *PublicApiService) GetSelfServiceRegistrationFlowExecute(r PublicApiApiG
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -749,6 +984,7 @@ type PublicApiApiGetSelfServiceSettingsFlowRequest struct {
 	ApiService    *PublicApiService
 	id            *string
 	xSessionToken *string
+	cookie        *string
 }
 
 func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Id(id string) PublicApiApiGetSelfServiceSettingsFlowRequest {
@@ -759,6 +995,10 @@ func (r PublicApiApiGetSelfServiceSettingsFlowRequest) XSessionToken(xSessionTok
 	r.xSessionToken = &xSessionToken
 	return r
 }
+func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceSettingsFlowRequest {
+	r.cookie = &cookie
+	return r
+}
 
 func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SettingsFlow, *http.Response, error) {
 	return r.ApiService.GetSelfServiceSettingsFlowExecute(r)
@@ -766,7 +1006,13 @@ func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SettingsFlow,
 
 /*
  * GetSelfServiceSettingsFlow Get Settings Flow
- * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
 but instead 403 or 500 to improve data privacy.
 
@@ -831,6 +1077,9 @@ func (a *PublicApiService) GetSelfServiceSettingsFlowExecute(r PublicApiApiGetSe
 	}
 	if r.xSessionToken != nil {
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -912,10 +1161,15 @@ type PublicApiApiGetSelfServiceVerificationFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookie     *string
 }
 
 func (r PublicApiApiGetSelfServiceVerificationFlowRequest) Id(id string) PublicApiApiGetSelfServiceVerificationFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceVerificationFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceVerificationFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -925,7 +1179,27 @@ func (r PublicApiApiGetSelfServiceVerificationFlowRequest) Execute() (*Verificat
 
 /*
  * GetSelfServiceVerificationFlow Get Verification Flow
- * This endpoint returns a verification flow's context with, for example, error details and other information.
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint returns a verification flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/recovery', async function (req, res) {
+const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
+
+res.render('verification', flow)
+})
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -983,6 +1257,9 @@ func (a *PublicApiService) GetSelfServiceVerificationFlowExecute(r PublicApiApiG
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -1050,113 +1327,6 @@ func (a *PublicApiService) GetSelfServiceVerificationFlowExecute(r PublicApiApiG
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-}
-
-func (r PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest) Execute() (*http.Response, error) {
-	return r.ApiService.InitializeSelfServiceBrowserLogoutFlowExecute(r)
-}
-
-/*
- * InitializeSelfServiceBrowserLogoutFlow Initialize Browser-Based Logout User Flow
- * This endpoint initializes a logout flow.
-
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
-
-On successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request
-or fall back to `urls.default_return_to`.
-
-More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest
-*/
-func (a *PublicApiService) InitializeSelfServiceBrowserLogoutFlow(ctx context.Context) PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest {
-	return PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *PublicApiService) InitializeSelfServiceBrowserLogoutFlowExecute(r PublicApiApiInitializeSelfServiceBrowserLogoutFlowRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceBrowserLogoutFlow")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/self-service/browser/flows/logout"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
-}
-
 type PublicApiApiInitializeSelfServiceLoginForBrowsersRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
@@ -1168,18 +1338,29 @@ func (r PublicApiApiInitializeSelfServiceLoginForBrowsersRequest) Refresh(refres
 	return r
 }
 
-func (r PublicApiApiInitializeSelfServiceLoginForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceLoginForBrowsersRequest) Execute() (*LoginFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceLoginForBrowsersExecute(r)
 }
 
 /*
- * InitializeSelfServiceLoginForBrowsers Initialize Login Flow for browsers
- * This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
+ * InitializeSelfServiceLoginForBrowsers Initialize Login Flow for Browsers
+ * This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate
+cookies and anti-CSRF measures required for browser-based flows.
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+If this endpoint is opened as a link in the browser, it will be redirected to
 `selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
 `?refresh=true` was set.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+If this endpoint is called via an AJAX request, the response contains the login flow without a redirect.
+
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1194,19 +1375,21 @@ func (a *PublicApiService) InitializeSelfServiceLoginForBrowsers(ctx context.Con
 
 /*
  * Execute executes the request
+ * @return LoginFlow
  */
-func (a *PublicApiService) InitializeSelfServiceLoginForBrowsersExecute(r PublicApiApiInitializeSelfServiceLoginForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceLoginForBrowsersExecute(r PublicApiApiInitializeSelfServiceLoginForBrowsersRequest) (*LoginFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *LoginFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceLoginForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/login/browser"
@@ -1237,19 +1420,19 @@ func (a *PublicApiService) InitializeSelfServiceLoginForBrowsersExecute(r Public
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1262,34 +1445,49 @@ func (a *PublicApiService) InitializeSelfServiceLoginForBrowsersExecute(r Public
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceLoginForNativeAppsRequest struct {
+type PublicApiApiInitializeSelfServiceLoginWithoutBrowserRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	refresh    *bool
 }
 
-func (r PublicApiApiInitializeSelfServiceLoginForNativeAppsRequest) Refresh(refresh bool) PublicApiApiInitializeSelfServiceLoginForNativeAppsRequest {
+func (r PublicApiApiInitializeSelfServiceLoginWithoutBrowserRequest) Refresh(refresh bool) PublicApiApiInitializeSelfServiceLoginWithoutBrowserRequest {
 	r.refresh = &refresh
 	return r
 }
 
-func (r PublicApiApiInitializeSelfServiceLoginForNativeAppsRequest) Execute() (*LoginFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceLoginForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceLoginWithoutBrowserRequest) Execute() (*LoginFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceLoginWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceLoginForNativeApps Initialize Login Flow for Native Apps and API clients
- * This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.
+ * InitializeSelfServiceLoginWithoutBrowser Initialize Login Flow for APIs, Services, Apps, ...
+ * This endpoint initiates a login flow for API clients that do not use a browser, such as mobile devices, smart TVs, and so on.
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
 
 If a valid provided session cookie or session token is provided, a 400 Bad Request error
 will be returned unless the URL query parameter `?refresh=true` is set.
@@ -1308,10 +1506,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceLoginForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceLoginWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceLoginForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceLoginForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceLoginForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceLoginWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceLoginWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceLoginWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -1321,7 +1519,7 @@ func (a *PublicApiService) InitializeSelfServiceLoginForNativeApps(ctx context.C
  * Execute executes the request
  * @return LoginFlow
  */
-func (a *PublicApiService) InitializeSelfServiceLoginForNativeAppsExecute(r PublicApiApiInitializeSelfServiceLoginForNativeAppsRequest) (*LoginFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceLoginWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceLoginWithoutBrowserRequest) (*LoginFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -1331,7 +1529,7 @@ func (a *PublicApiService) InitializeSelfServiceLoginForNativeAppsExecute(r Publ
 		localVarReturnValue  *LoginFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceLoginForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceLoginWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1423,17 +1621,26 @@ type PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest struct {
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest) Execute() (*RecoveryFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceRecoveryForBrowsersExecute(r)
 }
 
 /*
- * InitializeSelfServiceRecoveryForBrowsers Initialize Recovery Flow for Browser Clients
- * This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
+ * InitializeSelfServiceRecoveryForBrowsers Initialize Recovery Flow for Browsers
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 exists, the browser is returned to the configured return URL.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+If this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects
+or a 400 bad request error if the user is already authenticated.
+
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1448,19 +1655,21 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsers(ctx context.
 
 /*
  * Execute executes the request
+ * @return RecoveryFlow
  */
-func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsersExecute(r PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsersExecute(r PublicApiApiInitializeSelfServiceRecoveryForBrowsersRequest) (*RecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *RecoveryFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRecoveryForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/recovery/browser"
@@ -1488,19 +1697,19 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsersExecute(r Pub
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1508,33 +1717,58 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForBrowsersExecute(r Pub
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest struct {
+type PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest) Execute() (*RecoveryFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceRecoveryForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest) Execute() (*RecoveryFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceRecoveryWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceRecoveryForNativeApps Initialize Recovery Flow for Native Apps and API clients
- * This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
+ * InitializeSelfServiceRecoveryWithoutBrowser Initialize Recovery Flow for APIs, Services, Apps, ...
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 
 If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
@@ -1552,10 +1786,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceRecoveryForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceRecoveryWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -1565,7 +1799,7 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForNativeApps(ctx contex
  * Execute executes the request
  * @return RecoveryFlow
  */
-func (a *PublicApiService) InitializeSelfServiceRecoveryForNativeAppsExecute(r PublicApiApiInitializeSelfServiceRecoveryForNativeAppsRequest) (*RecoveryFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceRecoveryWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceRecoveryWithoutBrowserRequest) (*RecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -1575,7 +1809,7 @@ func (a *PublicApiService) InitializeSelfServiceRecoveryForNativeAppsExecute(r P
 		localVarReturnValue  *RecoveryFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRecoveryForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRecoveryWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1664,22 +1898,28 @@ type PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest struct {
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest) Execute() (*RegistrationFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceRegistrationForBrowsersExecute(r)
 }
 
 /*
- * InitializeSelfServiceRegistrationForBrowsers Initialize Registration Flow for browsers
- * This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
-`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
-exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
-`?refresh=true` was set.
+ * InitializeSelfServiceRegistrationForBrowsers Initialize Registration Flow for Browsers
+ * This endpoint initializes a browser-based user registration flow. This endpoint will set the appropriate
+cookies and anti-CSRF measures required for browser-based flows.
 
-:::note
+:::info
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
 :::
+
+If this endpoint is opened as a link in the browser, it will be redirected to
+`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+exists already, the browser will be redirected to `urls.default_redirect_url`.
+
+If this endpoint is called via an AJAX request, the response contains the registration flow without a redirect.
+
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1694,19 +1934,21 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsers(ctx cont
 
 /*
  * Execute executes the request
+ * @return RegistrationFlow
  */
-func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsersExecute(r PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsersExecute(r PublicApiApiInitializeSelfServiceRegistrationForBrowsersRequest) (*RegistrationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *RegistrationFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRegistrationForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/registration/browser"
@@ -1734,19 +1976,19 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsersExecute(r
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -1759,28 +2001,43 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForBrowsersExecute(r
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest struct {
+type PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest) Execute() (*RegistrationFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceRegistrationForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest) Execute() (*RegistrationFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceRegistrationWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceRegistrationForNativeApps Initialize Registration Flow for Native Apps and API clients
+ * InitializeSelfServiceRegistrationWithoutBrowser Initialize Registration Flow for APIs, Services, Apps, ...
  * This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.
+
+:::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
 
 If a valid provided session cookie or session token is provided, a 400 Bad Request error
 will be returned unless the URL query parameter `?refresh=true` is set.
@@ -1799,10 +2056,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceRegistrationForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceRegistrationWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -1812,7 +2069,7 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForNativeApps(ctx co
  * Execute executes the request
  * @return RegistrationFlow
  */
-func (a *PublicApiService) InitializeSelfServiceRegistrationForNativeAppsExecute(r PublicApiApiInitializeSelfServiceRegistrationForNativeAppsRequest) (*RegistrationFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceRegistrationWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceRegistrationWithoutBrowserRequest) (*RegistrationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -1822,7 +2079,7 @@ func (a *PublicApiService) InitializeSelfServiceRegistrationForNativeAppsExecute
 		localVarReturnValue  *RegistrationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRegistrationForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceRegistrationWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1911,21 +2168,30 @@ type PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest struct {
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest) Execute() (*SettingsFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceSettingsForBrowsersExecute(r)
 }
 
 /*
  * InitializeSelfServiceSettingsForBrowsers Initialize Settings Flow for Browsers
- * This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
 Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
 
-:::note
+If this endpoint is opened as a link in the browser, it will be redirected to
+`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session
+was set, the browser will be redirected to the login endpoint.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
+or a 403 forbidden error if no valid session was set.
 
-:::
+This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1940,19 +2206,21 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsers(ctx context.
 
 /*
  * Execute executes the request
+ * @return SettingsFlow
  */
-func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r PublicApiApiInitializeSelfServiceSettingsForBrowsersRequest) (*SettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *SettingsFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceSettingsForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/settings/browser"
@@ -1980,19 +2248,19 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r Pub
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2000,39 +2268,69 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForBrowsersExecute(r Pub
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest struct {
-	ctx           context.Context
-	ApiService    *PublicApiService
-	xSessionToken *string
+type PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest struct {
+	ctx            context.Context
+	ApiService     *PublicApiService
+	xSessionToken  *string
+	xSessionCookie *string
 }
 
-func (r PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest) XSessionToken(xSessionToken string) PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest {
+func (r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) XSessionToken(xSessionToken string) PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
+func (r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) XSessionCookie(xSessionCookie string) PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest {
+	r.xSessionCookie = &xSessionCookie
+	return r
+}
 
-func (r PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest) Execute() (*SettingsFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceSettingsForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) Execute() (*SettingsFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceSettingsWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceSettingsForNativeApps Initialize Settings Flow for Native Apps and API clients
- * This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
+ * InitializeSelfServiceSettingsWithoutBrowser Initialize Settings Flow for APIs, Services, Apps, ...
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
 You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 
 To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
@@ -2049,10 +2347,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceSettingsForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceSettingsWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2062,7 +2360,7 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForNativeApps(ctx contex
  * Execute executes the request
  * @return SettingsFlow
  */
-func (a *PublicApiService) InitializeSelfServiceSettingsForNativeAppsExecute(r PublicApiApiInitializeSelfServiceSettingsForNativeAppsRequest) (*SettingsFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceSettingsWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest) (*SettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2072,7 +2370,7 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForNativeAppsExecute(r P
 		localVarReturnValue  *SettingsFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceSettingsForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceSettingsWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2102,6 +2400,9 @@ func (a *PublicApiService) InitializeSelfServiceSettingsForNativeAppsExecute(r P
 	}
 	if r.xSessionToken != nil {
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	}
+	if r.xSessionCookie != nil {
+		localVarHeaderParams["X-Session-Cookie"] = parameterToString(*r.xSessionCookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -2164,14 +2465,22 @@ type PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest struct {
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest) Execute() (*VerificationFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceVerificationForBrowsersExecute(r)
 }
 
 /*
  * InitializeSelfServiceVerificationForBrowsers Initialize Verification Flow for Browser Clients
- * This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
+
+If this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
@@ -2188,19 +2497,21 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsers(ctx cont
 
 /*
  * Execute executes the request
+ * @return VerificationFlow
  */
-func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsersExecute(r PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest) (*http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsersExecute(r PublicApiApiInitializeSelfServiceVerificationForBrowsersRequest) (*VerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *VerificationFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceVerificationForBrowsers")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/self-service/verification/browser"
@@ -2228,19 +2539,19 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsersExecute(r
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -2253,28 +2564,43 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForBrowsersExecute(r
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest struct {
+type PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 }
 
-func (r PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest) Execute() (*VerificationFlow, *http.Response, error) {
-	return r.ApiService.InitializeSelfServiceVerificationForNativeAppsExecute(r)
+func (r PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest) Execute() (*VerificationFlow, *http.Response, error) {
+	return r.ApiService.InitializeSelfServiceVerificationWithoutBrowserExecute(r)
 }
 
 /*
- * InitializeSelfServiceVerificationForNativeApps Initialize Verification Flow for Native Apps and API clients
- * This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
+ * InitializeSelfServiceVerificationWithoutBrowser Initialize Verification Flow for APIs, Services, Apps, ...
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 
 To fetch an existing verification flow call `/self-service/verification/flows?flow=<flow_id>`.
 
@@ -2290,10 +2616,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest
+ * @return PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest
 */
-func (a *PublicApiService) InitializeSelfServiceVerificationForNativeApps(ctx context.Context) PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest {
-	return PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest{
+func (a *PublicApiService) InitializeSelfServiceVerificationWithoutBrowser(ctx context.Context) PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest {
+	return PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2303,7 +2629,7 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForNativeApps(ctx co
  * Execute executes the request
  * @return VerificationFlow
  */
-func (a *PublicApiService) InitializeSelfServiceVerificationForNativeAppsExecute(r PublicApiApiInitializeSelfServiceVerificationForNativeAppsRequest) (*VerificationFlow, *http.Response, error) {
+func (a *PublicApiService) InitializeSelfServiceVerificationWithoutBrowserExecute(r PublicApiApiInitializeSelfServiceVerificationWithoutBrowserRequest) (*VerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2313,7 +2639,7 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForNativeAppsExecute
 		localVarReturnValue  *VerificationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceVerificationForNativeApps")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.InitializeSelfServiceVerificationWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2397,129 +2723,6 @@ func (a *PublicApiService) InitializeSelfServiceVerificationForNativeAppsExecute
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiRevokeSessionRequest struct {
-	ctx           context.Context
-	ApiService    *PublicApiService
-	revokeSession *RevokeSession
-}
-
-func (r PublicApiApiRevokeSessionRequest) RevokeSession(revokeSession RevokeSession) PublicApiApiRevokeSessionRequest {
-	r.revokeSession = &revokeSession
-	return r
-}
-
-func (r PublicApiApiRevokeSessionRequest) Execute() (*http.Response, error) {
-	return r.ApiService.RevokeSessionExecute(r)
-}
-
-/*
- * RevokeSession Initialize Logout Flow for API Clients - Revoke a Session
- * Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
-such as mobile apps to log the user out of the system and invalidate the session.
-
-This endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiRevokeSessionRequest
-*/
-func (a *PublicApiService) RevokeSession(ctx context.Context) PublicApiApiRevokeSessionRequest {
-	return PublicApiApiRevokeSessionRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *PublicApiService) RevokeSessionExecute(r PublicApiApiRevokeSessionRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.RevokeSession")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/sessions"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-	if r.revokeSession == nil {
-		return nil, reportError("revokeSession is required and must be specified")
-	}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	localVarPostBody = r.revokeSession
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
-}
-
 type PublicApiApiSubmitSelfServiceLoginFlowRequest struct {
 	ctx                        context.Context
 	ApiService                 *PublicApiService
@@ -2542,7 +2745,13 @@ func (r PublicApiApiSubmitSelfServiceLoginFlowRequest) Execute() (*LoginViaApiRe
 
 /*
  * SubmitSelfServiceLoginFlow Submit a Login Flow
- * Use this endpoint to complete a login flow. This endpoint
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+Use this endpoint to complete a login flow. This endpoint
 behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and responds with
@@ -2550,9 +2759,14 @@ HTTP 200 and a application/json body with the session token on success;
 HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
 a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
 a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+
+Browser flows with an accept header of `application/json` will not redirect but instead respond with
+HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -2669,49 +2883,45 @@ func (a *PublicApiService) SubmitSelfServiceLoginFlowExecute(r PublicApiApiSubmi
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type PublicApiApiSubmitSelfServiceRecoveryFlowRequest struct {
+type PublicApiApiSubmitSelfServiceLogoutFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
-	flow       *string
-	body       *map[string]interface{}
 }
 
-func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
-	r.flow = &flow
-	return r
-}
-func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Body(body map[string]interface{}) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
-	r.body = &body
-	return r
-}
-
-func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Execute() (*http.Response, error) {
-	return r.ApiService.SubmitSelfServiceRecoveryFlowExecute(r)
+func (r PublicApiApiSubmitSelfServiceLogoutFlowRequest) Execute() (*http.Response, error) {
+	return r.ApiService.SubmitSelfServiceLogoutFlowExecute(r)
 }
 
 /*
- * SubmitSelfServiceRecoveryFlow Complete Recovery Flow
- * Use this endpoint to complete a recovery flow. This endpoint
-behaves differently for API and browser flows and has several states:
+ * SubmitSelfServiceLogoutFlow Complete Self-Service Logout
+ * :::info
 
-`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
-`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
-works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
-(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
-a new Recovery Flow ID which contains an error message that the recovery link was invalid.
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
-More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+:::
+
+This endpoint logs out an identity in a self-service manner.
+
+If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
+to the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.
+
+If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
+will be sent on successful logout instead.
+
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...). For API clients you can
+call the `/self-service/logout/api` URL directly with the Ory Session Token.
+
+:::
+
+More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return PublicApiApiSubmitSelfServiceRecoveryFlowRequest
+ * @return PublicApiApiSubmitSelfServiceLogoutFlowRequest
 */
-func (a *PublicApiService) SubmitSelfServiceRecoveryFlow(ctx context.Context) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
-	return PublicApiApiSubmitSelfServiceRecoveryFlowRequest{
+func (a *PublicApiService) SubmitSelfServiceLogoutFlow(ctx context.Context) PublicApiApiSubmitSelfServiceLogoutFlowRequest {
+	return PublicApiApiSubmitSelfServiceLogoutFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2720,7 +2930,7 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlow(ctx context.Context) Pu
 /*
  * Execute executes the request
  */
-func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) (*http.Response, error) {
+func (a *PublicApiService) SubmitSelfServiceLogoutFlowExecute(r PublicApiApiSubmitSelfServiceLogoutFlowRequest) (*http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -2729,23 +2939,140 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSu
 		localVarFileBytes    []byte
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceRecoveryFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceLogoutFlow")
 	if err != nil {
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/self-service/recovery"
+	localVarPath := localBasePath + "/self-service/logout"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.flow == nil {
-		return nil, reportError("flow is required and must be specified")
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
 	}
 
-	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
+}
+
+type PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest struct {
+	ctx                                           context.Context
+	ApiService                                    *PublicApiService
+	submitSelfServiceLogoutFlowWithoutBrowserBody *SubmitSelfServiceLogoutFlowWithoutBrowserBody
+}
+
+func (r PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) SubmitSelfServiceLogoutFlowWithoutBrowserBody(submitSelfServiceLogoutFlowWithoutBrowserBody SubmitSelfServiceLogoutFlowWithoutBrowserBody) PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest {
+	r.submitSelfServiceLogoutFlowWithoutBrowserBody = &submitSelfServiceLogoutFlowWithoutBrowserBody
+	return r
+}
+
+func (r PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) Execute() (*http.Response, error) {
+	return r.ApiService.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r)
+}
+
+/*
+ * SubmitSelfServiceLogoutFlowWithoutBrowser Perform Logout for APIs, Services, Apps, ...
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+Use this endpoint to log out an identity using an Ory Session Token. If the Ory Session Token was successfully
+revoked, the server returns a 204 No Content response. A 204 No Content response is also sent when
+the Ory Session Token has been revoked already before.
+
+If the Ory Session Token is malformed or does not exist a 403 Forbidden response will be returned.
+
+This endpoint does not remove any HTTP
+Cookies - use the Browser-Based Self-Service Logout Flow instead.
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest
+*/
+func (a *PublicApiService) SubmitSelfServiceLogoutFlowWithoutBrowser(ctx context.Context) PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest {
+	return PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *PublicApiService) SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodDelete
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceLogoutFlowWithoutBrowser")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/logout/api"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.submitSelfServiceLogoutFlowWithoutBrowserBody == nil {
+		return nil, reportError("submitSelfServiceLogoutFlowWithoutBrowserBody is required and must be specified")
+	}
+
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
+	localVarHTTPContentTypes := []string{"application/json"}
 
 	// set Content-Type header
 	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
@@ -2762,7 +3089,7 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSu
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.body
+	localVarPostBody = r.submitSelfServiceLogoutFlowWithoutBrowserBody
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err
@@ -2786,7 +3113,7 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSu
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
-			var v RecoveryFlow
+			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -2808,6 +3135,158 @@ func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSu
 	}
 
 	return localVarHTTPResponse, nil
+}
+
+type PublicApiApiSubmitSelfServiceRecoveryFlowRequest struct {
+	ctx                               context.Context
+	ApiService                        *PublicApiService
+	flow                              *string
+	submitSelfServiceRecoveryFlowBody *SubmitSelfServiceRecoveryFlowBody
+}
+
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
+	r.flow = &flow
+	return r
+}
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) SubmitSelfServiceRecoveryFlowBody(submitSelfServiceRecoveryFlowBody SubmitSelfServiceRecoveryFlowBody) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
+	r.submitSelfServiceRecoveryFlowBody = &submitSelfServiceRecoveryFlowBody
+	return r
+}
+
+func (r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) Execute() (*RecoveryFlow, *http.Response, error) {
+	return r.ApiService.SubmitSelfServiceRecoveryFlowExecute(r)
+}
+
+/*
+ * SubmitSelfServiceRecoveryFlow Complete Recovery Flow
+ * Use this endpoint to complete a recovery flow. This endpoint
+behaves differently for API and browser flows and has several states:
+
+`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+and works with API- and Browser-initiated flows.
+For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
+and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+`sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
+works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
+does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
+a new Recovery Flow ID which contains an error message that the recovery link was invalid.
+
+More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return PublicApiApiSubmitSelfServiceRecoveryFlowRequest
+*/
+func (a *PublicApiService) SubmitSelfServiceRecoveryFlow(ctx context.Context) PublicApiApiSubmitSelfServiceRecoveryFlowRequest {
+	return PublicApiApiSubmitSelfServiceRecoveryFlowRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return RecoveryFlow
+ */
+func (a *PublicApiService) SubmitSelfServiceRecoveryFlowExecute(r PublicApiApiSubmitSelfServiceRecoveryFlowRequest) (*RecoveryFlow, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodPost
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *RecoveryFlow
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceRecoveryFlow")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/recovery"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.flow == nil {
+		return localVarReturnValue, nil, reportError("flow is required and must be specified")
+	}
+
+	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json", "application/x-www-form-urlencoded"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.submitSelfServiceRecoveryFlowBody
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v RecoveryFlow
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type PublicApiApiSubmitSelfServiceRecoveryFlowWithLinkMethodRequest struct {
@@ -2980,7 +3459,13 @@ func (r PublicApiApiSubmitSelfServiceRegistrationFlowRequest) Execute() (*Regist
 
 /*
  * SubmitSelfServiceRegistrationFlow Submit a Registration Flow
- * Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
+ * :::info
+
+This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+
+:::
+
+Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
 behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and respond with
@@ -2989,9 +3474,14 @@ HTTP 200 and a application/json body with the created identity success - if the 
 HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+Browser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with
 a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
 a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+
+Browser flows with an accept header of `application/json` will not redirect but instead respond with
+HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -3146,10 +3636,16 @@ HTTP 401 when the endpoint is called without a valid session token.
 HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
 Implies that the user needs to re-authenticate.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
 a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
 a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
 a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+
+Browser flows with HTTP Header `Accept: application/json` respond with
+HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 403 when the page is accessed without a session cookie.
+HTTP 400 on form validation errors.
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -3290,22 +3786,22 @@ func (a *PublicApiService) SubmitSelfServiceSettingsFlowExecute(r PublicApiApiSu
 }
 
 type PublicApiApiSubmitSelfServiceVerificationFlowRequest struct {
-	ctx        context.Context
-	ApiService *PublicApiService
-	flow       *string
-	body       *map[string]interface{}
+	ctx                                   context.Context
+	ApiService                            *PublicApiService
+	flow                                  *string
+	submitSelfServiceVerificationFlowBody *SubmitSelfServiceVerificationFlowBody
 }
 
 func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Flow(flow string) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
 	r.flow = &flow
 	return r
 }
-func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Body(body map[string]interface{}) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
-	r.body = &body
+func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) SubmitSelfServiceVerificationFlowBody(submitSelfServiceVerificationFlowBody SubmitSelfServiceVerificationFlowBody) PublicApiApiSubmitSelfServiceVerificationFlowRequest {
+	r.submitSelfServiceVerificationFlowBody = &submitSelfServiceVerificationFlowBody
 	return r
 }
 
-func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*http.Response, error) {
+func (r PublicApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*VerificationFlow, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceVerificationFlowExecute(r)
 }
 
@@ -3316,9 +3812,9 @@ behaves differently for API and browser flows and has several states:
 
 `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
 and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
 `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
@@ -3339,28 +3835,30 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlow(ctx context.Context
 
 /*
  * Execute executes the request
+ * @return VerificationFlow
  */
-func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiApiSubmitSelfServiceVerificationFlowRequest) (*http.Response, error) {
+func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiApiSubmitSelfServiceVerificationFlowRequest) (*VerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
+		localVarReturnValue  *VerificationFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PublicApiService.SubmitSelfServiceVerificationFlow")
 	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/self-service/verification/methods/link"
+	localVarPath := localBasePath + "/self-service/verification"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 	if r.flow == nil {
-		return nil, reportError("flow is required and must be specified")
+		return localVarReturnValue, nil, reportError("flow is required and must be specified")
 	}
 
 	localVarQueryParams.Add("flow", parameterToString(*r.flow, ""))
@@ -3382,22 +3880,22 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.body
+	localVarPostBody = r.submitSelfServiceVerificationFlowBody
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return nil, err
+		return localVarReturnValue, nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarHTTPResponse, err
+		return localVarReturnValue, localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -3410,34 +3908,48 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
-			return localVarHTTPResponse, newErr
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
+				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
 		}
-		return localVarHTTPResponse, newErr
+		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
 
-	return localVarHTTPResponse, nil
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
 type PublicApiApiToSessionRequest struct {
-	ctx           context.Context
-	ApiService    *PublicApiService
-	xSessionToken *string
+	ctx            context.Context
+	ApiService     *PublicApiService
+	xSessionToken  *string
+	xSessionCookie *string
 }
 
 func (r PublicApiApiToSessionRequest) XSessionToken(xSessionToken string) PublicApiApiToSessionRequest {
 	r.xSessionToken = &xSessionToken
+	return r
+}
+func (r PublicApiApiToSessionRequest) XSessionCookie(xSessionCookie string) PublicApiApiToSessionRequest {
+	r.xSessionCookie = &xSessionCookie
 	return r
 }
 
@@ -3456,6 +3968,15 @@ This endpoint is useful for:
 AJAX calls. Remember to send credentials and set up CORS correctly!
 Reverse proxies and API Gateways
 Server-side calls - use the `X-Session-Token` header!
+
+This endpoint authenticates users by checking
+
+if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
+if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
+if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;
+if the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).
+
+If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiToSessionRequest
 */
@@ -3510,6 +4031,9 @@ func (a *PublicApiService) ToSessionExecute(r PublicApiApiToSessionRequest) (*Se
 	}
 	if r.xSessionToken != nil {
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	}
+	if r.xSessionCookie != nil {
+		localVarHeaderParams["X-Session-Cookie"] = parameterToString(*r.xSessionCookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {

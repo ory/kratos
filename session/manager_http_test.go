@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -93,6 +95,29 @@ func TestManagerHTTP(t *testing.T) {
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
 
 			res, err := c.Get(pts.URL + "/session/get")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		})
+
+		t.Run("case=valid and uses x-session-cookie", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+
+			i := identity.Identity{Traits: []byte("{}")}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
+
+			c := testhelpers.NewClientWithCookies(t)
+			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
+
+			cookies := c.Jar.Cookies(urlx.ParseOrPanic(pts.URL))
+			require.Len(t, cookies, 1)
+			assert.Equal(t, "ory_kratos_session", cookies[0].Name)
+
+			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+			require.NoError(t, err)
+			req.Header.Set("Cookie", "ory_kratos_session=not-valid")
+			req.Header.Set("X-Session-Cookie", cookies[0].Value)
+			res, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})

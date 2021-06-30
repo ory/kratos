@@ -4,6 +4,7 @@ package testhelpers
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -46,13 +47,25 @@ func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server)
 	return rs
 }
 
-func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
+func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.VerificationFlow {
 	publicClient := NewSDKCustomClient(ts, client)
-	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
+	req, err := http.NewRequest("GET", ts.URL+verification.RouteInitBrowserFlow, nil)
 	require.NoError(t, err)
-	require.NoError(t, res.Body.Close())
 
-	t.Logf("%+v\n\n%+v", client.Jar, res.Header)
+	if isSPA {
+		req.Header.Set("Accept", "application/json")
+	}
+	require.NoError(t, err)
+
+	res, err := client.Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	if isSPA {
+		var f kratos.VerificationFlow
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&f))
+		return &f
+	}
 
 	rs, _, err := publicClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
@@ -64,7 +77,7 @@ func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceVerificationForNativeApps(context.Background()).Execute()
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceVerificationWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -92,6 +105,7 @@ func VerificationMakeRequest(
 func SubmitVerificationForm(
 	t *testing.T,
 	isAPI bool,
+	isSPA bool,
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
@@ -102,7 +116,7 @@ func SubmitVerificationForm(
 	if isAPI {
 		f = InitializeVerificationFlowViaAPI(t, hc, publicTS)
 	} else {
-		f = InitializeVerificationFlowViaBrowser(t, hc, publicTS)
+		f = InitializeVerificationFlowViaBrowser(t, hc, isSPA, publicTS)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
@@ -110,7 +124,7 @@ func SubmitVerificationForm(
 	formPayload := SDKFormFieldsToURLValues(f.Ui.Nodes)
 	withValues(formPayload)
 
-	b, res := VerificationMakeRequest(t, isAPI, f, hc, EncodeFormAsJSON(t, isAPI, formPayload))
+	b, res := VerificationMakeRequest(t, isAPI || isSPA, f, hc, EncodeFormAsJSON(t, isAPI || isSPA, formPayload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

@@ -62,7 +62,9 @@
       "guides/secret-key-rotation",
       "guides/high-availability-ha",
       "guides/docker",
-      "guides/setting-up-password-hashing-parameters"
+      "guides/setting-up-password-hashing-parameters",
+      "guides/integration-with-other-systems-using-web-hooks",
+      "guides/tracing"
     ]
   },
   {
@@ -76,11 +78,6 @@
           "cli/kratos",
           "cli/kratos-courier",
           "cli/kratos-courier-watch",
-          "cli/kratos-hashers",
-          "cli/kratos-hashers-argon2",
-          "cli/kratos-hashers-argon2-calibrate",
-          "cli/kratos-hashers-argon2-hash",
-          "cli/kratos-hashers-argon2-load-test",
           "cli/kratos-identities",
           "cli/kratos-identities-delete",
           "cli/kratos-identities-get",

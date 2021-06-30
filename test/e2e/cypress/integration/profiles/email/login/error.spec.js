@@ -1,20 +1,25 @@
 import { APP_URL, gen } from '../../../../helpers'
 
-context('Login Flow Error', () => {
-  beforeEach(() => {
-    cy.visit(APP_URL + '/auth/login')
-  })
+context('Email Profile', () => {
+  describe('Login Flow Error', () => {
+    before(() => {
+      cy.useConfigProfile('email')
+    })
 
-  it('fails when CSRF cookies are missing', () => {
-    cy.clearCookies()
+    beforeEach(() => {
+      cy.visit(APP_URL + '/auth/login')
+    })
 
-    cy.get('input[name="password_identifier"]').type('i-do-not-exist')
-    cy.get('input[name="password"]').type('invalid-password')
+    it('fails when CSRF cookies are missing', () => {
+      cy.clearCookies()
+
+      cy.get('input[name="password_identifier"]').type('i-do-not-exist')
+      cy.get('input[name="password"]').type('invalid-password')
 
     cy.get('button[type="submit"]').click()
 
     // FIXME https://github.com/ory/kratos/issues/91
-    cy.get('html').should('contain.text', 'missing or invalid csrf_token value')
+    cy.get('html').should('contain.text', 'The request was rejected to protect you from Cross-Site-Request-Forgery')
   })
 
   describe('shows validation errors when invalid signup data is used', () => {
@@ -49,5 +54,6 @@ context('Login Flow Error', () => {
         'credentials are invalid'
       )
     })
+  })
   })
 })

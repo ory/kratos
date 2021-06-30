@@ -1,0 +1,20 @@
+# Set your token here
+session_token=8ziz8oCx0dsgXnoJJgElTQ60cNnbohAr
+
+curl -s -v -X DELETE \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  --data '{"session_token": "'$session_token'"}' \
+  http://127.0.0.1:4433/self-service/logout/api
+
+> DELETE /self-service/logout/api HTTP/1.1
+> Host: 127.0.0.1:4433
+> User-Agent: curl/7.64.1
+> Accept: application/json
+> Content-Type: application/json
+> Content-Length: 53
+
+< HTTP/1.1 204 No Content
+< Cache-Control: private, no-cache, no-store, must-revalidate
+< Vary: Cookie
+< Date: Fri, 18 Jun 2021 09:42:04 GMT

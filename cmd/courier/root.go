@@ -6,18 +6,18 @@ import (
 	"github.com/ory/x/configx"
 )
 
-// courierCmd represents the courier command
-var courierCmd = &cobra.Command{
-	Use:   "courier",
-	Short: "Commands related to the Ory Kratos message courier",
-}
-
-func init() {
-	configx.RegisterFlags(courierCmd.PersistentFlags())
+// NewCourierCmd creates a new courier command
+func NewCourierCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "courier",
+		Short: "Commands related to the Ory Kratos message courier",
+	}
+	configx.RegisterFlags(c.PersistentFlags())
+	return c
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(courierCmd)
-
-	courierCmd.AddCommand(watchCmd)
+	c := NewCourierCmd()
+	parent.AddCommand(c)
+	c.AddCommand(NewWatchCmd())
 }

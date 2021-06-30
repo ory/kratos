@@ -92,11 +92,11 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 			return
 		}
 
-		if f.Type == flow.TypeAPI {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
-				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
+				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
 		} else {
-			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
+			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -117,7 +117,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		return
 	}
 
-	if f.Type == flow.TypeBrowser {
+	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
 		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
 		return
 	}

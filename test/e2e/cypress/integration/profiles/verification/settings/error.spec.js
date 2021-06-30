@@ -6,16 +6,22 @@ import {
   verifyHrefPattern,
 } from '../../../../helpers'
 
-context('Settings', () => {
-  describe('error flow', () => {
-    let identity
+
+context('Verification Profile', () => {
+  describe('Settings', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('verification')
     })
 
-    beforeEach(() => {
-      identity = gen.identity()
-      cy.register(identity)
+    describe('error flow', () => {
+      let identity
+      before(() => {
+        cy.deleteMail()
+      })
+
+      beforeEach(() => {
+        identity = gen.identity()
+        cy.register(identity)
       cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
       cy.login(identity)
@@ -46,12 +52,13 @@ context('Settings', () => {
 
         cy.visit(link.href + '-not') // add random stuff to the confirm challenge
         cy.log(link.href)
-        cy.session().then(assertVerifiableAddress({ isVerified: false, email }))
+        cy.session().then(assertVerifiableAddress({isVerified: false, email}))
       })
     })
 
-    xit('should not update the traits until the email has been verified and the old email has accepted the change', () => {
-      // FIXME https://github.com/ory/kratos/issues/292
+      xit('should not update the traits until the email has been verified and the old email has accepted the change', () => {
+        // FIXME https://github.com/ory/kratos/issues/292
+      })
     })
   })
 })

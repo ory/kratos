@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/jsonx"
 
 	"github.com/ory/kratos/ui/node"
-
-	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
@@ -114,72 +114,80 @@ func TestHandleError(t *testing.T) {
 		assert.Contains(t, string(body), "system error")
 	})
 
-	t.Run("flow=api", func(t *testing.T) {
-		t.Run("case=expired error", func(t *testing.T) {
-			t.Cleanup(reset)
+	for _, tc := range []struct {
+		n string
+		t flow.Type
+	}{
+		{"api", flow.TypeAPI},
+		{"spa", flow.TypeBrowser},
+	} {
+		t.Run("flow="+tc.n, func(t *testing.T) {
+			t.Run("case=expired error", func(t *testing.T) {
+				t.Cleanup(reset)
 
-			recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = recovery.NewFlowExpiredError(anHourAgo)
-			methodName = recovery.StrategyRecoveryLinkName
+				recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
+				flowError = recovery.NewFlowExpiredError(anHourAgo)
+				methodName = recovery.StrategyRecoveryLinkName
 
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.Contains(t, res.Request.URL.String(), public.URL+recovery.RouteGetFlow)
-			require.Equal(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Contains(t, res.Request.URL.String(), public.URL+recovery.RouteGetFlow)
+				require.Equal(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
 
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), string(body))
-			assert.NotEqual(t, recoveryFlow.ID.String(), gjson.GetBytes(body, "id").String())
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), string(body))
+				assert.NotEqual(t, recoveryFlow.ID.String(), gjson.GetBytes(body, "id").String())
+			})
+
+			t.Run("case=validation error", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				recoveryFlow = newFlow(t, time.Minute, tc.t)
+				flowError = schema.NewInvalidCredentialsError()
+				methodName = recovery.StrategyRecoveryLinkName
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
+				assert.Equal(t, recoveryFlow.ID.String(), gjson.GetBytes(body, "id").String())
+			})
+
+			t.Run("case=generic error", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				recoveryFlow = newFlow(t, time.Minute, tc.t)
+				flowError = herodot.ErrInternalServerError.WithReason("system error")
+				methodName = recovery.StrategyRecoveryLinkName
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
+			})
 		})
-
-		t.Run("case=validation error", func(t *testing.T) {
-			t.Cleanup(reset)
-
-			recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = schema.NewInvalidCredentialsError()
-			methodName = recovery.StrategyRecoveryLinkName
-
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.Equal(t, http.StatusBadRequest, res.StatusCode)
-
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
-			assert.Equal(t, recoveryFlow.ID.String(), gjson.GetBytes(body, "id").String())
-		})
-
-		t.Run("case=generic error", func(t *testing.T) {
-			t.Cleanup(reset)
-
-			recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			methodName = recovery.StrategyRecoveryLinkName
-
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.Equal(t, http.StatusInternalServerError, res.StatusCode)
-
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.JSONEq(t, x.MustEncodeJSON(t, flowError), gjson.GetBytes(body, "error").Raw)
-		})
-	})
+	}
 
 	t.Run("flow=browser", func(t *testing.T) {
-		expectRecoveryUI := func(t *testing.T) (*kratos.RecoveryFlow, *http.Response) {
+		expectRecoveryUI := func(t *testing.T) (*recovery.Flow, *http.Response) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
 
-			lf, _, err := sdk.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+			rf, err := reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err)
-			return lf, res
+			return rf, res
 		}
 
 		t.Run("case=expired error", func(t *testing.T) {
@@ -190,8 +198,8 @@ func TestHandleError(t *testing.T) {
 			methodName = node.RecoveryLinkGroup
 
 			lf, _ := expectRecoveryUI(t)
-			require.Len(t, lf.Ui.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
-			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.Ui.Messages[0].Id))
+			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
+			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.UI.Messages[0].ID))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {
@@ -202,9 +210,9 @@ func TestHandleError(t *testing.T) {
 			methodName = node.RecoveryLinkGroup
 
 			lf, _ := expectRecoveryUI(t)
-			require.NotEmpty(t, lf.Ui, x.MustEncodeJSON(t, lf))
-			require.Len(t, lf.Ui.Messages, 1, x.MustEncodeJSON(t, lf))
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Ui.Messages[0].Id), x.MustEncodeJSON(t, lf))
+			require.NotEmpty(t, lf.UI, x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.UI.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.UI.Messages[0].ID), x.MustEncodeJSON(t, lf))
 		})
 
 		t.Run("case=generic error", func(t *testing.T) {

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/nosurf"
+
 	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/ui/node"
@@ -63,7 +65,14 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	redirect := session.RedirectOnAuthenticated(h.d)
-	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, redirect))
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		if x.IsJSONRequest(r) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+		} else {
+			redirect(w, r, ps)
+		}
+	}))
+
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initAPIFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)))
 
@@ -74,12 +83,17 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetch)
 }
 
-// swagger:route GET /self-service/recovery/api public initializeSelfServiceRecoveryForNativeApps
+// swagger:route GET /self-service/recovery/api public initializeSelfServiceRecoveryWithoutBrowser
 //
-// Initialize Recovery Flow for Native Apps and API clients
+// Initialize Recovery Flow for APIs, Services, Apps, ...
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -127,20 +141,31 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 
 // swagger:route GET /self-service/recovery/browser public initializeSelfServiceRecoveryForBrowsers
 //
-// Initialize Recovery Flow for Browser Clients
+// Initialize Recovery Flow for Browsers
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 // exists, the browser is returned to the configured return URL.
 //
-// This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+// If this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects
+// or a 400 bad request error if the user is already authenticated.
+//
+// This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Schemes: http, https
 //
 //     Responses:
+//       200: recoveryFlow
 //       302: emptyResponse
+//       400: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if !h.d.Config(r.Context()).SelfServiceFlowRecoveryEnabled() {
@@ -159,7 +184,8 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 		return
 	}
 
-	http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
+	redirTo := f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String()
+	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), f, redirTo)
 }
 
 // nolint:deadcode,unused
@@ -173,13 +199,43 @@ type getSelfServiceRecoveryFlowParameters struct {
 	// required: true
 	// in: query
 	FlowID string `json:"id"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/recovery/flows public admin getSelfServiceRecoveryFlow
+// swagger:route GET /self-service/recovery/flows public getSelfServiceRecoveryFlow
 //
-// Get information about a recovery flow
+// Get Recovery Flow
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // This endpoint returns a recovery flow's context with, for example, error details and other information.
+//
+// Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+// For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+//
+// If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+// and you need to forward the incoming HTTP Cookie header to this endpoint:
+//
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
+//
+//    res.render('recovery', flow)
+//	})
+//	```
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
@@ -203,6 +259,14 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	f, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), rid)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	// Browser flows must include the CSRF token
+	//
+	// Resolves: https://github.com/ory/kratos/issues/1282
+	if f.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), f.CSRFToken) {
+		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
 		return
 	}
 
@@ -238,9 +302,21 @@ type submitSelfServiceRecoveryFlow struct {
 	Body submitSelfServiceRecoveryFlowBody
 }
 
-// swagger:model submitSelfServiceRecoveryFlow
 // nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowBody struct{}
+// swagger:model submitSelfServiceRecoveryFlowBody
+type submitSelfServiceRecoveryFlowBody struct {
+	// Method supports `link` only right now.
+	//
+	// enum:
+	// - link
+	// required: true
+	Method string `json:"method"`
+
+	// Email is the email to which to send the Recovery message to.
+	//
+	// required: true
+	Email string `json:"email"`
+}
 
 // swagger:route POST /self-service/recovery public submitSelfServiceRecoveryFlow
 //
@@ -251,9 +327,9 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //
 // - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 //   and works with API- and Browser-initiated flows.
-//	 - For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+//	 - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid.
 //     and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-//	 - For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
 // - `sent_email` is the success state after `choose_method` for the `link` method and allows the user to request another recovery email. It
 //   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 // - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
@@ -273,6 +349,7 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //     Schemes: http, https
 //
 //     Responses:
+//       200: recoveryFlow
 //       400: recoveryFlow
 //       302: emptyResponse
 //       500: jsonError
@@ -320,8 +397,8 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	if f.Type == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
+	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
+		http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
 		return
 	}
 

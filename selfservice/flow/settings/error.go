@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -34,6 +36,7 @@ type (
 
 		HandlerProvider
 		FlowPersistenceProvider
+		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
 	}
 
 	ErrorHandlerProvider interface{ SettingsFlowErrorHandler() *ErrorHandler }
@@ -78,7 +81,7 @@ func (s *ErrorHandler) reauthenticate(
 	f *Flow,
 	err error,
 ) {
-	if f.Type == flow.TypeAPI {
+	if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -86,7 +89,7 @@ func (s *ErrorHandler) reauthenticate(
 	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), r.URL.Path), r.URL.Query())
 	http.Redirect(w, r, urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(r),
 		url.Values{"refresh": {"true"}, "return_to": {returnTo.String()}}),
-		login.RouteInitBrowserFlow).String(), http.StatusFound)
+		login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
 }
 
 func (s *ErrorHandler) WriteFlowError(
@@ -128,11 +131,11 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		if f.Type == flow.TypeAPI {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
-				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
+				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
 		} else {
-			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -147,7 +150,15 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := sortNodes(f.UI.Nodes, id.SchemaURL); err != nil {
+	// Lookup the schema from the loaded configuration. This local schema
+	// URL is needed for sorting the UI nodes, instead of the public URL.
+	schema, err := s.d.IdentityTraitsSchemas(r.Context()).GetByID(id.SchemaID)
+	if err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	if err := sortNodes(f.UI.Nodes, schema.RawURL); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
@@ -157,8 +168,8 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if f.Type == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
+		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
 		return
 	}
 
@@ -180,7 +191,7 @@ func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow,
 		return
 	}
 
-	if rr.Type == flow.TypeAPI {
+	if rr.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		s.d.Writer().WriteErrorCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), err)
 	} else {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

@@ -20,6 +20,8 @@ import (
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/networkx"
 
+	stdctx "context"
+
 	"github.com/gorilla/context"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
@@ -43,10 +45,12 @@ import (
 
 type options struct {
 	mwf []func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc)
+	ctx stdctx.Context
 }
 
-func newOptions(opts []Option) *options {
+func newOptions(ctx stdctx.Context, opts []Option) *options {
 	o := new(options)
+	o.ctx = ctx
 	for _, f := range opts {
 		f(o)
 	}
@@ -61,11 +65,16 @@ func WithRootMiddleware(m func(rw http.ResponseWriter, r *http.Request, next htt
 	}
 }
 
+func WithContext(ctx stdctx.Context) Option {
+	return func(o *options) {
+		o.ctx = ctx
+	}
+}
+
 func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
 	defer wg.Done()
-	modifiers := newOptions(opts)
-
-	ctx := cmd.Context()
+	modifiers := newOptions(cmd.Context(), opts)
+	ctx := modifiers.ctx
 
 	c := r.Config(cmd.Context())
 	l := r.Logger()
@@ -84,7 +93,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
-	n.Use(sqa(cmd, r))
+	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
@@ -116,10 +125,10 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 
 func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
 	defer wg.Done()
-	modifiers := newOptions(opts)
-	ctx := cmd.Context()
+	modifiers := newOptions(cmd.Context(), opts)
+	ctx := modifiers.ctx
 
-	c := r.Config(cmd.Context())
+	c := r.Config(ctx)
 	l := r.Logger()
 	n := negroni.New()
 	for _, mw := range modifiers.mwf {
@@ -130,7 +139,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	r.RegisterAdminRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
-	n.Use(sqa(cmd, r))
+	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
@@ -155,17 +164,17 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	l.Println("Admin httpd was shutdown gracefully")
 }
 
-func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
+func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 	// Creates only ones
 	// instance
 	return metricsx.New(
 		cmd,
 		d.Logger(),
-		d.Config(cmd.Context()).Source(),
+		d.Config(ctx).Source(),
 		&metricsx.Options{
 			Service:       "ory-kratos",
 			ClusterID:     metricsx.Hash(d.Persister().NetworkID().String()),
-			IsDevelopment: d.Config(cmd.Context()).IsInsecureDevMode(),
+			IsDevelopment: d.Config(ctx).IsInsecureDevMode(),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{
 				"/",
@@ -180,7 +189,9 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 				login.RouteGetFlow,
 				login.RouteSubmitFlow,
 
-				logout.RouteBrowser,
+				logout.RouteInitBrowserFlow,
+				logout.RouteSubmitFlow,
+				logout.RouteAPIFlow,
 
 				registration.RouteInitBrowserFlow,
 				registration.RouteInitAPIFlow,
@@ -220,11 +231,13 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 	)
 }
 
-func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
+func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string, opts ...Option) {
 	defer wg.Done()
+	modifiers := newOptions(cmd.Context(), opts)
+	ctx := modifiers.ctx
 
-	if d.Config(cmd.Context()).IsBackgroundCourierEnabled() {
-		go courier.Watch(cmd.Context(), d)
+	if d.Config(ctx).IsBackgroundCourierEnabled() {
+		go courier.Watch(ctx, d)
 	}
 }
 
@@ -234,7 +247,7 @@ func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args [
 		wg.Add(3)
 		go ServePublic(d, &wg, cmd, args, opts...)
 		go ServeAdmin(d, &wg, cmd, args, opts...)
-		go bgTasks(d, &wg, cmd, args)
+		go bgTasks(d, &wg, cmd, args, opts...)
 		wg.Wait()
 	}
 }

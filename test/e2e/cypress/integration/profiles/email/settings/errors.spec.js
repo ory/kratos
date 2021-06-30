@@ -8,15 +8,20 @@ import {
   website,
 } from '../../../../helpers'
 
-context('Settings Flow Errors', () => {
-  let email = gen.email()
-  let password = gen.password()
+context('Email Profile', () => {
+  describe('Settings Flow Errors', () => {
+    before(() => {
+      cy.useConfigProfile('email')
+    })
 
-  const emailSecond = `second-${gen.email()}`
-  const passwordSecond = gen.password()
+    let email = gen.email()
+    let password = gen.password()
 
-  const up = (value) => `not-${value}`
-  const down = (value) => value.replace(/not-/, '')
+    const emailSecond = `second-${gen.email()}`
+    const passwordSecond = gen.password()
+
+    const up = (value) => `not-${value}`
+    const down = (value) => value.replace(/not-/, '')
 
   before(() => {
     console.log('before')
@@ -61,10 +66,8 @@ context('Settings Flow Errors', () => {
         type: { email: emailSecond, password: passwordSecond },
       })
 
-      cy.get('.messages .message').should(
-        'contain.text',
-        'You must restart the flow because the resumable session was initiated by another person.'
-      )
+      // We end up in a new settings flow for the second user
+      cy.get('input[name="traits.email"]').should('have.value', emailSecond)
 
       // Try to log in with updated credentials -> should fail
       cy.clearCookies()
@@ -145,10 +148,8 @@ context('Settings Flow Errors', () => {
         type: { email: emailSecond, password: passwordSecond },
       })
 
-      cy.get('.messages .message').should(
-        'contain.text',
-        'You must restart the flow because the resumable session was initiated by another person.'
-      )
+      // We end up in a new settings flow for the second user
+      cy.get('input[name="traits.email"]').should('have.value', emailSecond)
 
       // Try to log in with updated credentials -> should fail
       cy.clearCookies()
@@ -189,13 +190,14 @@ context('Settings Flow Errors', () => {
       cy.get('input[name="password"]').clear().type(password)
       cy.get('button[value="password"]').click()
 
-      cy.reauth({ expect: { email }, type: { password: down(password) } })
+      cy.reauth({expect: {email}, type: {password: down(password)}})
 
       cy.clearCookies()
-      cy.login({ email, password })
+      cy.login({email, password})
 
       cy.clearCookies()
-      cy.login({ email, password: up(password), expectSession: false })
+      cy.login({email, password: up(password), expectSession: false})
     })
+  })
   })
 })

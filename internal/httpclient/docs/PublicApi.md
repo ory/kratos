@@ -4,33 +4,100 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**CreateSelfServiceLogoutUrlForBrowsers**](PublicApi.md#CreateSelfServiceLogoutUrlForBrowsers) | **Get** /self-service/logout/browser | Initialize Logout Flow for Browsers
 [**GetSchema**](PublicApi.md#GetSchema) | **Get** /schemas/{id} | 
 [**GetSelfServiceError**](PublicApi.md#GetSelfServiceError) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 [**GetSelfServiceLoginFlow**](PublicApi.md#GetSelfServiceLoginFlow) | **Get** /self-service/login/flows | Get Login Flow
-[**GetSelfServiceRecoveryFlow**](PublicApi.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | Get information about a recovery flow
+[**GetSelfServiceRecoveryFlow**](PublicApi.md#GetSelfServiceRecoveryFlow) | **Get** /self-service/recovery/flows | Get Recovery Flow
 [**GetSelfServiceRegistrationFlow**](PublicApi.md#GetSelfServiceRegistrationFlow) | **Get** /self-service/registration/flows | Get Registration Flow
 [**GetSelfServiceSettingsFlow**](PublicApi.md#GetSelfServiceSettingsFlow) | **Get** /self-service/settings/flows | Get Settings Flow
 [**GetSelfServiceVerificationFlow**](PublicApi.md#GetSelfServiceVerificationFlow) | **Get** /self-service/verification/flows | Get Verification Flow
-[**InitializeSelfServiceBrowserLogoutFlow**](PublicApi.md#InitializeSelfServiceBrowserLogoutFlow) | **Get** /self-service/browser/flows/logout | Initialize Browser-Based Logout User Flow
-[**InitializeSelfServiceLoginForBrowsers**](PublicApi.md#InitializeSelfServiceLoginForBrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for browsers
-[**InitializeSelfServiceLoginForNativeApps**](PublicApi.md#InitializeSelfServiceLoginForNativeApps) | **Get** /self-service/login/api | Initialize Login Flow for Native Apps and API clients
-[**InitializeSelfServiceRecoveryForBrowsers**](PublicApi.md#InitializeSelfServiceRecoveryForBrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browser Clients
-[**InitializeSelfServiceRecoveryForNativeApps**](PublicApi.md#InitializeSelfServiceRecoveryForNativeApps) | **Get** /self-service/recovery/api | Initialize Recovery Flow for Native Apps and API clients
-[**InitializeSelfServiceRegistrationForBrowsers**](PublicApi.md#InitializeSelfServiceRegistrationForBrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for browsers
-[**InitializeSelfServiceRegistrationForNativeApps**](PublicApi.md#InitializeSelfServiceRegistrationForNativeApps) | **Get** /self-service/registration/api | Initialize Registration Flow for Native Apps and API clients
+[**InitializeSelfServiceLoginForBrowsers**](PublicApi.md#InitializeSelfServiceLoginForBrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
+[**InitializeSelfServiceLoginWithoutBrowser**](PublicApi.md#InitializeSelfServiceLoginWithoutBrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
+[**InitializeSelfServiceRecoveryForBrowsers**](PublicApi.md#InitializeSelfServiceRecoveryForBrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browsers
+[**InitializeSelfServiceRecoveryWithoutBrowser**](PublicApi.md#InitializeSelfServiceRecoveryWithoutBrowser) | **Get** /self-service/recovery/api | Initialize Recovery Flow for APIs, Services, Apps, ...
+[**InitializeSelfServiceRegistrationForBrowsers**](PublicApi.md#InitializeSelfServiceRegistrationForBrowsers) | **Get** /self-service/registration/browser | Initialize Registration Flow for Browsers
+[**InitializeSelfServiceRegistrationWithoutBrowser**](PublicApi.md#InitializeSelfServiceRegistrationWithoutBrowser) | **Get** /self-service/registration/api | Initialize Registration Flow for APIs, Services, Apps, ...
 [**InitializeSelfServiceSettingsForBrowsers**](PublicApi.md#InitializeSelfServiceSettingsForBrowsers) | **Get** /self-service/settings/browser | Initialize Settings Flow for Browsers
-[**InitializeSelfServiceSettingsForNativeApps**](PublicApi.md#InitializeSelfServiceSettingsForNativeApps) | **Get** /self-service/settings/api | Initialize Settings Flow for Native Apps and API clients
+[**InitializeSelfServiceSettingsWithoutBrowser**](PublicApi.md#InitializeSelfServiceSettingsWithoutBrowser) | **Get** /self-service/settings/api | Initialize Settings Flow for APIs, Services, Apps, ...
 [**InitializeSelfServiceVerificationForBrowsers**](PublicApi.md#InitializeSelfServiceVerificationForBrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
-[**InitializeSelfServiceVerificationForNativeApps**](PublicApi.md#InitializeSelfServiceVerificationForNativeApps) | **Get** /self-service/verification/api | Initialize Verification Flow for Native Apps and API clients
-[**RevokeSession**](PublicApi.md#RevokeSession) | **Delete** /sessions | Initialize Logout Flow for API Clients - Revoke a Session
+[**InitializeSelfServiceVerificationWithoutBrowser**](PublicApi.md#InitializeSelfServiceVerificationWithoutBrowser) | **Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
 [**SubmitSelfServiceLoginFlow**](PublicApi.md#SubmitSelfServiceLoginFlow) | **Post** /self-service/login | Submit a Login Flow
+[**SubmitSelfServiceLogoutFlow**](PublicApi.md#SubmitSelfServiceLogoutFlow) | **Post** /self-service/logout | Complete Self-Service Logout
+[**SubmitSelfServiceLogoutFlowWithoutBrowser**](PublicApi.md#SubmitSelfServiceLogoutFlowWithoutBrowser) | **Delete** /self-service/logout/api | Perform Logout for APIs, Services, Apps, ...
 [**SubmitSelfServiceRecoveryFlow**](PublicApi.md#SubmitSelfServiceRecoveryFlow) | **Post** /self-service/recovery | Complete Recovery Flow
 [**SubmitSelfServiceRecoveryFlowWithLinkMethod**](PublicApi.md#SubmitSelfServiceRecoveryFlowWithLinkMethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
 [**SubmitSelfServiceRegistrationFlow**](PublicApi.md#SubmitSelfServiceRegistrationFlow) | **Post** /self-service/registration | Submit a Registration Flow
 [**SubmitSelfServiceSettingsFlow**](PublicApi.md#SubmitSelfServiceSettingsFlow) | **Post** /self-service/settings | Complete Settings Flow
-[**SubmitSelfServiceVerificationFlow**](PublicApi.md#SubmitSelfServiceVerificationFlow) | **Post** /self-service/verification/methods/link | Complete Verification Flow
+[**SubmitSelfServiceVerificationFlow**](PublicApi.md#SubmitSelfServiceVerificationFlow) | **Post** /self-service/verification | Complete Verification Flow
 [**ToSession**](PublicApi.md#ToSession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
+
+
+## CreateSelfServiceLogoutUrlForBrowsers
+
+> LogoutUrl CreateSelfServiceLogoutUrlForBrowsers(ctx).Cookie(cookie).Execute()
+
+Initialize Logout Flow for Browsers
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    cookie := "cookie_example" // string | HTTP Cookies  If you call this endpoint from a backend, please include the original Cookie header in the request. (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.CreateSelfServiceLogoutUrlForBrowsers(context.Background()).Cookie(cookie).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CreateSelfServiceLogoutUrlForBrowsers``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `CreateSelfServiceLogoutUrlForBrowsers`: LogoutUrl
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.CreateSelfServiceLogoutUrlForBrowsers`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiCreateSelfServiceLogoutUrlForBrowsersRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **cookie** | **string** | HTTP Cookies  If you call this endpoint from a backend, please include the original Cookie header in the request. | 
+
+### Return type
+
+[**LogoutUrl**](LogoutUrl.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## GetSchema
@@ -171,7 +238,7 @@ No authorization required
 
 ## GetSelfServiceLoginFlow
 
-> LoginFlow GetSelfServiceLoginFlow(ctx).Id(id).Execute()
+> LoginFlow GetSelfServiceLoginFlow(ctx).Id(id).Cookie(cookie).Execute()
 
 Get Login Flow
 
@@ -191,10 +258,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Login Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/login?flow=abcde`).
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(id).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceLoginFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -216,6 +284,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceLoginFlowReq
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Login Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/login?flow&#x3D;abcde&#x60;). | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 
@@ -237,9 +306,9 @@ No authorization required
 
 ## GetSelfServiceRecoveryFlow
 
-> RecoveryFlow GetSelfServiceRecoveryFlow(ctx).Id(id).Execute()
+> RecoveryFlow GetSelfServiceRecoveryFlow(ctx).Id(id).Cookie(cookie).Execute()
 
-Get information about a recovery flow
+Get Recovery Flow
 
 
 
@@ -257,10 +326,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Flow ID  The value for this parameter comes from `request` URL Query parameter sent to your application (e.g. `/recovery?flow=abcde`).
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(id).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceRecoveryFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -282,6 +352,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceRecoveryFlow
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Flow ID  The value for this parameter comes from &#x60;request&#x60; URL Query parameter sent to your application (e.g. &#x60;/recovery?flow&#x3D;abcde&#x60;). | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 
@@ -303,7 +374,7 @@ No authorization required
 
 ## GetSelfServiceRegistrationFlow
 
-> RegistrationFlow GetSelfServiceRegistrationFlow(ctx).Id(id).Execute()
+> RegistrationFlow GetSelfServiceRegistrationFlow(ctx).Id(id).Cookie(cookie).Execute()
 
 Get Registration Flow
 
@@ -323,10 +394,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/registration?flow=abcde`).
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(id).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceRegistrationFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -348,6 +420,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceRegistration
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?flow&#x3D;abcde&#x60;). | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 
@@ -369,7 +442,7 @@ No authorization required
 
 ## GetSelfServiceSettingsFlow
 
-> SettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).XSessionToken(xSessionToken).Execute()
+> SettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
 Get Settings Flow
 
@@ -389,11 +462,12 @@ import (
 
 func main() {
     id := "id_example" // string | ID is the Settings Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/settings?flow=abcde`).
-    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
+    xSessionToken := "xSessionToken_example" // string | The Session Token  When using the SDK in an app without a browser, please include the session token here. (optional)
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. You only need to do this for browser- based flows. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(id).XSessionToken(xSessionToken).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(id).XSessionToken(xSessionToken).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceSettingsFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -415,7 +489,8 @@ Other parameters are passed through a pointer to a apiGetSelfServiceSettingsFlow
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | ID is the Settings Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/settings?flow&#x3D;abcde&#x60;). | 
- **xSessionToken** | **string** | The Session Token of the Identity performing the settings flow. | 
+ **xSessionToken** | **string** | The Session Token  When using the SDK in an app without a browser, please include the session token here. | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. You only need to do this for browser- based flows. | 
 
 ### Return type
 
@@ -437,7 +512,7 @@ Name | Type | Description  | Notes
 
 ## GetSelfServiceVerificationFlow
 
-> VerificationFlow GetSelfServiceVerificationFlow(ctx).Id(id).Execute()
+> VerificationFlow GetSelfServiceVerificationFlow(ctx).Id(id).Cookie(cookie).Execute()
 
 Get Verification Flow
 
@@ -457,10 +532,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Flow ID  The value for this parameter comes from `request` URL Query parameter sent to your application (e.g. `/verification?flow=abcde`).
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(id).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceVerificationFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -482,6 +558,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceVerification
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Flow ID  The value for this parameter comes from &#x60;request&#x60; URL Query parameter sent to your application (e.g. &#x60;/verification?flow&#x3D;abcde&#x60;). | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 
@@ -501,70 +578,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## InitializeSelfServiceBrowserLogoutFlow
-
-> InitializeSelfServiceBrowserLogoutFlow(ctx).Execute()
-
-Initialize Browser-Based Logout User Flow
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceBrowserLogoutFlow(context.Background()).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceBrowserLogoutFlow``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-}
-```
-
-### Path Parameters
-
-This endpoint does not need any parameter.
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiInitializeSelfServiceBrowserLogoutFlowRequest struct via the builder pattern
-
-
-### Return type
-
- (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
 ## InitializeSelfServiceLoginForBrowsers
 
-> InitializeSelfServiceLoginForBrowsers(ctx).Refresh(refresh).Execute()
+> LoginFlow InitializeSelfServiceLoginForBrowsers(ctx).Refresh(refresh).Execute()
 
-Initialize Login Flow for browsers
+Initialize Login Flow for Browsers
 
 
 
@@ -590,6 +608,8 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceLoginForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceLoginForBrowsers`: LoginFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceLoginForBrowsers`: %v\n", resp)
 }
 ```
 
@@ -608,7 +628,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
- (empty response body)
+[**LoginFlow**](LoginFlow.md)
 
 ### Authorization
 
@@ -624,11 +644,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## InitializeSelfServiceLoginForNativeApps
+## InitializeSelfServiceLoginWithoutBrowser
 
-> LoginFlow InitializeSelfServiceLoginForNativeApps(ctx).Refresh(refresh).Execute()
+> LoginFlow InitializeSelfServiceLoginWithoutBrowser(ctx).Refresh(refresh).Execute()
 
-Initialize Login Flow for Native Apps and API clients
+Initialize Login Flow for APIs, Services, Apps, ...
 
 
 
@@ -649,13 +669,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceLoginForNativeApps(context.Background()).Refresh(refresh).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceLoginWithoutBrowser(context.Background()).Refresh(refresh).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceLoginForNativeApps``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceLoginWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `InitializeSelfServiceLoginForNativeApps`: LoginFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceLoginForNativeApps`: %v\n", resp)
+    // response from `InitializeSelfServiceLoginWithoutBrowser`: LoginFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceLoginWithoutBrowser`: %v\n", resp)
 }
 ```
 
@@ -665,7 +685,7 @@ func main() {
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiInitializeSelfServiceLoginForNativeAppsRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiInitializeSelfServiceLoginWithoutBrowserRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -692,9 +712,9 @@ No authorization required
 
 ## InitializeSelfServiceRecoveryForBrowsers
 
-> InitializeSelfServiceRecoveryForBrowsers(ctx).Execute()
+> RecoveryFlow InitializeSelfServiceRecoveryForBrowsers(ctx).Execute()
 
-Initialize Recovery Flow for Browser Clients
+Initialize Recovery Flow for Browsers
 
 
 
@@ -719,6 +739,8 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRecoveryForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceRecoveryForBrowsers`: RecoveryFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRecoveryForBrowsers`: %v\n", resp)
 }
 ```
 
@@ -733,7 +755,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceRecov
 
 ### Return type
 
- (empty response body)
+[**RecoveryFlow**](RecoveryFlow.md)
 
 ### Authorization
 
@@ -749,11 +771,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## InitializeSelfServiceRecoveryForNativeApps
+## InitializeSelfServiceRecoveryWithoutBrowser
 
-> RecoveryFlow InitializeSelfServiceRecoveryForNativeApps(ctx).Execute()
+> RecoveryFlow InitializeSelfServiceRecoveryWithoutBrowser(ctx).Execute()
 
-Initialize Recovery Flow for Native Apps and API clients
+Initialize Recovery Flow for APIs, Services, Apps, ...
 
 
 
@@ -773,13 +795,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceRecoveryForNativeApps(context.Background()).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceRecoveryWithoutBrowser(context.Background()).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRecoveryForNativeApps``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRecoveryWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `InitializeSelfServiceRecoveryForNativeApps`: RecoveryFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRecoveryForNativeApps`: %v\n", resp)
+    // response from `InitializeSelfServiceRecoveryWithoutBrowser`: RecoveryFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRecoveryWithoutBrowser`: %v\n", resp)
 }
 ```
 
@@ -789,7 +811,7 @@ This endpoint does not need any parameter.
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiInitializeSelfServiceRecoveryForNativeAppsRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiInitializeSelfServiceRecoveryWithoutBrowserRequest struct via the builder pattern
 
 
 ### Return type
@@ -812,9 +834,9 @@ No authorization required
 
 ## InitializeSelfServiceRegistrationForBrowsers
 
-> InitializeSelfServiceRegistrationForBrowsers(ctx).Execute()
+> RegistrationFlow InitializeSelfServiceRegistrationForBrowsers(ctx).Execute()
 
-Initialize Registration Flow for browsers
+Initialize Registration Flow for Browsers
 
 
 
@@ -839,6 +861,8 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRegistrationForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceRegistrationForBrowsers`: RegistrationFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRegistrationForBrowsers`: %v\n", resp)
 }
 ```
 
@@ -853,7 +877,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceRegis
 
 ### Return type
 
- (empty response body)
+[**RegistrationFlow**](RegistrationFlow.md)
 
 ### Authorization
 
@@ -869,11 +893,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## InitializeSelfServiceRegistrationForNativeApps
+## InitializeSelfServiceRegistrationWithoutBrowser
 
-> RegistrationFlow InitializeSelfServiceRegistrationForNativeApps(ctx).Execute()
+> RegistrationFlow InitializeSelfServiceRegistrationWithoutBrowser(ctx).Execute()
 
-Initialize Registration Flow for Native Apps and API clients
+Initialize Registration Flow for APIs, Services, Apps, ...
 
 
 
@@ -893,13 +917,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceRegistrationForNativeApps(context.Background()).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceRegistrationWithoutBrowser(context.Background()).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRegistrationForNativeApps``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceRegistrationWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `InitializeSelfServiceRegistrationForNativeApps`: RegistrationFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRegistrationForNativeApps`: %v\n", resp)
+    // response from `InitializeSelfServiceRegistrationWithoutBrowser`: RegistrationFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceRegistrationWithoutBrowser`: %v\n", resp)
 }
 ```
 
@@ -909,7 +933,7 @@ This endpoint does not need any parameter.
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiInitializeSelfServiceRegistrationForNativeAppsRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiInitializeSelfServiceRegistrationWithoutBrowserRequest struct via the builder pattern
 
 
 ### Return type
@@ -932,7 +956,7 @@ No authorization required
 
 ## InitializeSelfServiceSettingsForBrowsers
 
-> InitializeSelfServiceSettingsForBrowsers(ctx).Execute()
+> SettingsFlow InitializeSelfServiceSettingsForBrowsers(ctx).Execute()
 
 Initialize Settings Flow for Browsers
 
@@ -959,6 +983,8 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceSettingsForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceSettingsForBrowsers`: SettingsFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceSettingsForBrowsers`: %v\n", resp)
 }
 ```
 
@@ -973,7 +999,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceSetti
 
 ### Return type
 
- (empty response body)
+[**SettingsFlow**](SettingsFlow.md)
 
 ### Authorization
 
@@ -989,11 +1015,11 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceSetti
 [[Back to README]](../README.md)
 
 
-## InitializeSelfServiceSettingsForNativeApps
+## InitializeSelfServiceSettingsWithoutBrowser
 
-> SettingsFlow InitializeSelfServiceSettingsForNativeApps(ctx).XSessionToken(xSessionToken).Execute()
+> SettingsFlow InitializeSelfServiceSettingsWithoutBrowser(ctx).XSessionToken(xSessionToken).XSessionCookie(xSessionCookie).Execute()
 
-Initialize Settings Flow for Native Apps and API clients
+Initialize Settings Flow for APIs, Services, Apps, ...
 
 
 
@@ -1011,16 +1037,17 @@ import (
 
 func main() {
     xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
+    xSessionCookie := "xSessionCookie_example" // string | The Session Cookie of the Identity performing the settings flow. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceSettingsForNativeApps(context.Background()).XSessionToken(xSessionToken).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceSettingsWithoutBrowser(context.Background()).XSessionToken(xSessionToken).XSessionCookie(xSessionCookie).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceSettingsForNativeApps``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceSettingsWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `InitializeSelfServiceSettingsForNativeApps`: SettingsFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceSettingsForNativeApps`: %v\n", resp)
+    // response from `InitializeSelfServiceSettingsWithoutBrowser`: SettingsFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceSettingsWithoutBrowser`: %v\n", resp)
 }
 ```
 
@@ -1030,12 +1057,13 @@ func main() {
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiInitializeSelfServiceSettingsForNativeAppsRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiInitializeSelfServiceSettingsWithoutBrowserRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **xSessionToken** | **string** | The Session Token of the Identity performing the settings flow. | 
+ **xSessionCookie** | **string** | The Session Cookie of the Identity performing the settings flow. | 
 
 ### Return type
 
@@ -1057,7 +1085,7 @@ Name | Type | Description  | Notes
 
 ## InitializeSelfServiceVerificationForBrowsers
 
-> InitializeSelfServiceVerificationForBrowsers(ctx).Execute()
+> VerificationFlow InitializeSelfServiceVerificationForBrowsers(ctx).Execute()
 
 Initialize Verification Flow for Browser Clients
 
@@ -1084,6 +1112,8 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceVerificationForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceVerificationForBrowsers`: VerificationFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceVerificationForBrowsers`: %v\n", resp)
 }
 ```
 
@@ -1094,67 +1124,6 @@ This endpoint does not need any parameter.
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiInitializeSelfServiceVerificationForBrowsersRequest struct via the builder pattern
-
-
-### Return type
-
- (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## InitializeSelfServiceVerificationForNativeApps
-
-> VerificationFlow InitializeSelfServiceVerificationForNativeApps(ctx).Execute()
-
-Initialize Verification Flow for Native Apps and API clients
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.InitializeSelfServiceVerificationForNativeApps(context.Background()).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceVerificationForNativeApps``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-    // response from `InitializeSelfServiceVerificationForNativeApps`: VerificationFlow
-    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceVerificationForNativeApps`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-This endpoint does not need any parameter.
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiInitializeSelfServiceVerificationForNativeAppsRequest struct via the builder pattern
 
 
 ### Return type
@@ -1175,11 +1144,11 @@ No authorization required
 [[Back to README]](../README.md)
 
 
-## RevokeSession
+## InitializeSelfServiceVerificationWithoutBrowser
 
-> RevokeSession(ctx).RevokeSession(revokeSession).Execute()
+> VerificationFlow InitializeSelfServiceVerificationWithoutBrowser(ctx).Execute()
 
-Initialize Logout Flow for API Clients - Revoke a Session
+Initialize Verification Flow for APIs, Services, Apps, ...
 
 
 
@@ -1196,34 +1165,31 @@ import (
 )
 
 func main() {
-    revokeSession := *openapiclient.NewRevokeSession("SessionToken_example") // RevokeSession | 
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.RevokeSession(context.Background()).RevokeSession(revokeSession).Execute()
+    resp, r, err := apiClient.PublicApi.InitializeSelfServiceVerificationWithoutBrowser(context.Background()).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.RevokeSession``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.InitializeSelfServiceVerificationWithoutBrowser``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `InitializeSelfServiceVerificationWithoutBrowser`: VerificationFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.InitializeSelfServiceVerificationWithoutBrowser`: %v\n", resp)
 }
 ```
 
 ### Path Parameters
 
-
+This endpoint does not need any parameter.
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiRevokeSessionRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiInitializeSelfServiceVerificationWithoutBrowserRequest struct via the builder pattern
 
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **revokeSession** | [**RevokeSession**](RevokeSession.md) |  | 
 
 ### Return type
 
- (empty response body)
+[**VerificationFlow**](VerificationFlow.md)
 
 ### Authorization
 
@@ -1231,7 +1197,7 @@ No authorization required
 
 ### HTTP request headers
 
-- **Content-Type**: application/json
+- **Content-Type**: Not defined
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
@@ -1307,9 +1273,132 @@ No authorization required
 [[Back to README]](../README.md)
 
 
+## SubmitSelfServiceLogoutFlow
+
+> SubmitSelfServiceLogoutFlow(ctx).Execute()
+
+Complete Self-Service Logout
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceLogoutFlow(context.Background()).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceLogoutFlow``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
+
+### Path Parameters
+
+This endpoint does not need any parameter.
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiSubmitSelfServiceLogoutFlowRequest struct via the builder pattern
+
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## SubmitSelfServiceLogoutFlowWithoutBrowser
+
+> SubmitSelfServiceLogoutFlowWithoutBrowser(ctx).SubmitSelfServiceLogoutFlowWithoutBrowserBody(submitSelfServiceLogoutFlowWithoutBrowserBody).Execute()
+
+Perform Logout for APIs, Services, Apps, ...
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    submitSelfServiceLogoutFlowWithoutBrowserBody := *openapiclient.NewSubmitSelfServiceLogoutFlowWithoutBrowserBody("SessionToken_example") // SubmitSelfServiceLogoutFlowWithoutBrowserBody | 
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceLogoutFlowWithoutBrowser(context.Background()).SubmitSelfServiceLogoutFlowWithoutBrowserBody(submitSelfServiceLogoutFlowWithoutBrowserBody).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceLogoutFlowWithoutBrowser``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiSubmitSelfServiceLogoutFlowWithoutBrowserRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **submitSelfServiceLogoutFlowWithoutBrowserBody** | [**SubmitSelfServiceLogoutFlowWithoutBrowserBody**](SubmitSelfServiceLogoutFlowWithoutBrowserBody.md) |  | 
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## SubmitSelfServiceRecoveryFlow
 
-> SubmitSelfServiceRecoveryFlow(ctx).Flow(flow).Body(body).Execute()
+> RecoveryFlow SubmitSelfServiceRecoveryFlow(ctx).Flow(flow).SubmitSelfServiceRecoveryFlowBody(submitSelfServiceRecoveryFlowBody).Execute()
 
 Complete Recovery Flow
 
@@ -1329,15 +1418,17 @@ import (
 
 func main() {
     flow := "flow_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/registration?flow=abcde`).
-    body := map[string]interface{}(Object) // map[string]interface{} |  (optional)
+    submitSelfServiceRecoveryFlowBody := *openapiclient.NewSubmitSelfServiceRecoveryFlowBody("Email_example", "Method_example") // SubmitSelfServiceRecoveryFlowBody |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.SubmitSelfServiceRecoveryFlow(context.Background()).Flow(flow).Body(body).Execute()
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceRecoveryFlow(context.Background()).Flow(flow).SubmitSelfServiceRecoveryFlowBody(submitSelfServiceRecoveryFlowBody).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceRecoveryFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `SubmitSelfServiceRecoveryFlow`: RecoveryFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.SubmitSelfServiceRecoveryFlow`: %v\n", resp)
 }
 ```
 
@@ -1353,11 +1444,11 @@ Other parameters are passed through a pointer to a apiSubmitSelfServiceRecoveryF
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **flow** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?flow&#x3D;abcde&#x60;). | 
- **body** | **map[string]interface{}** |  | 
+ **submitSelfServiceRecoveryFlowBody** | [**SubmitSelfServiceRecoveryFlowBody**](SubmitSelfServiceRecoveryFlowBody.md) |  | 
 
 ### Return type
 
- (empty response body)
+[**RecoveryFlow**](RecoveryFlow.md)
 
 ### Authorization
 
@@ -1581,7 +1672,7 @@ Name | Type | Description  | Notes
 
 ## SubmitSelfServiceVerificationFlow
 
-> SubmitSelfServiceVerificationFlow(ctx).Flow(flow).Body(body).Execute()
+> VerificationFlow SubmitSelfServiceVerificationFlow(ctx).Flow(flow).SubmitSelfServiceVerificationFlowBody(submitSelfServiceVerificationFlowBody).Execute()
 
 Complete Verification Flow
 
@@ -1601,15 +1692,17 @@ import (
 
 func main() {
     flow := "flow_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/registration?flow=abcde`).
-    body := map[string]interface{}(Object) // map[string]interface{} |  (optional)
+    submitSelfServiceVerificationFlowBody := *openapiclient.NewSubmitSelfServiceVerificationFlowBody("Email_example", "Method_example") // SubmitSelfServiceVerificationFlowBody |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.SubmitSelfServiceVerificationFlow(context.Background()).Flow(flow).Body(body).Execute()
+    resp, r, err := apiClient.PublicApi.SubmitSelfServiceVerificationFlow(context.Background()).Flow(flow).SubmitSelfServiceVerificationFlowBody(submitSelfServiceVerificationFlowBody).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.SubmitSelfServiceVerificationFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
+    // response from `SubmitSelfServiceVerificationFlow`: VerificationFlow
+    fmt.Fprintf(os.Stdout, "Response from `PublicApi.SubmitSelfServiceVerificationFlow`: %v\n", resp)
 }
 ```
 
@@ -1625,11 +1718,11 @@ Other parameters are passed through a pointer to a apiSubmitSelfServiceVerificat
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **flow** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?flow&#x3D;abcde&#x60;). | 
- **body** | **map[string]interface{}** |  | 
+ **submitSelfServiceVerificationFlowBody** | [**SubmitSelfServiceVerificationFlowBody**](SubmitSelfServiceVerificationFlowBody.md) |  | 
 
 ### Return type
 
- (empty response body)
+[**VerificationFlow**](VerificationFlow.md)
 
 ### Authorization
 
@@ -1647,7 +1740,7 @@ No authorization required
 
 ## ToSession
 
-> Session ToSession(ctx).XSessionToken(xSessionToken).Execute()
+> Session ToSession(ctx).XSessionToken(xSessionToken).XSessionCookie(xSessionCookie).Execute()
 
 Check Who the Current HTTP Session Belongs To
 
@@ -1667,10 +1760,11 @@ import (
 
 func main() {
     xSessionToken := "xSessionToken_example" // string |  (optional)
+    xSessionCookie := "xSessionCookie_example" // string |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.ToSession(context.Background()).XSessionToken(xSessionToken).Execute()
+    resp, r, err := apiClient.PublicApi.ToSession(context.Background()).XSessionToken(xSessionToken).XSessionCookie(xSessionCookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.ToSession``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1692,6 +1786,7 @@ Other parameters are passed through a pointer to a apiToSessionRequest struct vi
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **xSessionToken** | **string** |  | 
+ **xSessionCookie** | **string** |  | 
 
 ### Return type
 
@@ -1699,7 +1794,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[sessionCookie](../README.md#sessionCookie)
+No authorization required
 
 ### HTTP request headers
 

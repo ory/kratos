@@ -44,87 +44,25 @@ func NewHandler(
 
 const (
 	RouteWhoami = "/sessions/whoami"
-	RouteRevoke = "/sessions"
-	// SessionsWhoisPath  = "/sessions/whois"
 )
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().ExemptPath(RouteWhoami)
-	h.r.CSRFHandler().ExemptPath(RouteRevoke)
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
 	}
-
-	public.DELETE(RouteRevoke, h.revoke)
-}
-
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	// admin.GET(SessionsWhoisPath, h.fromPath)
-}
-
-// swagger:parameters revokeSession
-// nolint:deadcode,unused
-type revokeSessionParameters struct {
-	// in: body
-	// required: true
-	Body revokeSession
-}
-
-// swagger:model revokeSession
-type revokeSession struct {
-	// The Session Token
-	//
-	// Invalidate this session token.
-	//
-	// required: true
-	SessionToken string `json:"session_token"`
-}
-
-// swagger:route DELETE /sessions public revokeSession
-//
-// Initialize Logout Flow for API Clients - Revoke a Session
-//
-// Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
-// such as mobile apps to log the user out of the system and invalidate the session.
-//
-// This endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.
-//
-//     Consumes:
-//     - application/json
-//
-//     Produces:
-//     - application/json
-//
-//     Schemes: http, https
-//
-//     Responses:
-//       204: emptyResponse
-//       400: jsonError
-//       500: jsonError
-func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var p revokeSession
-	if err := h.dx.Decode(r, &p,
-		decoderx.HTTPJSONDecoder(),
-		decoderx.HTTPDecoderAllowedMethods("DELETE")); err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	if err := h.r.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
 }
 
 // nolint:deadcode,unused
 // swagger:parameters toSession
-type sessionWhoAmIParameters struct {
+type toSession struct {
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// in: header
+	SessionCookie string `json:"X-Session-Cookie"`
 }
 
 // swagger:route GET /sessions/whoami public toSession
@@ -141,13 +79,19 @@ type sessionWhoAmIParameters struct {
 // - Reverse proxies and API Gateways
 // - Server-side calls - use the `X-Session-Token` header!
 //
+// This endpoint authenticates users by checking
+//
+// - if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
+// - if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
+// - if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;
+// - if the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).
+//
+// If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+//
 //     Produces:
 //     - application/json
 //
 //     Schemes: http, https
-//
-//     Security:
-//       sessionCookie:
 //
 //     Responses:
 //       200: session

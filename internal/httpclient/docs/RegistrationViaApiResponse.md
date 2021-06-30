@@ -6,13 +6,13 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Identity** | [**Identity**](Identity.md) |  | 
 **Session** | Pointer to [**Session**](Session.md) |  | [optional] 
-**SessionToken** | **string** | The Session Token  This field is only set when the session hook is configured as a post-registration hook.  A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header:  Authorization: bearer ${session-token}  The session token is only issued for API flows, not for Browser flows! | 
+**SessionToken** | Pointer to **string** | The Session Token  This field is only set when the session hook is configured as a post-registration hook.  A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header:  Authorization: bearer ${session-token}  The session token is only issued for API flows, not for Browser flows! | [optional] 
 
 ## Methods
 
 ### NewRegistrationViaApiResponse
 
-`func NewRegistrationViaApiResponse(identity Identity, sessionToken string, ) *RegistrationViaApiResponse`
+`func NewRegistrationViaApiResponse(identity Identity, ) *RegistrationViaApiResponse`
 
 NewRegistrationViaApiResponse instantiates a new RegistrationViaApiResponse object
 This constructor will assign default values to properties that have it defined,
@@ -91,6 +91,11 @@ and a boolean to check if the value has been set.
 
 SetSessionToken sets SessionToken field to given value.
 
+### HasSessionToken
+
+`func (o *RegistrationViaApiResponse) HasSessionToken() bool`
+
+HasSessionToken returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

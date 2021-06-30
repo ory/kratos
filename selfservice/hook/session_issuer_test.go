@@ -53,7 +53,7 @@ func TestSessionIssuer(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
-			s := &session.Session{ID: x.NewUUID(), Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum)}
+			s := &session.Session{ID: x.NewUUID(), Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum), LogoutToken: randx.MustString(12, randx.AlphaLowerNum)}
 			f := &registration.Flow{Type: flow.TypeAPI}
 
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))

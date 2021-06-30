@@ -32,6 +32,7 @@ docs/InlineResponse503.md
 docs/JsonError.md
 docs/LoginFlow.md
 docs/LoginViaApiResponse.md
+docs/LogoutUrl.md
 docs/Meta.md
 docs/Plugin.md
 docs/PluginConfig.md
@@ -53,7 +54,6 @@ docs/RecoveryFlow.md
 docs/RecoveryLink.md
 docs/RegistrationFlow.md
 docs/RegistrationViaApiResponse.md
-docs/RevokeSession.md
 docs/SelfServiceErrorContainer.md
 docs/ServiceUpdateResponse.md
 docs/Session.md
@@ -63,12 +63,15 @@ docs/SettingsViaApiResponse.md
 docs/SubmitSelfServiceBrowserSettingsOIDCFlowPayload.md
 docs/SubmitSelfServiceLoginFlow.md
 docs/SubmitSelfServiceLoginFlowWithPasswordMethod.md
+docs/SubmitSelfServiceLogoutFlowWithoutBrowserBody.md
+docs/SubmitSelfServiceRecoveryFlowBody.md
 docs/SubmitSelfServiceRecoveryFlowWithLinkMethod.md
 docs/SubmitSelfServiceRegistrationFlow.md
 docs/SubmitSelfServiceRegistrationFlowWithPasswordMethod.md
 docs/SubmitSelfServiceSettingsFlow.md
 docs/SubmitSelfServiceSettingsFlowWithPasswordMethod.md
 docs/SubmitSelfServiceSettingsFlowWithProfileMethod.md
+docs/SubmitSelfServiceVerificationFlowBody.md
 docs/SubmitSelfServiceVerificationFlowWithLinkMethod.md
 docs/UiContainer.md
 docs/UiNode.md
@@ -76,7 +79,6 @@ docs/UiNodeAnchorAttributes.md
 docs/UiNodeAttributes.md
 docs/UiNodeImageAttributes.md
 docs/UiNodeInputAttributes.md
-docs/UiNodeInputAttributesValue.md
 docs/UiNodeTextAttributes.md
 docs/UiText.md
 docs/UpdateIdentity.md
@@ -113,6 +115,7 @@ model_inline_response_503.go
 model_json_error.go
 model_login_flow.go
 model_login_via_api_response.go
+model_logout_url.go
 model_meta.go
 model_plugin.go
 model_plugin_config.go
@@ -133,7 +136,6 @@ model_recovery_flow.go
 model_recovery_link.go
 model_registration_flow.go
 model_registration_via_api_response.go
-model_revoke_session.go
 model_self_service_error_container.go
 model_service_update_response.go
 model_session.go
@@ -143,12 +145,15 @@ model_settings_via_api_response.go
 model_submit_self_service_browser_settings_oidc_flow_payload.go
 model_submit_self_service_login_flow.go
 model_submit_self_service_login_flow_with_password_method.go
+model_submit_self_service_logout_flow_without_browser_body.go
+model_submit_self_service_recovery_flow_body.go
 model_submit_self_service_recovery_flow_with_link_method.go
 model_submit_self_service_registration_flow.go
 model_submit_self_service_registration_flow_with_password_method.go
 model_submit_self_service_settings_flow.go
 model_submit_self_service_settings_flow_with_password_method.go
 model_submit_self_service_settings_flow_with_profile_method.go
+model_submit_self_service_verification_flow_body.go
 model_submit_self_service_verification_flow_with_link_method.go
 model_ui_container.go
 model_ui_node.go
@@ -156,7 +161,6 @@ model_ui_node_anchor_attributes.go
 model_ui_node_attributes.go
 model_ui_node_image_attributes.go
 model_ui_node_input_attributes.go
-model_ui_node_input_attributes_value.go
 model_ui_node_text_attributes.go
 model_ui_text.go
 model_update_identity.go

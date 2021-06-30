@@ -140,7 +140,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var newProfileFlow = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
 		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
-			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Id)))
+			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS).Id)))
 		require.NoError(t, err)
 		assert.Empty(t, req.Active)
 
@@ -160,7 +160,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	// does the same as new profile request but uses the SDK
 	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
-		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS)
+		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS)
 	}
 
 	t.Run("case=should not be able to continue a flow with a malformed ID", func(t *testing.T) {
@@ -198,7 +198,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents["password"]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
@@ -933,7 +933,7 @@ func TestSettingsStrategy(t *testing.T) {
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 
@@ -1049,7 +1049,7 @@ func TestSettingsStrategy(t *testing.T) {
 			updatedFlow, res, originalFlow := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
+			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
 
@@ -1381,7 +1381,7 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.State)
 
@@ -1555,7 +1555,7 @@ func TestSettingsStrategy(t *testing.T) {
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 

@@ -81,7 +81,11 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
+		if x.IsJSONRequest(r) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("Please include a valid session cookie or session token when calling this endpoint.")))
+		} else {
+			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
+		}
 	}))
 
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
@@ -92,7 +96,6 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetchAdminFlow)
 }
 
 func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Identity, ft flow.Type) (*Flow, error) {
@@ -119,17 +122,28 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 }
 
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceSettingsForNativeApps
-type initializeSelfServiceSettingsForNativeApps struct {
+// swagger:parameters initializeSelfServiceSettingsWithoutBrowser
+type initializeSelfServiceSettingsWithoutBrowser struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// The Session Cookie of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionCookie string `json:"X-Session-Cookie"`
 }
 
-// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsForNativeApps
+// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsWithoutBrowser
 //
-// Initialize Settings Flow for Native Apps and API clients
+// Initialize Settings Flow for APIs, Services, Apps, ...
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
 // You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
@@ -177,15 +191,24 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 // Initialize Settings Flow for Browsers
 //
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
+//
 // This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
 // Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
 //
-// :::note
+// If this endpoint is opened as a link in the browser, it will be redirected to
+// `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session
+// was set, the browser will be redirected to the login endpoint.
 //
-// This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+// If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
+// or a 403 forbidden error if no valid session was set.
 //
-// :::
+// This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -195,7 +218,9 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       sessionToken:
 //
 //     Responses:
+//       200: settingsFlow
 //       302: emptyResponse
+//       403: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
@@ -210,7 +235,8 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+	redirTo := f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String()
+	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), f, redirTo)
 }
 
 // nolint:deadcode,unused
@@ -224,20 +250,40 @@ type getSelfServiceSettingsFlowParameters struct {
 	// required: true
 	// in: query
 	ID string `json:"id"`
+
+	// The Session Token
+	//
+	// When using the SDK in an app without a browser, please include the
+	// session token here.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here. You only need to do this for browser-
+	// based flows.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookie"`
 }
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceSettingsFlow
 type getSelfServiceSettingsFlow struct {
-	// The Session Token of the Identity performing the settings flow.
-	//
-	// in: header
-	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:route GET /self-service/settings/flows public admin getSelfServiceSettingsFlow
+// swagger:route GET /self-service/settings/flows public getSelfServiceSettingsFlow
 //
 // Get Settings Flow
+//
+// :::info
+//
+// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
+//
+// :::
 //
 // When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 // or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
@@ -262,45 +308,32 @@ type getSelfServiceSettingsFlow struct {
 //       410: jsonError
 //       500: jsonError
 func (h *Handler) fetchPublicFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchFlow(w, r, true); err != nil {
+	if err := h.fetchFlow(w, r); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
 
-func (h *Handler) fetchAdminFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchFlow(w, r, false); err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
+func (h *Handler) wrapErrorForbidden(err error) error {
+	return errors.WithStack(herodot.ErrForbidden.
+		WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").
+		WithTrace(err).WithDebugf("%s", err))
 }
 
-func (h *Handler) wrapErrorForbidden(err error, shouldWrap bool) error {
-	if shouldWrap {
-		return herodot.ErrForbidden.
-			WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").
-			WithTrace(err).WithDebugf("%s", err)
-	}
-
-	return err
-}
-
-func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, checkSession bool) error {
+func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	pr, err := h.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)
 	if err != nil {
-		return h.wrapErrorForbidden(err, checkSession)
+		return h.wrapErrorForbidden(err)
 	}
 
-	if checkSession {
-		sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
-		if err != nil {
-			return h.wrapErrorForbidden(err, checkSession)
-		}
+	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	if err != nil {
+		return h.wrapErrorForbidden(err)
+	}
 
-		if pr.IdentityID != sess.Identity.ID {
-			return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
-		}
+	if pr.IdentityID != sess.Identity.ID {
+		return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
 	if pr.ExpiresAt.Before(time.Now().UTC()) {
@@ -360,10 +393,16 @@ type submitSelfServiceSettingsFlowBody struct{}
 //   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
 //     Implies that the user needs to re-authenticate.
 //
-// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+// Browser flows without HTTP Header `Accept` or with `Accept: text/*` respond with
 //   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
 //   - a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
 //   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+//
+// Browser flows with HTTP Header `Accept: application/json` respond with
+//   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
+//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 403 when the page is accessed without a session cookie.
+//   - HTTP 400 on form validation errors.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -404,7 +443,7 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 
 	ss, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
-		if f.Type == flow.TypeBrowser {
+		if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
 			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
 			return
 		}

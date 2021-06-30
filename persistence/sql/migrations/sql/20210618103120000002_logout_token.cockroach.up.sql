@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" RENAME COLUMN "logout_token" TO "_logout_token_tmp";

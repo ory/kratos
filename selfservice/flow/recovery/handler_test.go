@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/corpx"
 
 	"github.com/stretchr/testify/assert"
@@ -18,10 +20,8 @@ import (
 	"github.com/ory/x/assertx"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
 )
@@ -74,12 +74,15 @@ func TestInitFlow(t *testing.T) {
 		}
 	}
 
-	initAuthenticatedFlow := func(t *testing.T, isAPI bool) (*http.Response, []byte) {
+	initAuthenticatedFlow := func(t *testing.T, isAPI, isSPA bool) (*http.Response, []byte) {
 		route := recovery.RouteInitBrowserFlow
 		if isAPI {
 			route = recovery.RouteInitAPIFlow
 		}
 		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
+		if isSPA {
+			req.Header.Set("Accept", "application/json")
+		}
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
@@ -101,6 +104,21 @@ func TestInitFlow(t *testing.T) {
 		return res, body
 	}
 
+	initSPAFlow := func(t *testing.T, hc *http.Client, isSPA bool) (*http.Response, []byte) {
+		route := recovery.RouteInitBrowserFlow
+		c := publicTS.Client()
+		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
+		if isSPA {
+			req.Header.Set("Accept", "application/json")
+		}
+		res, err := c.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		return res, body
+	}
+
 	t.Run("flow=api", func(t *testing.T) {
 		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
 			res, body := initFlow(t, true)
@@ -109,7 +127,21 @@ func TestInitFlow(t *testing.T) {
 		})
 
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
-			res, body := initAuthenticatedFlow(t, true)
+			res, body := initAuthenticatedFlow(t, true, false)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+	})
+
+	t.Run("flow=spa", func(t *testing.T) {
+		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
+			res, body := initSPAFlow(t, new(http.Client), true)
+			assert.Contains(t, res.Request.URL.String(), recovery.RouteInitBrowserFlow)
+			assertion(body, false, false)
+		})
+
+		t.Run("case=fails on authenticated request", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, false, true)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
@@ -122,7 +154,7 @@ func TestInitFlow(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), recoveryTS.URL)
 		})
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
-			res, _ := initAuthenticatedFlow(t, false)
+			res, _ := initAuthenticatedFlow(t, false, false)
 			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 		})
 	})
@@ -135,68 +167,52 @@ func TestGetFlow(t *testing.T) {
 		map[string]interface{}{"enabled": true})
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
-	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRedirTS(t, "", conf)
 
-	newRecoveryTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
-		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if c == nil {
-				c = http.DefaultClient
-			}
-			_, err := w.Write(x.EasyGetBody(t, c, upstream+recovery.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+	setupRecoveryTS := func(t *testing.T, c *http.Client) *httptest.Server {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, err := w.Write(x.EasyGetBody(t, c, public.URL+recovery.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
+		t.Cleanup(ts.Close)
+		conf.MustSet(config.ViperKeySelfServiceRecoveryUI, ts.URL)
+		return ts
 	}
 
-	assertFlowPayload := func(t *testing.T, body []byte) {
+	t.Run("case=csrf cookie missing", func(t *testing.T) {
+		client := http.DefaultClient
+		setupRecoveryTS(t, client)
+		body := x.EasyGetBody(t, client, public.URL+recovery.RouteInitBrowserFlow)
+
+		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+	})
+
+	t.Run("case=valid", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupRecoveryTS(t, client)
+		body := x.EasyGetBody(t, client, public.URL+recovery.RouteInitBrowserFlow)
 		assert.NotEmpty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), public.URL, "%s", body)
-	}
-
-	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
-		assert.EqualValues(t, http.StatusGone, res.StatusCode)
-		assert.Equal(t, public.URL+recovery.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
-	}
-
-	newExpiredFlow := func() *recovery.Flow {
-		return &recovery.Flow{
-			ID:         x.NewUUID(),
-			ExpiresAt:  time.Now().Add(-time.Minute),
-			IssuedAt:   time.Now().Add(-time.Minute * 2),
-			RequestURL: public.URL + recovery.RouteInitBrowserFlow,
-			CSRFToken:  x.FakeCSRFToken,
-			Type:       flow.TypeBrowser,
-		}
-	}
-
-	run := func(t *testing.T, endpoint *httptest.Server) {
-		recoveryTS := newRecoveryTS(t, endpoint.URL, nil)
-		defer recoveryTS.Close()
-		conf.MustSet(config.ViperKeySelfServiceRecoveryUI, recoveryTS.URL)
-		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
-			map[string]interface{}{"enabled": true})
-
-		t.Run("case=valid", func(t *testing.T) {
-			assertFlowPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+recovery.RouteInitBrowserFlow))
-		})
-
-		t.Run("case=expired", func(t *testing.T) {
-			lr := newExpiredFlow()
-			require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), endpoint.URL+recovery.RouteGetFlow+"?id="+lr.ID.String())
-			assertExpiredPayload(t, res, body)
-		})
-	}
-
-	t.Run("daemon=admin", func(t *testing.T) {
-		run(t, admin)
 	})
 
-	t.Run("daemon=public", func(t *testing.T) {
-		run(t, public)
+	t.Run("case=expired", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupRecoveryTS(t, client)
+		body := x.EasyGetBody(t, client, public.URL+recovery.RouteInitBrowserFlow)
+
+		// Expire the flow
+		f, err := reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
+		require.NoError(t, err)
+		f.ExpiresAt = time.Now().Add(-time.Second)
+		require.NoError(t, reg.RecoveryFlowPersister().UpdateRecoveryFlow(context.Background(), f))
+
+		res, body := x.EasyGet(t, client, public.URL+recovery.RouteGetFlow+"?id="+f.ID.String())
+		assert.EqualValues(t, http.StatusGone, res.StatusCode)
+		assert.Equal(t, public.URL+recovery.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
 }

@@ -21,11 +21,10 @@ const ApiWarning = () => (
       </h5>
     </div>
     <div className="admonition-content">
-      <p>Never use API flows to implement Browser applications!</p>
       <p>
-        Using API flows in Single-Page-Apps as well as server-side apps opens up
-        several potential attack vectors, including Login and other CSRF
-        attacks.
+        Never use API flows to implement Browser applications! Using API flows
+        in Single-Page-Apps as well as server-side apps opens up several
+        potential attack vectors, including Login and other CSRF attacks.
       </p>
     </div>
   </div>
