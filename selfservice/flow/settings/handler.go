@@ -96,7 +96,6 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetchAdminFlow)
 }
 
 func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Identity, ft flow.Type) (*Flow, error) {
@@ -251,18 +250,32 @@ type getSelfServiceSettingsFlowParameters struct {
 	// required: true
 	// in: query
 	ID string `json:"id"`
+
+	// The Session Token
+	//
+	// When using the SDK in an app without a browser, please include the
+	// session token here.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here. You only need to do this for browser-
+	// based flows.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookie"`
 }
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceSettingsFlow
 type getSelfServiceSettingsFlow struct {
-	// The Session Token of the Identity performing the settings flow.
-	//
-	// in: header
-	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:route GET /self-service/settings/flows public admin getSelfServiceSettingsFlow
+// swagger:route GET /self-service/settings/flows public getSelfServiceSettingsFlow
 //
 // Get Settings Flow
 //
@@ -295,45 +308,32 @@ type getSelfServiceSettingsFlow struct {
 //       410: jsonError
 //       500: jsonError
 func (h *Handler) fetchPublicFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchFlow(w, r, true); err != nil {
+	if err := h.fetchFlow(w, r); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
 
-func (h *Handler) fetchAdminFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchFlow(w, r, false); err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
+func (h *Handler) wrapErrorForbidden(err error) error {
+	return errors.WithStack(herodot.ErrForbidden.
+		WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").
+		WithTrace(err).WithDebugf("%s", err))
 }
 
-func (h *Handler) wrapErrorForbidden(err error, shouldWrap bool) error {
-	if shouldWrap {
-		return herodot.ErrForbidden.
-			WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").
-			WithTrace(err).WithDebugf("%s", err)
-	}
-
-	return err
-}
-
-func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, checkSession bool) error {
+func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	pr, err := h.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)
 	if err != nil {
-		return h.wrapErrorForbidden(err, checkSession)
+		return h.wrapErrorForbidden(err)
 	}
 
-	if checkSession {
-		sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
-		if err != nil {
-			return h.wrapErrorForbidden(err, checkSession)
-		}
+	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	if err != nil {
+		return h.wrapErrorForbidden(err)
+	}
 
-		if pr.IdentityID != sess.Identity.ID {
-			return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
-		}
+	if pr.IdentityID != sess.Identity.ID {
+		return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
 	if pr.ExpiresAt.Before(time.Now().UTC()) {

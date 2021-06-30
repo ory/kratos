@@ -66,10 +66,8 @@ context('Email Profile', () => {
         type: { email: emailSecond, password: passwordSecond },
       })
 
-      cy.get('.messages .message').should(
-        'contain.text',
-        'You must restart the flow because the resumable session was initiated by another person.'
-      )
+      // We end up in a new settings flow for the second user
+      cy.get('input[name="traits.email"]').should('have.value', emailSecond)
 
       // Try to log in with updated credentials -> should fail
       cy.clearCookies()
@@ -150,10 +148,8 @@ context('Email Profile', () => {
         type: { email: emailSecond, password: passwordSecond },
       })
 
-      cy.get('.messages .message').should(
-        'contain.text',
-        'You must restart the flow because the resumable session was initiated by another person.'
-      )
+      // We end up in a new settings flow for the second user
+      cy.get('input[name="traits.email"]').should('have.value', emailSecond)
 
       // Try to log in with updated credentials -> should fail
       cy.clearCookies()

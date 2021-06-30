@@ -15,17 +15,17 @@ import (
 	"github.com/ory/x/reqlog"
 )
 
-var watchCmd = &cobra.Command{
-	Use:   "watch",
-	Short: "Starts the Ory Kratos message courier",
-	Run: func(cmd *cobra.Command, args []string) {
-		r := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
-		StartCourier(cmd.Context(), r)
-	},
-}
-
-func init() {
-	watchCmd.PersistentFlags().Int("expose-metrics-port", 0, "The port to expose the metrics endpoint on (not exposed by default)")
+func NewWatchCmd() *cobra.Command {
+	var c = &cobra.Command{
+		Use:   "watch",
+		Short: "Starts the Ory Kratos message courier",
+		Run: func(cmd *cobra.Command, args []string) {
+			r := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
+			StartCourier(cmd.Context(), r)
+		},
+	}
+	c.PersistentFlags().Int("expose-metrics-port", 0, "The port to expose the metrics endpoint on (not exposed by default)")
+	return c
 }
 
 func StartCourier(ctx cx.Context, r driver.Registry) {
@@ -83,7 +83,6 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 }
 
 func Watch(ctx cx.Context, r driver.Registry) {
-
 	ctx, cancel := cx.WithCancel(ctx)
 
 	r.Logger().Println("Courier worker started.")
@@ -97,5 +96,4 @@ func Watch(ctx cx.Context, r driver.Registry) {
 	}
 
 	r.Logger().Println("Courier worker was shutdown gracefully.")
-
 }
