@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/nosurf"
+
 	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/ui/node"
@@ -81,7 +83,6 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetch)
 }
 
 // swagger:route GET /self-service/recovery/api public initializeSelfServiceRecoveryWithoutBrowser
@@ -198,9 +199,18 @@ type getSelfServiceRecoveryFlowParameters struct {
 	// required: true
 	// in: query
 	FlowID string `json:"id"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/recovery/flows public admin getSelfServiceRecoveryFlow
+// swagger:route GET /self-service/recovery/flows public getSelfServiceRecoveryFlow
 //
 // Get Recovery Flow
 //
@@ -211,6 +221,21 @@ type getSelfServiceRecoveryFlowParameters struct {
 // :::
 //
 // This endpoint returns a recovery flow's context with, for example, error details and other information.
+//
+// Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+// For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+//
+// If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+// and you need to forward the incoming HTTP Cookie header to this endpoint:
+//
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
+//
+//    res.render('recovery', flow)
+//	})
+//	```
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
@@ -234,6 +259,14 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	f, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), rid)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	// Browser flows must include the CSRF token
+	//
+	// Resolves: https://github.com/ory/kratos/issues/1282
+	if f.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), f.CSRFToken) {
+		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
 		return
 	}
 

@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/ui/node"
+	"github.com/gofrs/uuid"
 
-	kratos "github.com/ory/kratos-client-go"
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gobuffalo/httptest"
@@ -194,16 +194,15 @@ func TestHandleError(t *testing.T) {
 	}
 
 	t.Run("flow=browser", func(t *testing.T) {
-		expectSettingsUI := func(t *testing.T) (*kratos.SettingsFlow, *http.Response) {
+		expectSettingsUI := func(t *testing.T) (*settings.Flow, *http.Response) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String()+"?flow=")
 
-			lf, _, err := sdk.PublicApi.GetSelfServiceSettingsFlow(context.Background()).
-				Id(res.Request.URL.Query().Get("flow")).Execute()
+			sf, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err)
-			return lf, res
+			return sf, res
 		}
 
 		t.Run("case=expired error", func(t *testing.T) {
@@ -214,8 +213,8 @@ func TestHandleError(t *testing.T) {
 			flowMethod = settings.StrategyProfile
 
 			lf, _ := expectSettingsUI(t)
-			require.Len(t, lf.Ui.Messages, 1)
-			assert.Equal(t, int(text.ErrorValidationSettingsFlowExpired), int(lf.Ui.Messages[0].Id))
+			require.Len(t, lf.UI.Messages, 1)
+			assert.Equal(t, int(text.ErrorValidationSettingsFlowExpired), int(lf.UI.Messages[0].ID))
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {
@@ -239,9 +238,9 @@ func TestHandleError(t *testing.T) {
 			flowMethod = settings.StrategyProfile
 
 			lf, _ := expectSettingsUI(t)
-			require.NotEmpty(t, lf.Ui, x.MustEncodeJSON(t, lf))
-			require.Len(t, lf.Ui.Messages, 1, x.MustEncodeJSON(t, lf))
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Ui.Messages[0].Id), x.MustEncodeJSON(t, lf))
+			require.NotEmpty(t, lf.UI, x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.UI.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.UI.Messages[0].ID), x.MustEncodeJSON(t, lf))
 		})
 
 		t.Run("case=inaccessible public URL", func(t *testing.T) {
@@ -256,9 +255,9 @@ func TestHandleError(t *testing.T) {
 			flowMethod = settings.StrategyProfile
 
 			lf, _ := expectSettingsUI(t)
-			require.NotEmpty(t, lf.Ui, x.MustEncodeJSON(t, lf))
-			require.Len(t, lf.Ui.Messages, 1, x.MustEncodeJSON(t, lf))
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Ui.Messages[0].Id), x.MustEncodeJSON(t, lf))
+			require.NotEmpty(t, lf.UI, x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.UI.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.UI.Messages[0].ID), x.MustEncodeJSON(t, lf))
 		})
 
 		t.Run("case=generic error", func(t *testing.T) {

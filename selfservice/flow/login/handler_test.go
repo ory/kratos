@@ -9,9 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gobuffalo/httptest"
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/corpx"
 
-	"github.com/gobuffalo/httptest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -22,7 +24,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
@@ -164,68 +165,59 @@ func TestInitFlow(t *testing.T) {
 
 func TestGetFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRedirTS(t, "", conf)
 
-	newLoginTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
-		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if c == nil {
-				c = http.DefaultClient
-			}
-			_, err := w.Write(x.EasyGetBody(t, c, upstream+login.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+	setupLoginUI := func(t *testing.T, c *http.Client) *httptest.Server {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// It is important that we use a HTTP request to fetch the flow because that will show us if CSRF works or not
+			_, err := w.Write(x.EasyGetBody(t, c, public.URL+login.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
+		conf.MustSet(config.ViperKeySelfServiceLoginUI, ts.URL)
+		t.Cleanup(ts.Close)
+		return ts
 	}
 
-	assertFlowPayload := func(t *testing.T, body []byte) {
+	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+		"enabled": true})
+
+	t.Run("case=fetching successful", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupLoginUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
+
 		assert.NotEmpty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), public.URL, "%s", body)
-	}
-
-	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
-		assert.EqualValues(t, http.StatusGone, res.StatusCode)
-		assert.Equal(t, public.URL+login.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
-	}
-
-	newExpiredFlow := func() *login.Flow {
-		return &login.Flow{
-			ID:         x.NewUUID(),
-			ExpiresAt:  time.Now().Add(-time.Minute),
-			IssuedAt:   time.Now().Add(-time.Minute * 2),
-			RequestURL: public.URL + login.RouteInitBrowserFlow,
-			CSRFToken:  x.FakeCSRFToken,
-			Type:       flow.TypeBrowser,
-		}
-	}
-
-	run := func(t *testing.T, endpoint *httptest.Server) {
-		loginTS := newLoginTS(t, endpoint.URL, nil)
-		defer loginTS.Close()
-		conf.MustSet(config.ViperKeySelfServiceLoginUI, loginTS.URL)
-		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
-			"enabled": true})
-
-		t.Run("case=valid", func(t *testing.T) {
-			assertFlowPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+login.RouteInitBrowserFlow))
-		})
-
-		t.Run("case=expired", func(t *testing.T) {
-			lr := newExpiredFlow()
-			require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), endpoint.URL+login.RouteGetFlow+"?id="+lr.ID.String())
-			assertExpiredPayload(t, res, body)
-		})
-	}
-
-	t.Run("daemon=admin", func(t *testing.T) {
-		run(t, admin)
 	})
 
-	t.Run("daemon=public", func(t *testing.T) {
-		run(t, public)
+	t.Run("case=csrf cookie missing", func(t *testing.T) {
+		client := http.DefaultClient
+		setupLoginUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
+
+		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+	})
+
+	t.Run("case=expired", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupLoginUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
+
+		// Expire the flow
+		f, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
+		require.NoError(t, err)
+		f.ExpiresAt = time.Now().Add(-time.Second)
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), f))
+
+		// Try the flow but it is expired
+		res, body := x.EasyGet(t, client, public.URL+login.RouteGetFlow+"?id="+f.ID.String())
+		assert.EqualValues(t, http.StatusGone, res.StatusCode)
+		assert.Equal(t, public.URL+login.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
 }

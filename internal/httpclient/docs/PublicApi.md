@@ -36,7 +36,7 @@ Method | HTTP request | Description
 
 ## CreateSelfServiceLogoutUrlForBrowsers
 
-> LogoutUrl CreateSelfServiceLogoutUrlForBrowsers(ctx).XSessionCookie(xSessionCookie).Execute()
+> LogoutUrl CreateSelfServiceLogoutUrlForBrowsers(ctx).Cookie(cookie).Execute()
 
 Initialize Logout Flow for Browsers
 
@@ -55,11 +55,11 @@ import (
 )
 
 func main() {
-    xSessionCookie := "xSessionCookie_example" // string |  (optional)
+    cookie := "cookie_example" // string | HTTP Cookies  If you call this endpoint from a backend, please include the original Cookie header in the request. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.CreateSelfServiceLogoutUrlForBrowsers(context.Background()).XSessionCookie(xSessionCookie).Execute()
+    resp, r, err := apiClient.PublicApi.CreateSelfServiceLogoutUrlForBrowsers(context.Background()).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.CreateSelfServiceLogoutUrlForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -80,7 +80,7 @@ Other parameters are passed through a pointer to a apiCreateSelfServiceLogoutUrl
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **xSessionCookie** | **string** |  | 
+ **cookie** | **string** | HTTP Cookies  If you call this endpoint from a backend, please include the original Cookie header in the request. | 
 
 ### Return type
 
@@ -238,7 +238,7 @@ No authorization required
 
 ## GetSelfServiceLoginFlow
 
-> LoginFlow GetSelfServiceLoginFlow(ctx).Id(id).Execute()
+> LoginFlow GetSelfServiceLoginFlow(ctx).Id(id).Cookie(cookie).Execute()
 
 Get Login Flow
 
@@ -258,10 +258,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Login Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/login?flow=abcde`).
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(id).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceLoginFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -283,6 +284,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceLoginFlowReq
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Login Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/login?flow&#x3D;abcde&#x60;). | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 
@@ -304,7 +306,7 @@ No authorization required
 
 ## GetSelfServiceRecoveryFlow
 
-> RecoveryFlow GetSelfServiceRecoveryFlow(ctx).Id(id).Execute()
+> RecoveryFlow GetSelfServiceRecoveryFlow(ctx).Id(id).Cookie(cookie).Execute()
 
 Get Recovery Flow
 
@@ -324,10 +326,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Flow ID  The value for this parameter comes from `request` URL Query parameter sent to your application (e.g. `/recovery?flow=abcde`).
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(id).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceRecoveryFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -349,6 +352,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceRecoveryFlow
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Flow ID  The value for this parameter comes from &#x60;request&#x60; URL Query parameter sent to your application (e.g. &#x60;/recovery?flow&#x3D;abcde&#x60;). | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 
@@ -370,7 +374,7 @@ No authorization required
 
 ## GetSelfServiceRegistrationFlow
 
-> RegistrationFlow GetSelfServiceRegistrationFlow(ctx).Id(id).Execute()
+> RegistrationFlow GetSelfServiceRegistrationFlow(ctx).Id(id).Cookie(cookie).Execute()
 
 Get Registration Flow
 
@@ -390,10 +394,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Registration Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/registration?flow=abcde`).
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(id).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceRegistrationFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -415,6 +420,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceRegistration
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Registration Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/registration?flow&#x3D;abcde&#x60;). | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 
@@ -436,7 +442,7 @@ No authorization required
 
 ## GetSelfServiceSettingsFlow
 
-> SettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).XSessionToken(xSessionToken).Execute()
+> SettingsFlow GetSelfServiceSettingsFlow(ctx).Id(id).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
 Get Settings Flow
 
@@ -456,11 +462,12 @@ import (
 
 func main() {
     id := "id_example" // string | ID is the Settings Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/settings?flow=abcde`).
-    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
+    xSessionToken := "xSessionToken_example" // string | The Session Token  When using the SDK in an app without a browser, please include the session token here. (optional)
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. You only need to do this for browser- based flows. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(id).XSessionToken(xSessionToken).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(id).XSessionToken(xSessionToken).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceSettingsFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -482,7 +489,8 @@ Other parameters are passed through a pointer to a apiGetSelfServiceSettingsFlow
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | ID is the Settings Flow ID  The value for this parameter comes from &#x60;flow&#x60; URL Query parameter sent to your application (e.g. &#x60;/settings?flow&#x3D;abcde&#x60;). | 
- **xSessionToken** | **string** | The Session Token of the Identity performing the settings flow. | 
+ **xSessionToken** | **string** | The Session Token  When using the SDK in an app without a browser, please include the session token here. | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. You only need to do this for browser- based flows. | 
 
 ### Return type
 
@@ -504,7 +512,7 @@ Name | Type | Description  | Notes
 
 ## GetSelfServiceVerificationFlow
 
-> VerificationFlow GetSelfServiceVerificationFlow(ctx).Id(id).Execute()
+> VerificationFlow GetSelfServiceVerificationFlow(ctx).Id(id).Cookie(cookie).Execute()
 
 Get Verification Flow
 
@@ -524,10 +532,11 @@ import (
 
 func main() {
     id := "id_example" // string | The Flow ID  The value for this parameter comes from `request` URL Query parameter sent to your application (e.g. `/verification?flow=abcde`).
+    cookie := "cookie_example" // string | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(id).Execute()
+    resp, r, err := apiClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(id).Cookie(cookie).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PublicApi.GetSelfServiceVerificationFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -549,6 +558,7 @@ Other parameters are passed through a pointer to a apiGetSelfServiceVerification
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **string** | The Flow ID  The value for this parameter comes from &#x60;request&#x60; URL Query parameter sent to your application (e.g. &#x60;/verification?flow&#x3D;abcde&#x60;). | 
+ **cookie** | **string** | HTTP Cookies  When using the SDK on the server side you must include the HTTP Cookie Header originally sent to your HTTP handler here. | 
 
 ### Return type
 
