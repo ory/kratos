@@ -3,6 +3,8 @@ package main
 import (
 	"testing"
 
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/ory/kratos/examples/go/pkg"
 
 	"github.com/google/uuid"
@@ -11,7 +13,7 @@ import (
 )
 
 func TestVerification(t *testing.T) {
-	publicURL, _ := pkg.NewKratosServer(t)
+	publicURL, _ := testhelpers.StartE2EServer(t, "../../pkg/stub/kratos.yaml")
 	client = pkg.NewSDKForSelfHosted(publicURL)
 
 	flow := performVerification("dev+" + uuid.New().String() + "@ory.sh")
