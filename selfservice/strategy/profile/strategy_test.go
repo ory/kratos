@@ -79,7 +79,7 @@ func TestStrategyTraits(t *testing.T) {
 	ui := testhelpers.NewSettingsUIEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
 	apiIdentity1 := newIdentityWithPassword("john-api@doe.com")
@@ -90,8 +90,6 @@ func TestStrategyTraits(t *testing.T) {
 	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity2)
 	apiUser1 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity1)
 	apiUser2 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity2)
-
-	adminClient := testhelpers.NewSDKClient(adminTS)
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
 		setUnprivileged(t)
@@ -656,7 +654,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	// Update the login endpoint to auto-accept any incoming login request!
-	_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient, conf)
+	_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
 
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
 		setPrivileged(t)

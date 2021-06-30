@@ -29,13 +29,13 @@ var (
 type PublicApiService service
 
 type PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest struct {
-	ctx            context.Context
-	ApiService     *PublicApiService
-	xSessionCookie *string
+	ctx        context.Context
+	ApiService *PublicApiService
+	cookie     *string
 }
 
-func (r PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest) XSessionCookie(xSessionCookie string) PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest {
-	r.xSessionCookie = &xSessionCookie
+func (r PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest) Cookie(cookie string) PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -63,6 +63,8 @@ call the `/self-service/logout/api` URL directly with the Ory Session Token.
 
 The URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns
 a 401 error.
+
+When calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return PublicApiApiCreateSelfServiceLogoutUrlForBrowsersRequest
 */
@@ -115,8 +117,8 @@ func (a *PublicApiService) CreateSelfServiceLogoutUrlForBrowsersExecute(r Public
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	if r.xSessionCookie != nil {
-		localVarHeaderParams["X-Session-Cookie"] = parameterToString(*r.xSessionCookie, "")
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -448,10 +450,15 @@ type PublicApiApiGetSelfServiceLoginFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookie     *string
 }
 
 func (r PublicApiApiGetSelfServiceLoginFlowRequest) Id(id string) PublicApiApiGetSelfServiceLoginFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceLoginFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceLoginFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -461,13 +468,28 @@ func (r PublicApiApiGetSelfServiceLoginFlowRequest) Execute() (*LoginFlow, *http
 
 /*
  * GetSelfServiceLoginFlow Get Login Flow
- * This endpoint returns a login flow's context with, for example, error details and other information.
-
-:::info
+ * :::info
 
 This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
 :::
+
+This endpoint returns a login flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/login', async function (req, res) {
+const flow = await client.getSelfServiceLoginFlow(req.header('cookie'), req.query['flow'])
+
+res.render('login', flow)
+})
+```
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -525,6 +547,9 @@ func (a *PublicApiService) GetSelfServiceLoginFlowExecute(r PublicApiApiGetSelfS
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -606,10 +631,15 @@ type PublicApiApiGetSelfServiceRecoveryFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookie     *string
 }
 
 func (r PublicApiApiGetSelfServiceRecoveryFlowRequest) Id(id string) PublicApiApiGetSelfServiceRecoveryFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceRecoveryFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceRecoveryFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -626,6 +656,21 @@ This endpoint is EXPERIMENTAL and subject to potential breaking changes in the f
 :::
 
 This endpoint returns a recovery flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/recovery', async function (req, res) {
+const flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])
+
+res.render('recovery', flow)
+})
+```
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -683,6 +728,9 @@ func (a *PublicApiService) GetSelfServiceRecoveryFlowExecute(r PublicApiApiGetSe
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -754,10 +802,15 @@ type PublicApiApiGetSelfServiceRegistrationFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookie     *string
 }
 
 func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Id(id string) PublicApiApiGetSelfServiceRegistrationFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceRegistrationFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -767,13 +820,28 @@ func (r PublicApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*Registrat
 
 /*
  * GetSelfServiceRegistrationFlow Get Registration Flow
- * This endpoint returns a registration flow's context with, for example, error details and other information.
-
-:::info
+ * :::info
 
 This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 
 :::
+
+This endpoint returns a registration flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/registration', async function (req, res) {
+const flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])
+
+res.render('registration', flow)
+})
+```
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -831,6 +899,9 @@ func (a *PublicApiService) GetSelfServiceRegistrationFlowExecute(r PublicApiApiG
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -913,6 +984,7 @@ type PublicApiApiGetSelfServiceSettingsFlowRequest struct {
 	ApiService    *PublicApiService
 	id            *string
 	xSessionToken *string
+	cookie        *string
 }
 
 func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Id(id string) PublicApiApiGetSelfServiceSettingsFlowRequest {
@@ -921,6 +993,10 @@ func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Id(id string) PublicApiAp
 }
 func (r PublicApiApiGetSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) PublicApiApiGetSelfServiceSettingsFlowRequest {
 	r.xSessionToken = &xSessionToken
+	return r
+}
+func (r PublicApiApiGetSelfServiceSettingsFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceSettingsFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -1002,6 +1078,9 @@ func (a *PublicApiService) GetSelfServiceSettingsFlowExecute(r PublicApiApiGetSe
 	if r.xSessionToken != nil {
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
+	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -1082,10 +1161,15 @@ type PublicApiApiGetSelfServiceVerificationFlowRequest struct {
 	ctx        context.Context
 	ApiService *PublicApiService
 	id         *string
+	cookie     *string
 }
 
 func (r PublicApiApiGetSelfServiceVerificationFlowRequest) Id(id string) PublicApiApiGetSelfServiceVerificationFlowRequest {
 	r.id = &id
+	return r
+}
+func (r PublicApiApiGetSelfServiceVerificationFlowRequest) Cookie(cookie string) PublicApiApiGetSelfServiceVerificationFlowRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -1102,6 +1186,20 @@ This endpoint is EXPERIMENTAL and subject to potential breaking changes in the f
 :::
 
 This endpoint returns a verification flow's context with, for example, error details and other information.
+
+Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+
+If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+and you need to forward the incoming HTTP Cookie header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/recovery', async function (req, res) {
+const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
+
+res.render('verification', flow)
+})
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1159,6 +1257,9 @@ func (a *PublicApiService) GetSelfServiceVerificationFlowExecute(r PublicApiApiG
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.cookie != nil {
+		localVarHeaderParams["cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
