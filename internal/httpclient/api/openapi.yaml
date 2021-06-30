@@ -13,15 +13,6 @@ info:
   title: Ory Kratos API
 servers:
 - url: /
-tags:
-- description: All administrative API endpoints exposed at the admin API port.
-  externalDocs:
-    url: https://www.ory.sh/kratos/docs/reference/api
-  name: admin
-- description: All public API endpoints exposed at the public API port.
-  externalDocs:
-    url: https://www.ory.sh/kratos/docs/reference/api
-  name: public
 paths:
   /health/alive:
     get:
@@ -85,7 +76,7 @@ paths:
         Lists all identities. Does not support search at the moment.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: listIdentities
+      operationId: adminListIdentities
       parameters:
       - description: |-
           Items per Page
@@ -118,31 +109,31 @@ paths:
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/identity'
-                type: array
-          description: A list of identities.
+                $ref: '#/components/schemas/identityList'
+          description: identityList
         "500":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: List Identities
       tags:
-      - admin
+      - v0alpha0
     post:
       description: |-
         This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
         using this method! A way to achieve that will be introduced in the future.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: createIdentity
+      operationId: adminCreateIdentity
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/createIdentity'
+              $ref: '#/components/schemas/adminCreateIdentityBody'
         x-originalParamName: Body
       responses:
         "201":
@@ -150,7 +141,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/identity'
-          description: A single identity.
+          description: identity
         "400":
           content:
             application/json:
@@ -169,9 +160,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: Create an Identity
       tags:
-      - admin
+      - v0alpha0
   /identities/{id}:
     delete:
       description: |-
@@ -180,7 +173,7 @@ paths:
         assumed that is has been deleted already.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: deleteIdentity
+      operationId: adminDeleteIdentity
       parameters:
       - description: ID is the identity's ID.
         explode: false
@@ -206,13 +199,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: Delete an Identity
       tags:
-      - admin
+      - v0alpha0
     get:
       description: Learn how identities work in [Ory Kratos' User And Identity Model
         Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: getIdentity
+      operationId: adminGetIdentity
       parameters:
       - description: ID must be set to the ID of identity you want to get
         explode: false
@@ -228,7 +223,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/identity'
-          description: A single identity.
+          description: identity
         "404":
           content:
             application/json:
@@ -241,9 +236,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: Get an Identity
       tags:
-      - admin
+      - v0alpha0
     put:
       description: |-
         This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
@@ -252,7 +249,7 @@ paths:
         The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: updateIdentity
+      operationId: adminUpdateIdentity
       parameters:
       - description: ID must be set to the ID of identity you want to update
         explode: false
@@ -266,7 +263,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/updateIdentity'
+              $ref: '#/components/schemas/AdminUpdateIdentityBody'
         x-originalParamName: Body
       responses:
         "200":
@@ -299,9 +296,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: Update an Identity
       tags:
-      - admin
+      - v0alpha0
   /metrics/prometheus:
     get:
       description: |-
@@ -2062,20 +2061,6 @@ components:
     emptyResponse:
       description: Empty responses are sent when, for example, resources are deleted.
         The HTTP status code for empty responses is typically 201.
-    identityList:
-      content:
-        application/json:
-          schema:
-            items:
-              $ref: '#/components/schemas/identity'
-            type: array
-      description: A list of identities.
-    identityResponse:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/identity'
-      description: A single identity.
     selfServiceErrorResponse:
       content:
         application/json:
@@ -2083,6 +2068,29 @@ components:
             $ref: '#/components/schemas/selfServiceErrorContainer'
       description: User-facing error response
   schemas:
+    AdminUpdateIdentityBody:
+      example:
+        traits: '{}'
+        schema_id: schema_id
+        state: ""
+      properties:
+        schema_id:
+          description: |-
+            SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
+            will update the Identity's SchemaID.
+          type: string
+        state:
+          description: State is the identity's state.
+        traits:
+          description: |-
+            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+            in a self-service manner. The input will always be validated against the JSON Schema defined
+            in `schema_id`.
+          type: object
+      required:
+      - state
+      - traits
+      type: object
     AuthenticateOKBody:
       description: AuthenticateOKBody authenticate o k body
       properties:
@@ -2779,7 +2787,7 @@ components:
       - RefCount
       - Size
       type: object
-    createIdentity:
+    adminCreateIdentityBody:
       properties:
         schema_id:
           description: SchemaID is the ID of the JSON Schema to be used for validating
@@ -2904,7 +2912,7 @@ components:
         created_at: 2000-01-23T04:56:07.000+00:00
         schema_url: schema_url
         id: id
-        state: active
+        state: ""
       properties:
         created_at:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
@@ -2938,10 +2946,6 @@ components:
           type: string
         state:
           description: State is the identity's state.
-          enum:
-          - active
-          - inactive
-          type: string
         state_changed_at:
           format: date-time
           title: NullTime implements sql.NullTime functionality.
@@ -3005,6 +3009,11 @@ components:
           format: date-time
           type: string
       type: object
+    identityList:
+      items:
+        $ref: '#/components/schemas/identity'
+      title: A list of identities.
+      type: array
     identityTraits:
       description: |-
         Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -3194,7 +3203,7 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: active
+            state: ""
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -3498,7 +3507,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: active
+          state: ""
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
           identity:
@@ -3546,7 +3555,7 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: active
+            state: ""
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -3650,7 +3659,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: active
+          state: ""
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         id: id
@@ -3789,7 +3798,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: active
+          state: ""
         active: active
         id: id
         state: state
@@ -3910,7 +3919,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: active
+          state: ""
         flow:
           expires_at: 2000-01-23T04:56:07.000+00:00
           ui:
@@ -4005,7 +4014,7 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: active
+            state: ""
           active: active
           id: id
           state: state
@@ -4448,29 +4457,6 @@ components:
       items:
         $ref: '#/components/schemas/uiText'
       type: array
-    updateIdentity:
-      properties:
-        schema_id:
-          description: |-
-            SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
-            will update the Identity's SchemaID.
-          type: string
-        state:
-          description: State is the identity's state.
-          enum:
-          - active
-          - inactive
-          type: string
-        traits:
-          description: |-
-            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
-            in a self-service manner. The input will always be validated against the JSON Schema defined
-            in `schema_id`.
-          type: object
-      required:
-      - state
-      - traits
-      type: object
     verifiableIdentityAddress:
       description: VerifiableAddress is an identity's verifiable address
       example:
@@ -4663,10 +4649,12 @@ components:
       - version
       type: object
   securitySchemes:
-    oryToken:
-      scheme: bearer
-      type: http
-    sessionToken:
+    oryAccessToken:
+      description: |
+        This security mechanism is only applicable when using the [Ory Platform](https://console.ory.sh) by
+        creating an [Ory Personal Access Token](https://www.ory.sh/docs/guides/create-personal-access-token).
+        If you are using the open source version, this security mechanism
+        will not work out of the box as you will need to add a security mechanism yourself.
       scheme: bearer
       type: http
 x-forwarded-proto: string

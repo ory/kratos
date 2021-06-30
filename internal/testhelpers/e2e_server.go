@@ -24,6 +24,9 @@ func StartE2EServer(t *testing.T, configFile string) (publicUrl, adminUrl string
 	publicPort, err := freeport.GetFreePort()
 	require.NoError(t, err)
 
+	publicUrl = fmt.Sprintf("http://127.0.0.1:%d", publicPort)
+	adminUrl = fmt.Sprintf("http://127.0.0.1:%d", adminPort)
+
 	ctx := configx.ContextWithConfigOptions(context.Background(),
 		configx.WithValue("dsn", "memory"),
 		configx.WithValue("dev", true),
@@ -31,6 +34,8 @@ func StartE2EServer(t *testing.T, configFile string) (publicUrl, adminUrl string
 		configx.WithValue("log.leak_sensitive_values", true),
 		configx.WithValue("serve.public.port", publicPort),
 		configx.WithValue("serve.admin.port", adminPort),
+		configx.WithValue("serve.public.base_url", publicUrl),
+		configx.WithValue("serve.admin.base_url", adminUrl),
 	)
 
 	//nolint:staticcheck
@@ -46,9 +51,6 @@ func StartE2EServer(t *testing.T, configFile string) (publicUrl, adminUrl string
 		t.Log("Starting server...")
 		_ = executor.ExecNoErr(t, "serve", "--config", configFile, "--watch-courier")
 	}()
-
-	publicUrl = fmt.Sprintf("http://127.0.0.1:%d", publicPort)
-	adminUrl = fmt.Sprintf("http://127.0.0.1:%d", adminPort)
 
 	require.NoError(t, retry.Do(func() error {
 		res, err := http.Get(publicUrl + "/health/alive")
