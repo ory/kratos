@@ -83,18 +83,13 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*AdminApi* | [**CreateIdentity**](docs/AdminApi.md#createidentity) | **Post** /identities | Create an Identity
 *AdminApi* | [**CreateRecoveryLink**](docs/AdminApi.md#createrecoverylink) | **Post** /recovery/link | Create a Recovery Link
-*AdminApi* | [**DeleteIdentity**](docs/AdminApi.md#deleteidentity) | **Delete** /identities/{id} | Delete an Identity
-*AdminApi* | [**GetIdentity**](docs/AdminApi.md#getidentity) | **Get** /identities/{id} | Get an Identity
 *AdminApi* | [**GetSchema**](docs/AdminApi.md#getschema) | **Get** /schemas/{id} | 
 *AdminApi* | [**GetSelfServiceError**](docs/AdminApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 *AdminApi* | [**GetVersion**](docs/AdminApi.md#getversion) | **Get** /version | Return Running Software Version.
 *AdminApi* | [**IsAlive**](docs/AdminApi.md#isalive) | **Get** /health/alive | Check HTTP Server Status
 *AdminApi* | [**IsReady**](docs/AdminApi.md#isready) | **Get** /health/ready | Check HTTP Server and Database Status
-*AdminApi* | [**ListIdentities**](docs/AdminApi.md#listidentities) | **Get** /identities | List Identities
 *AdminApi* | [**Prometheus**](docs/AdminApi.md#prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
-*AdminApi* | [**UpdateIdentity**](docs/AdminApi.md#updateidentity) | **Put** /identities/{id} | Update an Identity
 *PublicApi* | [**CreateSelfServiceLogoutUrlForBrowsers**](docs/PublicApi.md#createselfservicelogouturlforbrowsers) | **Get** /self-service/logout/browser | Initialize Logout Flow for Browsers
 *PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} | 
 *PublicApi* | [**GetSelfServiceError**](docs/PublicApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
@@ -122,10 +117,17 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**SubmitSelfServiceSettingsFlow**](docs/PublicApi.md#submitselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
 *PublicApi* | [**SubmitSelfServiceVerificationFlow**](docs/PublicApi.md#submitselfserviceverificationflow) | **Post** /self-service/verification | Complete Verification Flow
 *PublicApi* | [**ToSession**](docs/PublicApi.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
+*V0alpha0Api* | [**AdminCreateIdentity**](docs/V0alpha0Api.md#admincreateidentity) | **Post** /identities | Create an Identity
+*V0alpha0Api* | [**AdminDeleteIdentity**](docs/V0alpha0Api.md#admindeleteidentity) | **Delete** /identities/{id} | Delete an Identity
+*V0alpha0Api* | [**AdminGetIdentity**](docs/V0alpha0Api.md#admingetidentity) | **Get** /identities/{id} | Get an Identity
+*V0alpha0Api* | [**AdminListIdentities**](docs/V0alpha0Api.md#adminlistidentities) | **Get** /identities | List Identities
+*V0alpha0Api* | [**AdminUpdateIdentity**](docs/V0alpha0Api.md#adminupdateidentity) | **Put** /identities/{id} | Update an Identity
 
 
 ## Documentation For Models
 
+ - [AdminCreateIdentityBody](docs/AdminCreateIdentityBody.md)
+ - [AdminUpdateIdentityBody](docs/AdminUpdateIdentityBody.md)
  - [AuthenticateOKBody](docs/AuthenticateOKBody.md)
  - [ContainerChangeResponseItem](docs/ContainerChangeResponseItem.md)
  - [ContainerCreateCreatedBody](docs/ContainerCreateCreatedBody.md)
@@ -133,7 +135,6 @@ Class | Method | HTTP request | Description
  - [ContainerUpdateOKBody](docs/ContainerUpdateOKBody.md)
  - [ContainerWaitOKBody](docs/ContainerWaitOKBody.md)
  - [ContainerWaitOKBodyError](docs/ContainerWaitOKBodyError.md)
- - [CreateIdentity](docs/CreateIdentity.md)
  - [CreateRecoveryLink](docs/CreateRecoveryLink.md)
  - [ErrorResponse](docs/ErrorResponse.md)
  - [GenericError](docs/GenericError.md)
@@ -199,7 +200,6 @@ Class | Method | HTTP request | Description
  - [UiNodeInputAttributes](docs/UiNodeInputAttributes.md)
  - [UiNodeTextAttributes](docs/UiNodeTextAttributes.md)
  - [UiText](docs/UiText.md)
- - [UpdateIdentity](docs/UpdateIdentity.md)
  - [VerifiableIdentityAddress](docs/VerifiableIdentityAddress.md)
  - [VerificationFlow](docs/VerificationFlow.md)
  - [Version](docs/Version.md)
@@ -211,19 +211,7 @@ Class | Method | HTTP request | Description
 
 
 
-### oryToken
-
-- **Type**: HTTP Bearer token authentication
-
-Example
-
-```golang
-auth := context.WithValue(context.Background(), sw.ContextAccessToken, "BEARER_TOKEN_STRING")
-r, err := client.Service.Operation(auth, args)
-```
-
-
-### sessionToken
+### oryAccessToken
 
 - **Type**: HTTP Bearer token authentication
 

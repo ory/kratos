@@ -31,7 +31,7 @@ func NewDeleteCmd() *cobra.Command {
 			)
 
 			for _, a := range args {
-				_, err := c.AdminApi.DeleteIdentity(cmd.Context(), a).Execute()
+				_, err := c.V0alpha0Api.AdminDeleteIdentity(cmd.Context(), a).Execute()
 				if err != nil {
 					errs = append(errs, err)
 					continue

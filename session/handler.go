@@ -23,6 +23,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		x.CSRFProvider
+		config.Provider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -45,6 +46,14 @@ func NewHandler(
 const (
 	RouteWhoami = "/sessions/whoami"
 )
+
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
+		http.MethodDelete} {
+		// Redirect to public endpoint
+		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
+	}
+}
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().ExemptPath(RouteWhoami)

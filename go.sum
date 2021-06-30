@@ -1314,8 +1314,8 @@ github.com/ory/mail v2.3.1+incompatible h1:vHntHDHtQXamt2T+iwTTlCoBkDvILUeujE9Oc
 github.com/ory/mail v2.3.1+incompatible/go.mod h1:87D9/1gB6ewElQoN0lXJ0ayfqcj3cW3qCTXh+5E9mfU=
 github.com/ory/mail/v3 v3.0.0 h1:8LFMRj473vGahFD/ntiotWEd4S80FKYFtiZTDfOQ+sM=
 github.com/ory/mail/v3 v3.0.0/go.mod h1:JGAVeZF8YAlxbaFDUHqRZAKBCSeW2w1vuxf28hFbZAw=
-github.com/ory/nosurf v1.2.4 h1:UirSCPSu4nxMmcbI89G+ehZkr2QRrtdjPacia5egktI=
-github.com/ory/nosurf v1.2.4/go.mod h1:d4L3ZBa7Amv55bqxCBtCs63wSlyaiCkWVl4vKf3OUxA=
+github.com/ory/nosurf v1.2.5 h1:3PkEwcMd9BYpMD96PTCwJTNV8we69SbO+cgI8p1oeOA=
+github.com/ory/nosurf v1.2.5/go.mod h1:d4L3ZBa7Amv55bqxCBtCs63wSlyaiCkWVl4vKf3OUxA=
 github.com/ory/viper v1.7.5 h1:+xVdq7SU3e1vNaCsk/ixsfxE4zylk1TJUiJrY647jUE=
 github.com/ory/viper v1.7.5/go.mod h1:ypOuyJmEUb3oENywQZRgeAMwqgOyDqwboO1tj3DjTaM=
 github.com/ory/x v0.0.255 h1:gcktSc5gOxDSzT8TJjNy1N8/lZL4Rlj/3MPJ68BnVDY=

@@ -14,15 +14,3 @@
       name: Apache 2.0
     contact:
       email: "hi@ory.sh"
-
-- op: replace
-  path: /tags
-  value:
-    - name: admin
-      description: All administrative API endpoints exposed at the admin API port.
-      externalDocs:
-        url: https://www.ory.sh/kratos/docs/reference/api
-    - name: public
-      description: All public API endpoints exposed at the public API port.
-      externalDocs:
-        url: https://www.ory.sh/kratos/docs/reference/api
