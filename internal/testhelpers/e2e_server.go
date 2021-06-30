@@ -33,7 +33,7 @@ func StartE2EServer(t *testing.T, configFile string) (publicUrl, adminUrl string
 		configx.WithValue("serve.admin.port", adminPort),
 	)
 
-	//nolint
+	//nolint:staticcheck
 	ctx = context.WithValue(ctx, "dsn", "memory")
 	ctx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)
