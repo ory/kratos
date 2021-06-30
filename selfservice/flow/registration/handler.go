@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/nosurf"
+
 	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/identity"
@@ -79,9 +81,7 @@ func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request, ps htt
 	handler(w, r, ps)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetchFlow)
-}
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {}
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
 	f := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
@@ -215,19 +215,43 @@ type getSelfServiceRegistrationFlow struct {
 	// required: true
 	// in: query
 	ID string `json:"id"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here.
+	//
+	// in: header
+	// name: Cookie
+	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/registration/flows public admin getSelfServiceRegistrationFlow
+// swagger:route GET /self-service/registration/flows public getSelfServiceRegistrationFlow
 //
 // Get Registration Flow
-//
-// This endpoint returns a registration flow's context with, for example, error details and other information.
 //
 // :::info
 //
 // This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
 //
 // :::
+//
+// This endpoint returns a registration flow's context with, for example, error details and other information.
+//
+// Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+// For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+//
+// If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+// and you need to forward the incoming HTTP Cookie header to this endpoint:
+//
+//	```js
+//	// pseudo-code example
+//	router.get('/registration', async function (req, res) {
+//	  const flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])
+//
+//    res.render('registration', flow)
+//	})
+//	```
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -246,6 +270,14 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 	ar, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	// Browser flows must include the CSRF token
+	//
+	// Resolves: https://github.com/ory/kratos/issues/1282
+	if ar.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
+		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
 		return
 	}
 

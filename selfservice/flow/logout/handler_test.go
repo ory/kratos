@@ -99,9 +99,9 @@ func TestLogout(t *testing.T) {
 			res, err := (&http.Client{Jar: cj}).PostForm(public.URL+"/csrf/check", url.Values{})
 			require.NoError(t, err)
 			defer res.Body.Close()
-			assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
+			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
 			body := x.MustReadAll(res.Body)
-			assert.EqualValues(t, "CSRF token is missing or invalid.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {

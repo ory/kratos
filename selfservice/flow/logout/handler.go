@@ -69,8 +69,14 @@ type logoutURL struct {
 // swagger:parameters createSelfServiceLogoutUrlForBrowsers
 // nolint:deadcode,unused
 type createSelfServiceLogoutUrlForBrowsers struct {
+	// HTTP Cookies
+	//
+	// If you call this endpoint from a backend, please include the
+	// original Cookie header in the request.
+	//
 	// in: header
-	SessionCookie string `json:"X-Session-Cookie"`
+	// name: cookie
+	Cookie string `json:"cookie"`
 }
 
 // swagger:route GET /self-service/logout/browser public createSelfServiceLogoutUrlForBrowsers
@@ -95,6 +101,8 @@ type createSelfServiceLogoutUrlForBrowsers struct {
 //
 // The URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns
 // a 401 error.
+//
+// When calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.
 //
 //     Produces:
 //     - application/json

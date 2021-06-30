@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
+	"net/http/cookiejar"
 	"os"
 
 	"github.com/google/uuid"
@@ -14,13 +16,21 @@ import (
 
 func NewSDK(project string) *ory.APIClient {
 	conf := ory.NewConfiguration()
-	conf.Servers = ory.ServerConfigurations{{URL: fmt.Sprintf("https://%s.projects.oryapis.com/api/kratos/public", project)}}
+	conf.Servers = ory.ServerConfigurations{
+		{
+			URL: fmt.Sprintf("https://%s.projects.oryapis.com/api/kratos/public", project),
+		},
+	}
+	cj, _ := cookiejar.New(nil)
+	conf.HTTPClient = &http.Client{Jar: cj}
 	return ory.NewAPIClient(conf)
 }
 
 func NewSDKForSelfHosted(endpoint string) *ory.APIClient {
 	conf := ory.NewConfiguration()
 	conf.Servers = ory.ServerConfigurations{{URL: endpoint}}
+	cj, _ := cookiejar.New(nil)
+	conf.HTTPClient = &http.Client{Jar: cj}
 	return ory.NewAPIClient(conf)
 }
 

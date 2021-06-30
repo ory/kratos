@@ -165,9 +165,6 @@ Something is not working.
 - [ ] Verification does not include success message
       ([kratos#1450](https://github.com/ory/kratos/issues/1450)) -
       [@Alano Terblanche](https://github.com/Benehiko)
-- [ ] fix: settings flow error handle should access schemas using configured
-      "local" URLs instead of public URLs
-      ([kratos#1448](https://github.com/ory/kratos/issues/1448))
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] Investigate why smtps fails but smtp does not
@@ -193,6 +190,9 @@ Something is not working.
 - [x] Social sign uop should reduce confusion on sign up button
       ([kratos#1422](https://github.com/ory/kratos/issues/1422)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] fix: settings flow error handle should access schemas using configured
+      "local" URLs instead of public URLs
+      ([kratos#1448](https://github.com/ory/kratos/issues/1448))
 
 #### Pull Requests
 
@@ -221,6 +221,9 @@ New feature or request.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Write tests for domain aliasing in cookie handler
       ([kratos#1292](https://github.com/ory/kratos/issues/1292)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Document new CSRF Cookie requirement
+      ([kratos#1472](https://github.com/ory/kratos/issues/1472)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] Gracefully handle CSRF errors
       ([kratos#91](https://github.com/ory/kratos/issues/91)) -
@@ -258,11 +261,18 @@ A request for comments to discuss and share ideas.
       ([kratos#1282](https://github.com/ory/kratos/issues/1282)) -
       [@hackerman](https://github.com/aeneasr)
 - [ ] Separate OpenAPI tags into stable and experimental and rework admin
-      strategy ([kratos#1424](https://github.com/ory/kratos/issues/1424))
+      strategy ([kratos#1424](https://github.com/ory/kratos/issues/1424)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
 
 Blocks milestones or other issues or pulls.
+
+#### Issues
+
+- [ ] Document new CSRF Cookie requirement
+      ([kratos#1472](https://github.com/ory/kratos/issues/1472)) -
+      [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
