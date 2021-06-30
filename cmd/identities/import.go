@@ -56,14 +56,14 @@ WARNING: Importing credentials is not yet supported.`,
 					return err
 				}
 
-				var params kratos.CreateIdentity
+				var params kratos.AdminCreateIdentityBody
 				err = json.Unmarshal([]byte(i), &params)
 				if err != nil {
 					_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "STD_IN: Could not parse identity")
 					return cmdx.FailSilently(cmd)
 				}
 
-				ident, _, err := c.AdminApi.CreateIdentity(cmd.Context()).CreateIdentity(params).Execute()
+				ident, _, err := c.V0alpha0Api.AdminCreateIdentity(cmd.Context()).AdminCreateIdentityBody(params).Execute()
 				if err != nil {
 					failed[src] = err
 				} else {

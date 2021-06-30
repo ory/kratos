@@ -498,7 +498,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[sessionToken](../README.md#sessionToken)
+No authorization required
 
 ### HTTP request headers
 
@@ -1003,7 +1003,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceSetti
 
 ### Authorization
 
-[sessionToken](../README.md#sessionToken)
+No authorization required
 
 ### HTTP request headers
 
@@ -1071,7 +1071,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[sessionToken](../README.md#sessionToken)
+No authorization required
 
 ### HTTP request headers
 
@@ -1658,7 +1658,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[sessionToken](../README.md#sessionToken)
+No authorization required
 
 ### HTTP request headers
 

@@ -74,6 +74,11 @@
     },
     "/identities": {
       "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "Lists all identities. Does not support search at the moment.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "produces": [
           "application/json"
@@ -83,10 +88,10 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha0"
         ],
         "summary": "List Identities",
-        "operationId": "listIdentities",
+        "operationId": "adminListIdentities",
         "parameters": [
           {
             "maximum": 500,
@@ -110,7 +115,10 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/identityList"
+            "description": "identityList",
+            "schema": {
+              "$ref": "#/definitions/identityList"
+            }
           },
           "500": {
             "description": "jsonError",
@@ -121,6 +129,11 @@
         }
       },
       "post": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "consumes": [
           "application/json"
@@ -133,22 +146,25 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha0"
         ],
         "summary": "Create an Identity",
-        "operationId": "createIdentity",
+        "operationId": "adminCreateIdentity",
         "parameters": [
           {
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/createIdentity"
+              "$ref": "#/definitions/adminCreateIdentityBody"
             }
           }
         ],
         "responses": {
           "201": {
-            "$ref": "#/responses/identityResponse"
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
           },
           "400": {
             "description": "jsonError",
@@ -173,6 +189,11 @@
     },
     "/identities/{id}": {
       "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "consumes": [
           "application/json"
@@ -185,10 +206,10 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha0"
         ],
         "summary": "Get an Identity",
-        "operationId": "getIdentity",
+        "operationId": "adminGetIdentity",
         "parameters": [
           {
             "type": "string",
@@ -200,7 +221,10 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/identityResponse"
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
           },
           "404": {
             "description": "jsonError",
@@ -217,6 +241,11 @@
         }
       },
       "put": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nThe full identity payload (except credentials) is expected. This endpoint does not support patching.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "consumes": [
           "application/json"
@@ -229,10 +258,10 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha0"
         ],
         "summary": "Update an Identity",
-        "operationId": "updateIdentity",
+        "operationId": "adminUpdateIdentity",
         "parameters": [
           {
             "type": "string",
@@ -245,7 +274,7 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/updateIdentity"
+              "$ref": "#/definitions/AdminUpdateIdentityBody"
             }
           }
         ],
@@ -283,6 +312,11 @@
         }
       },
       "delete": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "produces": [
           "application/json"
@@ -292,10 +326,10 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha0"
         ],
         "summary": "Delete an Identity",
-        "operationId": "deleteIdentity",
+        "operationId": "adminDeleteIdentity",
         "parameters": [
           {
             "type": "string",
@@ -1777,6 +1811,26 @@
     }
   },
   "definitions": {
+    "AdminUpdateIdentityBody": {
+      "type": "object",
+      "required": [
+        "traits",
+        "state"
+      ],
+      "properties": {
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
+          "type": "string"
+        },
+        "state": {
+          "description": "State is the identity's state."
+        },
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
+          "type": "object"
+        }
+      }
+    },
     "AuthenticateOKBody": {
       "description": "AuthenticateOKBody authenticate o k body",
       "type": "object",
@@ -2662,7 +2716,7 @@
         }
       }
     },
-    "createIdentity": {
+    "adminCreateIdentityBody": {
       "type": "object",
       "required": [
         "schema_id",
@@ -2788,12 +2842,7 @@
           "type": "string"
         },
         "state": {
-          "description": "State is the identity's state.",
-          "type": "string",
-          "enum": [
-            "active",
-            "inactive"
-          ]
+          "description": "State is the identity's state."
         },
         "state_changed_at": {
           "$ref": "#/definitions/nullTime"
@@ -2843,6 +2892,13 @@
           "type": "string",
           "format": "date-time"
         }
+      }
+    },
+    "identityList": {
+      "type": "array",
+      "title": "A list of identities.",
+      "items": {
+        "$ref": "#/definitions/identity"
       }
     },
     "identityTraits": {
@@ -3608,31 +3664,6 @@
         "$ref": "#/definitions/uiText"
       }
     },
-    "updateIdentity": {
-      "type": "object",
-      "required": [
-        "traits",
-        "state"
-      ],
-      "properties": {
-        "schema_id": {
-          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
-          "type": "string"
-        },
-        "state": {
-          "description": "State is the identity's state.",
-          "type": "string",
-          "enum": [
-            "active",
-            "inactive"
-          ]
-        },
-        "traits": {
-          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
-          "type": "object"
-        }
-      }
-    },
     "verifiableIdentityAddress": {
       "description": "VerifiableAddress is an identity's verifiable address",
       "type": "object",
@@ -3736,21 +3767,6 @@
     "emptyResponse": {
       "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
     },
-    "identityList": {
-      "description": "A list of identities.",
-      "schema": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/identity"
-        }
-      }
-    },
-    "identityResponse": {
-      "description": "A single identity.",
-      "schema": {
-        "$ref": "#/definitions/identity"
-      }
-    },
     "selfServiceErrorResponse": {
       "description": "User-facing error response",
       "schema": {
@@ -3759,9 +3775,9 @@
     }
   },
   "securityDefinitions": {
-    "sessionToken": {
+    "oryAccessToken": {
       "type": "apiKey",
-      "name": "X-Session-Token",
+      "name": "Authorization",
       "in": "header"
     }
   },
