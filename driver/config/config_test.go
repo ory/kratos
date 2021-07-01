@@ -1,21 +1,16 @@
 package config_test
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
+	"github.com/ory/kratos/internal/testhelpers"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"testing"
 	"time"
-
-	"github.com/ory/x/tlsx"
 
 	"github.com/ory/x/configx"
 
@@ -665,7 +660,7 @@ func TestLoadingTLSConfig(t *testing.T) {
 	certPath := "/tmp/test_cert.pem"
 	keyPath := "/tmp/test_key.pem"
 
-	generateTLSCertificateFiles(t, certPath, keyPath)
+	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
 	certRaw, err := ioutil.ReadFile(certPath)
 	assert.Nil(t, err)
@@ -780,42 +775,4 @@ func TestLoadingTLSConfig(t *testing.T) {
 		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
 	})
 
-}
-
-func generateTLSCertificateFiles(t *testing.T, certPath, keyPath string) {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	assert.Nil(t, err)
-
-	cert, err := tlsx.CreateSelfSignedCertificate(privateKey)
-	assert.Nil(t, err)
-
-	derBytes := cert.Raw
-
-	certOut, err := os.Create(certPath)
-	if err != nil {
-		t.Errorf("Failed to open cert.pem for writing: %v", err)
-	}
-	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		t.Errorf("Failed to write data to cert.pem: %v", err)
-	}
-	if err := certOut.Close(); err != nil {
-		t.Errorf("Error closing cert.pem: %v", err)
-	}
-	t.Logf("wrote cert.pem")
-
-	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		t.Errorf("Failed to open key.pem for writing: %v", err)
-	}
-	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
-	if err != nil {
-		t.Errorf("Unable to marshal private key: %v", err)
-	}
-	if err := pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes}); err != nil {
-		t.Errorf("Failed to write data to key.pem: %v", err)
-	}
-	if err := keyOut.Close(); err != nil {
-		t.Errorf("Error closing key.pem: %v", err)
-	}
-	t.Logf("wrote key.pem")
 }

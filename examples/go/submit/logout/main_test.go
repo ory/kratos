@@ -9,7 +9,7 @@ import (
 )
 
 func TestLogout(t *testing.T) {
-	publicURL, _ := testhelpers.StartE2EServer(t, "../../pkg/stub/kratos.yaml")
+	publicURL, _ := testhelpers.StartE2EServer(t, "../../pkg/stub/kratos.yaml", nil)
 	client = pkg.NewSDKForSelfHosted(publicURL)
 
 	performLogout()
