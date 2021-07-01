@@ -3260,7 +3260,7 @@ This release finalizes the OpenID Connect and OAuth2 login, registration, and se
 
 We also changed the config validation output, making it easier than ever to find bugs in your config:
 
-````
+```
 
 % kratos --config invalid-config.yml serve INFO[0001] Config file loaded
 successfully. path=invalid-config.yml ERRO[0001] The provided configuration is
@@ -7597,7 +7597,7 @@ This release finalizes the OpenID Connect and OAuth2 login, registration, and se
 
 We also changed the config validation output, making it easier than ever to find bugs in your config:
 
-````
+```
 
 % kratos --config invalid-config.yml serve INFO[0001] Config file loaded
 successfully. path=invalid-config.yml ERRO[0001] The provided configuration is
