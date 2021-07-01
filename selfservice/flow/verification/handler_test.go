@@ -6,16 +6,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/gobuffalo/httptest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
@@ -27,18 +27,18 @@ func TestGetFlow(t *testing.T) {
 		map[string]interface{}{"enabled": true})
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
-	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRedirTS(t, "", conf)
 
-	newVerificationTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
-		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if c == nil {
-				c = http.DefaultClient
-			}
-			_, err := w.Write(x.EasyGetBody(t, c, upstream+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+	setupVerificationUI := func(t *testing.T, c *http.Client) *httptest.Server {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, err := w.Write(x.EasyGetBody(t, c, public.URL+verification.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
+		t.Cleanup(ts.Close)
+		conf.MustSet(config.ViperKeySelfServiceVerificationUI, ts.URL)
+		return ts
 	}
 
 	assertFlowPayload := func(t *testing.T, body []byte, isApi bool) {
@@ -56,62 +56,53 @@ func TestGetFlow(t *testing.T) {
 		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), public.URL, "%s", body)
 	}
 
-	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
-		assert.EqualValues(t, http.StatusGone, res.StatusCode)
-		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
-	}
-
-	newExpiredFlow := func() *verification.Flow {
-		return &verification.Flow{
-			ID:         x.NewUUID(),
-			ExpiresAt:  time.Now().Add(-time.Minute),
-			IssuedAt:   time.Now().Add(-time.Minute * 2),
-			RequestURL: public.URL + verification.RouteInitBrowserFlow,
-			CSRFToken:  x.FakeCSRFToken,
-			Type:       flow.TypeBrowser,
-		}
-	}
-
-	run := func(t *testing.T, endpoint *httptest.Server) {
-		verificationTS := newVerificationTS(t, endpoint.URL, nil)
-		defer verificationTS.Close()
-		conf.MustSet(config.ViperKeySelfServiceVerificationUI, verificationTS.URL)
-		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
-			map[string]interface{}{"enabled": true})
-
-		t.Run("case=valid", func(t *testing.T) {
-			t.Run("type=browser", func(t *testing.T) {
-				res, body := x.EasyGet(t, endpoint.Client(), public.URL+verification.RouteInitBrowserFlow)
-				require.NotEqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
-				assertFlowPayload(t, body, false)
-			})
-
-			t.Run("type=spa", func(t *testing.T) {
-				res, body := x.EasyGetJSON(t, endpoint.Client(), public.URL+verification.RouteInitBrowserFlow)
-				require.EqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
-				assertFlowPayload(t, body, false)
-			})
-
-			t.Run("type=api", func(t *testing.T) {
-				res, body := x.EasyGet(t, endpoint.Client(), public.URL+verification.RouteInitAPIFlow)
-				assert.Len(t, res.Header.Get("Set-Cookie"), 0)
-				assertFlowPayload(t, body, true)
-			})
+	t.Run("case=valid", func(t *testing.T) {
+		t.Run("type=browser", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			_ = setupVerificationUI(t, client)
+			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitBrowserFlow)
+			require.NotEqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
+			assertFlowPayload(t, body, false)
 		})
 
-		t.Run("case=expired", func(t *testing.T) {
-			lr := newExpiredFlow()
-			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), endpoint.URL+verification.RouteGetFlow+"?id="+lr.ID.String())
-			assertExpiredPayload(t, res, body)
+		t.Run("type=spa", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			_ = setupVerificationUI(t, client)
+			res, body := x.EasyGetJSON(t, client, public.URL+verification.RouteInitBrowserFlow)
+			require.EqualValues(t, res.Request.URL.String(), public.URL+verification.RouteInitBrowserFlow)
+			assertFlowPayload(t, body, false)
 		})
-	}
 
-	t.Run("daemon=admin", func(t *testing.T) {
-		run(t, admin)
+		t.Run("type=api", func(t *testing.T) {
+			client := testhelpers.NewClientWithCookies(t)
+			_ = setupVerificationUI(t, client)
+			res, body := x.EasyGet(t, client, public.URL+verification.RouteInitAPIFlow)
+			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
+			assertFlowPayload(t, body, true)
+		})
 	})
 
-	t.Run("daemon=public", func(t *testing.T) {
-		run(t, public)
+	t.Run("case=csrf cookie missing", func(t *testing.T) {
+		client := http.DefaultClient
+		_ = setupVerificationUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
+
+		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+	})
+
+	t.Run("case=expired", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupVerificationUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
+
+		// Expire the flow
+		f, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
+		require.NoError(t, err)
+		f.ExpiresAt = time.Now().Add(-time.Second)
+		require.NoError(t, reg.VerificationFlowPersister().UpdateVerificationFlow(context.Background(), f))
+
+		res, body := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+f.ID.String())
+		assert.EqualValues(t, http.StatusGone, res.StatusCode)
+		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
 }

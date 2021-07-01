@@ -21,45 +21,49 @@ import (
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
-var ValidateCmd = &cobra.Command{
-	Use:   "validate <file.json [file-2.json [file-3.json] ...]>",
-	Short: "Validate local identity files",
-	Long: `This command allows validation of identity files.
+func NewValidateCmd() *cobra.Command {
+	var c = &cobra.Command{
+		Use:   "validate <file.json [file-2.json [file-3.json] ...]>",
+		Short: "Validate local identity files",
+		Long: `This command allows validation of identity files.
 It validates against the payload of the API and the identity schema as configured in Ory Kratos.
 Identities can be supplied via STD_IN or JSON files containing a single or an array of identities.
 `,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		c := cliclient.NewClient(cmd)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			c := cliclient.NewClient(cmd)
 
-		is, err := readIdentities(cmd, args)
-		if err != nil {
-			return err
-		}
-
-		for src, i := range is {
-			err = validateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
-				return c.PublicApi.GetSchema(ctx, id).Execute()
-			})
+			is, err := readIdentities(cmd, args)
 			if err != nil {
 				return err
 			}
-		}
 
-		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "All identity files are valid.")
-		return nil
-	},
+			for src, i := range is {
+				err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
+					return c.PublicApi.GetSchema(ctx, id).Execute()
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "All identity files are valid.")
+			return nil
+		},
+	}
+
+	return c
 }
 
 var schemas = make(map[string]*jsonschema.Schema)
 
 const createIdentityPath = "openapi.json#/components/schemas/createIdentity"
 
-type schemaGetter = func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error)
+type SchemaGetter = func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error)
 
-// validateIdentity validates the json payload fc against
+// ValidateIdentity validates the json payload fc against
 // 1. the swagger payload definition and
 // 2. the remote custom identity schema.
-func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaGetter) error {
+func ValidateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema SchemaGetter) error {
 	swaggerSchema, ok := schemas[createIdentityPath]
 	if !ok {
 		// add swagger schema

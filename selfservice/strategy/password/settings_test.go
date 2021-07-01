@@ -76,14 +76,12 @@ func TestSettings(t *testing.T) {
 	browserIdentity2 := newEmptyIdentity()
 	apiIdentity2 := newEmptyIdentity()
 
-	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
 	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity2)
 	apiUser1 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity1)
 	apiUser2 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity2)
-
-	adminClient := testhelpers.NewSDKClient(adminTS)
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
 		c := testhelpers.NewDebugClient(t)
@@ -148,7 +146,6 @@ func TestSettings(t *testing.T) {
 
 		t.Run("session=needs reauthentication", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient, conf)
 			defer testhelpers.NewLoginUIWith401Response(t, conf)
 			t.Cleanup(func() {
 				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
@@ -160,18 +157,21 @@ func TestSettings(t *testing.T) {
 			}
 
 			t.Run("type=api/expected=an error because reauth can not be initialized for API clients", func(t *testing.T) {
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, apiUser1), conf)
 				actual := testhelpers.SubmitSettingsForm(t, true, false, apiUser1, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
 				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
 			})
 
 			t.Run("type=spa", func(t *testing.T) {
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
 				actual := testhelpers.SubmitSettingsForm(t, false, true, browserUser1, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
 				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser1), conf)
 				check(t, expectValidationError(t, false, false, browserUser1, payload))
 			})
 		})

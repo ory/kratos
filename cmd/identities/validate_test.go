@@ -1,4 +1,4 @@
-package identities
+package identities_test
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+
+	"github.com/ory/kratos/cmd/identities"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +22,7 @@ func TestValidateIdentity(t *testing.T) {
 		return cmd, out, err
 	}
 
-	var testSchemaGetter = func(resp map[string]interface{}) schemaGetter {
+	var testSchemaGetter = func(resp map[string]interface{}) identities.SchemaGetter {
 		return func(_ context.Context, _ string) (map[string]interface{}, *http.Response, error) {
 			return resp, nil, nil
 		}
@@ -63,7 +65,7 @@ func TestValidateIdentity(t *testing.T) {
 			if tc.identitySchema == nil {
 				tc.identitySchema = map[string]interface{}{}
 			}
-			err := validateIdentity(cmd, "test identity", tc.payload, testSchemaGetter(tc.identitySchema))
+			err := identities.ValidateIdentity(cmd, "test identity", tc.payload, testSchemaGetter(tc.identitySchema))
 			assert.Error(t, err, stdOut.String(), stdErr.String())
 			assert.Len(t, stdOut.String(), 0, stdErr.String())
 			assert.Contains(t, stdErr.String(), "required", stdOut.String())

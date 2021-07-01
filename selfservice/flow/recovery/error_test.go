@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/jsonx"
 
 	"github.com/ory/kratos/ui/node"
-
-	kratos "github.com/ory/kratos-client-go"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
@@ -179,15 +179,15 @@ func TestHandleError(t *testing.T) {
 	}
 
 	t.Run("flow=browser", func(t *testing.T) {
-		expectRecoveryUI := func(t *testing.T) (*kratos.RecoveryFlow, *http.Response) {
+		expectRecoveryUI := func(t *testing.T) (*recovery.Flow, *http.Response) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
 
-			lf, _, err := sdk.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+			rf, err := reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err)
-			return lf, res
+			return rf, res
 		}
 
 		t.Run("case=expired error", func(t *testing.T) {
@@ -198,8 +198,8 @@ func TestHandleError(t *testing.T) {
 			methodName = node.RecoveryLinkGroup
 
 			lf, _ := expectRecoveryUI(t)
-			require.Len(t, lf.Ui.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
-			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.Ui.Messages[0].Id))
+			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
+			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.UI.Messages[0].ID))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {
@@ -210,9 +210,9 @@ func TestHandleError(t *testing.T) {
 			methodName = node.RecoveryLinkGroup
 
 			lf, _ := expectRecoveryUI(t)
-			require.NotEmpty(t, lf.Ui, x.MustEncodeJSON(t, lf))
-			require.Len(t, lf.Ui.Messages, 1, x.MustEncodeJSON(t, lf))
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Ui.Messages[0].Id), x.MustEncodeJSON(t, lf))
+			require.NotEmpty(t, lf.UI, x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.UI.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.UI.Messages[0].ID), x.MustEncodeJSON(t, lf))
 		})
 
 		t.Run("case=generic error", func(t *testing.T) {

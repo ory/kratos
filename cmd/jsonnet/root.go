@@ -29,15 +29,19 @@ const GlobHelp = `Glob Syntax:
         pattern { ',' pattern }
                     comma-separated (without spaces) patterns`
 
-// jsonnetCmd represents the jsonnet command
-var jsonnetCmd = &cobra.Command{
-	Use:   "jsonnet",
-	Short: "Helpers for linting and formatting JSONNet code",
+func NewJsonnetCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "jsonnet",
+		Short: "Helpers for linting and formatting JSONNet code",
+	}
+
+	return c
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(jsonnetCmd)
+	c := NewJsonnetCmd()
+	parent.AddCommand(c)
 
-	jsonnetCmd.AddCommand(jsonnetFormatCmd)
-	jsonnetCmd.AddCommand(jsonnetLintCmd)
+	c.AddCommand(NewJsonnetFormatCmd())
+	c.AddCommand(NewJsonnetLintCmd())
 }

@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/selfservice/flow"
@@ -143,11 +145,11 @@ func TestAdminStrategy(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		testhelpers.LogJSON(t, rl)
 
-		sr, _, err := adminSDK.PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
 		require.NoError(t, err, "%s", res.Request.URL.String())
 
-		require.Len(t, sr.Ui.Messages, 1)
-		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Ui.Messages[0].Text)
+		require.Len(t, f.UI.Messages, 1)
+		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", f.UI.Messages[0].Text)
 	})
 }
 
@@ -173,23 +175,25 @@ func TestRecovery(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToRecover,
 		identity.ManagerAllowWriteProtectedTraits))
 
-	var expect = func(t *testing.T, isAPI, isSPA bool, values func(url.Values), c int) string {
-		hc := testhelpers.NewDebugClient(t)
-		if !isAPI {
-			hc = testhelpers.NewClientWithCookies(t)
-			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+	var expect = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
+		if hc == nil {
+			hc = testhelpers.NewDebugClient(t)
+			if !isAPI {
+				hc = testhelpers.NewClientWithCookies(t)
+				hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+			}
 		}
 
 		return testhelpers.SubmitRecoveryForm(t, isAPI, isSPA, hc, public, values, c,
 			testhelpers.ExpectURL(isAPI || isSPA, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI().String()))
 	}
 
-	var expectValidationError = func(t *testing.T, isAPI, isSPA bool, values func(url.Values)) string {
-		return expect(t, isAPI, isSPA, values, testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK))
+	var expectValidationError = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
+		return expect(t, hc, isAPI, isSPA, values, testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK))
 	}
 
-	var expectSuccess = func(t *testing.T, isAPI, isSPA bool, values func(url.Values)) string {
-		return expect(t, isAPI, isSPA, values, http.StatusOK)
+	var expectSuccess = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
+		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
 	t.Run("description=should set all the correct recovery payloads", func(t *testing.T) {
@@ -258,15 +262,15 @@ func TestRecovery(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, false, values))
+			check(t, expectValidationError(t, nil, false, false, values))
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			check(t, expectValidationError(t, false, true, values))
+			check(t, expectValidationError(t, nil, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, false, values))
+			check(t, expectValidationError(t, nil, true, false, values))
 		})
 	})
 
@@ -283,15 +287,15 @@ func TestRecovery(t *testing.T) {
 			}
 
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, false, false, values), email)
+				check(t, expectValidationError(t, nil, false, false, values), email)
 			})
 
 			t.Run("type=spa", func(t *testing.T) {
-				check(t, expectValidationError(t, false, true, values), email)
+				check(t, expectValidationError(t, nil, false, true, values), email)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
-				check(t, expectValidationError(t, true, false, values), email)
+				check(t, expectValidationError(t, nil, true, false, values), email)
 			})
 		}
 
@@ -314,17 +318,17 @@ func TestRecovery(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			email = x.NewUUID().String() + "@ory.sh"
-			check(t, expectSuccess(t, false, false, values))
+			check(t, expectSuccess(t, nil, false, false, values))
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			email = x.NewUUID().String() + "@ory.sh"
-			check(t, expectSuccess(t, false, true, values))
+			check(t, expectSuccess(t, nil, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
 			email = x.NewUUID().String() + "@ory.sh"
-			check(t, expectSuccess(t, true, false, values))
+			check(t, expectSuccess(t, nil, true, false, values))
 		})
 	})
 
@@ -360,15 +364,15 @@ func TestRecovery(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectSuccess(t, false, false, values))
+			check(t, expectSuccess(t, nil, false, false, values))
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			check(t, expectSuccess(t, true, true, values))
+			check(t, expectSuccess(t, nil, true, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectSuccess(t, true, false, values))
+			check(t, expectSuccess(t, nil, true, false, values))
 		})
 	})
 
@@ -411,7 +415,8 @@ func TestRecovery(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 		})
 
-		body := expectSuccess(t, false, false, func(v url.Values) {
+		c := testhelpers.NewClientWithCookies(t)
+		body := expectSuccess(t, c, false, false, func(v url.Values) {
 			v.Set("email", recoveryEmail)
 		})
 
@@ -422,7 +427,6 @@ func TestRecovery(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 201)
 
-		c := testhelpers.NewClientWithCookies(t)
 		res, err := c.Get(recoveryLink)
 		require.NoError(t, err)
 

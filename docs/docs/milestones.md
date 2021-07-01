@@ -31,6 +31,12 @@ Something is not working.
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [ ] Recovery link doesn't log out existing users
       ([kratos#1077](https://github.com/ory/kratos/issues/1077))
+- [ ] Email verification link is automatically opened by mail provider
+      ([kratos#1202](https://github.com/ory/kratos/issues/1202))
+- [ ] recovery link is open by email app
+      ([kratos#1142](https://github.com/ory/kratos/issues/1142))
+- [ ] Relative path in ui_url or default_browser_return_url cause runtime crash
+      ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 
@@ -94,6 +100,8 @@ New feature or request.
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [ ] Implement immutable keyword in JSON Schema for Identity Traits
       ([kratos#117](https://github.com/ory/kratos/issues/117))
+- [ ] Write new recovery and verification strategy that does not rely on links
+      ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
@@ -151,9 +159,9 @@ Something is not working.
 
 #### Issues
 
-- [ ] Update profile with field error returning 502
-      ([kratos#1425](https://github.com/ory/kratos/issues/1425)) -
-      [@hackerman](https://github.com/aeneasr)
+- [ ] Verification does not include success message
+      ([kratos#1450](https://github.com/ory/kratos/issues/1450)) -
+      [@Alano Terblanche](https://github.com/Benehiko)
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] Investigate why smtps fails but smtp does not
@@ -179,6 +187,12 @@ Something is not working.
 - [x] Social sign uop should reduce confusion on sign up button
       ([kratos#1422](https://github.com/ory/kratos/issues/1422)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Update profile with field error returning 502
+      ([kratos#1425](https://github.com/ory/kratos/issues/1425)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] fix: settings flow error handle should access schemas using configured
+      "local" URLs instead of public URLs
+      ([kratos#1448](https://github.com/ory/kratos/issues/1448))
 
 #### Pull Requests
 
@@ -201,12 +215,11 @@ New feature or request.
 
 #### Issues
 
-- [ ] Prevent accidental leak of PII when Copy & Pasting of Flow URLs which
-      include Flow IDs
-      ([kratos#1282](https://github.com/ory/kratos/issues/1282)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Write tests for domain aliasing in cookie handler
       ([kratos#1292](https://github.com/ory/kratos/issues/1292)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Document new CSRF Cookie requirement
+      ([kratos#1472](https://github.com/ory/kratos/issues/1472)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] Gracefully handle CSRF errors
       ([kratos#91](https://github.com/ory/kratos/issues/91)) -
@@ -223,11 +236,18 @@ New feature or request.
 - [x] CSRF failure should start a new login/registration flow
       ([kratos#821](https://github.com/ory/kratos/issues/821)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Prevent accidental leak of PII when Copy & Pasting of Flow URLs which
+      include Flow IDs
+      ([kratos#1282](https://github.com/ory/kratos/issues/1282)) -
+      [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
 - [x] feat: APIs for native integration with AJAX / SPAs / ReactJS / NextJS /
       ... ([kratos#1367](https://github.com/ory/kratos/pull/1367)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] feat: anti-CSRF measures when fetching flows
+      ([kratos#1458](https://github.com/ory/kratos/pull/1458)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
@@ -236,16 +256,23 @@ A request for comments to discuss and share ideas.
 
 #### Issues
 
-- [ ] Prevent accidental leak of PII when Copy & Pasting of Flow URLs which
+- [ ] Separate OpenAPI tags into stable and experimental and rework admin
+      strategy ([kratos#1424](https://github.com/ory/kratos/issues/1424)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Prevent accidental leak of PII when Copy & Pasting of Flow URLs which
       include Flow IDs
       ([kratos#1282](https://github.com/ory/kratos/issues/1282)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Separate OpenAPI tags into stable and experimental and rework admin
-      strategy ([kratos#1424](https://github.com/ory/kratos/issues/1424))
 
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
 
 Blocks milestones or other issues or pulls.
+
+#### Issues
+
+- [ ] Document new CSRF Cookie requirement
+      ([kratos#1472](https://github.com/ory/kratos/issues/1472)) -
+      [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
