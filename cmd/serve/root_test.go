@@ -2,9 +2,10 @@ package serve_test
 
 import (
 	"encoding/base64"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/internal/testhelpers"
 )

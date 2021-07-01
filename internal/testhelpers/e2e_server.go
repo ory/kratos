@@ -8,11 +8,13 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/ory/x/tlsx"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/x/tlsx"
 
 	"github.com/avast/retry-go/v3"
 	"github.com/phayes/freeport"
@@ -92,9 +94,8 @@ func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, 
 	adminUrl = fmt.Sprintf("https://127.0.0.1:%d", adminPort)
 
 	require.NoError(t, retry.Do(func() error {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
+		/* #nosec G402: TLS InsecureSkipVerify set true. */
+		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		client := &http.Client{Transport: tr}
 		res, err := client.Get(publicUrl + "/health/alive")
 		if err != nil {

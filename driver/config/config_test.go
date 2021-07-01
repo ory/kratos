@@ -4,13 +4,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/internal/testhelpers"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/ory/x/configx"
 
