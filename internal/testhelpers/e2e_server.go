@@ -12,8 +12,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/ory/x/tlsx"
 
 	"github.com/avast/retry-go/v3"
@@ -97,15 +95,24 @@ func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, 
 		/* #nosec G402: TLS InsecureSkipVerify set true. */
 		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		client := &http.Client{Transport: tr}
-		res, err := client.Get(publicUrl + "/health/alive")
-		if err != nil {
-			return err
-		}
-		defer res.Body.Close()
-		body := x.MustReadAll(res.Body)
-		if res.StatusCode != http.StatusOK {
-			t.Logf("%s", body)
-			return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
+
+		for _, url := range []string{publicUrl + "/health/alive", adminUrl + "/health/alive"} {
+			res, err := client.Get(url)
+			if err != nil {
+				return err
+			}
+
+			body := x.MustReadAll(res.Body)
+
+			err = res.Body.Close()
+			if err != nil {
+				return err
+			}
+
+			if res.StatusCode != http.StatusOK {
+				t.Logf("%s", body)
+				return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
+			}
 		}
 		return nil
 	}))
@@ -115,38 +122,33 @@ func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, 
 
 func GenerateTLSCertificateFilesForTests(t *testing.T, certPath, keyPath string) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	cert, err := tlsx.CreateSelfSignedCertificate(privateKey)
-	assert.Nil(t, err)
-
-	derBytes := cert.Raw
+	require.NoError(t, err)
 
 	certOut, err := os.Create(certPath)
-	if err != nil {
-		t.Errorf("Failed to open cert.pem for writing: %v", err)
-	}
-	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		t.Errorf("Failed to write data to cert.pem: %v", err)
-	}
-	if err := certOut.Close(); err != nil {
-		t.Errorf("Error closing cert.pem: %v", err)
-	}
+	require.NoError(t, err, "Failed to open cert.pem for writing: %v", err)
+
+	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
+	require.NoError(t, err, "Failed to write data to cert.pem: %v", err)
+
+	err = certOut.Close()
+	require.NoError(t, err, "Error closing cert.pem: %v", err)
+
 	t.Logf("wrote cert.pem")
 
 	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		t.Errorf("Failed to open key.pem for writing: %v", err)
-	}
+	require.NoError(t, err, "Failed to open key.pem for writing: %v", err)
+
 	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
-	if err != nil {
-		t.Errorf("Unable to marshal private key: %v", err)
-	}
-	if err := pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes}); err != nil {
-		t.Errorf("Failed to write data to key.pem: %v", err)
-	}
-	if err := keyOut.Close(); err != nil {
-		t.Errorf("Error closing key.pem: %v", err)
-	}
+	require.NoError(t, err, "Unable to marshal private key: %v", err)
+
+	err = pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
+	require.NoError(t, err, "Failed to write data to key.pem: %v", err)
+
+	err = keyOut.Close()
+	require.NoError(t, err, "Error closing key.pem: %v", err)
+
 	t.Logf("wrote key.pem")
 }

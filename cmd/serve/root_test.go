@@ -2,10 +2,9 @@ package serve_test
 
 import (
 	"encoding/base64"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/internal/testhelpers"
 )
@@ -21,10 +20,10 @@ func TestServeTLSBase64(t *testing.T) {
 	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
 	certRaw, err := ioutil.ReadFile(certPath)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	keyRaw, err := ioutil.ReadFile(keyPath)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	certBase64 := base64.StdEncoding.EncodeToString(certRaw)
 	keyBase64 := base64.StdEncoding.EncodeToString(keyRaw)
