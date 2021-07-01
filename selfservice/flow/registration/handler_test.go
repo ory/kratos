@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/corpx"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +23,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
@@ -160,69 +161,56 @@ func TestInitFlow(t *testing.T) {
 func TestGetFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+		map[string]interface{}{"enabled": true})
 
-	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
+	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRedirTS(t, "", conf)
 
-	newRegistrationTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
-		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if c == nil {
-				c = http.DefaultClient
-			}
-			_, err := w.Write(x.EasyGetBody(t, c, upstream+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
+	setupRegistrationUI := func(t *testing.T, c *http.Client) *httptest.Server {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, err := w.Write(x.EasyGetBody(t, c, public.URL+registration.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
+		t.Cleanup(ts.Close)
+		conf.MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL)
+		return ts
 	}
 
-	assertFlowPayload := func(t *testing.T, body []byte) {
+	t.Run("case=valid", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupRegistrationUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+
 		assert.NotEmpty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), public.URL, "%s", body)
-	}
-
-	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
-		assert.EqualValues(t, http.StatusGone, res.StatusCode)
-		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
-	}
-
-	newExpiredFlow := func() *registration.Flow {
-		return &registration.Flow{
-			ID:         x.NewUUID(),
-			ExpiresAt:  time.Now().Add(-time.Minute),
-			IssuedAt:   time.Now().Add(-time.Minute * 2),
-			RequestURL: public.URL + registration.RouteInitBrowserFlow,
-			CSRFToken:  x.FakeCSRFToken,
-			Type:       flow.TypeBrowser,
-		}
-	}
-
-	run := func(t *testing.T, endpoint *httptest.Server) {
-		registrationTS := newRegistrationTS(t, endpoint.URL, nil)
-		defer registrationTS.Close()
-		conf.MustSet(config.ViperKeySelfServiceRegistrationUI, registrationTS.URL)
-		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
-			map[string]interface{}{"enabled": true})
-
-		t.Run("case=valid", func(t *testing.T) {
-			assertFlowPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+registration.RouteInitBrowserFlow))
-		})
-
-		t.Run("case=expired", func(t *testing.T) {
-			lr := newExpiredFlow()
-			require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), endpoint.URL+registration.RouteGetFlow+"?id="+lr.ID.String())
-			assertExpiredPayload(t, res, body)
-		})
-	}
-
-	t.Run("daemon=admin", func(t *testing.T) {
-		run(t, admin)
 	})
 
-	t.Run("daemon=public", func(t *testing.T) {
-		run(t, public)
+	t.Run("case=csrf cookie missing", func(t *testing.T) {
+		client := http.DefaultClient
+		_ = setupRegistrationUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+
+		assert.EqualValues(t, x.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+	})
+
+	t.Run("case=expired", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupRegistrationUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
+
+		// Expire the flow
+		f, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
+		require.NoError(t, err)
+		f.ExpiresAt = time.Now().Add(-time.Second)
+		require.NoError(t, reg.RegistrationFlowPersister().UpdateRegistrationFlow(context.Background(), f))
+
+		res, body := x.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+f.ID.String())
+		assert.EqualValues(t, http.StatusGone, res.StatusCode)
+		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	})
 }

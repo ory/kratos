@@ -19,7 +19,7 @@ context('Email Profile', () => {
     cy.get('button[type="submit"]').click()
 
     // FIXME https://github.com/ory/kratos/issues/91
-    cy.get('html').should('contain.text', 'missing or invalid csrf_token value')
+    cy.get('html').should('contain.text', 'The request was rejected to protect you from Cross-Site-Request-Forgery')
   })
 
   describe('shows validation errors when invalid signup data is used', () => {

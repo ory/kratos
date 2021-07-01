@@ -89,11 +89,6 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**GetIdentity**](docs/AdminApi.md#getidentity) | **Get** /identities/{id} | Get an Identity
 *AdminApi* | [**GetSchema**](docs/AdminApi.md#getschema) | **Get** /schemas/{id} | 
 *AdminApi* | [**GetSelfServiceError**](docs/AdminApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
-*AdminApi* | [**GetSelfServiceLoginFlow**](docs/AdminApi.md#getselfserviceloginflow) | **Get** /self-service/login/flows | Get Login Flow
-*AdminApi* | [**GetSelfServiceRecoveryFlow**](docs/AdminApi.md#getselfservicerecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
-*AdminApi* | [**GetSelfServiceRegistrationFlow**](docs/AdminApi.md#getselfserviceregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
-*AdminApi* | [**GetSelfServiceSettingsFlow**](docs/AdminApi.md#getselfservicesettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
-*AdminApi* | [**GetSelfServiceVerificationFlow**](docs/AdminApi.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
 *AdminApi* | [**GetVersion**](docs/AdminApi.md#getversion) | **Get** /version | Return Running Software Version.
 *AdminApi* | [**IsAlive**](docs/AdminApi.md#isalive) | **Get** /health/alive | Check HTTP Server Status
 *AdminApi* | [**IsReady**](docs/AdminApi.md#isready) | **Get** /health/ready | Check HTTP Server and Database Status
