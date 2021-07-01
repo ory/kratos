@@ -3,7 +3,11 @@ package serve_test
 import (
 	"encoding/base64"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/assert"
 
@@ -15,8 +19,8 @@ func TestServe(t *testing.T) {
 }
 
 func TestServeTLSBase64(t *testing.T) {
-	certPath := "/tmp/e2e_test_cert.pem"
-	keyPath := "/tmp/e2e_test_key.pem"
+	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
+	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
 
 	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
@@ -40,8 +44,8 @@ func TestServeTLSBase64(t *testing.T) {
 }
 
 func TestServeTLSPaths(t *testing.T) {
-	certPath := "/tmp/e2e_test_cert.pem"
-	keyPath := "/tmp/e2e_test_key.pem"
+	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
+	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
 
 	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
