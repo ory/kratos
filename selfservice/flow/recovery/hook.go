@@ -75,13 +75,13 @@ func (e *HookExecutor) PostRecoveryHook(w http.ResponseWriter, r *http.Request, 
 			WithField("executor_position", k).
 			WithField("executors", PostHookRecoveryExecutorNames(e.d.PostRecoveryHooks(r.Context()))).
 			WithField("identity_id", s.Identity.ID).
-			Debug("ExecutePostVerificationHook completed successfully.")
+			Debug("ExecutePostRecoveryHook completed successfully.")
 	}
 
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", s.Identity.ID).
-		Debug("Post verification execution hooks completed successfully.")
+		Debug("Post recovery execution hooks completed successfully.")
 
 	return nil
 }
