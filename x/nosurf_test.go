@@ -31,6 +31,8 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	assert.EqualValues(t, "aHR0cDovL2Zvby5jb20vYmFy_csrf_token", cookie.Name, "base64 representation of http://foo.com/bar")
 	assert.EqualValues(t, http.SameSiteLaxMode, cookie.SameSite, "is set to lax because https/secure is false - chrome rejects none samesite on non-https")
 	assert.EqualValues(t, nosurf.MaxAge, cookie.MaxAge)
+	assert.EqualValues(t, "/", cookie.Path, "cookie path is site root by default")
+	assert.EqualValues(t, "foo.com", cookie.Domain, "domain for the cookie is set to public base url")
 	assert.False(t, cookie.Secure, "false because insecure dev mode")
 	assert.True(t, cookie.HttpOnly)
 
@@ -50,6 +52,21 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	assert.EqualValues(t, http.SameSiteNoneMode, cookie.SameSite, "can be none because https/secure is true")
 	assert.True(t, cookie.Secure, "true because secure mode")
 	assert.True(t, cookie.HttpOnly)
+
+	require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
+	require.NoError(t, conf.Source().Set(config.ViperKeyPublicDomainAliases, [...]config.DomainAlias{{MatchDomain: "example.com", BasePath: "/", Scheme: "http"}}))
+
+	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
+	assert.EqualValues(t, "foo.com", cookie.Domain, "domain doesn't change when request not from an alias")
+	assert.EqualValues(t, "/", cookie.Path, "cookie path is site root by default")
+
+	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://example.com/bar", nil))
+	assert.EqualValues(t, "example.com", cookie.Domain, "alias domain is used when request is from an alias")
+	assert.EqualValues(t, "/", cookie.Path, "cookie path is site root by default")
+
+	require.NoError(t, conf.Source().Set(config.ViperKeySessionPath, "/bar/"))
+	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://example.com/bar", nil))
+	assert.EqualValues(t, "/bar/", cookie.Path, "session cookie path is used for csrf cookie")
 }
 
 func TestNosurfBaseCookieErrorHandler(t *testing.T) {
