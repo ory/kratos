@@ -1,0 +1,77 @@
+networks:
+  intranet: {}
+services:
+  cockroachd:
+    command: start --insecure
+    image: cockroachdb/cockroach:v20.1.0
+    networks:
+      intranet: {}
+    ports:
+    - published: 26257
+      target: 26257
+  kratos:
+    command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
+    depends_on:
+      kratos-migrate:
+        condition: service_started
+    environment:
+      DSN: ${COCKROACH_DB_DSN}
+      LOG_LEVEL: trace
+    image: oryd/kratos:v0.6.3-alpha.1
+    networks:
+      intranet: {}
+    ports:
+    - published: 4433
+      target: 4433
+    - published: 4434
+      target: 4434
+    restart: unless-stopped
+    volumes:
+    - source: ./contrib/quickstart/kratos/config
+      target: /etc/config/kratos
+      type: bind
+    - source: kratos-sqlite
+      target: /var/lib/sqlite
+      type: volume
+  kratos-migrate:
+    command: -c /etc/config/kratos/kratos.yml migrate sql -e --yes
+    environment:
+      DSN: ${COCKROACH_DB_DSN}
+    image: oryd/kratos:v0.6.3-alpha.1
+    networks:
+      intranet: {}
+    restart: on-failure
+    volumes:
+    - source: ./contrib/quickstart/kratos/config
+      target: /etc/config/kratos
+      type: bind
+    - source: kratos-sqlite
+      target: /var/lib/sqlite
+      type: volume
+  kratos-selfservice-ui-node:
+    environment:
+      KRATOS_ADMIN_URL: http://kratos:4434/
+      KRATOS_BROWSER_URL: http://127.0.0.1:4433/
+      KRATOS_PUBLIC_URL: http://kratos:4433/
+      PORT: '4455'
+      SECURITY_MODE: ''
+    image: oryd/kratos-selfservice-ui-node:v0.6.0-alpha.1
+    networks:
+      intranet: {}
+    ports:
+    - published: 4455
+      target: 4455
+    restart: on-failure
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    networks:
+      intranet: {}
+    ports:
+    - published: 4436
+      target: 4436
+    - published: 4437
+      target: 4437
+version: '3.7'
+volumes:
+  kratos-sqlite: {}
+
