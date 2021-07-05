@@ -87,6 +87,7 @@ sdk: .bin/swagger .bin/ory node_modules
 					-p file://.schema/openapi/patches/schema.yaml \
 					-p file://.schema/openapi/patches/selfservice.yaml \
 					-p file://.schema/openapi/patches/security.yaml \
+					-p file://.schema/openapi/patches/session.yaml \
 					spec/swagger.json spec/api.json
 
 		rm -rf internal/httpclient/models internal/httpclient/clients
