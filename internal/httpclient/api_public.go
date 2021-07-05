@@ -3938,18 +3938,18 @@ func (a *PublicApiService) SubmitSelfServiceVerificationFlowExecute(r PublicApiA
 }
 
 type PublicApiApiToSessionRequest struct {
-	ctx            context.Context
-	ApiService     *PublicApiService
-	xSessionToken  *string
-	xSessionCookie *string
+	ctx           context.Context
+	ApiService    *PublicApiService
+	xSessionToken *string
+	cookie        *string
 }
 
 func (r PublicApiApiToSessionRequest) XSessionToken(xSessionToken string) PublicApiApiToSessionRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r PublicApiApiToSessionRequest) XSessionCookie(xSessionCookie string) PublicApiApiToSessionRequest {
-	r.xSessionCookie = &xSessionCookie
+func (r PublicApiApiToSessionRequest) Cookie(cookie string) PublicApiApiToSessionRequest {
+	r.cookie = &cookie
 	return r
 }
 
@@ -3963,6 +3963,27 @@ func (r PublicApiApiToSessionRequest) Execute() (*Session, *http.Response, error
 Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
 Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
 
+If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
+
+```js
+pseudo-code example
+router.get('/protected-endpoint', async function (req, res) {
+const session = await client.toSession(undefined, req.header('cookie'))
+
+console.log(session)
+})
+```
+
+When calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:
+
+```js
+pseudo-code example
+...
+const session = await client.toSession("the-session-token")
+
+console.log(session)
+```
+
 This endpoint is useful for:
 
 AJAX calls. Remember to send credentials and set up CORS correctly!
@@ -3973,8 +3994,7 @@ This endpoint authenticates users by checking
 
 if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
 if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
-if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;
-if the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).
+if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 
 If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -4032,8 +4052,8 @@ func (a *PublicApiService) ToSessionExecute(r PublicApiApiToSessionRequest) (*Se
 	if r.xSessionToken != nil {
 		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
-	if r.xSessionCookie != nil {
-		localVarHeaderParams["X-Session-Cookie"] = parameterToString(*r.xSessionCookie, "")
+	if r.cookie != nil {
+		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
