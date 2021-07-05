@@ -4,10 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/x"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -658,8 +660,8 @@ func TestViperProvider_HaveIBeenPwned(t *testing.T) {
 }
 
 func TestLoadingTLSConfig(t *testing.T) {
-	certPath := "/tmp/test_cert.pem"
-	keyPath := "/tmp/test_key.pem"
+	certPath := filepath.Join(os.TempDir(), "e2e_test_cert_"+x.NewUUID().String()+".pem")
+	keyPath := filepath.Join(os.TempDir(), "e2e_test_key_"+x.NewUUID().String()+".pem")
 
 	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
