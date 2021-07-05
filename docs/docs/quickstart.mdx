@@ -630,3 +630,19 @@ immediately signed in after registration.
 If you want to test Ory Kratos integration with different OIDC providers, you
 will find more information in this document:
 [OIDC](guides/sign-in-with-github-google-facebook-linkedin.mdx)
+
+### Quickstart Configuration
+
+In this tutorial we use a simplified configuration.  
+You can find it in
+[`contrib/quickstart/kratos/email-password/kratos.yml`](https://github.com/ory/kratos/blob/master/contrib/quickstart/kratos/email-password/kratos.yml).
+In the same place the
+[identity schema](https://github.com/ory/kratos/blob/master/contrib/quickstart/kratos/email-password/identity.schema.json)
+used in the tutorial can be found. The configuration gets loaded in
+docker-compose as specified in the
+[`quickstart.yml`](https://github.com/ory/kratos/blob/master/quickstart.yml).
+
+<CodeFromRemote src="https://github.com/ory/kratos/blob/master/contrib/quickstart/kratos/email-password/kratos.yml" />
+
+Have a look at the [reference configuration](./reference/configuration.md) for
+further information on possible configuration options.
