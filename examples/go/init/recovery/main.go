@@ -2,9 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
 
 	"github.com/ory/kratos/examples/go/pkg"
 
@@ -19,16 +16,13 @@ var client = pkg.NewSDK("playground")
 func initRecovery() *ory.RecoveryFlow {
 	ctx := context.Background()
 
-	flow, _, err := client.PublicApi.InitializeSelfServiceRecoveryWithoutBrowser(ctx).Execute()
-	if err != nil {
-		log.Fatalf("An error ocurred: %s\n", err)
-	}
+	flow, res, err := client.PublicApi.InitializeSelfServiceRecoveryWithoutBrowser(ctx).Execute()
+	pkg.SDKExitOnError(err, res)
 
 	return flow
 }
 
 func main() {
 	flow := initRecovery()
-	out, _ := json.MarshalIndent(flow, "", "  ")
-	fmt.Println(string(out))
+	pkg.PrintJSONPretty(flow)
 }

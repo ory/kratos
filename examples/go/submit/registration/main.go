@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/google/uuid"
 
@@ -22,7 +20,7 @@ func performRegistration() *ory.RegistrationViaApiResponse {
 	flow, _, err := client.PublicApi.InitializeSelfServiceRegistrationWithoutBrowser(ctx).Execute()
 	pkg.ExitOnError(err)
 
-	result, _, err := client.PublicApi.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlow(ory.SubmitSelfServiceRegistrationFlow{
+	result, res, err := client.PublicApi.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlow(ory.SubmitSelfServiceRegistrationFlow{
 		&ory.SubmitSelfServiceRegistrationFlowWithPasswordMethod{
 			Method:   "password",
 			Password: ory.PtrString(uuid.New().String() + uuid.New().String()),
@@ -31,12 +29,11 @@ func performRegistration() *ory.RegistrationViaApiResponse {
 			},
 		},
 	}).Execute()
-	pkg.ExitOnError(err)
+	pkg.SDKExitOnError(err, res)
 	return result
 }
 
 func main() {
 	result := performRegistration()
-	out, _ := json.MarshalIndent(result, "", "  ")
-	fmt.Println(string(out))
+	pkg.PrintJSONPretty(result)
 }

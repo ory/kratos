@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestVerification(t *testing.T) {
+func TestFunc(t *testing.T) {
 	publicURL, _ := testhelpers.StartE2EServer(t, "../../pkg/stub/kratos.yaml")
 	client = pkg.NewSDKForSelfHosted(publicURL)
 

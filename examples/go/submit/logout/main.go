@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/ory/kratos/examples/go/pkg"
 
@@ -17,11 +16,9 @@ var client = pkg.NewSDK("playground")
 func performLogout() {
 	// Create a temporary user
 	_, sessionToken := pkg.CreateIdentityWithSession(client)
-	_, err := client.PublicApi.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(ory.PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{}.
+	res, err := client.PublicApi.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(ory.PublicApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{}.
 		SubmitSelfServiceLogoutFlowWithoutBrowserBody(ory.SubmitSelfServiceLogoutFlowWithoutBrowserBody{SessionToken: sessionToken}))
-	if err != nil {
-		log.Fatalf("An error occurred: %s\n", err)
-	}
+	pkg.SDKExitOnError(err, res)
 }
 
 func main() {
