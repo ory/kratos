@@ -88,7 +88,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ],
         "summary": "List Identities",
         "operationId": "adminListIdentities",
@@ -146,7 +146,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ],
         "summary": "Create an Identity",
         "operationId": "adminCreateIdentity",
@@ -206,7 +206,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ],
         "summary": "Get an Identity",
         "operationId": "adminGetIdentity",
@@ -258,7 +258,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ],
         "summary": "Update an Identity",
         "operationId": "adminUpdateIdentity",
@@ -326,7 +326,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ],
         "summary": "Delete an Identity",
         "operationId": "adminDeleteIdentity",
@@ -1750,7 +1750,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Check Who the Current HTTP Session Belongs To",
         "operationId": "toSession",

@@ -25,21 +25,21 @@ var (
 	_ context.Context
 )
 
-// V0alpha0ApiService V0alpha0Api service
-type V0alpha0ApiService service
+// V0alpha1ApiService V0alpha1Api service
+type V0alpha1ApiService service
 
-type V0alpha0ApiApiAdminCreateIdentityRequest struct {
+type V0alpha1ApiApiAdminCreateIdentityRequest struct {
 	ctx                     context.Context
-	ApiService              *V0alpha0ApiService
+	ApiService              *V0alpha1ApiService
 	adminCreateIdentityBody *AdminCreateIdentityBody
 }
 
-func (r V0alpha0ApiApiAdminCreateIdentityRequest) AdminCreateIdentityBody(adminCreateIdentityBody AdminCreateIdentityBody) V0alpha0ApiApiAdminCreateIdentityRequest {
+func (r V0alpha1ApiApiAdminCreateIdentityRequest) AdminCreateIdentityBody(adminCreateIdentityBody AdminCreateIdentityBody) V0alpha1ApiApiAdminCreateIdentityRequest {
 	r.adminCreateIdentityBody = &adminCreateIdentityBody
 	return r
 }
 
-func (r V0alpha0ApiApiAdminCreateIdentityRequest) Execute() (*Identity, *http.Response, error) {
+func (r V0alpha1ApiApiAdminCreateIdentityRequest) Execute() (*Identity, *http.Response, error) {
 	return r.ApiService.AdminCreateIdentityExecute(r)
 }
 
@@ -50,10 +50,10 @@ using this method! A way to achieve that will be introduced in the future.
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha0ApiApiAdminCreateIdentityRequest
+ * @return V0alpha1ApiApiAdminCreateIdentityRequest
 */
-func (a *V0alpha0ApiService) AdminCreateIdentity(ctx context.Context) V0alpha0ApiApiAdminCreateIdentityRequest {
-	return V0alpha0ApiApiAdminCreateIdentityRequest{
+func (a *V0alpha1ApiService) AdminCreateIdentity(ctx context.Context) V0alpha1ApiApiAdminCreateIdentityRequest {
+	return V0alpha1ApiApiAdminCreateIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -63,7 +63,7 @@ func (a *V0alpha0ApiService) AdminCreateIdentity(ctx context.Context) V0alpha0Ap
  * Execute executes the request
  * @return Identity
  */
-func (a *V0alpha0ApiService) AdminCreateIdentityExecute(r V0alpha0ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error) {
+func (a *V0alpha1ApiService) AdminCreateIdentityExecute(r V0alpha1ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -73,7 +73,7 @@ func (a *V0alpha0ApiService) AdminCreateIdentityExecute(r V0alpha0ApiApiAdminCre
 		localVarReturnValue  *Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha0ApiService.AdminCreateIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminCreateIdentity")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -169,13 +169,13 @@ func (a *V0alpha0ApiService) AdminCreateIdentityExecute(r V0alpha0ApiApiAdminCre
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha0ApiApiAdminDeleteIdentityRequest struct {
+type V0alpha1ApiApiAdminDeleteIdentityRequest struct {
 	ctx        context.Context
-	ApiService *V0alpha0ApiService
+	ApiService *V0alpha1ApiService
 	id         string
 }
 
-func (r V0alpha0ApiApiAdminDeleteIdentityRequest) Execute() (*http.Response, error) {
+func (r V0alpha1ApiApiAdminDeleteIdentityRequest) Execute() (*http.Response, error) {
 	return r.ApiService.AdminDeleteIdentityExecute(r)
 }
 
@@ -188,10 +188,10 @@ assumed that is has been deleted already.
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID is the identity's ID.
- * @return V0alpha0ApiApiAdminDeleteIdentityRequest
+ * @return V0alpha1ApiApiAdminDeleteIdentityRequest
 */
-func (a *V0alpha0ApiService) AdminDeleteIdentity(ctx context.Context, id string) V0alpha0ApiApiAdminDeleteIdentityRequest {
-	return V0alpha0ApiApiAdminDeleteIdentityRequest{
+func (a *V0alpha1ApiService) AdminDeleteIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminDeleteIdentityRequest {
+	return V0alpha1ApiApiAdminDeleteIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -201,7 +201,7 @@ func (a *V0alpha0ApiService) AdminDeleteIdentity(ctx context.Context, id string)
 /*
  * Execute executes the request
  */
-func (a *V0alpha0ApiService) AdminDeleteIdentityExecute(r V0alpha0ApiApiAdminDeleteIdentityRequest) (*http.Response, error) {
+func (a *V0alpha1ApiService) AdminDeleteIdentityExecute(r V0alpha1ApiApiAdminDeleteIdentityRequest) (*http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodDelete
 		localVarPostBody     interface{}
@@ -210,7 +210,7 @@ func (a *V0alpha0ApiService) AdminDeleteIdentityExecute(r V0alpha0ApiApiAdminDel
 		localVarFileBytes    []byte
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha0ApiService.AdminDeleteIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminDeleteIdentity")
 	if err != nil {
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -286,13 +286,13 @@ func (a *V0alpha0ApiService) AdminDeleteIdentityExecute(r V0alpha0ApiApiAdminDel
 	return localVarHTTPResponse, nil
 }
 
-type V0alpha0ApiApiAdminGetIdentityRequest struct {
+type V0alpha1ApiApiAdminGetIdentityRequest struct {
 	ctx        context.Context
-	ApiService *V0alpha0ApiService
+	ApiService *V0alpha1ApiService
 	id         string
 }
 
-func (r V0alpha0ApiApiAdminGetIdentityRequest) Execute() (*Identity, *http.Response, error) {
+func (r V0alpha1ApiApiAdminGetIdentityRequest) Execute() (*Identity, *http.Response, error) {
 	return r.ApiService.AdminGetIdentityExecute(r)
 }
 
@@ -301,10 +301,10 @@ func (r V0alpha0ApiApiAdminGetIdentityRequest) Execute() (*Identity, *http.Respo
  * Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of identity you want to get
- * @return V0alpha0ApiApiAdminGetIdentityRequest
+ * @return V0alpha1ApiApiAdminGetIdentityRequest
  */
-func (a *V0alpha0ApiService) AdminGetIdentity(ctx context.Context, id string) V0alpha0ApiApiAdminGetIdentityRequest {
-	return V0alpha0ApiApiAdminGetIdentityRequest{
+func (a *V0alpha1ApiService) AdminGetIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminGetIdentityRequest {
+	return V0alpha1ApiApiAdminGetIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -315,7 +315,7 @@ func (a *V0alpha0ApiService) AdminGetIdentity(ctx context.Context, id string) V0
  * Execute executes the request
  * @return Identity
  */
-func (a *V0alpha0ApiService) AdminGetIdentityExecute(r V0alpha0ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error) {
+func (a *V0alpha1ApiService) AdminGetIdentityExecute(r V0alpha1ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -325,7 +325,7 @@ func (a *V0alpha0ApiService) AdminGetIdentityExecute(r V0alpha0ApiApiAdminGetIde
 		localVarReturnValue  *Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha0ApiService.AdminGetIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminGetIdentity")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -410,23 +410,23 @@ func (a *V0alpha0ApiService) AdminGetIdentityExecute(r V0alpha0ApiApiAdminGetIde
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha0ApiApiAdminListIdentitiesRequest struct {
+type V0alpha1ApiApiAdminListIdentitiesRequest struct {
 	ctx        context.Context
-	ApiService *V0alpha0ApiService
+	ApiService *V0alpha1ApiService
 	perPage    *int64
 	page       *int64
 }
 
-func (r V0alpha0ApiApiAdminListIdentitiesRequest) PerPage(perPage int64) V0alpha0ApiApiAdminListIdentitiesRequest {
+func (r V0alpha1ApiApiAdminListIdentitiesRequest) PerPage(perPage int64) V0alpha1ApiApiAdminListIdentitiesRequest {
 	r.perPage = &perPage
 	return r
 }
-func (r V0alpha0ApiApiAdminListIdentitiesRequest) Page(page int64) V0alpha0ApiApiAdminListIdentitiesRequest {
+func (r V0alpha1ApiApiAdminListIdentitiesRequest) Page(page int64) V0alpha1ApiApiAdminListIdentitiesRequest {
 	r.page = &page
 	return r
 }
 
-func (r V0alpha0ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.Response, error) {
+func (r V0alpha1ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.Response, error) {
 	return r.ApiService.AdminListIdentitiesExecute(r)
 }
 
@@ -436,10 +436,10 @@ func (r V0alpha0ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.R
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha0ApiApiAdminListIdentitiesRequest
+ * @return V0alpha1ApiApiAdminListIdentitiesRequest
 */
-func (a *V0alpha0ApiService) AdminListIdentities(ctx context.Context) V0alpha0ApiApiAdminListIdentitiesRequest {
-	return V0alpha0ApiApiAdminListIdentitiesRequest{
+func (a *V0alpha1ApiService) AdminListIdentities(ctx context.Context) V0alpha1ApiApiAdminListIdentitiesRequest {
+	return V0alpha1ApiApiAdminListIdentitiesRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -449,7 +449,7 @@ func (a *V0alpha0ApiService) AdminListIdentities(ctx context.Context) V0alpha0Ap
  * Execute executes the request
  * @return []Identity
  */
-func (a *V0alpha0ApiService) AdminListIdentitiesExecute(r V0alpha0ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error) {
+func (a *V0alpha1ApiService) AdminListIdentitiesExecute(r V0alpha1ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -459,7 +459,7 @@ func (a *V0alpha0ApiService) AdminListIdentitiesExecute(r V0alpha0ApiApiAdminLis
 		localVarReturnValue  []Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha0ApiService.AdminListIdentities")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminListIdentities")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -539,19 +539,19 @@ func (a *V0alpha0ApiService) AdminListIdentitiesExecute(r V0alpha0ApiApiAdminLis
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha0ApiApiAdminUpdateIdentityRequest struct {
+type V0alpha1ApiApiAdminUpdateIdentityRequest struct {
 	ctx                     context.Context
-	ApiService              *V0alpha0ApiService
+	ApiService              *V0alpha1ApiService
 	id                      string
 	adminUpdateIdentityBody *AdminUpdateIdentityBody
 }
 
-func (r V0alpha0ApiApiAdminUpdateIdentityRequest) AdminUpdateIdentityBody(adminUpdateIdentityBody AdminUpdateIdentityBody) V0alpha0ApiApiAdminUpdateIdentityRequest {
+func (r V0alpha1ApiApiAdminUpdateIdentityRequest) AdminUpdateIdentityBody(adminUpdateIdentityBody AdminUpdateIdentityBody) V0alpha1ApiApiAdminUpdateIdentityRequest {
 	r.adminUpdateIdentityBody = &adminUpdateIdentityBody
 	return r
 }
 
-func (r V0alpha0ApiApiAdminUpdateIdentityRequest) Execute() (*Identity, *http.Response, error) {
+func (r V0alpha1ApiApiAdminUpdateIdentityRequest) Execute() (*Identity, *http.Response, error) {
 	return r.ApiService.AdminUpdateIdentityExecute(r)
 }
 
@@ -565,10 +565,10 @@ The full identity payload (except credentials) is expected. This endpoint does n
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of identity you want to update
- * @return V0alpha0ApiApiAdminUpdateIdentityRequest
+ * @return V0alpha1ApiApiAdminUpdateIdentityRequest
 */
-func (a *V0alpha0ApiService) AdminUpdateIdentity(ctx context.Context, id string) V0alpha0ApiApiAdminUpdateIdentityRequest {
-	return V0alpha0ApiApiAdminUpdateIdentityRequest{
+func (a *V0alpha1ApiService) AdminUpdateIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminUpdateIdentityRequest {
+	return V0alpha1ApiApiAdminUpdateIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -579,7 +579,7 @@ func (a *V0alpha0ApiService) AdminUpdateIdentity(ctx context.Context, id string)
  * Execute executes the request
  * @return Identity
  */
-func (a *V0alpha0ApiService) AdminUpdateIdentityExecute(r V0alpha0ApiApiAdminUpdateIdentityRequest) (*Identity, *http.Response, error) {
+func (a *V0alpha1ApiService) AdminUpdateIdentityExecute(r V0alpha1ApiApiAdminUpdateIdentityRequest) (*Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPut
 		localVarPostBody     interface{}
@@ -589,7 +589,7 @@ func (a *V0alpha0ApiService) AdminUpdateIdentityExecute(r V0alpha0ApiApiAdminUpd
 		localVarReturnValue  *Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha0ApiService.AdminUpdateIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminUpdateIdentity")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -696,23 +696,23 @@ func (a *V0alpha0ApiService) AdminUpdateIdentityExecute(r V0alpha0ApiApiAdminUpd
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha0ApiApiToSessionRequest struct {
+type V0alpha1ApiApiToSessionRequest struct {
 	ctx           context.Context
-	ApiService    *V0alpha0ApiService
+	ApiService    *V0alpha1ApiService
 	xSessionToken *string
 	cookie        *string
 }
 
-func (r V0alpha0ApiApiToSessionRequest) XSessionToken(xSessionToken string) V0alpha0ApiApiToSessionRequest {
+func (r V0alpha1ApiApiToSessionRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiToSessionRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r V0alpha0ApiApiToSessionRequest) Cookie(cookie string) V0alpha0ApiApiToSessionRequest {
+func (r V0alpha1ApiApiToSessionRequest) Cookie(cookie string) V0alpha1ApiApiToSessionRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha0ApiApiToSessionRequest) Execute() (*Session, *http.Response, error) {
+func (r V0alpha1ApiApiToSessionRequest) Execute() (*Session, *http.Response, error) {
 	return r.ApiService.ToSessionExecute(r)
 }
 
@@ -757,10 +757,10 @@ if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Tok
 
 If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha0ApiApiToSessionRequest
+ * @return V0alpha1ApiApiToSessionRequest
 */
-func (a *V0alpha0ApiService) ToSession(ctx context.Context) V0alpha0ApiApiToSessionRequest {
-	return V0alpha0ApiApiToSessionRequest{
+func (a *V0alpha1ApiService) ToSession(ctx context.Context) V0alpha1ApiApiToSessionRequest {
+	return V0alpha1ApiApiToSessionRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -770,7 +770,7 @@ func (a *V0alpha0ApiService) ToSession(ctx context.Context) V0alpha0ApiApiToSess
  * Execute executes the request
  * @return Session
  */
-func (a *V0alpha0ApiService) ToSessionExecute(r V0alpha0ApiApiToSessionRequest) (*Session, *http.Response, error) {
+func (a *V0alpha1ApiService) ToSessionExecute(r V0alpha1ApiApiToSessionRequest) (*Session, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -780,7 +780,7 @@ func (a *V0alpha0ApiService) ToSessionExecute(r V0alpha0ApiApiToSessionRequest) 
 		localVarReturnValue  *Session
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha0ApiService.ToSession")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.ToSession")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}

@@ -2174,7 +2174,7 @@
         ],
         "summary": "List Identities",
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ]
       },
       "post": {
@@ -2239,7 +2239,7 @@
         ],
         "summary": "Create an Identity",
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ]
       }
     },
@@ -2290,7 +2290,7 @@
         ],
         "summary": "Delete an Identity",
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ]
       },
       "get": {
@@ -2346,7 +2346,7 @@
         ],
         "summary": "Get an Identity",
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ]
       },
       "put": {
@@ -2432,7 +2432,7 @@
         ],
         "summary": "Update an Identity",
         "tags": [
-          "v0alpha0"
+          "v0alpha1"
         ]
       }
     },
@@ -4114,7 +4114,7 @@
         },
         "summary": "Check Who the Current HTTP Session Belongs To",
         "tags": [
-          "public"
+          "v0alpha1"
         ]
       }
     },

@@ -63,7 +63,7 @@ WARNING: Importing credentials is not yet supported.`,
 					return cmdx.FailSilently(cmd)
 				}
 
-				ident, _, err := c.V0alpha0Api.AdminCreateIdentity(cmd.Context()).AdminCreateIdentityBody(params).Execute()
+				ident, _, err := c.V0alpha1Api.AdminCreateIdentity(cmd.Context()).AdminCreateIdentityBody(params).Execute()
 				if err != nil {
 					failed[src] = err
 				} else {
