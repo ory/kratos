@@ -220,6 +220,7 @@ module.exports = {
         customCss
       }
     ],
-    '@docusaurus/theme-search-algolia'
+    '@docusaurus/theme-search-algolia',
+    'docusaurus-theme-redoc'
   ]
 }
