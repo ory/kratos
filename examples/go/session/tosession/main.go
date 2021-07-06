@@ -11,19 +11,18 @@ import (
 //var client = pkg.NewSDKForSelfHosted("http://127.0.0.1:4433")
 var client = pkg.NewSDK("playground")
 
-func initSettings() *ory.SettingsFlow {
+func toSession() *ory.Session {
 	// Create a temporary user
 	_, sessionToken := pkg.CreateIdentityWithSession(client)
-	flow, res, err := client.PublicApi.
-		InitializeSelfServiceSettingsWithoutBrowserExecute(ory.
-		PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest{}.
+	session, res, err := client.V0alpha1Api.
+		ToSessionExecute(ory.
+		V0alpha1ApiApiToSessionRequest{}.
 			XSessionToken(sessionToken))
 	pkg.SDKExitOnError(err, res)
-
-	return flow
+	return session
 }
 
 func main() {
-	flow := initSettings()
-	pkg.PrintJSONPretty(flow)
+	session := toSession()
+	pkg.PrintJSONPretty(session)
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	ory "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/examples/go/pkg"
@@ -17,21 +15,20 @@ var client = pkg.NewSDK("playground")
 var ctx = context.Background()
 
 func performVerification(email string) *ory.VerificationFlow {
-	flow, _, err := client.PublicApi.InitializeSelfServiceVerificationWithoutBrowser(ctx).Execute()
-	pkg.ExitOnError(err)
+	flow, res, err := client.PublicApi.InitializeSelfServiceVerificationWithoutBrowser(ctx).Execute()
+	pkg.SDKExitOnError(err, res)
 
-	flow, _, err = client.PublicApi.
+	flow, res, err = client.PublicApi.
 		SubmitSelfServiceVerificationFlowExecute(ory.PublicApiApiSubmitSelfServiceVerificationFlowRequest{}.
 			Flow(flow.Id).
 			SubmitSelfServiceVerificationFlowBody(
 				ory.SubmitSelfServiceVerificationFlowBody{
 					Email: email, Method: "link"}))
-	pkg.ExitOnError(err)
+	pkg.SDKExitOnError(err, res)
 	return flow
 }
 
 func main() {
-	flow := performVerification("someone@foobar.com")
-	out, _ := json.MarshalIndent(flow, "", "  ")
-	fmt.Println(string(out))
+	result := performVerification("someone@foobar.com")
+	pkg.PrintJSONPretty(result)
 }
