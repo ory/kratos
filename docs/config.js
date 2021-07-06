@@ -46,5 +46,6 @@ module.exports = {
   updateConfig: {
     src: './driver/config/.schema/config.schema.json',
     dst: './docs/docs/reference/configuration.md'
-  }
+  },
+  enableRedoc: true
 }
