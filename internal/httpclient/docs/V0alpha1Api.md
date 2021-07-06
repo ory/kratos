@@ -1,25 +1,21 @@
-# \V0alpha0Api
+# \V0alpha1Api
 
 All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**AdminCreateIdentity**](V0alpha0Api.md#AdminCreateIdentity) | **Post** /identities | Create an Identity
-[**AdminDeleteIdentity**](V0alpha0Api.md#AdminDeleteIdentity) | **Delete** /identities/{id} | Delete an Identity
-[**AdminGetIdentity**](V0alpha0Api.md#AdminGetIdentity) | **Get** /identities/{id} | Get an Identity
-[**AdminListIdentities**](V0alpha0Api.md#AdminListIdentities) | **Get** /identities | List Identities
-[**AdminUpdateIdentity**](V0alpha0Api.md#AdminUpdateIdentity) | **Put** /identities/{id} | Update an Identity
-[**ToSession**](V0alpha0Api.md#ToSession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
-
-
+[**AdminCreateIdentity**](V0alpha1Api.md#AdminCreateIdentity) | **Post** /identities | Create an Identity
+[**AdminDeleteIdentity**](V0alpha1Api.md#AdminDeleteIdentity) | **Delete** /identities/{id} | Delete an Identity
+[**AdminGetIdentity**](V0alpha1Api.md#AdminGetIdentity) | **Get** /identities/{id} | Get an Identity
+[**AdminListIdentities**](V0alpha1Api.md#AdminListIdentities) | **Get** /identities | List Identities
+[**AdminUpdateIdentity**](V0alpha1Api.md#AdminUpdateIdentity) | **Put** /identities/{id} | Update an Identity
+[**ToSession**](V0alpha1Api.md#ToSession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
 ## AdminCreateIdentity
 
 > Identity AdminCreateIdentity(ctx).AdminCreateIdentityBody(adminCreateIdentityBody).Execute()
 
 Create an Identity
-
-
 
 ### Example
 
@@ -38,28 +34,25 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha0Api.AdminCreateIdentity(context.Background()).AdminCreateIdentityBody(adminCreateIdentityBody).Execute()
+    resp, r, err := apiClient.V0alpha1Api.AdminCreateIdentity(context.Background()).AdminCreateIdentityBody(adminCreateIdentityBody).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha0Api.AdminCreateIdentity``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.AdminCreateIdentity``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
     // response from `AdminCreateIdentity`: Identity
-    fmt.Fprintf(os.Stdout, "Response from `V0alpha0Api.AdminCreateIdentity`: %v\n", resp)
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha1Api.AdminCreateIdentity`: %v\n", resp)
 }
 ```
 
 ### Path Parameters
 
-
-
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiAdminCreateIdentityRequest struct via the builder pattern
 
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **adminCreateIdentityBody** | [**AdminCreateIdentityBody**](AdminCreateIdentityBody.md) |  |
+**adminCreateIdentityBody** | [**AdminCreateIdentityBody**](AdminCreateIdentityBody.md) |  |
 
 ### Return type
 
@@ -78,14 +71,11 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
-
 ## AdminDeleteIdentity
 
 > AdminDeleteIdentity(ctx, id).Execute()
 
 Delete an Identity
-
-
 
 ### Example
 
@@ -104,16 +94,15 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha0Api.AdminDeleteIdentity(context.Background(), id).Execute()
+    resp, r, err := apiClient.V0alpha1Api.AdminDeleteIdentity(context.Background(), id).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha0Api.AdminDeleteIdentity``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.AdminDeleteIdentity``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
 }
 ```
 
 ### Path Parameters
-
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
@@ -124,14 +113,12 @@ Name | Type | Description  | Notes
 
 Other parameters are passed through a pointer to a apiAdminDeleteIdentityRequest struct via the builder pattern
 
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
-
 ### Return type
 
- (empty response body)
+(empty response body)
 
 ### Authorization
 
@@ -146,14 +133,11 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
-
 ## AdminGetIdentity
 
 > Identity AdminGetIdentity(ctx, id).Execute()
 
 Get an Identity
-
-
 
 ### Example
 
@@ -172,18 +156,17 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha0Api.AdminGetIdentity(context.Background(), id).Execute()
+    resp, r, err := apiClient.V0alpha1Api.AdminGetIdentity(context.Background(), id).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha0Api.AdminGetIdentity``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.AdminGetIdentity``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
     // response from `AdminGetIdentity`: Identity
-    fmt.Fprintf(os.Stdout, "Response from `V0alpha0Api.AdminGetIdentity`: %v\n", resp)
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha1Api.AdminGetIdentity`: %v\n", resp)
 }
 ```
 
 ### Path Parameters
-
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
@@ -194,10 +177,8 @@ Name | Type | Description  | Notes
 
 Other parameters are passed through a pointer to a apiAdminGetIdentityRequest struct via the builder pattern
 
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
-
 
 ### Return type
 
@@ -216,14 +197,11 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
-
 ## AdminListIdentities
 
 > []Identity AdminListIdentities(ctx).PerPage(perPage).Page(page).Execute()
 
 List Identities
-
-
 
 ### Example
 
@@ -243,29 +221,26 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha0Api.AdminListIdentities(context.Background()).PerPage(perPage).Page(page).Execute()
+    resp, r, err := apiClient.V0alpha1Api.AdminListIdentities(context.Background()).PerPage(perPage).Page(page).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha0Api.AdminListIdentities``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.AdminListIdentities``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
     // response from `AdminListIdentities`: []Identity
-    fmt.Fprintf(os.Stdout, "Response from `V0alpha0Api.AdminListIdentities`: %v\n", resp)
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha1Api.AdminListIdentities`: %v\n", resp)
 }
 ```
 
 ### Path Parameters
 
-
-
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiAdminListIdentitiesRequest struct via the builder pattern
 
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
- **page** | **int64** | Pagination Page | [default to 0]
+**perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
+**page** | **int64** | Pagination Page | [default to 0]
 
 ### Return type
 
@@ -284,14 +259,11 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
-
 ## AdminUpdateIdentity
 
 > Identity AdminUpdateIdentity(ctx, id).AdminUpdateIdentityBody(adminUpdateIdentityBody).Execute()
 
 Update an Identity
-
-
 
 ### Example
 
@@ -311,18 +283,17 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha0Api.AdminUpdateIdentity(context.Background(), id).AdminUpdateIdentityBody(adminUpdateIdentityBody).Execute()
+    resp, r, err := apiClient.V0alpha1Api.AdminUpdateIdentity(context.Background(), id).AdminUpdateIdentityBody(adminUpdateIdentityBody).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha0Api.AdminUpdateIdentity``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.AdminUpdateIdentity``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
     // response from `AdminUpdateIdentity`: Identity
-    fmt.Fprintf(os.Stdout, "Response from `V0alpha0Api.AdminUpdateIdentity`: %v\n", resp)
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha1Api.AdminUpdateIdentity`: %v\n", resp)
 }
 ```
 
 ### Path Parameters
-
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
@@ -333,11 +304,10 @@ Name | Type | Description  | Notes
 
 Other parameters are passed through a pointer to a apiAdminUpdateIdentityRequest struct via the builder pattern
 
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **adminUpdateIdentityBody** | [**AdminUpdateIdentityBody**](AdminUpdateIdentityBody.md) |  |
+**adminUpdateIdentityBody** | [**AdminUpdateIdentityBody**](AdminUpdateIdentityBody.md) | |
 
 ### Return type
 
@@ -380,13 +350,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha0Api.ToSession(context.Background()).XSessionToken(xSessionToken).Cookie(cookie).Execute()
+    resp, r, err := apiClient.V0alpha1Api.ToSession(context.Background()).XSessionToken(xSessionToken).Cookie(cookie).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha0Api.ToSession``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.ToSession``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
     // response from `ToSession`: Session
-    fmt.Fprintf(os.Stdout, "Response from `V0alpha0Api.ToSession`: %v\n", resp)
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha1Api.ToSession`: %v\n", resp)
 }
 ```
 

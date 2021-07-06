@@ -121,7 +121,7 @@ paths:
       - oryAccessToken: []
       summary: List Identities
       tags:
-      - v0alpha0
+        - v0alpha1
     post:
       description: |-
         This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
@@ -164,7 +164,7 @@ paths:
       - oryAccessToken: []
       summary: Create an Identity
       tags:
-      - v0alpha0
+        - v0alpha1
   /identities/{id}:
     delete:
       description: |-
@@ -203,7 +203,7 @@ paths:
       - oryAccessToken: []
       summary: Delete an Identity
       tags:
-      - v0alpha0
+        - v0alpha1
     get:
       description: Learn how identities work in [Ory Kratos' User And Identity Model
         Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -240,7 +240,7 @@ paths:
       - oryAccessToken: []
       summary: Get an Identity
       tags:
-      - v0alpha0
+        - v0alpha1
     put:
       description: |-
         This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
@@ -300,7 +300,7 @@ paths:
       - oryAccessToken: []
       summary: Update an Identity
       tags:
-      - v0alpha0
+        - v0alpha1
   /metrics/prometheus:
     get:
       description: |-
@@ -2064,7 +2064,7 @@ paths:
           description: jsonError
       summary: Check Who the Current HTTP Session Belongs To
       tags:
-      - public
+        - v0alpha1
   /version:
     get:
       description: |-

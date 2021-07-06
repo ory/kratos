@@ -39,7 +39,7 @@ func CreateIdentityWithSession(c *ory.APIClient) (*ory.Session, string) {
 func CreateIdentity(c *ory.APIClient) *ory.Identity {
 	ctx := context.Background()
 
-	identity, _, err := c.V0alpha0Api.AdminCreateIdentity(ctx).AdminCreateIdentityBody(ory.AdminCreateIdentityBody{
+	identity, _, err := c.V0alpha1Api.AdminCreateIdentity(ctx).AdminCreateIdentityBody(ory.AdminCreateIdentityBody{
 		SchemaId: "default",
 		Traits: map[string]interface{}{
 			"email": "dev+" + uuid.New().String() + "@ory.sh",
