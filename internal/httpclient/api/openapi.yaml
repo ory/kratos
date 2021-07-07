@@ -121,7 +121,7 @@ paths:
       - oryAccessToken: []
       summary: List Identities
       tags:
-        - v0alpha1
+      - v0alpha1
     post:
       description: |-
         This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
@@ -164,7 +164,7 @@ paths:
       - oryAccessToken: []
       summary: Create an Identity
       tags:
-        - v0alpha1
+      - v0alpha1
   /identities/{id}:
     delete:
       description: |-
@@ -203,7 +203,7 @@ paths:
       - oryAccessToken: []
       summary: Delete an Identity
       tags:
-        - v0alpha1
+      - v0alpha1
     get:
       description: Learn how identities work in [Ory Kratos' User And Identity Model
         Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -240,7 +240,7 @@ paths:
       - oryAccessToken: []
       summary: Get an Identity
       tags:
-        - v0alpha1
+      - v0alpha1
     put:
       description: |-
         This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
@@ -300,7 +300,7 @@ paths:
       - oryAccessToken: []
       summary: Update an Identity
       tags:
-        - v0alpha1
+      - v0alpha1
   /metrics/prometheus:
     get:
       description: |-
@@ -407,10 +407,10 @@ paths:
         More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
       operationId: getSelfServiceError
       parameters:
-      - description: Error is the container's ID
+      - description: Error is the error's ID
         explode: true
         in: query
-        name: error
+        name: id
         required: true
         schema:
           type: string
@@ -420,8 +420,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/selfServiceErrorContainer'
-          description: User-facing error response
+                $ref: '#/components/schemas/selfServiceError'
+          description: selfServiceError
         "403":
           content:
             application/json:
@@ -440,10 +440,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get User-Facing Self-Service Errors
+      summary: Get Self-Service Errors
       tags:
-      - public
-      - admin
+      - v0alpha1
   /self-service/login:
     post:
       description: |-
@@ -2064,7 +2063,7 @@ paths:
           description: jsonError
       summary: Check Who the Current HTTP Session Belongs To
       tags:
-        - v0alpha1
+      - v0alpha1
   /version:
     get:
       description: |-
@@ -2091,12 +2090,6 @@ components:
     emptyResponse:
       description: Empty responses are sent when, for example, resources are deleted.
         The HTTP status code for empty responses is typically 201.
-    selfServiceErrorResponse:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/selfServiceErrorContainer'
-      description: User-facing error response
   schemas:
     AdminUpdateIdentityBody:
       example:
@@ -3611,7 +3604,7 @@ components:
       required:
       - identity
       type: object
-    selfServiceErrorContainer:
+    selfServiceError:
       example:
         updated_at: 2000-01-23T04:56:07.000+00:00
         created_at: 2000-01-23T04:56:07.000+00:00

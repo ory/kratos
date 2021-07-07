@@ -84,15 +84,13 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AdminApi* | [**CreateRecoveryLink**](docs/AdminApi.md#createrecoverylink) | **Post** /recovery/link | Create a Recovery Link
-*AdminApi* | [**GetSchema**](docs/AdminApi.md#getschema) | **Get** /schemas/{id} |
-*AdminApi* | [**GetSelfServiceError**](docs/AdminApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
+*AdminApi* | [**GetSchema**](docs/AdminApi.md#getschema) | **Get** /schemas/{id} | 
 *AdminApi* | [**GetVersion**](docs/AdminApi.md#getversion) | **Get** /version | Return Running Software Version.
 *AdminApi* | [**IsAlive**](docs/AdminApi.md#isalive) | **Get** /health/alive | Check HTTP Server Status
 *AdminApi* | [**IsReady**](docs/AdminApi.md#isready) | **Get** /health/ready | Check HTTP Server and Database Status
 *AdminApi* | [**Prometheus**](docs/AdminApi.md#prometheus) | **Get** /metrics/prometheus | Get snapshot metrics from the service. If you&#39;re using k8s, you can then add annotations to your deployment like so:
 *PublicApi* | [**CreateSelfServiceLogoutUrlForBrowsers**](docs/PublicApi.md#createselfservicelogouturlforbrowsers) | **Get** /self-service/logout/browser | Initialize Logout Flow for Browsers
-*PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} |
-*PublicApi* | [**GetSelfServiceError**](docs/PublicApi.md#getselfserviceerror) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
+*PublicApi* | [**GetSchema**](docs/PublicApi.md#getschema) | **Get** /schemas/{id} | 
 *PublicApi* | [**GetSelfServiceLoginFlow**](docs/PublicApi.md#getselfserviceloginflow) | **Get** /self-service/login/flows | Get Login Flow
 *PublicApi* | [**GetSelfServiceRecoveryFlow**](docs/PublicApi.md#getselfservicerecoveryflow) | **Get** /self-service/recovery/flows | Get Recovery Flow
 *PublicApi* | [**GetSelfServiceRegistrationFlow**](docs/PublicApi.md#getselfserviceregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
@@ -106,42 +104,23 @@ Class | Method | HTTP request | Description
 *PublicApi* | [**InitializeSelfServiceRegistrationWithoutBrowser**](docs/PublicApi.md#initializeselfserviceregistrationwithoutbrowser) | **Get** /self-service/registration/api | Initialize Registration Flow for APIs, Services, Apps, ...
 *PublicApi* | [**InitializeSelfServiceSettingsForBrowsers**](docs/PublicApi.md#initializeselfservicesettingsforbrowsers) | **Get** /self-service/settings/browser | Initialize Settings Flow for Browsers
 *PublicApi* | [**InitializeSelfServiceSettingsWithoutBrowser**](docs/PublicApi.md#initializeselfservicesettingswithoutbrowser) | **Get** /self-service/settings/api | Initialize Settings Flow for APIs, Services, Apps, ...
-*PublicApi* | [**
-InitializeSelfServiceVerificationForBrowsers**](docs/PublicApi.md#initializeselfserviceverificationforbrowsers) | **
-Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
-*PublicApi* | [**
-InitializeSelfServiceVerificationWithoutBrowser**](docs/PublicApi.md#initializeselfserviceverificationwithoutbrowser) | **
-Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
-*PublicApi* | [**SubmitSelfServiceLoginFlow**](docs/PublicApi.md#submitselfserviceloginflow) | **
-Post** /self-service/login | Submit a Login Flow
-*PublicApi* | [**SubmitSelfServiceLogoutFlow**](docs/PublicApi.md#submitselfservicelogoutflow) | **
-Post** /self-service/logout | Complete Self-Service Logout
-*PublicApi* | [**
-SubmitSelfServiceLogoutFlowWithoutBrowser**](docs/PublicApi.md#submitselfservicelogoutflowwithoutbrowser) | **
-Delete** /self-service/logout/api | Perform Logout for APIs, Services, Apps, ...
-*PublicApi* | [**SubmitSelfServiceRecoveryFlow**](docs/PublicApi.md#submitselfservicerecoveryflow) | **
-Post** /self-service/recovery | Complete Recovery Flow
-*PublicApi* | [**
-SubmitSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#submitselfservicerecoveryflowwithlinkmethod) | **
-Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
-*PublicApi* | [**SubmitSelfServiceRegistrationFlow**](docs/PublicApi.md#submitselfserviceregistrationflow) | **
-Post** /self-service/registration | Submit a Registration Flow
-*PublicApi* | [**SubmitSelfServiceSettingsFlow**](docs/PublicApi.md#submitselfservicesettingsflow) | **
-Post** /self-service/settings | Complete Settings Flow
-*PublicApi* | [**SubmitSelfServiceVerificationFlow**](docs/PublicApi.md#submitselfserviceverificationflow) | **
-Post** /self-service/verification | Complete Verification Flow
-*V0alpha1Api* | [**AdminCreateIdentity**](docs/V0alpha1Api.md#admincreateidentity) | **
-Post** /identities | Create an Identity
-*V0alpha1Api* | [**AdminDeleteIdentity**](docs/V0alpha1Api.md#admindeleteidentity) | **
-Delete** /identities/{id} | Delete an Identity
-*V0alpha1Api* | [**AdminGetIdentity**](docs/V0alpha1Api.md#admingetidentity) | **
-Get** /identities/{id} | Get an Identity
-*V0alpha1Api* | [**AdminListIdentities**](docs/V0alpha1Api.md#adminlistidentities) | **
-Get** /identities | List Identities
-*V0alpha1Api* | [**AdminUpdateIdentity**](docs/V0alpha1Api.md#adminupdateidentity) | **
-Put** /identities/{id} | Update an Identity
-*V0alpha1Api* | [**ToSession**](docs/V0alpha1Api.md#tosession) | **
-Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
+*PublicApi* | [**InitializeSelfServiceVerificationForBrowsers**](docs/PublicApi.md#initializeselfserviceverificationforbrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
+*PublicApi* | [**InitializeSelfServiceVerificationWithoutBrowser**](docs/PublicApi.md#initializeselfserviceverificationwithoutbrowser) | **Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
+*PublicApi* | [**SubmitSelfServiceLoginFlow**](docs/PublicApi.md#submitselfserviceloginflow) | **Post** /self-service/login | Submit a Login Flow
+*PublicApi* | [**SubmitSelfServiceLogoutFlow**](docs/PublicApi.md#submitselfservicelogoutflow) | **Post** /self-service/logout | Complete Self-Service Logout
+*PublicApi* | [**SubmitSelfServiceLogoutFlowWithoutBrowser**](docs/PublicApi.md#submitselfservicelogoutflowwithoutbrowser) | **Delete** /self-service/logout/api | Perform Logout for APIs, Services, Apps, ...
+*PublicApi* | [**SubmitSelfServiceRecoveryFlow**](docs/PublicApi.md#submitselfservicerecoveryflow) | **Post** /self-service/recovery | Complete Recovery Flow
+*PublicApi* | [**SubmitSelfServiceRecoveryFlowWithLinkMethod**](docs/PublicApi.md#submitselfservicerecoveryflowwithlinkmethod) | **Post** /self-service/recovery/methods/link | Complete Recovery Flow with Link Method
+*PublicApi* | [**SubmitSelfServiceRegistrationFlow**](docs/PublicApi.md#submitselfserviceregistrationflow) | **Post** /self-service/registration | Submit a Registration Flow
+*PublicApi* | [**SubmitSelfServiceSettingsFlow**](docs/PublicApi.md#submitselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
+*PublicApi* | [**SubmitSelfServiceVerificationFlow**](docs/PublicApi.md#submitselfserviceverificationflow) | **Post** /self-service/verification | Complete Verification Flow
+*V0alpha1Api* | [**AdminCreateIdentity**](docs/V0alpha1Api.md#admincreateidentity) | **Post** /identities | Create an Identity
+*V0alpha1Api* | [**AdminDeleteIdentity**](docs/V0alpha1Api.md#admindeleteidentity) | **Delete** /identities/{id} | Delete an Identity
+*V0alpha1Api* | [**AdminGetIdentity**](docs/V0alpha1Api.md#admingetidentity) | **Get** /identities/{id} | Get an Identity
+*V0alpha1Api* | [**AdminListIdentities**](docs/V0alpha1Api.md#adminlistidentities) | **Get** /identities | List Identities
+*V0alpha1Api* | [**AdminUpdateIdentity**](docs/V0alpha1Api.md#adminupdateidentity) | **Put** /identities/{id} | Update an Identity
+*V0alpha1Api* | [**GetSelfServiceError**](docs/V0alpha1Api.md#getselfserviceerror) | **Get** /self-service/errors | Get Self-Service Errors
+*V0alpha1Api* | [**ToSession**](docs/V0alpha1Api.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
 
 
 ## Documentation For Models
@@ -193,7 +172,7 @@ Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
  - [RecoveryLink](docs/RecoveryLink.md)
  - [RegistrationFlow](docs/RegistrationFlow.md)
  - [RegistrationViaApiResponse](docs/RegistrationViaApiResponse.md)
- - [SelfServiceErrorContainer](docs/SelfServiceErrorContainer.md)
+ - [SelfServiceError](docs/SelfServiceError.md)
  - [ServiceUpdateResponse](docs/ServiceUpdateResponse.md)
  - [Session](docs/Session.md)
  - [SettingsFlow](docs/SettingsFlow.md)

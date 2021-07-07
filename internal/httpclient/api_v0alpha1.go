@@ -696,6 +696,152 @@ func (a *V0alpha1ApiService) AdminUpdateIdentityExecute(r V0alpha1ApiApiAdminUpd
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
+type V0alpha1ApiApiGetSelfServiceErrorRequest struct {
+	ctx        context.Context
+	ApiService *V0alpha1ApiService
+	id         *string
+}
+
+func (r V0alpha1ApiApiGetSelfServiceErrorRequest) Id(id string) V0alpha1ApiApiGetSelfServiceErrorRequest {
+	r.id = &id
+	return r
+}
+
+func (r V0alpha1ApiApiGetSelfServiceErrorRequest) Execute() (*SelfServiceError, *http.Response, error) {
+	return r.ApiService.GetSelfServiceErrorExecute(r)
+}
+
+/*
+ * GetSelfServiceError Get Self-Service Errors
+ * This endpoint returns the error associated with a user-facing self service errors.
+
+This endpoint supports stub values to help you implement the error UI:
+
+`?error=stub:500` - returns a stub 500 (Internal Server Error) error.
+
+More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return V0alpha1ApiApiGetSelfServiceErrorRequest
+*/
+func (a *V0alpha1ApiService) GetSelfServiceError(ctx context.Context) V0alpha1ApiApiGetSelfServiceErrorRequest {
+	return V0alpha1ApiApiGetSelfServiceErrorRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return SelfServiceError
+ */
+func (a *V0alpha1ApiService) GetSelfServiceErrorExecute(r V0alpha1ApiApiGetSelfServiceErrorRequest) (*SelfServiceError, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  *SelfServiceError
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.GetSelfServiceError")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/self-service/errors"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.id == nil {
+		return localVarReturnValue, nil, reportError("id is required and must be specified")
+	}
+
+	localVarQueryParams.Add("id", parameterToString(*r.id, ""))
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type V0alpha1ApiApiToSessionRequest struct {
 	ctx           context.Context
 	ApiService    *V0alpha1ApiService

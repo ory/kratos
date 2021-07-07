@@ -69,7 +69,7 @@ export const initApiFlow = {
   go: {
     label: 'Go',
     language: 'go',
-    code: require('raw-loader!../../../../../../examples/go/init/settings/main.go')
+    code: require('raw-loader!../../../../../../examples/go/selfserviceinit/settings/main.go')
       .default
   },
   curlUnauth: {

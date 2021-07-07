@@ -6,7 +6,6 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**CreateRecoveryLink**](AdminApi.md#CreateRecoveryLink) | **Post** /recovery/link | Create a Recovery Link
 [**GetSchema**](AdminApi.md#GetSchema) | **Get** /schemas/{id} | 
-[**GetSelfServiceError**](AdminApi.md#GetSelfServiceError) | **Get** /self-service/errors | Get User-Facing Self-Service Errors
 [**GetVersion**](AdminApi.md#GetVersion) | **Get** /version | Return Running Software Version.
 [**IsAlive**](AdminApi.md#IsAlive) | **Get** /health/alive | Check HTTP Server Status
 [**IsReady**](AdminApi.md#IsReady) | **Get** /health/ready | Check HTTP Server and Database Status
@@ -135,72 +134,6 @@ Name | Type | Description  | Notes
 ### Return type
 
 **map[string]interface{}**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
-## GetSelfServiceError
-
-> SelfServiceErrorContainer GetSelfServiceError(ctx).Error_(error_).Execute()
-
-Get User-Facing Self-Service Errors
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "./openapi"
-)
-
-func main() {
-    error_ := "error__example" // string | Error is the container's ID
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.AdminApi.GetSelfServiceError(context.Background()).Error_(error_).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `AdminApi.GetSelfServiceError``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-    // response from `GetSelfServiceError`: SelfServiceErrorContainer
-    fmt.Fprintf(os.Stdout, "Response from `AdminApi.GetSelfServiceError`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiGetSelfServiceErrorRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **error_** | **string** | Error is the container&#39;s ID | 
-
-### Return type
-
-[**SelfServiceErrorContainer**](SelfServiceErrorContainer.md)
 
 ### Authorization
 
