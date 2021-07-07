@@ -56,7 +56,7 @@ docs/RecoveryFlow.md
 docs/RecoveryLink.md
 docs/RegistrationFlow.md
 docs/RegistrationViaApiResponse.md
-docs/SelfServiceErrorContainer.md
+docs/SelfServiceError.md
 docs/ServiceUpdateResponse.md
 docs/Session.md
 docs/SettingsFlow.md
@@ -139,7 +139,7 @@ model_recovery_flow.go
 model_recovery_link.go
 model_registration_flow.go
 model_registration_via_api_response.go
-model_self_service_error_container.go
+model_self_service_error.go
 model_service_update_response.go
 model_session.go
 model_settings_flow.go

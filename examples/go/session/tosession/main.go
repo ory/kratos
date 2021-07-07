@@ -16,7 +16,7 @@ func toSession() *ory.Session {
 	_, sessionToken := pkg.CreateIdentityWithSession(client)
 	session, res, err := client.V0alpha1Api.
 		ToSessionExecute(ory.
-		V0alpha1ApiApiToSessionRequest{}.
+			V0alpha1ApiApiToSessionRequest{}.
 			XSessionToken(sessionToken))
 	pkg.SDKExitOnError(err, res)
 	return session

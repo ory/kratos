@@ -9,13 +9,18 @@ Method | HTTP request | Description
 [**AdminGetIdentity**](V0alpha1Api.md#AdminGetIdentity) | **Get** /identities/{id} | Get an Identity
 [**AdminListIdentities**](V0alpha1Api.md#AdminListIdentities) | **Get** /identities | List Identities
 [**AdminUpdateIdentity**](V0alpha1Api.md#AdminUpdateIdentity) | **Put** /identities/{id} | Update an Identity
+[**GetSelfServiceError**](V0alpha1Api.md#GetSelfServiceError) | **Get** /self-service/errors | Get Self-Service Errors
 [**ToSession**](V0alpha1Api.md#ToSession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
+
+
 
 ## AdminCreateIdentity
 
 > Identity AdminCreateIdentity(ctx).AdminCreateIdentityBody(adminCreateIdentityBody).Execute()
 
 Create an Identity
+
+
 
 ### Example
 
@@ -46,13 +51,16 @@ func main() {
 
 ### Path Parameters
 
+
+
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiAdminCreateIdentityRequest struct via the builder pattern
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
-**adminCreateIdentityBody** | [**AdminCreateIdentityBody**](AdminCreateIdentityBody.md) |  |
+ **adminCreateIdentityBody** | [**AdminCreateIdentityBody**](AdminCreateIdentityBody.md) |  | 
 
 ### Return type
 
@@ -71,11 +79,14 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
+
 ## AdminDeleteIdentity
 
 > AdminDeleteIdentity(ctx, id).Execute()
 
 Delete an Identity
+
+
 
 ### Example
 
@@ -104,21 +115,24 @@ func main() {
 
 ### Path Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**id** | **string** | ID is the identity&#39;s ID. |
+**id** | **string** | ID is the identity&#39;s ID. | 
 
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiAdminDeleteIdentityRequest struct via the builder pattern
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
+
 ### Return type
 
-(empty response body)
+ (empty response body)
 
 ### Authorization
 
@@ -133,11 +147,14 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
+
 ## AdminGetIdentity
 
 > Identity AdminGetIdentity(ctx, id).Execute()
 
 Get an Identity
+
+
 
 ### Example
 
@@ -168,17 +185,20 @@ func main() {
 
 ### Path Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**id** | **string** | ID must be set to the ID of identity you want to get |
+**id** | **string** | ID must be set to the ID of identity you want to get | 
 
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiAdminGetIdentityRequest struct via the builder pattern
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+
 
 ### Return type
 
@@ -197,11 +217,14 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
+
 ## AdminListIdentities
 
 > []Identity AdminListIdentities(ctx).PerPage(perPage).Page(page).Execute()
 
 List Identities
+
+
 
 ### Example
 
@@ -233,14 +256,17 @@ func main() {
 
 ### Path Parameters
 
+
+
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiAdminListIdentitiesRequest struct via the builder pattern
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
-**perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
-**page** | **int64** | Pagination Page | [default to 0]
+ **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
+ **page** | **int64** | Pagination Page | [default to 0]
 
 ### Return type
 
@@ -259,11 +285,14 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
+
 ## AdminUpdateIdentity
 
 > Identity AdminUpdateIdentity(ctx, id).AdminUpdateIdentityBody(adminUpdateIdentityBody).Execute()
 
 Update an Identity
+
+
 
 ### Example
 
@@ -295,19 +324,21 @@ func main() {
 
 ### Path Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**id** | **string** | ID must be set to the ID of identity you want to update |
+**id** | **string** | ID must be set to the ID of identity you want to update | 
 
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiAdminUpdateIdentityRequest struct via the builder pattern
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
-**adminUpdateIdentityBody** | [**AdminUpdateIdentityBody**](AdminUpdateIdentityBody.md) | |
+ **adminUpdateIdentityBody** | [**AdminUpdateIdentityBody**](AdminUpdateIdentityBody.md) |  | 
 
 ### Return type
 
@@ -326,11 +357,80 @@ Name | Type | Description  | Notes
 [[Back to Model list]](../README.md#documentation-for-models)
 [[Back to README]](../README.md)
 
+
+## GetSelfServiceError
+
+> SelfServiceError GetSelfServiceError(ctx).Id(id).Execute()
+
+Get Self-Service Errors
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    id := "id_example" // string | Error is the error's ID
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.V0alpha1Api.GetSelfServiceError(context.Background()).Id(id).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.GetSelfServiceError``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `GetSelfServiceError`: SelfServiceError
+    fmt.Fprintf(os.Stdout, "Response from `V0alpha1Api.GetSelfServiceError`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiGetSelfServiceErrorRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **string** | Error is the error&#39;s ID | 
+
+### Return type
+
+[**SelfServiceError**](SelfServiceError.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## ToSession
 
 > Session ToSession(ctx).XSessionToken(xSessionToken).Cookie(cookie).Execute()
 
 Check Who the Current HTTP Session Belongs To
+
+
 
 ### Example
 
@@ -362,16 +462,17 @@ func main() {
 
 ### Path Parameters
 
+
+
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiToSessionRequest struct via the builder pattern
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
-**xSessionToken** | **
-string** | Set the Session Token when calling from non-browser clients. A session token has a format of &#x60;MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj&#x60;. |
-**cookie** | **
-string** | Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that scenario you must include the HTTP Cookie Header which originally was included in the request to your server. An example of a session in the HTTP Cookie Header is: &#x60;ory_kratos_session&#x3D;a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f&#x3D;&#x3D;&#x60;. It is ok if more than one cookie are included here as all other cookies will be ignored. |
+ **xSessionToken** | **string** | Set the Session Token when calling from non-browser clients. A session token has a format of &#x60;MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj&#x60;. | 
+ **cookie** | **string** | Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that scenario you must include the HTTP Cookie Header which originally was included in the request to your server. An example of a session in the HTTP Cookie Header is: &#x60;ory_kratos_session&#x3D;a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f&#x3D;&#x3D;&#x60;.  It is ok if more than one cookie are included here as all other cookies will be ignored. | 
 
 ### Return type
 

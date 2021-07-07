@@ -488,23 +488,25 @@
           "https"
         ],
         "tags": [
-          "public",
-          "admin"
+          "v0alpha1"
         ],
-        "summary": "Get User-Facing Self-Service Errors",
+        "summary": "Get Self-Service Errors",
         "operationId": "getSelfServiceError",
         "parameters": [
           {
             "type": "string",
-            "description": "Error is the container's ID",
-            "name": "error",
+            "description": "Error is the error's ID",
+            "name": "id",
             "in": "query",
             "required": true
           }
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/selfServiceErrorResponse"
+            "description": "selfServiceError",
+            "schema": {
+              "$ref": "#/definitions/selfServiceError"
+            }
           },
           "403": {
             "description": "jsonError",
@@ -3140,7 +3142,7 @@
         }
       }
     },
-    "selfServiceErrorContainer": {
+    "selfServiceError": {
       "type": "object",
       "required": [
         "id",
@@ -3768,12 +3770,6 @@
   "responses": {
     "emptyResponse": {
       "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
-    },
-    "selfServiceErrorResponse": {
-      "description": "User-facing error response",
-      "schema": {
-        "$ref": "#/definitions/selfServiceErrorContainer"
-      }
     }
   },
   "securityDefinitions": {

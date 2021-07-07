@@ -16,7 +16,7 @@ func initSettings() *ory.SettingsFlow {
 	_, sessionToken := pkg.CreateIdentityWithSession(client)
 	flow, res, err := client.PublicApi.
 		InitializeSelfServiceSettingsWithoutBrowserExecute(ory.
-		PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest{}.
+			PublicApiApiInitializeSelfServiceSettingsWithoutBrowserRequest{}.
 			XSessionToken(sessionToken))
 	pkg.SDKExitOnError(err, res)
 

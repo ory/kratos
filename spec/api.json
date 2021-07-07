@@ -3,16 +3,6 @@
     "responses": {
       "emptyResponse": {
         "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
-      },
-      "selfServiceErrorResponse": {
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/selfServiceErrorContainer"
-            }
-          }
-        },
-        "description": "User-facing error response"
       }
     },
     "schemas": {
@@ -1345,7 +1335,7 @@
         ],
         "type": "object"
       },
-      "selfServiceErrorContainer": {
+      "selfServiceError": {
         "properties": {
           "created_at": {
             "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
@@ -2572,9 +2562,9 @@
         "operationId": "getSelfServiceError",
         "parameters": [
           {
-            "description": "Error is the container's ID",
+            "description": "Error is the error's ID",
             "in": "query",
-            "name": "error",
+            "name": "id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2583,7 +2573,14 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/selfServiceErrorResponse"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/selfServiceError"
+                }
+              }
+            },
+            "description": "selfServiceError"
           },
           "403": {
             "content": {
@@ -2616,10 +2613,9 @@
             "description": "jsonError"
           }
         },
-        "summary": "Get User-Facing Self-Service Errors",
+        "summary": "Get Self-Service Errors",
         "tags": [
-          "public",
-          "admin"
+          "v0alpha1"
         ]
       }
     },

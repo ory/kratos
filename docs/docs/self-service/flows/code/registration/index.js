@@ -61,7 +61,7 @@ export const initApiFlow = {
   go: {
     label: 'Go',
     language: 'go',
-    code: require('raw-loader!../../../../../../examples/go/init/registration/main.go')
+    code: require('raw-loader!../../../../../../examples/go/selfserviceinit/registration/main.go')
       .default
   }
 }
