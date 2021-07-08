@@ -16,44 +16,47 @@ context('Email Profile', () => {
       cy.get('input[name="password_identifier"]').type('i-do-not-exist')
       cy.get('input[name="password"]').type('invalid-password')
 
-    cy.get('button[type="submit"]').click()
-
-    // FIXME https://github.com/ory/kratos/issues/91
-    cy.get('html').should('contain.text', 'The request was rejected to protect you from Cross-Site-Request-Forgery')
-  })
-
-  describe('shows validation errors when invalid signup data is used', () => {
-    it('should show an error when the identifier is missing', () => {
       cy.get('button[type="submit"]').click()
-      cy.get('.messages .message').should(
+
+      // FIXME https://github.com/ory/kratos/issues/91
+      cy.get('html').should(
         'contain.text',
-        'length must be >= 1, but got 0'
+        'The request was rejected to protect you from Cross-Site-Request-Forgery'
       )
     })
 
-    it('should show an error when the password is missing', () => {
-      const identity = gen.email()
-      cy.get('input[name="password_identifier"]')
-        .type(identity)
-        .should('have.value', identity)
+    describe('shows validation errors when invalid signup data is used', () => {
+      it('should show an error when the identifier is missing', () => {
+        cy.get('button[type="submit"]').click()
+        cy.get('.messages .message').should(
+          'contain.text',
+          'length must be >= 1, but got 0'
+        )
+      })
 
-      cy.get('button[type="submit"]').click()
-      cy.get('.messages .message').should(
-        'contain.text',
-        'length must be >= 1, but got 0'
-      )
+      it('should show an error when the password is missing', () => {
+        const identity = gen.email()
+        cy.get('input[name="password_identifier"]')
+          .type(identity)
+          .should('have.value', identity)
+
+        cy.get('button[type="submit"]').click()
+        cy.get('.messages .message').should(
+          'contain.text',
+          'length must be >= 1, but got 0'
+        )
+      })
+
+      it('should show fail to sign in', () => {
+        cy.get('input[name="password_identifier"]').type('i-do-not-exist')
+        cy.get('input[name="password"]').type('invalid-password')
+
+        cy.get('button[type="submit"]').click()
+        cy.get('.messages .message').should(
+          'contain.text',
+          'credentials are invalid'
+        )
+      })
     })
-
-    it('should show fail to sign in', () => {
-      cy.get('input[name="password_identifier"]').type('i-do-not-exist')
-      cy.get('input[name="password"]').type('invalid-password')
-
-      cy.get('button[type="submit"]').click()
-      cy.get('.messages .message').should(
-        'contain.text',
-        'credentials are invalid'
-      )
-    })
-  })
   })
 })
