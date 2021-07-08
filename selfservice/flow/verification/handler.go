@@ -71,7 +71,14 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteSubmitFlow, h.submitFlow)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {}
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d))
+
+	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+}
 
 // swagger:route GET /self-service/verification/api v0alpha1 initializeSelfServiceVerificationFlowWithoutBrowser
 //
