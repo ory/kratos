@@ -75,8 +75,9 @@ signed in after registration, notify another system on successful registration
 
 There are two flow types supported in Ory Kratos:
 
-- Flows where the user sits in front of the Browser (e.g. website, single page
-  app, ...)
+- Flows where the user sits in front of the Browser and the application is
+  - a server-side application (e.g. NodeJS, Java, ...)
+  - a client-side application (e.g. ReactJS, AngularJS, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 All Self-Service Flows ([User Login](self-service/flows/user-login.mdx),
@@ -89,15 +90,15 @@ API endpoints.
 
 <ApiWarning />
 
-## Browser Flows for Server-Side Apps: NodeJS, Java Server Pages, ...
+## Browser Flows for Server-Side Apps: NodeJS, PHP, Java, ...
 
-Browser-based flows make use of three core HTTP technologies:
+Browser-based flows for server-side apps make use of three core HTTP
+technologies:
 
 - HTTP Redirects
 - HTTP POST (`application/x-www-urlencoded`) and REST GET requests.
-- HTTP Cookies to prevent CSRF and Session Hijaking attack vectors.
+- HTTP Cookies to prevent CSRF and Session Hijacking attack vectors.
 
-The browser flow is the easiest and most secure to set up and integrated with.
 Ory Kratos takes care of all required session and CSRF cookies and ensures that
 all security requirements are fulfilled.
 
@@ -109,9 +110,9 @@ The browser flow has three stages:
 
 :::note
 
-The payloads, examples, ports, and IPs shown here are the ones used if you run
-the [Quickstart](quickstart.mdx). If you have not checked it out yet, please do
-so before reading this document.
+All examples use the Ory Cloud Platform (OCP) playground project. Please be
+aware that everyone can see the data you enter there. You can replace the OCP
+URL with a locally hosted Ory Kratos as well.
 
 :::
 
@@ -129,33 +130,22 @@ The flow object has an ID and contains additional information about the flow
 such as the login methods (e.g. "username/password" and "Sign in with Google")
 and their form data.
 
+import DomainWarning from '@theme/DomainWarning'
+
+<DomainWarning />
+
 Once stored, the Browser is HTTP 302 redirected to the flow's configured UI URL
 (e.g. `selfservice.flows.login.ui_url`), appending the flow ID as the `flow` URL
-Query Parameter. Also included will be might be some cookies such as Anti-CSRF
-cookies.
-
-The response will look along the lines of:
-
-```
-$ curl -s -v -X GET \
-  -H "Accept: text/html" \
-  http://127.0.0.1:4433/self-service/login/browser
-
-# Response Headers
-< HTTP/1.1 302 Found
-< Cache-Control: 0
-< Content-Type: text/html; charset=utf-8
-< Location: http://127.0.0.1:4455/auth/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe
-< Set-Cookie: csrf_token=qhMCbVX6iDyw1x/701zlINVFFqfkZrq1t/Z27Z1uFDw=; Path=/.ory/kratos/public/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly
-< Vary: Cookie
-< Date: Mon, 17 Aug 2020 13:54:52 GMT
-< Content-Length: 97
-```
+Query Parameter. Also included are HTTP cookies such as Anti-CSRF cookies.
 
 ### Form Rendering
 
-The Browser opens the URL (here
-`http://127.0.0.1:4455/auth/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe`)
+The Browser follows the link and opens
+
+```
+https://playground.projects.oryapis.com/hosted/login?flow=36c3246f-8e40-4f45-8721-c246576a8bc3
+```
+
 which renders the HTML form which for example shows the "username and password"
 field, the "Update your email address" field, or other flow forms. This HTML
 form is rendered be the
@@ -163,33 +153,47 @@ form is rendered be the
 which you fully control.
 
 The endpoint responsible for the UI URL uses the `flow` URL Query Parameter
-(here `...?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe`) to call the flow
-information endpoint (e.g.
-`http://127.0.0.1:4434/self-service/login/flows?id=f6209031-38d5-48bc-b6a5-118e8a24d1fe`)
-and fetch the flow data - so for example the login form and any validation
-errors. This endpoint is available at both Ory Kratos's Public and Admin
-Endpoints. For example, the Self-Service UI responsible for rendering the Login
-HTML Form would make a request along the lines of:
+(here `...?flow=36c3246f-8e40-4f45-8721-c246576a8bc3`) to call the flow
+information endpoint, for example:
+`https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser/flows?id=36c3246f-8e40-4f45-8721-c246576a8bc3`
 
-```
+:::note
+
+Calling the flow enpdoint without the correct CSRF cookies will result in a
+failure!
+
+:::
+
+The endpoint returns the flow data - so for example the login form and any
+validation errors. Let's take a look at an example using CURL:
+
+```shell-session
+# A cookie jar for storing the CSRF tokens
+$ cookieJar=$(mktemp)`
+$ flowId=$(curl -s -X GET \
+    --cookie-jar $cookieJar --cookie $cookieJar \
+    -H "Accept: application/json" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser | jq -r '.id')
+
 # The endpoint uses Ory Kratos' REST API to fetch information about the request
 $ curl -s -X GET \
+    --cookie-jar $cookieJar --cookie $cookieJar \
     -H "Accept: application/json" \
-    "http://127.0.0.1:4434/self-service/login/flows?id=f6209031-38d5-48bc-b6a5-118e8a24d1fe" | jq
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=$flowId" | jq`
 ```
 
-The result includes login methods, their fields, and additional information
+The response includes login methods, their fields, and additional information
 about the flow:
 
 ```json
 {
-  "id": "f6209031-38d5-48bc-b6a5-118e8a24d1fe",
+  "id": "33f6079a-ef14-4084-af13-34a91e53cd6c",
   "type": "browser",
-  "expires_at": "2021-04-28T09:00:57.10254633Z",
-  "issued_at": "2021-04-28T08:50:57.10254633Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "expires_at": "2021-07-09T10:08:08.856735Z",
+  "issued_at": "2021-07-09T09:08:08.856735Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/login/browser",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=33f6079a-ef14-4084-af13-34a91e53cd6c",
     "method": "POST",
     "nodes": [
       {
@@ -198,11 +202,11 @@ about the flow:
         "attributes": {
           "name": "csrf_token",
           "type": "hidden",
-          "value": "pUhD8lmSNNRnX/tuy6yAM317SfdiPOwetYUKnx23iTHnySErkBGJwaF1t3cEqNtxF3uC7W5A/dwP5l5VDYFRSA==",
+          "value": "XmG3qwTYSV0oWIyNGTugvtNOKMxWPYHd7dNX7BYK5lL79P0iUdq5jVmRUKwwm8RLcAGN7eF7iYraAiTSOdamuQ==",
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {}
       },
       {
@@ -215,7 +219,7 @@ about the flow:
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070004,
@@ -233,7 +237,7 @@ about the flow:
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070001,
@@ -251,7 +255,7 @@ about the flow:
           "value": "password",
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1010001,
@@ -261,8 +265,17 @@ about the flow:
           }
         }
       }
+    ],
+    "messages": [
+      {
+        "id": 4010002,
+        "text": "Could not find a strategy to log you in with. Did you fill out the form correctly?",
+        "type": "error"
+      }
     ]
   },
+  "created_at": "2021-07-09T09:08:08.857959Z",
+  "updated_at": "2021-07-09T09:08:08.857959Z",
   "forced": false
 }
 ```
@@ -274,13 +287,13 @@ HTML Form would look along the lines of:
 
 ```html
 <form
-  action="http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe"
+  action="https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe"
   method="POST"
 >
   <input
     name="csrf_token"
     type="hidden"
-    value="pUhD8lmSNNRnX/tuy6yAM317SfdiPOwetYUKnx23iTHnySErkBGJwaF1t3cEqNtxF3uC7W5A/dwP5l5VDYFRSA=="
+    value="XmG3qwTYSV0oWIyNGTugvtNOKMxWPYHd7dNX7BYK5lL79P0iUdq5jVmRUKwwm8RLcAGN7eF7iYraAiTSOdamuQ=="
   />
   <fieldset>
     <label>
@@ -307,22 +320,23 @@ then fetches the information about the flow again
 
 ```
 # The endpoint uses Ory Kratos' REST API to fetch information about the request
-$ curl -s -X GET \
-    -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/login/flows?id=f6209031-38d5-48bc-b6a5-118e8a24d1fe" | jq
+$ theFlowID=...
+$ curl -s -i -X GET \
+    -H "Accept: application/json"  \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/login/flows?id=$theFlowID' | jq
 ```
 
 which now includes validation errors and other potential messages:
 
 ```json5
 {
-  id: 'f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+  id: '36c3246f-8e40-4f45-8721-c246576a8bc3',
   type: 'browser',
   expires_at: '2021-04-28T09:00:57.10254633Z',
   issued_at: '2021-04-28T08:50:57.10254633Z',
-  request_url: 'http://127.0.0.1:4433/self-service/login/browser',
+  request_url: 'https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser',
   ui: {
-    action: 'http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+    action: 'https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=36c3246f-8e40-4f45-8721-c246576a8bc3',
     method: 'POST',
     nodes: [
       // ...
@@ -391,11 +405,22 @@ specified redirect URL and sets a session cookie. The registration flow also
 redirects to a specified redirect URL but only creates the user in the database
 and might issue a session cookie if configured to do so.
 
-## Browser Flows for Client-Side Apps: Single-Page-Apps, SPAs, ...
+## Browser Flows for Client-Side Apps: Single-Page-Apps, ReactJS, AngularJS, NextJS, ...
 
 Browser-based flows also support Client Side applications such as
 Single-Page-Apps (ReactJS, AngularJS, NextJS, ...) that use AJAX to perform
 requests.
+
+:::info
+
+Ory Kratos and your UI must be on the hosted on same top level domain! You can
+not host Ory Kratos and your UI on separate top level domains:
+
+- `kratos.bar.com` and `ui.bar.com` will work;
+- `kratos.bar.com` and `bar.com` will work;
+- `kratos.bar.com` and `not-bar.com` will not work.
+
+:::
 
 Ory Kratos identifies SPA requests by checking if the `Accept` HTTP Header is
 set to `application/json`.
@@ -446,9 +471,9 @@ response could be sent:
   type: 'browser',
   expires_at: '2021-04-28T09:00:57.10254633Z',
   issued_at: '2021-04-28T08:50:57.10254633Z',
-  request_url: 'http://127.0.0.1:4433/self-service/login/browser',
+  request_url: 'https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser',
   ui: {
-    action: 'http://127.0.0.1:4433/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe',
+    action: 'https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=f6209031-38d5-48bc-b6a5-118e8a24d1fe',
     method: 'POST',
     nodes: [
       // ...
@@ -514,7 +539,7 @@ response could be sent:
 
 API flows have three stages:
 
-- Initialization **without redirect**;
+- Initialization without redirect and cookies;
 - Form rendering using e.g. native iOS, Android, ... components;
 - Form submission as `application/json` and payload validation.
 
@@ -546,15 +571,17 @@ snippet:
 ```tsx
 import React, { useState, useEffect } from 'react'
 import { Text, TextInput, View } from 'react-native'
-import { PublicApi, LoginFlow } from '@ory/kratos-client'
+import { Configuration, V0alpha1Api, LoginFlow } from '@ory/kratos-client'
 
-const kratos = new PublicApi('http://127.0.0.1:4455/.ory/kratos/public')
+const kratos = new V0alpha1Api(
+  new Configuration({ basePath: 'https://playground.projects.oryapis.com/api/kratos/public' })
+)
 
 export default function Login () {
   const [flow, setFlow] = useState<LoginFlow | undefined>(undefined)
 
   useEffect(() => {
-    kratos.initializeSelfServiceAPILoginFlow().then(({ data: flow }) => {
+    kratos.initializeSelfServiceLoginFlowWithoutBrowser().then(({ data: flow }) => {
       setFlow(flow)
     })
   }, [])
@@ -586,9 +613,9 @@ If needed, the client can re-request the flow using the same HTTP Request as the
 browser flow at the Public API endpoint:
 
 ```shell script
-curl -s -X GET \
+$ curl -s -X GET \
     -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/login/flows?id=41ebf1e9-79f5-4b97-b643-04bfc405f8ad" | jq
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/flows?id=<the-flow-id>" | jq
 
 {
   "id": "41ebf1e9-79f5-4b97-b643-04bfc405f8ad",
@@ -602,11 +629,11 @@ The request is then completed by sending the form formatted as
 `application/json` to the action endpoint
 
 ```shell
-flow=$(curl -s -X GET -H "Accept: application/json" "http://127.0.0.1:4433/self-service/login/api")
+flow=$(curl -s -X GET -H "Accept: application/json" "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api")
 actionUrl=$(echo $flow | jq -r '.ui.action')
 
 echo $actionUrl
-# http://127.0.0.1:4433/self-service/login?flow=6394ffa4-235f-4c1a-a200-e62f89862015
+# https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=6394ffa4-235f-4c1a-a200-e62f89862015
 
 curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
     -d '{"password_identifier": "i-do-not-exist@user.org", "password": "the-wrong-password", "method": "password"}' \
@@ -621,9 +648,9 @@ which in this case fails with a 400 Bad Request error and the following payload:
   "type": "api",
   "expires_at": "2021-04-28T09:12:48.462374732Z",
   "issued_at": "2021-04-28T09:02:48.462374732Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/api",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/login?flow=6394ffa4-235f-4c1a-a200-e62f89862015",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=6394ffa4-235f-4c1a-a200-e62f89862015",
     "method": "POST",
     "messages": [
       {

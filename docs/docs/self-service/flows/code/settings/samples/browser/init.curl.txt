@@ -1,6 +1,6 @@
 curl -s -v -X GET \
   -H "Accept: text/html"  \
-  http://127.0.0.1:4433/self-service/settings/browser
+  https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser
 
 > GET /self-service/settings/browser HTTP/1.1
 > Host: 127.0.0.1:4433

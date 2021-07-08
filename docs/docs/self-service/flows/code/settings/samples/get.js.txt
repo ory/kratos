@@ -1,7 +1,7 @@
 import { AdminApi, Configuration } from '@ory/kratos-client';
 
 const kratos = new AdminApi(new Configuration({
-  basePath: 'http://127.0.0.1:4433/'
+  basePath: 'https://playground.projects.oryapis.com/api/kratos/public/'
   apiKey: 'the-session-token'
 }));
 

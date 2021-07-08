@@ -1,16 +1,16 @@
 $ curl -s -X GET \
     -H "Authorization: Bearer $sessionToken" \
     -H "Accept: application/json" \
-    'http://127.0.0.1:4433/self-service/settings/flows?id=f71743cd-700d-4a30-9275-8edc90de07cc' | jq
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/flows?id=f71743cd-700d-4a30-9275-8edc90de07cc' | jq
 
 {
   "id": "f71743cd-700d-4a30-9275-8edc90de07cc",
   "type": "browser",
   "expires_at": "2021-04-28T12:39:36.804397011Z",
   "issued_at": "2021-04-28T11:39:36.804397011Z",
-  "request_url": "http://127.0.0.1:4433/self-service/settings/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/settings?flow=f71743cd-700d-4a30-9275-8edc90de07cc",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings?flow=f71743cd-700d-4a30-9275-8edc90de07cc",
     "method": "POST",
     "nodes": [
       {
@@ -137,7 +137,7 @@ $ curl -s -X GET \
   "identity": {
     "id": "5b23b651-c186-4398-8717-f15ac72cbc7e",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "example.user@ory.sh"
     },

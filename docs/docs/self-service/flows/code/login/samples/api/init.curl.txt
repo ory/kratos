@@ -1,15 +1,15 @@
 $ curl -s -X GET \
     -H "Accept: application/json"  \
-    http://127.0.0.1:4433/self-service/login/api | jq
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api | jq
 
 {
-  "id": "cc24b30b-c0a8-46f5-a929-304371e92e46",
+  "id": "9cb47dc9-937d-432b-b491-998fc6355e49",
   "type": "api",
-  "expires_at": "2021-04-28T10:02:34.102190388Z",
-  "issued_at": "2021-04-28T09:52:34.102190388Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/api",
+  "expires_at": "2021-07-09T10:41:09.420577059Z",
+  "issued_at": "2021-07-09T09:41:09.420577059Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/login/api",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/login?flow=cc24b30b-c0a8-46f5-a929-304371e92e46",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=9cb47dc9-937d-432b-b491-998fc6355e49",
     "method": "POST",
     "nodes": [
       {
@@ -22,7 +22,7 @@ $ curl -s -X GET \
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {}
       },
       {
@@ -35,7 +35,7 @@ $ curl -s -X GET \
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070004,
@@ -53,7 +53,7 @@ $ curl -s -X GET \
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070001,
@@ -71,7 +71,7 @@ $ curl -s -X GET \
           "value": "password",
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1010001,
@@ -83,5 +83,7 @@ $ curl -s -X GET \
       }
     ]
   },
+  "created_at": "2021-07-09T09:41:09.422111Z",
+  "updated_at": "2021-07-09T09:41:09.422111Z",
   "forced": false
 }

@@ -1,14 +1,15 @@
+
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/login/flows?id=42e26bc5-8014-400c-b463-dc5c3738c242' | jq
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/login/flows?id=42e26bc5-8014-400c-b463-dc5c3738c242' | jq
 
 {
   "id": "42e26bc5-8014-400c-b463-dc5c3738c242",
   "type": "browser",
   "expires_at": "2021-04-28T10:04:44.506336771Z",
   "issued_at": "2021-04-28T09:54:44.506336771Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
     "method": "POST",
     "nodes": [
       {
