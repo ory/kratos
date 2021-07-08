@@ -16,7 +16,7 @@ $ docker run --rm -it oryd/kratos help
 ```
 
 You can find more detailed information on the official Kratos docker images
-[here](guides/docker).
+[here](guides/docker.md).
 
 ## macOS
 

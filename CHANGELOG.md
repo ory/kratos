@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-07-05)](#unreleased-2021-07-05)
+- [Unreleased (2021-07-07)](#unreleased-2021-07-07)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -181,7 +181,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...af54d5bb9e36f90d272d293817f0d6d7eb2e79a8) (2021-07-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.6.3-alpha.1...b51bb555d829ab020e593a764cbce4c5ba4885a2) (2021-07-07)
 ## Breaking Changes
 
 This patch introduces CSRF countermeasures for fetching all self-service flows. This ensures that users can not accidentally leak sensitive information when copy/pasting e.g. login URLs (see #1282). If a self-service flow for browsers is requested, the CSRF cookie must be included in the call, regardless if it is a client-side browser app or a server-side browser app calling. This **does not apply** for API-based flows.
@@ -285,6 +285,7 @@ We listened to your feedback and have improved the naming of the SDK method `ini
 * Corp package ([#1402](https://github.com/ory/kratos/issues/1402)) ([0202dc5](https://github.com/ory/kratos/commit/0202dc57aacc0d48e4c1ee4e68c91654451f63fa))
 * Introduce DefaultContextualizer in corp package ([#1390](https://github.com/ory/kratos/issues/1390)) ([944d045](https://github.com/ory/kratos/commit/944d045aa7fc59eadfdd18951f0d4937b1ea79df)), closes [#1363](https://github.com/ory/kratos/issues/1363)
 * Move cleansql to separate package ([7c203dc](https://github.com/ory/kratos/commit/7c203dc8219afe07f180143f832158615b51f60a))
+* Openapi.json -> api.json ([6df0de5](https://github.com/ory/kratos/commit/6df0de5d0b4c952576bf9e14c18d521934edd9bb))
 
 ### Documentation
 
@@ -296,6 +297,8 @@ We listened to your feedback and have improved the naming of the SDK method `ini
 * Fix building from source ([#1473](https://github.com/ory/kratos/issues/1473)) ([af54d5b](https://github.com/ory/kratos/commit/af54d5bb9e36f90d272d293817f0d6d7eb2e79a8))
 * Fix typo in "Sign in/up with ID & assword" ([#1383](https://github.com/ory/kratos/issues/1383)) ([f39739d](https://github.com/ory/kratos/commit/f39739d94e97f20b94630b957371d11294dc8300))
 * Mark login endpoints as experimental ([6faf0f6](https://github.com/ory/kratos/commit/6faf0f65bb05bbafdee6b1274a719695fd5b4173))
+* Remove changelog from docs folder ([5a7e3d8](https://github.com/ory/kratos/commit/5a7e3d83a5fb7f3e6945f37d42abca14d2982e72))
+* Resolve build issues ([b51bb55](https://github.com/ory/kratos/commit/b51bb555d829ab020e593a764cbce4c5ba4885a2))
 * Update docs for all flows ([d29ea69](https://github.com/ory/kratos/commit/d29ea69f6bb908b529502030942b1ced52227372))
 * Update documentation for plaintext templates ([#1369](https://github.com/ory/kratos/issues/1369)) ([419784d](https://github.com/ory/kratos/commit/419784dd0d4ddc338830ed0d77a7d99f8f440777)), closes [#1351](https://github.com/ory/kratos/issues/1351)
 * Update path ([f0384d9](https://github.com/ory/kratos/commit/f0384d9c11085230fd16290c524d22fac6002870))
@@ -308,6 +311,7 @@ We listened to your feedback and have improved the naming of the SDK method `ini
 * Add GetContextualizer ([ac32717](https://github.com/ory/kratos/commit/ac3271742c9c2b968b08dd2b35a5d120c5befcd9))
 * Add helper for starting kratos e2e ([#1469](https://github.com/ory/kratos/issues/1469)) ([b9c7674](https://github.com/ory/kratos/commit/b9c7674c30df8200bcd7223c2fa6b058e833bb8a))
 * Add instana as possible tracing provider ([#1429](https://github.com/ory/kratos/issues/1429)) ([abe48a9](https://github.com/ory/kratos/commit/abe48a97ee75567979a70f00dd73ff698efcc75d)), closes [#1385](https://github.com/ory/kratos/issues/1385)
+* Add redoc ([#1502](https://github.com/ory/kratos/issues/1502)) ([492266d](https://github.com/ory/kratos/commit/492266de9c9b7b775a7b21b5890361380d911da4))
 * Add vk and yandex providers to oidc providers and documentation ([#1339](https://github.com/ory/kratos/issues/1339)) ([22a3ef9](https://github.com/ory/kratos/commit/22a3ef98181eb5922cc0f1c016d42ce46732d0a2)), closes [#1234](https://github.com/ory/kratos/issues/1234)
 * Anti-CSRF measures when fetching flows ([#1458](https://github.com/ory/kratos/issues/1458)) ([5171557](https://github.com/ory/kratos/commit/51715572ea08f654d1e97d760b9c3d3a9113aa3d)), closes [#1282](https://github.com/ory/kratos/issues/1282)
 * Disable HaveIBeenPwned validation when HaveIBeenPwnedEnabled is set to false ([#1445](https://github.com/ory/kratos/issues/1445)) ([44002f4](https://github.com/ory/kratos/commit/44002f4fa93b40a6bb18f1e759bb416d082cec08)), closes [#316](https://github.com/ory/kratos/issues/316):
