@@ -1,30 +1,26 @@
-$ curl -s -v -X GET \
-  -H "Accept: application/json"  \
-  -H "Origin: http://127.0.0.1:4433"  \
-  http://127.0.0.1:4433/self-service/login/browser | jq
+$ curl -v -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser | jq
 
-> GET /self-service/login/browser HTTP/1.1
-> Host: 127.0.0.1:4433
+> GET /api/kratos/public/self-service/login/browser HTTP/2
+> Host: playground.projects.oryapis.com
 > User-Agent: curl/7.64.1
 > Accept: application/json
-> Origin: http://127.0.0.1:4433
 
-< HTTP/1.1 200 OK
-< Cache-Control: private, no-cache, no-store, must-revalidate
-< Content-Type: application/json; charset=utf-8
-< Set-Cookie: aHR0cDovLzEyNy4wLjAuMTo0NDU1Lw_csrf_token=YEmFowXUktsX6FeLp7xfsKsUA5s+FVVb8CAr5mNbaUY=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly; SameSite=Lax
-< Vary: Cookie
-< Date: Thu, 20 May 2021 09:18:41 GMT
-< Content-Length: 1318
-
+< HTTP/2 200
+< content-type: application/json; charset=utf-8
+< content-length: 1359
+< set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=p34hp8ZW6RS4yKasUFGk9HRGC7EIRA3YXdF3hhqU/SE=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+< vary: Origin
+< vary: Cookie
 {
-  "id": "59b6f701-8ee3-40fd-8084-f40e9eae7c05",
+  "id": "dd824502-922f-41a4-b14c-dbdcb72c8ba3",
   "type": "browser",
-  "expires_at": "2021-05-20T10:18:41.383586Z",
-  "issued_at": "2021-05-20T09:18:41.383586Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "expires_at": "2021-07-09T10:14:00.899381869Z",
+  "issued_at": "2021-07-09T09:14:00.899381869Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/login/browser",
   "ui": {
-    "action": "http://127.0.0.1:4455/self-service/login?flow=59b6f701-8ee3-40fd-8084-f40e9eae7c05",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=dd824502-922f-41a4-b14c-dbdcb72c8ba3",
     "method": "POST",
     "nodes": [
       {
@@ -33,11 +29,11 @@ $ curl -s -v -X GET \
         "attributes": {
           "name": "csrf_token",
           "type": "hidden",
-          "value": "ILaniF78sVwx0apUwy0qSKSMEbdzxmaIleCNmVv9pQFA/yIrWygjhyY5/d9kkXX4D5gSLE3TM9NlwKZ/OKbMRw==",
+          "value": "LB9DGazPs8o94L0dTCv/OD990MKoDYfgcPsMUapvws+LYWK+apla3oUoG7EcelvMSzvbc6BJijgtKnvXsPs/7g==",
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {}
       },
       {
@@ -50,7 +46,7 @@ $ curl -s -v -X GET \
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070004,
@@ -68,7 +64,7 @@ $ curl -s -v -X GET \
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070001,
@@ -86,7 +82,7 @@ $ curl -s -v -X GET \
           "value": "password",
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1010001,
@@ -98,7 +94,7 @@ $ curl -s -v -X GET \
       }
     ]
   },
-  "created_at": "2021-05-20T11:18:41.384303+02:00",
-  "updated_at": "2021-05-20T11:18:41.384303+02:00",
+  "created_at": "2021-07-09T09:14:00.900613Z",
+  "updated_at": "2021-07-09T09:14:00.900613Z",
   "forced": false
 }

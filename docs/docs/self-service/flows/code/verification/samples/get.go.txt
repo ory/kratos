@@ -13,7 +13,7 @@ func NewKratosClient(endpoint string) *kratos.APIClient {
 }
 
 func main() {
-  c := NewKratosClient("http://127.0.0.1:4433/")
+  c := NewKratosClient("https://playground.projects.oryapis.com/api/kratos/public/")
   ctx := context.Background()
   flowID := "" // Usually something like: res.Request.URL.Query().Get("flow")
 

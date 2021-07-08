@@ -2,16 +2,16 @@ $ sessionToken=...
 $ curl -s -X GET \
     -H "Authorization: Bearer $sessionToken"  \
     -H "Accept: application/json"  \
-    http://127.0.0.1:4433/self-service/settings/api | jq
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/api | jq
 
 {
   "id": "34b4fa55-f3a3-4b16-9091-b25db5644411",
   "type": "api",
   "expires_at": "2021-04-28T12:31:36.139073277Z",
   "issued_at": "2021-04-28T11:31:36.139073277Z",
-  "request_url": "http://127.0.0.1:4433/self-service/settings/api",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/api",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/settings?flow=34b4fa55-f3a3-4b16-9091-b25db5644411",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings?flow=34b4fa55-f3a3-4b16-9091-b25db5644411",
     "method": "POST",
     "nodes": [
       {
@@ -138,7 +138,7 @@ $ curl -s -X GET \
   "identity": {
     "id": "5b23b651-c186-4398-8717-f15ac72cbc7e",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "example.user@ory.sh"
     },

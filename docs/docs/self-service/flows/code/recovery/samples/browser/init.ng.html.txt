@@ -1,1 +1,1 @@
-<a href="http://127.0.0.1:4433/self-service/recovery/browser">Recover Account</a>
+<a href="https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/browser">Recover Account</a>

@@ -1,10 +1,10 @@
-<a href="http://127.0.0.1:4433/self-service/settings/browser">Update Profile</a>
+<a href="https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser">Update Profile</a>
 
 <!-- or -->
 
 <script>
   const initSettings = () => {
-    window.location.href = 'http://127.0.0.1:4433/self-service/settings/browser'
+    window.location.href = 'https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser'
   }
 </script>
 

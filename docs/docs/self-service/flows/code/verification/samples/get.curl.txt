@@ -1,5 +1,5 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4433/self-service/verification/flows?id=956c0499-17a9-4a99-9602-9282d1632f7b' | \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/flows?id=956c0499-17a9-4a99-9602-9282d1632f7b' | \
       jq
 
 {
@@ -7,9 +7,9 @@ $ curl -H "Accept: application/json" -s \
   "type": "browser",
   "expires_at": "2021-04-28T13:24:12.648411549Z",
   "issued_at": "2021-04-28T12:24:12.648411549Z",
-  "request_url": "http://127.0.0.1:4433/self-service/verification/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/verification?flow=956c0499-17a9-4a99-9602-9282d1632f7b",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification?flow=956c0499-17a9-4a99-9602-9282d1632f7b",
     "method": "POST",
     "nodes": [
       {

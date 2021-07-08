@@ -2,7 +2,7 @@
 # returns an HTTP 403 error.
 $ curl -s -X GET \
     -H "Accept: application/json" \
-    http://127.0.0.1:4433/self-service/settings/api | jq
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/api | jq
 
 {
   "error": {

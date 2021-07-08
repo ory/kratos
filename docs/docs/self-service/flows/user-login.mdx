@@ -29,8 +29,9 @@ continuing with this document.
 
 There are two Login Flow types supported in Ory Kratos:
 
-- Flows where the user sits in front of the Browser (e.g. website, single page
-  app, ...)
+- Flows where the user sits in front of the Browser and the application is
+  - a server-side application (e.g. NodeJS, Java, ...)
+  - a client-side application (e.g. ReactJS, AngularJS, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 The Login Flow can be summarized as the following state machine:
@@ -182,9 +183,9 @@ $ curl -H "Accept: application/json" -s \
   "type": "browser",
   "expires_at": "2021-04-28T10:04:44.506336771Z",
   "issued_at": "2021-04-28T09:54:44.506336771Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
     "method": "POST",
     "nodes": [
       {
@@ -305,7 +306,7 @@ $ curl -H "Accept: application/json" -s \
   "type": "browser",
   "expires_at": "2021-04-28T11:05:01.382156Z",
   "issued_at": "2021-04-28T10:05:01.382156Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser",
   "ui": {
     "action": "http://127.0.0.1:4455/self-service/login?flow=d6340737-89f2-4b01-a848-79007de6f430",
     "method": "POST",
@@ -435,7 +436,7 @@ Now, whenever the browser is making a request (with cookies) to the
 
 ```shell script
 curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==" \
-  http://127.0.0.1:4433/sessions/whoami | jq
+  https://playground.projects.oryapis.com/api/kratos/public/sessions/whoami | jq
 
 {
   "id": "ede90ce6-2420-435a-a745-3d8ab1a9636c",
@@ -446,7 +447,7 @@ curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQ
   "identity": {
     "id": "d96e86d9-bc33-4aa5-b865-4ade8a3974b3",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "foouser@ory.sh",
       "name": {
@@ -491,7 +492,7 @@ which includes a `Set-Cookie` header and a JSON response (see below):
     "identity": {
       "id": "bf32596a-f853-47c4-91e6-a3f41cf4949d",
       "schema_id": "default",
-      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
       "traits": {
         "email": "api@user.org",
         "name": {
@@ -531,7 +532,7 @@ Token:
 # Inits a Login Flow
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/login/api" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api" \
     | jq -r '.ui.action'\
 )
 
@@ -551,7 +552,7 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
     "identity": {
       "id": "bf32596a-f853-47c4-91e6-a3f41cf4949d",
       "schema_id": "default",
-      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
       "traits": {
         "email": "api@user.org",
         "name": {
@@ -586,7 +587,7 @@ The Ory Kratos Session Token can be checked at the
 
 ```shell script
 $ curl -s -H "Authorization: Bearer svX8bE9HTiVpMr7r55TtKtcOkLRhAq1a" \
-  http://127.0.0.1:4433/sessions/whoami | jq
+  https://playground.projects.oryapis.com/api/kratos/public/sessions/whoami | jq
 
 {
   "id": "d09fc470-9e11-4e70-855f-0dc1aee7e501",
@@ -597,7 +598,7 @@ $ curl -s -H "Authorization: Bearer svX8bE9HTiVpMr7r55TtKtcOkLRhAq1a" \
   "identity": {
     "id": "9ee8fb81-9d5c-47a7-9cee-28a0f64dccbb",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "api@user.org",
       "name": {
@@ -641,9 +642,9 @@ Refreshing a session will not log the user out, unless another user signs in.
 To refresh a session, append `?refresh=true` to:
 
 - `/self-service/login/browser` for browser Clients (e.g.
-  `http://127.0.0.1:4433/self-service/login/browser?refresh=true`)
+  `https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser?refresh=true`)
 - `/self-service/login/api` for API Clients (e.g.
-  `http://127.0.0.1:4433/self-service/login/api?refresh=true`)
+  `https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api?refresh=true`)
 
 ## Hooks
 

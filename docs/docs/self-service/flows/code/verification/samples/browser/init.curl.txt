@@ -1,6 +1,6 @@
 curl -s -v -X GET \
   -H "Accept: text/html"  \
-  http://127.0.0.1:4433/self-service/verification/browser
+  https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser
 
 > GET /self-service/verification/browser HTTP/1.1
 > Host: 127.0.0.1:4433

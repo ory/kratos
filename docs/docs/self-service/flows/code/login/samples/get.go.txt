@@ -16,7 +16,7 @@ func main() {
   ctx := context.Background()
   flowID := "" // Usually something like: res.Request.URL.Query().Get("flow")
 
-  c := NewKratosClient("http://127.0.0.1:4433/")
+  c := NewKratosClient("https://playground.projects.oryapis.com/api/kratos/public/")
   flow, _, err := c.PublicApi.GetSelfServiceLoginFlow().Id(flowID).Execute()
   if err != nil {
     // ...

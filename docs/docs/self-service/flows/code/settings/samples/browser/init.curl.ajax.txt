@@ -2,8 +2,8 @@ $ sessionToken=...
 $ curl -s -v -X GET \
   -H "Authorization: Bearer $sessionToken" \
   -H "Accept: application/json"  \
-  -H "Origin: http://127.0.0.1:4433"  \
-  http://127.0.0.1:4433/self-service/settings/browser | jq
+  -H "Origin: https://playground.projects.oryapis.com/api/kratos/public"  \
+  https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser | jq
 
 > GET /self-service/settings/browser HTTP/1.1
 > Host: 127.0.0.1:4433
@@ -23,7 +23,7 @@ $ curl -s -v -X GET \
   "type": "browser",
   "expires_at": "2021-06-15T08:33:30.348239Z",
   "issued_at": "2021-06-15T07:33:30.348239Z",
-  "request_url": "http://127.0.0.1:4433/self-service/settings/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser",
   "ui": {
     "action": "http://127.0.0.1:4455/self-service/settings?flow=2ae3e787-6c3b-474b-b55c-54eb2e20ddd0",
     "method": "POST",

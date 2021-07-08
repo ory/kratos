@@ -1,13 +1,13 @@
 curl -s -v -X GET \
   -H "Accept: application/json"  \
-  -H "Origin: http://127.0.0.1:4433"  \
-  http://127.0.0.1:4433/self-service/verification/browser | jq
+  -H "Origin: https://playground.projects.oryapis.com/api/kratos/public"  \
+  https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser | jq
 
 > GET /self-service/verification/browser HTTP/1.1
 > Host: 127.0.0.1:4433
 > User-Agent: curl/7.64.1
 > Accept: application/json
-> Origin: http://127.0.0.1:4433
+> Origin: https://playground.projects.oryapis.com/api/kratos/public
 
 < HTTP/1.1 200 OK
 < Cache-Control: private, no-cache, no-store, must-revalidate
@@ -21,7 +21,7 @@ curl -s -v -X GET \
   "type": "browser",
   "expires_at": "2021-06-15T14:38:26.190743Z",
   "issued_at": "2021-06-15T14:33:26.190743Z",
-  "request_url": "http://127.0.0.1:4433/self-service/verification/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser",
   "ui": {
     "action": "http://127.0.0.1:4455/self-service/verification?flow=bcf93f61-2ecd-48d2-ac18-6d731fead2b6",
     "method": "POST",
