@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ory/kratos/driver/config"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -20,6 +22,8 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		IdentityTraitsProvider
+		x.CSRFProvider
+		config.Provider
 	}
 	Handler struct {
 		r handlerDependencies
@@ -36,11 +40,12 @@ func NewHandler(r handlerDependencies) *Handler {
 const SchemasPath string = "schemas"
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.r.CSRFHandler().IgnoreGlobs(fmt.Sprintf("/%s/*", SchemasPath))
 	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.get)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.get)
+	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), x.RedirectToPublicRoute(h.r))
 }
 
 // Raw JSON Schema

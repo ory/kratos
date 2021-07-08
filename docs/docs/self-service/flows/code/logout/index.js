@@ -7,7 +7,7 @@ export const apiFlow = {
   go: {
     label: 'Go',
     language: 'go',
-    code: require('raw-loader!../../../../../../examples/go/selfservicesubmit/logout/main.go')
+    code: require('raw-loader!../../../../../../examples/go/selfservice/logout/main.go')
       .default
   }
 }
