@@ -68,12 +68,12 @@
       "guides/tracing"
     ]
   },
+  "reference/api",
   {
     "Reference": [
       "reference/configuration",
       "reference/json-schema-json-paths",
       "reference/html-forms",
-      "reference/api",
       {
         "Command Line Interface (CLI)": [
           "cli/kratos",
