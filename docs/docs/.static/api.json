@@ -20,7 +20,10 @@
             "type": "object"
           }
         },
-        "required": ["traits", "state"],
+        "required": [
+          "traits",
+          "state"
+        ],
         "type": "object"
       },
       "AuthenticateOKBody": {
@@ -35,7 +38,10 @@
             "type": "string"
           }
         },
-        "required": ["IdentityToken", "Status"],
+        "required": [
+          "IdentityToken",
+          "Status"
+        ],
         "type": "object"
       },
       "ContainerChangeResponseItem": {
@@ -51,7 +57,10 @@
             "type": "string"
           }
         },
-        "required": ["Kind", "Path"],
+        "required": [
+          "Kind",
+          "Path"
+        ],
         "type": "object"
       },
       "ContainerCreateCreatedBody": {
@@ -69,7 +78,10 @@
             "type": "array"
           }
         },
-        "required": ["Id", "Warnings"],
+        "required": [
+          "Id",
+          "Warnings"
+        ],
         "type": "object"
       },
       "ContainerTopOKBody": {
@@ -93,7 +105,10 @@
             "type": "array"
           }
         },
-        "required": ["Processes", "Titles"],
+        "required": [
+          "Processes",
+          "Titles"
+        ],
         "type": "object"
       },
       "ContainerUpdateOKBody": {
@@ -107,7 +122,9 @@
             "type": "array"
           }
         },
-        "required": ["Warnings"],
+        "required": [
+          "Warnings"
+        ],
         "type": "object"
       },
       "ContainerWaitOKBody": {
@@ -122,7 +139,10 @@
             "type": "integer"
           }
         },
-        "required": ["Error", "StatusCode"],
+        "required": [
+          "Error",
+          "StatusCode"
+        ],
         "type": "object"
       },
       "ContainerWaitOKBodyError": {
@@ -147,7 +167,9 @@
             "type": "string"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "title": "ErrorResponse Represents an error.",
         "type": "object"
       },
@@ -165,7 +187,10 @@
             "type": "string"
           }
         },
-        "required": ["Data", "Name"],
+        "required": [
+          "Data",
+          "Name"
+        ],
         "title": "GraphDriverData Information about a container's graph driver.",
         "type": "object"
       },
@@ -181,7 +206,9 @@
             "type": "string"
           }
         },
-        "required": ["Id"],
+        "required": [
+          "Id"
+        ],
         "type": "object"
       },
       "ImageDeleteResponseItem": {
@@ -310,7 +337,12 @@
             "$ref": "#/components/schemas/PluginSettings"
           }
         },
-        "required": ["Config", "Enabled", "Name", "Settings"],
+        "required": [
+          "Config",
+          "Enabled",
+          "Name",
+          "Settings"
+        ],
         "type": "object"
       },
       "PluginConfig": {
@@ -427,7 +459,12 @@
             "type": "array"
           }
         },
-        "required": ["Description", "Name", "Settable", "Value"],
+        "required": [
+          "Description",
+          "Name",
+          "Settable",
+          "Value"
+        ],
         "type": "object"
       },
       "PluginConfigInterface": {
@@ -445,7 +482,10 @@
             "type": "array"
           }
         },
-        "required": ["Socket", "Types"],
+        "required": [
+          "Socket",
+          "Types"
+        ],
         "type": "object"
       },
       "PluginConfigLinux": {
@@ -470,7 +510,11 @@
             "type": "array"
           }
         },
-        "required": ["AllowAllDevices", "Capabilities", "Devices"],
+        "required": [
+          "AllowAllDevices",
+          "Capabilities",
+          "Devices"
+        ],
         "type": "object"
       },
       "PluginConfigNetwork": {
@@ -481,7 +525,9 @@
             "type": "string"
           }
         },
-        "required": ["Type"],
+        "required": [
+          "Type"
+        ],
         "type": "object"
       },
       "PluginConfigRootfs": {
@@ -540,7 +586,12 @@
             "type": "array"
           }
         },
-        "required": ["Description", "Name", "Path", "Settable"],
+        "required": [
+          "Description",
+          "Name",
+          "Path",
+          "Settable"
+        ],
         "type": "object"
       },
       "PluginEnv": {
@@ -566,7 +617,12 @@
             "type": "string"
           }
         },
-        "required": ["Description", "Name", "Settable", "Value"],
+        "required": [
+          "Description",
+          "Name",
+          "Settable",
+          "Value"
+        ],
         "type": "object"
       },
       "PluginInterfaceType": {
@@ -585,7 +641,11 @@
             "type": "string"
           }
         },
-        "required": ["Capability", "Prefix", "Version"],
+        "required": [
+          "Capability",
+          "Prefix",
+          "Version"
+        ],
         "type": "object"
       },
       "PluginMount": {
@@ -668,7 +728,12 @@
             "type": "array"
           }
         },
-        "required": ["Args", "Devices", "Env", "Mounts"],
+        "required": [
+          "Args",
+          "Devices",
+          "Env",
+          "Mounts"
+        ],
         "title": "PluginSettings Settings that can be modified by users.",
         "type": "object"
       },
@@ -694,7 +759,10 @@
             "type": "string"
           }
         },
-        "required": ["PrivatePort", "Type"],
+        "required": [
+          "PrivatePort",
+          "Type"
+        ],
         "type": "object"
       },
       "RecoveryAddress": {
@@ -719,7 +787,11 @@
             "$ref": "#/components/schemas/RecoveryAddressType"
           }
         },
-        "required": ["id", "value", "via"],
+        "required": [
+          "id",
+          "value",
+          "via"
+        ],
         "type": "object"
       },
       "RecoveryAddressType": {
@@ -812,7 +884,10 @@
             "type": "integer"
           }
         },
-        "required": ["RefCount", "Size"],
+        "required": [
+          "RefCount",
+          "Size"
+        ],
         "type": "object"
       },
       "adminCreateIdentityBody": {
@@ -826,7 +901,10 @@
             "type": "object"
           }
         },
-        "required": ["schema_id", "traits"],
+        "required": [
+          "schema_id",
+          "traits"
+        ],
         "type": "object"
       },
       "adminCreateSelfServiceRecoveryLinkBody": {
@@ -840,7 +918,9 @@
             "$ref": "#/components/schemas/UUID"
           }
         },
-        "required": ["identity_id"],
+        "required": [
+          "identity_id"
+        ],
         "type": "object"
       },
       "genericError": {
@@ -882,7 +962,9 @@
             "type": "string"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "type": "object"
       },
       "healthNotReadyStatus": {
@@ -963,7 +1045,13 @@
             "x-omitempty": true
           }
         },
-        "required": ["id", "schema_id", "schema_url", "state", "traits"],
+        "required": [
+          "id",
+          "schema_id",
+          "schema_url",
+          "state",
+          "traits"
+        ],
         "title": "Identity represents an Ory Kratos identity",
         "type": "object"
       },
@@ -1021,7 +1109,9 @@
             "$ref": "#/components/schemas/genericError"
           }
         },
-        "required": ["error"],
+        "required": [
+          "error"
+        ],
         "title": "JSON API Error Response",
         "type": "object"
       },
@@ -1057,7 +1147,9 @@
             "type": "string"
           }
         },
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "type": "object"
       },
       "selfServiceFlowType": {
@@ -1176,7 +1268,11 @@
       },
       "selfServiceRecoveryFlowState": {
         "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-        "enum": ["choose_method", "sent_email", "passed_challenge"],
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
         "title": "Recovery Flow State",
         "type": "string"
       },
@@ -1192,7 +1288,9 @@
             "type": "string"
           }
         },
-        "required": ["recovery_link"],
+        "required": [
+          "recovery_link"
+        ],
         "type": "object"
       },
       "selfServiceRegistrationFlow": {
@@ -1224,7 +1322,13 @@
             "$ref": "#/components/schemas/uiContainer"
           }
         },
-        "required": ["id", "expires_at", "issued_at", "request_url", "ui"],
+        "required": [
+          "id",
+          "expires_at",
+          "issued_at",
+          "request_url",
+          "ui"
+        ],
         "type": "object"
       },
       "selfServiceSettingsFlow": {
@@ -1278,7 +1382,10 @@
       },
       "selfServiceSettingsFlowState": {
         "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
-        "enum": ["show_form", "success"],
+        "enum": [
+          "show_form",
+          "success"
+        ],
         "title": "State represents the state of this flow. It knows two states:",
         "type": "string"
       },
@@ -1316,13 +1423,22 @@
             "$ref": "#/components/schemas/uiContainer"
           }
         },
-        "required": ["id", "type", "ui", "state"],
+        "required": [
+          "id",
+          "type",
+          "ui",
+          "state"
+        ],
         "title": "A Verification Flow",
         "type": "object"
       },
       "selfServiceVerificationFlowState": {
         "description": "The state represents the state of the verification flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
-        "enum": ["choose_method", "sent_email", "passed_challenge"],
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
         "title": "Verification Flow State",
         "type": "string"
       },
@@ -1355,7 +1471,10 @@
             "type": "string"
           }
         },
-        "required": ["id", "identity"],
+        "required": [
+          "id",
+          "identity"
+        ],
         "type": "object"
       },
       "settingsProfileFormConfig": {
@@ -1375,7 +1494,11 @@
             "$ref": "#/components/schemas/uiNodes"
           }
         },
-        "required": ["action", "method", "nodes"],
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
         "type": "object"
       },
       "submitSelfServiceLoginFlowBody": {
@@ -1408,7 +1531,10 @@
             "type": "string"
           }
         },
-        "required": ["traits", "method"],
+        "required": [
+          "traits",
+          "method"
+        ],
         "type": "object"
       },
       "submitSelfServiceLoginFlowWithPasswordMethodBody": {
@@ -1419,7 +1545,10 @@
           },
           "method": {
             "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
-            "enum": ["password", "oidc"],
+            "enum": [
+              "password",
+              "oidc"
+            ],
             "type": "string"
           },
           "password": {
@@ -1431,7 +1560,11 @@
             "type": "string"
           }
         },
-        "required": ["method", "password", "password_identifier"],
+        "required": [
+          "method",
+          "password",
+          "password_identifier"
+        ],
         "title": "submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.",
         "type": "object"
       },
@@ -1443,7 +1576,9 @@
             "type": "string"
           }
         },
-        "required": ["session_token"],
+        "required": [
+          "session_token"
+        ],
         "type": "object"
       },
       "submitSelfServiceRecoveryFlowBody": {
@@ -1471,11 +1606,17 @@
           },
           "method": {
             "description": "Method supports `link` only right now.",
-            "enum": ["password", "oidc"],
+            "enum": [
+              "password",
+              "oidc"
+            ],
             "type": "string"
           }
         },
-        "required": ["email", "method"],
+        "required": [
+          "email",
+          "method"
+        ],
         "type": "object"
       },
       "submitSelfServiceRegistrationFlowBody": {
@@ -1508,7 +1649,10 @@
             "type": "string"
           }
         },
-        "required": ["traits", "method"],
+        "required": [
+          "traits",
+          "method"
+        ],
         "type": "object"
       },
       "submitSelfServiceRegistrationFlowWithPasswordMethodBody": {
@@ -1520,7 +1664,10 @@
           },
           "method": {
             "description": "Method to use\n\nThis field must be set to `password` when using the password method.",
-            "enum": ["password", "oidc"],
+            "enum": [
+              "password",
+              "oidc"
+            ],
             "type": "string"
           },
           "password": {
@@ -1532,7 +1679,11 @@
             "type": "object"
           }
         },
-        "required": ["password", "traits", "method"],
+        "required": [
+          "password",
+          "traits",
+          "method"
+        ],
         "type": "object"
       },
       "submitSelfServiceSettingsFlowBody": {
@@ -1573,7 +1724,9 @@
             "type": "string"
           }
         },
-        "required": ["method"],
+        "required": [
+          "method"
+        ],
         "type": "object"
       },
       "submitSelfServiceSettingsFlowWithPasswordMethodBody": {
@@ -1584,7 +1737,11 @@
           },
           "method": {
             "description": "Method\n\nShould be set to password when trying to update a password.",
-            "enum": ["password", "profile", "oidc"],
+            "enum": [
+              "password",
+              "profile",
+              "oidc"
+            ],
             "type": "string"
           },
           "password": {
@@ -1592,7 +1749,10 @@
             "type": "string"
           }
         },
-        "required": ["password", "method"],
+        "required": [
+          "password",
+          "method"
+        ],
         "type": "object"
       },
       "submitSelfServiceSettingsFlowWithProfileMethodBody": {
@@ -1611,7 +1771,10 @@
             "type": "object"
           }
         },
-        "required": ["traits", "method"],
+        "required": [
+          "traits",
+          "method"
+        ],
         "type": "object"
       },
       "submitSelfServiceVerificationFlowBody": {
@@ -1640,11 +1803,17 @@
           },
           "method": {
             "description": "Method supports `link` only right now.",
-            "enum": ["password", "oidc"],
+            "enum": [
+              "password",
+              "oidc"
+            ],
             "type": "string"
           }
         },
-        "required": ["email", "method"],
+        "required": [
+          "email",
+          "method"
+        ],
         "type": "object"
       },
       "successfulSelfServiceLoginWithoutBrowser": {
@@ -1658,7 +1827,9 @@
             "type": "string"
           }
         },
-        "required": ["session"],
+        "required": [
+          "session"
+        ],
         "type": "object"
       },
       "successfulSelfServiceRegistrationWithoutBrowser": {
@@ -1675,7 +1846,9 @@
             "type": "string"
           }
         },
-        "required": ["identity"],
+        "required": [
+          "identity"
+        ],
         "type": "object"
       },
       "successfulSelfServiceSettingsWithoutBrowser": {
@@ -1688,7 +1861,10 @@
             "$ref": "#/components/schemas/identity"
           }
         },
-        "required": ["flow", "identity"],
+        "required": [
+          "flow",
+          "identity"
+        ],
         "type": "object"
       },
       "uiContainer": {
@@ -1709,7 +1885,11 @@
             "$ref": "#/components/schemas/uiNodes"
           }
         },
-        "required": ["action", "method", "nodes"],
+        "required": [
+          "action",
+          "method",
+          "nodes"
+        ],
         "type": "object"
       },
       "uiNode": {
@@ -1731,7 +1911,13 @@
             "$ref": "#/components/schemas/uiNodeType"
           }
         },
-        "required": ["type", "group", "attributes", "messages", "meta"],
+        "required": [
+          "type",
+          "group",
+          "attributes",
+          "messages",
+          "meta"
+        ],
         "title": "Node represents a flow's nodes",
         "type": "object"
       },
@@ -1745,7 +1931,10 @@
             "$ref": "#/components/schemas/uiText"
           }
         },
-        "required": ["href", "title"],
+        "required": [
+          "href",
+          "title"
+        ],
         "title": "AnchorAttributes represents the attributes of an anchor node.",
         "type": "object"
       },
@@ -1776,7 +1965,9 @@
             "type": "string"
           }
         },
-        "required": ["src"],
+        "required": [
+          "src"
+        ],
         "title": "ImageAttributes represents the attributes of an image node.",
         "type": "object"
       },
@@ -1813,7 +2004,11 @@
             "nullable": true
           }
         },
-        "required": ["name", "type", "disabled"],
+        "required": [
+          "name",
+          "type",
+          "disabled"
+        ],
         "type": "object"
       },
       "uiNodeTextAttributes": {
@@ -1822,7 +2017,9 @@
             "$ref": "#/components/schemas/uiText"
           }
         },
-        "required": ["text"],
+        "required": [
+          "text"
+        ],
         "title": "TextAttributes represents the attributes of a text node.",
         "type": "object"
       },
@@ -1852,7 +2049,11 @@
             "$ref": "#/components/schemas/uiTextType"
           }
         },
-        "required": ["id", "text", "type"],
+        "required": [
+          "id",
+          "text",
+          "type"
+        ],
         "type": "object"
       },
       "uiTextType": {
@@ -1901,7 +2102,13 @@
             "$ref": "#/components/schemas/identityVerifiableAddressType"
           }
         },
-        "required": ["id", "value", "verified", "via", "status"],
+        "required": [
+          "id",
+          "value",
+          "verified",
+          "via",
+          "status"
+        ],
         "type": "object"
       },
       "version": {
@@ -1950,7 +2157,9 @@
                       "type": "string"
                     }
                   },
-                  "required": ["status"],
+                  "required": [
+                    "status"
+                  ],
                   "type": "object"
                 }
               }
@@ -1969,7 +2178,9 @@
           }
         },
         "summary": "Check HTTP Server Status",
-        "tags": ["admin"]
+        "tags": [
+          "metadata"
+        ]
       }
     },
     "/health/ready": {
@@ -1987,7 +2198,9 @@
                       "type": "string"
                     }
                   },
-                  "required": ["status"],
+                  "required": [
+                    "status"
+                  ],
                   "type": "object"
                 }
               }
@@ -2007,7 +2220,9 @@
                       "type": "object"
                     }
                   },
-                  "required": ["errors"],
+                  "required": [
+                    "errors"
+                  ],
                   "type": "object"
                 }
               }
@@ -2016,7 +2231,9 @@
           }
         },
         "summary": "Check HTTP Server and Database Status",
-        "tags": ["admin"]
+        "tags": [
+          "metadata"
+        ]
       }
     },
     "/identities": {
@@ -2076,7 +2293,9 @@
           }
         ],
         "summary": "List Identities",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       },
       "post": {
         "description": "This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
@@ -2139,7 +2358,9 @@
           }
         ],
         "summary": "Create an Identity",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/identities/{id}": {
@@ -2188,7 +2409,9 @@
           }
         ],
         "summary": "Delete an Identity",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       },
       "get": {
         "description": "Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
@@ -2242,7 +2465,9 @@
           }
         ],
         "summary": "Get an Identity",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       },
       "put": {
         "description": "This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nThe full identity payload (except credentials) is expected. This endpoint does not support patching.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
@@ -2326,7 +2551,9 @@
           }
         ],
         "summary": "Update an Identity",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/metrics/prometheus": {
@@ -2339,7 +2566,9 @@
           }
         },
         "summary": "Get snapshot metrics from the service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
-        "tags": ["admin"]
+        "tags": [
+          "metadata"
+        ]
       }
     },
     "/recovery/link": {
@@ -2399,7 +2628,9 @@
           }
         },
         "summary": "Create a Recovery Link",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/schemas/{id}": {
@@ -2449,7 +2680,9 @@
             "description": "jsonError"
           }
         },
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/errors": {
@@ -2510,7 +2743,9 @@
           }
         },
         "summary": "Get Self-Service Errors",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/login": {
@@ -2579,7 +2814,9 @@
           }
         },
         "summary": "Submit a Login Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/login/api": {
@@ -2629,7 +2866,9 @@
           }
         },
         "summary": "Initialize Login Flow for APIs, Services, Apps, ...",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/login/browser": {
@@ -2672,7 +2911,9 @@
           }
         },
         "summary": "Initialize Login Flow for Browsers",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/login/flows": {
@@ -2751,7 +2992,9 @@
           }
         },
         "summary": "Get Login Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/logout": {
@@ -2787,7 +3030,9 @@
           }
         },
         "summary": "Complete Self-Service Logout",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/logout/api": {
@@ -2831,7 +3076,9 @@
           }
         },
         "summary": "Perform Logout for APIs, Services, Apps, ...",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/logout/browser": {
@@ -2881,7 +3128,9 @@
           }
         },
         "summary": "Create a Logout URL for Browsers",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/recovery": {
@@ -2958,7 +3207,9 @@
           }
         },
         "summary": "Complete Recovery Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/recovery/api": {
@@ -2998,7 +3249,9 @@
           }
         },
         "summary": "Initialize Recovery Flow for APIs, Services, Apps, ...",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/recovery/browser": {
@@ -3041,7 +3294,9 @@
           }
         },
         "summary": "Initialize Recovery Flow for Browsers",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/recovery/flows": {
@@ -3110,7 +3365,9 @@
           }
         },
         "summary": "Get Recovery Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/registration": {
@@ -3179,7 +3436,9 @@
           }
         },
         "summary": "Submit a Registration Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/registration/api": {
@@ -3219,7 +3478,9 @@
           }
         },
         "summary": "Initialize Registration Flow for APIs, Services, Apps, ...",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/registration/browser": {
@@ -3252,7 +3513,9 @@
           }
         },
         "summary": "Initialize Registration Flow for Browsers",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/registration/flows": {
@@ -3331,7 +3594,9 @@
           }
         },
         "summary": "Get Registration Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/settings": {
@@ -3433,7 +3698,9 @@
           }
         ],
         "summary": "Complete Settings Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/settings/api": {
@@ -3483,7 +3750,9 @@
           }
         },
         "summary": "Initialize Settings Flow for APIs, Services, Apps, ...",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/settings/browser": {
@@ -3536,7 +3805,9 @@
           }
         },
         "summary": "Initialize Settings Flow for Browsers",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/settings/flows": {
@@ -3623,7 +3894,9 @@
           }
         },
         "summary": "Get Settings Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/verification": {
@@ -3700,7 +3973,9 @@
           }
         },
         "summary": "Complete Verification Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/verification/api": {
@@ -3740,7 +4015,9 @@
           }
         },
         "summary": "Initialize Verification Flow for APIs, Services, Apps, ...",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/verification/browser": {
@@ -3773,7 +4050,9 @@
           }
         },
         "summary": "Initialize Verification Flow for Browser Clients",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/self-service/verification/flows": {
@@ -3842,7 +4121,9 @@
           }
         },
         "summary": "Get Verification Flow",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/sessions/whoami": {
@@ -3902,7 +4183,9 @@
           }
         },
         "summary": "Check Who the Current HTTP Session Belongs To",
-        "tags": ["v0alpha1"]
+        "tags": [
+          "v0alpha1"
+        ]
       }
     },
     "/version": {
@@ -3920,7 +4203,9 @@
                       "type": "string"
                     }
                   },
-                  "required": ["version"],
+                  "required": [
+                    "version"
+                  ],
                   "type": "object"
                 }
               }
@@ -3929,7 +4214,9 @@
           }
         },
         "summary": "Return Running Software Version.",
-        "tags": ["admin"]
+        "tags": [
+          "metadata"
+        ]
       }
     }
   },

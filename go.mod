@@ -14,7 +14,7 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.2021
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 
-replace github.com/ory/x => github.com/ory/x v0.0.255
+replace github.com/ory/x => github.com/ory/x v0.0.262
 
 require (
 	github.com/DataDog/datadog-go v4.7.0+incompatible // indirect

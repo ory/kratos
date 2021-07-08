@@ -293,7 +293,11 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
       })
     })
     .then(({ status }) => {
-      console.log('Login sequence completed: ', { email, password })
+      console.log('Login sequence completed: ', {
+        email,
+        password,
+        expectSession
+      })
       if (expectSession) {
         expect(status).to.eq(200)
         return cy.session()

@@ -24,13 +24,14 @@ context('Email Profile', () => {
         .type('123456')
         .should('have.value', '123456')
 
+      let initial
+      cy.location().should((location) => {
+        initial = location.search
+      })
       cy.get('button[type="submit"]').click()
 
-      // FIXME https://github.com/ory/kratos/issues/91
-      cy.get('html').should(
-        'contain.text',
-        'The request was rejected to protect you from Cross-Site-Request-Forgery'
-      )
+      // We end up at a new flow
+      cy.location('search').should('not.eq', initial)
     })
 
     describe('show errors when invalid signup data is used', () => {

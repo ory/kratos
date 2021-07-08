@@ -14,11 +14,9 @@ context('Email Profile', () => {
       cy.login({ email, password })
     })
 
-    beforeEach(() => {
-      cy.visit(APP_URL + '/')
-    })
-
     it('should sign out and be able to sign in again', () => {
+      cy.visit(APP_URL + '/')
+      cy.session()
       cy.get('a[href*="logout"]').click()
       cy.noSession()
       cy.url().should('include', '/auth/login')

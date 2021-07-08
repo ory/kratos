@@ -53,7 +53,7 @@ func StartE2EServer(t *testing.T, configFile string) (publicUrl, adminUrl string
 	}()
 
 	require.NoError(t, retry.Do(func() error {
-		res, err := http.Get(publicUrl + "/health/alive")
+		res, err := http.Get(publicUrl + "/health/ready")
 		if err != nil {
 			return err
 		}
