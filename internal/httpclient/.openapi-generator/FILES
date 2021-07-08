@@ -2,11 +2,10 @@
 .travis.yml
 README.md
 api/openapi.yaml
-api_admin.go
+api_metadata.go
 api_v0alpha1.go
 client.go
 configuration.go
-docs/AdminApi.md
 docs/AdminCreateIdentityBody.md
 docs/AdminCreateSelfServiceRecoveryLinkBody.md
 docs/AdminUpdateIdentityBody.md
@@ -32,6 +31,7 @@ docs/InlineResponse2001.md
 docs/InlineResponse503.md
 docs/JsonError.md
 docs/Meta.md
+docs/MetadataApi.md
 docs/Plugin.md
 docs/PluginConfig.md
 docs/PluginConfigArgs.md

@@ -2179,7 +2179,7 @@
         },
         "summary": "Check HTTP Server Status",
         "tags": [
-          "admin"
+          "metadata"
         ]
       }
     },
@@ -2232,7 +2232,7 @@
         },
         "summary": "Check HTTP Server and Database Status",
         "tags": [
-          "admin"
+          "metadata"
         ]
       }
     },
@@ -2567,7 +2567,7 @@
         },
         "summary": "Get snapshot metrics from the service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
         "tags": [
-          "admin"
+          "metadata"
         ]
       }
     },
@@ -4215,7 +4215,7 @@
         },
         "summary": "Return Running Software Version.",
         "tags": [
-          "admin"
+          "metadata"
         ]
       }
     }

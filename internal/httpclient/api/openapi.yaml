@@ -41,7 +41,7 @@ paths:
           description: genericError
       summary: Check HTTP Server Status
       tags:
-      - admin
+      - metadata
   /health/ready:
     get:
       description: |-
@@ -69,7 +69,7 @@ paths:
           description: Ory Kratos is not yet ready to accept requests.
       summary: Check HTTP Server and Database Status
       tags:
-      - admin
+      - metadata
   /identities:
     get:
       description: |-
@@ -319,7 +319,7 @@ paths:
         Get snapshot metrics from the service. If you're using k8s, you can then add annotations to
         your deployment like so:
       tags:
-      - admin
+      - metadata
   /recovery/link:
     post:
       description: |-
@@ -1912,7 +1912,7 @@ paths:
           description: Returns the Ory Kratos version.
       summary: Return Running Software Version.
       tags:
-      - admin
+      - metadata
 components:
   responses:
     emptyResponse:

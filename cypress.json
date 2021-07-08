@@ -8,7 +8,7 @@
   "screenshotsFolder": "test/e2e/cypress/screenshots",
   "retries": {
     "runMode": 3,
-    "openMode": 1
+    "openMode": 0
   },
   "timeouts": {
     "defaultCommandTimeout": 10000,
