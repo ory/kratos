@@ -15,6 +15,16 @@ type ValidationError struct {
 	Messages text.Messages
 }
 
+func NewValidationHookError(instancePtr, message string, details text.Messages) error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     message,
+			InstancePtr: instancePtr,
+		},
+		Messages: details,
+	})
+}
+
 func NewMinLengthError(instancePtr string, expected, actual int) error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{

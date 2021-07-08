@@ -64,11 +64,11 @@ func (e Error) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request
 	return e.err("ExecuteRegistrationPreHook", registration.ErrHookAbortFlow)
 }
 
-func (e Error) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
+func (e Error) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session, ct identity.CredentialsType) error {
 	return e.err("ExecutePostRegistrationPostPersistHook", registration.ErrHookAbortFlow)
 }
 
-func (e Error) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, i *identity.Identity) error {
+func (e Error) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, i *identity.Identity, ct identity.CredentialsType) error {
 	return e.err("ExecutePostRegistrationPrePersistHook", registration.ErrHookAbortFlow)
 }
 

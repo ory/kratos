@@ -149,6 +149,11 @@
               "type": "string",
               "description": "Path to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads"
             },
+            "interrupt": {
+              "type": "boolean",
+              "default": false,
+              "description": "Should hook be able to interrupt the flow. It only applies to a certain flows and require concrete response format"
+            },
             "auth": {
               "type": "object",
               "title": "Auth mechanisms",

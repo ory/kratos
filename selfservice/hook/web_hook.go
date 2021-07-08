@@ -7,7 +7,10 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/text"
+	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -25,6 +28,7 @@ import (
 )
 
 var _ registration.PostHookPostPersistExecutor = new(WebHook)
+var _ registration.PostHookPrePersistExecutor = new(WebHook)
 var _ verification.PostHookExecutor = new(WebHook)
 var _ recovery.PostHookExecutor = new(WebHook)
 
@@ -53,6 +57,7 @@ type (
 		url          string
 		templatePath string
 		auth         AuthStrategy
+		interrupt    bool
 	}
 
 	webHookDependencies interface {
@@ -60,16 +65,30 @@ type (
 	}
 
 	templateContext struct {
-		Flow           flow.Flow          `json:"flow"`
-		RequestHeaders http.Header        `json:"request_headers"`
-		RequestMethod  string             `json:"request_method"`
-		RequestUrl     string             `json:"request_url"`
-		Identity       *identity.Identity `json:"identity"`
+		Flow           flow.Flow             `json:"flow"`
+		RequestHeaders http.Header           `json:"request_headers"`
+		RequestMethod  string                `json:"request_method"`
+		RequestUrl     string                `json:"request_url"`
+		Identity       *identity.Identity    `json:"identity,omitempty"`
+		Credentials    *identity.Credentials `json:"credentials,omitempty"`
 	}
 
 	WebHook struct {
 		r webHookDependencies
 		c json.RawMessage
+	}
+
+	detailedMessage struct {
+		ID      int
+		Text    string
+		Type    string
+		Context json.RawMessage `json:"context,omitempty"`
+	}
+
+	rawHookResponse struct {
+		InstancePtr      string
+		Message          string
+		DetailedMessages []detailedMessage
 	}
 )
 
@@ -152,6 +171,7 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 			Type   string
 			Config json.RawMessage
 		}
+		Interrupt bool
 	}
 
 	var rc rawWebHookConfig
@@ -170,6 +190,7 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 		url:          rc.Url,
 		templatePath: rc.Body,
 		auth:         as,
+		interrupt:    rc.Interrupt,
 	}, nil
 }
 
@@ -196,13 +217,13 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 	})
 }
 
-func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, identity *identity.Identity) error {
+func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, id *identity.Identity) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
-		Identity:       identity,
+		Identity:       id,
 	})
 }
 
@@ -225,23 +246,39 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 	})
 }
 
-func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
+func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity, ct identity.CredentialsType) error {
+	credentials, _ := id.GetCredentials(ct)
+	return e.execute(&templateContext{
+		Flow:           flow,
+		RequestHeaders: req.Header,
+		RequestMethod:  req.Method,
+		RequestUrl:     req.RequestURI,
+		Identity:       id,
+		Credentials:    credentials,
+	})
+}
+
+func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session, ct identity.CredentialsType) error {
+	credentials, _ := session.Identity.GetCredentials(ct)
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
 		Identity:       session.Identity,
+		Credentials:    credentials,
 	})
 }
 
-func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, identity *identity.Identity) error {
+func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, id *identity.Identity, ct identity.CredentialsType) error {
+	credentials, _ := id.GetCredentials(ct)
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
-		Identity:       identity,
+		Identity:       id,
+		Credentials:    credentials,
 	})
 }
 
@@ -263,10 +300,17 @@ func (e *WebHook) execute(data *templateContext) error {
 		}
 	}
 
-	if err = doHttpCall(conf.method, conf.url, conf.auth, body); err != nil {
+	resp, err := doHttpCall(conf.method, conf.url, conf.auth, body)
+	if err != nil {
 		return fmt.Errorf("failed to call web hook %w", err)
 	}
-	return nil
+
+	if !conf.interrupt || resp.StatusCode == http.StatusNoContent {
+		return nil
+	}
+
+	err = parseResponse(resp)
+	return err
 }
 
 func createBody(templatePath string, data *templateContext) (io.Reader, error) {
@@ -294,10 +338,10 @@ func createBody(templatePath string, data *templateContext) (io.Reader, error) {
 	}
 }
 
-func doHttpCall(method string, url string, as AuthStrategy, body io.Reader) error {
+func doHttpCall(method string, url string, as AuthStrategy, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -306,10 +350,44 @@ func doHttpCall(method string, url string, as AuthStrategy, body io.Reader) erro
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		return err
+		return nil, err
 	} else if resp.StatusCode >= 400 {
-		return fmt.Errorf("web hook failed with status code %v", resp.StatusCode)
+		return nil, fmt.Errorf("web hook failed with status code %v", resp.StatusCode)
 	}
 
-	return nil
+	return resp, nil
+}
+
+func parseResponse(resp *http.Response) error {
+	if resp == nil {
+		return fmt.Errorf("empty response provided from the webhook")
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Wrap(err, "could not read response body")
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
+	hookResponse := rawHookResponse{
+		DetailedMessages: []detailedMessage{},
+	}
+
+	if err = json.Unmarshal(body, &hookResponse); err != nil {
+		return errors.Wrap(err, "hook response could not be unmarshalled properly")
+	}
+
+	detailedMessages := text.Messages{}
+	for _, msg := range hookResponse.DetailedMessages {
+		detailedMessages.Add(&text.Message{
+			ID:      text.ID(msg.ID),
+			Text:    msg.Text,
+			Type:    text.Type(msg.Type),
+			Context: msg.Context,
+		})
+	}
+
+	return schema.NewValidationHookError(hookResponse.InstancePtr, hookResponse.Message, detailedMessages)
 }
