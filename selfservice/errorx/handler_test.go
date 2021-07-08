@@ -82,7 +82,7 @@ func TestHandler(t *testing.T) {
 		actual, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
 
-		assert.EqualValues(t, "This is a stub error.", gjson.GetBytes(actual, "error.0.reason").String())
+		assert.EqualValues(t, "This is a stub error.", gjson.GetBytes(actual, "error.reason").String())
 	})
 
 	t.Run("case=errors types", func(t *testing.T) {

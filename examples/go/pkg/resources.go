@@ -3,31 +3,44 @@ package pkg
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/google/uuid"
 
 	ory "github.com/ory/kratos-client-go"
 )
 
+func RandomCredentials() (email, password string) {
+	email = "dev+" + uuid.New().String() + "@ory.sh"
+	password = strings.ReplaceAll(uuid.New().String(), "-", "")
+	return
+}
+
 // CreateIdentityWithSession creates an identity and an Ory Session Token for it.
-func CreateIdentityWithSession(c *ory.APIClient) (*ory.Session, string) {
+func CreateIdentityWithSession(c *ory.APIClient, email, password string) (*ory.Session, string) {
 	ctx := context.Background()
 
+	if email == "" {
+		email, _ = RandomCredentials()
+	}
+
+	if password == "" {
+		_, password = RandomCredentials()
+	}
+
 	// Initialize a registration flow
-	flow, _, err := c.PublicApi.InitializeSelfServiceRegistrationWithoutBrowser(ctx).Execute()
+	flow, _, err := c.V0alpha1Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
 	ExitOnError(err)
 
 	// Submit the registration flow
-	result, _, err := c.PublicApi.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlow(ory.SubmitSelfServiceRegistrationFlow{
-		&ory.SubmitSelfServiceRegistrationFlowWithPasswordMethod{
+	result, res, err := c.V0alpha1Api.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlowBody(
+		ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBodyAsSubmitSelfServiceRegistrationFlowBody(&ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBody{
 			Method:   "password",
-			Password: ory.PtrString(uuid.New().String() + uuid.New().String()),
-			Traits: map[string]interface{}{
-				"email": "dev+" + uuid.New().String() + "@ory.sh",
-			},
-		},
-	}).Execute()
-	ExitOnError(err)
+			Password: password,
+			Traits:   map[string]interface{}{"email": email},
+		}),
+	).Execute()
+	SDKExitOnError(err, res)
 
 	if result.Session == nil {
 		log.Fatalf("The server is expected to create sessions for new registrations.")
@@ -39,10 +52,11 @@ func CreateIdentityWithSession(c *ory.APIClient) (*ory.Session, string) {
 func CreateIdentity(c *ory.APIClient) *ory.Identity {
 	ctx := context.Background()
 
+	email, _ := RandomCredentials()
 	identity, _, err := c.V0alpha1Api.AdminCreateIdentity(ctx).AdminCreateIdentityBody(ory.AdminCreateIdentityBody{
 		SchemaId: "default",
 		Traits: map[string]interface{}{
-			"email": "dev+" + uuid.New().String() + "@ory.sh",
+			"email": email,
 		}}).Execute()
 	ExitOnError(err)
 	return identity

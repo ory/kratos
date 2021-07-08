@@ -4,7 +4,7 @@ import "github.com/ory/kratos/session"
 
 // The Response for Login Flows via API
 //
-// swagger:model loginViaApiResponse
+// swagger:model successfulSelfServiceLoginWithoutBrowser
 type APIFlowResponse struct {
 	// The Session Token
 	//

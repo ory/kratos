@@ -13,7 +13,9 @@ var client = pkg.NewSDK("playground")
 
 func toSession() *ory.Session {
 	// Create a temporary user
-	_, sessionToken := pkg.CreateIdentityWithSession(client)
+	email, password := pkg.RandomCredentials()
+	_, sessionToken := pkg.CreateIdentityWithSession(client, email, password)
+
 	session, res, err := client.V0alpha1Api.
 		ToSessionExecute(ory.
 			V0alpha1ApiApiToSessionRequest{}.
