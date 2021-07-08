@@ -10,8 +10,8 @@ context('Email Profile', () => {
     const password = gen.password()
 
     before(() => {
-      cy.register({email, password, fields: {'traits.website': website}})
-      cy.login({email, password})
+      cy.register({ email, password, fields: { 'traits.website': website } })
+      cy.login({ email, password })
     })
 
     beforeEach(() => {
