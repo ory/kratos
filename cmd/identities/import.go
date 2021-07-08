@@ -50,7 +50,7 @@ WARNING: Importing credentials is not yet supported.`,
 
 			for src, i := range is {
 				err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
-					return c.PublicApi.GetSchema(ctx, id).Execute()
+					return c.V0alpha1Api.GetJsonSchema(ctx, id).Execute()
 				})
 				if err != nil {
 					return err

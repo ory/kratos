@@ -30,7 +30,7 @@ import (
 //
 // Once a login flow is completed successfully, a session cookie or session token will be issued.
 //
-// swagger:model loginFlow
+// swagger:model selfServiceLoginFlow
 type Flow struct {
 	// ID represents the flow's unique ID. When performing the login flow, this
 	// represents the id in the login UI's query parameter: http://<selfservice.flows.login.ui_url>/?flow=<flow_id>

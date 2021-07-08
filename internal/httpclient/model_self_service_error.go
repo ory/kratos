@@ -19,10 +19,9 @@ import (
 // SelfServiceError struct for SelfServiceError
 type SelfServiceError struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	// Errors in the container
-	Errors []map[string]interface{} `json:"errors"`
-	Id     string                   `json:"id"`
+	CreatedAt *time.Time             `json:"created_at,omitempty"`
+	Error     map[string]interface{} `json:"error,omitempty"`
+	Id        string                 `json:"id"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
@@ -31,9 +30,8 @@ type SelfServiceError struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSelfServiceError(errors []map[string]interface{}, id string) *SelfServiceError {
+func NewSelfServiceError(id string) *SelfServiceError {
 	this := SelfServiceError{}
-	this.Errors = errors
 	this.Id = id
 	return &this
 }
@@ -78,28 +76,36 @@ func (o *SelfServiceError) SetCreatedAt(v time.Time) {
 	o.CreatedAt = &v
 }
 
-// GetErrors returns the Errors field value
-func (o *SelfServiceError) GetErrors() []map[string]interface{} {
-	if o == nil {
-		var ret []map[string]interface{}
+// GetError returns the Error field value if set, zero value otherwise.
+func (o *SelfServiceError) GetError() map[string]interface{} {
+	if o == nil || o.Error == nil {
+		var ret map[string]interface{}
 		return ret
 	}
-
-	return o.Errors
+	return o.Error
 }
 
-// GetErrorsOk returns a tuple with the Errors field value
+// GetErrorOk returns a tuple with the Error field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceError) GetErrorsOk() ([]map[string]interface{}, bool) {
-	if o == nil {
+func (o *SelfServiceError) GetErrorOk() (map[string]interface{}, bool) {
+	if o == nil || o.Error == nil {
 		return nil, false
 	}
-	return o.Errors, true
+	return o.Error, true
 }
 
-// SetErrors sets field value
-func (o *SelfServiceError) SetErrors(v []map[string]interface{}) {
-	o.Errors = v
+// HasError returns a boolean if a field has been set.
+func (o *SelfServiceError) HasError() bool {
+	if o != nil && o.Error != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetError gets a reference to the given map[string]interface{} and assigns it to the Error field.
+func (o *SelfServiceError) SetError(v map[string]interface{}) {
+	o.Error = v
 }
 
 // GetId returns the Id field value
@@ -163,8 +169,8 @@ func (o SelfServiceError) MarshalJSON() ([]byte, error) {
 	if o.CreatedAt != nil {
 		toSerialize["created_at"] = o.CreatedAt
 	}
-	if true {
-		toSerialize["errors"] = o.Errors
+	if o.Error != nil {
+		toSerialize["error"] = o.Error
 	}
 	if true {
 		toSerialize["id"] = o.Id

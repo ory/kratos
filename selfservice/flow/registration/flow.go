@@ -21,7 +21,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:model registrationFlow
+// swagger:model selfServiceRegistrationFlow
 type Flow struct {
 	// ID represents the flow's unique ID. When performing the registration flow, this
 	// represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?flow=<id>

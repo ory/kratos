@@ -17,10 +17,7 @@
   value: true
 
 - op: replace
-  path: /components/schemas/selfServiceError/properties/errors/type
-  value: array
-- op: replace
-  path: /components/schemas/selfServiceError/properties/errors/items
+  path: /components/schemas/selfServiceError/properties/error
   value:
     type: object
 

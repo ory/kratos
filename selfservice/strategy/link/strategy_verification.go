@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
@@ -83,33 +82,9 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 	return err
 }
 
-// swagger:parameters submitSelfServiceVerificationFlowWithLinkMethod
+// swagger:model submitSelfServiceVerificationFlowWithLinkMethodBody
 // nolint:deadcode,unused
-type submitSelfServiceVerificationFlowWithLinkMethodParameters struct {
-	// in: body
-	Body submitSelfServiceVerificationFlowWithLinkMethod
-
-	// Verification Token
-	//
-	// The verification token which completes the verification request. If the token
-	// is invalid (e.g. expired) an error will be shown to the end-user.
-	//
-	// in: query
-	Token string `json:"token"`
-
-	// The Flow ID
-	//
-	// format: uuid
-	// in: query
-	Flow string `json:"flow"`
-}
-
-func (m *verificationSubmitPayload) GetFlow() uuid.UUID {
-	return x.ParseUUID(m.Flow)
-}
-
-// nolint:deadcode,unused
-type submitSelfServiceVerificationFlowWithLinkMethod struct {
+type submitSelfServiceVerificationFlowWithLinkMethodBody struct {
 	// Email to Verify
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -117,11 +92,18 @@ type submitSelfServiceVerificationFlowWithLinkMethod struct {
 	// a email with details on what happened will be sent instead.
 	//
 	// format: email
-	// in: body
+	// required: true
 	Email string `json:"email"`
 
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
+
+	// Method supports `link` only right now.
+	//
+	// enum:
+	// - link
+	// required: true
+	Method string `json:"method"`
 }
 
 func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {

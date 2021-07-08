@@ -121,36 +121,23 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 	return f, nil
 }
 
+// swagger:parameters initializeSelfServiceSettingsFlowWithoutBrowser
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceSettingsWithoutBrowser
-type initializeSelfServiceSettingsWithoutBrowser struct {
+type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
-
-	// The Session Cookie of the Identity performing the settings flow.
-	//
-	// in: header
-	SessionCookie string `json:"X-Session-Cookie"`
 }
 
-// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsWithoutBrowser
+// swagger:route GET /self-service/settings/api v0alpha1 initializeSelfServiceSettingsFlowWithoutBrowser
 //
 // Initialize Settings Flow for APIs, Services, Apps, ...
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
 // You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 //
 // To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
-//
-// :::warning
 //
 // You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 // Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -158,17 +145,12 @@ type initializeSelfServiceSettingsWithoutBrowser struct {
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// :::
-//
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Schemes: http, https
 //
-//     Security:
-//       sessionToken:
-//
 //     Responses:
-//       200: settingsFlow
+//       200: selfServiceSettingsFlow
 //       400: jsonError
 //       500: jsonError
 func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -187,15 +169,18 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, f)
 }
 
-// swagger:route GET /self-service/settings/browser public initializeSelfServiceSettingsForBrowsers
+// nolint:deadcode,unused
+// swagger:parameters initializeSelfServiceSettingsFlowForBrowsers
+type initializeSelfServiceSettingsFlowForBrowsers struct {
+	// The Session Cookie of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionCookie string `json:"Cookie"`
+}
+
+// swagger:route GET /self-service/settings/browser v0alpha1 initializeSelfServiceSettingsFlowForBrowsers
 //
 // Initialize Settings Flow for Browsers
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
@@ -214,11 +199,8 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 //     Schemes: http, https
 //
-//     Security:
-//       sessionToken:
-//
 //     Responses:
-//       200: settingsFlow
+//       200: selfServiceSettingsFlow
 //       302: emptyResponse
 //       403: jsonError
 //       500: jsonError
@@ -241,7 +223,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceSettingsFlow
-type getSelfServiceSettingsFlowParameters struct {
+type getSelfServiceSettingsFlow struct {
 	// ID is the Settings Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -270,20 +252,9 @@ type getSelfServiceSettingsFlowParameters struct {
 	Cookies string `json:"cookie"`
 }
 
-// nolint:deadcode,unused
-// swagger:parameters getSelfServiceSettingsFlow
-type getSelfServiceSettingsFlow struct {
-}
-
-// swagger:route GET /self-service/settings/flows public getSelfServiceSettingsFlow
+// swagger:route GET /self-service/settings/flows v0alpha1 getSelfServiceSettingsFlow
 //
 // Get Settings Flow
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
 // or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
@@ -298,11 +269,8 @@ type getSelfServiceSettingsFlow struct {
 //
 //     Schemes: http, https
 //
-//     Security:
-//       sessionToken:
-//
 //     Responses:
-//       200: settingsFlow
+//       200: selfServiceSettingsFlow
 //       403: jsonError
 //       404: jsonError
 //       410: jsonError
@@ -374,11 +342,11 @@ type submitSelfServiceSettingsFlow struct {
 	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:model submitSelfServiceSettingsFlow
+// swagger:model submitSelfServiceSettingsFlowBody
 // nolint:deadcode,unused
 type submitSelfServiceSettingsFlowBody struct{}
 
-// swagger:route POST /self-service/settings public submitSelfServiceSettingsFlow
+// swagger:route POST /self-service/settings v0alpha1 submitSelfServiceSettingsFlow
 //
 // Complete Settings Flow
 //
@@ -419,9 +387,9 @@ type submitSelfServiceSettingsFlowBody struct{}
 //     Schemes: http, https
 //
 //     Responses:
-//       200: settingsViaApiResponse
+//       200: successfulSelfServiceSettingsWithoutBrowser
 //       302: emptyResponse
-//       400: settingsFlow
+//       400: selfServiceSettingsFlow
 //       401: jsonError
 //       403: jsonError
 //       500: jsonError

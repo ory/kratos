@@ -10,20 +10,26 @@ type CredentialsConfig struct {
 	HashedPassword string `json:"hashed_password"`
 }
 
-// submitSelfServiceLoginFlowWithPasswordMethod is used to decode the login form payload.
+// submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.
 //
-// swagger:model submitSelfServiceLoginFlowWithPasswordMethod
-type submitSelfServiceLoginFlowWithPasswordMethod struct {
+// swagger:model submitSelfServiceLoginFlowWithPasswordMethodBody
+type submitSelfServiceLoginFlowWithPasswordMethodBody struct {
 	// Method should be set to "password" when logging in using the identifier and password strategy.
+	//
+	// required: true
 	Method string `json:"method"`
 
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `json:"csrf_token"`
 
 	// The user's password.
+	//
+	// required: true
 	Password string `json:"password"`
 
 	// Identifier is the email or username of the user trying to log in.
+	//
+	// required: true
 	Identifier string `json:"password_identifier"`
 }
 

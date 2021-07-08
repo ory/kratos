@@ -157,6 +157,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.Ro
 func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.RouterAdmin) {
 	m.RegistrationHandler().RegisterAdminRoutes(router)
 	m.LoginHandler().RegisterAdminRoutes(router)
+	m.LogoutHandler().RegisterAdminRoutes(router)
 	m.SchemaHandler().RegisterAdminRoutes(router)
 	m.SettingsHandler().RegisterAdminRoutes(router)
 	m.IdentityHandler().RegisterAdminRoutes(router)

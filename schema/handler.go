@@ -47,11 +47,11 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // swagger:model jsonSchema
 // nolint:deadcode,unused
-type schemaResponse json.RawMessage
+type jsonSchema json.RawMessage
 
 // nolint:deadcode,unused
-// swagger:parameters getSchema
-type getSchemaParameters struct {
+// swagger:parameters getJsonSchema
+type getJsonSchema struct {
 	// ID must be set to the ID of schema you want to get
 	//
 	// required: true
@@ -59,9 +59,9 @@ type getSchemaParameters struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /schemas/{id} public admin getSchema
+// swagger:route GET /schemas/{id} v0alpha1 getJsonSchema
 //
-// Get a Traits Schema Definition
+// Get a JSON Schema
 //
 //     Produces:
 //     - application/json

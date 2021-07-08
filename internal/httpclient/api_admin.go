@@ -17,7 +17,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 // Linger please
@@ -25,275 +24,95 @@ var (
 	_ context.Context
 )
 
+type AdminApi interface {
+
+	/*
+			 * GetVersion Return Running Software Version.
+			 * This endpoint returns the version of Ory Kratos.
+
+		If the service supports TLS Edge Termination, this endpoint does not require the
+		`X-Forwarded-Proto` header to be set.
+
+		Be aware that if you are running multiple nodes of this service, the version will never
+		refer to the cluster state, only to a single instance.
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return AdminApiApiGetVersionRequest
+	*/
+	GetVersion(ctx context.Context) AdminApiApiGetVersionRequest
+
+	/*
+	 * GetVersionExecute executes the request
+	 * @return InlineResponse2001
+	 */
+	GetVersionExecute(r AdminApiApiGetVersionRequest) (*InlineResponse2001, *http.Response, error)
+
+	/*
+			 * IsAlive Check HTTP Server Status
+			 * This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming
+		HTTP requests. This status does currently not include checks whether the database connection is working.
+
+		If the service supports TLS Edge Termination, this endpoint does not require the
+		`X-Forwarded-Proto` header to be set.
+
+		Be aware that if you are running multiple nodes of this service, the health status will never
+		refer to the cluster state, only to a single instance.
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return AdminApiApiIsAliveRequest
+	*/
+	IsAlive(ctx context.Context) AdminApiApiIsAliveRequest
+
+	/*
+	 * IsAliveExecute executes the request
+	 * @return InlineResponse200
+	 */
+	IsAliveExecute(r AdminApiApiIsAliveRequest) (*InlineResponse200, *http.Response, error)
+
+	/*
+			 * IsReady Check HTTP Server and Database Status
+			 * This endpoint returns a HTTP 200 status code when Ory Kratos is up running and the environment dependencies (e.g.
+		the database) are responsive as well.
+
+		If the service supports TLS Edge Termination, this endpoint does not require the
+		`X-Forwarded-Proto` header to be set.
+
+		Be aware that if you are running multiple nodes of Ory Kratos, the health status will never
+		refer to the cluster state, only to a single instance.
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return AdminApiApiIsReadyRequest
+	*/
+	IsReady(ctx context.Context) AdminApiApiIsReadyRequest
+
+	/*
+	 * IsReadyExecute executes the request
+	 * @return InlineResponse200
+	 */
+	IsReadyExecute(r AdminApiApiIsReadyRequest) (*InlineResponse200, *http.Response, error)
+
+	/*
+			 * Prometheus Get snapshot metrics from the service. If you're using k8s, you can then add annotations to your deployment like so:
+			 * ```
+		metadata:
+		annotations:
+		prometheus.io/port: "4434"
+		prometheus.io/path: "/metrics/prometheus"
+		```
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return AdminApiApiPrometheusRequest
+	*/
+	Prometheus(ctx context.Context) AdminApiApiPrometheusRequest
+
+	/*
+	 * PrometheusExecute executes the request
+	 */
+	PrometheusExecute(r AdminApiApiPrometheusRequest) (*http.Response, error)
+}
+
 // AdminApiService AdminApi service
 type AdminApiService service
 
-type AdminApiApiCreateRecoveryLinkRequest struct {
-	ctx                context.Context
-	ApiService         *AdminApiService
-	createRecoveryLink *CreateRecoveryLink
-}
-
-func (r AdminApiApiCreateRecoveryLinkRequest) CreateRecoveryLink(createRecoveryLink CreateRecoveryLink) AdminApiApiCreateRecoveryLinkRequest {
-	r.createRecoveryLink = &createRecoveryLink
-	return r
-}
-
-func (r AdminApiApiCreateRecoveryLinkRequest) Execute() (*RecoveryLink, *http.Response, error) {
-	return r.ApiService.CreateRecoveryLinkExecute(r)
-}
-
-/*
- * CreateRecoveryLink Create a Recovery Link
- * This endpoint creates a recovery link which should be given to the user in order for them to recover
-(or activate) their account.
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return AdminApiApiCreateRecoveryLinkRequest
-*/
-func (a *AdminApiService) CreateRecoveryLink(ctx context.Context) AdminApiApiCreateRecoveryLinkRequest {
-	return AdminApiApiCreateRecoveryLinkRequest{
-		ApiService: a,
-		ctx:        ctx,
-	}
-}
-
-/*
- * Execute executes the request
- * @return RecoveryLink
- */
-func (a *AdminApiService) CreateRecoveryLinkExecute(r AdminApiApiCreateRecoveryLinkRequest) (*RecoveryLink, *http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-		localVarReturnValue  *RecoveryLink
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AdminApiService.CreateRecoveryLink")
-	if err != nil {
-		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/recovery/link"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	// body params
-	localVarPostBody = r.createRecoveryLink
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 404 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
-type AdminApiApiGetSchemaRequest struct {
-	ctx        context.Context
-	ApiService *AdminApiService
-	id         string
-}
-
-func (r AdminApiApiGetSchemaRequest) Execute() (map[string]interface{}, *http.Response, error) {
-	return r.ApiService.GetSchemaExecute(r)
-}
-
-/*
- * GetSchema Method for GetSchema
- * Get a Traits Schema Definition
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param id ID must be set to the ID of schema you want to get
- * @return AdminApiApiGetSchemaRequest
- */
-func (a *AdminApiService) GetSchema(ctx context.Context, id string) AdminApiApiGetSchemaRequest {
-	return AdminApiApiGetSchemaRequest{
-		ApiService: a,
-		ctx:        ctx,
-		id:         id,
-	}
-}
-
-/*
- * Execute executes the request
- * @return map[string]interface{}
- */
-func (a *AdminApiService) GetSchemaExecute(r AdminApiApiGetSchemaRequest) (map[string]interface{}, *http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-		localVarReturnValue  map[string]interface{}
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AdminApiService.GetSchema")
-	if err != nil {
-		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/schemas/{id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 404 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
 type AdminApiApiGetVersionRequest struct {
 	ctx        context.Context
-	ApiService *AdminApiService
+	ApiService AdminApi
 }
 
 func (r AdminApiApiGetVersionRequest) Execute() (*InlineResponse2001, *http.Response, error) {
@@ -400,7 +219,7 @@ func (a *AdminApiService) GetVersionExecute(r AdminApiApiGetVersionRequest) (*In
 
 type AdminApiApiIsAliveRequest struct {
 	ctx        context.Context
-	ApiService *AdminApiService
+	ApiService AdminApi
 }
 
 func (r AdminApiApiIsAliveRequest) Execute() (*InlineResponse200, *http.Response, error) {
@@ -517,7 +336,7 @@ func (a *AdminApiService) IsAliveExecute(r AdminApiApiIsAliveRequest) (*InlineRe
 
 type AdminApiApiIsReadyRequest struct {
 	ctx        context.Context
-	ApiService *AdminApiService
+	ApiService AdminApi
 }
 
 func (r AdminApiApiIsReadyRequest) Execute() (*InlineResponse200, *http.Response, error) {
@@ -634,7 +453,7 @@ func (a *AdminApiService) IsReadyExecute(r AdminApiApiIsReadyRequest) (*InlineRe
 
 type AdminApiApiPrometheusRequest struct {
 	ctx        context.Context
-	ApiService *AdminApiService
+	ApiService AdminApi
 }
 
 func (r AdminApiApiPrometheusRequest) Execute() (*http.Response, error) {

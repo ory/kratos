@@ -85,15 +85,9 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
-// swagger:route GET /self-service/recovery/api public initializeSelfServiceRecoveryWithoutBrowser
+// swagger:route GET /self-service/recovery/api v0alpha1 initializeSelfServiceRecoveryFlowWithoutBrowser
 //
 // Initialize Recovery Flow for APIs, Services, Apps, ...
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -101,22 +95,19 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
 //
-// :::warning
-//
 // You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 // Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
 // you vulnerable to a variety of CSRF attacks.
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// :::
 //
 // More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Schemes: http, https
 //
 //     Responses:
-//       200: recoveryFlow
+//       200: selfServiceRecoveryFlow
 //       500: jsonError
 //       400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -139,15 +130,9 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
-// swagger:route GET /self-service/recovery/browser public initializeSelfServiceRecoveryForBrowsers
+// swagger:route GET /self-service/recovery/browser v0alpha1 initializeSelfServiceRecoveryFlowForBrowsers
 //
 // Initialize Recovery Flow for Browsers
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -163,7 +148,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //     Schemes: http, https
 //
 //     Responses:
-//       200: recoveryFlow
+//       200: selfServiceRecoveryFlow
 //       302: emptyResponse
 //       400: jsonError
 //       500: jsonError
@@ -190,7 +175,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceRecoveryFlow
-type getSelfServiceRecoveryFlowParameters struct {
+type getSelfServiceRecoveryFlow struct {
 	// The Flow ID
 	//
 	// The value for this parameter comes from `request` URL Query parameter sent to your
@@ -210,15 +195,9 @@ type getSelfServiceRecoveryFlowParameters struct {
 	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/recovery/flows public getSelfServiceRecoveryFlow
+// swagger:route GET /self-service/recovery/flows v0alpha1 getSelfServiceRecoveryFlow
 //
 // Get Recovery Flow
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint returns a recovery flow's context with, for example, error details and other information.
 //
@@ -245,7 +224,7 @@ type getSelfServiceRecoveryFlowParameters struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: recoveryFlow
+//       200: selfServiceRecoveryFlow
 //       404: jsonError
 //       410: jsonError
 //       500: jsonError
@@ -289,36 +268,34 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 // nolint:deadcode,unused
 // swagger:parameters submitSelfServiceRecoveryFlow
 type submitSelfServiceRecoveryFlow struct {
-	// The Registration Flow ID
+	// The Recovery Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
-	// application (e.g. `/registration?flow=abcde`).
+	// application (e.g. `/recovery?flow=abcde`).
 	//
 	// required: true
 	// in: query
 	Flow string `json:"flow"`
 
+	// Recovery Token
+	//
+	// The recovery token which completes the recovery request. If the token
+	// is invalid (e.g. expired) an error will be shown to the end-user.
+	//
+	// This parameter is usually set in a link and not used by any direct API call.
+	//
+	// in: query
+	Token string `json:"token" form:"token"`
+
 	// in: body
 	Body submitSelfServiceRecoveryFlowBody
 }
 
-// nolint:deadcode,unused
 // swagger:model submitSelfServiceRecoveryFlowBody
-type submitSelfServiceRecoveryFlowBody struct {
-	// Method supports `link` only right now.
-	//
-	// enum:
-	// - link
-	// required: true
-	Method string `json:"method"`
+// nolint:deadcode,unused
+type submitSelfServiceRecoveryFlowBody struct{}
 
-	// Email is the email to which to send the Recovery message to.
-	//
-	// required: true
-	Email string `json:"email"`
-}
-
-// swagger:route POST /self-service/recovery public submitSelfServiceRecoveryFlow
+// swagger:route POST /self-service/recovery v0alpha1 submitSelfServiceRecoveryFlow
 //
 // Complete Recovery Flow
 //
@@ -349,8 +326,8 @@ type submitSelfServiceRecoveryFlowBody struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: recoveryFlow
-//       400: recoveryFlow
+//       200: selfServiceRecoveryFlow
+//       400: selfServiceRecoveryFlow
 //       302: emptyResponse
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

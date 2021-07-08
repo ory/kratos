@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
-**Errors** | **[]map[string]interface{}** | Errors in the container | 
+**Error** | Pointer to **map[string]interface{}** |  | [optional] 
 **Id** | **string** |  | 
 **UpdatedAt** | Pointer to **time.Time** | UpdatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 
@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 
 ### NewSelfServiceError
 
-`func NewSelfServiceError(errors []map[string]interface{}, id string, ) *SelfServiceError`
+`func NewSelfServiceError(id string, ) *SelfServiceError`
 
 NewSelfServiceError instantiates a new SelfServiceError object
 This constructor will assign default values to properties that have it defined,
@@ -53,25 +53,30 @@ SetCreatedAt sets CreatedAt field to given value.
 
 HasCreatedAt returns a boolean if a field has been set.
 
-### GetErrors
+### GetError
 
-`func (o *SelfServiceError) GetErrors() []map[string]interface{}`
+`func (o *SelfServiceError) GetError() map[string]interface{}`
 
-GetErrors returns the Errors field if non-nil, zero value otherwise.
+GetError returns the Error field if non-nil, zero value otherwise.
 
-### GetErrorsOk
+### GetErrorOk
 
-`func (o *SelfServiceError) GetErrorsOk() (*[]map[string]interface{}, bool)`
+`func (o *SelfServiceError) GetErrorOk() (*map[string]interface{}, bool)`
 
-GetErrorsOk returns a tuple with the Errors field if it's non-nil, zero value otherwise
+GetErrorOk returns a tuple with the Error field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetErrors
+### SetError
 
-`func (o *SelfServiceError) SetErrors(v []map[string]interface{})`
+`func (o *SelfServiceError) SetError(v map[string]interface{})`
 
-SetErrors sets Errors field to given value.
+SetError sets Error field to given value.
 
+### HasError
+
+`func (o *SelfServiceError) HasError() bool`
+
+HasError returns a boolean if a field has been set.
 
 ### GetId
 
