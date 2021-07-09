@@ -1,5 +1,0 @@
-import React from 'react'
-
-const MyComponent = () => (
-  <a href="https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser">Update Profile</a>
-)

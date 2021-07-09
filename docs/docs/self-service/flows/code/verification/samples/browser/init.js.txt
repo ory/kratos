@@ -1,3 +1,0 @@
-express.get('/verification', function (req, res) {
-  res.redirect(302, 'https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser')
-})

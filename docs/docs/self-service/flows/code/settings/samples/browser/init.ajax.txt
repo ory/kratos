@@ -1,7 +1,0 @@
-import { Configuration, PublicApi } from '@ory/kratos-client';
-const kratos = new PublicApi(new Configuration({ basePath: 'https://playground.projects.oryapis.com/api/kratos/public/' }));
-
-return kratos.initializeSelfServiceRegistrationForBrowsers()
-  .then(({ status, data: flow, ...response }) => {
-    console.log(flow) // see the curl tab for the payload
-  })
