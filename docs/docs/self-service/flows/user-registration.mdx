@@ -19,21 +19,21 @@ import {
 import RenderFlow from '@theme/Code/RenderFlow'
 import DomainWarning from '@theme/DomainWarning'
 import AjaxWarning from '@theme/AjaxWarning'
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
 
 :::info
 
 Please read the [Self-Service Flows](../../self-service.mdx) overview before
-continuing with this document. It is also advised to run the
-[quickstart](../../quickstart.mdx) locally as example URLs and payloads have
-been generated with it.
+continuing with this document.
 
 :::
 
 There are two Registration Flow types supported in Ory Kratos:
 
 - Flows where the user sits in front of the Browser and the application is
-- a server-side application (e.g. NodeJS, Java, ...)
-- a client-side application (e.g. ReactJS, AngularJS, ...)
+  - a server-side application (e.g. NodeJS, Java, ...)
+  - a client-side application (e.g. ReactJS, AngularJS, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 The Registration Flow can be summarized as the following state machine:
@@ -85,12 +85,12 @@ Currently, two registration methods are supported:
 
     ```yaml title="path/to/my/kratos/config.yml"
     selfservice:
-    methods:
-    password:
-    enabled: true
-    oidc:
-    enabled: true
-    # ...
+      methods:
+        password:
+          enabled: true
+        oidc:
+          enabled: true
+      # ...
     ```
 
   </TabItem>
@@ -158,10 +158,10 @@ registration URL.
 
     ```yaml title="path/to/config/kratos.yml"
     selfservice:
-    flows:
-    registration:
-    # becomes http://127.0.0.1:4455/auth/registration?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-    ui_url: http://127.0.0.1:4455/auth/registration
+      flows:
+        registration:
+          # becomes http://127.0.0.1:4455/auth/registration?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+          ui_url: http://127.0.0.1:4455/auth/registration
     ```
 
   </TabItem>
