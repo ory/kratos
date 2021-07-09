@@ -59,5 +59,20 @@ Error UI:
 To call a stub error, simply do:
 
 ```shell script
-$ curl 'https://kratos-<public|admin>/self-service/errors?id=stub:500'
+$ curl -s \
+  'https://playground.projects.oryapis.com/api/kratos/public/self-service/errors?id=stub:500' | jq
+
+{
+  "id": "9f900efa-a5ea-4dfd-8311-a8c7448ffeec",
+  "errors": [
+    {
+      "code": 500,
+      "status": "Internal Server Error",
+      "reason": "This is a stub error.",
+      "message": "An internal server error occurred, please contact the system administrator"
+    }
+  ],
+  "created_at": "0001-01-01T00:00:00Z",
+  "updated_at": "0001-01-01T00:00:00Z"
+}
 ```
