@@ -76,22 +76,22 @@ Currently, two registration methods are supported:
   ]}>
   <TabItem value="ocp">
 
-    Currently, only the password method is enabled.
+Currently, only the password method is enabled.
 
   </TabItem>
   <TabItem value="oss">
 
-    You can configure which methods to use in the Ory Kratos config:
+You can configure which methods to use in the Ory Kratos config:
 
-    ```yaml title="path/to/my/kratos/config.yml"
-    selfservice:
-      methods:
-        password:
-          enabled: true
-        oidc:
-          enabled: true
-      # ...
-    ```
+```yaml title="path/to/my/kratos/config.yml"
+selfservice:
+  methods:
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+  # ...
+```
 
   </TabItem>
 </Tabs>
@@ -148,21 +148,21 @@ registration URL.
   ]}>
   <TabItem value="ocp">
 
-    The Ory Cloud Platform offers a default login UI implementation. Pointing to another UI
-    endpoint will be supported in the future.
+The Ory Cloud Platform offers a default UI implementation. Pointing to another
+UI endpoint will be supported in the future.
 
   </TabItem>
   <TabItem value="oss">
 
-    You can configure which login URL to use in the Ory Kratos config:
+You can configure which login URL to use in the Ory Kratos config:
 
-    ```yaml title="path/to/config/kratos.yml"
-    selfservice:
-      flows:
-        registration:
-          # becomes http://127.0.0.1:4455/auth/registration?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-          ui_url: http://127.0.0.1:4455/auth/registration
-    ```
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  flows:
+    registration:
+      # becomes http://127.0.0.1:4455/auth/registration?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+      ui_url: http://127.0.0.1:4455/auth/registration
+```
 
   </TabItem>
 </Tabs>
@@ -240,6 +240,7 @@ $ curl -s -X GET \
     -H "Accept: application/json"  \
     https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/api | jq
 
+{
   "id": "c7ed95c7-2710-436c-a7d0-09ac771a3e8b",
   "type": "api",
   "expires_at": "2021-07-09T10:41:34.883536226Z",
@@ -269,7 +270,7 @@ $ flowId=$(curl -s -X GET \
 
 $ curl -s -X GET \
     -H "Accept: application/json" \
-    "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration?flow=$flowId" | jq
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/flows?id=$flowId" | jq
 
 {
   "id": "260196cc-cd99-40b8-a9b1-8afc06c08afc",

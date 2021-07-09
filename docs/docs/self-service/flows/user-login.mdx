@@ -12,14 +12,11 @@ import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
-  initBrowserFlow,
-  initSpaFlow,
-  initApiFlow,
-  getFlow,
   getFlowMethodPasswordWithErrors,
   getFlowMethodOidcWithErrors
 } from './code/login'
 import RenderFlow from '@theme/Code/RenderFlow'
+import DomainWarning from '@theme/DomainWarning'
 
 :::info
 
@@ -75,27 +72,29 @@ Currently, two login methods are supported:
   ]}>
   <TabItem value="ocp">
 
-    Currently, only the password method is enabled.
+Currently, only the password method is enabled.
 
   </TabItem>
   <TabItem value="oss">
 
-    You can configure which methods to use in the Ory Kratos config:
+You can configure which methods to use in the Ory Kratos config:
 
-    ```yaml title="path/to/my/kratos/config.yml"
-    selfservice:
-      methods:
-        password:
-          enabled: true
-        oidc:
-          enabled: true
-      # ...
-    ```
+```yaml title="path/to/my/kratos/config.yml"
+selfservice:
+  methods:
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+  # ...
+```
 
   </TabItem>
 </Tabs>
 
 ## Initialize Login Flow
+
+<DomainWarning />
 
 The first step is to initialize the Login Flow. This allows pre-login hooks to
 run, set up Anti-CSRF tokens, and more.
@@ -144,21 +143,21 @@ here:
   ]}>
   <TabItem value="ocp">
 
-    The Ory Cloud Platform offers a default login UI implementation. Pointing to another UI
-    endpoint will be supported in the future.
+The Ory Cloud Platform offers a default UI implementation. Pointing to another
+UI endpoint will be supported in the future.
 
   </TabItem>
   <TabItem value="oss">
 
-    You can configure which login URL to use in the Ory Kratos config:
+You can configure which login URL to use in the Ory Kratos config:
 
-    ```yaml title="path/to/config/kratos.yml"
-    selfservice:
-      flows:
-        login:
-          # becomes http://127.0.0.1:4455/auth/login?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-          ui_url: http://127.0.0.1:4455/auth/login
-    ```
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  flows:
+    login:
+      # becomes http://127.0.0.1:4455/auth/login?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+      ui_url: http://127.0.0.1:4455/auth/login
+```
 
   </TabItem>
 </Tabs>
@@ -267,7 +266,7 @@ $ flowId=$(curl -s -X GET \
 
 $ curl -s -X GET \
     -H "Accept: application/json" \
-    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=$flowId" | jq
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/flows?id=$flowId" | jq
 
 {
   "id": "d8c4a887-ccb0-4a1a-882a-7708e0bf3501",

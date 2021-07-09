@@ -19,6 +19,7 @@ import RenderFlow from '@theme/Code/RenderFlow'
 import AjaxWarning from '@theme/AjaxWarning'
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
+import DomainWarning from '@theme/DomainWarning'
 
 :::info
 
@@ -83,24 +84,24 @@ Currently, three settings methods are supported:
   ]}>
   <TabItem value="ocp">
 
-    Currently, only the password and profile method are enabled.
+Currently, only the password and profile method are enabled.
 
   </TabItem>
   <TabItem value="oss">
 
-    You can configure which methods to use in the Ory Kratos config:
+You can configure which methods to use in the Ory Kratos config:
 
-    ```yaml title="path/to/my/kratos/config.yml"
-    selfservice:
-      methods:
-        password:
-          enabled: true
-        oidc:
-          enabled: true
-        profile:
-          enabled: true
-      # ...
-    ```
+```yaml title="path/to/my/kratos/config.yml"
+selfservice:
+  methods:
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+    profile:
+      enabled: true
+  # ...
+```
 
   </TabItem>
 </Tabs>
@@ -136,25 +137,25 @@ selfservice:
   ]}>
   <TabItem value="ocp">
 
-    If any of these fields are changed, the Ory Kratos Login Session must not be
-    older than the configured `privileged_session_max_age` value.
+If any of these fields are changed, the Ory Kratos Login Session must not be
+older than the configured `privileged_session_max_age` value.
 
-    An option to configure this value is on the roadmap for OCP.
+An option to configure this value is on the roadmap for OCP.
 
   </TabItem>
   <TabItem value="oss">
 
-    If any of these fields are changed, the Ory Kratos Login Session must not be
-    older than the configured `privileged_session_max_age` value:
+If any of these fields are changed, the Ory Kratos Login Session must not be
+older than the configured `privileged_session_max_age` value:
 
-    ```yaml title="path/to/kratos/config.yml"
-    selfservice:
-      flows:
-        settings:
-          # Sessions older than a minute requires the user to sign in again before
-          # the password is changed.
-          privileged_session_max_age: 1m
-    ```
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  flows:
+    settings:
+      # Sessions older than a minute requires the user to sign in again before
+      # the password is changed.
+      privileged_session_max_age: 1m
+```
 
   </TabItem>
 </Tabs>
@@ -175,6 +176,8 @@ you to request a new Ory Kratos Login session using the
 [API-based Login Flow](user-login.mdx).
 
 ## Initialize Settings Flow
+
+<DomainWarning />
 
 The first step is to initialize the settings flow. This allows pre-settings
 hooks to run, set up Anti-CSRF tokens, and more. Each Settings Flow also has a
@@ -286,21 +289,21 @@ settings URL.
   ]}>
   <TabItem value="ocp">
 
-    The Ory Cloud Platform offers a default login UI implementation. Pointing to another UI
-    endpoint will be supported in the future.
+The Ory Cloud Platform offers a default UI implementation. Pointing to another
+UI endpoint will be supported in the future.
 
   </TabItem>
   <TabItem value="oss">
 
-    You can configure which login URL to use in the Ory Kratos config:
+You can configure which login URL to use in the Ory Kratos config:
 
-    ```yaml title="path/to/config/kratos.yml"
-    selfservice:
-      flows:
-        settings:
-          # becomes http://127.0.0.1:4455/auth/settings?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-          ui_url: http://127.0.0.1:4455/auth/settings
-    ```
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  flows:
+    settings:
+      # becomes http://127.0.0.1:4455/auth/settings?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+      ui_url: http://127.0.0.1:4455/auth/settings
+```
 
   </TabItem>
 </Tabs>
@@ -444,7 +447,7 @@ $ flowId=$(curl -s -X GET \
 $ curl -s -X GET \
     -H "Accept: application/json" \
     -H "Authorization: bearer $sessionToken" \
-    "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings?flow=$flowId" | jq
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/flows?id=$flowId" | jq
 
 {
   "id": "260196cc-cd99-40b8-a9b1-8afc06c08afc",

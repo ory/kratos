@@ -1,1 +1,0 @@
-<a href="https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/browser">Recover Account</a>
