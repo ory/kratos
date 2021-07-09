@@ -177,7 +177,7 @@ The Login Flow for client-side browser clients relies on AJAX requests.
 To initialize the Registration Flow, call the login initialization endpoint and
 set `Accept: application/json`:
 
-```
+```shell-session
 $ curl -v -s -X GET \
     -H "Accept: application/json"  \
     https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser | jq
@@ -212,7 +212,6 @@ $ curl -v -s -X GET \
   "updated_at": "2021-07-09T10:25:12.137554Z",
   "forced": false
 }
-
 ```
 
 ### Login for API Clients and Clients without Browsers
