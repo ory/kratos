@@ -11,16 +11,14 @@ import SelfServiceSpaFlow from '@theme/SelfServiceSpaFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
-  initBrowserFlow,
-  initApiFlow,
-  initSpaFlow,
-  getFlow,
   getFlowMethodPasswordWithErrors,
   getFlowMethodProfileWithErrors,
-  getFlowMethodOidcWithErrors,
   privilegedVideo
 } from './code/settings'
 import RenderFlow from '@theme/Code/RenderFlow'
+import AjaxWarning from '@theme/AjaxWarning'
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
 
 :::info
 
@@ -77,18 +75,35 @@ Currently, three settings methods are supported:
   updated traits must be valid against the Identity JSON Schema defined for its
   [Identity Traits](../../concepts/identity-data-model.mdx).
 
-These methods are dis/enabled in the Ory Kratos config:
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
 
-```yaml title="path/to/my/kratos/config.yml"
-selfservice:
-  methods:
-    password:
-      enabled: true
-    oidc:
-      enabled: true
-    profile:
-      enabled: true
-```
+    Currently, only the password and profile method are enabled.
+
+  </TabItem>
+  <TabItem value="oss">
+
+    You can configure which methods to use in the Ory Kratos config:
+
+    ```yaml title="path/to/my/kratos/config.yml"
+    selfservice:
+      methods:
+        password:
+          enabled: true
+        oidc:
+          enabled: true
+        profile:
+          enabled: true
+      # ...
+    ```
+
+  </TabItem>
+</Tabs>
 
 ### Updating Privileged Fields
 
@@ -104,9 +119,6 @@ protected:
   ... which is considered a privileged action (check out the
   [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
-If any of these fields are changed, the Ory Kratos Login Session must not be
-older than the configured `privileged_session_max_age` value:
-
 ```yaml title="path/to/kratos/config.yml"
 selfservice:
   flows:
@@ -115,6 +127,37 @@ selfservice:
       # the password is changed.
       privileged_session_max_age: 1m
 ```
+
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+    If any of these fields are changed, the Ory Kratos Login Session must not be
+    older than the configured `privileged_session_max_age` value.
+
+    An option to configure this value is on the roadmap for OCP.
+
+  </TabItem>
+  <TabItem value="oss">
+
+    If any of these fields are changed, the Ory Kratos Login Session must not be
+    older than the configured `privileged_session_max_age` value:
+
+    ```yaml title="path/to/kratos/config.yml"
+    selfservice:
+      flows:
+        settings:
+          # Sessions older than a minute requires the user to sign in again before
+          # the password is changed.
+          privileged_session_max_age: 1m
+    ```
+
+  </TabItem>
+</Tabs>
 
 If the Ory Kratos Login Session is older than the specified amount, the user is
 prompted to re-authenticate similar to the
@@ -147,17 +190,16 @@ stateDiagram
 `}
 />
 
-Keep in mind that initializing a Settings Flow requires a valid Ory Kratos Login
-Session Token (for API-based flows) or Ory Kratos Login Session Cookie (for
-Browser-based flows)!
+Keep in mind that initializing a Settings Flow requires a valid Ory Session
+Token (for API-based flows) or Ory Session Cookie (for Browser-based flows)!
 
 Before we start with the examples below, let's create a user using the API-based
 Registration Flow. This will yield a session token which then use to perform the
 Settings Flow on this page:
 
 ```shell script
-username=example.user@ory.sh
-password=sBdHzGp9hAx2Hf2m
+username=dev+docs.$(date +%s)@ory.sh
+password=$(openssl rand -base64 12)
 
 actionUrl=$(curl -s -H "Accept: application/json" \
   'https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/api' | jq -r '.ui.action')
@@ -181,34 +223,93 @@ Kratos, your Settings UI, and the end-user's browser:
   interactions={['"Save Profile Changes"']}
 />
 
-To initialize the Settings Flow, point the Browser to
-[the initialization endpoint](../../self-service#initialization-and-redirect-to-ui):
+Before we start, we need to log in the user we created:
 
-<CodeTabs items={initBrowserFlow} />
+```shell
+# We use this cookie jar to initiate the settings flow in the next step!
+cookieJar=$(mktemp)
+
+# Initialize the flow
+flow=$( \
+    curl -s -H "Accept: application/json"  --cookie $cookieJar --cookie-jar $cookieJar \
+      'https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser' \
+  )
+
+# Get the action URL
+actionUrl=$(echo $flow | jq -r '.ui.action')
+
+# Get the CSRF Token
+csrfToken=$(echo $flow | jq -r '.ui.nodes[] | select(.attributes.name=="csrf_token") | .attributes.value')
+
+# Complete the login (with the user we created before)
+session=$( \
+  curl -s --cookie $cookieJar --cookie-jar $cookieJar -X POST \
+    -H "Accept: application/json" -H "Content-Type: application/json" \
+    --data '{ "password_identifier": "'$username'", "password": "'$password'", "method": "password", "csrf_token": "'$csrfToken'" }' \
+    "$actionUrl" \
+)
+
+echo $session | jq
+```
+
+To initialize the Settings Flow, point the Browser to the initialization
+endpoint:
+
+```shell-session
+$ curl -s -i -X GET \
+    --cookie $cookieJar --cookie-jar $cookieJar \
+    -H "Accept: text/html" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser
+
+HTTP/2 302
+date: Fri, 09 Jul 2021 11:07:48 GMT
+content-type: text/html; charset=utf-8
+content-length: 120
+location: https://playground.projects.oryapis.com/hosted/settings?flow=95efce11-0bd2-4f55-abce-180ced8b69d7
+cache-control: private, no-cache, no-store, must-revalidate
+vary: Origin
+vary: Cookie
+strict-transport-security: max-age=15724800; includeSubDomains
+
+<a href="https://playground.projects.oryapis.com/hosted/settings?flow=95efce11-0bd2-4f55-abce-180ced8b69d7">Found</a>.
+```
 
 The server responds with a HTTP 302 redirect to the Settings UI, appending the
-`?flow=<flow-id>` query parameter (see the curl example) to the URL configured
-here:
+`?flow=<flow-id>` query parameter (see the curl example) to the configured
+settings URL.
 
-```yaml title="path/to/config/kratos.yml"
-selfservice:
-  flows:
-    settings:
-      # becomes http://127.0.0.1:4455/settings?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-      ui_url: http://127.0.0.1:4455/settings
-```
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+    The Ory Cloud Platform offers a default login UI implementation. Pointing to another UI
+    endpoint will be supported in the future.
+
+  </TabItem>
+  <TabItem value="oss">
+
+    You can configure which login URL to use in the Ory Kratos config:
+
+    ```yaml title="path/to/config/kratos.yml"
+    selfservice:
+      flows:
+        settings:
+          # becomes http://127.0.0.1:4455/auth/settings?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+          ui_url: http://127.0.0.1:4455/auth/settings
+    ```
+
+  </TabItem>
+</Tabs>
 
 ### User and Profile Settings for Client-Side (AJAX) Browser Clients
 
 The Settings Flow for client-side browser clients relies on AJAX requests.
 
-:::note
-
-This flow requires AJAX and has all the potential problems with CORS. To make it
-work, you need to ensure that cookies work by setting the correct configuration
-options in your JavaScript code and the CORS headers of the server.
-
-:::
+<AjaxWarning />
 
 <SelfServiceSpaFlow
   flows={['settings']}
@@ -219,7 +320,41 @@ options in your JavaScript code and the CORS headers of the server.
 To initialize the Settings Flow, point the Browser to the initialization
 endpoint:
 
-<CodeTabs items={initSpaFlow} />
+```shell-session
+$ curl -v -s -X GET \
+    --cookie $cookieJar --cookie-jar $cookieJar \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser | jq
+
+> GET /api/kratos/public/self-service/settings/browser HTTP/2
+> Host: playground.projects.oryapis.com
+> User-Agent: curl/7.64.1
+> Accept: application/json
+
+< HTTP/2 200
+< date: Fri, 09 Jul 2021 09:36:34 GMT
+< content-type: application/json; charset=utf-8
+< content-length: 1241
+< cache-control: private, no-cache, no-store, must-revalidate
+< set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=wSDoLSdDqNJv2uWVWdv5euaQo9UimCFS1GhXokTLU3o=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+< vary: Origin
+< vary: Cookie
+< strict-transport-security: max-age=15724800; includeSubDomains
+<
+
+{
+  "id": "4074acf9-5025-469b-be9c-9bc776b4a862",
+  "type": "browser",
+  "expires_at": "2021-07-09T10:36:34.04310083Z",
+  "issued_at": "2021-07-09T09:36:34.04310083Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/settings/browser",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings?flow=4074acf9-5025-469b-be9c-9bc776b4a862",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
+```
 
 ### User and Profile Settings Updates for API Clients and Clients without Browsers
 
@@ -239,7 +374,59 @@ endpoint
 ([REST API Reference](../../reference/api.mdx#initialize-settings-flow-for-api-clients))
 which returns a JSON response:
 
-<CodeTabs items={initApiFlow} />
+```
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    -H "Authorization: bearer $sessionToken" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/api | jq
+
+{
+  "id": "20d5c364-663f-47e6-bd06-2944aa288f55",
+  "type": "api",
+  "expires_at": "2021-07-09T12:10:36.109455077Z",
+  "issued_at": "2021-07-09T11:10:36.109455077Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/settings/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings?flow=20d5c364-663f-47e6-bd06-2944aa288f55",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  },
+  "identity": {
+    "id": "7130f345-8506-4c13-869b-d0e8341ff585",
+    "schema_id": "default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
+    "state": "active",
+    "state_changed_at": "2021-07-09T11:06:02.23703Z",
+    "traits": {
+      "email": "dev+docs.1625828760@ory.sh"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "a5c0a49b-aa8d-44fd-ae20-361136a7260e",
+        "value": "dev+docs.1625828760@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "sent",
+        "verified_at": null,
+        "created_at": "2021-07-09T11:06:02.244136Z",
+        "updated_at": "2021-07-09T11:06:02.244136Z"
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "ac4b8521-905c-4492-9b9c-c877d94ca7db",
+        "value": "dev+docs.1625828760@ory.sh",
+        "via": "email",
+        "created_at": "2021-07-09T11:06:02.249405Z",
+        "updated_at": "2021-07-09T11:06:02.249405Z"
+      }
+    ],
+    "created_at": "2021-07-09T11:06:02.239075Z",
+    "updated_at": "2021-07-09T11:06:02.239075Z"
+  },
+  "state": "show_form"
+}
+```
 
 ## Settings Flow Payloads
 
@@ -248,7 +435,30 @@ Fetching the Settings Flow
 only required for browser clients but also works for Settings Flows initialized
 by API clients. All you need is a valid flow ID:
 
-<CodeTabs items={getFlow} />
+```shell-session
+$ flowId=$(curl -s -X GET \
+    -H "Accept: application/json" \
+    -H "Authorization: bearer $sessionToken" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/api | jq -r '.id')
+
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    -H "Authorization: bearer $sessionToken" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings?flow=$flowId" | jq
+
+{
+  "id": "260196cc-cd99-40b8-a9b1-8afc06c08afc",
+  "type": "api",
+  "expires_at": "2021-07-09T11:05:43.388907Z",
+  "issued_at": "2021-07-09T10:05:43.388907Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/registration/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration?flow=260196cc-cd99-40b8-a9b1-8afc06c08afc",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
+```
 
 ### Update Profile
 
@@ -267,48 +477,14 @@ $ curl -s -X GET \
   "attributes": {
     "name": "traits.email",
     "type": "email",
-    "value": "example.user@ory.sh",
+    "value": "dev+docs.1625828760@ory.sh",
     "disabled": false
   },
-  "messages": null,
+  "messages": [],
   "meta": {
     "label": {
       "id": 1070002,
       "text": "E-Mail",
-      "type": "info"
-    }
-  }
-}
-{
-  "type": "input",
-  "group": "profile",
-  "attributes": {
-    "name": "traits.name.first",
-    "type": "text",
-    "disabled": false
-  },
-  "messages": null,
-  "meta": {
-    "label": {
-      "id": 1070002,
-      "text": "First Name",
-      "type": "info"
-    }
-  }
-}
-{
-  "type": "input",
-  "group": "profile",
-  "attributes": {
-    "name": "traits.name.last",
-    "type": "text",
-    "disabled": false
-  },
-  "messages": null,
-  "meta": {
-    "label": {
-      "id": 1070002,
-      "text": "Last Name",
       "type": "info"
     }
   }
@@ -322,7 +498,7 @@ $ curl -s -X GET \
     "value": "profile",
     "disabled": false
   },
-  "messages": null,
+  "messages": [],
   "meta": {
     "label": {
       "id": 1070003,
@@ -364,7 +540,7 @@ $ curl -s -X GET \
     "required": true,
     "disabled": false
   },
-  "messages": null,
+  "messages": [],
   "meta": {
     "label": {
       "id": 1070001,
@@ -382,7 +558,7 @@ $ curl -s -X GET \
     "value": "password",
     "disabled": false
   },
-  "messages": null,
+  "messages": [],
   "meta": {
     "label": {
       "id": 1070003,
@@ -465,22 +641,6 @@ a future version, which is partially tracked as
 
 :::
 
-## Settings Flow Form Rendering
-
-The Settings User Interface is a route (page / site) in your application
-(server, native app, single page app) that should render a settings form.
-
-In stark contrast to other Identity Systems, Ory Kratos does not render this
-HTML. Instead, you need to implement the HTML code in your application (e.g.
-NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
-flexibility and customizability in your user interface flows and designs.
-
-You will use the Settings Flow JSON response to render the settings form UI,
-which could looks as follows depending on your programming language and web
-framework:
-
-<RenderFlow flow="settings" />
-
 ## Settings Form Validation
 
 The form payloads are then submitted to Ory Kratos which follows up with:
@@ -537,7 +697,7 @@ HTTP 302 Redirect to the Settings UI which now contains the success state
 
 ```shell script
 curl -s -X GET \
-    -H "Authorization: Bearer $sessionToken"  \
+    --cookie $cookieJar --cookie-jar $cookieJar \
     -H "Accept: application/json"  \
     'https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/flows?id=f71743cd-700d-4a30-9275-8edc90de07cc' | \
       jq
@@ -721,16 +881,27 @@ When the update is completed successfully, Ory Kratos response with a HTTP 200
 OK message containing the updated identity:
 
 ```shell script
-$ password=ByS8NWuFSkDgMjbe
+password=ByS8NWuFSkDgMjbe
 
-$ actionUrl=$(curl -s -H "Accept: application/json" \
-  -H "Authorization: bearer $sessionToken" \
-  'https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser' | jq -r '.ui.action')
+# Initialize the flow
+flow=$( \
+    curl -s -H "Accept: application/json" --cookie $cookieJar --cookie-jar $cookieJar \
+      'https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/browser' \
+  )
 
-$ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
-    -H "Authorization: bearer $sessionToken" \
-    -d '{"password": "'$password'", "method": "password"}' \
-    "$actionUrl" | jq
+# Get the action URL
+actionUrl=$(echo $flow | jq -r '.ui.action')
+
+# Get the CSRF Token
+csrfToken=$(echo $flow | jq -r '.ui.nodes[] | select(.attributes.name=="csrf_token") | .attributes.value')
+
+# Complete the login (with the user we created before)
+session=$( \
+  curl -s --cookie $cookieJar --cookie-jar $cookieJar -X POST \
+    -H "Accept: application/json" -H "Content-Type: application/json" \
+    --data '{"password": "'$password'", "method": "password", "csrf_token": "'$csrfToken'" }' \
+    "$actionUrl" \
+)
 
 {
   "id": "f71743cd-700d-4a30-9275-8edc90de07cc",
@@ -787,13 +958,13 @@ For API Clients, Ory Kratos responds with a JSON payload which includes the
 updated identity:
 
 ```shell script
-$ password=ByS8NWuFSkDgMjbe
+password=ByS8NWuFSkDgMjbe
 
-$ actionUrl=$(curl -s -H "Accept: application/json" \
+actionUrl=$(curl -s -H "Accept: application/json" \
   -H "Authorization: bearer $sessionToken" \
   'https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/api' | jq -r '.ui.action')
 
-$ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
+curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
     -H "Authorization: bearer $sessionToken" \
     -d '{"password": "'$password'", "method": "password"}' \
     "$actionUrl" | jq
@@ -846,6 +1017,22 @@ $ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/js
   "state": "success"
 }
 ```
+
+## Code Examples for NodeJS, ReactJS, Go, ...
+
+The Settings User Interface is a route (page / site) in your application
+(server, native app, single page app) that should render a settings form.
+
+In stark contrast to other Identity Systems, Ory Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+You will use the Settings Flow JSON response to render the settings form UI,
+which could looks as follows depending on your programming language and web
+framework:
+
+<RenderFlow flow="settings" />
 
 ## Hooks
 
