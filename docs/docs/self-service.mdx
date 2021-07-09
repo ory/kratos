@@ -123,7 +123,24 @@ URL with a locally hosted Ory Kratos as well.
 First, the Browser opens the flow's initialization endpoint
 (e.g.`/self-service/login/browser`, `/self-service/registration/browser`, ...):
 
-<CodeTabs items={initBrowserFlow} />
+```shell-session
+$ curl -s -i -X GET \
+    -H "Accept: text/html" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser
+
+HTTP/2 303
+date: Fri, 09 Jul 2021 10:23:52 GMT
+content-type: text/html; charset=utf-8
+content-length: 121
+location: https://playground.projects.oryapis.com/hosted/login?flow=3fc63726-8461-43f4-974a-5579ff4174f1
+cache-control: private, no-cache, no-store, must-revalidate
+set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=Lk9swSOlimGS9LI5HslOyEKGL4hMQzWHnwnQpm9HGAA=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+vary: Origin
+vary: Cookie
+strict-transport-security: max-age=15724800; includeSubDomains
+
+<a href="https://playground.projects.oryapis.com/hosted/login?flow=3fc63726-8461-43f4-974a-5579ff4174f1">See Other</a>.
+```
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow
@@ -443,7 +460,42 @@ The AJAX client (e.g. NextJS app) makes a request to the flow's initialization
 endpoint (e.g.`/self-service/login/browser`,
 `/self-service/registration/browser`, ...):
 
-<CodeTabs items={initSpaFlow} />
+```shell-session
+$ curl -v -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser | jq
+
+> GET /api/kratos/public/self-service/login/browser HTTP/2
+> Host: playground.projects.oryapis.com
+> User-Agent: curl/7.64.1
+> Accept: application/json
+
+< HTTP/2 200
+< date: Fri, 09 Jul 2021 10:25:12 GMT
+< content-type: application/json; charset=utf-8
+< content-length: 1359
+< cache-control: private, no-cache, no-store, must-revalidate
+< set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=UlKMcLe00G8B9GjC7D1I5rvQ6P79Q0YpzKb4lo7uLtw=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+< vary: Origin
+< vary: Cookie
+< strict-transport-security: max-age=15724800; includeSubDomains
+
+{
+  "id": "ff0c97c4-a7bb-49a5-a8a6-ebf174877fa5",
+  "type": "browser",
+  "expires_at": "2021-07-09T11:25:12.136099226Z",
+  "issued_at": "2021-07-09T10:25:12.136099226Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/login/browser",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=ff0c97c4-a7bb-49a5-a8a6-ebf174877fa5",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  },
+  "created_at": "2021-07-09T10:25:12.137554Z",
+  "updated_at": "2021-07-09T10:25:12.137554Z",
+  "forced": false
+}
+```
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow
@@ -553,7 +605,24 @@ The client (e.g. mobile application) makes a request to the flow's
 initialization endpoint (e.g.`/self-service/login/api`,
 `/self-service/registration/api`, ...):
 
-<CodeTabs items={initApiFlow} />
+```shell-session
+$ curl -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api | jq
+
+{
+  "id": "9d17f37b-b60b-44f5-9812-4829a89810f7",
+  "type": "api",
+  "expires_at": "2021-07-09T11:26:04.019418543Z",
+  "issued_at": "2021-07-09T10:26:04.019418543Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/login/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=9d17f37b-b60b-44f5-9812-4829a89810f7",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
+```
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow

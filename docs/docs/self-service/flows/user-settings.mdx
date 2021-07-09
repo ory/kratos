@@ -377,7 +377,7 @@ endpoint
 ([REST API Reference](../../reference/api.mdx#initialize-settings-flow-for-api-clients))
 which returns a JSON response:
 
-```
+```shell-session
 $ curl -s -X GET \
     -H "Accept: application/json" \
     -H "Authorization: bearer $sessionToken" \
@@ -698,8 +698,8 @@ When the profile update is completed successfully, Ory Kratos responds with a
 HTTP 302 Redirect to the Settings UI which now contains the success state
 (`state: success`) as well as the updated identity:
 
-```shell script
-curl -s -X GET \
+```shell-session
+$ curl -s -X GET \
     --cookie $cookieJar --cookie-jar $cookieJar \
     -H "Accept: application/json"  \
     'https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/flows?id=f71743cd-700d-4a30-9275-8edc90de07cc' | \
