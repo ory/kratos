@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/oauth2"
+
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/x/decoderx"
@@ -330,7 +332,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) error {
+func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token *oauth2.Token, claims *Claims, provider Provider) error {
 	p := &submitSelfServiceBrowserSettingsOIDCFlowPayload{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
@@ -342,11 +344,21 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
+	cat, err := s.d.Crypt().Encrypt(r.Context(), token.AccessToken)
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
+	crt, err := s.d.Crypt().Encrypt(r.Context(), token.RefreshToken)
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
 	var conf CredentialsConfig
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = NewCredentials(provider.Config().ID, claims.Subject); err != nil {
+		if creds, err = NewCredentials(cat, crt, provider.Config().ID, claims.Subject); err != nil {
 			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else if err != nil {
@@ -354,7 +366,8 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 	} else {
 		creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
 		conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
-			Subject: claims.Subject, Provider: provider.Config().ID})
+			Subject: claims.Subject, Provider: provider.Config().ID,
+			EncryptedAccessToken: cat, EncryptedRefreshToken: crt})
 
 		creds.Config, err = json.Marshal(conf)
 		if err != nil {

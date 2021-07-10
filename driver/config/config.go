@@ -3,8 +3,10 @@ package config
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"net"
 	"net/http"
 	"net/url"
@@ -47,6 +49,7 @@ const (
 	ViperKeyCourierSMTPFromName                                     = "courier.smtp.from_name"
 	ViperKeySecretsDefault                                          = "secrets.default"
 	ViperKeySecretsCookie                                           = "secrets.cookie"
+	ViperKeySecretsAES                                              = "secrets.aes"
 	ViperKeyPublicBaseURL                                           = "serve.public.base_url"
 	ViperKeyPublicDomainAliases                                     = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                              = "serve.public.port"
@@ -124,6 +127,9 @@ const (
 const DefaultSessionCookieName = "ory_kratos_session"
 
 type (
+	AES struct {
+		Secret string `json:"secret"`
+	}
 	Argon2 struct {
 		Memory            bytesize.ByteSize `json:"memory"`
 		Iterations        uint32            `json:"iterations"`
@@ -221,7 +227,7 @@ func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *C
 func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
-		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "client_secret"),
+		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "secrets.aes", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
@@ -307,6 +313,12 @@ func (p *Config) HasherBcrypt() *Bcrypt {
 	}
 
 	return &Bcrypt{Cost: cost}
+}
+
+func (p *Config) CryptAES() *AES {
+	return &AES{
+		Secret: p.SecretsAES(),
+	}
 }
 
 func (p *Config) listenOn(key string) string {
@@ -527,8 +539,35 @@ func (p *Config) SecretsSession() [][]byte {
 	return result
 }
 
+func (p *Config) SecretsAES() (secret string) {
+	secret = p.p.String(ViperKeySecretsAES)
+	if len(secret) == 0 {
+		secret = string(p.SecretsDefault()[0][:32])
+	}
+	if len(secret)%32 != 0 {
+		p.l.Warnf("secret bad size %d, generate a key", len(secret))
+		secret = p.generateKey()
+	}
+	return
+}
+
 func (p *Config) SelfServiceBrowserDefaultReturnTo() *url.URL {
 	return p.ParseURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
+}
+
+func (p *Config) generateKey() string {
+	const letters = "0123456789abcdef"
+	const length = 128
+	ret := make([]byte, length)
+	for i := 0; i < length; i++ {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			p.l.WithError(err).Error("generate random key failed")
+			return letters + letters
+		}
+		ret[i] = letters[num.Int64()]
+	}
+	return string(ret)
 }
 
 func (p *Config) guessBaseURL(keyHost, keyPort string, defaultPort int) *url.URL {

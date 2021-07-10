@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ory/kratos/crypt"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/ui/container"
@@ -86,6 +88,8 @@ type dependencies interface {
 	settings.HookExecutorProvider
 
 	continuity.ManagementProvider
+
+	crypt.CryptProvider
 }
 
 func isForced(req interface{}) bool {
@@ -296,7 +300,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	switch a := req.(type) {
 	case *login.Flow:
-		if ff, err := s.processLogin(w, r, a, claims, provider, cntnr); err != nil {
+		if ff, err := s.processLogin(w, r, a, token, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -305,7 +309,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		}
 		return
 	case *registration.Flow:
-		if ff, err := s.processRegistration(w, r, a, claims, provider, cntnr); err != nil {
+		if ff, err := s.processRegistration(w, r, a, token, claims, provider, cntnr); err != nil {
 			if ff != nil {
 				s.forwardError(w, r, ff, err)
 				return
@@ -319,7 +323,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
 			return
 		}
-		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, claims, provider); err != nil {
+		if err := s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, token, claims, provider); err != nil {
 			s.forwardError(w, r, a, s.handleError(w, r, a, pid, nil, err))
 			return
 		}
