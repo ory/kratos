@@ -464,7 +464,6 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
-      cy.longRecoveryLifespan()
       cy.visit(link.href)
     })
 )
@@ -502,7 +501,6 @@ Cypress.Commands.add(
         // specified in base...
       })
 
-      cy.longVerificationLifespan()
       cy.visit(link.href)
       cy.location('pathname').should('include', 'verify')
       cy.location('search').should('not.be.empty', 'request')
