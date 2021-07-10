@@ -131,6 +131,27 @@ type Identity struct {
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
+type CredentialsConfig struct {
+	Providers []IdentifierCredentialsEncrypted `json:"providers"`
+}
+type IdentifierCredentialsEncrypted struct {
+	Subject               string `json:"subject"`
+	Provider              string `json:"provider"`
+	EncryptedAccessToken  string `json:"encrypted_access_token"`
+	EncryptedRefreshToken string `json:"encrypted_refresh_token"`
+}
+
+type IdentifierCredential struct {
+	Subject      string `json:"subject"`
+	Provider     string `json:"provider"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+type IdentifyWithCredentials struct {
+	Identity Identity
+	IdentifierCredential IdentifierCredential `json:"identifier_credential"`
+}
+
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 // in a self-service manner. The input will always be validated against the JSON Schema defined
 // in `schema_url`.
@@ -264,6 +285,20 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, (*localIdentity)(i))
 	i.Credentials = nil
 	return err
+}
+
+func (i IdentifyWithCredentials) MarshalJSON() ([]byte, error) {
+	type localIdentifierCredential IdentifyWithCredentials
+	result, err := json.Marshal(localIdentifierCredential(i))
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (i *IdentifyWithCredentials) UnmarshalJSON(b []byte) error {
+	type localIdentifierCredential IdentifyWithCredentials
+	return json.Unmarshal(b, (*localIdentifierCredential)(i))
 }
 
 type IdentityWithCredentialsMetadataInJSON Identity

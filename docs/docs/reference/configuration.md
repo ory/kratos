@@ -1731,7 +1731,7 @@ secrets:
 
   ## Secret Keys for AES ##
   #
-  # The first secret in the array is used for encrypting cookies while all other keys are used to decrypt data.
+  # The first secret in the array is used for encrypting data while all other keys are used to decrypt data.
   # for now is only used for access and refresh token from oidc.
   #
   # WARNING the secret key must be 32 caracters long all keys that not 32 characters long will be ignore
