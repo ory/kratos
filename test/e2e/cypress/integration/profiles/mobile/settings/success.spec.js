@@ -42,9 +42,9 @@ context('Mobile Profile', () => {
         cy.get('*[data-testid="logout"]').click()
 
         cy.visit(MOBILE_URL + '/Home')
-        cy.loginMobile({email, password})
+        cy.loginMobile({ email, password })
         cy.get('[data-testid="session-token"]').should('not.exist')
-        cy.loginMobile({email, password: newPassword})
+        cy.loginMobile({ email, password: newPassword })
         cy.get('[data-testid="session-token"]').should('not.be.empty')
       })
     })

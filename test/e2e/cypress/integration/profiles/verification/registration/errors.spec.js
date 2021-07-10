@@ -27,7 +27,7 @@ context('Verification Profile', () => {
       })
 
       it('is unable to verify the email address if the code is no longer valid and resend the code', () => {
-        cy.verifyEmailButExpired({expect: {email: identity.email}})
+        cy.verifyEmailButExpired({ expect: { email: identity.email } })
 
         cy.longLinkLifespan()
 
@@ -38,7 +38,7 @@ context('Verification Profile', () => {
           'contain.text',
           'An email containing a verification'
         )
-        cy.verifyEmail({expect: {email: identity.email}})
+        cy.verifyEmail({ expect: { email: identity.email } })
       })
 
       it('is unable to verify the email address if the code is incorrect', () => {
