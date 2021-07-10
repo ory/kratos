@@ -10,6 +10,10 @@ selfservice:
   default_browser_return_url: http://127.0.0.1:4455/
   whitelisted_return_urls:
     - http://127.0.0.1:4455
+  methods:
+    link:
+      config:
+        lifespan: 1h
   flows:
     login:
       ui_url: http://127.0.0.1:4455/auth/login

@@ -15,7 +15,7 @@ context('Verification Profile', () => {
     describe('error flow', () => {
       let identity
       beforeEach(() => {
-        cy.shortVerificationLifespan()
+        cy.shortLinkLifespan()
         cy.visit(APP_URL + '/')
         cy.deleteMail()
 
@@ -25,7 +25,6 @@ context('Verification Profile', () => {
       })
 
       it('is unable to verify the email address if the code is no longer valid and resend the code', () => {
-        cy.wait(4000)
         cy.verifyEmailButExpired({ expect: { email: identity.email } })
 
         cy.get('input[name="email"]').should('be.empty')
@@ -36,8 +35,8 @@ context('Verification Profile', () => {
           'An email containing a verification'
         )
 
-        cy.longVerificationLifespan()
-        cy.verifyEmail({ expect: { email: identity.email } })
+        cy.longLinkLifespan()
+        cy.verifyEmail({expect: {email: identity.email}})
       })
 
       it('is unable to verify the email address if the code is incorrect', () => {

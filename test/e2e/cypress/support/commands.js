@@ -98,6 +98,18 @@ Cypress.Commands.add('shortVerificationLifespan', ({} = {}) => {
     return config
   })
 })
+Cypress.Commands.add('shortLinkLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.link.config.lifespan = '1ms'
+    return config
+  })
+})
+Cypress.Commands.add('longLinkLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.link.config.lifespan = '1ms'
+    return config
+  })
+})
 Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.lifespan = '1m'

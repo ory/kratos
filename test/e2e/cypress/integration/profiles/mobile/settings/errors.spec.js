@@ -29,6 +29,11 @@ context('Mobile Profile', () => {
         cy.get(
           '*[data-testid="settings-profile"] div[data-testid="submit-form"]'
         ).click()
+
+        cy.get(
+          '*[data-testid="settings-profile"] div[data-testid="submit-form"]'
+        ).should('have.attr', 'data-focusable', 'true')
+
         cy.get('*[data-testid="field/traits.website"]').should(
           'contain.text',
           'length must be >= 10'
