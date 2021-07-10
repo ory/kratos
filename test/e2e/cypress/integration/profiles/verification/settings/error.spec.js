@@ -19,6 +19,7 @@ context('Verification Profile', () => {
       })
 
       beforeEach(() => {
+        cy.longLinkLifespan()
         identity = gen.identity()
         cy.register(identity)
         cy.deleteMail({ atLeast: 1 }) // clean up registration email
@@ -28,13 +29,12 @@ context('Verification Profile', () => {
       })
 
       it('is unable to verify the email address if the code is no longer valid', () => {
-        cy.shortVerificationLifespan()
+        cy.shortLinkLifespan()
         cy.visit(APP_URL + '/settings')
 
         const email = `not-${identity.email}`
         cy.get('input[name="traits.email"]').clear().type(email)
         cy.get('button[value="profile"]').click()
-        cy.wait(4000)
 
         cy.verifyEmailButExpired({ expect: { email } })
       })
