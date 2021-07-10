@@ -544,7 +544,7 @@ func (p *Config) SecretsAES() (secret string) {
 	if len(secret) == 0 {
 		secret = string(p.SecretsDefault()[0][:32])
 	}
-	if len(secret) % 32 != 0 {
+	if len(secret)%32 != 0 {
 		p.l.Warnf("secret bad size %d, generate a key", len(secret))
 		secret = p.generateKey()
 	}
@@ -557,13 +557,13 @@ func (p *Config) SelfServiceBrowserDefaultReturnTo() *url.URL {
 
 func (p *Config) generateKey() string {
 	const letters = "0123456789abcdef"
-	const length  = 128
+	const length = 128
 	ret := make([]byte, length)
 	for i := 0; i < length; i++ {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
 		if err != nil {
 			p.l.WithError(err).Error("generate random key failed")
-			return letters+letters
+			return letters + letters
 		}
 		ret[i] = letters[num.Int64()]
 	}

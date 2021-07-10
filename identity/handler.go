@@ -3,11 +3,11 @@ package identity
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/ory/kratos/crypt"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/ory/kratos/crypt"
 
 	"github.com/ory/herodot"
 
@@ -79,7 +79,6 @@ type identifierResponse struct {
 	// in: body
 	Body *IdentifyWithCredentials
 }
-
 
 // A list of identities.
 // swagger:response identityList
@@ -461,8 +460,4 @@ func (h *Handler) Crypt() crypt.Crypt {
 		h.crypter = crypt.NewCryptAES(h)
 	}
 	return h.crypter
-}
-
-func uid(provider, subject string) string {
-	return fmt.Sprintf("%s:%s", provider, subject)
 }
