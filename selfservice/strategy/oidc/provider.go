@@ -1,7 +1,9 @@
 package oidc
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 
 	"golang.org/x/oauth2"
 )
@@ -13,7 +15,31 @@ type Provider interface {
 	AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 }
 
+func toClaims(basicClaims BasicClaims) Claims {
+	var buffer []byte
+	bb := bytes.NewBuffer(buffer)
+	enc := json.NewEncoder(bb)
+	err := enc.Encode(basicClaims)
+	if err != nil {
+		return Claims{}
+	}
+
+	dec := json.NewDecoder(bb)
+	var claims Claims
+	err = dec.Decode(&claims)
+	if err != nil {
+		return Claims{}
+	}
+
+	return claims
+}
+
 type Claims struct {
+	BasicClaims
+	AdditionalClaims map[string]interface{} `json:"additional_claims"`
+}
+
+type BasicClaims struct {
 	Issuer              string `json:"iss,omitempty"`
 	Subject             string `json:"sub,omitempty"`
 	Name                string `json:"name,omitempty"`

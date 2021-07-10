@@ -77,7 +77,7 @@ func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token) (*
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	claims := &Claims{
+	basicClaims := BasicClaims{
 		Issuer:            discordgo.EndpointOauth2,
 		Subject:           user.ID,
 		Name:              fmt.Sprintf("%s#%s", user.Username, user.Discriminator),
@@ -89,5 +89,6 @@ func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token) (*
 		Locale:            user.Locale,
 	}
 
-	return claims, nil
+	claims := toClaims(basicClaims)
+	return &claims, nil
 }

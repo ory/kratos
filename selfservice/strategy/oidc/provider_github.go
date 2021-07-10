@@ -69,7 +69,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	claims := &Claims{
+	basicClaims := BasicClaims{
 		Subject:   fmt.Sprintf("%d", user.GetID()),
 		Issuer:    github.Endpoint.TokenURL,
 		Name:      user.GetName(),
@@ -91,12 +91,13 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		for k, e := range emails {
 			// If it is the primary email or it's the last email (no primary email set?), set the email.
 			if e.GetPrimary() || k == len(emails) {
-				claims.Email = e.GetEmail()
-				claims.EmailVerified = e.GetVerified()
+				basicClaims.Email = e.GetEmail()
+				basicClaims.EmailVerified = e.GetVerified()
 				break
 			}
 		}
 	}
 
-	return claims, nil
+	claims := toClaims(basicClaims)
+	return &claims, nil
 }

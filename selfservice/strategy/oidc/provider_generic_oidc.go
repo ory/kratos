@@ -100,6 +100,12 @@ func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Cont
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}
 
+	var additionalClaims map[string]interface{}
+	if err = token.Claims(&additionalClaims); err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+	}
+
+	claims.AdditionalClaims = additionalClaims
 	return &claims, nil
 }
 

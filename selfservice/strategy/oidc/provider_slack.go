@@ -72,7 +72,7 @@ func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	claims := &Claims{
+	basicClaims := BasicClaims{
 		Issuer:            "https://slack.com/oauth/",
 		Subject:           identity.User.ID,
 		Name:              identity.User.Name,
@@ -84,5 +84,6 @@ func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 		Team:              identity.Team.ID,
 	}
 
-	return claims, nil
+	claims := toClaims(basicClaims)
+	return &claims, nil
 }
