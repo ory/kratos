@@ -148,7 +148,7 @@ type IdentifierCredential struct {
 	RefreshToken string `json:"refresh_token"`
 }
 type IdentifyWithCredentials struct {
-	Identity Identity
+	Identity             Identity
 	IdentifierCredential IdentifierCredential `json:"identifier_credential"`
 }
 

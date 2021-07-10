@@ -3,8 +3,6 @@ package identity
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/ory/kratos/crypt"
 	"log"
 	"net/http"
 	"time"
@@ -82,7 +80,6 @@ type identifierResponse struct {
 	// in: body
 	Body *IdentifyWithCredentials
 }
-
 
 // A list of identities.
 // swagger:model identityList
