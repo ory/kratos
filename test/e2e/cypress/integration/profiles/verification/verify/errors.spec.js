@@ -19,7 +19,7 @@ context('Verification Profile', () => {
       })
 
       beforeEach(() => {
-        cy.clearCookies({domain: null})
+        cy.clearCookies({ domain: null })
         cy.longVerificationLifespan()
         cy.longLinkLifespan()
 
@@ -27,7 +27,7 @@ context('Verification Profile', () => {
         cy.register(identity)
         cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
-        cy.clearCookies({domain: null})
+        cy.clearCookies({ domain: null })
         cy.login(identity)
         cy.visit(APP_URL + '/verify')
       })
