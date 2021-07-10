@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/oauth2"
+
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -59,7 +61,7 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	Method string `json:"method"`
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -82,7 +84,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 
-			if _, err := s.processRegistration(w, r, aa, claims, provider, container); err != nil {
+			if _, err := s.processRegistration(w, r, aa, token, claims, provider, container); err != nil {
 				return aa, err
 			}
 
