@@ -1557,6 +1557,12 @@
             "minLength": 16
           },
           "uniqueItems": true
+        },
+        "aes": {
+          "type": "string",
+          "title": "Secret for AES",
+          "description": "This secret is used for encrypting and decrypt data.",
+          "minLength": 32
         }
       },
       "additionalProperties": false
