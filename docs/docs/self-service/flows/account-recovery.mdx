@@ -79,18 +79,27 @@ recovery will become an option.
 
   </TabItem>
   <TabItem value="oss">
-You can configure which methods to use in the Ory Kratos config:
 
-```yaml title="path/to/my/kratos/config.yml"
-selfservice:
-  methods:
+    You can configure which methods to use in the Ory Kratos config:
+
+    ```yaml title="path/to/my/kratos/config.yml"
+    selfservice:
+    methods:
     link:
-      enabled: true
-  flows:
+    enabled: true
+    config:
+    # Defines how long a recovery link is valid for (default 1h)
+    lifespan: 15m
+
+    flows:
     recovery:
-      enabled: true
-  # ...
-```
+    enabled: true
+
+    # Defines how long a recovery flow (the UI interaction, not the link!)
+    # is valid for (default 1h)
+    lifespan: 15m
+    # ...
+    ```
 
   </TabItem>
 </Tabs>
