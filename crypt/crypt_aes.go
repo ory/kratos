@@ -7,9 +7,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"github.com/ory/herodot"
 	"io"
 	"log"
+
+	"github.com/ory/herodot"
 
 	"github.com/pkg/errors"
 

@@ -550,7 +550,7 @@ func (p *Config) SecretsAES() (secret string) {
 	if len(secret) == 0 {
 		secret = string(p.SecretsDefault()[0][:32])
 	}
-	if len(secret) % 32 != 0 {
+	if len(secret)%32 != 0 {
 		p.l.Warnf("secret bad size %d, generate a key", len(secret))
 		secret = p.generateKey()
 	}
