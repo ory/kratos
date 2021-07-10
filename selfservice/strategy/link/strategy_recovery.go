@@ -130,7 +130,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	expiresIn := s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan()
+	expiresIn := s.d.Config(r.Context()).SelfServiceLinkMethodLifespan()
 	if len(p.ExpiresIn) > 0 {
 		var err error
 		expiresIn, err = time.ParseDuration(p.ExpiresIn)

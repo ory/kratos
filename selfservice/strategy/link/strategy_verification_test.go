@@ -353,7 +353,7 @@ func TestVerification(t *testing.T) {
 		identityToVerify.VerifiableAddresses = append(identityToVerify.VerifiableAddresses, *email)
 		require.NoError(t, reg.IdentityManager().Update(context.Background(), identityToVerify, identity.ManagerAllowWriteProtectedTraits))
 
-		token := link.NewSelfServiceVerificationToken(&identityToVerify.VerifiableAddresses[0], f)
+		token := link.NewSelfServiceVerificationToken(&identityToVerify.VerifiableAddresses[0], f, time.Hour)
 		require.NoError(t, reg.VerificationTokenPersister().CreateVerificationToken(context.Background(), token))
 		return f, token
 	}

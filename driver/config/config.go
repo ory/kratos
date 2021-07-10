@@ -85,39 +85,40 @@ const (
 	ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter        = "selfservice.flows.settings.privileged_session_max_age"
 	ViperKeySelfServiceRecoveryAfter                                = "selfservice.flows.recovery.after"
 	ViperKeySelfServiceRecoveryEnabled                              = "selfservice.flows.recovery.enabled"
-	ViperKeySelfServiceRecoveryUI                                   = "selfservice.flows.recovery.ui_url"
-	ViperKeySelfServiceRecoveryRequestLifespan                      = "selfservice.flows.recovery.lifespan"
-	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo               = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
-	ViperKeySelfServiceVerificationEnabled                          = "selfservice.flows.verification.enabled"
-	ViperKeySelfServiceVerificationUI                               = "selfservice.flows.verification.ui_url"
-	ViperKeySelfServiceVerificationRequestLifespan                  = "selfservice.flows.verification.lifespan"
-	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
-	ViperKeySelfServiceVerificationAfter                            = "selfservice.flows.verification.after"
-	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
-	ViperKeyIdentitySchemas                                         = "identity.schemas"
-	ViperKeyHasherAlgorithm                                         = "hashers.algorithm"
-	ViperKeyHasherArgon2ConfigMemory                                = "hashers.argon2.memory"
-	ViperKeyHasherArgon2ConfigIterations                            = "hashers.argon2.iterations"
-	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
-	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
-	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
-	ViperKeyHasherArgon2ConfigExpectedDuration                      = "hashers.argon2.expected_duration"
-	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
-	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
-	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
-	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
-	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
-	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
-	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
-	ViperKeyVersion                                                 = "version"
-	Argon2DefaultMemory                                             = 128 * bytesize.MB
-	Argon2DefaultIterations                                  uint32 = 1
-	Argon2DefaultSaltLength                                  uint32 = 16
-	Argon2DefaultKeyLength                                   uint32 = 32
-	Argon2DefaultDuration                                           = 500 * time.Millisecond
-	Argon2DefaultDeviation                                          = 500 * time.Millisecond
-	Argon2DefaultDedicatedMemory                                    = 1 * bytesize.GB
-	BcryptDefaultCost                                        uint32 = 12
+	ViperKeySelfServiceRecoveryUI                                = "selfservice.flows.recovery.ui_url"
+	ViperKeySelfServiceRecoveryRequestLifespan                   = "selfservice.flows.recovery.lifespan"
+	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo            = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
+	ViperKeySelfServiceVerificationEnabled                       = "selfservice.flows.verification.enabled"
+	ViperKeySelfServiceVerificationUI                            = "selfservice.flows.verification.ui_url"
+	ViperKeySelfServiceVerificationRequestLifespan               = "selfservice.flows.verification.lifespan"
+	ViperKeySelfServiceVerificationBrowserDefaultReturnTo        = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
+	ViperKeySelfServiceVerificationAfter                         = "selfservice.flows.verification.after"
+	ViperKeyDefaultIdentitySchemaURL                             = "identity.default_schema_url"
+	ViperKeyIdentitySchemas                                      = "identity.schemas"
+	ViperKeyHasherAlgorithm                                      = "hashers.algorithm"
+	ViperKeyHasherArgon2ConfigMemory                             = "hashers.argon2.memory"
+	ViperKeyHasherArgon2ConfigIterations                         = "hashers.argon2.iterations"
+	ViperKeyHasherArgon2ConfigParallelism                        = "hashers.argon2.parallelism"
+	ViperKeyHasherArgon2ConfigSaltLength                         = "hashers.argon2.salt_length"
+	ViperKeyHasherArgon2ConfigKeyLength                          = "hashers.argon2.key_length"
+	ViperKeyHasherArgon2ConfigExpectedDuration                   = "hashers.argon2.expected_duration"
+	ViperKeyHasherArgon2ConfigExpectedDeviation                  = "hashers.argon2.expected_deviation"
+	ViperKeyHasherArgon2ConfigDedicatedMemory                    = "hashers.argon2.dedicated_memory"
+	ViperKeyHasherBcryptCost                                     = "hashers.bcrypt.cost"
+	ViperKeyLinkLifespan                                         = "selfservice.methods.link.config.lifespan"
+	ViperKeyPasswordHaveIBeenPwnedHost                           = "selfservice.methods.password.config.haveibeenpwned_host"
+	ViperKeyPasswordHaveIBeenPwnedEnabled                        = "selfservice.methods.password.config.haveibeenpwned_enabled"
+	ViperKeyPasswordMaxBreaches                                  = "selfservice.methods.password.config.max_breaches"
+	ViperKeyIgnoreNetworkErrors                                  = "selfservice.methods.password.config.ignore_network_errors"
+	ViperKeyVersion                                              = "version"
+	Argon2DefaultMemory                                          = 128 * bytesize.MB
+	Argon2DefaultIterations                               uint32 = 1
+	Argon2DefaultSaltLength                               uint32 = 16
+	Argon2DefaultKeyLength                                uint32 = 32
+	Argon2DefaultDuration                                        = 500 * time.Millisecond
+	Argon2DefaultDeviation                                       = 500 * time.Millisecond
+	Argon2DefaultDedicatedMemory                                 = 1 * bytesize.GB
+	BcryptDefaultCost                                     uint32 = 12
 )
 
 // DefaultSessionCookieName returns the default cookie name for the kratos session.
@@ -775,6 +776,10 @@ func (p *Config) SelfServiceFlowRecoveryReturnTo() *url.URL {
 
 func (p *Config) SelfServiceFlowRecoveryRequestLifespan() time.Duration {
 	return p.p.DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
+	return p.p.DurationF(ViperKeyLinkLifespan, time.Hour)
 }
 
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {

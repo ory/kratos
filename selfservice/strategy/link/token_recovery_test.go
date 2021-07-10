@@ -32,7 +32,7 @@ func TestRecoveryToken(t *testing.T) {
 
 			tokens := make([]string, 10)
 			for k := range tokens {
-				tokens[k] = NewSelfServiceRecoveryToken(nil, f).Token
+				tokens[k] = NewSelfServiceRecoveryToken(nil, f, time.Hour).Token
 			}
 
 			assert.Len(t, stringslice.Unique(tokens), len(tokens))
@@ -43,7 +43,7 @@ func TestRecoveryToken(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := NewSelfServiceRecoveryToken(nil, f)
+			token := NewSelfServiceRecoveryToken(nil, f, -time.Hour)
 			require.Error(t, token.Valid())
 			assert.EqualError(t, token.Valid(), f.Valid().Error())
 		})

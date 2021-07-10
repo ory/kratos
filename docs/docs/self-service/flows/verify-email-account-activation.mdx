@@ -78,18 +78,26 @@ stateDiagram
   </TabItem>
   <TabItem value="oss">
 
-To enable verification flows, make the following adjustments to your Ory Kratos
-configuration:
+    To enable verification flows, make the following adjustments to your Ory Kratos
+    configuration:
 
-```yaml title="path/to/config/kratos.yml"
-selfservice:
-  methods:
+    ```yaml title="path/to/config/kratos.yml"
+    selfservice:
+    methods:
     link:
-      enabled: true
-  flows:
+    enabled: true
+    config:
+    # Defines how long a recovery link is valid for (default 1h)
+    lifespan: 15m
+
+    flows:
     verification:
-      enabled: true
-```
+    enabled: true
+
+    # Defines how long a recovery flow (the UI interaction, not the link!)
+    # is valid for (default 1h)
+    lifespan: 15m
+    ```
 
   </TabItem>
 </Tabs>
