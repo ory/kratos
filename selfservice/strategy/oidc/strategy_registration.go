@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/oauth2"
+
 	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/text"
@@ -120,7 +122,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -141,7 +143,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}
 
-		if _, err := s.processLogin(w, r, ar, claims, provider, container); err != nil {
+		if _, err := s.processLogin(w, r, ar, token, claims, provider, container); err != nil {
 			return ar, err
 		}
 		return nil, nil
@@ -200,7 +202,17 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	creds, err := NewCredentials(provider.Config().ID, claims.Subject)
+	cat, err := s.d.Crypt().Encrypt(r.Context(), token.AccessToken)
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	crt, err := s.d.Crypt().Encrypt(r.Context(), token.RefreshToken)
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	creds, err := NewCredentials(cat, crt, provider.Config().ID, claims.Subject)
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}

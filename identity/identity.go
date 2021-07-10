@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"bytes"
 	"context"
 	"database/sql/driver"
 	"encoding/json"
@@ -107,6 +108,27 @@ type Identity struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
+}
+
+type CredentialsConfig struct {
+	Providers []IdentifierCredentialsEncrypted `json:"providers"`
+}
+type IdentifierCredentialsEncrypted struct {
+	Subject               string `json:"subject"`
+	Provider              string `json:"provider"`
+	EncryptedAccessToken  string `json:"encrypted_access_token"`
+	EncryptedRefreshToken string `json:"encrypted_refresh_token"`
+}
+
+type IdentifierCredential struct {
+	Subject      string `json:"subject"`
+	Provider     string `json:"provider"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+type IdentifyWithCredentials struct {
+	Identity Identity
+	IdentifierCredential IdentifierCredential `json:"identifier_credential"`
 }
 
 // Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -244,6 +266,20 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+func (i IdentifyWithCredentials) MarshalJSON() ([]byte, error) {
+	type localIdentifierCredential IdentifyWithCredentials
+	result, err := json.Marshal(localIdentifierCredential(i))
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (i *IdentifyWithCredentials) UnmarshalJSON(b []byte) error {
+	type localIdentifierCredential IdentifyWithCredentials
+	return json.Unmarshal(b, (*localIdentifierCredential)(i))
+}
+
 type IdentityWithCredentialsMetadataInJSON Identity
 
 func (i IdentityWithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
@@ -285,4 +321,12 @@ func (i *Identity) ValidateNID() error {
 	}
 
 	return nil
+}
+
+func (i *Identity) GetCredential(ctx context.Context, config sqlxx.JSONRawMessage) (*CredentialsConfig, error) {
+	var o CredentialsConfig
+	if err := json.NewDecoder(bytes.NewBuffer(config)).Decode(&o); err != nil {
+		return nil, err
+	}
+	return &o, nil
 }

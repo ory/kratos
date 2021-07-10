@@ -7,6 +7,9 @@ SHELL=/bin/bash -o pipefail
 export GO111MODULE := on
 export PATH := .bin:${PATH}
 export PWD := $(shell pwd)
+export VERSION ?= "master"
+export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+export VCS_REF := $(shell git rev-parse HEAD)
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/ory/x/tools/listx \
@@ -52,7 +55,7 @@ docs: docs/node_modules
 
 .PHONY: lint
 lint: .bin/golangci-lint
-		golangci-lint run -v ./...
+		golangci-lint run -v --timeout 5m ./...
 
 .PHONY: mocks
 mocks: .bin/mockgen
@@ -125,7 +128,7 @@ format: .bin/goimports docs/node_modules node_modules
 # Runs tests in short mode, without database adapters
 .PHONY: docker
 docker:
-		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
+		docker build -f .docker/Dockerfile-build --build-arg=VERSION=$(VERSION) --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .
 
 # Runs the documentation tests
 .PHONY: test-docs

@@ -15,7 +15,13 @@ RUN go mod download
 
 ADD . .
 
-RUN go build -tags sqlite -o /usr/bin/kratos
+ARG VERSION
+ARG COMMIT
+ARG BUILD_DATE
+
+RUN go build -tags sqlite \
+    -ldflags="-X 'github.com/ory/kratos/driver/config.Version=${VERSION}' -X 'github.com/ory/kratos/driver/config.Date=${BUILD_DATE}' -X 'github.com/ory/kratos/driver/config.Commit=${COMMIT}'" \
+    -o /usr/bin/kratos
 
 FROM alpine:3.12
 
