@@ -1,7 +1,11 @@
 package identity
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/ory/kratos/crypt"
+	"log"
 	"net/http"
 	"time"
 
@@ -33,8 +37,14 @@ type (
 	}
 	Handler struct {
 		r handlerDependencies
+
+		crypter crypt.Crypt
 	}
 )
+
+func (h *Handler) Config(ctx context.Context) *config.Config {
+	return h.r.Config(ctx)
+}
 
 func NewHandler(r handlerDependencies) *Handler {
 	return &Handler{r: r}
@@ -43,6 +53,7 @@ func NewHandler(r handlerDependencies) *Handler {
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteBase, h.list)
 	admin.GET(RouteBase+"/:id", h.get)
+	admin.GET(RouteBase+"/:id/:identifier", h.getWithCredential)
 	admin.DELETE(RouteBase+"/:id", h.delete)
 
 	admin.POST(RouteBase, h.create)
@@ -58,6 +69,17 @@ type identityResponse struct {
 	// in: body
 	Body *Identity
 }
+
+// A single identify with credentials.
+//
+// swagger:response identifierResponse
+// nolint:deadcode,unused
+type identifierResponse struct {
+	// required: true
+	// in: body
+	Body *IdentifyWithCredentials
+}
+
 
 // A list of identities.
 // swagger:response identityList
@@ -162,6 +184,72 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	}
 
 	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
+}
+
+// swagger:route GET /identities/{id}/{identifier} admin getWithCredential
+//
+// Get an Identifier Credential
+//
+// Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: identifierResponse
+//       404: jsonError
+//       500: jsonError
+func (h *Handler) getWithCredential(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	i, c, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), CredentialsTypeOIDC, ps.ByName("identifier"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(err))
+		return
+	}
+
+	cred, err := i.GetCredential(r.Context(), c.Config)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(err))
+		return
+	}
+	if len(cred.Providers) == 0 {
+		h.r.Writer().WriteErrorCode(w, r, http.StatusNotFound, errors.WithStack(errors.New("identifier does not exist in this identity")))
+		return
+	}
+	cr := h.Crypt()
+	log.Printf("get accessToken")
+	accessToken, err := cr.Decrypt(r.Context(), cred.Providers[0].EncryptedAccessToken)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(err))
+		return
+	}
+	log.Printf("get refreshToken")
+	refreshToken, err := cr.Decrypt(r.Context(), cred.Providers[0].EncryptedRefreshToken)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, errors.WithStack(err))
+		return
+	}
+	for k, v := range i.Credentials {
+		v.Config = nil
+		i.Credentials[k] = v
+	}
+	// TODO: check the access token validity but use refresh token to renew it if needed
+	// add expire_in in EncryptedAccessToken struct
+
+	var iwc IdentifyWithCredentials
+	iwc.Identity = *i
+	iwc.IdentifierCredential = IdentifierCredential{
+		Subject:      cred.Providers[0].Subject,
+		Provider:     cred.Providers[0].Provider,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	log.Printf("iwc: %+v", iwc)
+	h.r.Writer().Write(w, r, &iwc)
 }
 
 // swagger:parameters createIdentity
@@ -366,4 +454,15 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) Crypt() crypt.Crypt {
+	if h.crypter == nil {
+		h.crypter = crypt.NewCryptAES(h)
+	}
+	return h.crypter
+}
+
+func uid(provider, subject string) string {
+	return fmt.Sprintf("%s:%s", provider, subject)
 }
