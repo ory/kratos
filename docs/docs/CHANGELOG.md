@@ -4831,7 +4831,7 @@ keys in the forms key `{"methods": { "traits": { ... }, "password": { ... } }}`.
 - Updates issue and pull request templates
   ([#315](https://github.com/ory/kratos/issues/315))
   ([8b68db1](https://github.com/ory/kratos/commit/8b68db140a7fc1c0eaa9318c1759ea9d8d0c27df))
-- Use git checkout <tag> in quickstart
+- Use git checkout `<tag>` in quickstart
   ([#339](https://github.com/ory/kratos/issues/339))
   ([2d2562b](https://github.com/ory/kratos/commit/2d2562b587a69a2891ff29d927cb001e15d75b5d)),
   closes [#335](https://github.com/ory/kratos/issues/335)
