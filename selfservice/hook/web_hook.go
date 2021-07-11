@@ -300,17 +300,12 @@ func (e *WebHook) execute(data *templateContext) error {
 		}
 	}
 
-	resp, err := doHttpCall(conf.method, conf.url, conf.auth, body)
+	err = doHttpCall(conf.method, conf.url, conf.auth, conf.interrupt, body)
 	if err != nil {
 		return fmt.Errorf("failed to call web hook %w", err)
 	}
 
-	if !conf.interrupt || resp.StatusCode == http.StatusNoContent {
-		return nil
-	}
-
-	err = parseResponse(resp)
-	return err
+	return nil
 }
 
 func createBody(templatePath string, data *templateContext) (io.Reader, error) {
@@ -338,10 +333,10 @@ func createBody(templatePath string, data *templateContext) (io.Reader, error) {
 	}
 }
 
-func doHttpCall(method string, url string, as AuthStrategy, body io.Reader) (*http.Response, error) {
+func doHttpCall(method string, url string, as AuthStrategy, interrupt bool, body io.Reader) error {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -350,12 +345,17 @@ func doHttpCall(method string, url string, as AuthStrategy, body io.Reader) (*ht
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		return nil, err
-	} else if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("web hook failed with status code %v", resp.StatusCode)
+		return err
+	} else if resp.StatusCode >= http.StatusBadRequest {
+		if interrupt {
+			if err = parseResponse(resp); err != nil {
+				return err
+			}
+		}
+		return fmt.Errorf("web hook failed with status code %v", resp.StatusCode)
 	}
 
-	return resp, nil
+	return nil
 }
 
 func parseResponse(resp *http.Response) error {
