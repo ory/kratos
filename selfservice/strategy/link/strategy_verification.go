@@ -220,6 +220,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 
 	f.UI.Messages.Clear()
 	f.State = verification.StatePassedChallenge
+	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
 	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
