@@ -17,7 +17,7 @@ import (
 )
 
 func TestFunc(t *testing.T) {
-	publicURL, _ := testhelpers.StartE2EServer(t, "../../pkg/stub/kratos.yaml")
+	publicURL, _ := testhelpers.StartE2EServer(t, "../../pkg/stub/kratos.yaml", nil)
 	client = pkg.NewSDKForSelfHosted(publicURL)
 
 	flow := performVerification("dev+" + uuid.New().String() + "@ory.sh")
