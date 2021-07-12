@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ory/kratos/driver/config"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -20,6 +22,8 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		IdentityTraitsProvider
+		x.CSRFProvider
+		config.Provider
 	}
 	Handler struct {
 		r handlerDependencies
@@ -36,22 +40,23 @@ func NewHandler(r handlerDependencies) *Handler {
 const SchemasPath string = "schemas"
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.r.CSRFHandler().IgnoreGlobs(fmt.Sprintf("/%s/*", SchemasPath))
 	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.get)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.get)
+	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), x.RedirectToPublicRoute(h.r))
 }
 
 // Raw JSON Schema
 //
 // swagger:model jsonSchema
 // nolint:deadcode,unused
-type schemaResponse json.RawMessage
+type jsonSchema json.RawMessage
 
 // nolint:deadcode,unused
-// swagger:parameters getSchema
-type getSchemaParameters struct {
+// swagger:parameters getJsonSchema
+type getJsonSchema struct {
 	// ID must be set to the ID of schema you want to get
 	//
 	// required: true
@@ -59,9 +64,9 @@ type getSchemaParameters struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /schemas/{id} public admin getSchema
+// swagger:route GET /schemas/{id} v0alpha1 getJsonSchema
 //
-// Get a Traits Schema Definition
+// Get a JSON Schema
 //
 //     Produces:
 //     - application/json

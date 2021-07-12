@@ -7,7 +7,7 @@ import (
 
 // The Response for Registration Flows via API
 //
-// swagger:model registrationViaApiResponse
+// swagger:model successfulSelfServiceRegistrationWithoutBrowser
 type APIFlowResponse struct {
 	// The Session Token
 	//

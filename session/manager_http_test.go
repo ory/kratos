@@ -28,11 +28,15 @@ type mockCSRFHandler struct {
 	c int
 }
 
-func (f *mockCSRFHandler) ExemptPath(s string) {
+func (f *mockCSRFHandler) IgnoreGlob(s string) {
 }
 
-func (f *mockCSRFHandler) IgnorePath(s string) {
+func (f *mockCSRFHandler) IgnoreGlobs(s ...string) {
 }
+
+func (f *mockCSRFHandler) ExemptPath(s string) {}
+
+func (f *mockCSRFHandler) IgnorePath(s string) {}
 
 func (f *mockCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }

@@ -12,29 +12,28 @@ import SelfServiceSpaFlow from '@theme/SelfServiceSpaFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
-  initBrowserFlow,
-  initSpaFlow,
-  initApiFlow,
-  getFlow,
-  getFlowMethodPasswordWithErrors,
+  getFlowMethodOidcWithCompletion,
   getFlowMethodOidcWithErrors,
-  getFlowMethodOidcWithCompletion
+  getFlowMethodPasswordWithErrors
 } from './code/registration'
 import RenderFlow from '@theme/Code/RenderFlow'
+import DomainWarning from '@theme/DomainWarning'
+import AjaxWarning from '@theme/AjaxWarning'
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
 
 :::info
 
 Please read the [Self-Service Flows](../../self-service.mdx) overview before
-continuing with this document. It is also advised to run the
-[quickstart](../../quickstart.mdx) locally as example URLs and payloads have
-been generated with it.
+continuing with this document.
 
 :::
 
 There are two Registration Flow types supported in Ory Kratos:
 
-- Flows where the user sits in front of the Browser (e.g. website, single page
-  app, ...)
+- Flows where the user sits in front of the Browser and the application is
+  - a server-side application (e.g. NodeJS, Java, ...)
+  - a client-side application (e.g. ReactJS, AngularJS, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 The Registration Flow can be summarized as the following state machine:
@@ -69,7 +68,20 @@ Currently, two registration methods are supported:
   Facebook (check out the
   [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
-Both are dis/enabled in the Ory Kratos config:
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+Currently, only the password method is enabled.
+
+  </TabItem>
+  <TabItem value="oss">
+
+You can configure which methods to use in the Ory Kratos config:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
@@ -78,13 +90,18 @@ selfservice:
       enabled: true
     oidc:
       enabled: true
-      # ...
+  # ...
 ```
+
+  </TabItem>
+</Tabs>
 
 ## Initialize Registration Flow
 
 The first step is to initialize the Registration Flow. This allows
 pre-registration hooks to run, set up Anti-CSRF tokens, and more.
+
+<DomainWarning />
 
 ### Registration for Server-Side Browser Clients
 
@@ -100,11 +117,44 @@ Kratos, your Registration UI, and the end-user's browser:
 To initialize the Registration Flow, point the Browser to the initialization
 endpoint:
 
-<CodeTabs items={initBrowserFlow} />
+```shell-session
+$ curl -s -i -X GET \
+    -H "Accept: text/html" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/browser
+
+HTTP/2 303
+date: Fri, 09 Jul 2021 09:35:26 GMT
+content-type: text/html; charset=utf-8
+content-length: 128
+location: https://playground.projects.oryapis.com/hosted/registration?flow=6c2ae96c-8486-42f0-91f9-f654eccd09fb
+cache-control: private, no-cache, no-store, must-revalidate
+set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=JDYmr2vbucEi5hjc9/tjOxz0yORCcfFmjIgPDobyD9o=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+vary: Origin
+vary: Cookie
+strict-transport-security: max-age=15724800; includeSubDomains
+
+<a href="https://playground.projects.oryapis.com/hosted/registration?flow=6c2ae96c-8486-42f0-91f9-f654eccd09fb">See Other</a>.
+```
 
 The server responds with a HTTP 302 redirect to the Registration UI, appending
-the `?flow=<flow-id>` query parameter (see the curl example) to the URL
-configured here:
+the `?flow=<flow-id>` query parameter (see the curl example) to the configured
+registration URL.
+
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+The Ory Cloud Platform offers a default UI implementation. Pointing to another
+UI endpoint will be supported in the future.
+
+  </TabItem>
+  <TabItem value="oss">
+
+You can configure which login URL to use in the Ory Kratos config:
 
 ```yaml title="path/to/config/kratos.yml"
 selfservice:
@@ -114,17 +164,14 @@ selfservice:
       ui_url: http://127.0.0.1:4455/auth/registration
 ```
 
+  </TabItem>
+</Tabs>
+
 ### Registration for Client-Side (AJAX) Browser Clients
 
 The Registration Flow for client-side browser clients relies on AJAX requests.
 
-:::note
-
-This flow requires AJAX and has all the potential problems with CORS. To make it
-work, you need to ensure that cookies work by setting the correct configuration
-options in your JavaScript code and the CORS headers of the server.
-
-:::
+<AjaxWarning />
 
 <SelfServiceSpaFlow
   flows={['registration']}
@@ -132,10 +179,43 @@ options in your JavaScript code and the CORS headers of the server.
   interactions={['"Log in"']}
 />
 
-To initialize the Registration Flow, point the Browser to the initialization
-endpoint:
+To initialize the Registration Flow, call the registration initialization
+endpoint and set `Accept: application/json`:
 
-<CodeTabs items={initSpaFlow} />
+```
+$ curl -v -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/browser | jq
+
+> GET /api/kratos/public/self-service/registration/browser HTTP/2
+> Host: playground.projects.oryapis.com
+> User-Agent: curl/7.64.1
+> Accept: application/json
+
+< HTTP/2 200
+< date: Fri, 09 Jul 2021 09:36:34 GMT
+< content-type: application/json; charset=utf-8
+< content-length: 1241
+< cache-control: private, no-cache, no-store, must-revalidate
+< set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=wSDoLSdDqNJv2uWVWdv5euaQo9UimCFS1GhXokTLU3o=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+< vary: Origin
+< vary: Cookie
+< strict-transport-security: max-age=15724800; includeSubDomains
+<
+
+{
+  "id": "4074acf9-5025-469b-be9c-9bc776b4a862",
+  "type": "browser",
+  "expires_at": "2021-07-09T10:36:34.04310083Z",
+  "issued_at": "2021-07-09T09:36:34.04310083Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/registration/browser",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration?flow=4074acf9-5025-469b-be9c-9bc776b4a862",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
+```
 
 ### Registration for API Clients and Clients without Browsers
 
@@ -155,7 +235,26 @@ endpoint
 ([REST API Reference](../../reference/api.mdx#initialize-registration-flow-for-api-clients))
 which returns a JSON response:
 
-<CodeTabs items={initApiFlow} />
+```shell-session
+$ curl -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/api | jq
+
+{
+  "id": "c7ed95c7-2710-436c-a7d0-09ac771a3e8b",
+  "type": "api",
+  "expires_at": "2021-07-09T10:41:34.883536226Z",
+  "issued_at": "2021-07-09T09:41:34.883536226Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/registration/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration?flow=c7ed95c7-2710-436c-a7d0-09ac771a3e8b",
+    "method": "POST",
+     "method": "POST",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
+```
 
 ## Registration Form Payloads
 
@@ -164,7 +263,28 @@ Fetching the Registration Flow
 only required for browser clients but also works for Registration Flows
 initialized by API clients. All you need is a valid Registration Flow ID:
 
-<CodeTabs items={getFlow} />
+```shell-session
+$ flowId=$(curl -s -X GET \
+    -H "Accept: application/json" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/api | jq -r '.id')
+
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/flows?id=$flowId" | jq
+
+{
+  "id": "260196cc-cd99-40b8-a9b1-8afc06c08afc",
+  "type": "api",
+  "expires_at": "2021-07-09T11:05:43.388907Z",
+  "issued_at": "2021-07-09T10:05:43.388907Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/registration/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration?flow=260196cc-cd99-40b8-a9b1-8afc06c08afc",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
+```
 
 ### Registration with Username/Email and password
 
@@ -192,16 +312,16 @@ the response would look as such:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/registration/flows?id=388ae8da-4c44-4765-bfa8-669963d388f5' | jq
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/flows?id=388ae8da-4c44-4765-bfa8-669963d388f5' | jq
 
 {
   "id": "388ae8da-4c44-4765-bfa8-669963d388f5",
   "type": "browser",
   "expires_at": "2021-04-28T09:29:23.713785401Z",
   "issued_at": "2021-04-28T09:19:23.713785401Z",
-  "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/browser",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/registration?flow=388ae8da-4c44-4765-bfa8-669963d388f5",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration?flow=388ae8da-4c44-4765-bfa8-669963d388f5",
     "method": "POST",
     "nodes": [
       {
@@ -344,14 +464,14 @@ providers as submit fields:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4433/self-service/registration/flows?id=c1f4dfd1-3559-4cd3-b6f6-4a83689a41bd' | jq
+  'https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/flows?id=c1f4dfd1-3559-4cd3-b6f6-4a83689a41bd' | jq
 
 {
   "id": "c1f4dfd1-3559-4cd3-b6f6-4a83689a41bd",
   "type": "browser",
   "expires_at": "2021-04-28T10:25:35.011063Z",
   "issued_at": "2021-04-28T09:25:35.011063Z",
-  "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/browser",
   "ui": {
     "action": "http://127.0.0.1:4455/self-service/registration?flow=c1f4dfd1-3559-4cd3-b6f6-4a83689a41bd",
     "method": "POST",
@@ -415,22 +535,6 @@ $ curl -H "Accept: application/json" -s \
   }
 }
 ```
-
-## Registration Flow Form Rendering
-
-The Registration User Interface is a route (page / site) in your application
-(server, native app, single page app) that should render a registration form.
-
-In stark contrast to other Identity Systems, Ory Kratos does not render this
-HTML. Instead, you need to implement the HTML code in your application (e.g.
-NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
-flexibility and customizability in your user interface flows and designs.
-
-You will use the Registration Flow JSON response to render the registration form
-UI, which could looks as follows depending on your programming language and web
-framework:
-
-<RenderFlow flow="registration" />
 
 ## Registration Form Validation
 
@@ -621,7 +725,7 @@ Now, whenever the browser is making a request (with cookies) to the
 
 ```shell script
 curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==" \
-  http://127.0.0.1:4433/sessions/whoami | jq
+  https://playground.projects.oryapis.com/api/kratos/public/sessions/whoami | jq
 
 {
   "id": "ede90ce6-2420-435a-a745-3d8ab1a9636c",
@@ -632,7 +736,7 @@ curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQ
   "identity": {
     "id": "d96e86d9-bc33-4aa5-b865-4ade8a3974b3",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "foouser@ory.sh",
       "name": {
@@ -671,7 +775,7 @@ When the registration is completed successfully, Ory Kratos responds with a HTTP
   "identity": {
     "id": "d8baf63b-7ce6-4275-82b9-9ac6d97e5037",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "registration-api@user.org"
     },
@@ -724,7 +828,7 @@ As well as information about the session:
     "identity": {
       "id": "8a7755df-1aac-4477-a53c-3f16fa059113",
       "schema_id": "default",
-      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
       "traits": {
         "email": "registration-session-api@user.org"
       },
@@ -750,7 +854,7 @@ As well as information about the session:
   "identity": {
     "id": "8a7755df-1aac-4477-a53c-3f16fa059113",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "registration-session-api@user.org"
     },
@@ -784,7 +888,7 @@ signed up identity:
 # Inits a Registration Flow
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/registration/api" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/api" \
     | jq -r '.ui.action'\
 )
 
@@ -797,7 +901,7 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
   "identity": {
     "id": "d8baf63b-7ce6-4275-82b9-9ac6d97e5037",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "registration-api@user.org"
     },
@@ -830,7 +934,7 @@ Kratos Login Session Token are included in the response:
 ```shell script
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/registration/api" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/api" \
     | jq -r '.ui.action'\
 )
 
@@ -849,7 +953,7 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
     "identity": {
       "id": "8a7755df-1aac-4477-a53c-3f16fa059113",
       "schema_id": "default",
-      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
       "traits": {
         "email": "registration-session-api@user.org"
       },
@@ -875,7 +979,7 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
   "identity": {
     "id": "8a7755df-1aac-4477-a53c-3f16fa059113",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "registration-session-api@user.org"
     },
@@ -899,6 +1003,22 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
   }
 }
 ```
+
+## Code Examples for NodeJS, ReactJS, Go, ...
+
+The Registration User Interface is a route (page / site) in your application
+(server, native app, single page app) that should render a registration form.
+
+In stark contrast to other Identity Systems, Ory Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+You will use the Registration Flow JSON response to render the registration form
+UI, which could looks as follows depending on your programming language and web
+framework:
+
+<RenderFlow flow="registration" />
 
 ## Hooks
 

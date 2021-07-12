@@ -869,6 +869,24 @@
                   "type": "boolean",
                   "title": "Enables Link Method",
                   "default": true
+                },
+                "config": {
+                  "type": "object",
+                  "title": "Link Configuration",
+                  "description": "Additional configuration for the link strategy.",
+                  "properties": {
+                    "lifespan": {
+                      "title": "How long a link is valid for",
+                      "type": "string",
+                      "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                      "default": "1h",
+                      "examples": [
+                        "1h",
+                        "1m",
+                        "1s"
+                      ]
+                    }
+                  }
                 }
               }
             },

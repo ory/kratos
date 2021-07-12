@@ -13,92 +13,70 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
-// SubmitSelfServiceVerificationFlowBody nolint:deadcode,unused
+// SubmitSelfServiceVerificationFlowBody - nolint:deadcode,unused
 type SubmitSelfServiceVerificationFlowBody struct {
-	// Email is the email to which to send the verification message to.
-	Email string `json:"email"`
-	// Method supports `link` only right now.
-	Method string `json:"method"`
+	SubmitSelfServiceVerificationFlowWithLinkMethodBody *SubmitSelfServiceVerificationFlowWithLinkMethodBody
 }
 
-// NewSubmitSelfServiceVerificationFlowBody instantiates a new SubmitSelfServiceVerificationFlowBody object
-// This constructor will assign default values to properties that have it defined,
-// and makes sure properties required by API are set, but the set of arguments
-// will change when the set of required properties is changed
-func NewSubmitSelfServiceVerificationFlowBody(email string, method string) *SubmitSelfServiceVerificationFlowBody {
-	this := SubmitSelfServiceVerificationFlowBody{}
-	this.Email = email
-	this.Method = method
-	return &this
+// SubmitSelfServiceVerificationFlowWithLinkMethodBodyAsSubmitSelfServiceVerificationFlowBody is a convenience function that returns SubmitSelfServiceVerificationFlowWithLinkMethodBody wrapped in SubmitSelfServiceVerificationFlowBody
+func SubmitSelfServiceVerificationFlowWithLinkMethodBodyAsSubmitSelfServiceVerificationFlowBody(v *SubmitSelfServiceVerificationFlowWithLinkMethodBody) SubmitSelfServiceVerificationFlowBody {
+	return SubmitSelfServiceVerificationFlowBody{
+		SubmitSelfServiceVerificationFlowWithLinkMethodBody: v,
+	}
 }
 
-// NewSubmitSelfServiceVerificationFlowBodyWithDefaults instantiates a new SubmitSelfServiceVerificationFlowBody object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewSubmitSelfServiceVerificationFlowBodyWithDefaults() *SubmitSelfServiceVerificationFlowBody {
-	this := SubmitSelfServiceVerificationFlowBody{}
-	return &this
-}
-
-// GetEmail returns the Email field value
-func (o *SubmitSelfServiceVerificationFlowBody) GetEmail() string {
-	if o == nil {
-		var ret string
-		return ret
+// Unmarshal JSON data into one of the pointers in the struct
+func (dst *SubmitSelfServiceVerificationFlowBody) UnmarshalJSON(data []byte) error {
+	var err error
+	match := 0
+	// try to unmarshal data into SubmitSelfServiceVerificationFlowWithLinkMethodBody
+	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceVerificationFlowWithLinkMethodBody)
+	if err == nil {
+		jsonSubmitSelfServiceVerificationFlowWithLinkMethodBody, _ := json.Marshal(dst.SubmitSelfServiceVerificationFlowWithLinkMethodBody)
+		if string(jsonSubmitSelfServiceVerificationFlowWithLinkMethodBody) == "{}" { // empty struct
+			dst.SubmitSelfServiceVerificationFlowWithLinkMethodBody = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.SubmitSelfServiceVerificationFlowWithLinkMethodBody = nil
 	}
 
-	return o.Email
-}
+	if match > 1 { // more than 1 match
+		// reset to nil
+		dst.SubmitSelfServiceVerificationFlowWithLinkMethodBody = nil
 
-// GetEmailOk returns a tuple with the Email field value
-// and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceVerificationFlowBody) GetEmailOk() (*string, bool) {
-	if o == nil {
-		return nil, false
+		return fmt.Errorf("Data matches more than one schema in oneOf(SubmitSelfServiceVerificationFlowBody)")
+	} else if match == 1 {
+		return nil // exactly one match
+	} else { // no match
+		return fmt.Errorf("Data failed to match schemas in oneOf(SubmitSelfServiceVerificationFlowBody)")
 	}
-	return &o.Email, true
 }
 
-// SetEmail sets field value
-func (o *SubmitSelfServiceVerificationFlowBody) SetEmail(v string) {
-	o.Email = v
-}
-
-// GetMethod returns the Method field value
-func (o *SubmitSelfServiceVerificationFlowBody) GetMethod() string {
-	if o == nil {
-		var ret string
-		return ret
+// Marshal data from the first non-nil pointers in the struct to JSON
+func (src SubmitSelfServiceVerificationFlowBody) MarshalJSON() ([]byte, error) {
+	if src.SubmitSelfServiceVerificationFlowWithLinkMethodBody != nil {
+		return json.Marshal(&src.SubmitSelfServiceVerificationFlowWithLinkMethodBody)
 	}
 
-	return o.Method
+	return nil, nil // no data in oneOf schemas
 }
 
-// GetMethodOk returns a tuple with the Method field value
-// and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceVerificationFlowBody) GetMethodOk() (*string, bool) {
-	if o == nil {
-		return nil, false
+// Get the actual instance
+func (obj *SubmitSelfServiceVerificationFlowBody) GetActualInstance() interface{} {
+	if obj == nil {
+		return nil
 	}
-	return &o.Method, true
-}
+	if obj.SubmitSelfServiceVerificationFlowWithLinkMethodBody != nil {
+		return obj.SubmitSelfServiceVerificationFlowWithLinkMethodBody
+	}
 
-// SetMethod sets field value
-func (o *SubmitSelfServiceVerificationFlowBody) SetMethod(v string) {
-	o.Method = v
-}
-
-func (o SubmitSelfServiceVerificationFlowBody) MarshalJSON() ([]byte, error) {
-	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["email"] = o.Email
-	}
-	if true {
-		toSerialize["method"] = o.Method
-	}
-	return json.Marshal(toSerialize)
+	// all schemas are nil
+	return nil
 }
 
 type NullableSubmitSelfServiceVerificationFlowBody struct {

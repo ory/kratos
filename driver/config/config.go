@@ -116,6 +116,7 @@ const (
 	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
+	ViperKeyLinkLifespan                                            = "selfservice.methods.link.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
@@ -786,6 +787,10 @@ func (p *Config) SelfServiceFlowRecoveryReturnTo() *url.URL {
 
 func (p *Config) SelfServiceFlowRecoveryRequestLifespan() time.Duration {
 	return p.p.DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
+}
+
+func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
+	return p.p.DurationF(ViperKeyLinkLifespan, time.Hour)
 }
 
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {

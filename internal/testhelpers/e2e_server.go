@@ -34,6 +34,9 @@ func StartE2EServerOnly(t *testing.T, configFile string, configOptions ConfigOpt
 	publicPort, err = freeport.GetFreePort()
 	require.NoError(t, err)
 
+	publicUrl = fmt.Sprintf("http://127.0.0.1:%d", publicPort)
+	adminUrl = fmt.Sprintf("http://127.0.0.1:%d", adminPort)
+
 	ctx := configx.ContextWithConfigOptions(context.Background(),
 		configx.WithValue("dsn", "memory"),
 		configx.WithValue("dev", true),
@@ -41,6 +44,8 @@ func StartE2EServerOnly(t *testing.T, configFile string, configOptions ConfigOpt
 		configx.WithValue("log.leak_sensitive_values", true),
 		configx.WithValue("serve.public.port", publicPort),
 		configx.WithValue("serve.admin.port", adminPort),
+		configx.WithValue("serve.public.base_url", publicUrl),
+		configx.WithValue("serve.admin.base_url", adminUrl),
 		configx.WithValues(configOptions),
 	)
 
@@ -58,6 +63,21 @@ func StartE2EServerOnly(t *testing.T, configFile string, configOptions ConfigOpt
 		_ = executor.ExecNoErr(t, "serve", "--config", configFile, "--watch-courier")
 	}()
 
+	require.NoError(t, retry.Do(func() error {
+		res, err := http.Get(publicUrl + "/health/ready")
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
+		body := x.MustReadAll(res.Body)
+		if res.StatusCode != http.StatusOK {
+			t.Logf("%s", body)
+			return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
+		}
+		return nil
+	}), err)
+
+
 	return publicPort, adminPort
 }
 
@@ -69,22 +89,6 @@ func StartE2EServer(t *testing.T, configFile string, configOptions ConfigOptions
 func CheckE2EServerOnHTTP(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
 	publicUrl = fmt.Sprintf("http://127.0.0.1:%d", publicPort)
 	adminUrl = fmt.Sprintf("http://127.0.0.1:%d", adminPort)
-
-	require.NoError(t, retry.Do(func() error {
-		res, err := http.Get(publicUrl + "/health/alive")
-		if err != nil {
-			return err
-		}
-		defer res.Body.Close()
-		body := x.MustReadAll(res.Body)
-		if res.StatusCode != http.StatusOK {
-			t.Logf("%s", body)
-			return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
-		}
-		return nil
-	}))
-
-	return
 }
 
 func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
@@ -96,7 +100,7 @@ func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, 
 		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		client := &http.Client{Transport: tr}
 
-		for _, url := range []string{publicUrl + "/health/alive", adminUrl + "/health/alive"} {
+		for _, url := range []string{publicUrl + "/health/ready", adminUrl + "/health/ready"} {
 			res, err := client.Get(url)
 			if err != nil {
 				return err

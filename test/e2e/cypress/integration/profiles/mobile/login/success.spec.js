@@ -1,4 +1,4 @@
-import {gen, MOBILE_URL, website} from '../../../../helpers'
+import { gen, MOBILE_URL, website } from '../../../../helpers'
 
 context('Mobile Profile', () => {
   describe('Login Flow Success', () => {
@@ -10,12 +10,12 @@ context('Mobile Profile', () => {
     const password = gen.password()
 
     before(() => {
-      cy.registerApi({email, password, fields: {'traits.website': website}})
+      cy.registerApi({ email, password, fields: { 'traits.website': website } })
     })
 
     beforeEach(() => {
-      cy.visit(MOBILE_URL + "/Login")
-  })
+      cy.visit(MOBILE_URL + '/Login')
+    })
 
     it('should sign up and be logged in', () => {
       cy.get('input[data-testid="password_identifier"]').type(email)

@@ -13,92 +13,70 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
-// SubmitSelfServiceRecoveryFlowBody nolint:deadcode,unused
+// SubmitSelfServiceRecoveryFlowBody - struct for SubmitSelfServiceRecoveryFlowBody
 type SubmitSelfServiceRecoveryFlowBody struct {
-	// Email is the email to which to send the Recovery message to.
-	Email string `json:"email"`
-	// Method supports `link` only right now.
-	Method string `json:"method"`
+	SubmitSelfServiceRecoveryFlowWithLinkMethodBody *SubmitSelfServiceRecoveryFlowWithLinkMethodBody
 }
 
-// NewSubmitSelfServiceRecoveryFlowBody instantiates a new SubmitSelfServiceRecoveryFlowBody object
-// This constructor will assign default values to properties that have it defined,
-// and makes sure properties required by API are set, but the set of arguments
-// will change when the set of required properties is changed
-func NewSubmitSelfServiceRecoveryFlowBody(email string, method string) *SubmitSelfServiceRecoveryFlowBody {
-	this := SubmitSelfServiceRecoveryFlowBody{}
-	this.Email = email
-	this.Method = method
-	return &this
+// SubmitSelfServiceRecoveryFlowWithLinkMethodBodyAsSubmitSelfServiceRecoveryFlowBody is a convenience function that returns SubmitSelfServiceRecoveryFlowWithLinkMethodBody wrapped in SubmitSelfServiceRecoveryFlowBody
+func SubmitSelfServiceRecoveryFlowWithLinkMethodBodyAsSubmitSelfServiceRecoveryFlowBody(v *SubmitSelfServiceRecoveryFlowWithLinkMethodBody) SubmitSelfServiceRecoveryFlowBody {
+	return SubmitSelfServiceRecoveryFlowBody{
+		SubmitSelfServiceRecoveryFlowWithLinkMethodBody: v,
+	}
 }
 
-// NewSubmitSelfServiceRecoveryFlowBodyWithDefaults instantiates a new SubmitSelfServiceRecoveryFlowBody object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewSubmitSelfServiceRecoveryFlowBodyWithDefaults() *SubmitSelfServiceRecoveryFlowBody {
-	this := SubmitSelfServiceRecoveryFlowBody{}
-	return &this
-}
-
-// GetEmail returns the Email field value
-func (o *SubmitSelfServiceRecoveryFlowBody) GetEmail() string {
-	if o == nil {
-		var ret string
-		return ret
+// Unmarshal JSON data into one of the pointers in the struct
+func (dst *SubmitSelfServiceRecoveryFlowBody) UnmarshalJSON(data []byte) error {
+	var err error
+	match := 0
+	// try to unmarshal data into SubmitSelfServiceRecoveryFlowWithLinkMethodBody
+	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceRecoveryFlowWithLinkMethodBody)
+	if err == nil {
+		jsonSubmitSelfServiceRecoveryFlowWithLinkMethodBody, _ := json.Marshal(dst.SubmitSelfServiceRecoveryFlowWithLinkMethodBody)
+		if string(jsonSubmitSelfServiceRecoveryFlowWithLinkMethodBody) == "{}" { // empty struct
+			dst.SubmitSelfServiceRecoveryFlowWithLinkMethodBody = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.SubmitSelfServiceRecoveryFlowWithLinkMethodBody = nil
 	}
 
-	return o.Email
-}
+	if match > 1 { // more than 1 match
+		// reset to nil
+		dst.SubmitSelfServiceRecoveryFlowWithLinkMethodBody = nil
 
-// GetEmailOk returns a tuple with the Email field value
-// and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceRecoveryFlowBody) GetEmailOk() (*string, bool) {
-	if o == nil {
-		return nil, false
+		return fmt.Errorf("Data matches more than one schema in oneOf(SubmitSelfServiceRecoveryFlowBody)")
+	} else if match == 1 {
+		return nil // exactly one match
+	} else { // no match
+		return fmt.Errorf("Data failed to match schemas in oneOf(SubmitSelfServiceRecoveryFlowBody)")
 	}
-	return &o.Email, true
 }
 
-// SetEmail sets field value
-func (o *SubmitSelfServiceRecoveryFlowBody) SetEmail(v string) {
-	o.Email = v
-}
-
-// GetMethod returns the Method field value
-func (o *SubmitSelfServiceRecoveryFlowBody) GetMethod() string {
-	if o == nil {
-		var ret string
-		return ret
+// Marshal data from the first non-nil pointers in the struct to JSON
+func (src SubmitSelfServiceRecoveryFlowBody) MarshalJSON() ([]byte, error) {
+	if src.SubmitSelfServiceRecoveryFlowWithLinkMethodBody != nil {
+		return json.Marshal(&src.SubmitSelfServiceRecoveryFlowWithLinkMethodBody)
 	}
 
-	return o.Method
+	return nil, nil // no data in oneOf schemas
 }
 
-// GetMethodOk returns a tuple with the Method field value
-// and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceRecoveryFlowBody) GetMethodOk() (*string, bool) {
-	if o == nil {
-		return nil, false
+// Get the actual instance
+func (obj *SubmitSelfServiceRecoveryFlowBody) GetActualInstance() interface{} {
+	if obj == nil {
+		return nil
 	}
-	return &o.Method, true
-}
+	if obj.SubmitSelfServiceRecoveryFlowWithLinkMethodBody != nil {
+		return obj.SubmitSelfServiceRecoveryFlowWithLinkMethodBody
+	}
 
-// SetMethod sets field value
-func (o *SubmitSelfServiceRecoveryFlowBody) SetMethod(v string) {
-	o.Method = v
-}
-
-func (o SubmitSelfServiceRecoveryFlowBody) MarshalJSON() ([]byte, error) {
-	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["email"] = o.Email
-	}
-	if true {
-		toSerialize["method"] = o.Method
-	}
-	return json.Marshal(toSerialize)
+	// all schemas are nil
+	return nil
 }
 
 type NullableSubmitSelfServiceRecoveryFlowBody struct {

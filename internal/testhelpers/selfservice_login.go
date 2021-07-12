@@ -45,7 +45,7 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 	return ts
 }
 
-func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool) *kratos.LoginFlow {
+func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool) *kratos.SelfServiceLoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	q := ""
@@ -70,17 +70,17 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := publicClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceLoginFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *kratos.LoginFlow {
+func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *kratos.SelfServiceLoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceLoginWithoutBrowser(context.Background()).Refresh(forced).Execute()
+	rs, _, err := publicClient.V0alpha1Api.InitializeSelfServiceLoginFlowWithoutBrowser(context.Background()).Refresh(forced).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -91,7 +91,7 @@ func LoginMakeRequest(
 	t *testing.T,
 	isAPI bool,
 	isSPA bool,
-	f *kratos.LoginFlow,
+	f *kratos.SelfServiceLoginFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -131,7 +131,7 @@ func SubmitLoginForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var f *kratos.LoginFlow
+	var f *kratos.SelfServiceLoginFlow
 	if isAPI {
 		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced)
 	} else {

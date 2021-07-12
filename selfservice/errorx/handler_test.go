@@ -56,77 +56,55 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, err)
 			return body
 		}
-		expectedError := x.MustEncodeJSON(t, []error{herodot.ErrNotFound.WithReason("foobar")})
+		expectedError := x.MustEncodeJSON(t, herodot.ErrNotFound.WithReason("foobar"))
 
 		t.Run("call with valid csrf cookie", func(t *testing.T) {
 			hc := &http.Client{}
 			id := getBody(t, hc, "/set-error", http.StatusOK)
-			actual := getBody(t, hc, errorx.RouteGet+"?error="+string(id), http.StatusOK)
-			assert.JSONEq(t, expectedError, gjson.GetBytes(actual, "errors").Raw, "%s", actual)
+			actual := getBody(t, hc, errorx.RouteGet+"?id="+string(id), http.StatusOK)
+			assert.JSONEq(t, expectedError, gjson.GetBytes(actual, "error").Raw, "%s", actual)
 
 			// We expect a forbid error if the error is not found, regardless of CSRF
-			_ = getBody(t, hc, errorx.RouteGet+"?error=does-not-exist", http.StatusForbidden)
+			_ = getBody(t, hc, errorx.RouteGet+"?id=does-not-exist", http.StatusNotFound)
 		})
 	})
 
 	t.Run("case=stubs", func(t *testing.T) {
-		router := x.NewRouterAdmin()
-		h.RegisterAdminRoutes(router)
+		router := x.NewRouterPublic()
+		h.RegisterPublicRoutes(router)
 		ts := httptest.NewServer(router)
 		defer ts.Close()
 
-		res, err := ts.Client().Get(ts.URL + errorx.RouteGet + "?error=stub:500")
+		res, err := ts.Client().Get(ts.URL + errorx.RouteGet + "?id=stub:500")
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusOK, res.StatusCode)
 
 		actual, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
 
-		assert.EqualValues(t, "This is a stub error.", gjson.GetBytes(actual, "errors.0.reason").String())
+		assert.EqualValues(t, "This is a stub error.", gjson.GetBytes(actual, "error.reason").String())
 	})
 
 	t.Run("case=errors types", func(t *testing.T) {
-		router := x.NewRouterAdmin()
-		h.RegisterAdminRoutes(router)
+		router := x.NewRouterPublic()
+		h.RegisterPublicRoutes(router)
 		ts := httptest.NewServer(router)
 		defer ts.Close()
 
 		for k, tc := range []struct {
-			gave []error
+			gave error
 		}{
-			{
-				gave: []error{
-					herodot.ErrNotFound.WithReason("foobar"),
-				},
-			},
-			{
-				gave: []error{
-					herodot.ErrNotFound.WithReason("foobar"),
-					herodot.ErrNotFound.WithReason("foobar"),
-				},
-			},
-			{
-				gave: []error{
-					herodot.ErrNotFound.WithReason("foobar"),
-				},
-			},
-			{
-				gave: []error{
-					errors.WithStack(herodot.ErrNotFound.WithReason("foobar")),
-				},
-			},
-			{
-				gave: []error{
-					errors.WithStack(herodot.ErrNotFound.WithReason("foobar").WithTrace(errors.New("asdf"))),
-				},
-			},
+			{gave: herodot.ErrNotFound.WithReason("foobar")},
+			{gave: herodot.ErrNotFound.WithReason("foobar")},
+			{gave: errors.WithStack(herodot.ErrNotFound.WithReason("foobar"))},
+			{gave: errors.WithStack(herodot.ErrNotFound.WithReason("foobar").WithTrace(errors.New("asdf")))},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				csrf := x.NewUUID()
-				id, err := reg.SelfServiceErrorPersister().Add(context.Background(), csrf.String(), tc.gave...)
+				id, err := reg.SelfServiceErrorPersister().Add(context.Background(), csrf.String(), tc.gave)
 				require.NoError(t, err)
 
-				res, err := ts.Client().Get(ts.URL + errorx.RouteGet + "?error=" + id.String())
+				res, err := ts.Client().Get(ts.URL + errorx.RouteGet + "?id=" + id.String())
 				require.NoError(t, err)
 				defer res.Body.Close()
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -134,11 +112,7 @@ func TestHandler(t *testing.T) {
 				actual, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
 
-				gg := make([]error, len(tc.gave))
-				for k, g := range tc.gave {
-					gg[k] = errorsx.Cause(g)
-				}
-
+				gg := errorsx.Cause(tc.gave)
 				expected, err := json.Marshal(errorx.ErrorContainer{
 					ID:     id,
 					Errors: x.RequireJSONMarshal(t, gg),
@@ -147,7 +121,7 @@ func TestHandler(t *testing.T) {
 
 				assertx.EqualAsJSONExcept(t, json.RawMessage(expected), json.RawMessage(actual), []string{"created_at", "updated_at"})
 				assert.Empty(t, gjson.GetBytes(actual, "csrf_token").String())
-				assert.JSONEq(t, string(x.RequireJSONMarshal(t, gg)), gjson.GetBytes(actual, "errors").Raw)
+				assert.JSONEq(t, string(x.RequireJSONMarshal(t, gg)), gjson.GetBytes(actual, "error").Raw)
 				t.Logf("%s", actual)
 			})
 		}

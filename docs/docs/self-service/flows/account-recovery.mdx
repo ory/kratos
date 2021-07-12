@@ -12,16 +12,17 @@ import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
-  initBrowserFlow,
-  initApiFlow,
-  initSpaFlow,
-  getFlow,
   getFlowMethodLinkWithErrors,
   getFlowMethodLinkSuccess,
   getFlowMethodLinkInvalidChallenge,
   getFlowMethodLinkChallengeDone
 } from './code/recovery'
 import RenderFlow from '@theme/Code/RenderFlow'
+
+import DomainWarning from '@theme/DomainWarning'
+import AjaxWarning from '@theme/AjaxWarning'
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
 
 :::info
 
@@ -39,8 +40,9 @@ recovered. Common use cases include:
 
 There are two Recovery Flow types supported in Ory Kratos:
 
-- Flows where the user sits in front of the Browser (e.g. website, single page
-  app, ...)
+- Flows where the user sits in front of the Browser and the application is
+  - a server-side application (e.g. NodeJS, Java, ...)
+  - a client-side application (e.g. ReactJS, AngularJS, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 The Recovery Flow can be summarized as the following state machine:
@@ -64,18 +66,43 @@ stateDiagram
 `}
 />
 
-To enable recovery flows, make the following adjustments to your Ory Kratos
-configuration:
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
 
-```yaml title="path/to/config/kratos.yml"
-selfservice:
-  methods:
+Currently, account recovery is enabled. In the future, disabling account
+recovery will become an option.
+
+  </TabItem>
+  <TabItem value="oss">
+
+    You can configure which methods to use in the Ory Kratos config:
+
+    ```yaml title="path/to/my/kratos/config.yml"
+    selfservice:
+    methods:
     link:
-      enabled: true
-  flows:
+    enabled: true
+    config:
+    # Defines how long a recovery link is valid for (default 1h)
+    lifespan: 15m
+
+    flows:
     recovery:
-      enabled: true
-```
+    enabled: true
+
+    # Defines how long a recovery flow (the UI interaction, not the link!)
+    # is valid for (default 1h)
+    lifespan: 15m
+    # ...
+    ```
+
+  </TabItem>
+</Tabs>
 
 ## Methods
 
@@ -85,16 +112,6 @@ Currently, one recovery method is supported:
   sending an email containing a recovery link to the user.
 
 ### Recovery `link` Method
-
-The `link` method is dis/enabled in the Ory Kratos config:
-
-```yaml title="path/to/my/kratos/config.yml"
-selfservice:
-  methods:
-    link:
-      enabled: true
-      # ...
-```
 
 There are two email types sent by this method:
 
@@ -136,7 +153,22 @@ template IDs are:
 
 You should also configure how long a session is privileged. The user will only
 be able to update his/her password (or any other credential) for the specified
-amount of time after clicking on the recovery link:
+amount of time after clicking on the recovery link.
+
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+Configuring the privileged session duration will be possible in the future.
+
+  </TabItem>
+  <TabItem value="oss">
+
+You can configure the privileged session duration in the Ory Kratos config:
 
 ```yaml title="path/to/kratos/config.yml"
 selfservice:
@@ -144,6 +176,9 @@ selfservice:
     settings:
       privileged_session_max_age: 15m
 ```
+
+  </TabItem>
+</Tabs>
 
 To specify that an identity's trait is a recovery email, use the following
 Identity JSON Schema:
@@ -180,6 +215,8 @@ Identity JSON Schema:
 ```
 
 ## Initialize Recovery Flow
+
+<DomainWarning />
 
 The first step is to initialize the Recovery Flow. This sets up Anti-CSRF tokens
 and more. Each recovery flow has a `state` parameter which follows the state
@@ -221,11 +258,44 @@ Kratos, your Recovery UI, and the end-user's browser:
 To initialize the Recovery Flow, point the Browser to the initialization
 endpoint:
 
-<CodeTabs items={initBrowserFlow} />
+```shell-session
+$ curl -s -i -X GET \
+    -H "Accept: text/html" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/browser
+
+HTTP/2 302
+date: Fri, 09 Jul 2021 12:50:38 GMT
+content-type: text/html; charset=utf-8
+content-length: 120
+location: https://playground.projects.oryapis.com/hosted/recovery?flow=33964b22-c364-4217-b6fc-5f381d142d65
+cache-control: private, no-cache, no-store, must-revalidate
+set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=WCOWjhwHy338874TGz6S7ICVp/hFFVHV8Ev7e1hZYSo=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+vary: Origin
+vary: Cookie
+strict-transport-security: max-age=15724800; includeSubDomains
+
+<a href="https://playground.projects.oryapis.com/hosted/recovery?flow=33964b22-c364-4217-b6fc-5f381d142d65">Found</a>.
+```
 
 The server responds with a HTTP 302 redirect to the Recovery UI, appending the
 `?flow=<flow-id>` query parameter (see the curl example) to the URL configured
 here:
+
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+The Ory Cloud Platform offers a default UI implementation. Pointing to another
+UI endpoint will be supported in the future.
+
+  </TabItem>
+  <TabItem value="oss">
+
+You can configure which recovery URL to use in the Ory Kratos config:
 
 ```yaml title="path/to/config/kratos.yml"
 selfservice:
@@ -235,17 +305,14 @@ selfservice:
       ui_url: http://127.0.0.1:4455/recovery
 ```
 
+  </TabItem>
+</Tabs>
+
 ### Recovery for Client-Side (AJAX) Browser Clients
 
 The Recovery Flow for client-side browser clients relies on AJAX requests.
 
-:::note
-
-This flow requires AJAX and has all the potential problems with CORS. To make it
-work, you need to ensure that cookies work by setting the correct configuration
-options in your JavaScript code and the CORS headers of the server.
-
-:::
+<AjaxWarning />
 
 <SelfServiceSpaFlow
   flows={['recovery']}
@@ -253,10 +320,87 @@ options in your JavaScript code and the CORS headers of the server.
   interactions={['"Recover account"']}
 />
 
-To initialize the Recovery Flow, point the Browser to the initialization
-endpoint:
+To initialize the Recovery Flow, call the recovery initialization endpoint and
+set `Accept: application/json`:
 
-<CodeTabs items={initSpaFlow} />
+```
+$ curl -v -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/browser | jq
+
+> GET /api/kratos/public/self-service/recovery/browser HTTP/2
+> Host: playground.projects.oryapis.com
+> User-Agent: curl/7.64.1
+> Accept: application/json
+
+< HTTP/2 200
+< date: Fri, 09 Jul 2021 09:36:34 GMT
+< content-type: application/json; charset=utf-8
+< content-length: 1241
+< cache-control: private, no-cache, no-store, must-revalidate
+< set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=wSDoLSdDqNJv2uWVWdv5euaQo9UimCFS1GhXokTLU3o=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+< vary: Origin
+< vary: Cookie
+< strict-transport-security: max-age=15724800; includeSubDomains
+
+{
+  "id": "d37e270d-eb84-472a-8032-3f0f01786210",
+  "type": "browser",
+  "expires_at": "2021-06-15T14:27:31.270617Z",
+  "issued_at": "2021-06-15T14:22:31.270617Z",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4455/self-service/recovery?flow=d37e270d-eb84-472a-8032-3f0f01786210",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "17VNGchueAPEYWji/X3ORohTfHUGqA0HPqTJILpE4xYfMNmIvif7xPIIcJdf62809Y1xGRTwhZMz6SyMDtCSag==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
+  },
+  "state": "choose_method"
+}
+```
 
 ### Recovery for API Clients and Clients without Browsers
 
@@ -276,7 +420,25 @@ endpoint
 ([REST API Reference](../../reference/api.mdx#initialize-recovery-flow-for-api-clients))
 which returns a JSON response:
 
-<CodeTabs items={initApiFlow} />
+```shell-session
+$ curl -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/api | jq
+
+{
+  "id": "660cc928-48f1-485b-8003-dc690f5afc35",
+  "type": "api",
+  "expires_at": "2021-07-09T13:52:56.270081773Z",
+  "issued_at": "2021-07-09T12:52:56.270081773Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/recovery/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery?flow=660cc928-48f1-485b-8003-dc690f5afc35",
+    "method": "POST",
+    "nodes": [ /* */ ]
+  },
+  "state": "choose_method"
+}
+```
 
 ## Recovery Flow Payloads
 
@@ -285,7 +447,30 @@ Fetching the Recovery Flow
 only required for browser clients but also works for Recovery Flows initialized
 by API clients. All you need is a valid flow ID:
 
-<CodeTabs items={getFlow} />
+```shell-session
+$ flowId=$(curl -s -X GET \
+    -H "Accept: application/json" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/api | jq -r '.id')
+
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/flows?id=$flowId" | jq
+
+{
+  "id": "7c033350-a935-4807-a06e-85cfc2475c75",
+  "type": "api",
+  "expires_at": "2021-07-09T14:00:52.752217Z",
+  "issued_at": "2021-07-09T13:00:52.752217Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/recovery/api",
+  "active": "default",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery?flow=7c033350-a935-4807-a06e-85cfc2475c75",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  },
+  "state": "choose_method"
+}
+```
 
 ### Send Recovery Link to Email
 
@@ -302,7 +487,7 @@ the Recovery Flow:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/recovery/flows?id=199a2c74-08ca-4f22-b24c-3de3032682f8' | \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/flows?id=199a2c74-08ca-4f22-b24c-3de3032682f8' | \
       jq -r '.ui.nodes[] | select(.group=="link")'
 
 {
@@ -336,22 +521,6 @@ $ curl -H "Accept: application/json" -s \
   }
 }
 ```
-
-## Recovery Flow Form Rendering
-
-The Recovery User Interface is a route (page / site) in your application
-(server, native app, single page app) that should render a recovery form.
-
-In stark contrast to other Identity Systems, Ory Kratos does not render this
-HTML. Instead, you need to implement the HTML code in your application (e.g.
-NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
-flexibility and customizability in your user interface flows and designs.
-
-You will use the Recovery Flow JSON response to render the recovery form UI,
-which could looks as follows depending on your programming language and web
-framework:
-
-<RenderFlow flow="recovery" />
 
 ## Recovery Form Validation
 
@@ -408,3 +577,19 @@ Kratos Login Session Cookie to the Settings UI with a Settings Flow prompting
 the user to update their password or credentials:
 
 <CodeTabs items={getFlowMethodLinkChallengeDone} />
+
+## Code Examples for NodeJS, ReactJS, Go, ...
+
+The Recovery User Interface is a route (page / site) in your application
+(server, native app, single page app) that should render a recovery form.
+
+In stark contrast to other Identity Systems, Ory Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+You will use the Recovery Flow JSON response to render the recovery form UI,
+which could looks as follows depending on your programming language and web
+framework:
+
+<RenderFlow flow="recovery" />
