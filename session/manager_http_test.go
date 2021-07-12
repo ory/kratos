@@ -52,6 +52,69 @@ func TestManagerHTTP(t *testing.T) {
 		assert.Equal(t, 1, mock.c)
 	})
 
+	t.Run("case=cookie settings", func(t *testing.T) {
+		ctx := context.Background()
+		conf, reg := internal.NewFastRegistryWithMocks(t)
+		conf.MustSet("dev", false)
+		mock := new(mockCSRFHandler)
+		reg.WithCSRFHandler(mock)
+		s := &session.Session{Identity: new(identity.Identity)}
+
+		require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, "https://baseurl.com/base_url"))
+		require.NoError(t, conf.Source().Set(config.ViperKeyPublicDomainAliases, [...]config.DomainAlias{{MatchDomain: "alias.com", BasePath: "/bar", Scheme: "http"}}))
+
+		var getCookie = func(t *testing.T, req *http.Request) *http.Cookie {
+			rec := httptest.NewRecorder()
+			require.NoError(t, reg.SessionManager().IssueCookie(ctx, rec, req, s))
+			require.Len(t, rec.Result().Cookies(), 1)
+			return rec.Result().Cookies()[0]
+		}
+
+		t.Run("case=with default options", func(t *testing.T) {
+			actual := getCookie(t, httptest.NewRequest("GET", "https://baseurl.com/bar", nil))
+			assert.EqualValues(t, "", actual.Domain, "Domain is empty because unset as a config option")
+			assert.EqualValues(t, "/", actual.Path, "Path is the default /")
+			assert.EqualValues(t, http.SameSiteLaxMode, actual.SameSite)
+			assert.EqualValues(t, true, actual.HttpOnly)
+			assert.EqualValues(t, true, actual.Secure)
+		})
+
+		t.Run("case=with base cookie customization", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyCookiePath, "/cookie")
+			conf.MustSet(config.ViperKeyCookieDomain, "cookie.com")
+			conf.MustSet(config.ViperKeyCookieSameSite, "Strict")
+
+			actual := getCookie(t, httptest.NewRequest("GET", "https://baseurl.com/bar", nil))
+			assert.EqualValues(t, "cookie.com", actual.Domain, "Domain is empty because unset as a config option")
+			assert.EqualValues(t, "/cookie", actual.Path, "Path is the default /")
+			assert.EqualValues(t, http.SameSiteStrictMode, actual.SameSite)
+			assert.EqualValues(t, true, actual.HttpOnly)
+			assert.EqualValues(t, true, actual.Secure)
+		})
+
+		t.Run("case=with base session customization", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionPath, "/session")
+			conf.MustSet(config.ViperKeySessionDomain, "session.com")
+			conf.MustSet(config.ViperKeySessionSameSite, "None")
+
+			actual := getCookie(t, httptest.NewRequest("GET", "https://baseurl.com/bar", nil))
+			assert.EqualValues(t, "session.com", actual.Domain, "Domain is empty because unset as a config option")
+			assert.EqualValues(t, "/session", actual.Path, "Path is the default /")
+			assert.EqualValues(t, http.SameSiteNoneMode, actual.SameSite)
+			assert.EqualValues(t, true, actual.HttpOnly)
+			assert.EqualValues(t, true, actual.Secure)
+		})
+
+		t.Run("case=request from alias domain", func(t *testing.T) {
+			actual := getCookie(t, httptest.NewRequest("GET", "https://alias.com/bar", nil))
+			assert.EqualValues(t, "alias.com", actual.Domain, "Domain is alias.com")
+			assert.EqualValues(t, "/bar", actual.Path, "Path is the from alias")
+			assert.EqualValues(t, http.SameSiteNoneMode, actual.SameSite)
+			assert.EqualValues(t, true, actual.HttpOnly)
+			assert.EqualValues(t, true, actual.Secure)
+		})
+	})
+
 	t.Run("suite=lifecycle", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		conf.MustSet(config.ViperKeySelfServiceLoginUI, "https://www.ory.sh")

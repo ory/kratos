@@ -1572,6 +1572,36 @@
       },
       "additionalProperties": false
     },
+    "cookies": {
+      "type": "object",
+      "title": "HTTP Cookie Configuration",
+      "description": "Configure the HTTP Cookies. Applies to both CSRF and session cookies.",
+      "properties": {
+        "domain": {
+          "title": "HTTP Cookie Domain",
+          "description": "Sets the cookie domain for session and CSRF cookies. Useful when dealing with subdomains. Use with care!",
+          "type": "string"
+        },
+        "path": {
+          "title": "HTTP  Cookie Path",
+          "description": "Sets the session and CSRF cookie path. Use with care!",
+          "type": "string",
+          "default": "/"
+        },
+        "same_site": {
+          "title": "HTTP Cookie Same Site Configuration",
+          "description": "Sets the session and CSRF cookie SameSite.",
+          "type": "string",
+          "enum": [
+            "Strict",
+            "Lax",
+            "None"
+          ],
+          "default": "Lax"
+        }
+      },
+      "additionalProperties": false
+    },
     "session": {
       "type": "object",
       "additionalProperties": false,
@@ -1593,7 +1623,7 @@
           "properties": {
             "domain": {
               "title": "Session Cookie Domain",
-              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care!",
+              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care! Overrides `cookies.domain`.",
               "type": "string"
             },
             "name": {
@@ -1610,19 +1640,18 @@
             },
             "path": {
               "title": "Session Cookie Path",
-              "description": "Sets the session cookie path. Use with care!",
-              "type": "string",
-              "default": "/"
+              "description": "Sets the session cookie path. Use with care! Overrides `cookies.path`.",
+              "type": "string"
             },
             "same_site": {
-              "title": "Cookie Same Site Configuration",
+              "title": "Session Cookie SameSite Configuration",
+              "description": "Sets the session cookie SameSite. Overrides `cookies.same_site`.",
               "type": "string",
               "enum": [
                 "Strict",
                 "Lax",
                 "None"
-              ],
-              "default": "Lax"
+              ]
             }
           },
           "additionalProperties": false

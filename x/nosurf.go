@@ -123,18 +123,22 @@ func NosurfBaseCookieHandler(reg interface {
 	return func(w http.ResponseWriter, r *http.Request) http.Cookie {
 		secure := !reg.Config(r.Context()).IsInsecureDevMode()
 
-		sameSite := http.SameSiteNoneMode
+		sameSite := reg.Config(r.Context()).CookieSameSiteMode()
 		if !secure {
 			sameSite = http.SameSiteLaxMode
 		}
 
-		name := CSRFCookieName(reg, r)
+		domain := ""
+		if d := reg.Config(r.Context()).CookieDomain(); d != "" {
+			domain = d
+		}
 
+		name := CSRFCookieName(reg, r)
 		cookie := http.Cookie{
 			Name:     name,
 			MaxAge:   nosurf.MaxAge,
-			Path:     "/",
-			Domain:   reg.Config(r.Context()).SelfPublicURL(r).Hostname(),
+			Path:     reg.Config(r.Context()).CookiePath(),
+			Domain:   domain,
 			HttpOnly: true,
 			Secure:   secure,
 			SameSite: sameSite,
@@ -144,10 +148,6 @@ func NosurfBaseCookieHandler(reg interface {
 			// If a domain alias is detected use that instead.
 			cookie.Domain = alias.Hostname()
 			cookie.Path = alias.Path
-		}
-
-		if reg.Config(r.Context()).SessionPath() != "" {
-			cookie.Path = reg.Config(r.Context()).SessionPath()
 		}
 
 		return cookie

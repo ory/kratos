@@ -533,6 +533,67 @@ func TestViperProvider_ReturnTo(t *testing.T) {
 	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
 }
 
+func TestSession(t *testing.T) {
+	l := logrusx.New("", "")
+	p := config.MustNew(t, l, configx.SkipValidation())
+
+	assert.Equal(t, "ory_kratos_session", p.SessionName())
+	p.MustSet(config.ViperKeySessionName, "ory_session")
+	assert.Equal(t, "ory_session", p.SessionName())
+
+	assert.Equal(t, time.Hour*24, p.SessionLifespan())
+	p.MustSet(config.ViperKeySessionLifespan, "1m")
+	assert.Equal(t, time.Minute, p.SessionLifespan())
+
+	assert.Equal(t, true, p.SessionPersistentCookie())
+	p.MustSet(config.ViperKeySessionPersistentCookie, false)
+	assert.Equal(t, false, p.SessionPersistentCookie())
+}
+
+func TestCookies(t *testing.T) {
+	l := logrusx.New("", "")
+	p := config.MustNew(t, l, configx.SkipValidation())
+
+	t.Run("path", func(t *testing.T) {
+		assert.Equal(t, "/", p.CookiePath())
+		assert.Equal(t, "/", p.SessionPath())
+
+		p.MustSet(config.ViperKeyCookiePath, "/cookie")
+		assert.Equal(t, "/cookie", p.CookiePath())
+		assert.Equal(t, "/cookie", p.SessionPath())
+
+		p.MustSet(config.ViperKeySessionPath, "/session")
+		assert.Equal(t, "/cookie", p.CookiePath())
+		assert.Equal(t, "/session", p.SessionPath())
+	})
+
+	t.Run("SameSite", func(t *testing.T) {
+		assert.Equal(t, http.SameSiteLaxMode, p.CookieSameSiteMode())
+		assert.Equal(t, http.SameSiteLaxMode, p.SessionSameSiteMode())
+
+		p.MustSet(config.ViperKeyCookieSameSite, "Strict")
+		assert.Equal(t, http.SameSiteStrictMode, p.CookieSameSiteMode())
+		assert.Equal(t, http.SameSiteStrictMode, p.SessionSameSiteMode())
+
+		p.MustSet(config.ViperKeySessionSameSite, "None")
+		assert.Equal(t, http.SameSiteStrictMode, p.CookieSameSiteMode())
+		assert.Equal(t, http.SameSiteNoneMode, p.SessionSameSiteMode())
+	})
+
+	t.Run("domain", func(t *testing.T) {
+		assert.Equal(t, "", p.CookieDomain())
+		assert.Equal(t, "", p.SessionDomain())
+
+		p.MustSet(config.ViperKeyCookieDomain, "www.cookie.com")
+		assert.Equal(t, "www.cookie.com", p.CookieDomain())
+		assert.Equal(t, "www.cookie.com", p.SessionDomain())
+
+		p.MustSet(config.ViperKeySessionDomain, "www.session.com")
+		assert.Equal(t, "www.cookie.com", p.CookieDomain())
+		assert.Equal(t, "www.session.com", p.SessionDomain())
+	})
+}
+
 func TestViperProvider_DSN(t *testing.T) {
 	t.Run("case=dsn: memory", func(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
