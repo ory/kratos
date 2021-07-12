@@ -35,7 +35,7 @@ func NewInfoSelfServiceVerificationSuccessful() *Message {
 	return &Message{
 		ID:   InfoSelfServiceRecoverySuccessful,
 		Type: Info,
-		Text: fmt.Sprintf("You successfully verified your email address."),
+		Text: "You successfully verified your email address.",
 	}
 }
 
