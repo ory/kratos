@@ -77,6 +77,9 @@ const (
 	ViperKeySessionName                                             = "session.cookie.name"
 	ViperKeySessionPath                                             = "session.cookie.path"
 	ViperKeySessionPersistentCookie                                 = "session.cookie.persistent"
+	ViperKeyCookieSameSite                                          = "cookies.same_site"
+	ViperKeyCookieDomain                                            = "cookies.domain"
+	ViperKeyCookiePath                                              = "cookies.path"
 	ViperKeySelfServiceStrategyConfig                               = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                       = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsWhitelistedReturnToDomains                          = "selfservice.whitelisted_return_urls"
@@ -283,16 +286,8 @@ func (p *Config) MustSet(key string, value interface{}) {
 	}
 }
 
-func (p *Config) SessionDomain() string {
-	return p.p.String(ViperKeySessionDomain)
-}
-
 func (p *Config) SessionName() string {
 	return stringsx.Coalesce(p.p.String(ViperKeySessionName), DefaultSessionCookieName)
-}
-
-func (p *Config) SessionPath() string {
-	return p.p.String(ViperKeySessionPath)
 }
 
 func (p *Config) HasherArgon2() *Argon2 {
@@ -802,6 +797,10 @@ func (p *Config) SelfServiceFlowSettingsPrivilegedSessionMaxAge() time.Duration 
 }
 
 func (p *Config) SessionSameSiteMode() http.SameSite {
+	if !p.p.Exists(ViperKeySessionSameSite) {
+		return p.CookieSameSiteMode()
+	}
+
 	switch p.p.StringF(ViperKeySessionSameSite, "Lax") {
 	case "Lax":
 		return http.SameSiteLaxMode
@@ -811,6 +810,40 @@ func (p *Config) SessionSameSiteMode() http.SameSite {
 		return http.SameSiteNoneMode
 	}
 	return http.SameSiteDefaultMode
+}
+
+func (p *Config) SessionDomain() string {
+	if !p.p.Exists(ViperKeySessionDomain) {
+		return p.CookieDomain()
+	}
+	return p.p.String(ViperKeySessionDomain)
+}
+
+func (p *Config) CookieDomain() string {
+	return p.p.String(ViperKeyCookieDomain)
+}
+
+func (p *Config) CookieSameSiteMode() http.SameSite {
+	switch p.p.StringF(ViperKeyCookieSameSite, "Lax") {
+	case "Lax":
+		return http.SameSiteLaxMode
+	case "Strict":
+		return http.SameSiteStrictMode
+	case "None":
+		return http.SameSiteNoneMode
+	}
+	return http.SameSiteDefaultMode
+}
+
+func (p *Config) SessionPath() string {
+	if !p.p.Exists(ViperKeySessionPath) {
+		return p.CookiePath()
+	}
+	return p.p.String(ViperKeySessionPath)
+}
+
+func (p *Config) CookiePath() string {
+	return p.p.String(ViperKeyCookiePath)
 }
 
 func (p *Config) SelfServiceFlowLoginReturnTo(strategy string) *url.URL {
