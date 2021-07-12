@@ -27,15 +27,20 @@ import (
 
 type ConfigOptions map[string]interface{}
 
-func StartE2EServerOnly(t *testing.T, configFile string, configOptions ConfigOptions) (publicPort, adminPort int) {
+func StartE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptions ConfigOptions) (publicPort, adminPort int) {
 	adminPort, err := freeport.GetFreePort()
 	require.NoError(t, err)
 
 	publicPort, err = freeport.GetFreePort()
 	require.NoError(t, err)
 
-	publicUrl = fmt.Sprintf("http://127.0.0.1:%d", publicPort)
-	adminUrl = fmt.Sprintf("http://127.0.0.1:%d", adminPort)
+	publicUrl := fmt.Sprintf("http://127.0.0.1:%d", publicPort)
+	adminUrl := fmt.Sprintf("http://127.0.0.1:%d", adminPort)
+
+	if isTLS {
+		publicUrl = fmt.Sprintf("https://127.0.0.1:%d", publicPort)
+		adminUrl = fmt.Sprintf("https://127.0.0.1:%d", adminPort)
+	}
 
 	ctx := configx.ContextWithConfigOptions(context.Background(),
 		configx.WithValue("dsn", "memory"),
@@ -63,6 +68,18 @@ func StartE2EServerOnly(t *testing.T, configFile string, configOptions ConfigOpt
 		_ = executor.ExecNoErr(t, "serve", "--config", configFile, "--watch-courier")
 	}()
 
+	return publicPort, adminPort
+}
+
+func StartE2EServer(t *testing.T, configFile string, configOptions ConfigOptions) (publicUrl, adminUrl string) {
+	publicPort, adminPort := StartE2EServerOnly(t, configFile, false, configOptions)
+	return CheckE2EServerOnHTTP(t, publicPort, adminPort)
+}
+
+func CheckE2EServerOnHTTP(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
+	publicUrl = fmt.Sprintf("http://127.0.0.1:%d", publicPort)
+	adminUrl = fmt.Sprintf("http://127.0.0.1:%d", adminPort)
+
 	require.NoError(t, retry.Do(func() error {
 		res, err := http.Get(publicUrl + "/health/ready")
 		if err != nil {
@@ -75,20 +92,9 @@ func StartE2EServerOnly(t *testing.T, configFile string, configOptions ConfigOpt
 			return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
 		}
 		return nil
-	}), err)
+	}))
 
-
-	return publicPort, adminPort
-}
-
-func StartE2EServer(t *testing.T, configFile string, configOptions ConfigOptions) (publicUrl, adminUrl string) {
-	publicPort, adminPort := StartE2EServerOnly(t, configFile, configOptions)
-	return CheckE2EServerOnHTTP(t, publicPort, adminPort)
-}
-
-func CheckE2EServerOnHTTP(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
-	publicUrl = fmt.Sprintf("http://127.0.0.1:%d", publicPort)
-	adminUrl = fmt.Sprintf("http://127.0.0.1:%d", adminPort)
+	return
 }
 
 func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {

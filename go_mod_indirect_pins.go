@@ -8,8 +8,6 @@ import (
 	_ "github.com/sqs/goreturns"
 	_ "golang.org/x/tools/cmd/cover"
 
-	_ "github.com/sqs/goreturns"
-
 	_ "github.com/gobuffalo/fizz"
 
 	_ "github.com/ory/go-acc"
@@ -23,4 +21,3 @@ import (
 
 	_ "github.com/hashicorp/consul/api"
 )
-

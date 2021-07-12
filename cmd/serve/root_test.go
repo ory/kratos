@@ -2,12 +2,14 @@ package serve_test
 
 import (
 	"encoding/base64"
-	"github.com/ory/kratos/x"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/internal/testhelpers"
 )
@@ -32,6 +34,7 @@ func TestServeTLSBase64(t *testing.T) {
 	keyBase64 := base64.StdEncoding.EncodeToString(keyRaw)
 	publicPort, adminPort := testhelpers.StartE2EServerOnly(t,
 		"../../contrib/quickstart/kratos/email-password/kratos.yml",
+		true,
 		testhelpers.ConfigOptions{
 			"serve.public.tls.key.base64":  keyBase64,
 			"serve.public.tls.cert.base64": certBase64,
@@ -50,6 +53,7 @@ func TestServeTLSPaths(t *testing.T) {
 
 	publicPort, adminPort := testhelpers.StartE2EServerOnly(t,
 		"../../contrib/quickstart/kratos/email-password/kratos.yml",
+		true,
 		testhelpers.ConfigOptions{
 			"serve.public.tls.key.path":  keyPath,
 			"serve.public.tls.cert.path": certPath,
