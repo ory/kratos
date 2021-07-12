@@ -218,9 +218,6 @@ New feature or request.
 - [ ] Write tests for domain aliasing in cookie handler
       ([kratos#1292](https://github.com/ory/kratos/issues/1292)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Document new CSRF Cookie requirement
-      ([kratos#1472](https://github.com/ory/kratos/issues/1472)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] Gracefully handle CSRF errors
       ([kratos#91](https://github.com/ory/kratos/issues/91)) -
       [@hackerman](https://github.com/aeneasr)
@@ -240,6 +237,9 @@ New feature or request.
       include Flow IDs
       ([kratos#1282](https://github.com/ory/kratos/issues/1282)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Document new CSRF Cookie requirement
+      ([kratos#1472](https://github.com/ory/kratos/issues/1472)) -
+      [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
@@ -256,12 +256,12 @@ A request for comments to discuss and share ideas.
 
 #### Issues
 
-- [ ] Separate OpenAPI tags into stable and experimental and rework admin
-      strategy ([kratos#1424](https://github.com/ory/kratos/issues/1424)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] Prevent accidental leak of PII when Copy & Pasting of Flow URLs which
       include Flow IDs
       ([kratos#1282](https://github.com/ory/kratos/issues/1282)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Separate OpenAPI tags into stable and experimental and rework admin
+      strategy ([kratos#1424](https://github.com/ory/kratos/issues/1424)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
@@ -270,7 +270,7 @@ Blocks milestones or other issues or pulls.
 
 #### Issues
 
-- [ ] Document new CSRF Cookie requirement
+- [x] Document new CSRF Cookie requirement
       ([kratos#1472](https://github.com/ory/kratos/issues/1472)) -
       [@hackerman](https://github.com/aeneasr)
 
