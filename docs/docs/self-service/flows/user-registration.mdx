@@ -255,6 +255,49 @@ $ curl -s -X GET \
   }
 }
 ```
+## Registering New User Information
+
+Using the `/self-service/registration` with `POST` allows the creation of new user
+information
+
+```shell-session
+$ flowId=$(curl -s -X GET  -H "Accept: application/json" \
+  http://127.0.0.1:4433/self-service/registration/api  \
+  | jq -r '.id')
+
+$ curl -s -X POST  -H "Content-Type: application/json" \
+    -d '{"traits.email": "iminvisibleagain@google.com", \
+    "password": "__MY__PASSWORD__", \
+    "method": "password"}'     \
+    "http://127.0.0.1:4433/self-service/registration?flow=$flow" | jq
+```
+
+On successful response will get JSON response like the following:
+
+```
+{
+  "session_token": "bccG5X0diQLRNrIIH6d3mtTXDpMKKA2C",
+  "session": {
+    "id": "9242f3b6-624d-4bc5-9013-1a051e46b201",
+    "active": true,
+    "expires_at": "2021-07-13T13:40:48.517495939Z",
+    "authenticated_at": "2021-07-12T13:40:48.520295345Z",
+    "issued_at": "2021-07-12T13:40:48.517503557Z",
+    "identity": {
+      "id": "ebee92e2-a3ec-4896-9f4d-a014f41d53e9",
+      "schema_id": "default",
+      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "state": "active",
+      "state_changed_at": "2021-07-12T23:40:48.516418201+10:00",
+      "traits": {
+        "email": "iminvisibleagain@google.com",
+        "name": {}
+      },
+      ...
+      ...
+      ...
+}
+```
 
 ## Registration Form Payloads
 
