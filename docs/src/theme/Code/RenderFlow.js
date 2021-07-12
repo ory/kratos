@@ -37,7 +37,8 @@ const RenderFlow = ({ flow }) => {
       defaultValue="browser"
       values={[
         { label: 'Browser UI', value: 'browser' },
-        { label: 'ExpressJS & Handlebars', value: 'express' },
+        { label: 'Golang (API Flow)', value: 'golang' },
+        { label: 'ExpressJS', value: 'express' },
         { label: 'ReactJS', value: 'react' },
         { label: 'React Native', value: 'react-native' }
       ]}
@@ -91,8 +92,16 @@ const RenderFlow = ({ flow }) => {
       <TabItem value="react">
         A React example is currently in the making.
       </TabItem>
+      <TabItem value="golang">
+        <CodeFromRemote
+          lang="tsx"
+          link={`https://github.com/ory/kratos/blob/master/examples/go/selfservice/${flow}/main.go.tsx`}
+          src={`https://raw.githubusercontent.com/ory/kratos/master/examples/go/selfservice/${flow}/main.go`}
+        />
+        The rest of the code examples partials can be found{' '}
+        <a href="https://github.com/ory/kratos/blob/master/examples">here</a>
+      </TabItem>
       <TabItem value="react-native">
-        A React Native example is currently in the making.
         <CodeFromRemote
           lang="tsx"
           link={`https://github.com/ory/kratos-selfservice-ui-react-native/blob/master/src/components/Routes/${ucfirst(

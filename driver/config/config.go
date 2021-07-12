@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -13,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/tlsx"
 
 	"github.com/google/uuid"
 
@@ -54,12 +57,20 @@ const (
 	ViperKeyPublicSocketOwner                                       = "serve.public.socket.owner"
 	ViperKeyPublicSocketGroup                                       = "serve.public.socket.group"
 	ViperKeyPublicSocketMode                                        = "serve.public.socket.mode"
+	ViperKeyPublicTLSCertBase64                                     = "serve.public.tls.cert.base64"
+	ViperKeyPublicTLSKeyBase64                                      = "serve.public.tls.key.base64"
+	ViperKeyPublicTLSCertPath                                       = "serve.public.tls.cert.path"
+	ViperKeyPublicTLSKeyPath                                        = "serve.public.tls.key.path"
 	ViperKeyAdminBaseURL                                            = "serve.admin.base_url"
 	ViperKeyAdminPort                                               = "serve.admin.port"
 	ViperKeyAdminHost                                               = "serve.admin.host"
 	ViperKeyAdminSocketOwner                                        = "serve.admin.socket.owner"
 	ViperKeyAdminSocketGroup                                        = "serve.admin.socket.group"
 	ViperKeyAdminSocketMode                                         = "serve.admin.socket.mode"
+	ViperKeyAdminTLSCertBase64                                      = "serve.admin.tls.cert.base64"
+	ViperKeyAdminTLSKeyBase64                                       = "serve.admin.tls.key.base64"
+	ViperKeyAdminTLSCertPath                                        = "serve.admin.tls.cert.path"
+	ViperKeyAdminTLSKeyPath                                         = "serve.admin.tls.key.path"
 	ViperKeySessionLifespan                                         = "session.lifespan"
 	ViperKeySessionSameSite                                         = "session.cookie.same_site"
 	ViperKeySessionDomain                                           = "session.cookie.domain"
@@ -108,6 +119,7 @@ const (
 	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
+	ViperKeyLinkLifespan                                            = "selfservice.methods.link.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
@@ -772,6 +784,10 @@ func (p *Config) SelfServiceFlowRecoveryRequestLifespan() time.Duration {
 	return p.p.DurationF(ViperKeySelfServiceRecoveryRequestLifespan, time.Hour)
 }
 
+func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
+	return p.p.DurationF(ViperKeyLinkLifespan, time.Hour)
+}
+
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {
 	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRecoveryAfter, strategy))
 }
@@ -879,4 +895,38 @@ func (p *Config) HasherPasswordHashingAlgorithm() string {
 	default:
 		return configValue
 	}
+}
+
+func (p *Config) GetTSLCertificatesForPublic() []tls.Certificate {
+	return p.getTSLCertificates(
+		"public",
+		p.p.String(ViperKeyPublicTLSCertBase64),
+		p.p.String(ViperKeyPublicTLSKeyBase64),
+		p.p.String(ViperKeyPublicTLSCertPath),
+		p.p.String(ViperKeyPublicTLSKeyPath),
+	)
+}
+
+func (p *Config) GetTSLCertificatesForAdmin() []tls.Certificate {
+	return p.getTSLCertificates(
+		"admin",
+		p.p.String(ViperKeyAdminTLSCertBase64),
+		p.p.String(ViperKeyAdminTLSKeyBase64),
+		p.p.String(ViperKeyAdminTLSCertPath),
+		p.p.String(ViperKeyAdminTLSKeyPath),
+	)
+}
+
+func (p *Config) getTSLCertificates(daemon, certBase64, keyBase64, certPath, keyPath string) []tls.Certificate {
+	cert, err := tlsx.Certificate(certBase64, keyBase64, certPath, keyPath)
+
+	if err == nil {
+		p.l.Infof("Setting up HTTPS for %s", daemon)
+		return cert
+	} else if !errors.Is(err, tlsx.ErrNoCertificatesConfigured) {
+		p.l.WithError(err).Fatalf("Unable to load HTTPS TLS Certificate")
+	}
+
+	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
+	return nil
 }

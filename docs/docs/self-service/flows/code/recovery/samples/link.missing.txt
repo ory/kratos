@@ -1,5 +1,5 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4433/self-service/recovery/flows?id=199a2c74-08ca-4f22-b24c-3de3032682f8' | \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/flows?id=199a2c74-08ca-4f22-b24c-3de3032682f8' | \
       jq -r '.ui.nodes[] | select(.group=="link")'
 
 {

@@ -50,20 +50,20 @@ WARNING: Importing credentials is not yet supported.`,
 
 			for src, i := range is {
 				err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
-					return c.PublicApi.GetSchema(ctx, id).Execute()
+					return c.V0alpha1Api.GetJsonSchema(ctx, id).Execute()
 				})
 				if err != nil {
 					return err
 				}
 
-				var params kratos.CreateIdentity
+				var params kratos.AdminCreateIdentityBody
 				err = json.Unmarshal([]byte(i), &params)
 				if err != nil {
 					_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "STD_IN: Could not parse identity")
 					return cmdx.FailSilently(cmd)
 				}
 
-				ident, _, err := c.AdminApi.CreateIdentity(cmd.Context()).CreateIdentity(params).Execute()
+				ident, _, err := c.V0alpha1Api.AdminCreateIdentity(cmd.Context()).AdminCreateIdentityBody(params).Execute()
 				if err != nil {
 					failed[src] = err
 				} else {

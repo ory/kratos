@@ -62,17 +62,18 @@
       "guides/secret-key-rotation",
       "guides/high-availability-ha",
       "guides/docker",
+      "guides/https-tls",
       "guides/setting-up-password-hashing-parameters",
       "guides/integration-with-other-systems-using-web-hooks",
       "guides/tracing"
     ]
   },
+  "reference/api",
   {
     "Reference": [
       "reference/configuration",
       "reference/json-schema-json-paths",
       "reference/html-forms",
-      "reference/api",
       {
         "Command Line Interface (CLI)": [
           "cli/kratos",

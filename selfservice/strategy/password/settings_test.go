@@ -247,7 +247,7 @@ func TestSettings(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceErrorUI))
 
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
+		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
 	})
 
 	t.Run("case=should pass even without CSRF token/type=spa", func(t *testing.T) {
@@ -359,7 +359,7 @@ func TestSettings(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
-		var run = func(t *testing.T, f *kratos.SettingsFlow, isAPI bool, c *http.Client, id *identity.Identity) {
+		var run = func(t *testing.T, f *kratos.SelfServiceSettingsFlow, isAPI bool, c *http.Client, id *identity.Identity) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 			values.Set("method", "password")
 			values.Set("password", randx.MustString(16, randx.AlphaNum))

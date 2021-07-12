@@ -93,6 +93,12 @@ func (f *FakeCSRFHandler) ExemptPath(s string) {
 func (f *FakeCSRFHandler) IgnorePath(s string) {
 }
 
+func (f *FakeCSRFHandler) IgnoreGlob(s string) {
+}
+
+func (f *FakeCSRFHandler) IgnoreGlobs(s ...string) {
+}
+
 func (f *FakeCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
@@ -109,6 +115,8 @@ type CSRFHandler interface {
 	RegenerateToken(w http.ResponseWriter, r *http.Request) string
 	ExemptPath(string)
 	IgnorePath(string)
+	IgnoreGlob(string)
+	IgnoreGlobs(...string)
 }
 
 func CSRFCookieName(reg interface {

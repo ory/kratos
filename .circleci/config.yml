@@ -176,14 +176,14 @@ workflows:
               ignore: /master/
       - docs/cli
       - docs/build:
-          swag-spec-location: spec/openapi.json
+          swag-spec-location: spec/api.json
           filters:
             tags:
               only: /.*/
             branches:
               only: master
       - sdk/release-openapi:
-          swagpath: spec/openapi.json
+          swagpath: spec/api.json
           requires:
             - test
             - test-e2e

@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Flow** | [**SettingsFlow**](SettingsFlow.md) |  | 
+**Flow** | [**SelfServiceSettingsFlow**](SelfServiceSettingsFlow.md) |  | 
 **Identity** | [**Identity**](Identity.md) |  | 
 
 ## Methods
 
 ### NewSettingsViaApiResponse
 
-`func NewSettingsViaApiResponse(flow SettingsFlow, identity Identity, ) *SettingsViaApiResponse`
+`func NewSettingsViaApiResponse(flow SelfServiceSettingsFlow, identity Identity, ) *SettingsViaApiResponse`
 
 NewSettingsViaApiResponse instantiates a new SettingsViaApiResponse object
 This constructor will assign default values to properties that have it defined,
@@ -28,20 +28,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetFlow
 
-`func (o *SettingsViaApiResponse) GetFlow() SettingsFlow`
+`func (o *SettingsViaApiResponse) GetFlow() SelfServiceSettingsFlow`
 
 GetFlow returns the Flow field if non-nil, zero value otherwise.
 
 ### GetFlowOk
 
-`func (o *SettingsViaApiResponse) GetFlowOk() (*SettingsFlow, bool)`
+`func (o *SettingsViaApiResponse) GetFlowOk() (*SelfServiceSettingsFlow, bool)`
 
 GetFlowOk returns a tuple with the Flow field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetFlow
 
-`func (o *SettingsViaApiResponse) SetFlow(v SettingsFlow)`
+`func (o *SettingsViaApiResponse) SetFlow(v SelfServiceSettingsFlow)`
 
 SetFlow sets Flow field to given value.
 

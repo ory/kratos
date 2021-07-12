@@ -3,9 +3,8 @@ import {
   assertVerifiableAddress,
   gen,
   parseHtml,
-  verifyHrefPattern,
+  verifyHrefPattern
 } from '../../../../helpers'
-
 
 context('Verification Profile', () => {
   describe('Settings', () => {
@@ -20,41 +19,43 @@ context('Verification Profile', () => {
       })
 
       beforeEach(() => {
+        cy.longLinkLifespan()
         identity = gen.identity()
         cy.register(identity)
-      cy.deleteMail({ atLeast: 1 }) // clean up registration email
+        cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
-      cy.login(identity)
-      cy.visit(APP_URL + '/settings')
-    })
-
-    it('is unable to verify the email address if the code is no longer valid', () => {
-      cy.shortVerificationLifespan()
-      cy.visit(APP_URL + '/settings')
-
-      const email = `not-${identity.email}`
-      cy.get('input[name="traits.email"]').clear().type(email)
-      cy.get('button[value="profile"]').click()
-      cy.wait(4000)
-
-      cy.verifyEmailButExpired({ expect: { email } })
-    })
-
-    it('is unable to verify the email address if the code is incorrect', () => {
-      const email = `not-${identity.email}`
-      cy.get('input[name="traits.email"]').clear().type(email)
-      cy.get('button[value="profile"]').click()
-
-      cy.getMail().then((mail) => {
-        const link = parseHtml(mail.body).querySelector('a')
-
-        expect(verifyHrefPattern.test(link.href)).to.be.true
-
-        cy.visit(link.href + '-not') // add random stuff to the confirm challenge
-        cy.log(link.href)
-        cy.session().then(assertVerifiableAddress({isVerified: false, email}))
+        cy.login(identity)
+        cy.visit(APP_URL + '/settings')
       })
-    })
+
+      it('is unable to verify the email address if the code is no longer valid', () => {
+        cy.shortLinkLifespan()
+        cy.visit(APP_URL + '/settings')
+
+        const email = `not-${identity.email}`
+        cy.get('input[name="traits.email"]').clear().type(email)
+        cy.get('button[value="profile"]').click()
+
+        cy.verifyEmailButExpired({ expect: { email } })
+      })
+
+      it('is unable to verify the email address if the code is incorrect', () => {
+        const email = `not-${identity.email}`
+        cy.get('input[name="traits.email"]').clear().type(email)
+        cy.get('button[value="profile"]').click()
+
+        cy.getMail().then((mail) => {
+          const link = parseHtml(mail.body).querySelector('a')
+
+          expect(verifyHrefPattern.test(link.href)).to.be.true
+
+          cy.visit(link.href + '-not') // add random stuff to the confirm challenge
+          cy.log(link.href)
+          cy.session().then(
+            assertVerifiableAddress({ isVerified: false, email })
+          )
+        })
+      })
 
       xit('should not update the traits until the email has been verified and the old email has accepted the change', () => {
         // FIXME https://github.com/ory/kratos/issues/292

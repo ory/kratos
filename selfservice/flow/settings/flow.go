@@ -32,7 +32,7 @@ import (
 //
 // We recommend reading the [User Settings Documentation](../self-service/flows/user-settings)
 //
-// swagger:model settingsFlow
+// swagger:model selfServiceSettingsFlow
 type Flow struct {
 	// ID represents the flow's unique ID. When performing the settings flow, this
 	// represents the id in the settings ui's query parameter: http://<selfservice.flows.settings.ui_url>?flow=<id>
@@ -97,7 +97,7 @@ type Flow struct {
 
 // The Response for Settings Flows via API
 //
-// swagger:model settingsViaApiResponse
+// swagger:model successfulSelfServiceSettingsWithoutBrowser
 type APIFlowResponse struct {
 	// The Flow
 	//

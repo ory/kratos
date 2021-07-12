@@ -65,20 +65,6 @@
                 {
                     "properties": {
                         "version": {
-                            "const": "v0.5.3-alpha.1.pre.0"
-                        }
-                    }
-                },
-                {
-                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v0.5.3-alpha.1.pre.0/.schema/config.schema.json"
-                }
-            ]
-        },
-        {
-            "allOf": [
-                {
-                    "properties": {
-                        "version": {
                             "const": "v0.5.3-alpha.1"
                         }
                     }

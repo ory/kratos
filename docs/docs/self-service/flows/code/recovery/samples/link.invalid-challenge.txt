@@ -1,5 +1,5 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4433/self-service/recovery/flows?id=db163ca2-5e03-4961-8398-c537ed6c1cb9' | \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery/flows?id=db163ca2-5e03-4961-8398-c537ed6c1cb9' | \
       jq
 
 {
@@ -7,9 +7,9 @@ $ curl -H "Accept: application/json" -s \
   "type": "browser",
   "expires_at": "2021-04-28T13:54:51.358334636Z",
   "issued_at": "2021-04-28T12:54:51.358334636Z",
-  "request_url": "http://127.0.0.1:4433/self-service/recovery?flow=199a2c74-08ca-4f22-b24c-3de3032682f8&token=XSpIPzkW4DgnJVhBG5Wjw3F123Z0ORmGrrq",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery?flow=199a2c74-08ca-4f22-b24c-3de3032682f8&token=XSpIPzkW4DgnJVhBG5Wjw3F123Z0ORmGrrq",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/recovery?flow=db163ca2-5e03-4961-8398-c537ed6c1cb9",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/recovery?flow=db163ca2-5e03-4961-8398-c537ed6c1cb9",
     "method": "POST",
     "messages": [
       {

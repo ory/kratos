@@ -15,12 +15,12 @@ the Error UI URL set by the `selfservice.flows.error.ui_url` configuration or
 
 Assuming `selfservice.flows.error.ui_url` is set to
 `https://example.org/errors`, Ory Kratos will redirect the User's Browser to
-`https://example.org/errors?error=abcde`.
+`https://example.org/errors?id=abcde`.
 
 The route matching `https://example.org/errors` uses the `error` URL Query
 parameter value `abcde` to make a request to Ory Kratos' Public or Admin API
-`https://kratos-<public|admin>/self-service/errors?error=abcde`. The JSON
-Response contains a list of errors and their details, for example:
+`https://kratos-<public|admin>/self-service/errors?id=abcde`. The JSON Response
+contains a list of errors and their details, for example:
 
 ```json
 [
@@ -54,10 +54,25 @@ steps are required.
 The error endpoint supports stub errors which can be used to implement your
 Error UI:
 
-- `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
+- `?id=stub:500` - returns a stub 500 (Internal Server Error) error.
 
 To call a stub error, simply do:
 
 ```shell script
-$ curl 'https://kratos-<public|admin>/self-service/errors?error=stub:500'
+$ curl -s \
+  'https://playground.projects.oryapis.com/api/kratos/public/self-service/errors?id=stub:500' | jq
+
+{
+  "id": "9f900efa-a5ea-4dfd-8311-a8c7448ffeec",
+  "errors": [
+    {
+      "code": 500,
+      "status": "Internal Server Error",
+      "reason": "This is a stub error.",
+      "message": "An internal server error occurred, please contact the system administrator"
+    }
+  ],
+  "created_at": "0001-01-01T00:00:00Z",
+  "updated_at": "0001-01-01T00:00:00Z"
+}
 ```

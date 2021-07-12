@@ -50,6 +50,27 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
 }
 
+// SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
+// when using the oidc method.
+//
+// swagger:model submitSelfServiceRegistrationFlowWithOidcMethodBody
+type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
+	// The provider to register with
+	//
+	// required: true
+	Provider string `json:"traits"`
+
+	// The CSRF Token
+	CSRFToken string `json:"csrf_token"`
+
+	// Method to use
+	//
+	// This field must be set to `oidc` when using the oidc method.
+	//
+	// required: true
+	Method string `json:"method"`
+}
+
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
 	if err := r.ParseForm(); err != nil {
 		return s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))

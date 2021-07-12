@@ -1,29 +1,32 @@
 package pkg
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"testing"
 
-	"github.com/google/uuid"
+	"github.com/ory/kratos/x"
+
+	"github.com/ory/kratos/internal/testhelpers"
 
 	ory "github.com/ory/kratos-client-go"
 )
 
+func PrintJSONPretty(v interface{}) {
+	out, _ := json.MarshalIndent(v, "", "  ")
+	fmt.Println(string(out))
+}
+
+func TestClient(t *testing.T) *ory.APIClient {
+	publicURL, _ := testhelpers.StartE2EServer(t, "../../pkg/stub/kratos.yaml", nil)
+	return NewSDKForSelfHosted(publicURL)
+}
+
 func NewSDK(project string) *ory.APIClient {
-	conf := ory.NewConfiguration()
-	conf.Servers = ory.ServerConfigurations{
-		{
-			URL: fmt.Sprintf("https://%s.projects.oryapis.com/api/kratos/public", project),
-		},
-	}
-	cj, _ := cookiejar.New(nil)
-	conf.HTTPClient = &http.Client{Jar: cj}
-	return ory.NewAPIClient(conf)
+	return NewSDKForSelfHosted(fmt.Sprintf("https://%s.projects.oryapis.com/api/kratos/public", project))
 }
 
 func NewSDKForSelfHosted(endpoint string) *ory.APIClient {
@@ -43,33 +46,12 @@ func ExitOnError(err error) {
 	os.Exit(1)
 }
 
-// CreateIdentityWithSession creates an identity and an Ory Session Token for it.
-func CreateIdentityWithSession(c *ory.APIClient) (*ory.Session, string) {
-	ctx := context.Background()
-
-	// Initialize a registration flow
-	flow, _, err := c.PublicApi.InitializeSelfServiceRegistrationWithoutBrowser(ctx).Execute()
-	if err != nil {
-		log.Fatalf("An error ocurred during registration initialization: %s\n", err)
+func SDKExitOnError(err error, res *http.Response) {
+	if err == nil {
+		return
 	}
-
-	// Submit the registration flow
-	result, _, err := c.PublicApi.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlow(ory.SubmitSelfServiceRegistrationFlow{
-		&ory.SubmitSelfServiceRegistrationFlowWithPasswordMethod{
-			Method:   "password",
-			Password: ory.PtrString(uuid.New().String() + uuid.New().String()),
-			Traits: map[string]interface{}{
-				"email": "dev+" + uuid.New().String() + "@ory.sh",
-			},
-		},
-	}).Execute()
-	if err != nil {
-		log.Fatalf("An error ocurred during registration: %s\n", err)
-	}
-
-	if result.Session == nil {
-		log.Fatalf("The server is expected to create sessions for new registrations.")
-	}
-
-	return result.Session, *result.SessionToken
+	body, _ := json.MarshalIndent(json.RawMessage(x.MustReadAll(res.Body)), "", "  ")
+	out, _ := json.MarshalIndent(err, "", "  ")
+	fmt.Printf("%s\n\nAn error occurred: %+v\nbody: %s\n", out, err, body)
+	os.Exit(1)
 }

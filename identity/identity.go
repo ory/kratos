@@ -20,7 +20,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:enum State
+// swagger:enum IdentityState
 type State string
 
 const (

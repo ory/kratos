@@ -1,24 +1,134 @@
 # Makes submitSelfServiceLoginFlowPayload polymorph
-- op: remove
-  path: /components/schemas/submitSelfServiceLoginFlow/type
-- op: add
-  path: /components/schemas/submitSelfServiceLoginFlow/oneOf
-  value:
-    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethod"
+#- op: remove
+#  path: /components/schemas/submitSelfServiceLoginFlowBody/type
+#- op: add
+#  path: /components/schemas/submitSelfServiceLoginFlowBody/oneOf
+#  value:
+#    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethod"
 
 # Makes submitSelfServiceRegistrationFlowPayload polymorph
-- op: remove
-  path: /components/schemas/submitSelfServiceRegistrationFlow/type
-- op: add
-  path: /components/schemas/submitSelfServiceRegistrationFlow/oneOf
-  value:
-    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethod"
 
-# Makes submitSelfServiceSettingsFlow polymorph
+# All modifications for the registration flow
 - op: remove
-  path: /components/schemas/submitSelfServiceSettingsFlow/type
+  path: /components/schemas/submitSelfServiceRegistrationFlowBody/type
 - op: add
-  path: /components/schemas/submitSelfServiceSettingsFlow/oneOf
+  path: /components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody/properties/method/enum
   value:
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethod"
-    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethod"
+    - password
+    - oidc
+- op: add
+  path: /components/schemas/submitSelfServiceRegistrationFlowBody/oneOf
+  value:
+    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
+- op: add
+  path: /components/schemas/submitSelfServiceRegistrationFlowBody/discriminator
+  value:
+    propertyName: method
+    mapping:
+      password: "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
+      oidc: "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
+# end
+
+# All modifications for the login flow
+- op: remove
+  path: /components/schemas/submitSelfServiceLoginFlowBody/type
+- op: add
+  path: /components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody/properties/method/enum
+  value:
+    - password
+    - oidc
+- op: add
+  path: /components/schemas/submitSelfServiceLoginFlowBody/oneOf
+  value:
+    - "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
+- op: add
+  path: /components/schemas/submitSelfServiceLoginFlowBody/discriminator
+  value:
+    propertyName: method
+    mapping:
+      password: "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
+      oidc: "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody"
+# end
+
+# All modifications for the recovery flow
+- op: remove
+  path: /components/schemas/submitSelfServiceRecoveryFlowBody/type
+- op: add
+  path: /components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody/properties/method/enum
+  value:
+    - password
+    - oidc
+- op: add
+  path: /components/schemas/submitSelfServiceRecoveryFlowBody/oneOf
+  value:
+    - "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+- op: add
+  path: /components/schemas/submitSelfServiceRecoveryFlowBody/discriminator
+  value:
+    propertyName: method
+    mapping:
+      link: "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+- op: add
+  path: /components/schemas/selfServiceRecoveryFlowState/enum
+  value:
+    - choose_method
+    - sent_email
+    - passed_challenge
+# End
+
+# All modifications for the verification flow
+- op: remove
+  path: /components/schemas/submitSelfServiceVerificationFlowBody/type
+- op: add
+  path: /components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody/properties/method/enum
+  value:
+    - password
+    - oidc
+- op: add
+  path: /components/schemas/submitSelfServiceVerificationFlowBody/oneOf
+  value:
+    - "$ref": "#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody"
+- op: add
+  path: /components/schemas/submitSelfServiceVerificationFlowBody/discriminator
+  value:
+    propertyName: method
+    mapping:
+      link: "#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody"
+- op: add
+  path: /components/schemas/selfServiceVerificationFlowState/enum
+  value:
+    - choose_method
+    - sent_email
+    - passed_challenge
+# End
+
+
+
+# All modifications for the settings flow
+- op: remove
+  path: /components/schemas/submitSelfServiceSettingsFlowBody/type
+- op: add
+  path: /components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody/properties/method/enum
+  value:
+    - password
+    - profile
+    - oidc
+- op: add
+  path: /components/schemas/submitSelfServiceSettingsFlowBody/oneOf
+  value:
+    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
+- op: add
+  path: /components/schemas/submitSelfServiceSettingsFlowBody/discriminator
+  value:
+    propertyName: method
+    mapping:
+      password: "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody"
+      profile: "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
+      oidc: "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
+- op: add
+  path: /components/schemas/selfServiceSettingsFlowState/enum
+  value:
+    - show_form
+    - success
+# end
