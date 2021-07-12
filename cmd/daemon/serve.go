@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"crypto/tls"
 	"net/http"
 	"sync"
 
@@ -106,7 +107,11 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		handler = cors.New(options).Handler(handler)
 	}
 
-	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(handler)})
+	certs := c.GetTSLCertificatesForPublic()
+	server := graceful.WithDefaults(&http.Server{
+		Handler:   context.ClearHandler(handler),
+		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+	})
 	addr := c.PublicListenOn()
 
 	l.Printf("Starting the public httpd on: %s", addr)
@@ -116,7 +121,10 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 			return err
 		}
 
-		return server.Serve(listener)
+		if certs == nil {
+			return server.Serve(listener)
+		}
+		return server.ServeTLS(listener, "", "")
 	}, server.Shutdown); err != nil {
 		l.Fatalf("Failed to gracefully shutdown public httpd: %s", err)
 	}
@@ -147,7 +155,11 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	}
 
 	n.UseHandler(router)
-	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(n)})
+	certs := c.GetTSLCertificatesForAdmin()
+	server := graceful.WithDefaults(&http.Server{
+		Handler:   context.ClearHandler(n),
+		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+	})
 	addr := c.AdminListenOn()
 
 	l.Printf("Starting the admin httpd on: %s", addr)
@@ -157,7 +169,10 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 			return err
 		}
 
-		return server.Serve(listener)
+		if certs == nil {
+			return server.Serve(listener)
+		}
+		return server.ServeTLS(listener, "", "")
 	}, server.Shutdown); err != nil {
 		l.Fatalf("Failed to gracefully shutdown admin httpd: %s", err)
 	}
