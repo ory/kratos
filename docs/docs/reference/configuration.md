@@ -1018,6 +1018,7 @@ selfservice:
   # - - https://app.my-app.com/dashboard
   #   - /dashboard
   #   - https://www.my-app.com/
+  #   - https://*.my-app.com/
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -1029,6 +1030,7 @@ selfservice:
     - https://app.my-app.com/dashboard
     - /dashboard
     - https://www.my-app.com/
+    - https://*.my-app.com/
 
 ## serve ##
 #

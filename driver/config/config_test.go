@@ -47,6 +47,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, []string{
 				"http://return-to-1-test.ory.sh/",
 				"http://return-to-2-test.ory.sh/",
+				"http://*.wildcards.ory.sh",
 			}, ds)
 
 			pWithFragments := config.MustNew(t, logrusx.New("", ""),

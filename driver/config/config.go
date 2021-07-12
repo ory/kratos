@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/publicsuffix"
+
 	"github.com/google/uuid"
 
 	"github.com/ory/x/dbal"
@@ -670,6 +672,17 @@ func (p *Config) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {
 		parsed, err := url.ParseRequestURI(u)
 		if err != nil {
 			p.l.WithError(err).Warnf("Ignoring URL \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			continue
+		}
+		if parsed.Host == "*" {
+			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			continue
+		}
+		eTLD, icann := publicsuffix.PublicSuffix(parsed.Host)
+		if parsed.Host[:1] == "*" &&
+			icann &&
+			parsed.Host == fmt.Sprintf("*.%s", eTLD) {
+			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
 			continue
 		}
 
