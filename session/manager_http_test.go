@@ -177,13 +177,23 @@ func TestManagerHTTP(t *testing.T) {
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
 
 			cookies := c.Jar.Cookies(urlx.ParseOrPanic(pts.URL))
-			require.Len(t, cookies, 1)
-			assert.Equal(t, "ory_kratos_session", cookies[0].Name)
+			require.Len(t, cookies, 2, "expect two cookies, one csrf, one session")
+
+			var cookie *http.Cookie
+			for _, c := range cookies {
+				if c.Name == "ory_kratos_session" {
+					cookie = c
+					break
+				}
+			}
+			require.NotNil(t, cookie, "must find the kratos session cookie")
+
+			assert.Equal(t, "ory_kratos_session", cookie.Name)
 
 			req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
 			require.NoError(t, err)
 			req.Header.Set("Cookie", "ory_kratos_session=not-valid")
-			req.Header.Set("X-Session-Cookie", cookies[0].Value)
+			req.Header.Set("X-Session-Cookie", cookie.Value)
 			res, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
