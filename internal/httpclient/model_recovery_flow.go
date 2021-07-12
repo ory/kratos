@@ -26,8 +26,8 @@ type RecoveryFlow struct {
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt time.Time `json:"issued_at"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
-	RequestUrl string `json:"request_url"`
-	State      string `json:"state"`
+	RequestUrl string            `json:"request_url"`
+	State      RecoveryFlowState `json:"state"`
 	// The flow type can either be `api` or `browser`.
 	Type *string     `json:"type,omitempty"`
 	Ui   UiContainer `json:"ui"`
@@ -37,7 +37,7 @@ type RecoveryFlow struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state string, ui UiContainer) *RecoveryFlow {
+func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state RecoveryFlowState, ui UiContainer) *RecoveryFlow {
 	this := RecoveryFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
@@ -185,9 +185,9 @@ func (o *RecoveryFlow) SetRequestUrl(v string) {
 }
 
 // GetState returns the State field value
-func (o *RecoveryFlow) GetState() string {
+func (o *RecoveryFlow) GetState() RecoveryFlowState {
 	if o == nil {
-		var ret string
+		var ret RecoveryFlowState
 		return ret
 	}
 
@@ -196,7 +196,7 @@ func (o *RecoveryFlow) GetState() string {
 
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
-func (o *RecoveryFlow) GetStateOk() (*string, bool) {
+func (o *RecoveryFlow) GetStateOk() (*RecoveryFlowState, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -204,7 +204,7 @@ func (o *RecoveryFlow) GetStateOk() (*string, bool) {
 }
 
 // SetState sets field value
-func (o *RecoveryFlow) SetState(v string) {
+func (o *RecoveryFlow) SetState(v RecoveryFlowState) {
 	o.State = v
 }
 

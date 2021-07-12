@@ -71,23 +71,22 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteSubmitFlow, h.submitFlow)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {}
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d))
 
-// swagger:route GET /self-service/verification/api public initializeSelfServiceVerificationWithoutBrowser
+	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+}
+
+// swagger:route GET /self-service/verification/api v0alpha1 initializeSelfServiceVerificationFlowWithoutBrowser
 //
 // Initialize Verification Flow for APIs, Services, Apps, ...
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 //
 // To fetch an existing verification flow call `/self-service/verification/flows?flow=<flow_id>`.
-//
-// :::warning
 //
 // You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 // Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -95,14 +94,12 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {}
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// :::
-//
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
 //     Schemes: http, https
 //
 //     Responses:
-//       200: verificationFlow
+//       200: selfServiceVerificationFlow
 //       500: jsonError
 //       400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -125,15 +122,9 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
-// swagger:route GET /self-service/verification/browser public initializeSelfServiceVerificationForBrowsers
+// swagger:route GET /self-service/verification/browser v0alpha1 initializeSelfServiceVerificationFlowForBrowsers
 //
 // Initialize Verification Flow for Browser Clients
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
@@ -147,7 +138,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //     Schemes: http, https
 //
 //     Responses:
-//       200: verificationFlow
+//       200: selfServiceVerificationFlow
 //       302: emptyResponse
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -171,9 +162,9 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), req, redirTo)
 }
 
-// nolint:deadcode,unused
 // swagger:parameters getSelfServiceVerificationFlow
-type getSelfServiceVerificationFlowParameters struct {
+// nolint:deadcode,unused
+type getSelfServiceVerificationFlow struct {
 	// The Flow ID
 	//
 	// The value for this parameter comes from `request` URL Query parameter sent to your
@@ -190,18 +181,12 @@ type getSelfServiceVerificationFlowParameters struct {
 	//
 	// in: header
 	// name: Cookie
-	Cookies string `json:"cookie"`
+	Cookie string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/verification/flows public getSelfServiceVerificationFlow
+// swagger:route GET /self-service/verification/flows v0alpha1 getSelfServiceVerificationFlow
 //
 // Get Verification Flow
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
 //
@@ -227,7 +212,7 @@ type getSelfServiceVerificationFlowParameters struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: verificationFlow
+//       200: selfServiceVerificationFlow
 //       403: jsonError
 //       404: jsonError
 //       500: jsonError
@@ -271,14 +256,24 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 // nolint:deadcode,unused
 // swagger:parameters submitSelfServiceVerificationFlow
 type submitSelfServiceVerificationFlow struct {
-	// The Registration Flow ID
+	// The Verification Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
-	// application (e.g. `/registration?flow=abcde`).
+	// application (e.g. `/verification?flow=abcde`).
 	//
 	// required: true
 	// in: query
 	Flow string `json:"flow"`
+
+	// Verification Token
+	//
+	// The verification token which completes the verification request. If the token
+	// is invalid (e.g. expired) an error will be shown to the end-user.
+	//
+	// This parameter is usually set in a link and not used by any direct API call.
+	//
+	// in: query
+	Token string `json:"token" form:"token"`
 
 	// in: body
 	Body submitSelfServiceVerificationFlowBody
@@ -286,21 +281,9 @@ type submitSelfServiceVerificationFlow struct {
 
 // nolint:deadcode,unused
 // swagger:model submitSelfServiceVerificationFlowBody
-type submitSelfServiceVerificationFlowBody struct {
-	// Method supports `link` only right now.
-	//
-	// enum:
-	// - link
-	// required: true
-	Method string `json:"method"`
+type submitSelfServiceVerificationFlowBody struct{}
 
-	// Email is the email to which to send the verification message to.
-	//
-	// required: true
-	Email string `json:"email"`
-}
-
-// swagger:route POST /self-service/verification public submitSelfServiceVerificationFlow
+// swagger:route POST /self-service/verification v0alpha1 submitSelfServiceVerificationFlow
 //
 // Complete Verification Flow
 //
@@ -331,8 +314,8 @@ type submitSelfServiceVerificationFlowBody struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: verificationFlow
-//       400: verificationFlow
+//       200: selfServiceVerificationFlow
+//       400: selfServiceVerificationFlow
 //       302: emptyResponse
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

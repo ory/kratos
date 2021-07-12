@@ -22,15 +22,19 @@ import (
 	"github.com/ory/x/errorsx"
 )
 
-// SubmitSelfServiceRegistrationFlowWithPasswordMethod is used to decode the registration form payload
+// SubmitSelfServiceRegistrationFlowWithPasswordMethodBody is used to decode the registration form payload
 // when using the password method.
 //
-// swagger:model submitSelfServiceRegistrationFlowWithPasswordMethod
-type SubmitSelfServiceRegistrationFlowWithPasswordMethod struct {
+// swagger:model submitSelfServiceRegistrationFlowWithPasswordMethodBody
+type SubmitSelfServiceRegistrationFlowWithPasswordMethodBody struct {
 	// Password to sign the user up with
+	//
+	// required: true
 	Password string `json:"password"`
 
 	// The identity's traits
+	//
+	// required: true
 	Traits json.RawMessage `json:"traits"`
 
 	// The CSRF Token
@@ -40,7 +44,6 @@ type SubmitSelfServiceRegistrationFlowWithPasswordMethod struct {
 	//
 	// This field must be set to `password` when using the password method.
 	//
-	// pattern: ^password$
 	// required: true
 	Method string `json:"method"`
 }
@@ -48,7 +51,7 @@ type SubmitSelfServiceRegistrationFlowWithPasswordMethod struct {
 func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
 }
 
-func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *SubmitSelfServiceRegistrationFlowWithPasswordMethod, err error) error {
+func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, err error) error {
 	if f != nil {
 		if p != nil {
 			for _, n := range container.NewFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
@@ -65,7 +68,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 	return err
 }
 
-func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethod, r *http.Request) error {
+func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, r *http.Request) error {
 	raw, err := sjson.SetBytes(registrationSchema,
 		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
@@ -85,7 +88,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return err
 	}
 
-	var p SubmitSelfServiceRegistrationFlowWithPasswordMethod
+	var p SubmitSelfServiceRegistrationFlowWithPasswordMethodBody
 	if err := s.decode(&p, r); err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}

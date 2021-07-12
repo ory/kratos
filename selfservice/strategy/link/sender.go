@@ -65,7 +65,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, r *http.Request, f *recov
 		return errors.Cause(ErrUnknownAddress)
 	}
 
-	token := NewSelfServiceRecoveryToken(address, f)
+	token := NewSelfServiceRecoveryToken(address, f, s.r.Config(r.Context()).SelfServiceLinkMethodLifespan())
 	if err := s.r.RecoveryTokenPersister().CreateRecoveryToken(ctx, token); err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	token := NewSelfServiceVerificationToken(address, f)
+	token := NewSelfServiceVerificationToken(address, f, s.r.Config(ctx).SelfServiceLinkMethodLifespan())
 	if err := s.r.VerificationTokenPersister().CreateVerificationToken(ctx, token); err != nil {
 		return err
 	}

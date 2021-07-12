@@ -26,7 +26,7 @@ func NewListCmd() *cobra.Command {
 		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := cliclient.NewClient(cmd)
-			req := c.AdminApi.ListIdentities(cmd.Context())
+			req := c.V0alpha1Api.AdminListIdentities(cmd.Context())
 
 			if len(args) == 2 {
 				page, err := strconv.ParseInt(args[0], 0, 64)

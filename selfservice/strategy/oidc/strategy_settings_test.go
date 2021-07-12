@@ -9,11 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/jsonx"
-	"github.com/ory/x/pointerx"
-
-	"github.com/ory/kratos/ui/container"
 
 	kratos "github.com/ory/kratos-client-go"
 
@@ -47,31 +45,6 @@ func init() {
 var (
 	csrfField = testhelpers.NewFakeCSRFNode()
 )
-
-func newFakeProfile(email string) []kratos.UiNode {
-	return []kratos.UiNode{
-		*testhelpers.NewFakeCSRFNode(),
-		{
-			Type:  "input",
-			Group: "profile",
-			Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-				Name:  "traits.email",
-				Type:  "email",
-				Value: &kratos.UiNodeInputAttributesValue{String: pointerx.String(email)},
-			}),
-		},
-		{
-			Type:  "input",
-			Group: "profile",
-			Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
-				Name: "traits.name",
-				Type: "text",
-			}),
-		},
-		*testhelpers.NewMethodSubmit("authenticator_password", "password"),
-		*testhelpers.NewPasswordNode(),
-	}
-}
 
 func TestSettingsStrategy(t *testing.T) {
 	if testing.Short() {
@@ -159,7 +132,7 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	// does the same as new profile request but uses the SDK
-	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
+	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SelfServiceSettingsFlow {
 		return testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS)
 	}
 
@@ -190,7 +163,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "403")
 	})
@@ -198,7 +171,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["password"]).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
@@ -837,7 +810,7 @@ func TestSettingsStrategy(t *testing.T) {
 		}
 	})
 
-	var action = func(req *kratos.SettingsFlow) string {
+	var action = func(req *kratos.SelfServiceSettingsFlow) string {
 		return req.Ui.Action
 	}
 
@@ -874,7 +847,7 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	t.Run("suite=unlink", func(t *testing.T) {
-		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
+		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SelfServiceSettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
@@ -926,14 +899,14 @@ func TestSettingsStrategy(t *testing.T) {
 		t.Run("case=should not be able to unlink a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "github"
 
-			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
+			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
 				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 
@@ -964,7 +937,7 @@ func TestSettingsStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=link", func(t *testing.T) {
-		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
+		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SelfServiceSettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
@@ -1049,7 +1022,7 @@ func TestSettingsStrategy(t *testing.T) {
 			updatedFlow, res, originalFlow := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
+			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
 
@@ -1381,7 +1354,7 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.State)
 
@@ -1548,14 +1521,14 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID
 
-			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
+			var runUnauthed = func(t *testing.T) *kratos.SelfServiceSettingsFlow {
 				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
+				rs, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 

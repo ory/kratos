@@ -34,6 +34,9 @@ func (s *Strategy) RecoveryStrategyID() string {
 }
 
 func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
+	s.d.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryLink)
+	public.POST(RouteAdminCreateRecoveryLink, x.RedirectToAdminRoute(s.d))
+
 }
 
 func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
@@ -52,15 +55,16 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 	return nil
 }
 
-// swagger:parameters createRecoveryLink
+// swagger:parameters adminCreateSelfServiceRecoveryLink
 //
 // nolint
-type createRecoveryLinkParameters struct {
+type adminCreateSelfServiceRecoveryLink struct {
 	// in: body
-	Body CreateRecoveryLink
+	Body adminCreateSelfServiceRecoveryLinkBody
 }
 
-type CreateRecoveryLink struct {
+// swagger:model adminCreateSelfServiceRecoveryLinkBody
+type adminCreateSelfServiceRecoveryLinkBody struct {
 	// Identity to Recover
 	//
 	// The identity's ID you wish to recover.
@@ -82,10 +86,9 @@ type CreateRecoveryLink struct {
 	ExpiresIn string `json:"expires_in"`
 }
 
-// swagger:model recoveryLink
-//
+// swagger:model selfServiceRecoveryLink
 // nolint
-type recoveryLink struct {
+type selfServiceRecoveryLink struct {
 	// Recovery Link
 	//
 	// This link can be used to recover the account.
@@ -100,7 +103,7 @@ type recoveryLink struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
-// swagger:route POST /recovery/link admin createRecoveryLink
+// swagger:route POST /recovery/link v0alpha1 adminCreateSelfServiceRecoveryLink
 //
 // Create a Recovery Link
 //
@@ -116,18 +119,18 @@ type recoveryLink struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: recoveryLink
+//       200: selfServiceRecoveryLink
 //       404: jsonError
 //       400: jsonError
 //       500: jsonError
 func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var p CreateRecoveryLink
+	var p adminCreateSelfServiceRecoveryLinkBody
 	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	expiresIn := s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan()
+	expiresIn := s.d.Config(r.Context()).SelfServiceLinkMethodLifespan()
 	if len(p.ExpiresIn) > 0 {
 		var err error
 		expiresIn, err = time.ParseDuration(p.ExpiresIn)
@@ -179,7 +182,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		WithSensitiveField("recovery_link_token", token).
 		Info("A recovery link has been created.")
 
-	s.d.Writer().Write(w, r, &recoveryLink{
+	s.d.Writer().Write(w, r, &selfServiceRecoveryLink{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), recovery.RouteSubmitFlow),
@@ -190,35 +193,9 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		herodot.UnescapedHTML)
 }
 
-// swagger:parameters submitSelfServiceRecoveryFlowWithLinkMethod
+// swagger:model submitSelfServiceRecoveryFlowWithLinkMethodBody
 // nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowWithLinkMethodParameters struct {
-	// in: body
-	Body submitSelfServiceRecoveryFlowWithLinkMethod
-
-	// Recovery Token
-	//
-	// The recovery token which completes the recovery request. If the token
-	// is invalid (e.g. expired) an error will be shown to the end-user.
-	//
-	// in: query
-	Token string `json:"token" form:"token"`
-
-	// The Flow ID
-	//
-	// format: uuid
-	// in: query
-	Flow string `json:"flow" form:"flow"`
-}
-
-// nolint:deadcode,unused
-func (m *submitSelfServiceRecoveryFlowWithLinkMethodParameters) GetFlow() uuid.UUID {
-	return x.ParseUUID(m.Flow)
-}
-
-// swagger:model submitSelfServiceRecoveryFlowWithLinkMethod
-// nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowWithLinkMethod struct {
+type submitSelfServiceRecoveryFlowWithLinkMethodBody struct {
 	// Email to Recover
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -226,47 +203,18 @@ type submitSelfServiceRecoveryFlowWithLinkMethod struct {
 	// a email with details on what happened will be sent instead.
 	//
 	// format: email
-	// in: body
+	// required: true
 	Email string `json:"email" form:"email"`
 
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
+
+	// Method supports `link` only right now.
+	//
+	// required: true
+	Method string `json:"method"`
 }
 
-// swagger:route POST /self-service/recovery/methods/link public submitSelfServiceRecoveryFlowWithLinkMethod
-//
-// Complete Recovery Flow with Link Method
-//
-// Use this endpoint to complete a recovery flow using the link method. This endpoint
-// behaves differently for API and browser flows and has several states:
-//
-// - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-//   and works with API- and Browser-initiated flows.
-//	 - For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-//     and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-//	 - For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
-// - `sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It
-//   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-// - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-//   does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
-//   (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
-//   a new Recovery Flow ID which contains an error message that the recovery link was invalid.
-//
-// More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-//
-//     Consumes:
-//     - application/json
-//     - application/x-www-form-urlencoded
-//
-//     Produces:
-//     - application/json
-//
-//     Schemes: http, https
-//
-//     Responses:
-//       400: recoveryFlow
-//       302: emptyResponse
-//       500: jsonError
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
 	body, err := s.decodeRecovery(r)
 	if err != nil {

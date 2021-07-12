@@ -6,14 +6,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | The CSRF Token | [optional] 
 **Method** | **string** | Method to use  This field must be set to &#x60;password&#x60; when using the password method. | 
-**Password** | Pointer to **string** | Password to sign the user up with | [optional] 
-**Traits** | Pointer to **map[string]interface{}** | The identity&#39;s traits | [optional] 
+**Password** | **string** | Password to sign the user up with | 
+**Traits** | **map[string]interface{}** | The identity&#39;s traits | 
 
 ## Methods
 
 ### NewSubmitSelfServiceRegistrationFlowWithPasswordMethod
 
-`func NewSubmitSelfServiceRegistrationFlowWithPasswordMethod(method string, ) *SubmitSelfServiceRegistrationFlowWithPasswordMethod`
+`func NewSubmitSelfServiceRegistrationFlowWithPasswordMethod(method string, password string, traits map[string]interface{}, ) *SubmitSelfServiceRegistrationFlowWithPasswordMethod`
 
 NewSubmitSelfServiceRegistrationFlowWithPasswordMethod instantiates a new SubmitSelfServiceRegistrationFlowWithPasswordMethod object
 This constructor will assign default values to properties that have it defined,
@@ -92,11 +92,6 @@ and a boolean to check if the value has been set.
 
 SetPassword sets Password field to given value.
 
-### HasPassword
-
-`func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) HasPassword() bool`
-
-HasPassword returns a boolean if a field has been set.
 
 ### GetTraits
 
@@ -117,11 +112,6 @@ and a boolean to check if the value has been set.
 
 SetTraits sets Traits field to given value.
 
-### HasTraits
-
-`func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) HasTraits() bool`
-
-HasTraits returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
