@@ -60,7 +60,7 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
 	s, err := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC())
 	if err != nil {
 		return err
@@ -70,18 +70,18 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
-		WithField("flow_method", ct).
+		WithField("flow_method", a.Active).
 		Debug("Running ExecuteLoginPostHook.")
-	for k, executor := range e.d.PostLoginHooks(r.Context(), ct) {
+	for k, executor := range e.d.PostLoginHooks(r.Context(), a.Active) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
 					WithField("executor", fmt.Sprintf("%T", executor)).
 					WithField("executor_position", k).
-					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), ct))).
+					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), a.Active))).
 					WithField("identity_id", i.ID).
-					WithField("flow_method", ct).
+					WithField("flow_method", a.Active).
 					Debug("A ExecuteLoginPostHook hook aborted early.")
 				return nil
 			}
@@ -92,9 +92,9 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 			WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
-			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), ct))).
+			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(r.Context(), a.Active))).
 			WithField("identity_id", i.ID).
-			WithField("flow_method", ct).
+			WithField("flow_method", a.Active).
 			Debug("ExecuteLoginPostHook completed successfully.")
 	}
 
@@ -130,7 +130,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 	}
 
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
-		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(ct.String())))
+		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(a.Active.String())))
 }
 
 func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
