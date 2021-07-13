@@ -73,31 +73,31 @@ stateDiagram
   ]}>
   <TabItem value="ocp">
 
-    Currently, account verification is enabled. In the future, disabling account verification will become an option.
+Currently, account verification is enabled. In the future, disabling account verification will become an option.
 
   </TabItem>
   <TabItem value="oss">
 
-    To enable verification flows, make the following adjustments to your Ory Kratos
-    configuration:
+To enable verification flows, make the following adjustments to your Ory Kratos
+configuration:
 
-    ```yaml title="path/to/config/kratos.yml"
-    selfservice:
-    methods:
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  methods:
     link:
-    enabled: true
-    config:
+      enabled: true
+  config:
     # Defines how long a recovery link is valid for (default 1h)
     lifespan: 15m
 
-    flows:
+  flows:
     verification:
-    enabled: true
+      enabled: true
 
-    # Defines how long a recovery flow (the UI interaction, not the link!)
-    # is valid for (default 1h)
-    lifespan: 15m
-    ```
+  # Defines how long a recovery flow (the UI interaction, not the link!)
+  # is valid for (default 1h)
+  lifespan: 15m
+```
 
   </TabItem>
 </Tabs>
