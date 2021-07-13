@@ -19,8 +19,6 @@ Something is not working.
 - [ ] Fetching a settings request after error is missing identity data
       ([kratos#689](https://github.com/ory/kratos/issues/689)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Typescript ErrorContainer type is incorrect
-      ([kratos#782](https://github.com/ory/kratos/issues/782))
 - [ ] Feature Request: Have access to username in email templates
       ([kratos#925](https://github.com/ory/kratos/issues/925))
 - [ ] Implement email TTL for non-working/non-existant emails
@@ -37,8 +35,12 @@ Something is not working.
       ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 - [ ] Relative path in ui_url or default_browser_return_url cause runtime crash
       ([kratos#1446](https://github.com/ory/kratos/issues/1446))
+- [ ] /schemas/default does not work with base64 identity schemas
+      ([kratos#1529](https://github.com/ory/kratos/issues/1529))
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
+- [x] Typescript ErrorContainer type is incorrect
+      ([kratos#782](https://github.com/ory/kratos/issues/782))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -83,8 +85,6 @@ New feature or request.
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
-- [ ] Add TLS configuration
-      ([kratos#791](https://github.com/ory/kratos/issues/791))
 - [ ] Add i18n support to mail templates
       ([kratos#834](https://github.com/ory/kratos/issues/834))
 - [ ] Add option for disabling registration
@@ -105,6 +105,8 @@ New feature or request.
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Add TLS configuration
+      ([kratos#791](https://github.com/ory/kratos/issues/791))
 - [x] More meta information about the managed identity
       ([kratos#820](https://github.com/ory/kratos/issues/820))
 
@@ -159,9 +161,6 @@ Something is not working.
 
 #### Issues
 
-- [ ] Verification does not include success message
-      ([kratos#1450](https://github.com/ory/kratos/issues/1450)) -
-      [@Alano Terblanche](https://github.com/Benehiko)
 - [x] Do not create system errors on duplicate credentials when linking oidc
       providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [x] Investigate why smtps fails but smtp does not
@@ -193,6 +192,9 @@ Something is not working.
 - [x] fix: settings flow error handle should access schemas using configured
       "local" URLs instead of public URLs
       ([kratos#1448](https://github.com/ory/kratos/issues/1448))
+- [x] Verification does not include success message
+      ([kratos#1450](https://github.com/ory/kratos/issues/1450)) -
+      [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
@@ -215,9 +217,6 @@ New feature or request.
 
 #### Issues
 
-- [ ] Write tests for domain aliasing in cookie handler
-      ([kratos#1292](https://github.com/ory/kratos/issues/1292)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] Gracefully handle CSRF errors
       ([kratos#91](https://github.com/ory/kratos/issues/91)) -
       [@hackerman](https://github.com/aeneasr)
@@ -236,6 +235,9 @@ New feature or request.
 - [x] Prevent accidental leak of PII when Copy & Pasting of Flow URLs which
       include Flow IDs
       ([kratos#1282](https://github.com/ory/kratos/issues/1282)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Write tests for domain aliasing in cookie handler
+      ([kratos#1292](https://github.com/ory/kratos/issues/1292)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] Document new CSRF Cookie requirement
       ([kratos#1472](https://github.com/ory/kratos/issues/1472)) -
