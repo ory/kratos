@@ -27,10 +27,18 @@ module.exports = {
       files: ['docs/docs/install.md', 'docs/docs/quickstart.mdx']
     },
     {
-      replacer: ({ content, next }) =>
+      replacer: ({content, next}) =>
         content.replace(
           /oryd\/kratos:(v[0-9a-zA-Z\\.\\-]+)/gi,
           `oryd/kratos:${next}-sqlite`
+        ),
+      files: ['quickstart.yml']
+    },
+    {
+      replacer: ({content, next}) =>
+        content.replace(
+          /oryd\/kratos-selfservice-ui-node:(v[0-9a-zA-Z\\.\\-]+)/gi,
+          `oryd/kratos-selfservice-ui-node:${next}`
         ),
       files: ['quickstart.yml']
     },
