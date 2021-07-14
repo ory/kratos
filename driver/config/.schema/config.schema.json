@@ -1830,47 +1830,6 @@
           "courier"
         ]
       }
-    },
-    {
-      "if": {
-        "properties": {
-          "session": {
-            "properties": {
-              "cookie": {
-                "properties": {
-                  "domain": {
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "domain"
-                ]
-              }
-            },
-            "required": [
-              "cookie"
-            ]
-          }
-        },
-        "required": [
-          "session"
-        ]
-      },
-      "then": {
-        "properties": {
-          "serve": {
-            "properties": {
-              "public": {
-                "properties": {
-                  "domain_aliases": {
-                    "maxItems": 0
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
     }
   ],
   "required": [
