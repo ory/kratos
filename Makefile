@@ -4,12 +4,13 @@ SHELL=/bin/bash -o pipefail
 #  K := $(foreach exec,$(EXECUTABLES),\
 #          $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
 
-export GO111MODULE := on
-export PATH := .bin:${PATH}
-export PWD := $(shell pwd)
-export VERSION ?= "master"
-export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-export VCS_REF := $(shell git rev-parse HEAD)
+export GO111MODULE        := on
+export PATH               := .bin:${PATH}
+export PWD                := $(shell pwd)
+export VERSION            ?= "master"
+export BUILD_DATE         := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+export VCS_REF            := $(shell git rev-parse HEAD)
+export QUICKSTART_OPTIONS ?= ""
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/ory/x/tools/listx \
@@ -118,7 +119,7 @@ quickstart:
 .PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml up --build --force-recreate
+		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
 .PHONY: format
