@@ -1,0 +1,5 @@
+- op: add
+  path: /components/schemas/identityState/properties/method/enum
+  value:
+    - active
+    - inactive

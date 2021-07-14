@@ -1774,7 +1774,7 @@
           "type": "string"
         },
         "state": {
-          "description": "State is the identity's state."
+          "$ref": "#/definitions/identityState"
         },
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
@@ -2749,7 +2749,6 @@
         "id",
         "schema_id",
         "schema_url",
-        "state",
         "traits"
       ],
       "properties": {
@@ -2785,7 +2784,7 @@
           "type": "string"
         },
         "state": {
-          "description": "State is the identity's state."
+          "$ref": "#/definitions/identityState"
         },
         "state_changed_at": {
           "$ref": "#/definitions/nullTime"
@@ -2843,6 +2842,11 @@
       "items": {
         "$ref": "#/definitions/identity"
       }
+    },
+    "identityState": {
+      "description": "The state can either be `active` or `inactive`.",
+      "type": "string",
+      "title": "An Identity's State"
     },
     "identityTraits": {
       "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",

@@ -29,9 +29,9 @@ type Identity struct {
 	SchemaId string `json:"schema_id"`
 	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.  format: url
 	SchemaUrl string `json:"schema_url"`
-	// State is the identity's state.
-	State          interface{} `json:"state"`
-	StateChangedAt *time.Time  `json:"state_changed_at,omitempty"`
+	// The state can either be `active` or `inactive`.
+	State          *string    `json:"state,omitempty"`
+	StateChangedAt *time.Time `json:"state_changed_at,omitempty"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_url`.
 	Traits interface{} `json:"traits"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
@@ -44,12 +44,11 @@ type Identity struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewIdentity(id string, schemaId string, schemaUrl string, state interface{}, traits interface{}) *Identity {
+func NewIdentity(id string, schemaId string, schemaUrl string, traits interface{}) *Identity {
 	this := Identity{}
 	this.Id = id
 	this.SchemaId = schemaId
 	this.SchemaUrl = schemaUrl
-	this.State = state
 	this.Traits = traits
 	return &this
 }
@@ -230,30 +229,36 @@ func (o *Identity) SetSchemaUrl(v string) {
 	o.SchemaUrl = v
 }
 
-// GetState returns the State field value
-// If the value is explicit nil, the zero value for interface{} will be returned
-func (o *Identity) GetState() interface{} {
-	if o == nil {
-		var ret interface{}
+// GetState returns the State field value if set, zero value otherwise.
+func (o *Identity) GetState() string {
+	if o == nil || o.State == nil {
+		var ret string
 		return ret
 	}
-
-	return o.State
+	return *o.State
 }
 
-// GetStateOk returns a tuple with the State field value
+// GetStateOk returns a tuple with the State field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Identity) GetStateOk() (*interface{}, bool) {
+func (o *Identity) GetStateOk() (*string, bool) {
 	if o == nil || o.State == nil {
 		return nil, false
 	}
-	return &o.State, true
+	return o.State, true
 }
 
-// SetState sets field value
-func (o *Identity) SetState(v interface{}) {
-	o.State = v
+// HasState returns a boolean if a field has been set.
+func (o *Identity) HasState() bool {
+	if o != nil && o.State != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetState gets a reference to the given string and assigns it to the State field.
+func (o *Identity) SetState(v string) {
+	o.State = &v
 }
 
 // GetStateChangedAt returns the StateChangedAt field value if set, zero value otherwise.

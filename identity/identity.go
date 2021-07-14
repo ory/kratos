@@ -20,7 +20,11 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:enum IdentityState
+// An Identity's State
+//
+// The state can either be `active` or `inactive`.
+//
+// swagger:model identityState
 type State string
 
 const (
@@ -69,10 +73,7 @@ type Identity struct {
 
 	// State is the identity's state.
 	//
-	// enum:
-	// - active
-	// - inactive
-	// required: true
+	// This value has currently no effect.
 	State State `json:"state" faker:"-" db:"state"`
 
 	// StateChangedAt contains the last time when the identity's state changed.

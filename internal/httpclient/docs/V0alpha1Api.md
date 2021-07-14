@@ -399,7 +399,7 @@ import (
 
 func main() {
     id := "id_example" // string | ID must be set to the ID of identity you want to update
-    adminUpdateIdentityBody := *openapiclient.NewAdminUpdateIdentityBody(interface{}(123), map[string]interface{}(123)) // AdminUpdateIdentityBody |  (optional)
+    adminUpdateIdentityBody := *openapiclient.NewAdminUpdateIdentityBody("State_example", map[string]interface{}(123)) // AdminUpdateIdentityBody |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)

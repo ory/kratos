@@ -13,7 +13,7 @@
             "type": "string"
           },
           "state": {
-            "description": "State is the identity's state."
+            "$ref": "#/components/schemas/identityState"
           },
           "traits": {
             "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
@@ -1023,7 +1023,7 @@
             "type": "string"
           },
           "state": {
-            "description": "State is the identity's state."
+            "$ref": "#/components/schemas/identityState"
           },
           "state_changed_at": {
             "$ref": "#/components/schemas/nullTime"
@@ -1049,7 +1049,6 @@
           "id",
           "schema_id",
           "schema_url",
-          "state",
           "traits"
         ],
         "title": "Identity represents an Ory Kratos identity",
@@ -1090,6 +1089,11 @@
         },
         "title": "A list of identities.",
         "type": "array"
+      },
+      "identityState": {
+        "description": "The state can either be `active` or `inactive`.",
+        "title": "An Identity's State",
+        "type": "string"
       },
       "identityTraits": {
         "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`."
@@ -1607,8 +1611,7 @@
           "method": {
             "description": "Method supports `link` only right now.",
             "enum": [
-              "password",
-              "oidc"
+              "link"
             ],
             "type": "string"
           }
@@ -1804,8 +1807,7 @@
           "method": {
             "description": "Method supports `link` only right now.",
             "enum": [
-              "password",
-              "oidc"
+              "link"
             ],
             "type": "string"
           }

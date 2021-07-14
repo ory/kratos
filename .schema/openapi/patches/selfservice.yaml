@@ -56,8 +56,7 @@
 - op: add
   path: /components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody/properties/method/enum
   value:
-    - password
-    - oidc
+    - link
 - op: add
   path: /components/schemas/submitSelfServiceRecoveryFlowBody/oneOf
   value:
@@ -82,8 +81,7 @@
 - op: add
   path: /components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody/properties/method/enum
   value:
-    - password
-    - oidc
+    - link
 - op: add
   path: /components/schemas/submitSelfServiceVerificationFlowBody/oneOf
   value:

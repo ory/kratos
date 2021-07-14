@@ -19,8 +19,8 @@ import (
 type AdminUpdateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set will update the Identity's SchemaID.
 	SchemaId *string `json:"schema_id,omitempty"`
-	// State is the identity's state.
-	State interface{} `json:"state"`
+	// The state can either be `active` or `inactive`.
+	State string `json:"state"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_id`.
 	Traits map[string]interface{} `json:"traits"`
 }
@@ -29,7 +29,7 @@ type AdminUpdateIdentityBody struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAdminUpdateIdentityBody(state interface{}, traits map[string]interface{}) *AdminUpdateIdentityBody {
+func NewAdminUpdateIdentityBody(state string, traits map[string]interface{}) *AdminUpdateIdentityBody {
 	this := AdminUpdateIdentityBody{}
 	this.State = state
 	this.Traits = traits
@@ -77,10 +77,9 @@ func (o *AdminUpdateIdentityBody) SetSchemaId(v string) {
 }
 
 // GetState returns the State field value
-// If the value is explicit nil, the zero value for interface{} will be returned
-func (o *AdminUpdateIdentityBody) GetState() interface{} {
+func (o *AdminUpdateIdentityBody) GetState() string {
 	if o == nil {
-		var ret interface{}
+		var ret string
 		return ret
 	}
 
@@ -89,16 +88,15 @@ func (o *AdminUpdateIdentityBody) GetState() interface{} {
 
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *AdminUpdateIdentityBody) GetStateOk() (*interface{}, bool) {
-	if o == nil || o.State == nil {
+func (o *AdminUpdateIdentityBody) GetStateOk() (*string, bool) {
+	if o == nil {
 		return nil, false
 	}
 	return &o.State, true
 }
 
 // SetState sets field value
-func (o *AdminUpdateIdentityBody) SetState(v interface{}) {
+func (o *AdminUpdateIdentityBody) SetState(v string) {
 	o.State = v
 }
 
@@ -131,7 +129,7 @@ func (o AdminUpdateIdentityBody) MarshalJSON() ([]byte, error) {
 	if o.SchemaId != nil {
 		toSerialize["schema_id"] = o.SchemaId
 	}
-	if o.State != nil {
+	if true {
 		toSerialize["state"] = o.State
 	}
 	if true {
