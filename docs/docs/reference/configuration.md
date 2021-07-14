@@ -1602,9 +1602,10 @@ secrets:
 
   ## Secret Keys for AES ##
   #
-  # The secret is used for encrypting and decrypting access and refresh token from oidc.
+  # The first secret in the array is used for encrypting cookies while all other keys are used to decrypt data.
+  # for now is only used for access and refresh token from oidc.
   #
-  # WARNING the secret must be 32 caracters long
+  # WARNING the secret key must be 32 caracters long all keys that not 32 characters long will be ignore
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -1612,7 +1613,8 @@ secrets:
   # - Windows Command Line (CMD):
   #    > set SECRETS_AES=<value>
   #
-  aes: ipsumipsumipsumi
+  aes:
+    - ipsumipsumipsumi
 
   ## Default Encryption Signing Secrets ##
   #

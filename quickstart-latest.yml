@@ -8,4 +8,4 @@ services:
     image: oryd/kratos:latest-sqlite
 
   kratos-selfservice-ui-node:
-    image: w6dio/kratos-selfservice-ui-node:latest
+    image: oryd/kratos-selfservice-ui-node:latest

@@ -341,7 +341,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 }
 
 func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token *oauth2.Token, claims *Claims, provider Provider) error {
-	p := &submitSelfServiceBrowserSettingsOIDCFlowPayload{
+	p := &submitSelfServiceSettingsFlowWithOidcMethodBody{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
