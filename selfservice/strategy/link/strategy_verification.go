@@ -220,6 +220,8 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 
 	f.UI.Messages.Clear()
 	f.State = verification.StatePassedChallenge
+	// See https://github.com/ory/kratos/issues/1547
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
 	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
