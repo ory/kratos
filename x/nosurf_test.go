@@ -36,15 +36,13 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	assert.False(t, cookie.Secure, "false because insecure dev mode")
 	assert.True(t, cookie.HttpOnly)
 
+	alNum := regexp.MustCompile("[a-zA-Z_0-9]+")
 	for i := 0; i < 10; i++ {
 		require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, randx.MustString(16, randx.AlphaNum)))
 		cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 
 		assert.NotEqual(t, "aHR0cDovL2Zvby5jb20vYmFy_csrf_token", cookie.Name, "should no longer be http://foo.com/bar")
-
-		matches, err := regexp.MatchString("[a-zA-Z_0-9]+", cookie.Name)
-		require.NoError(t, err)
-		assert.True(t, matches, "does not have any special chars")
+		assert.True(t, alNum.MatchString(cookie.Name), "does not have any special chars")
 	}
 
 	require.NoError(t, conf.Set(config.ViperKeyCookieSameSite, "None"))
