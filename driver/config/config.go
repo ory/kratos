@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"net"
 	"net/http"
 	"net/url"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gtank/cryptopasta"
 
 	"github.com/ory/x/tlsx"
 
@@ -142,7 +143,7 @@ const DefaultSessionCookieName = "ory_kratos_session"
 
 type (
 	AES struct {
-		Secret string `json:"secret"`
+		Secrets [][32]byte `json:"secret"`
 	}
 	Argon2 struct {
 		Memory            bytesize.ByteSize `json:"memory"`
@@ -323,7 +324,7 @@ func (p *Config) HasherBcrypt() *Bcrypt {
 
 func (p *Config) CryptAES() *AES {
 	return &AES{
-		Secret: p.SecretsAES(),
+		Secrets: p.SecretsAES(),
 	}
 }
 
@@ -545,16 +546,21 @@ func (p *Config) SecretsSession() [][]byte {
 	return result
 }
 
-func (p *Config) SecretsAES() (secret string) {
-	secret = p.p.String(ViperKeySecretsAES)
-	if len(secret) == 0 {
-		secret = string(p.SecretsDefault()[0][:32])
+func (p *Config) SecretsAES() [][32]byte {
+	secrets := p.p.Strings(ViperKeySecretsAES)
+	if len(secrets) == 0 {
+		return [][32]byte{*cryptopasta.NewEncryptionKey()}
 	}
-	if len(secret)%32 != 0 {
-		p.l.Warnf("secret bad size %d, generate a key", len(secret))
-		secret = p.generateKey()
+	result := make([][32]byte, len(secrets))
+	for n, s := range secrets {
+		if len(s) != 32 {
+			continue
+		}
+		for k, v := range []byte(s) {
+			result[n][k] = byte(v)
+		}
 	}
-	return
+	return result
 }
 
 func (p *Config) SelfServiceBrowserDefaultReturnTo() *url.URL {
