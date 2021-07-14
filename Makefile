@@ -55,7 +55,7 @@ docs: docs/node_modules
 
 .PHONY: lint
 lint: .bin/golangci-lint
-		golangci-lint run -v --timeout 5m ./...
+		golangci-lint run -v --timeout 10m ./...
 
 .PHONY: mocks
 mocks: .bin/mockgen

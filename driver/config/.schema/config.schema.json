@@ -1638,10 +1638,13 @@
           "uniqueItems": true
         },
         "aes": {
-          "type": "string",
-          "title": "Secret for AES",
-          "description": "This secret is used for encrypting and decrypt data.",
-          "minLength": 32
+          "type": "array",
+          "title": "Secrets for AES",
+          "description": "The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.",
+          "items": {
+            "type": "string",
+            "length": 32
+          }
         }
       },
       "additionalProperties": false
