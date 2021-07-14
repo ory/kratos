@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/pkg/errors"
@@ -374,6 +376,39 @@ func TestRecovery(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			check(t, expectSuccess(t, nil, true, false, values))
 		})
+	})
+
+	t.Run("description=should recover an account and set the csrf cookies", func(t *testing.T) {
+		var check = func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			cl := testhelpers.NewClientWithCookies(t)
+			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+			res, err := cl.Get(recoveryLink)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, http.StatusFound, res.StatusCode)
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 2)
+			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
+			assert.Contains(t, cookies, x.CSRFTokenName)
+			assert.Contains(t, cookies, "ory_kratos_session")
+
+			rl := urlx.ParseOrPanic(recoveryLink)
+			actualRes, err := cl.Get(public.URL + recovery.RouteGetFlow + "?id=" + rl.Query().Get("flow"))
+			require.NoError(t, err)
+			body := x.MustReadAll(actualRes.Body)
+			require.NoError(t, actualRes.Body.Close())
+			assert.Equal(t, http.StatusOK, actualRes.StatusCode, "%s", body)
+		}
+
+		var values = func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		}
+
+		check(t, expectSuccess(t, nil, false, false, values))
 	})
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {

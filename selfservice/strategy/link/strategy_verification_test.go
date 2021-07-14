@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/urlx"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/ui/node"
@@ -356,9 +357,8 @@ func TestVerification(t *testing.T) {
 			require.NoError(t, err)
 			body := string(ioutilx.MustReadAll(res.Body))
 			require.NoError(t, res.Body.Close())
-			assert.Len(t, res.Cookies(), 1)
-			assert.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
-			assert.Contains(t, "sadf", res.Cookies())
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
+			assert.Contains(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL))[0].Name, x.CSRFTokenName)
 
 			actualRes, err := cl.Get(public.URL + verification.RouteGetFlow + "?id=" + gjson.Get(body, "id").String())
 			require.NoError(t, err)
