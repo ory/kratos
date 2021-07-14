@@ -18,9 +18,8 @@ import (
 // AdminUpdateIdentityBody struct for AdminUpdateIdentityBody
 type AdminUpdateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set will update the Identity's SchemaID.
-	SchemaId *string `json:"schema_id,omitempty"`
-	// The state can either be `active` or `inactive`.
-	State string `json:"state"`
+	SchemaId *string       `json:"schema_id,omitempty"`
+	State    IdentityState `json:"state"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_id`.
 	Traits map[string]interface{} `json:"traits"`
 }
@@ -29,7 +28,7 @@ type AdminUpdateIdentityBody struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAdminUpdateIdentityBody(state string, traits map[string]interface{}) *AdminUpdateIdentityBody {
+func NewAdminUpdateIdentityBody(state IdentityState, traits map[string]interface{}) *AdminUpdateIdentityBody {
 	this := AdminUpdateIdentityBody{}
 	this.State = state
 	this.Traits = traits
@@ -77,9 +76,9 @@ func (o *AdminUpdateIdentityBody) SetSchemaId(v string) {
 }
 
 // GetState returns the State field value
-func (o *AdminUpdateIdentityBody) GetState() string {
+func (o *AdminUpdateIdentityBody) GetState() IdentityState {
 	if o == nil {
-		var ret string
+		var ret IdentityState
 		return ret
 	}
 
@@ -88,7 +87,7 @@ func (o *AdminUpdateIdentityBody) GetState() string {
 
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
-func (o *AdminUpdateIdentityBody) GetStateOk() (*string, bool) {
+func (o *AdminUpdateIdentityBody) GetStateOk() (*IdentityState, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -96,7 +95,7 @@ func (o *AdminUpdateIdentityBody) GetStateOk() (*string, bool) {
 }
 
 // SetState sets field value
-func (o *AdminUpdateIdentityBody) SetState(v string) {
+func (o *AdminUpdateIdentityBody) SetState(v IdentityState) {
 	o.State = v
 }
 

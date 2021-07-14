@@ -1092,6 +1092,10 @@
       },
       "identityState": {
         "description": "The state can either be `active` or `inactive`.",
+        "enum": [
+          "active",
+          "inactive"
+        ],
         "title": "An Identity's State",
         "type": "string"
       },

@@ -1923,7 +1923,6 @@ components:
       example:
         traits: '{}'
         schema_id: schema_id
-        state: state
       properties:
         schema_id:
           description: |-
@@ -1931,9 +1930,7 @@ components:
             will update the Identity's SchemaID.
           type: string
         state:
-          description: The state can either be `active` or `inactive`.
-          title: An Identity's State
-          type: string
+          $ref: '#/components/schemas/identityState'
         traits:
           description: |-
             Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -2756,7 +2753,6 @@ components:
         created_at: 2000-01-23T04:56:07.000+00:00
         schema_url: schema_url
         id: id
-        state: state
       properties:
         created_at:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
@@ -2789,9 +2785,7 @@ components:
             format: url
           type: string
         state:
-          description: The state can either be `active` or `inactive`.
-          title: An Identity's State
-          type: string
+          $ref: '#/components/schemas/identityState'
         state_changed_at:
           format: date-time
           title: NullTime implements sql.NullTime functionality.
@@ -2861,6 +2855,9 @@ components:
       type: array
     identityState:
       description: The state can either be `active` or `inactive`.
+      enum:
+      - active
+      - inactive
       title: An Identity's State
       type: string
     identityTraits:
@@ -3373,7 +3370,6 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: state
         active: active
         id: id
         type: type
@@ -3595,7 +3591,6 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: state
         authenticated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         id: id
@@ -3987,7 +3982,6 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: state
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -4058,7 +4052,6 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: state
         session:
           expires_at: 2000-01-23T04:56:07.000+00:00
           identity:
@@ -4106,7 +4099,6 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: state
           authenticated_at: 2000-01-23T04:56:07.000+00:00
           active: true
           id: id
@@ -4180,7 +4172,6 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: state
         flow:
           expires_at: 2000-01-23T04:56:07.000+00:00
           ui:
@@ -4275,7 +4266,6 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: state
           active: active
           id: id
           type: type

@@ -141,6 +141,7 @@ Class | Method | HTTP request | Description
  - [IdResponse](docs/IdResponse.md)
  - [Identity](docs/Identity.md)
  - [IdentityCredentials](docs/IdentityCredentials.md)
+ - [IdentityState](docs/IdentityState.md)
  - [ImageDeleteResponseItem](docs/ImageDeleteResponseItem.md)
  - [ImageSummary](docs/ImageSummary.md)
  - [InlineResponse200](docs/InlineResponse200.md)
