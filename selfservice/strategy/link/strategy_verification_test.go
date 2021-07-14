@@ -360,7 +360,7 @@ func TestVerification(t *testing.T) {
 			assert.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
 			assert.Contains(t, "sadf", res.Cookies())
 
-			actualRes, err := cl.Get(public.URL + verification.RouteGetFlow + "?flow=" + gjson.Get(body, "id").String())
+			actualRes, err := cl.Get(public.URL + verification.RouteGetFlow + "?id=" + gjson.Get(body, "id").String())
 			require.NoError(t, err)
 			actualBody := string(ioutilx.MustReadAll(actualRes.Body))
 			require.NoError(t, actualRes.Body.Close())
