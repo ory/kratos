@@ -263,6 +263,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 	f.UI.Messages.Clear()
 	f.State = recovery.StatePassedChallenge
+	f.SetCSRFToken(flow.GetCSRFToken(s.d, w, r, f.Type))
 	f.RecoveredIdentityID = uuid.NullUUID{
 		UUID:  recoveredID,
 		Valid: true,

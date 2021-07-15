@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/ui/node"
 
@@ -343,6 +345,36 @@ func TestVerification(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			check(t, expectSuccess(t, nil, true, false, values))
 		})
+	})
+
+	t.Run("description=should verify an email address when the link is opened in another browser", func(t *testing.T) {
+		var check = func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+			verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			cl := testhelpers.NewClientWithCookies(t)
+			res, err := cl.Get(verificationLink)
+			require.NoError(t, err)
+			body := string(ioutilx.MustReadAll(res.Body))
+			require.NoError(t, res.Body.Close())
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
+			assert.Contains(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL))[0].Name, x.CSRFTokenName)
+
+			actualRes, err := cl.Get(public.URL + verification.RouteGetFlow + "?id=" + gjson.Get(body, "id").String())
+			require.NoError(t, err)
+			actualBody := string(ioutilx.MustReadAll(actualRes.Body))
+			require.NoError(t, actualRes.Body.Close())
+			assert.Equal(t, http.StatusOK, actualRes.StatusCode)
+
+			assertx.EqualAsJSON(t, body, actualBody)
+			assert.EqualValues(t, "passed_challenge", gjson.Get(actualBody, "state").String())
+		}
+
+		var values = func(v url.Values) {
+			v.Set("email", verificationEmail)
+		}
+
+		check(t, expectSuccess(t, nil, false, false, values))
 	})
 
 	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {

@@ -141,3 +141,8 @@ func (f *Flow) Valid() error {
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
 	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
 }
+
+func (f *Flow) SetCSRFToken(token string) {
+	f.CSRFToken = token
+	f.UI.SetCSRF(token)
+}
