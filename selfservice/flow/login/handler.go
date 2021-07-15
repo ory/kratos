@@ -1,6 +1,7 @@
 package login
 
 import (
+	"github.com/ory/kratos/text"
 	"net/http"
 	"time"
 
@@ -91,6 +92,10 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 
 	if err := sortNodes(f.UI.Nodes); err != nil {
 		return nil, err
+	}
+
+	if f.Forced {
+		f.UI.Messages.Set(text.NewVerificationConfirmation())
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
