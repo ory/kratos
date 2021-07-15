@@ -186,7 +186,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.7.0-alpha.1...ba5ca642d01917b43d49e009bf140ae13b4f1313) (2021-07-15)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.7.0-alpha.1...cc7ed4b5f65d2971a45d5d0ec6188908d070d915) (2021-07-15)
 
 
 ### Bug Fixes
@@ -212,6 +212,7 @@
 * Fix formatting of Email and Phone Verification Flow tab content ([#1536](https://github.com/ory/kratos/issues/1536)) ([0bfac67](https://github.com/ory/kratos/commit/0bfac67a06ef0d96ffd6a487c90edb44d3a40710))
 * Fix typo ([#1543](https://github.com/ory/kratos/issues/1543)) ([b25bae7](https://github.com/ory/kratos/commit/b25bae7f2cdcbb60384808041744edd718a2a814))
 * Fix typo ([#1544](https://github.com/ory/kratos/issues/1544)) ([547788d](https://github.com/ory/kratos/commit/547788de74794a1dcf43e5190cdfc9d2e1a2dc92))
+* Update csrf pitfall flow section ([#1558](https://github.com/ory/kratos/issues/1558)) ([cc7ed4b](https://github.com/ory/kratos/commit/cc7ed4b5f65d2971a45d5d0ec6188908d070d915)), closes [#1557](https://github.com/ory/kratos/issues/1557)
 
 ### Tests
 
