@@ -11,7 +11,7 @@ import (
 )
 
 //go:embed .schema/extension/*.json
-var extensionSchemas embed.FS
+var ExtensionSchemas embed.FS
 
 const (
 	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = ".schema/extension/identity.schema.json"
@@ -57,7 +57,7 @@ type (
 
 func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...Extension) (*ExtensionRunner, error) {
 	var err error
-	schema, err := extensionSchemas.ReadFile(string(meta))
+	schema, err := ExtensionSchemas.ReadFile(string(meta))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
