@@ -13,7 +13,7 @@
               "additionalProperties": false,
               "properties": {
                 "identifier": {
-                  "type": "string"
+                  "type": "boolean"
                 }
               }
             }
