@@ -25,14 +25,14 @@ type (
 	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
 
 	PostHookPostPersistExecutor interface {
-		ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
+		ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session, ct identity.CredentialsType) error
 	}
-	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
+	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session, ct identity.CredentialsType) error
 
 	PostHookPrePersistExecutor interface {
-		ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
+		ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, ct identity.CredentialsType) error
 	}
-	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
+	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, ct identity.CredentialsType) error
 
 	HooksProvider interface {
 		PreRegistrationHooks(ctx context.Context) []PreHookExecutor
@@ -52,11 +52,11 @@ func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string 
 func (f PreHookExecutorFunc) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	return f(w, r, a)
 }
-func (f PostHookPostPersistExecutorFunc) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
-	return f(w, r, a, s)
+func (f PostHookPostPersistExecutorFunc) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session, ct identity.CredentialsType) error {
+	return f(w, r, a, s, ct)
 }
-func (f PostHookPrePersistExecutorFunc) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
-	return f(w, r, a, i)
+func (f PostHookPrePersistExecutorFunc) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, ct identity.CredentialsType) error {
+	return f(w, r, a, i, ct)
 }
 
 type (
@@ -88,7 +88,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("flow_method", ct).
 		Debug("Running PostRegistrationPrePersistHooks.")
 	for k, executor := range e.d.PostRegistrationPrePersistHooks(r.Context(), ct) {
-		if err := executor.ExecutePostRegistrationPrePersistHook(w, r, a, i); err != nil {
+		if err := executor.ExecutePostRegistrationPrePersistHook(w, r, a, i, ct); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
@@ -140,7 +140,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("flow_method", ct).
 		Debug("Running PostRegistrationPostPersistHooks.")
 	for k, executor := range e.d.PostRegistrationPostPersistHooks(r.Context(), ct) {
-		if err := executor.ExecutePostRegistrationPostPersistHook(w, r, a, s); err != nil {
+		if err := executor.ExecutePostRegistrationPostPersistHook(w, r, a, s, ct); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
