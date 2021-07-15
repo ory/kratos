@@ -39,7 +39,7 @@ func TestSessionIssuer(t *testing.T) {
 			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 			require.NoError(t, h.ExecutePostRegistrationPostPersistHook(w, &r,
-				&registration.Flow{Type: flow.TypeBrowser}, &session.Session{ID: sid, Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum)}))
+				&registration.Flow{Type: flow.TypeBrowser}, &session.Session{ID: sid, Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum)}, identity.CredentialsTypePassword))
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 			require.NoError(t, err)
@@ -57,7 +57,7 @@ func TestSessionIssuer(t *testing.T) {
 			f := &registration.Flow{Type: flow.TypeAPI}
 
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-			err := h.ExecutePostRegistrationPostPersistHook(w, &r, f, s)
+			err := h.ExecutePostRegistrationPostPersistHook(w, &r, f, s, identity.CredentialsTypePassword)
 			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID)

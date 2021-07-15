@@ -342,14 +342,14 @@ func TestWebHooks(t *testing.T) {
 
 	for _, tc := range []struct {
 		uc           string
-		callWebHook  func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error
+		callWebHook  func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session, ct identity.CredentialsType) error
 		expectedBody func(req *http.Request, f flow.Flow, s *session.Session) string
 		createFlow   func() flow.Flow
 	}{
 		{
 			uc:         "Pre Login Hook",
 			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
-			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, _ *session.Session, _ identity.CredentialsType) error {
 				return wh.ExecuteLoginPreHook(nil, req, f.(*login.Flow))
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, _ *session.Session) string {
@@ -359,7 +359,7 @@ func TestWebHooks(t *testing.T) {
 		{
 			uc:         "Post Login Hook",
 			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
-			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session, _ identity.CredentialsType) error {
 				return wh.ExecuteLoginPostHook(nil, req, f.(*login.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
@@ -369,7 +369,7 @@ func TestWebHooks(t *testing.T) {
 		{
 			uc:         "Pre Registration Hook",
 			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
-			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, _ *session.Session, _ identity.CredentialsType) error {
 				return wh.ExecuteRegistrationPreHook(nil, req, f.(*registration.Flow))
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, _ *session.Session) string {
@@ -379,8 +379,8 @@ func TestWebHooks(t *testing.T) {
 		{
 			uc:         "Post Registration Hook",
 			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
-			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session, ct identity.CredentialsType) error {
+				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s, ct)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
 				return bodyWithFlowAndIdentity(req, f, s)
@@ -389,7 +389,7 @@ func TestWebHooks(t *testing.T) {
 		{
 			uc:         "Post Recovery Hook",
 			createFlow: func() flow.Flow { return &recovery.Flow{ID: x.NewUUID()} },
-			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session, _ identity.CredentialsType) error {
 				return wh.ExecutePostRecoveryHook(nil, req, f.(*recovery.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
@@ -399,7 +399,7 @@ func TestWebHooks(t *testing.T) {
 		{
 			uc:         "Post Verification Hook",
 			createFlow: func() flow.Flow { return &verification.Flow{ID: x.NewUUID()} },
-			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session, _ identity.CredentialsType) error {
 				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
@@ -409,7 +409,7 @@ func TestWebHooks(t *testing.T) {
 		{
 			uc:         "Post Settings Hook",
 			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
-			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session, _ identity.CredentialsType) error {
 				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
@@ -497,7 +497,7 @@ func TestWebHooks(t *testing.T) {
 
 							wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
-							err := tc.callWebHook(wh, req, f, s)
+							err := tc.callWebHook(wh, req, f, s, identity.CredentialsTypePassword)
 							if method == "GARBAGE" {
 								assert.Error(t, err)
 								return

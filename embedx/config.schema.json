@@ -195,6 +195,11 @@
                 }
               ]
             },
+            "interrupt": {
+              "type": "boolean",
+              "default": false,
+              "description": "Should hook be able to interrupt the flow. It only applies to a certain flows and require concrete response format"
+            },
             "auth": {
               "type": "object",
               "title": "Auth mechanisms",

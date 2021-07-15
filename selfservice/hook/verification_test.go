@@ -35,7 +35,7 @@ func TestVerifier(t *testing.T) {
 		},
 		"register": func(h *hook.Verifier, i *identity.Identity, f flow.Flow) error {
 			return h.ExecutePostRegistrationPostPersistHook(
-				httptest.NewRecorder(), u, f.(*registration.Flow), &session.Session{ID: x.NewUUID(), Identity: i})
+				httptest.NewRecorder(), u, f.(*registration.Flow), &session.Session{ID: x.NewUUID(), Identity: i}, identity.CredentialsTypePassword)
 		},
 	} {
 		t.Run("name="+k, func(t *testing.T) {
