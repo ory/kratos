@@ -3,6 +3,24 @@ id: milestones
 title: Milestones and Roadmap
 ---
 
+## [v0.7.1-alpha.1](https://github.com/ory/kratos/milestone/12)
+
+_This milestone does not have a description._
+
+### [Bug](https://github.com/ory/kratos/labels/bug)
+
+Something is not working.
+
+#### Issues
+
+- [ ] Opening verification link in another browser causes GET request to fail
+      due to CSRF issue
+      ([kratos#1547](https://github.com/ory/kratos/issues/1547)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Submitting successful link verification again ends up with JSON response
+      ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
+      [@hackerman](https://github.com/aeneasr)
+
 ## [v0.9.0-alpha.1](https://github.com/ory/kratos/milestone/11)
 
 _This milestone does not have a description._
