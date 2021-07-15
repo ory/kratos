@@ -24,7 +24,9 @@ var ErrOriginHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
 var ErrCookieHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
 	WithReasonf(`The HTTP Request Header included the "Cookie" key, indicating that this request was made by a Browser. The flow however was initiated as an API request. To prevent potential misuse and mitigate several attack vectors including CSRF, the request has been blocked. Please consult the documentation.`)
 
-func EnsureCSRF(
+func EnsureCSRF(reg interface {
+	config.Provider
+},
 	r *http.Request,
 	flowType Type,
 	disableAPIFlowEnforcement bool,
@@ -52,7 +54,7 @@ func EnsureCSRF(
 		return nil
 	default:
 		if !nosurf.VerifyToken(generator(r), actual) {
-			return errors.WithStack(x.ErrInvalidCSRFToken)
+			return errors.WithStack(x.CSRFErrorReason(r, reg))
 		}
 	}
 

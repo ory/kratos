@@ -38,6 +38,27 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, l *login.Flow) error {
 	return s.populateMethod(r, l.UI, text.NewInfoLoginWith)
 }
 
+// SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload
+// when using the oidc method.
+//
+// swagger:model submitSelfServiceLoginFlowWithOidcMethodBody
+type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
+	// The provider to register with
+	//
+	// required: true
+	Provider string `json:"traits"`
+
+	// The CSRF Token
+	CSRFToken string `json:"csrf_token"`
+
+	// Method to use
+	//
+	// This field must be set to `oidc` when using the oidc method.
+	//
+	// required: true
+	Method string `json:"method"`
+}
+
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {

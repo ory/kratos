@@ -1,0 +1,2 @@
+INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES ('2ae6a5a7-2983-49e7-a4d8-7740b37c88cb','884f556e-eb3a-4b9f-bee3-11345642c6c0', 'default', '{"email":"d7b10@ory.sh"}', '2013-10-07 08:23:19', '2013-10-07 08:23:19', 'active');
+INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at) VALUES ('359963ec-b09b-4ea0-aece-fb4dd95f304a','884f556e-eb3a-4b9f-bee3-11345642c6c0', 'default', '{"email":"d7b11@ory.sh"}', '2013-10-07 08:23:19', '2013-10-07 08:23:19');

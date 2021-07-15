@@ -37,7 +37,8 @@ const RenderFlow = ({ flow }) => {
       defaultValue="browser"
       values={[
         { label: 'Browser UI', value: 'browser' },
-        { label: 'ExpressJS & Handlebars', value: 'express' },
+        { label: 'Golang (API Flow)', value: 'golang' },
+        { label: 'ExpressJS', value: 'express' },
         { label: 'ReactJS', value: 'react' },
         { label: 'React Native', value: 'react-native' }
       ]}
@@ -91,8 +92,53 @@ const RenderFlow = ({ flow }) => {
       <TabItem value="react">
         A React example is currently in the making.
       </TabItem>
+      <TabItem value="golang">
+        <CodeFromRemote
+          lang="tsx"
+          link={`https://github.com/ory/kratos/blob/master/examples/go/selfservice/${flow}/main.go.tsx`}
+          src={`https://raw.githubusercontent.com/ory/kratos/master/examples/go/selfservice/${flow}/main.go`}
+        />
+        The rest of the code examples partials can be found{' '}
+        <a href="https://github.com/ory/kratos/blob/master/examples">here</a>
+      </TabItem>
       <TabItem value="react-native">
-        A React Native example is currently in the making.
+        <CodeFromRemote
+          lang="tsx"
+          link={`https://github.com/ory/kratos-selfservice-ui-react-native/blob/master/src/components/Routes/${ucfirst(
+            flow
+          )}.tsx`}
+          src={`https://raw.githubusercontent.com/ory/kratos-selfservice-ui-react-native/master/src/components/Routes/${ucfirst(
+            flow
+          )}.tsx`}
+        />
+        The views can be rather simple, as Ory Kratos provides you with all the
+        information you need for rendering the forms.
+        <Tabs
+          defaultValue="generic-form"
+          values={[
+            { label: 'Generic Form View', value: 'generic-form' },
+            { label: 'Example Input Form Element', value: 'input-form' }
+          ]}
+        >
+          <TabItem value="generic-form">
+            <CodeFromRemote
+              lang="handlebars"
+              link="https://github.com/ory/kratos-selfservice-ui-react-native/blob/master/src/components/Form/Form.tsx"
+              src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-react-native/master/src/components/Form/Form.tsx"
+            />
+          </TabItem>
+          <TabItem value="input-form">
+            <CodeFromRemote
+              lang="handlebars"
+              link="https://github.com/ory/kratos-selfservice-ui-react-native/blob/master/src/components/Form/Field.tsxs"
+              src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-react-native/master/src/components/Form/Field.tsx"
+            />
+          </TabItem>
+        </Tabs>
+        The rest of the form partials can be found{' '}
+        <a href="https://github.com/ory/kratos-selfservice-ui-react-native/tree/master/src">
+          here
+        </a>
       </TabItem>
     </Tabs>
   )

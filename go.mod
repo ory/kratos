@@ -10,11 +10,11 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 
 replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
-replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.2-0.20210412125924-f5ad9021d6ac
+replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.20210608105745-bb07a373cc0e
 
-replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7
+replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 
-replace github.com/ory/x => github.com/ory/x v0.0.250
+replace github.com/ory/x => github.com/ory/x v0.0.262
 
 replace github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
 
@@ -23,11 +23,13 @@ require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
+	github.com/avast/retry-go/v3 v3.1.1
 	github.com/bwmarrin/discordgo v0.23.0
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/containerd/containerd v1.5.2 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/fatih/color v1.9.0
 	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
@@ -71,8 +73,8 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.3
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
-	github.com/ory/nosurf v1.2.4
-	github.com/ory/x v0.0.250
+	github.com/ory/nosurf v1.2.5
+	github.com/ory/x v0.0.256
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/philhofer/fwd v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1

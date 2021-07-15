@@ -9,6 +9,7 @@ const (
 	InfoSelfServiceRegistrationRoot ID = 1040000 + iota // 1040000
 	InfoSelfServiceRegistration                         // 1040001
 	InfoSelfServiceRegistrationWith                     // 1040002
+	InfoRegistrationContinue                            // 1040003
 )
 
 const (
@@ -33,6 +34,14 @@ func NewInfoRegistrationWith(provider string) *Message {
 		Context: context(map[string]interface{}{
 			"provider": provider,
 		}),
+	}
+}
+
+func NewInfoRegistrationContinue() *Message {
+	return &Message{
+		ID:   InfoRegistrationContinue,
+		Text: "Continue",
+		Type: Info,
 	}
 }
 

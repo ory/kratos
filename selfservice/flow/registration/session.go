@@ -7,7 +7,7 @@ import (
 
 // The Response for Registration Flows via API
 //
-// swagger:model registrationViaApiResponse
+// swagger:model successfulSelfServiceRegistrationWithoutBrowser
 type APIFlowResponse struct {
 	// The Session Token
 	//
@@ -19,8 +19,6 @@ type APIFlowResponse struct {
 	// 		Authorization: bearer ${session-token}
 	//
 	// The session token is only issued for API flows, not for Browser flows!
-	//
-	// required: true
 	Token string `json:"session_token,omitempty"`
 
 	// The Session

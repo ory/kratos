@@ -60,7 +60,7 @@ func PrepareUpdate(d interface {
 }, w http.ResponseWriter, r *http.Request, f *Flow, ss *session.Session, name string, payload UpdatePayload) (*UpdateContext, error) {
 	payload.SetFlowID(f.ID)
 	c := &UpdateContext{Session: ss, Flow: f}
-	if f.Type == flow.TypeAPI {
+	if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		return c, nil
 	}
 

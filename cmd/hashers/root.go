@@ -6,13 +6,16 @@ import (
 	"github.com/ory/kratos/cmd/hashers/argon2"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "hashers",
-	Short: "This command contains helpers around hashing",
+func NewRootCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "hashers",
+		Short: "This command contains helpers around hashing",
+	}
+	return c
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(rootCmd)
+	parent.AddCommand(NewRootCmd())
 
-	argon2.RegisterCommandRecursive(rootCmd)
+	argon2.RegisterCommandRecursive(NewRootCmd())
 }

@@ -44,14 +44,14 @@ var statusCmd = &cobra.Command{
 		state := &statusState{}
 		defer cmdx.PrintRow(cmd, state)
 
-		alive, _, err := c.AdminApi.IsAlive(cmd.Context()).Execute()
+		alive, _, err := c.MetadataApi.IsAlive(cmd.Context()).Execute()
 		if err != nil {
 			return
 		}
 
 		state.Alive = alive.Status == "ok"
 
-		ready, _, err := c.AdminApi.IsReady(cmd.Context()).Execute()
+		ready, _, err := c.MetadataApi.IsReady(cmd.Context()).Execute()
 		if err != nil {
 			return
 		}

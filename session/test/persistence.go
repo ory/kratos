@@ -183,8 +183,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			t1, t2 := randx.MustString(32, randx.AlphaNum), randx.MustString(32, randx.AlphaNum)
 			sid1, sid2 := x.NewUUID(), x.NewUUID()
-			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", sid1, nid1, iid1, t1, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now()).Exec())
-			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", sid2, nid2, iid2, t2, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now()).Exec())
+			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", sid1, nid1, iid1, t1, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum)).Exec())
+			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", sid2, nid2, iid2, t2, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum)).Exec())
 
 			_, err := p.GetSession(ctx, sid1)
 			require.NoError(t, err)

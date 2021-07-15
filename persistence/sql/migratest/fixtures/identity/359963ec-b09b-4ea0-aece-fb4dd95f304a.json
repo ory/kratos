@@ -1,0 +1,12 @@
+{
+  "id": "359963ec-b09b-4ea0-aece-fb4dd95f304a",
+  "schema_id": "default",
+  "schema_url": "https://www.ory.sh/schemas/default",
+  "state": "active",
+  "state_changed_at": null,
+  "traits": {
+    "email": "d7b11@ory.sh"
+  },
+  "created_at": "2013-10-07T08:23:19Z",
+  "updated_at": "2013-10-07T08:23:19Z"
+}

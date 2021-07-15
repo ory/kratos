@@ -76,12 +76,16 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *drive
 	reg, err := driver.NewRegistryFromDSN(c, logrusx.New("", ""))
 	require.NoError(t, err)
 	reg.Config(context.Background()).MustSet("dev", true)
-	require.NoError(t, reg.Init(context.Background()))
+	require.NoError(t, reg.Init(context.Background(), driver.SkipNetworkInit))
+	require.NoError(t, reg.Persister().NetworkMigrateUp(context.Background()))
 
-	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID())
 	actual, err := reg.Persister().DetermineNetwork(context.Background())
 	require.NoError(t, err)
+	reg.SetPersister(reg.Persister().WithNetworkID(actual.ID))
+
 	require.EqualValues(t, reg.Persister().NetworkID(), actual.ID)
+	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID())
+	reg.Persister()
 
 	return c, reg.(*driver.RegistryDefault)
 }

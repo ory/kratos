@@ -20,7 +20,11 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:enum State
+// An Identity's State
+//
+// The state can either be `active` or `inactive`.
+//
+// swagger:model identityState
 type State string
 
 const (
@@ -69,10 +73,7 @@ type Identity struct {
 
 	// State is the identity's state.
 	//
-	// enum:
-	// - active
-	// - inactive
-	// required: true
+	// This value has currently no effect.
 	State State `json:"state" faker:"-" db:"state"`
 
 	// StateChangedAt contains the last time when the identity's state changed.
@@ -258,4 +259,31 @@ func (i IdentityWithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (i *Identity) ValidateNID() error {
+	expected := i.NID
+	if expected == uuid.Nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))
+	}
+
+	for _, r := range i.RecoveryAddresses {
+		if r.NID != expected {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for recovery addresses."))
+		}
+	}
+
+	for _, r := range i.VerifiableAddresses {
+		if r.NID != expected {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for verifiable addresses."))
+		}
+	}
+
+	for _, r := range i.Credentials {
+		if r.NID != expected {
+			return errors.WithStack(herodot.ErrInternalServerError.WithReason("Mismatching nid for credentials."))
+		}
+	}
+
+	return nil
 }

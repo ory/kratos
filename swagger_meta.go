@@ -15,13 +15,9 @@
 //     - application/json
 //
 //     SecurityDefinitions:
-//     sessionToken:
+//     oryAccessToken:
 //          type: apiKey
-//          name: X-Session-Token
-//          in: header
-//     sessionCookie:
-//          type: apiKey
-//          name: Cookie
+//          name: Authorization
 //          in: header
 //
 //     Extensions:

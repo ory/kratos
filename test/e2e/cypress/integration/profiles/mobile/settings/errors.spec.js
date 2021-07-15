@@ -1,31 +1,46 @@
-import {gen, MOBILE_URL, website} from '../../../../helpers'
+import { gen, MOBILE_URL, website } from '../../../../helpers'
 
-context('Settings Flow Errors', () => {
-  let email, password
+context('Mobile Profile', () => {
+  describe('Settings Flow Errors', () => {
+    before(() => {
+      cy.useConfigProfile('mobile')
+    })
 
-  before(() => {
-    email = gen.email()
-    password = gen.password()
-    cy.registerApi({email, password, fields: {'traits.website': website}})
-  })
+    let email, password
 
-  beforeEach(() => {
-    cy.loginMobile({email, password})
-    cy.visit(MOBILE_URL + "/Settings")
-  })
+    before(() => {
+      email = gen.email()
+      password = gen.password()
+      cy.registerApi({ email, password, fields: { 'traits.website': website } })
+    })
 
-  describe('profile', () => {
-    it('fails with validation errors', () => {
-      cy.get('*[data-testid="settings-profile"] input[data-testid="traits.website"]')
-        .clear()
-        .type('http://s')
-      cy.get('*[data-testid="settings-profile"] div[data-testid="submit-form"]').click()
-      cy.get('*[data-testid="field/traits.website"]').should(
-        'contain.text',
-        'length must be >= 10'
-      )
+    beforeEach(() => {
+      cy.loginMobile({ email, password })
+      cy.visit(MOBILE_URL + '/Settings')
+    })
 
-      cy.get('*[data-testid="settings-password"]').should('exist')
+    describe('profile', () => {
+      it('fails with validation errors', () => {
+        cy.get(
+          '*[data-testid="settings-profile"] input[data-testid="traits.website"]'
+        )
+          .clear()
+          .type('http://s')
+        cy.get(
+          '*[data-testid="settings-profile"] div[data-testid="submit-form"]'
+        ).click()
+
+        cy.get(
+          '*[data-testid="settings-profile"] div[data-testid="submit-form"]'
+        ).should('have.attr', 'data-focusable', 'true')
+
+        cy.get('*[data-testid="field/traits.website"]').should(
+          'contain.text',
+          'length must be >= 10'
+        )
+
+        cy.get('*[data-testid="settings-password"]').should('exist')
+      })
     })
   })
 })

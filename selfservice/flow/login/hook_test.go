@@ -133,6 +133,16 @@ func TestLoginExecutor(t *testing.T) {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.NotEmpty(t, gjson.Get(body, "session.identity.id"))
 				})
+
+				t.Run("case=pass without hooks for browser flow with application/json", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+
+					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser), true, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.NotEmpty(t, gjson.Get(body, "session.identity.id"))
+					assert.Empty(t, gjson.Get(body, "session.token"))
+					assert.Empty(t, gjson.Get(body, "session_token"))
+				})
 			})
 
 			t.Run("type=api", func(t *testing.T) {

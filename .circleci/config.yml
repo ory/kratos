@@ -70,7 +70,8 @@ jobs:
       - run: make install
       - run: make test-docs
       - run: make test-coverage
-      - run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+      - run: |
+          bash <(curl -s https://codecov.io/bash)
 
   test-e2e:
     docker:
@@ -175,14 +176,14 @@ workflows:
               ignore: /master/
       - docs/cli
       - docs/build:
-          swag-spec-location: spec/openapi.json
+          swag-spec-location: spec/api.json
           filters:
             tags:
               only: /.*/
             branches:
               only: master
       - sdk/release-openapi:
-          swagpath: spec/openapi.json
+          swagpath: spec/api.json
           requires:
             - test
             - test-e2e

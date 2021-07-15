@@ -8,24 +8,26 @@ import (
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
-// identitiesCmd represents the identity command
-var identitiesCmd = &cobra.Command{
-	Use:   "identities",
-	Short: "Tools to interact with remote identities",
+// NewIdentitiesCmd represents the identity command
+func NewIdentitiesCmd() *cobra.Command {
+	var identitiesCmd = &cobra.Command{
+		Use:   "identities",
+		Short: "Tools to interact with remote identities",
+	}
+
+	cliclient.RegisterClientFlags(identitiesCmd.PersistentFlags())
+	cmdx.RegisterFormatFlags(identitiesCmd.PersistentFlags())
+	return identitiesCmd
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(identitiesCmd)
+	c := NewIdentitiesCmd()
+	parent.AddCommand(c)
 
-	identitiesCmd.AddCommand(ImportCmd)
-	identitiesCmd.AddCommand(ValidateCmd)
-	identitiesCmd.AddCommand(ListCmd)
-	identitiesCmd.AddCommand(GetCmd)
-	identitiesCmd.AddCommand(DeleteCmd)
-	identitiesCmd.AddCommand(PatchCmd)
-}
-
-func RegisterFlags() {
-	cliclient.RegisterClientFlags(identitiesCmd.PersistentFlags())
-	cmdx.RegisterFormatFlags(identitiesCmd.PersistentFlags())
+	c.AddCommand(NewImportCmd())
+	c.AddCommand(NewValidateCmd())
+	c.AddCommand(NewListCmd())
+	c.AddCommand(NewGetCmd())
+	c.AddCommand(NewDeleteCmd())
+	c.AddCommand(NewPatchCmd())
 }

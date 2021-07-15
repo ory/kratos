@@ -151,8 +151,16 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	return nil
 }
 
-// swagger:model submitSelfServiceBrowserSettingsOIDCFlowPayload
-type submitSelfServiceBrowserSettingsOIDCFlowPayload struct {
+// nolint:deadcode,unused
+// swagger:model submitSelfServiceSettingsFlowWithOidcMethodBody
+type submitSelfServiceSettingsFlowWithOidcMethodBody struct {
+	// Method
+	//
+	// Should be set to profile when trying to update a profile.
+	//
+	// required: true
+	Method string `json:"method"`
+
 	// Link this provider
 	//
 	// Either this or `unlink` must be set.
@@ -175,11 +183,11 @@ type submitSelfServiceBrowserSettingsOIDCFlowPayload struct {
 	FlowID string `json:"flow"`
 }
 
-func (p *submitSelfServiceBrowserSettingsOIDCFlowPayload) GetFlowID() uuid.UUID {
+func (p *submitSelfServiceSettingsFlowWithOidcMethodBody) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.FlowID)
 }
 
-func (p *submitSelfServiceBrowserSettingsOIDCFlowPayload) SetFlowID(rid uuid.UUID) {
+func (p *submitSelfServiceSettingsFlowWithOidcMethodBody) SetFlowID(rid uuid.UUID) {
 	p.FlowID = rid.String()
 }
 
@@ -202,7 +210,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return nil, errors.WithStack(err)
 	}
 
-	var p submitSelfServiceBrowserSettingsOIDCFlowPayload
+	var p submitSelfServiceSettingsFlowWithOidcMethodBody
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		if !s.d.Config(r.Context()).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
@@ -291,7 +299,7 @@ func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext
 	return i, nil
 }
 
-func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceBrowserSettingsOIDCFlowPayload) error {
+func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithOidcMethodBody) error {
 	if _, err := s.isLinkable(r, ctxUpdate, p.Link); err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
@@ -331,7 +339,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 }
 
 func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) error {
-	p := &submitSelfServiceBrowserSettingsOIDCFlowPayload{
+	p := &submitSelfServiceSettingsFlowWithOidcMethodBody{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
@@ -372,7 +380,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 	return nil
 }
 
-func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceBrowserSettingsOIDCFlowPayload) error {
+func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithOidcMethodBody) error {
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		return s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
@@ -435,7 +443,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request, ctxUpd
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceBrowserSettingsOIDCFlowPayload, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithOidcMethodBody, err error) error {
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {

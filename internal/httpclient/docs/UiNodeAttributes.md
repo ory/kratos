@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 **Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
 **Type** | **string** |  | 
-**Value** | Pointer to [**UiNodeInputAttributesValue**](UiNodeInputAttributesValue.md) |  | [optional] 
+**Value** | Pointer to **interface{}** | The input&#39;s value. | [optional] 
 **Text** | [**UiText**](UiText.md) |  | 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
@@ -172,20 +172,20 @@ SetType sets Type field to given value.
 
 ### GetValue
 
-`func (o *UiNodeAttributes) GetValue() UiNodeInputAttributesValue`
+`func (o *UiNodeAttributes) GetValue() interface{}`
 
 GetValue returns the Value field if non-nil, zero value otherwise.
 
 ### GetValueOk
 
-`func (o *UiNodeAttributes) GetValueOk() (*UiNodeInputAttributesValue, bool)`
+`func (o *UiNodeAttributes) GetValueOk() (*interface{}, bool)`
 
 GetValueOk returns a tuple with the Value field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetValue
 
-`func (o *UiNodeAttributes) SetValue(v UiNodeInputAttributesValue)`
+`func (o *UiNodeAttributes) SetValue(v interface{})`
 
 SetValue sets Value field to given value.
 
@@ -195,6 +195,16 @@ SetValue sets Value field to given value.
 
 HasValue returns a boolean if a field has been set.
 
+### SetValueNil
+
+`func (o *UiNodeAttributes) SetValueNil(b bool)`
+
+ SetValueNil sets the value for Value to be an explicit nil
+
+### UnsetValue
+`func (o *UiNodeAttributes) UnsetValue()`
+
+UnsetValue ensures that no value is present for Value, not even an explicit nil
 ### GetText
 
 `func (o *UiNodeAttributes) GetText() UiText`

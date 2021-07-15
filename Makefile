@@ -30,10 +30,6 @@ $(call make-lint-dependency)
 docs/cli: .bin/clidoc
 		clidoc .
 
-.bin/traefik:
-		https://github.com/containous/traefik/releases/download/v2.3.0-rc4/traefik_v2.3.0-rc4_linux_amd64.tar.gz \
-			tar -zxvf traefik_${traefik_version}_linux_${arch}.tar.gz
-
 .bin/ory: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/cli/master/install.sh) -b .bin v0.0.53
 		touch -a -m .bin/ory
@@ -58,11 +54,6 @@ docs: docs/node_modules
 lint: .bin/golangci-lint
 		golangci-lint run -v ./...
 
-.PHONY: cover
-cover:
-		go test ./... -coverprofile=cover.out
-		go tool cover -func=cover.out
-
 .PHONY: mocks
 mocks: .bin/mockgen
 		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
@@ -81,8 +72,7 @@ test:
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-		go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m -tags sqlite
-		test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+		go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
 
 # Generates the SDK
 .PHONY: sdk
@@ -92,16 +82,19 @@ sdk: .bin/swagger .bin/ory node_modules
 		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
 				ory dev openapi migrate \
+					--health-path-tags metadata \
 					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
 					-p file://.schema/openapi/patches/meta.yaml \
 					-p file://.schema/openapi/patches/schema.yaml \
 					-p file://.schema/openapi/patches/selfservice.yaml \
 					-p file://.schema/openapi/patches/security.yaml \
-					spec/swagger.json spec/openapi.json
+					-p file://.schema/openapi/patches/session.yaml \
+					-p file://.schema/openapi/patches/identity.yaml \
+					spec/swagger.json spec/api.json
 
 		rm -rf internal/httpclient/models internal/httpclient/clients
 		mkdir -p internal/httpclient/
-		npm run openapi-generator-cli -- generate -i "spec/openapi.json" \
+		npm run openapi-generator-cli -- generate -i "spec/api.json" \
 				-g go \
 				-o "internal/httpclient" \
 				--git-user-id ory \

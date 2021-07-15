@@ -258,7 +258,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook, vk, yandex.",
+          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
           "type": "string",
           "enum": [
             "github",
@@ -269,6 +269,7 @@
             "discord",
             "slack",
             "facebook",
+            "auth0",
             "vk",
             "yandex"
           ],
@@ -554,6 +555,51 @@
         }
       },
       "additionalProperties": false
+    },
+    "tlsxSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path to PEM-encoded Fle",
+          "type": "string",
+          "examples": [
+            "path/to/file.pem"
+          ]
+        },
+        "base64": {
+          "title": "Base64 Encoded Inline",
+          "description": "The base64 string of the PEM-encoded file content. Can be generated using for example `base64 -i path/to/file.pem`.",
+          "type": "string",
+          "examples": [
+            "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXG5NSUlEWlRDQ0FrMmdBd0lCQWdJRVY1eE90REFOQmdr..."
+          ]
+        }
+      }
+    },
+    "tlsx": {
+      "title": "HTTPS",
+      "description": "Configure HTTP over TLS (HTTPS). All options can also be set using environment variables by replacing dots (`.`) with underscores (`_`) and uppercasing the key. For example, `some.prefix.tls.key.path` becomes `export SOME_PREFIX_TLS_KEY_PATH`. If all keys are left undefined, TLS will be disabled.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "title": "Private Key (PEM)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/tlsxSource"
+            }
+          ]
+        },
+        "cert": {
+          "title": "TLS Certificate (PEM)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/tlsxSource"
+            }
+          ]
+        }
+      }
     }
   },
   "properties": {
@@ -823,6 +869,24 @@
                   "type": "boolean",
                   "title": "Enables Link Method",
                   "default": true
+                },
+                "config": {
+                  "type": "object",
+                  "title": "Link Configuration",
+                  "description": "Additional configuration for the link strategy.",
+                  "properties": {
+                    "lifespan": {
+                      "title": "How long a link is valid for",
+                      "type": "string",
+                      "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                      "default": "1h",
+                      "examples": [
+                        "1h",
+                        "1m",
+                        "1s"
+                      ]
+                    }
+                  }
                 }
               }
             },
@@ -845,6 +909,12 @@
                       "description": "Allows changing the default HIBP host to a self hosted version.",
                       "type": "string",
                       "default": "api.pwnedpasswords.com"
+                    },
+                    "haveibeenpwned_enabled": {
+                      "title": "Enable the HaveIBeenPwned API",
+                      "description": "If set to false the password validation does not utilize the Have I Been Pwnd API.",
+                      "type": "boolean",
+                      "default": true
                     },
                     "max_breaches": {
                       "title": "Allow Password Breaches",
@@ -932,7 +1002,7 @@
                 "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false"
               ],
               "type": "string",
-              "format": "uri"
+              "pattern": "^smtps?:\\/\\/.*"
             },
             "from_address": {
               "title": "SMTP Sender Address",
@@ -995,6 +1065,9 @@
             },
             "socket": {
               "$ref": "#/definitions/socket"
+            },
+            "tls": {
+              "$ref": "#/definitions/tlsx"
             }
           },
           "additionalProperties": false
@@ -1185,6 +1258,9 @@
             },
             "socket": {
               "$ref": "#/definitions/socket"
+            },
+            "tls": {
+              "$ref": "#/definitions/tlsx"
             }
           },
           "additionalProperties": false
@@ -1199,12 +1275,13 @@
       "properties": {
         "provider": {
           "type": "string",
-          "description": "Set this to the tracing backend you wish to use. Supports Jaeger, Zipkin and DataDog. If omitted or empty, tracing will be disabled. Use environment variables to configure DataDog (see https://docs.datadoghq.com/tracing/setup/go/#configuration).",
+          "description": "Set this to the tracing backend you wish to use. Supports Jaeger, Zipkin, DataDog, elastic-apm and instana. If omitted or empty, tracing will be disabled. Use environment variables to configure DataDog (see https://docs.datadoghq.com/tracing/setup/go/#configuration).",
           "enum": [
             "jaeger",
             "zipkin",
             "datadog",
-            "elastic-apm"
+            "elastic-apm",
+            "instana"
           ],
           "examples": [
             "jaeger"
@@ -1564,6 +1641,36 @@
       },
       "additionalProperties": false
     },
+    "cookies": {
+      "type": "object",
+      "title": "HTTP Cookie Configuration",
+      "description": "Configure the HTTP Cookies. Applies to both CSRF and session cookies.",
+      "properties": {
+        "domain": {
+          "title": "HTTP Cookie Domain",
+          "description": "Sets the cookie domain for session and CSRF cookies. Useful when dealing with subdomains. Use with care!",
+          "type": "string"
+        },
+        "path": {
+          "title": "HTTP  Cookie Path",
+          "description": "Sets the session and CSRF cookie path. Use with care!",
+          "type": "string",
+          "default": "/"
+        },
+        "same_site": {
+          "title": "HTTP Cookie Same Site Configuration",
+          "description": "Sets the session and CSRF cookie SameSite.",
+          "type": "string",
+          "enum": [
+            "Strict",
+            "Lax",
+            "None"
+          ],
+          "default": "Lax"
+        }
+      },
+      "additionalProperties": false
+    },
     "session": {
       "type": "object",
       "additionalProperties": false,
@@ -1585,7 +1692,7 @@
           "properties": {
             "domain": {
               "title": "Session Cookie Domain",
-              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care!",
+              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care! Overrides `cookies.domain`.",
               "type": "string"
             },
             "name": {
@@ -1602,19 +1709,18 @@
             },
             "path": {
               "title": "Session Cookie Path",
-              "description": "Sets the session cookie path. Use with care!",
-              "type": "string",
-              "default": "/"
+              "description": "Sets the session cookie path. Use with care! Overrides `cookies.path`.",
+              "type": "string"
             },
             "same_site": {
-              "title": "Cookie Same Site Configuration",
+              "title": "Session Cookie SameSite Configuration",
+              "description": "Sets the session cookie SameSite. Overrides `cookies.same_site`.",
               "type": "string",
               "enum": [
                 "Strict",
                 "Lax",
                 "None"
-              ],
-              "default": "Lax"
+              ]
             }
           },
           "additionalProperties": false
@@ -1638,15 +1744,17 @@
     },
     "sqa-opt-out": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "This is a CLI flag and environment variable and can not be set using the config file."
     },
     "watch-courier": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "This is a CLI flag and environment variable and can not be set using the config file."
     },
     "expose-metrics-port": {
       "title": "Metrics port",
-      "description": "The port the courier's metrics endpoint listens on (0/disabled by default).",
+      "description": "The port the courier's metrics endpoint listens on (0/disabled by default). This is a CLI flag and environment variable and can not be set using the config file.",
       "type": "integer",
       "minimum": 0,
       "maximum": 65535,
@@ -1659,7 +1767,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "This is a CLI flag and environment variable and can not be set using the config file."
     }
   },
   "allOf": [
@@ -1720,47 +1829,6 @@
         "required": [
           "courier"
         ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "session": {
-            "properties": {
-              "cookie": {
-                "properties": {
-                  "domain": {
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "domain"
-                ]
-              }
-            },
-            "required": [
-              "cookie"
-            ]
-          }
-        },
-        "required": [
-          "session"
-        ]
-      },
-      "then": {
-        "properties": {
-          "serve": {
-            "properties": {
-              "public": {
-                "properties": {
-                  "domain_aliases": {
-                    "maxItems": 0
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     }
   ],

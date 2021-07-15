@@ -25,7 +25,7 @@ import (
 //
 // For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation
 //
-// swagger:model verificationFlow
+// swagger:model selfServiceVerificationFlow
 type Flow struct {
 	// ID represents the request's unique ID. When performing the verification flow, this
 	// represents the id in the verify ui's query parameter: http://<selfservice.flows.verification.ui_url>?request=<id>
@@ -149,4 +149,9 @@ func (f Flow) GetID() uuid.UUID {
 
 func (f Flow) GetNID() uuid.UUID {
 	return f.NID
+}
+
+func (f *Flow) SetCSRFToken(token string) {
+	f.CSRFToken = token
+	f.UI.SetCSRF(token)
 }

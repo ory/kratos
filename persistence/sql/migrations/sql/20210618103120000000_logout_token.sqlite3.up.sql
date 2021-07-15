@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ADD COLUMN "logout_token" TEXT;

@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/identity"
@@ -19,6 +21,9 @@ func TestSession(t *testing.T) {
 	i.State = identity.StateActive
 	s, _ := session.NewActiveSession(i, conf, authAt)
 	assert.True(t, s.IsActive())
+
+	require.NotEmpty(t, s.Token)
+	require.NotEmpty(t, s.LogoutToken)
 
 	i = new(identity.Identity)
 	s, err := session.NewActiveSession(i, conf, authAt)

@@ -398,9 +398,10 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		// This is kinda hacky and will probably need to be updated at some point.
 
 		rf.UI.Nodes = node.Nodes{}
-		if err := s.populateMethod(r, rf.UI, text.NewInfoRegistrationWith); err != nil {
-			return err
-		}
+
+		// Adds the "Continue" button
+		rf.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+		AddProvider(rf.UI, provider, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
 			traitNodes, err := container.NodesFromJSONSchema(node.OpenIDConnectGroup,

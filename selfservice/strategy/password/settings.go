@@ -30,36 +30,21 @@ func (s *Strategy) SettingsStrategyID() string {
 	return identity.CredentialsTypePassword.String()
 }
 
-// nolint:deadcode,unused
-// swagger:parameters submitSelfServiceSettingsFlowWithPasswordMethod
-type submitSelfServiceSettingsFlowWithPasswordMethod struct {
-	// in: body
-	Body submitSelfServiceSettingsFlowWithPasswordMethodBody
-
-	// Flow is flow ID.
-	//
-	// in: query
-	Flow string `json:"flow"`
-}
-
-// swagger:model submitSelfServiceSettingsFlowWithPasswordMethod
+// swagger:model submitSelfServiceSettingsFlowWithPasswordMethodBody
 type submitSelfServiceSettingsFlowWithPasswordMethodBody struct {
 	// Password is the updated password
 	//
-	// type: string
 	// required: true
 	Password string `json:"password"`
 
 	// CSRFToken is the anti-CSRF token
-	//
-	// type: string
 	CSRFToken string `json:"csrf_token"`
 
 	// Method
 	//
 	// Should be set to password when trying to update a password.
 	//
-	// type: string
+	// required: true
 	Method string `json:"method"`
 
 	// Flow is flow ID.
@@ -122,7 +107,7 @@ func (s *Strategy) continueSettingsFlow(
 		return err
 	}
 
-	if err := flow.EnsureCSRF(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.EnsureCSRF(s.d, r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		return err
 	}
 

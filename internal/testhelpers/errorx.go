@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -26,12 +27,13 @@ func NewErrorTestServer(t *testing.T, reg interface {
 	logger := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 	writer := herodot.NewJSONWriter(logger)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("error")))
+		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 		require.NoError(t, err)
 		t.Logf("Found error in NewErrorTestServer: %s", e.Errors)
 		writer.Write(w, r, e.Errors)
 	}))
 	t.Cleanup(ts.Close)
+	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", -1)
 	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceErrorUI, ts.URL)
 	return ts
 }

@@ -1,107 +1,122 @@
 import { APP_URL, assertVerifiableAddress, gen } from '../../../../helpers'
 
-context('Verify', () => {
-  describe('successful flow', () => {
-    let identity
-
+context('Verification Profile', () => {
+  describe('Verify', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('verification')
     })
 
-    beforeEach(() => {
-      identity = gen.identity()
-      cy.register(identity)
-      cy.deleteMail({ atLeast: 1 }) // clean up registration email
+    describe('successful flow', () => {
+      let identity
 
-      cy.login(identity)
-      cy.visit(APP_URL + '/verify')
-    })
-
-    it('should request verification and receive an email and verify it', () => {
-      cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[value="link"]').click()
-
-      cy.get('.messages .message').should(
-        'contain.text',
-        'An email containing a verification'
-      )
-
-      cy.verifyEmail({ expect: { email: identity.email } })
-
-      cy.location('pathname').should('eq', '/')
-    })
-
-    it('should request verification for an email that does not exist yet', () => {
-      const email = `not-${identity.email}`
-      cy.get('input[name="email"]').type(email)
-      cy.get('button[value="link"]').click()
-
-      cy.get('.messages .message').should(
-        'contain.text',
-        'An email containing a verification'
-      )
-
-      cy.getMail().should((message) => {
-        expect(message.subject.trim()).to.equal(
-          'Someone tried to verify this email address'
-        )
-        expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
-        expect(message.toAddresses).to.have.length(1)
-        expect(message.toAddresses[0].trim()).to.equal(email)
+      before(() => {
+        cy.deleteMail()
       })
 
-      cy.session().then(
-        assertVerifiableAddress({ isVerified: false, email: identity.email })
-      )
-    })
+      beforeEach(() => {
+        identity = gen.identity()
+        cy.register(identity)
+        cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
-    it('should not verify email when clicking on link received on different address', () => {
-      cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[value="link"]').click()
+        cy.login(identity)
+        cy.visit(APP_URL + '/verify')
+      })
 
-      cy.verifyEmail({ expect: { email: identity.email } })
+      it('should request verification and receive an email and verify it', () => {
+        cy.get('input[name="email"]').type(identity.email)
+        cy.get('button[value="link"]').click()
 
-      cy.location('pathname').should('eq', '/')
+        cy.get('.messages .message').should(
+          'contain.text',
+          'An email containing a verification'
+        )
 
-      // identity is verified
+        cy.verifyEmail({ expect: { email: identity.email } })
 
-      cy.logout()
+        cy.location('pathname').should('eq', '/')
+      })
 
-      // registered with other email address
-      const identity2 = gen.identity()
-      cy.register(identity2)
-      cy.deleteMail({ atLeast: 1 }) // clean up registration email
+      it('should request verification for an email that does not exist yet', () => {
+        const email = `not-${identity.email}`
+        cy.get('input[name="email"]').type(email)
+        cy.get('button[value="link"]').click()
 
-      cy.login(identity2)
+        cy.get('.messages .message').should(
+          'contain.text',
+          'An email containing a verification'
+        )
 
-      cy.visit(APP_URL + '/verify')
+        cy.getMail().should((message) => {
+          expect(message.subject.trim()).to.equal(
+            'Someone tried to verify this email address'
+          )
+          expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
+          expect(message.toAddresses).to.have.length(1)
+          expect(message.toAddresses[0].trim()).to.equal(email)
+        })
 
-      // request verification link for identity
-      cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[value="link"]').click()
+        cy.session().then(
+          assertVerifiableAddress({ isVerified: false, email: identity.email })
+        )
+      })
 
-      cy.performEmailVerification({ expect: { email: identity.email } })
+      it('should not verify email when clicking on link received on different address', () => {
+        cy.get('input[name="email"]').type(identity.email)
+        cy.get('button[value="link"]').click()
 
-      // expect current session to still not have a verified email address
-      cy.session().should(assertVerifiableAddress({ email: identity2.email, isVerified: false }))
+        cy.verifyEmail({ expect: { email: identity.email } })
 
-      cy.location('pathname').should('eq', '/')
-    })
+        cy.location('pathname').should('eq', '/')
 
-    it('should redirect to return_to after completing verification', () => {
-      cy.clearCookies()
-      // registered with other email address
-      const identity2 = gen.identity()
-      cy.register(identity2)
-      cy.deleteMail({ atLeast: 1 }) // clean up registration email
+        // identity is verified
 
-      cy.login(identity2)
-      
-      cy.visit(APP_URL + '/self-service/verification/browser', {qs:{return_to: "http://127.0.0.1:4455/verification_callback"}})
-      // request verification link for identity
-      cy.get('input[name="email"]').type(identity2.email)
-      cy.get('button[type="submit"]').click()
-      cy.verifyEmail({ expect: { email: identity2.email, redirectTo: "http://127.0.0.1:4455/verification_callback"} })
+        cy.logout()
+
+        // registered with other email address
+        const identity2 = gen.identity()
+        cy.register(identity2)
+        cy.deleteMail({ atLeast: 1 }) // clean up registration email
+
+        cy.login(identity2)
+
+        cy.visit(APP_URL + '/verify')
+
+        // request verification link for identity
+        cy.get('input[name="email"]').type(identity.email)
+        cy.get('button[value="link"]').click()
+
+        cy.performEmailVerification({ expect: { email: identity.email } })
+
+        // expect current session to still not have a verified email address
+        cy.session().should(
+          assertVerifiableAddress({ email: identity2.email, isVerified: false })
+        )
+
+        cy.location('pathname').should('eq', '/')
+      })
+
+      it('should redirect to return_to after completing verification', () => {
+        cy.clearCookies()
+        // registered with other email address
+        const identity2 = gen.identity()
+        cy.register(identity2)
+        cy.deleteMail({ atLeast: 1 }) // clean up registration email
+
+        cy.login(identity2)
+
+        cy.visit(APP_URL + '/self-service/verification/browser', {
+          qs: { return_to: 'http://127.0.0.1:4455/verification_callback' }
+        })
+        // request verification link for identity
+        cy.get('input[name="email"]').type(identity2.email)
+        cy.get('button[type="submit"]').click()
+        cy.verifyEmail({
+          expect: {
+            email: identity2.email,
+            redirectTo: 'http://127.0.0.1:4455/verification_callback'
+          }
+        })
+      })
     })
   })
 })

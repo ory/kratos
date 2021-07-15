@@ -1,2 +1,2 @@
 *.log
-kratos.generated.yml
+kratos.*.yml

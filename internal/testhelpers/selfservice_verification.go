@@ -4,6 +4,7 @@ package testhelpers
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,38 +35,52 @@ func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 	return ts
 }
 
-func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RecoveryFlow {
+func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err, "%s", res.Request.URL.String())
 	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RecoveryFlow {
+func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
+	req, err := http.NewRequest("GET", ts.URL+recovery.RouteInitBrowserFlow, nil)
 	require.NoError(t, err)
-	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	if isSPA {
+		req.Header.Set("Accept", "application/json")
+	}
+
+	res, err := client.Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	if isSPA {
+		var f kratos.SelfServiceRecoveryFlow
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&f))
+		return &f
+	}
+
+	require.NoError(t, res.Body.Close())
+	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RecoveryFlow {
+func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceRecoveryForNativeApps(context.Background()).Execute()
+	rs, _, err := publicClient.V0alpha1Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -75,7 +90,7 @@ func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptes
 func RecoveryMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *kratos.RecoveryFlow,
+	f *kratos.SelfServiceRecoveryFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -93,6 +108,7 @@ func RecoveryMakeRequest(
 func SubmitRecoveryForm(
 	t *testing.T,
 	isAPI bool,
+	isSPA bool,
 	hc *http.Client,
 	publicTS *httptest.Server,
 	withValues func(v url.Values),
@@ -100,11 +116,11 @@ func SubmitRecoveryForm(
 	expectedURL string,
 ) string {
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var f *kratos.RecoveryFlow
+	var f *kratos.SelfServiceRecoveryFlow
 	if isAPI {
 		f = InitializeRecoveryFlowViaAPI(t, hc, publicTS)
 	} else {
-		f = InitializeRecoveryFlowViaBrowser(t, hc, publicTS)
+		f = InitializeRecoveryFlowViaBrowser(t, hc, isSPA, publicTS)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
@@ -112,7 +128,7 @@ func SubmitRecoveryForm(
 	formPayload := SDKFormFieldsToURLValues(f.Ui.Nodes)
 	withValues(formPayload)
 
-	b, res := RecoveryMakeRequest(t, isAPI, f, hc, EncodeFormAsJSON(t, isAPI, formPayload))
+	b, res := RecoveryMakeRequest(t, isAPI || isSPA, f, hc, EncodeFormAsJSON(t, isAPI || isSPA, formPayload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

@@ -35,6 +35,14 @@ module.exports = {
       files: ['quickstart.yml']
     },
     {
+      replacer: ({ content, next }) =>
+        content.replace(
+          /oryd\/kratos-selfservice-ui-node:(v[0-9a-zA-Z\\.\\-]+)/gi,
+          `oryd/kratos-selfservice-ui-node:${next}`
+        ),
+      files: ['quickstart.yml']
+    },
+    {
       image: 'oryd/kratos',
       files: [
         'quickstart-mysql.yml',

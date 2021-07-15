@@ -18,6 +18,10 @@ type Contextualizer interface {
 
 var c Contextualizer = nil
 
+func GetContextualizer() Contextualizer {
+	return c
+}
+
 func SetContextualizer(cc Contextualizer) {
 	if _, ok := cc.(*ContextNoOp); ok && c != nil {
 		return

@@ -4,18 +4,18 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **bool** |  | [optional] 
-**AuthenticatedAt** | **time.Time** |  | 
-**ExpiresAt** | **time.Time** |  | 
+**Active** | Pointer to **bool** | Whether or not the session is active. | [optional] 
+**AuthenticatedAt** | Pointer to **time.Time** | The Session Authentication Timestamp  When this session was authenticated at. | [optional] 
+**ExpiresAt** | Pointer to **time.Time** | The Session Expiry  When this session expires at. | [optional] 
 **Id** | **string** |  | 
 **Identity** | [**Identity**](Identity.md) |  | 
-**IssuedAt** | **time.Time** |  | 
+**IssuedAt** | Pointer to **time.Time** | The Session Issuance Timestamp  When this session was authenticated at. | [optional] 
 
 ## Methods
 
 ### NewSession
 
-`func NewSession(authenticatedAt time.Time, expiresAt time.Time, id string, identity Identity, issuedAt time.Time, ) *Session`
+`func NewSession(id string, identity Identity, ) *Session`
 
 NewSession instantiates a new Session object
 This constructor will assign default values to properties that have it defined,
@@ -74,6 +74,11 @@ and a boolean to check if the value has been set.
 
 SetAuthenticatedAt sets AuthenticatedAt field to given value.
 
+### HasAuthenticatedAt
+
+`func (o *Session) HasAuthenticatedAt() bool`
+
+HasAuthenticatedAt returns a boolean if a field has been set.
 
 ### GetExpiresAt
 
@@ -94,6 +99,11 @@ and a boolean to check if the value has been set.
 
 SetExpiresAt sets ExpiresAt field to given value.
 
+### HasExpiresAt
+
+`func (o *Session) HasExpiresAt() bool`
+
+HasExpiresAt returns a boolean if a field has been set.
 
 ### GetId
 
@@ -154,6 +164,11 @@ and a boolean to check if the value has been set.
 
 SetIssuedAt sets IssuedAt field to given value.
 
+### HasIssuedAt
+
+`func (o *Session) HasIssuedAt() bool`
+
+HasIssuedAt returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

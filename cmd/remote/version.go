@@ -30,7 +30,7 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)
 
-		resp, _, err := c.AdminApi.GetVersion(cmd.Context()).Execute()
+		resp, _, err := c.MetadataApi.GetVersion(cmd.Context()).Execute()
 		cmdx.Must(err, "Could not get version: %s", err)
 
 		cmdx.PrintRow(cmd, &versionValue{Version: resp.Version})

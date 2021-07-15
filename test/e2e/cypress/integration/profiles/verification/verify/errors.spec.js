@@ -3,62 +3,73 @@ import {
   assertVerifiableAddress,
   gen,
   parseHtml,
-  verifyHrefPattern,
+  verifyHrefPattern
 } from '../../../../helpers'
 
-context('Verify', () => {
-  describe('error flow', () => {
-    let identity
+context('Verification Profile', () => {
+  describe('Verify', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('verification')
     })
 
-    beforeEach(() => {
-      cy.longVerificationLifespan()
+    describe('error flow', () => {
+      let identity
+      before(() => {
+        cy.deleteMail()
+      })
 
-      identity = gen.identity()
-      cy.register(identity)
-      cy.deleteMail({ atLeast: 1 }) // clean up registration email
+      beforeEach(() => {
+        cy.clearCookies({ domain: null })
+        cy.longVerificationLifespan()
+        cy.longLinkLifespan()
 
-      cy.login(identity)
-      cy.visit(APP_URL + '/verify')
-    })
+        identity = gen.identity()
+        cy.register(identity)
+        cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
-    it('is unable to verify the email address if the code is expired', () => {
-      cy.shortVerificationLifespan()
+        cy.clearCookies({ domain: null })
+        cy.login(identity)
+        cy.visit(APP_URL + '/verify')
+      })
 
-      cy.visit(APP_URL + '/verify')
-      cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[value="link"]').click()
+      it('is unable to verify the email address if the code is expired', () => {
+        cy.shortLinkLifespan()
 
-      cy.get('.messages .message').should(
-        'contain.text',
-        'An email containing a verification'
-      )
+        cy.visit(APP_URL + '/verify')
+        cy.get('input[name="email"]').type(identity.email)
+        cy.get('button[value="link"]').click()
 
-      cy.wait(4000)
-      cy.verifyEmailButExpired({ expect: { email: identity.email } })
-    })
-
-    it('is unable to verify the email address if the code is incorrect', () => {
-      cy.get('input[name="email"]').type(identity.email)
-      cy.get('button[value="link"]').click()
-
-      cy.get('.messages .message').should(
-        'contain.text',
-        'An email containing a verification'
-      )
-
-      cy.getMail().then((mail) => {
-        const link = parseHtml(mail.body).querySelector('a')
-
-        expect(verifyHrefPattern.test(link.href)).to.be.true
-
-        cy.visit(link.href + '-not') // add random stuff to the confirm challenge
-        cy.log(link.href)
-        cy.session().then(
-          assertVerifiableAddress({ isVerified: false, email: identity.email })
+        cy.get('.messages .message').should(
+          'contain.text',
+          'An email containing a verification'
         )
+
+        cy.verifyEmailButExpired({ expect: { email: identity.email } })
+      })
+
+      it('is unable to verify the email address if the code is incorrect', () => {
+        cy.get('input[name="email"]').type(identity.email)
+        cy.get('button[value="link"]').click()
+
+        cy.get('.messages .message').should(
+          'contain.text',
+          'An email containing a verification'
+        )
+
+        cy.getMail().then((mail) => {
+          const link = parseHtml(mail.body).querySelector('a')
+
+          expect(verifyHrefPattern.test(link.href)).to.be.true
+
+          cy.visit(link.href + '-not') // add random stuff to the confirm challenge
+          cy.log(link.href)
+          cy.session().then(
+            assertVerifiableAddress({
+              isVerified: false,
+              email: identity.email
+            })
+          )
+        })
       })
     })
   })

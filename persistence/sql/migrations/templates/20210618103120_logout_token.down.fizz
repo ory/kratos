@@ -1,0 +1,1 @@
+drop_column("sessions", "logout_token")

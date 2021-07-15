@@ -53,6 +53,10 @@ func (a RecoveryAddress) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "identity_recovery_addresses")
 }
 
+func (a RecoveryAddress) ValidateNID() error {
+	return nil
+}
+
 func NewRecoveryEmailAddress(
 	value string,
 	identity uuid.UUID,

@@ -20,13 +20,14 @@ import (
 )
 
 func TestVerifyRequest(t *testing.T) {
-	require.EqualError(t, flow.EnsureCSRF(&http.Request{}, flow.TypeBrowser, false, x.FakeCSRFTokenGenerator, "not_csrf_token"), x.ErrInvalidCSRFToken.Error())
-	require.NoError(t, flow.EnsureCSRF(&http.Request{}, flow.TypeBrowser, false, x.FakeCSRFTokenGenerator, x.FakeCSRFToken), nil)
-	require.NoError(t, flow.EnsureCSRF(&http.Request{}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""))
-	require.EqualError(t, flow.EnsureCSRF(&http.Request{
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, x.FakeCSRFTokenGenerator, "not_csrf_token"), x.ErrInvalidCSRFToken.Error())
+	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, x.FakeCSRFTokenGenerator, x.FakeCSRFToken), nil)
+	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""))
+	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Origin": {"https://www.ory.sh"}},
 	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrOriginHeaderNeedsBrowserFlow.Error())
-	require.EqualError(t, flow.EnsureCSRF(&http.Request{
+	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"cookie=ory"}},
 	}, flow.TypeAPI, false, x.FakeCSRFTokenGenerator, ""), flow.ErrCookieHeaderNeedsBrowserFlow.Error())
 }

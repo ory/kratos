@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/nosurf"
+
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlcon"
@@ -70,18 +72,21 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetch)
+	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d))
+
+	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-// swagger:route GET /self-service/verification/api public initializeSelfServiceVerificationForNativeApps
+// swagger:route GET /self-service/verification/api v0alpha1 initializeSelfServiceVerificationFlowWithoutBrowser
 //
-// Initialize Verification Flow for Native Apps and API clients
+// Initialize Verification Flow for APIs, Services, Apps, ...
 //
 // This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 //
 // To fetch an existing verification flow call `/self-service/verification/flows?flow=<flow_id>`.
-//
-// :::warning
 //
 // You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 // Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -89,14 +94,12 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// :::
-//
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
 //     Schemes: http, https
 //
 //     Responses:
-//       200: verificationFlow
+//       200: selfServiceVerificationFlow
 //       500: jsonError
 //       400: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -119,12 +122,14 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
-// swagger:route GET /self-service/verification/browser public initializeSelfServiceVerificationForBrowsers
+// swagger:route GET /self-service/verification/browser v0alpha1 initializeSelfServiceVerificationFlowForBrowsers
 //
 // Initialize Verification Flow for Browser Clients
 //
 // This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
+//
+// If this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.
 //
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 //
@@ -133,6 +138,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //     Schemes: http, https
 //
 //     Responses:
+//       200: selfServiceVerificationFlow
 //       302: emptyResponse
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -152,12 +158,13 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	http.Redirect(w, r, req.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+	redirTo := req.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String()
+	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), req, redirTo)
 }
 
-// nolint:deadcode,unused
 // swagger:parameters getSelfServiceVerificationFlow
-type getSelfServiceVerificationFlowParameters struct {
+// nolint:deadcode,unused
+type getSelfServiceVerificationFlow struct {
 	// The Flow ID
 	//
 	// The value for this parameter comes from `request` URL Query parameter sent to your
@@ -166,13 +173,36 @@ type getSelfServiceVerificationFlowParameters struct {
 	// required: true
 	// in: query
 	FlowID string `json:"id"`
+
+	// HTTP Cookies
+	//
+	// When using the SDK on the server side you must include the HTTP Cookie Header
+	// originally sent to your HTTP handler here.
+	//
+	// in: header
+	// name: Cookie
+	Cookie string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/verification/flows public admin getSelfServiceVerificationFlow
+// swagger:route GET /self-service/verification/flows v0alpha1 getSelfServiceVerificationFlow
 //
 // Get Verification Flow
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
+//
+// Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
+// For AJAX requests you must ensure that cookies are included in the request or requests will fail.
+//
+// If you use the browser-flow for server-side apps, the services need to run on a common top-level-domain
+// and you need to forward the incoming HTTP Cookie header to this endpoint:
+//
+//	```js
+//	// pseudo-code example
+//	router.get('/recovery', async function (req, res) {
+//	  const flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])
+//
+//    res.render('verification', flow)
+//	})
 //
 // More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 //
@@ -182,7 +212,7 @@ type getSelfServiceVerificationFlowParameters struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: verificationFlow
+//       200: selfServiceVerificationFlow
 //       403: jsonError
 //       404: jsonError
 //       500: jsonError
@@ -196,6 +226,14 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	req, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), rid)
 	if err != nil {
 		h.d.Writer().Write(w, r, req)
+		return
+	}
+
+	// Browser flows must include the CSRF token
+	//
+	// Resolves: https://github.com/ory/kratos/issues/1282
+	if req.Type == flow.TypeBrowser && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), req.CSRFToken) {
+		h.d.Writer().WriteError(w, r, x.CSRFErrorReason(r, h.d))
 		return
 	}
 
@@ -218,24 +256,34 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 // nolint:deadcode,unused
 // swagger:parameters submitSelfServiceVerificationFlow
 type submitSelfServiceVerificationFlow struct {
-	// The Registration Flow ID
+	// The Verification Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
-	// application (e.g. `/registration?flow=abcde`).
+	// application (e.g. `/verification?flow=abcde`).
 	//
 	// required: true
 	// in: query
 	Flow string `json:"flow"`
 
+	// Verification Token
+	//
+	// The verification token which completes the verification request. If the token
+	// is invalid (e.g. expired) an error will be shown to the end-user.
+	//
+	// This parameter is usually set in a link and not used by any direct API call.
+	//
+	// in: query
+	Token string `json:"token" form:"token"`
+
 	// in: body
-	Body submitSelfServiceRecoveryFlowBody
+	Body submitSelfServiceVerificationFlowBody
 }
 
-// swagger:model submitSelfServiceRecoveryFlow
 // nolint:deadcode,unused
-type submitSelfServiceRecoveryFlowBody struct{}
+// swagger:model submitSelfServiceVerificationFlowBody
+type submitSelfServiceVerificationFlowBody struct{}
 
-// swagger:route POST /self-service/verification/methods/link public submitSelfServiceVerificationFlow
+// swagger:route POST /self-service/verification v0alpha1 submitSelfServiceVerificationFlow
 //
 // Complete Verification Flow
 //
@@ -244,9 +292,9 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //
 // - `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
 //   and works with API- and Browser-initiated flows.
-//	 - For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+//	 - For API clients and Browser clients with HTTP Header `Accept: application/json` it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
 //     and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-//	 - For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+//	 - For Browser clients without HTTP Header `Accept` or with `Accept: text/*` it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
 // - `sent_email` is the success state after `choose_method` when using the `link` method and allows the user to request another verification email. It
 //   works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
 // - `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
@@ -266,7 +314,8 @@ type submitSelfServiceRecoveryFlowBody struct{}
 //     Schemes: http, https
 //
 //     Responses:
-//       400: verificationFlow
+//       200: selfServiceVerificationFlow
+//       400: selfServiceVerificationFlow
 //       302: emptyResponse
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -313,7 +362,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	if f.Type == flow.TypeBrowser {
+	if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
 		http.Redirect(w, r, f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
 		return
 	}

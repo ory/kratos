@@ -110,6 +110,8 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderSlack(&p, public), nil
 			case addProviderName("facebook"):
 				return NewProviderFacebook(&p, public), nil
+			case addProviderName("auth0"):
+				return NewProviderAuth0(&p, public), nil
 			case addProviderName("vk"):
 				return NewProviderVK(&p, public), nil
 			case addProviderName("yandex"):

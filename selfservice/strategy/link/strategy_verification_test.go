@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/ui/node"
 
@@ -56,23 +58,25 @@ func TestVerification(t *testing.T) {
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToVerify,
 		identity.ManagerAllowWriteProtectedTraits))
 
-	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
-		hc := testhelpers.NewDebugClient(t)
-		if !isAPI {
-			hc = testhelpers.NewClientWithCookies(t)
-			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+	var expect = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
+		if hc == nil {
+			hc = testhelpers.NewDebugClient(t)
+			if !isAPI {
+				hc = testhelpers.NewClientWithCookies(t)
+				hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+			}
 		}
 
-		return testhelpers.SubmitVerificationForm(t, isAPI, hc, public, values, c,
-			testhelpers.ExpectURL(isAPI, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI().String()))
+		return testhelpers.SubmitVerificationForm(t, isAPI, isSPA, hc, public, values, c,
+			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI().String()))
 	}
 
-	var expectValidationError = func(t *testing.T, isAPI bool, values func(url.Values)) string {
-		return expect(t, isAPI, values, testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK))
+	var expectValidationError = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
+		return expect(t, hc, isAPI, isSPA, values, testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK))
 	}
 
-	var expectSuccess = func(t *testing.T, isAPI bool, values func(url.Values)) string {
-		return expect(t, isAPI, values, http.StatusOK)
+	var expectSuccess = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
+		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
@@ -155,11 +159,15 @@ func TestVerification(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, values))
+			check(t, expectValidationError(t, nil, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectValidationError(t, nil, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, values))
+			check(t, expectValidationError(t, nil, true, false, values))
 		})
 	})
 
@@ -177,11 +185,15 @@ func TestVerification(t *testing.T) {
 			}
 
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, false, values), email)
+				check(t, expectValidationError(t, nil, false, false, values), email)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				check(t, expectValidationError(t, nil, false, true, values), email)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
-				check(t, expectValidationError(t, true, values), email)
+				check(t, expectValidationError(t, nil, true, false, values), email)
 			})
 		}
 	})
@@ -203,24 +215,29 @@ func TestVerification(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			email = x.NewUUID().String() + "@ory.sh"
-			check(t, expectSuccess(t, false, values))
+			check(t, expectSuccess(t, nil, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			email = x.NewUUID().String() + "@ory.sh"
+			check(t, expectSuccess(t, nil, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
 			email = x.NewUUID().String() + "@ory.sh"
-			check(t, expectSuccess(t, true, values))
+			check(t, expectSuccess(t, nil, true, false, values))
 		})
 	})
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeVerificationFlowViaBrowser(t, c, public)
+		f := testhelpers.InitializeVerificationFlowViaBrowser(t, c, false, public)
 		res, err := c.Get(public.URL + verification.RouteSubmitFlow + "?flow=" + f.Id + "&token=i-do-not-exist")
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String()+"?flow=")
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, sr.Ui.Messages, 1)
@@ -251,7 +268,8 @@ func TestVerification(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
-		body := expectSuccess(t, false, func(v url.Values) {
+		c := testhelpers.NewClientWithCookies(t)
+		body := expectSuccess(t, c, false, false, func(v url.Values) {
 			v.Set("email", verificationEmail)
 		})
 
@@ -262,7 +280,6 @@ func TestVerification(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 201)
 
-		c := testhelpers.NewClientWithCookies(t)
 		res, err := c.Get(verificationLink)
 		require.NoError(t, err)
 
@@ -270,7 +287,7 @@ func TestVerification(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, sr.Ui.Messages, 1)
@@ -300,6 +317,7 @@ func TestVerification(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 			body := string(ioutilx.MustReadAll(res.Body))
 			assert.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String())
+			assert.EqualValues(t, text.NewInfoSelfServiceVerificationSuccessful().Text, gjson.Get(body, "ui.messages.0.text").String())
 
 			id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), identityToVerify.ID)
 			require.NoError(t, err)
@@ -317,12 +335,46 @@ func TestVerification(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectSuccess(t, false, values))
+			check(t, expectSuccess(t, nil, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectSuccess(t, nil, false, true, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectSuccess(t, true, values))
+			check(t, expectSuccess(t, nil, true, false, values))
 		})
+	})
+
+	t.Run("description=should verify an email address when the link is opened in another browser", func(t *testing.T) {
+		var check = func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+			verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			cl := testhelpers.NewClientWithCookies(t)
+			res, err := cl.Get(verificationLink)
+			require.NoError(t, err)
+			body := string(ioutilx.MustReadAll(res.Body))
+			require.NoError(t, res.Body.Close())
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
+			assert.Contains(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL))[0].Name, x.CSRFTokenName)
+
+			actualRes, err := cl.Get(public.URL + verification.RouteGetFlow + "?id=" + gjson.Get(body, "id").String())
+			require.NoError(t, err)
+			actualBody := string(ioutilx.MustReadAll(actualRes.Body))
+			require.NoError(t, actualRes.Body.Close())
+			assert.Equal(t, http.StatusOK, actualRes.StatusCode)
+
+			assertx.EqualAsJSON(t, body, actualBody)
+			assert.EqualValues(t, "passed_challenge", gjson.Get(actualBody, "state").String())
+		}
+
+		var values = func(v url.Values) {
+			v.Set("email", verificationEmail)
+		}
+
+		check(t, expectSuccess(t, nil, false, false, values))
 	})
 
 	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {
@@ -334,7 +386,7 @@ func TestVerification(t *testing.T) {
 		identityToVerify.VerifiableAddresses = append(identityToVerify.VerifiableAddresses, *email)
 		require.NoError(t, reg.IdentityManager().Update(context.Background(), identityToVerify, identity.ManagerAllowWriteProtectedTraits))
 
-		token := link.NewSelfServiceVerificationToken(&identityToVerify.VerifiableAddresses[0], f)
+		token := link.NewSelfServiceVerificationToken(&identityToVerify.VerifiableAddresses[0], f, time.Hour)
 		require.NoError(t, reg.VerificationTokenPersister().CreateVerificationToken(context.Background(), token))
 		return f, token
 	}

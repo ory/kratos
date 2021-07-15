@@ -23,6 +23,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		x.CSRFProvider
+		config.Provider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -44,90 +45,44 @@ func NewHandler(
 
 const (
 	RouteWhoami = "/sessions/whoami"
-	RouteRevoke = "/sessions"
-	// SessionsWhoisPath  = "/sessions/whois"
 )
+
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
+		http.MethodDelete} {
+		// Redirect to public endpoint
+		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
+	}
+}
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().ExemptPath(RouteWhoami)
-	h.r.CSRFHandler().ExemptPath(RouteRevoke)
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
 	}
-
-	public.DELETE(RouteRevoke, h.revoke)
-}
-
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	// admin.GET(SessionsWhoisPath, h.fromPath)
-}
-
-// swagger:parameters revokeSession
-// nolint:deadcode,unused
-type revokeSessionParameters struct {
-	// in: body
-	// required: true
-	Body revokeSession
-}
-
-// swagger:model revokeSession
-type revokeSession struct {
-	// The Session Token
-	//
-	// Invalidate this session token.
-	//
-	// required: true
-	SessionToken string `json:"session_token"`
-}
-
-// swagger:route DELETE /sessions public revokeSession
-//
-// Initialize Logout Flow for API Clients - Revoke a Session
-//
-// Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
-// such as mobile apps to log the user out of the system and invalidate the session.
-//
-// This endpoint does not remove any HTTP Cookies - use the Browser-Based Self-Service Logout Flow instead.
-//
-//     Consumes:
-//     - application/json
-//
-//     Produces:
-//     - application/json
-//
-//     Schemes: http, https
-//
-//     Responses:
-//       204: emptyResponse
-//       400: jsonError
-//       500: jsonError
-func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var p revokeSession
-	if err := h.dx.Decode(r, &p,
-		decoderx.HTTPJSONDecoder(),
-		decoderx.HTTPDecoderAllowedMethods("DELETE")); err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	if err := h.r.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
 }
 
 // nolint:deadcode,unused
 // swagger:parameters toSession
-type sessionWhoAmIParameters struct {
+type toSession struct {
+	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+	// scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+	// An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+	//
+	// It is ok if more than one cookie are included here as all other cookies will be ignored.
+	//
+	// in: header
+	Cookie string `json:"Cookie"`
 }
 
-// swagger:route GET /sessions/whoami public toSession
+// swagger:route GET /sessions/whoami v0alpha1 toSession
 //
 // Check Who the Current HTTP Session Belongs To
 //
@@ -135,19 +90,45 @@ type sessionWhoAmIParameters struct {
 // Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
 // Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
 //
+// If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
+//
+//	```js
+//	// pseudo-code example
+//	router.get('/protected-endpoint', async function (req, res) {
+//	  const session = await client.toSession(undefined, req.header('cookie'))
+//
+//    // console.log(session)
+//	})
+//	```
+//
+// When calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:
+//
+//	```js
+//	// pseudo-code example
+//	// ...
+//	const session = await client.toSession("the-session-token")
+//
+//  // console.log(session)
+//	```
+//
 // This endpoint is useful for:
 //
 // - AJAX calls. Remember to send credentials and set up CORS correctly!
 // - Reverse proxies and API Gateways
 // - Server-side calls - use the `X-Session-Token` header!
 //
+// This endpoint authenticates users by checking
+//
+// - if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
+// - if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
+// - if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
+//
+// If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+//
 //     Produces:
 //     - application/json
 //
 //     Schemes: http, https
-//
-//     Security:
-//       sessionCookie:
 //
 //     Responses:
 //       200: session

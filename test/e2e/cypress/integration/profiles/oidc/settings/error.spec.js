@@ -1,28 +1,34 @@
 import { APP_URL, gen, website } from '../../../../helpers'
 
-context('Settings', () => {
-  const up = (value) => `not-${value}`
-  const down = (value) => value.replace(/not-/, '')
-  let email
+context('OIDC Profile', () => {
+  describe('Settings', () => {
+    before(() => {
+      cy.useConfigProfile('oidc')
+    })
 
-  beforeEach(() => {
-    cy.clearCookies()
-    email = gen.email()
+    const up = (value) => `not-${value}`
+    const down = (value) => value.replace(/not-/, '')
+    let email
 
-    cy.registerOidc({ email, expectSession: true, website })
-    cy.visit(APP_URL + '/settings')
-  })
+    beforeEach(() => {
+      cy.clearCookies()
+      email = gen.email()
 
-  describe('oidc', () => {
-    it('should fail to link google because id token is missing', () => {
-      cy.get('button[value="google"]').click()
-      cy.get('#remember').click()
-      cy.get('#accept').click()
+      cy.registerOidc({ email, expectSession: true, website })
+      cy.visit(APP_URL + '/settings')
+    })
 
-      cy.get('.messages .message').should(
-        'contain.text',
-        'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
-      )
+    describe('oidc', () => {
+      it('should fail to link google because id token is missing', () => {
+        cy.get('button[value="google"]').click()
+        cy.get('#remember').click()
+        cy.get('#accept').click()
+
+        cy.get('.messages .message').should(
+          'contain.text',
+          'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
+        )
+      })
     })
   })
 })
