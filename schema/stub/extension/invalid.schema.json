@@ -7,7 +7,7 @@
       "ory.sh/kratos": {
         "credentials": {
           "password": {
-            "identifier": true
+            "identifier": 0
           }
         }
       }

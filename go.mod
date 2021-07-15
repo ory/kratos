@@ -16,6 +16,8 @@ replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.202
 
 replace github.com/ory/x => github.com/ory/x v0.0.262
 
+replace github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
+
 require (
 	github.com/DataDog/datadog-go v4.7.0+incompatible // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
