@@ -13,12 +13,22 @@ Something is not working.
 
 #### Issues
 
-- [ ] Opening verification link in another browser causes GET request to fail
+- [x] Submitting successful link verification again ends up with JSON response
+      ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Opening verification link in another browser causes GET request to fail
       due to CSRF issue
       ([kratos#1547](https://github.com/ory/kratos/issues/1547)) -
       [@hackerman](https://github.com/aeneasr)
-- [x] Submitting successful link verification again ends up with JSON response
-      ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
+
+### [Docs](https://github.com/ory/kratos/labels/docs)
+
+Affects documentation.
+
+#### Issues
+
+- [x] Update CSRF pitfall section for admin endpoints
+      ([kratos#1557](https://github.com/ory/kratos/issues/1557)) -
       [@hackerman](https://github.com/aeneasr)
 
 ## [v0.9.0-alpha.1](https://github.com/ory/kratos/milestone/11)
@@ -96,7 +106,8 @@ New feature or request.
       ([kratos#683](https://github.com/ory/kratos/issues/683)) -
       [@hackerman](https://github.com/aeneasr)
 - [ ] Validate identity schema on load
-      ([kratos#701](https://github.com/ory/kratos/issues/701))
+      ([kratos#701](https://github.com/ory/kratos/issues/701)) -
+      [@Alano Terblanche](https://github.com/Benehiko)
 - [ ] Support OAuth2 and OpenID Connect in API-based flows
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
