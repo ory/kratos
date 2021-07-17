@@ -132,8 +132,8 @@ type toSession struct {
 //
 //     Responses:
 //       200: session
-//       500: jsonError
 //       401: jsonError
+//       500: jsonError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {

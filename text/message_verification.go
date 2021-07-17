@@ -9,7 +9,6 @@ const (
 	InfoSelfServiceVerification           ID = 1070000 + iota // 1070000
 	InfoSelfServiceVerificationEmailSent                      // 1070001
 	InfoSelfServiceVerificationSuccessful                     // 1070002
-	InfoSelfServiceConfirmActionVerification                  // 1070003
 )
 
 const (
@@ -51,7 +50,7 @@ func NewVerificationEmailSent() *Message {
 
 func NewVerificationConfirmation() *Message {
 	return &Message{
-		ID:      InfoSelfServiceConfirmActionVerification,
+		ID:      InfoSelfServiceVerificationConfirmation,
 		Type:    Info,
 		Text:    "Please confirm this action by verifying that it's you.",
 		Context: context(nil),

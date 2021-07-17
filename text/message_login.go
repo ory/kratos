@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	InfoSelfServiceLoginRoot ID = 1010000 + iota // 1010000
-	InfoSelfServiceLogin                         // 1010001
-	InfoSelfServiceLoginWith                     // 1010002
+	InfoSelfServiceLoginRoot                ID = 1010000 + iota // 1010000
+	InfoSelfServiceLogin                                        // 1010001
+	InfoSelfServiceLoginWith                                    // 1010002
+	InfoSelfServiceVerificationConfirmation                     // 1010003
 )
 
 const (

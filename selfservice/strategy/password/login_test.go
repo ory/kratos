@@ -535,6 +535,16 @@ func TestCompleteLogin(t *testing.T) {
 					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password_identifier).attributes.value").String(), "%s", body)
 					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
 				})
+
+				t.Run("show verification confirmation when refresh is set to true", func(t *testing.T) {
+					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
+					require.NoError(t, err)
+					defer res.Body.Close()
+					body := ioutilx.MustReadAll(res.Body)
+
+					assert.True(t, gjson.GetBytes(body, "forced").Bool())
+					assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "verifying that", "%s", body)
+				})
 			})
 		})
 	})
