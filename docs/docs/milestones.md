@@ -27,6 +27,8 @@ Affects documentation.
 
 #### Issues
 
+- [ ] Different payload for stub:500
+      ([kratos#1568](https://github.com/ory/kratos/issues/1568))
 - [x] Update CSRF pitfall section for admin endpoints
       ([kratos#1557](https://github.com/ory/kratos/issues/1557)) -
       [@hackerman](https://github.com/aeneasr)
