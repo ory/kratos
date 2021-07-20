@@ -41,8 +41,9 @@ func (a *AES) Decrypt(ctx context.Context, encryptedString []byte) (string, erro
 	}
 	var err error
 	var plaintext []byte
-	for _, key := range a.c.Config(ctx).SecretsAES() {
-		plaintext, err = cryptopasta.Decrypt(encryptedString, &key)
+	secrets := a.c.Config(ctx).SecretsAES()
+	for i := range secrets {
+		plaintext, err = cryptopasta.Decrypt(encryptedString, &secrets[i])
 		if err == nil {
 			break
 		}
