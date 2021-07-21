@@ -82,16 +82,18 @@ sdk: .bin/swagger .bin/ory node_modules
 		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
 				ory dev openapi migrate \
+					--health-path-tags metadata \
 					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
 					-p file://.schema/openapi/patches/meta.yaml \
 					-p file://.schema/openapi/patches/schema.yaml \
 					-p file://.schema/openapi/patches/selfservice.yaml \
 					-p file://.schema/openapi/patches/security.yaml \
-					spec/swagger.json spec/openapi.json
+					-p file://.schema/openapi/patches/session.yaml \
+					spec/swagger.json spec/api.json
 
 		rm -rf internal/httpclient/models internal/httpclient/clients
 		mkdir -p internal/httpclient/
-		npm run openapi-generator-cli -- generate -i "spec/openapi.json" \
+		npm run openapi-generator-cli -- generate -i "spec/api.json" \
 				-g go \
 				-o "internal/httpclient" \
 				--git-user-id ory \

@@ -12,16 +12,17 @@ import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
-  initBrowserFlow,
-  initApiFlow,
-  initSpaFlow,
-  getFlow,
   getFlowMethodLinkWithErrors,
   getFlowMethodLinkSuccess,
   getFlowMethodLinkInvalidChallenge,
   getFlowMethodLinkChallengeDone
 } from './code/verification'
 import RenderFlow from '@theme/Code/RenderFlow'
+
+import DomainWarning from '@theme/DomainWarning'
+import AjaxWarning from '@theme/AjaxWarning'
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
 
 :::info
 
@@ -38,8 +39,9 @@ Ory Kratos allows users to verify their out-of-band (email, telephone number,
 
 There are two Verification Flow types supported in Ory Kratos:
 
-- Flows where the user sits in front of the Browser (e.g. website, single page
-  app, ...)
+- Flows where the user sits in front of the Browser and the application is
+  - a server-side application (e.g. NodeJS, Java, ...)
+  - a client-side application (e.g. ReactJS, AngularJS, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 The Verification Flow can be summarized as the following state machine:
@@ -63,18 +65,42 @@ stateDiagram
 `}
 />
 
-To enable verification flows, make the following adjustments to your Ory Kratos
-configuration:
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
 
-```yaml title="path/to/config/kratos.yml"
-selfservice:
-  methods:
+    Currently, account verification is enabled. In the future, disabling account verification will become an option.
+
+  </TabItem>
+  <TabItem value="oss">
+
+    To enable verification flows, make the following adjustments to your Ory Kratos
+    configuration:
+
+    ```yaml title="path/to/config/kratos.yml"
+    selfservice:
+    methods:
     link:
-      enabled: true
-  flows:
+    enabled: true
+    config:
+    # Defines how long a recovery link is valid for (default 1h)
+    lifespan: 15m
+
+    flows:
     verification:
-      enabled: true
-```
+    enabled: true
+
+    # Defines how long a recovery flow (the UI interaction, not the link!)
+    # is valid for (default 1h)
+    lifespan: 15m
+    ```
+
+  </TabItem>
+</Tabs>
 
 ## Account Activation
 
@@ -94,16 +120,6 @@ Currently, Ory Kratos only supports one verification method:
 - The `link` method performs verification of email addresses.
 
 ### Verification `link` Method
-
-The `link` method is dis/enabled in the Ory Kratos config:
-
-```yaml title="path/to/my/kratos/config.yml"
-selfservice:
-  methods:
-    link:
-      enabled: true
-      # ...
-```
 
 Enabling this method will send out verification emails on new sign ups and when
 a verified email address is updated.
@@ -177,6 +193,8 @@ address.
 
 ## Initialize Verification Flow to Request or Resend Verification Challenge
 
+<DomainWarning />
+
 The first step is to initialize the Verification Flow. This sets up Anti-CSRF
 tokens and more. Each verification flow has a `state` parameter which follows
 the state machine:
@@ -214,14 +232,47 @@ Kratos, your Verification UI, and the end-user's browser:
   interactions={['"Verify Email"']}
 />
 
-To initialize the Verification Flow, point the Browser to
-[the initialization endpoint](../../self-service#initialization-and-redirect-to-ui):
+To initialize the Verification Flow, point the Browser to the initialization
+endpoint:
 
-<CodeTabs items={initBrowserFlow} />
+```shell-session
+$ curl -s -i -X GET \
+    -H "Accept: text/html" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser
+
+HTTP/2 302
+date: Fri, 09 Jul 2021 13:08:00 GMT
+content-type: text/html; charset=utf-8
+content-length: 124
+location: https://playground.projects.oryapis.com/hosted/verification?flow=ba66958a-5f15-4b8f-88f9-52b35020db5c
+cache-control: private, no-cache, no-store, must-revalidate
+set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=VZDY6ArI9oL3QYTJgYOJWSavAmAp0qcJYLSFKGXDd3U=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+vary: Origin
+vary: Cookie
+strict-transport-security: max-age=15724800; includeSubDomains
+
+<a href="https://playground.projects.oryapis.com/hosted/verification?flow=ba66958a-5f15-4b8f-88f9-52b35020db5c">Found</a>.
+```
 
 The server responds with a HTTP 302 redirect to the Verification UI, appending
 the `?flow=<flow-id>` query parameter (see the curl example) to the URL
 configured here:
+
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+    The Ory Cloud Platform offers a default UI implementation. Pointing to
+    another UI endpoint will be supported in the future.
+
+  </TabItem>
+  <TabItem value="oss">
+
+You can configure which recovery URL to use in the Ory Kratos config:
 
 ```yaml title="path/to/config/kratos.yml"
 selfservice:
@@ -231,17 +282,14 @@ selfservice:
       ui_url: http://127.0.0.1:4455/verification
 ```
 
+  </TabItem>
+</Tabs>
+
 ### Verification for Client-Side (AJAX) Browser Clients
 
 The Verification Flow for client-side browser clients relies on AJAX requests.
 
-:::note
-
-This flow requires AJAX and has all the potential problems with CORS. To make it
-work, you need to ensure that cookies work by setting the correct configuration
-options in your JavaScript code and the CORS headers of the server.
-
-:::
+<AjaxWarning />
 
 <SelfServiceSpaFlow
   flows={['verification']}
@@ -249,10 +297,88 @@ options in your JavaScript code and the CORS headers of the server.
   interactions={['"Verify Email"']}
 />
 
-To initialize the Verification Flow, point the Browser to the initialization
-endpoint:
+To initialize the Verification Flow, call the verification initialization
+endpoint and set `Accept: application/json`:
 
-<CodeTabs items={initSpaFlow} />
+```
+$ curl -v -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser | jq
+
+> GET /api/kratos/public/self-service/verification/browser HTTP/2
+> Host: playground.projects.oryapis.com
+> User-Agent: curl/7.64.1
+> Accept: application/json
+
+< HTTP/2 200
+< date: Fri, 09 Jul 2021 09:36:34 GMT
+< content-type: application/json; charset=utf-8
+< content-length: 1241
+< cache-control: private, no-cache, no-store, must-revalidate
+< set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=wSDoLSdDqNJv2uWVWdv5euaQo9UimCFS1GhXokTLU3o=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+< vary: Origin
+< vary: Cookie
+< strict-transport-security: max-age=15724800; includeSubDomains
+
+{
+  "id": "bcf93f61-2ecd-48d2-ac18-6d731fead2b6",
+  "type": "browser",
+  "expires_at": "2021-06-15T14:38:26.190743Z",
+  "issued_at": "2021-06-15T14:33:26.190743Z",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/browser",
+  "ui": {
+    "action": "http://127.0.0.1:4455/self-service/verification?flow=bcf93f61-2ecd-48d2-ac18-6d731fead2b6",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "g0pSHhIJGTfOZ+VjShGfPEuGwDQMel7Xpc/DaLVYTSjMxuhLg90UqFKVrWrldezcf1ykF1jud9ZBNcg2rKarQw==",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
+  },
+  "state": "choose_method"
+}
+
+```
 
 ### Verification for API Clients
 
@@ -272,7 +398,69 @@ endpoint
 ([REST API Reference](../../reference/api.mdx#initialize-verification-flow-for-api-clients))
 which returns a JSON response:
 
-<CodeTabs items={initApiFlow} />
+```shell-session
+$ curl -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/api | jq
+
+{
+  "id": "535faa25-d617-42ff-b85c-c0d04fd87c44",
+  "type": "api",
+  "expires_at": "2021-07-09T14:11:07.30270945Z",
+  "issued_at": "2021-07-09T13:11:07.30270945Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/verification/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification?flow=535faa25-d617-42ff-b85c-c0d04fd87c44",
+    "method": "POST",
+    "nodes": [
+      {
+        "type": "input",
+        "group": "default",
+        "attributes": {
+          "name": "csrf_token",
+          "type": "hidden",
+          "value": "",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {}
+      },
+      {
+        "type": "input",
+        "group": "link",
+        "attributes": {
+          "name": "method",
+          "type": "submit",
+          "value": "link",
+          "disabled": false
+        },
+        "messages": [],
+        "meta": {
+          "label": {
+            "id": 1070005,
+            "text": "Submit",
+            "type": "info"
+          }
+        }
+      }
+    ]
+  },
+  "state": "choose_method"
+}
+```
 
 ## Verification Flow Payloads
 
@@ -281,7 +469,29 @@ Fetching the Verification Flow
 only required for browser clients but also works for Verification Flows
 initialized by API clients. All you need is a valid flow ID:
 
-<CodeTabs items={getFlow} />
+```shell-session
+$ flowId=$(curl -s -X GET \
+    -H "Accept: application/json" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/api | jq -r '.id')
+
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/flows?id=$flowId" | jq
+
+{
+  "id": "979d00d7-4d45-4960-8566-730e37dc0a3e",
+  "type": "api",
+  "expires_at": "2021-07-09T14:11:53.197917Z",
+  "issued_at": "2021-07-09T13:11:53.197917Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/verification/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification?flow=979d00d7-4d45-4960-8566-730e37dc0a3e",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  },
+  "state": "choose_method"
+}
+```
 
 ### Send Verification Link to Email
 
@@ -298,7 +508,7 @@ the Verification Flow:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/verification/flows?id=956c0499-17a9-4a99-9602-9282d1632f7b' | \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/verification/flows?id=956c0499-17a9-4a99-9602-9282d1632f7b' | \
       jq -r '.ui.nodes[] | select(.group=="link")'
 
 {
@@ -332,22 +542,6 @@ $ curl -H "Accept: application/json" -s \
   }
 }
 ```
-
-## Verification Flow Form Rendering
-
-The Verification User Interface is a route (page / site) in your application
-(server, native app, single page app) that should render a verification form.
-
-In stark contrast to other Identity Systems, Ory Kratos does not render this
-HTML. Instead, you need to implement the HTML code in your application (e.g.
-NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
-flexibility and customizability in your user interface flows and designs.
-
-You will use the Verification Flow JSON response to render the verification form
-UI, which could looks as follows depending on your programming language and web
-framework:
-
-<RenderFlow flow="verification" />
 
 ## Verification Form Validation
 
@@ -408,3 +602,19 @@ Verification Flow that has now the `state` of `passed_challenge`:
 You may also
 [configure a redirect URL](../../concepts/browser-redirect-flow-completion.mdx)
 instead which would send the end-user to that configured URL.
+
+## Code Examples for NodeJS, ReactJS, Go, ...
+
+The Verification User Interface is a route (page / site) in your application
+(server, native app, single page app) that should render a verification form.
+
+In stark contrast to other Identity Systems, Ory Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+You will use the Verification Flow JSON response to render the verification form
+UI, which could looks as follows depending on your programming language and web
+framework:
+
+<RenderFlow flow="verification" />

@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **Id** | **string** |  | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the request occurred. | 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
-**State** | **string** |  | 
+**State** | [**RecoveryFlowState**](RecoveryFlowState.md) |  | 
 **Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
 **Ui** | [**UiContainer**](UiContainer.md) |  | 
 
@@ -17,7 +17,7 @@ Name | Type | Description | Notes
 
 ### NewRecoveryFlow
 
-`func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state string, ui UiContainer, ) *RecoveryFlow`
+`func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, requestUrl string, state RecoveryFlowState, ui UiContainer, ) *RecoveryFlow`
 
 NewRecoveryFlow instantiates a new RecoveryFlow object
 This constructor will assign default values to properties that have it defined,
@@ -139,20 +139,20 @@ SetRequestUrl sets RequestUrl field to given value.
 
 ### GetState
 
-`func (o *RecoveryFlow) GetState() string`
+`func (o *RecoveryFlow) GetState() RecoveryFlowState`
 
 GetState returns the State field if non-nil, zero value otherwise.
 
 ### GetStateOk
 
-`func (o *RecoveryFlow) GetStateOk() (*string, bool)`
+`func (o *RecoveryFlow) GetStateOk() (*RecoveryFlowState, bool)`
 
 GetStateOk returns a tuple with the State field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetState
 
-`func (o *RecoveryFlow) SetState(v string)`
+`func (o *RecoveryFlow) SetState(v RecoveryFlowState)`
 
 SetState sets State field to given value.
 

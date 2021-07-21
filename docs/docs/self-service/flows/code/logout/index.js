@@ -1,3 +1,4 @@
+import logoutCode from '@theme/logoutCode'
 export const apiFlow = {
   curl: {
     label: 'curl',
@@ -7,8 +8,7 @@ export const apiFlow = {
   go: {
     label: 'Go',
     language: 'go',
-    code: require('raw-loader!../../../../../../examples/go/submit/logout/main.go')
-      .default
+    code: logoutCode
   }
 }
 export const browserFlow = {

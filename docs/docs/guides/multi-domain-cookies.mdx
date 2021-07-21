@@ -1,7 +1,10 @@
 ---
 id: multi-domain-cookies
-title: Getting URLs and Cookies to Work on Multi-Domains
+title: Advanced Base URL, CSRF & Session Cookie Settings
 ---
+
+This document describes advanced strategies for multi-domain environments and
+other scenarios.
 
 ## Base URL
 
@@ -57,19 +60,44 @@ is important to know that
 
 You can adjust the session cookie's domain using:
 
-```yaml title="path/to/kratos/config.yml
+```yaml title="path/to/kratos/config.yml"
+# Settings for both anti-CSRF and session cookies
+cookies:
+  domain: www.cookies.com
+  path: /cookies
+  same_site: Lax
+
 session:
   cookie:
+    # Overrides cookies.domain for session cookies
     domain: my-domain.com
+
+    # Overrides cookies.path for session cookies
     path: /
+
+    # Overrides cookies.samesite for session cookies
+    same_site: Strict
+
+serve:
+  public:
+    domain_aliases:
+      # When a request is coming from www.another-domain.com or that-domain.com, these these override:
+      #
+      # - session.cookie.domain and session.cookie.path for sessions
+      # - cookies.domain and cookies.path for anti-CSRF cookies
+
+      - match_domain: www.another-domain.com
+        base_path: /kratos
+
+        # The scheme has NO effect on the cookie `secure` flag!
+        # scheme: https
+
+      - match_domain: that-domain.com
+        base_path: /
+
+        # The scheme has NO effect on the cookie `secure` flag!
+        # scheme: http
 ```
-
-:::warning
-
-Do not set the cookie domain when using multiple domain aliases as it enforces
-the domain - breaking sessions on your alias domains.
-
-:::
 
 What **is not** currently possible is to set up Ory Kratos in a way where you
 get session cookies running on two separate top level domains (e.g.

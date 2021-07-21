@@ -16,7 +16,7 @@ $ docker run --rm -it oryd/kratos help
 ```
 
 You can find more detailed information on the official Kratos docker images
-[here](guides/docker).
+[here](guides/docker.md).
 
 ## macOS
 
@@ -79,8 +79,8 @@ compile it, and set up flags so that `kratos version` works as expected. Please
 note that this will only work with POSIX-compliant shells like `bash` or `sh`.
 
 ```shell
-$ go get -d -u github.com/ory/kratos
-$ cd $(go env GOPATH)/src/github.com/ory/kratos
+$ git clone https://github.com/ory/kratos.git
+$ cd kratos
 $ GO111MODULE=on make install
 $ $(go env GOPATH)/bin/kratos help
 ```

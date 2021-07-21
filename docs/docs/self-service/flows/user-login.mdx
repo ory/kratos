@@ -8,17 +8,15 @@ import ApiWarning from '@theme/ApiWarning'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceSpaFlow from '@theme/SelfServiceSpaFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
-
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
 import CodeTabs from '@theme/Code/CodeTabs'
 import {
-  initBrowserFlow,
-  initSpaFlow,
-  initApiFlow,
-  getFlow,
   getFlowMethodPasswordWithErrors,
   getFlowMethodOidcWithErrors
 } from './code/login'
 import RenderFlow from '@theme/Code/RenderFlow'
+import DomainWarning from '@theme/DomainWarning'
 
 :::info
 
@@ -29,8 +27,9 @@ continuing with this document.
 
 There are two Login Flow types supported in Ory Kratos:
 
-- Flows where the user sits in front of the Browser (e.g. website, single page
-  app, ...)
+- Flows where the user sits in front of the Browser and the application is
+  - a server-side application (e.g. NodeJS, Java, ...)
+  - a client-side application (e.g. ReactJS, AngularJS, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
 The Login Flow can be summarized as the following state machine:
@@ -65,7 +64,20 @@ Currently, two login methods are supported:
   Facebook (check out the
   [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
-Both are dis/enabled in the Ory Kratos config:
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+Currently, only the password method is enabled.
+
+  </TabItem>
+  <TabItem value="oss">
+
+You can configure which methods to use in the Ory Kratos config:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
@@ -74,10 +86,15 @@ selfservice:
       enabled: true
     oidc:
       enabled: true
-      # ...
+  # ...
 ```
 
+  </TabItem>
+</Tabs>
+
 ## Initialize Login Flow
+
+<DomainWarning />
 
 The first step is to initialize the Login Flow. This allows pre-login hooks to
 run, set up Anti-CSRF tokens, and more.
@@ -95,11 +112,44 @@ your Login UI, and the end-user's browser:
 
 To initialize the Login Flow, point the Browser to the initialization endpoint:
 
-<CodeTabs items={initBrowserFlow} />
+```shell-session
+$ curl -s -i -X GET \
+    -H "Accept: text/html" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser
+
+HTTP/2 303
+date: Fri, 09 Jul 2021 10:23:52 GMT
+content-type: text/html; charset=utf-8
+content-length: 121
+location: https://playground.projects.oryapis.com/hosted/login?flow=3fc63726-8461-43f4-974a-5579ff4174f1
+cache-control: private, no-cache, no-store, must-revalidate
+set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=Lk9swSOlimGS9LI5HslOyEKGL4hMQzWHnwnQpm9HGAA=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+vary: Origin
+vary: Cookie
+strict-transport-security: max-age=15724800; includeSubDomains
+
+<a href="https://playground.projects.oryapis.com/hosted/login?flow=3fc63726-8461-43f4-974a-5579ff4174f1">See Other</a>.
+```
 
 The server responds with a HTTP 302 redirect to the Login UI, appending the
 `?flow=<flow-id>` query parameter (see the curl example) to the URL configured
 here:
+
+<Tabs
+  defaultValue="oss"
+  values={[
+    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Kratos', value: 'oss'}
+  ]}>
+  <TabItem value="ocp">
+
+The Ory Cloud Platform offers a default UI implementation. Pointing to another
+UI endpoint will be supported in the future.
+
+  </TabItem>
+  <TabItem value="oss">
+
+You can configure which login URL to use in the Ory Kratos config:
 
 ```yaml title="path/to/config/kratos.yml"
 selfservice:
@@ -109,17 +159,14 @@ selfservice:
       ui_url: http://127.0.0.1:4455/auth/login
 ```
 
+  </TabItem>
+</Tabs>
+
 ### Login for Client-Side (AJAX) Browser Clients
 
 The Login Flow for client-side browser clients relies on AJAX requests.
 
-:::note
-
-This flow requires AJAX and has all the potential problems with CORS. To make it
-work, you need to ensure that cookies work by setting the correct configuration
-options in your JavaScript code and the CORS headers of the server.
-
-:::
+<AjaxWarning />
 
 <SelfServiceSpaFlow
   flows={['login']}
@@ -127,9 +174,45 @@ options in your JavaScript code and the CORS headers of the server.
   interactions={['"Log in"']}
 />
 
-To initialize the Login Flow, point the Browser to the initialization endpoint:
+To initialize the Registration Flow, call the login initialization endpoint and
+set `Accept: application/json`:
 
-<CodeTabs items={initSpaFlow} />
+```shell-session
+$ curl -v -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser | jq
+
+> GET /api/kratos/public/self-service/login/browser HTTP/2
+> Host: playground.projects.oryapis.com
+> User-Agent: curl/7.64.1
+> Accept: application/json
+
+< HTTP/2 200
+< date: Fri, 09 Jul 2021 10:25:12 GMT
+< content-type: application/json; charset=utf-8
+< content-length: 1359
+< cache-control: private, no-cache, no-store, must-revalidate
+< set-cookie: aHR0cHM6Ly9wbGF5Z3JvdW5kLnByb2plY3RzLm9yeWFwaXMuY29tL2FwaS9rcmF0b3MvcHVibGlj_csrf_token=UlKMcLe00G8B9GjC7D1I5rvQ6P79Q0YpzKb4lo7uLtw=; Path=/api/kratos/public; Domain=playground.projects.oryapis.com; Max-Age=31536000; HttpOnly; Secure; SameSite=None
+< vary: Origin
+< vary: Cookie
+< strict-transport-security: max-age=15724800; includeSubDomains
+
+{
+  "id": "ff0c97c4-a7bb-49a5-a8a6-ebf174877fa5",
+  "type": "browser",
+  "expires_at": "2021-07-09T11:25:12.136099226Z",
+  "issued_at": "2021-07-09T10:25:12.136099226Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/login/browser",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=ff0c97c4-a7bb-49a5-a8a6-ebf174877fa5",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  },
+  "created_at": "2021-07-09T10:25:12.137554Z",
+  "updated_at": "2021-07-09T10:25:12.137554Z",
+  "forced": false
+}
+```
 
 ### Login for API Clients and Clients without Browsers
 
@@ -149,7 +232,24 @@ endpoint
 ([REST API Reference](../../reference/api.mdx#initialize-login-flow-for-api-clients))
 which returns a JSON response:
 
-<CodeTabs items={initApiFlow} />
+```shell-session
+$ curl -s -X GET \
+    -H "Accept: application/json"  \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api | jq
+
+{
+  "id": "9d17f37b-b60b-44f5-9812-4829a89810f7",
+  "type": "api",
+  "expires_at": "2021-07-09T11:26:04.019418543Z",
+  "issued_at": "2021-07-09T10:26:04.019418543Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/login/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=9d17f37b-b60b-44f5-9812-4829a89810f7",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
+```
 
 ## Login Flow Payloads
 
@@ -158,7 +258,28 @@ Fetching the Login Flow
 required for browser clients but also works for Login Flows initialized by API
 clients. All you need is a valid flow ID:
 
-<CodeTabs items={getFlow} />
+```shell-session
+$ flowId=$(curl -s -X GET \
+    -H "Accept: application/json" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api | jq -r '.id')
+
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/flows?id=$flowId" | jq
+
+{
+  "id": "d8c4a887-ccb0-4a1a-882a-7708e0bf3501",
+  "type": "api",
+  "expires_at": "2021-07-09T11:26:50.2356Z",
+  "issued_at": "2021-07-09T10:26:50.2356Z",
+  "request_url": "http://playground.projects.oryapis.com/self-service/login/api",
+  "ui": {
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=d8c4a887-ccb0-4a1a-882a-7708e0bf3501",
+    "method": "POST",
+    "nodes": [ /* ... */ ]
+  }
+}
+```
 
 ### Login with Username/Email and Password
 
@@ -175,16 +296,16 @@ in the Login Flow:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/login/flows?id=42e26bc5-8014-400c-b463-dc5c3738c242' | jq
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/self-service/login/flows?id=42e26bc5-8014-400c-b463-dc5c3738c242' | jq
 
 {
   "id": "42e26bc5-8014-400c-b463-dc5c3738c242",
   "type": "browser",
   "expires_at": "2021-04-28T10:04:44.506336771Z",
   "issued_at": "2021-04-28T09:54:44.506336771Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=42e26bc5-8014-400c-b463-dc5c3738c242",
     "method": "POST",
     "nodes": [
       {
@@ -297,7 +418,7 @@ providers as submit fields:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/login/flows?id=d6340737-89f2-4b01-a848-79007de6f430' \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/self-service/login/flows?id=d6340737-89f2-4b01-a848-79007de6f430' \
     | jq
 
 {
@@ -305,7 +426,7 @@ $ curl -H "Accept: application/json" -s \
   "type": "browser",
   "expires_at": "2021-04-28T11:05:01.382156Z",
   "issued_at": "2021-04-28T10:05:01.382156Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser",
   "ui": {
     "action": "http://127.0.0.1:4455/self-service/login?flow=d6340737-89f2-4b01-a848-79007de6f430",
     "method": "POST",
@@ -349,21 +470,6 @@ $ curl -H "Accept: application/json" -s \
   "forced": false
 }
 ```
-
-## Login Flow Form Rendering
-
-The Login User Interface is a route (page / site) in your application (server,
-native app, single page app) that should render a login form.
-
-In stark contrast to other Identity Systems, Ory Kratos does not render this
-HTML. Instead, you need to implement the HTML code in your application (e.g.
-NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
-flexibility and customizability in your user interface flows and designs.
-
-You will use the Login Flow JSON response to render the login form UI, which
-could looks as follows depending on your programming language and web framework:
-
-<RenderFlow flow="login" />
 
 ## Login Form Validation
 
@@ -435,7 +541,7 @@ Now, whenever the browser is making a request (with cookies) to the
 
 ```shell script
 curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==" \
-  http://127.0.0.1:4433/sessions/whoami | jq
+  https://playground.projects.oryapis.com/api/kratos/public/sessions/whoami | jq
 
 {
   "id": "ede90ce6-2420-435a-a745-3d8ab1a9636c",
@@ -446,7 +552,7 @@ curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQ
   "identity": {
     "id": "d96e86d9-bc33-4aa5-b865-4ade8a3974b3",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "foouser@ory.sh",
       "name": {
@@ -491,7 +597,7 @@ which includes a `Set-Cookie` header and a JSON response (see below):
     "identity": {
       "id": "bf32596a-f853-47c4-91e6-a3f41cf4949d",
       "schema_id": "default",
-      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
       "traits": {
         "email": "api@user.org",
         "name": {
@@ -531,7 +637,7 @@ Token:
 # Inits a Login Flow
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/login/api" \
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api" \
     | jq -r '.ui.action'\
 )
 
@@ -551,7 +657,7 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
     "identity": {
       "id": "bf32596a-f853-47c4-91e6-a3f41cf4949d",
       "schema_id": "default",
-      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
       "traits": {
         "email": "api@user.org",
         "name": {
@@ -586,7 +692,7 @@ The Ory Kratos Session Token can be checked at the
 
 ```shell script
 $ curl -s -H "Authorization: Bearer svX8bE9HTiVpMr7r55TtKtcOkLRhAq1a" \
-  http://127.0.0.1:4433/sessions/whoami | jq
+  https://playground.projects.oryapis.com/api/kratos/public/sessions/whoami | jq
 
 {
   "id": "d09fc470-9e11-4e70-855f-0dc1aee7e501",
@@ -597,7 +703,7 @@ $ curl -s -H "Authorization: Bearer svX8bE9HTiVpMr7r55TtKtcOkLRhAq1a" \
   "identity": {
     "id": "9ee8fb81-9d5c-47a7-9cee-28a0f64dccbb",
     "schema_id": "default",
-    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
     "traits": {
       "email": "api@user.org",
       "name": {
@@ -641,9 +747,24 @@ Refreshing a session will not log the user out, unless another user signs in.
 To refresh a session, append `?refresh=true` to:
 
 - `/self-service/login/browser` for browser Clients (e.g.
-  `http://127.0.0.1:4433/self-service/login/browser?refresh=true`)
+  `https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser?refresh=true`)
 - `/self-service/login/api` for API Clients (e.g.
-  `http://127.0.0.1:4433/self-service/login/api?refresh=true`)
+  `https://playground.projects.oryapis.com/api/kratos/public/self-service/login/api?refresh=true`)
+
+## Code Examples for NodeJS, ReactJS, Go, ...
+
+The Login User Interface is a route (page / site) in your application (server,
+native app, single page app) that should render a login form.
+
+In stark contrast to other Identity Systems, Ory Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+You will use the Login Flow JSON response to render the login form UI, which
+could looks as follows depending on your programming language and web framework:
+
+<RenderFlow flow="login" />
 
 ## Hooks
 

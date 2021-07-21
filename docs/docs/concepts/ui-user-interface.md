@@ -45,7 +45,7 @@ forms that need to be shown during e.g. login, registration:
   "expires_at": "2021-04-28T13:55:36.046466067Z",
   "issued_at": "2021-04-28T12:55:36.046466067Z",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/settings?flow=9b527900-2199-4221-9252-7971b3362282",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/settings?flow=9b527900-2199-4221-9252-7971b3362282",
     "method": "POST",
     "nodes": [
       {

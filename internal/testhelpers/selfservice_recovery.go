@@ -33,21 +33,21 @@ func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
+func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceVerificationFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err, "%s", res.Request.URL.String())
 	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.VerificationFlow {
+func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.SelfServiceVerificationFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 	req, err := http.NewRequest("GET", ts.URL+verification.RouteInitBrowserFlow, nil)
 	require.NoError(t, err)
@@ -62,22 +62,22 @@ func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, isS
 	defer res.Body.Close()
 
 	if isSPA {
-		var f kratos.VerificationFlow
+		var f kratos.SelfServiceVerificationFlow
 		require.NoError(t, json.NewDecoder(res.Body).Decode(&f))
 		return &f
 	}
 
-	rs, _, err := publicClient.PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.VerificationFlow {
+func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceVerificationFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceVerificationWithoutBrowser(context.Background()).Execute()
+	rs, _, err := publicClient.V0alpha1Api.InitializeSelfServiceVerificationFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -87,7 +87,7 @@ func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *htt
 func VerificationMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *kratos.VerificationFlow,
+	f *kratos.SelfServiceVerificationFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -112,7 +112,7 @@ func SubmitVerificationForm(
 	expectedStatusCode int,
 	expectedURL string,
 ) string {
-	var f *kratos.VerificationFlow
+	var f *kratos.SelfServiceVerificationFlow
 	if isAPI {
 		f = InitializeVerificationFlowViaAPI(t, hc, publicTS)
 	} else {

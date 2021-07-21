@@ -30,8 +30,8 @@ type Identity struct {
 	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.  format: url
 	SchemaUrl string `json:"schema_url"`
 	// State is the identity's state.
-	State          string     `json:"state"`
-	StateChangedAt *time.Time `json:"state_changed_at,omitempty"`
+	State          interface{} `json:"state"`
+	StateChangedAt *time.Time  `json:"state_changed_at,omitempty"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_url`.
 	Traits interface{} `json:"traits"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
@@ -44,7 +44,7 @@ type Identity struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewIdentity(id string, schemaId string, schemaUrl string, state string, traits interface{}) *Identity {
+func NewIdentity(id string, schemaId string, schemaUrl string, state interface{}, traits interface{}) *Identity {
 	this := Identity{}
 	this.Id = id
 	this.SchemaId = schemaId
@@ -231,9 +231,10 @@ func (o *Identity) SetSchemaUrl(v string) {
 }
 
 // GetState returns the State field value
-func (o *Identity) GetState() string {
+// If the value is explicit nil, the zero value for interface{} will be returned
+func (o *Identity) GetState() interface{} {
 	if o == nil {
-		var ret string
+		var ret interface{}
 		return ret
 	}
 
@@ -242,15 +243,16 @@ func (o *Identity) GetState() string {
 
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
-func (o *Identity) GetStateOk() (*string, bool) {
-	if o == nil {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *Identity) GetStateOk() (*interface{}, bool) {
+	if o == nil || o.State == nil {
 		return nil, false
 	}
 	return &o.State, true
 }
 
 // SetState sets field value
-func (o *Identity) SetState(v string) {
+func (o *Identity) SetState(v interface{}) {
 	o.State = v
 }
 
@@ -396,7 +398,7 @@ func (o Identity) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["schema_url"] = o.SchemaUrl
 	}
-	if true {
+	if o.State != nil {
 		toSerialize["state"] = o.State
 	}
 	if o.StateChangedAt != nil {

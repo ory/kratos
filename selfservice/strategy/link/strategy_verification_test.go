@@ -235,7 +235,7 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String()+"?flow=")
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, sr.Ui.Messages, 1)
@@ -285,7 +285,7 @@ func TestVerification(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, sr.Ui.Messages, 1)
@@ -315,6 +315,7 @@ func TestVerification(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 			body := string(ioutilx.MustReadAll(res.Body))
 			assert.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String())
+			assert.EqualValues(t, text.NewInfoSelfServiceVerificationSuccessful().Text, gjson.Get(body, "ui.messages.0.text").String())
 
 			id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), identityToVerify.ID)
 			require.NoError(t, err)
@@ -353,7 +354,7 @@ func TestVerification(t *testing.T) {
 		identityToVerify.VerifiableAddresses = append(identityToVerify.VerifiableAddresses, *email)
 		require.NoError(t, reg.IdentityManager().Update(context.Background(), identityToVerify, identity.ManagerAllowWriteProtectedTraits))
 
-		token := link.NewSelfServiceVerificationToken(&identityToVerify.VerifiableAddresses[0], f)
+		token := link.NewSelfServiceVerificationToken(&identityToVerify.VerifiableAddresses[0], f, time.Hour)
 		require.NoError(t, reg.VerificationTokenPersister().CreateVerificationToken(context.Background(), token))
 		return f, token
 	}

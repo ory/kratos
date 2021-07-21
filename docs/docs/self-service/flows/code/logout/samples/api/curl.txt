@@ -5,7 +5,7 @@ curl -s -v -X DELETE \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   --data '{"session_token": "'$session_token'"}' \
-  http://127.0.0.1:4433/self-service/logout/api
+  https://playground.projects.oryapis.com/api/kratos/public/self-service/logout/api
 
 > DELETE /self-service/logout/api HTTP/1.1
 > Host: 127.0.0.1:4433

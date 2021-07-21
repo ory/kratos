@@ -1,5 +1,6 @@
 disallowAdditionalPropertiesIfNotPresent: true
 packageName: client
-generateInterfaces: false
+generateInterfaces: true
 isGoSubmodule: false
 structPrefix: true
+enumClassPrefix: true

@@ -13,15 +13,6 @@ info:
   title: Ory Kratos API
 servers:
 - url: /
-tags:
-- description: All administrative API endpoints exposed at the admin API port.
-  externalDocs:
-    url: https://www.ory.sh/kratos/docs/reference/api
-  name: admin
-- description: All public API endpoints exposed at the public API port.
-  externalDocs:
-    url: https://www.ory.sh/kratos/docs/reference/api
-  name: public
 paths:
   /health/alive:
     get:
@@ -50,7 +41,7 @@ paths:
           description: genericError
       summary: Check HTTP Server Status
       tags:
-      - admin
+      - metadata
   /health/ready:
     get:
       description: |-
@@ -78,14 +69,14 @@ paths:
           description: Ory Kratos is not yet ready to accept requests.
       summary: Check HTTP Server and Database Status
       tags:
-      - admin
+      - metadata
   /identities:
     get:
       description: |-
         Lists all identities. Does not support search at the moment.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: listIdentities
+      operationId: adminListIdentities
       parameters:
       - description: |-
           Items per Page
@@ -118,31 +109,31 @@ paths:
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/identity'
-                type: array
-          description: A list of identities.
+                $ref: '#/components/schemas/identityList'
+          description: identityList
         "500":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: List Identities
       tags:
-      - admin
+      - v0alpha1
     post:
       description: |-
         This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
         using this method! A way to achieve that will be introduced in the future.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: createIdentity
+      operationId: adminCreateIdentity
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/createIdentity'
+              $ref: '#/components/schemas/adminCreateIdentityBody'
         x-originalParamName: Body
       responses:
         "201":
@@ -150,7 +141,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/identity'
-          description: A single identity.
+          description: identity
         "400":
           content:
             application/json:
@@ -169,9 +160,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: Create an Identity
       tags:
-      - admin
+      - v0alpha1
   /identities/{id}:
     delete:
       description: |-
@@ -180,7 +173,7 @@ paths:
         assumed that is has been deleted already.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: deleteIdentity
+      operationId: adminDeleteIdentity
       parameters:
       - description: ID is the identity's ID.
         explode: false
@@ -206,13 +199,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: Delete an Identity
       tags:
-      - admin
+      - v0alpha1
     get:
       description: Learn how identities work in [Ory Kratos' User And Identity Model
         Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: getIdentity
+      operationId: adminGetIdentity
       parameters:
       - description: ID must be set to the ID of identity you want to get
         explode: false
@@ -228,7 +223,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/identity'
-          description: A single identity.
+          description: identity
         "404":
           content:
             application/json:
@@ -241,9 +236,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: Get an Identity
       tags:
-      - admin
+      - v0alpha1
     put:
       description: |-
         This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
@@ -252,7 +249,7 @@ paths:
         The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
-      operationId: updateIdentity
+      operationId: adminUpdateIdentity
       parameters:
       - description: ID must be set to the ID of identity you want to update
         explode: false
@@ -266,7 +263,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/updateIdentity'
+              $ref: '#/components/schemas/AdminUpdateIdentityBody'
         x-originalParamName: Body
       responses:
         "200":
@@ -299,9 +296,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+      security:
+      - oryAccessToken: []
       summary: Update an Identity
       tags:
-      - admin
+      - v0alpha1
   /metrics/prometheus:
     get:
       description: |-
@@ -320,26 +319,26 @@ paths:
         Get snapshot metrics from the service. If you're using k8s, you can then add annotations to
         your deployment like so:
       tags:
-      - admin
+      - metadata
   /recovery/link:
     post:
       description: |-
         This endpoint creates a recovery link which should be given to the user in order for them to recover
         (or activate) their account.
-      operationId: createRecoveryLink
+      operationId: adminCreateSelfServiceRecoveryLink
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateRecoveryLink'
+              $ref: '#/components/schemas/adminCreateSelfServiceRecoveryLinkBody'
         x-originalParamName: Body
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/recoveryLink'
-          description: recoveryLink
+                $ref: '#/components/schemas/selfServiceRecoveryLink'
+          description: selfServiceRecoveryLink
         "400":
           content:
             application/json:
@@ -360,11 +359,11 @@ paths:
           description: jsonError
       summary: Create a Recovery Link
       tags:
-      - admin
+      - v0alpha1
   /schemas/{id}:
     get:
-      description: Get a Traits Schema Definition
-      operationId: getSchema
+      description: Get a JSON Schema
+      operationId: getJsonSchema
       parameters:
       - description: ID must be set to the ID of schema you want to get
         explode: false
@@ -394,8 +393,7 @@ paths:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
       tags:
-      - public
-      - admin
+      - v0alpha1
   /self-service/errors:
     get:
       description: |-
@@ -403,15 +401,15 @@ paths:
 
         This endpoint supports stub values to help you implement the error UI:
 
-        `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
+        `?id=stub:500` - returns a stub 500 (Internal Server Error) error.
 
         More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
       operationId: getSelfServiceError
       parameters:
-      - description: Error is the container's ID
+      - description: Error is the error's ID
         explode: true
         in: query
-        name: error
+        name: id
         required: true
         schema:
           type: string
@@ -421,8 +419,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/selfServiceErrorContainer'
-          description: User-facing error response
+                $ref: '#/components/schemas/selfServiceError'
+          description: selfServiceError
         "403":
           content:
             application/json:
@@ -441,10 +439,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Get User-Facing Self-Service Errors
+      summary: Get Self-Service Errors
       tags:
-      - public
-      - admin
+      - v0alpha1
   /self-service/login:
     post:
       description: |-
@@ -490,18 +487,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/submitSelfServiceLoginFlow'
+              $ref: '#/components/schemas/submitSelfServiceLoginFlowBody'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/submitSelfServiceLoginFlow'
+              $ref: '#/components/schemas/submitSelfServiceLoginFlowBody'
         x-originalParamName: Body
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/loginViaApiResponse'
-          description: loginViaApiResponse
+                $ref: '#/components/schemas/successfulSelfServiceLoginWithoutBrowser'
+          description: successfulSelfServiceLoginWithoutBrowser
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -509,8 +506,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/loginFlow'
-          description: loginFlow
+                $ref: '#/components/schemas/selfServiceLoginFlow'
+          description: selfServiceLoginFlow
         "500":
           content:
             application/json:
@@ -519,24 +516,16 @@ paths:
           description: jsonError
       summary: Submit a Login Flow
       tags:
-      - public
+      - v0alpha1
   /self-service/login/api:
     get:
       description: |-
         This endpoint initiates a login flow for API clients that do not use a browser, such as mobile devices, smart TVs, and so on.
 
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         If a valid provided session cookie or session token is provided, a 400 Bad Request error
         will be returned unless the URL query parameter `?refresh=true` is set.
 
         To fetch an existing login flow call `/self-service/login/flows?flow=<flow_id>`.
-
-        :::warning
 
         You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
         Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -544,10 +533,8 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        :::
-
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: initializeSelfServiceLoginWithoutBrowser
+      operationId: initializeSelfServiceLoginFlowWithoutBrowser
       parameters:
       - description: |-
           Refresh a login session
@@ -567,8 +554,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/loginFlow'
-          description: loginFlow
+                $ref: '#/components/schemas/selfServiceLoginFlow'
+          description: selfServiceLoginFlow
         "400":
           content:
             application/json:
@@ -583,18 +570,12 @@ paths:
           description: jsonError
       summary: Initialize Login Flow for APIs, Services, Apps, ...
       tags:
-      - public
+      - v0alpha1
   /self-service/login/browser:
     get:
       description: |-
         This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate
         cookies and anti-CSRF measures required for browser-based flows.
-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
 
         If this endpoint is opened as a link in the browser, it will be redirected to
         `selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -606,7 +587,7 @@ paths:
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: initializeSelfServiceLoginForBrowsers
+      operationId: initializeSelfServiceLoginFlowForBrowsers
       parameters:
       - description: |-
           Refresh a login session
@@ -626,8 +607,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/loginFlow'
-          description: loginFlow
+                $ref: '#/components/schemas/selfServiceLoginFlow'
+          description: selfServiceLoginFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -639,16 +620,10 @@ paths:
           description: jsonError
       summary: Initialize Login Flow for Browsers
       tags:
-      - public
+      - v0alpha1
   /self-service/login/flows:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint returns a login flow's context with, for example, error details and other information.
 
         Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -698,8 +673,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/loginFlow'
-          description: loginFlow
+                $ref: '#/components/schemas/selfServiceLoginFlow'
+          description: selfServiceLoginFlow
         "403":
           content:
             application/json:
@@ -726,16 +701,10 @@ paths:
           description: jsonError
       summary: Get Login Flow
       tags:
-      - public
+      - v0alpha1
   /self-service/logout:
-    post:
+    get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint logs out an identity in a self-service manner.
 
         If the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)
@@ -744,16 +713,25 @@ paths:
         If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
         will be sent on successful logout instead.
 
-        :::note
-
         This endpoint is NOT INTENDED for API clients and only works
         with browsers (Chrome, Firefox, ...). For API clients you can
         call the `/self-service/logout/api` URL directly with the Ory Session Token.
 
-        :::
-
         More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
       operationId: submitSelfServiceLogoutFlow
+      parameters:
+      - description: |-
+          A Valid Logout Token
+
+          If you do not have a logout token because you only have a session cookie,
+          call `/self-service/logout/urls` to generate a URL for this endpoint.
+        explode: true
+        in: query
+        name: token
+        required: false
+        schema:
+          type: string
+        style: form
       responses:
         "204":
           description: Empty responses are sent when, for example, resources are deleted.
@@ -769,16 +747,10 @@ paths:
           description: jsonError
       summary: Complete Self-Service Logout
       tags:
-      - public
+      - v0alpha1
   /self-service/logout/api:
     delete:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         Use this endpoint to log out an identity using an Ory Session Token. If the Ory Session Token was successfully
         revoked, the server returns a 204 No Content response. A 204 No Content response is also sent when
         the Ory Session Token has been revoked already before.
@@ -813,31 +785,21 @@ paths:
           description: jsonError
       summary: Perform Logout for APIs, Services, Apps, ...
       tags:
-      - public
+      - v0alpha1
   /self-service/logout/browser:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.
-
-        :::note
 
         This endpoint is NOT INTENDED for API clients and only works
         with browsers (Chrome, Firefox, ...). For API clients you can
         call the `/self-service/logout/api` URL directly with the Ory Session Token.
 
-        :::
-
         The URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns
         a 401 error.
 
         When calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.
-      operationId: createSelfServiceLogoutUrlForBrowsers
+      operationId: createSelfServiceLogoutFlowUrlForBrowsers
       parameters:
       - description: |-
           HTTP Cookies
@@ -856,8 +818,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/logoutUrl'
-          description: logoutUrl
+                $ref: '#/components/schemas/selfServiceLogoutUrl'
+          description: selfServiceLogoutUrl
         "401":
           content:
             application/json:
@@ -870,9 +832,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      summary: Initialize Logout Flow for Browsers
+      summary: Create a Logout URL for Browsers
       tags:
-      - public
+      - v0alpha1
   /self-service/recovery:
     post:
       description: |-
@@ -895,14 +857,28 @@ paths:
       operationId: submitSelfServiceRecoveryFlow
       parameters:
       - description: |-
-          The Registration Flow ID
+          The Recovery Flow ID
 
           The value for this parameter comes from `flow` URL Query parameter sent to your
-          application (e.g. `/registration?flow=abcde`).
+          application (e.g. `/recovery?flow=abcde`).
         explode: true
         in: query
         name: flow
         required: true
+        schema:
+          type: string
+        style: form
+      - description: |-
+          Recovery Token
+
+          The recovery token which completes the recovery request. If the token
+          is invalid (e.g. expired) an error will be shown to the end-user.
+
+          This parameter is usually set in a link and not used by any direct API call.
+        explode: true
+        in: query
+        name: token
+        required: false
         schema:
           type: string
         style: form
@@ -920,8 +896,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/recoveryFlow'
-          description: recoveryFlow
+                $ref: '#/components/schemas/selfServiceRecoveryFlow'
+          description: selfServiceRecoveryFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -929,8 +905,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/recoveryFlow'
-          description: recoveryFlow
+                $ref: '#/components/schemas/selfServiceRecoveryFlow'
+          description: selfServiceRecoveryFlow
         "500":
           content:
             application/json:
@@ -939,23 +915,15 @@ paths:
           description: jsonError
       summary: Complete Recovery Flow
       tags:
-      - public
+      - v0alpha1
   /self-service/recovery/api:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 
         If a valid provided session cookie or session token is provided, a 400 Bad Request error.
 
         To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
-
-        :::warning
 
         You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
         Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -963,17 +931,16 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        :::
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-      operationId: initializeSelfServiceRecoveryWithoutBrowser
+      operationId: initializeSelfServiceRecoveryFlowWithoutBrowser
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/recoveryFlow'
-          description: recoveryFlow
+                $ref: '#/components/schemas/selfServiceRecoveryFlow'
+          description: selfServiceRecoveryFlow
         "400":
           content:
             application/json:
@@ -988,16 +955,10 @@ paths:
           description: jsonError
       summary: Initialize Recovery Flow for APIs, Services, Apps, ...
       tags:
-      - public
+      - v0alpha1
   /self-service/recovery/browser:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
         `selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
         exists, the browser is returned to the configured return URL.
@@ -1008,14 +969,14 @@ paths:
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-      operationId: initializeSelfServiceRecoveryForBrowsers
+      operationId: initializeSelfServiceRecoveryFlowForBrowsers
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/recoveryFlow'
-          description: recoveryFlow
+                $ref: '#/components/schemas/selfServiceRecoveryFlow'
+          description: selfServiceRecoveryFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -1033,16 +994,10 @@ paths:
           description: jsonError
       summary: Initialize Recovery Flow for Browsers
       tags:
-      - public
+      - v0alpha1
   /self-service/recovery/flows:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint returns a recovery flow's context with, for example, error details and other information.
 
         Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -1092,8 +1047,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/recoveryFlow'
-          description: recoveryFlow
+                $ref: '#/components/schemas/selfServiceRecoveryFlow'
+          description: selfServiceRecoveryFlow
         "404":
           content:
             application/json:
@@ -1114,88 +1069,10 @@ paths:
           description: jsonError
       summary: Get Recovery Flow
       tags:
-      - public
-  /self-service/recovery/methods/link:
-    post:
-      description: |-
-        Use this endpoint to complete a recovery flow using the link method. This endpoint
-        behaves differently for API and browser flows and has several states:
-
-        `choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-        and works with API- and Browser-initiated flows.
-        For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-        and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-        For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
-        `sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It
-        works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-        `passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-        does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
-        (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
-        a new Recovery Flow ID which contains an error message that the recovery link was invalid.
-
-        More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
-      operationId: submitSelfServiceRecoveryFlowWithLinkMethod
-      parameters:
-      - description: |-
-          Recovery Token
-
-          The recovery token which completes the recovery request. If the token
-          is invalid (e.g. expired) an error will be shown to the end-user.
-        explode: true
-        in: query
-        name: token
-        required: false
-        schema:
-          type: string
-        style: form
-      - description: |-
-          The Flow ID
-
-          format: uuid
-        explode: true
-        in: query
-        name: flow
-        required: false
-        schema:
-          type: string
-        style: form
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethod'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethod'
-        x-originalParamName: Body
-      responses:
-        "302":
-          description: Empty responses are sent when, for example, resources are deleted.
-            The HTTP status code for empty responses is typically 201.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/recoveryFlow'
-          description: recoveryFlow
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/jsonError'
-          description: jsonError
-      summary: Complete Recovery Flow with Link Method
-      tags:
-      - public
+      - v0alpha1
   /self-service/registration:
     post:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
         behaves differently for API and browser flows.
 
@@ -1233,18 +1110,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/submitSelfServiceRegistrationFlow'
+              $ref: '#/components/schemas/submitSelfServiceRegistrationFlowBody'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/submitSelfServiceRegistrationFlow'
+              $ref: '#/components/schemas/submitSelfServiceRegistrationFlowBody'
         x-originalParamName: Body
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/registrationViaApiResponse'
-          description: registrationViaApiResponse
+                $ref: '#/components/schemas/successfulSelfServiceRegistrationWithoutBrowser'
+          description: successfulSelfServiceRegistrationWithoutBrowser
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -1252,8 +1129,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/registrationFlow'
-          description: registrationFlow
+                $ref: '#/components/schemas/selfServiceRegistrationFlow'
+          description: selfServiceRegistrationFlow
         "500":
           content:
             application/json:
@@ -1262,24 +1139,16 @@ paths:
           description: jsonError
       summary: Submit a Registration Flow
       tags:
-      - public
+      - v0alpha1
   /self-service/registration/api:
     get:
       description: |-
         This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.
 
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         If a valid provided session cookie or session token is provided, a 400 Bad Request error
         will be returned unless the URL query parameter `?refresh=true` is set.
 
         To fetch an existing registration flow call `/self-service/registration/flows?flow=<flow_id>`.
-
-        :::warning
 
         You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
         Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -1287,17 +1156,15 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        :::
-
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: initializeSelfServiceRegistrationWithoutBrowser
+      operationId: initializeSelfServiceRegistrationFlowWithoutBrowser
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/registrationFlow'
-          description: registrationFlow
+                $ref: '#/components/schemas/selfServiceRegistrationFlow'
+          description: selfServiceRegistrationFlow
         "400":
           content:
             application/json:
@@ -1312,7 +1179,7 @@ paths:
           description: jsonError
       summary: Initialize Registration Flow for APIs, Services, Apps, ...
       tags:
-      - public
+      - v0alpha1
   /self-service/registration/browser:
     get:
       description: |-
@@ -1334,14 +1201,14 @@ paths:
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-      operationId: initializeSelfServiceRegistrationForBrowsers
+      operationId: initializeSelfServiceRegistrationFlowForBrowsers
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/registrationFlow'
-          description: registrationFlow
+                $ref: '#/components/schemas/selfServiceRegistrationFlow'
+          description: selfServiceRegistrationFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -1353,16 +1220,10 @@ paths:
           description: jsonError
       summary: Initialize Registration Flow for Browsers
       tags:
-      - public
+      - v0alpha1
   /self-service/registration/flows:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint returns a registration flow's context with, for example, error details and other information.
 
         Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -1412,8 +1273,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/registrationFlow'
-          description: registrationFlow
+                $ref: '#/components/schemas/selfServiceRegistrationFlow'
+          description: selfServiceRegistrationFlow
         "403":
           content:
             application/json:
@@ -1440,7 +1301,7 @@ paths:
           description: jsonError
       summary: Get Registration Flow
       tags:
-      - public
+      - v0alpha1
   /self-service/settings:
     post:
       description: |-
@@ -1493,18 +1354,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/submitSelfServiceSettingsFlow'
+              $ref: '#/components/schemas/submitSelfServiceSettingsFlowBody'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/submitSelfServiceSettingsFlow'
+              $ref: '#/components/schemas/submitSelfServiceSettingsFlowBody'
         x-originalParamName: Body
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/settingsViaApiResponse'
-          description: settingsViaApiResponse
+                $ref: '#/components/schemas/successfulSelfServiceSettingsWithoutBrowser'
+          description: successfulSelfServiceSettingsWithoutBrowser
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -1512,8 +1373,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/settingsFlow'
-          description: settingsFlow
+                $ref: '#/components/schemas/selfServiceSettingsFlow'
+          description: selfServiceSettingsFlow
         "401":
           content:
             application/json:
@@ -1536,22 +1397,14 @@ paths:
       - sessionToken: []
       summary: Complete Settings Flow
       tags:
-      - public
+      - v0alpha1
   /self-service/settings/api:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
         You must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 
         To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
-
-        :::warning
 
         You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
         Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -1559,10 +1412,8 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        :::
-
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: initializeSelfServiceSettingsWithoutBrowser
+      operationId: initializeSelfServiceSettingsFlowWithoutBrowser
       parameters:
       - description: The Session Token of the Identity performing the settings flow.
         explode: false
@@ -1572,21 +1423,13 @@ paths:
         schema:
           type: string
         style: simple
-      - description: The Session Cookie of the Identity performing the settings flow.
-        explode: false
-        in: header
-        name: X-Session-Cookie
-        required: false
-        schema:
-          type: string
-        style: simple
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/settingsFlow'
-          description: settingsFlow
+                $ref: '#/components/schemas/selfServiceSettingsFlow'
+          description: selfServiceSettingsFlow
         "400":
           content:
             application/json:
@@ -1599,20 +1442,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      security:
-      - sessionToken: []
       summary: Initialize Settings Flow for APIs, Services, Apps, ...
       tags:
-      - public
+      - v0alpha1
   /self-service/settings/browser:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
         `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
         Ory Kratos Session Cookie is included in the request, a login flow will be initialized.
@@ -1627,14 +1462,23 @@ paths:
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-      operationId: initializeSelfServiceSettingsForBrowsers
+      operationId: initializeSelfServiceSettingsFlowForBrowsers
+      parameters:
+      - description: The Session Cookie of the Identity performing the settings flow.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/settingsFlow'
-          description: settingsFlow
+                $ref: '#/components/schemas/selfServiceSettingsFlow'
+          description: selfServiceSettingsFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -1650,20 +1494,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      security:
-      - sessionToken: []
       summary: Initialize Settings Flow for Browsers
       tags:
-      - public
+      - v0alpha1
   /self-service/settings/flows:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
         or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
         but instead 403 or 500 to improve data privacy.
@@ -1715,8 +1551,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/settingsFlow'
-          description: settingsFlow
+                $ref: '#/components/schemas/selfServiceSettingsFlow'
+          description: selfServiceSettingsFlow
         "403":
           content:
             application/json:
@@ -1741,11 +1577,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-      security:
-      - sessionToken: []
       summary: Get Settings Flow
       tags:
-      - public
+      - v0alpha1
   /self-service/verification:
     post:
       description: |-
@@ -1768,14 +1602,28 @@ paths:
       operationId: submitSelfServiceVerificationFlow
       parameters:
       - description: |-
-          The Registration Flow ID
+          The Verification Flow ID
 
           The value for this parameter comes from `flow` URL Query parameter sent to your
-          application (e.g. `/registration?flow=abcde`).
+          application (e.g. `/verification?flow=abcde`).
         explode: true
         in: query
         name: flow
         required: true
+        schema:
+          type: string
+        style: form
+      - description: |-
+          Verification Token
+
+          The verification token which completes the verification request. If the token
+          is invalid (e.g. expired) an error will be shown to the end-user.
+
+          This parameter is usually set in a link and not used by any direct API call.
+        explode: true
+        in: query
+        name: token
+        required: false
         schema:
           type: string
         style: form
@@ -1793,8 +1641,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/verificationFlow'
-          description: verificationFlow
+                $ref: '#/components/schemas/selfServiceVerificationFlow'
+          description: selfServiceVerificationFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -1802,8 +1650,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/verificationFlow'
-          description: verificationFlow
+                $ref: '#/components/schemas/selfServiceVerificationFlow'
+          description: selfServiceVerificationFlow
         "500":
           content:
             application/json:
@@ -1812,21 +1660,13 @@ paths:
           description: jsonError
       summary: Complete Verification Flow
       tags:
-      - public
+      - v0alpha1
   /self-service/verification/api:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 
         To fetch an existing verification flow call `/self-service/verification/flows?flow=<flow_id>`.
-
-        :::warning
 
         You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
         Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -1834,17 +1674,15 @@ paths:
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-        :::
-
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-      operationId: initializeSelfServiceVerificationWithoutBrowser
+      operationId: initializeSelfServiceVerificationFlowWithoutBrowser
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/verificationFlow'
-          description: verificationFlow
+                $ref: '#/components/schemas/selfServiceVerificationFlow'
+          description: selfServiceVerificationFlow
         "400":
           content:
             application/json:
@@ -1859,16 +1697,10 @@ paths:
           description: jsonError
       summary: Initialize Verification Flow for APIs, Services, Apps, ...
       tags:
-      - public
+      - v0alpha1
   /self-service/verification/browser:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
         `selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
 
@@ -1877,14 +1709,14 @@ paths:
         This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-      operationId: initializeSelfServiceVerificationForBrowsers
+      operationId: initializeSelfServiceVerificationFlowForBrowsers
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/verificationFlow'
-          description: verificationFlow
+                $ref: '#/components/schemas/selfServiceVerificationFlow'
+          description: selfServiceVerificationFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -1896,16 +1728,10 @@ paths:
           description: jsonError
       summary: Initialize Verification Flow for Browser Clients
       tags:
-      - public
+      - v0alpha1
   /self-service/verification/flows:
     get:
       description: |-
-        :::info
-
-        This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-
-        :::
-
         This endpoint returns a verification flow's context with, for example, error details and other information.
 
         Browser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.
@@ -1954,8 +1780,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/verificationFlow'
-          description: verificationFlow
+                $ref: '#/components/schemas/selfServiceVerificationFlow'
+          description: selfServiceVerificationFlow
         "403":
           content:
             application/json:
@@ -1976,13 +1802,34 @@ paths:
           description: jsonError
       summary: Get Verification Flow
       tags:
-      - public
+      - v0alpha1
   /sessions/whoami:
     get:
       description: |-
         Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
         Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
         Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
+
+        If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
+
+        ```js
+        pseudo-code example
+        router.get('/protected-endpoint', async function (req, res) {
+        const session = await client.toSession(undefined, req.header('cookie'))
+
+        console.log(session)
+        })
+        ```
+
+        When calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:
+
+        ```js
+        pseudo-code example
+        ...
+        const session = await client.toSession("the-session-token")
+
+        console.log(session)
+        ```
 
         This endpoint is useful for:
 
@@ -1994,22 +1841,31 @@ paths:
 
         if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
         if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
-        if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;
-        if the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).
+        if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 
         If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
       operationId: toSession
       parameters:
-      - explode: false
+      - description: Set the Session Token when calling from non-browser clients.
+          A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+        example: MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj
+        explode: false
         in: header
         name: X-Session-Token
         required: false
         schema:
           type: string
         style: simple
-      - explode: false
+      - description: |-
+          Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+          scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+          An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+
+          It is ok if more than one cookie are included here as all other cookies will be ignored.
+        example: ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==
+        explode: false
         in: header
-        name: X-Session-Cookie
+        name: Cookie
         required: false
         schema:
           type: string
@@ -2035,7 +1891,7 @@ paths:
           description: jsonError
       summary: Check Who the Current HTTP Session Belongs To
       tags:
-      - public
+      - v0alpha1
   /version:
     get:
       description: |-
@@ -2056,33 +1912,36 @@ paths:
           description: Returns the Ory Kratos version.
       summary: Return Running Software Version.
       tags:
-      - admin
+      - metadata
 components:
   responses:
     emptyResponse:
       description: Empty responses are sent when, for example, resources are deleted.
         The HTTP status code for empty responses is typically 201.
-    identityList:
-      content:
-        application/json:
-          schema:
-            items:
-              $ref: '#/components/schemas/identity'
-            type: array
-      description: A list of identities.
-    identityResponse:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/identity'
-      description: A single identity.
-    selfServiceErrorResponse:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/selfServiceErrorContainer'
-      description: User-facing error response
   schemas:
+    AdminUpdateIdentityBody:
+      example:
+        traits: '{}'
+        schema_id: schema_id
+        state: ""
+      properties:
+        schema_id:
+          description: |-
+            SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
+            will update the Identity's SchemaID.
+          type: string
+        state:
+          description: State is the identity's state.
+        traits:
+          description: |-
+            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+            in a self-service manner. The input will always be validated against the JSON Schema defined
+            in `schema_id`.
+          type: object
+      required:
+      - state
+      - traits
+      type: object
     AuthenticateOKBody:
       description: AuthenticateOKBody authenticate o k body
       properties:
@@ -2177,25 +2036,6 @@ components:
         Message:
           description: Details of an error
           type: string
-      type: object
-    CreateRecoveryLink:
-      example:
-        identity_id: identity_id
-        expires_in: expires_in
-      properties:
-        expires_in:
-          description: |-
-            Link Expires In
-
-            The recovery link will expire at that point in time. Defaults to the configuration value of
-            `selfservice.flows.recovery.request_lifespan`.
-          pattern: ^[0-9]+(ns|us|ms|s|m|h)$
-          type: string
-        identity_id:
-          format: uuid4
-          type: string
-      required:
-      - identity_id
       type: object
     CredentialsType:
       description: and so on.
@@ -2698,12 +2538,6 @@ components:
             type: string
           type: array
       type: object
-    State:
-      type: string
-    Type:
-      description: The flow type can either be `api` or `browser`.
-      title: Type is the flow type.
-      type: string
     UUID:
       format: uuid4
       type: string
@@ -2779,7 +2613,7 @@ components:
       - RefCount
       - Size
       type: object
-    createIdentity:
+    adminCreateIdentityBody:
       properties:
         schema_id:
           description: SchemaID is the ID of the JSON Schema to be used for validating
@@ -2794,6 +2628,22 @@ components:
       required:
       - schema_id
       - traits
+      type: object
+    adminCreateSelfServiceRecoveryLinkBody:
+      properties:
+        expires_in:
+          description: |-
+            Link Expires In
+
+            The recovery link will expire at that point in time. Defaults to the configuration value of
+            `selfservice.flows.recovery.request_lifespan`.
+          pattern: ^[0-9]+(ns|us|ms|s|m|h)$
+          type: string
+        identity_id:
+          format: uuid4
+          type: string
+      required:
+      - identity_id
       type: object
     genericError:
       properties:
@@ -2904,7 +2754,7 @@ components:
         created_at: 2000-01-23T04:56:07.000+00:00
         schema_url: schema_url
         id: id
-        state: active
+        state: ""
       properties:
         created_at:
           description: CreatedAt is a helper struct field for gobuffalo.pop.
@@ -2938,10 +2788,6 @@ components:
           type: string
         state:
           description: State is the identity's state.
-          enum:
-          - active
-          - inactive
-          type: string
         state_changed_at:
           format: date-time
           title: NullTime implements sql.NullTime functionality.
@@ -3005,6 +2851,11 @@ components:
           format: date-time
           type: string
       type: object
+    identityList:
+      items:
+        $ref: '#/components/schemas/identity'
+      title: A list of identities.
+      type: array
     identityTraits:
       description: |-
         Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -3030,7 +2881,42 @@ components:
     jsonSchema:
       description: Raw JSON Schema
       type: object
-    loginFlow:
+    nullJsonRawMessage:
+      description: NullJSONRawMessage represents a json.RawMessage that works well
+        with JSON, SQL, and Swagger and is NULLable-
+      type: object
+    nullTime:
+      format: date-time
+      title: NullTime implements sql.NullTime functionality.
+      type: string
+    selfServiceError:
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        created_at: 2000-01-23T04:56:07.000+00:00
+        id: id
+        error: '{}'
+      properties:
+        created_at:
+          description: CreatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+        error:
+          type: object
+        id:
+          format: uuid4
+          type: string
+        updated_at:
+          description: UpdatedAt is a helper struct field for gobuffalo.pop.
+          format: date-time
+          type: string
+      required:
+      - id
+      type: object
+    selfServiceFlowType:
+      description: The flow type can either be `api` or `browser`.
+      title: Type is the flow type.
+      type: string
+    selfServiceLoginFlow:
       description: |-
         This object represents a login flow. A login flow is initiated at the "Initiate Login API / Browser Flow"
         endpoint by a client.
@@ -3143,80 +3029,7 @@ components:
       - ui
       title: Login Flow
       type: object
-    loginViaApiResponse:
-      description: The Response for Login Flows via API
-      example:
-        session_token: session_token
-        session:
-          expires_at: 2000-01-23T04:56:07.000+00:00
-          identity:
-            recovery_addresses:
-            - updated_at: 2000-01-23T04:56:07.000+00:00
-              created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
-              value: value
-              via: via
-            - updated_at: 2000-01-23T04:56:07.000+00:00
-              created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
-              value: value
-              via: via
-            traits: ""
-            updated_at: 2000-01-23T04:56:07.000+00:00
-            credentials:
-              key:
-                updated_at: 2000-01-23T04:56:07.000+00:00
-                identifiers:
-                - identifiers
-                - identifiers
-                created_at: 2000-01-23T04:56:07.000+00:00
-                type: type
-                config: '{}'
-            verifiable_addresses:
-            - updated_at: 2014-01-01T23:28:56.782Z
-              verified_at: 2000-01-23T04:56:07.000+00:00
-              verified: true
-              created_at: 2014-01-01T23:28:56.782Z
-              id: id
-              value: value
-              status: status
-              via: via
-            - updated_at: 2014-01-01T23:28:56.782Z
-              verified_at: 2000-01-23T04:56:07.000+00:00
-              verified: true
-              created_at: 2014-01-01T23:28:56.782Z
-              id: id
-              value: value
-              status: status
-              via: via
-            schema_id: schema_id
-            state_changed_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            schema_url: schema_url
-            id: id
-            state: active
-          authenticated_at: 2000-01-23T04:56:07.000+00:00
-          active: true
-          id: id
-          issued_at: 2000-01-23T04:56:07.000+00:00
-      properties:
-        session:
-          $ref: '#/components/schemas/session'
-        session_token:
-          description: |-
-            The Session Token
-
-            A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
-            Header:
-
-            Authorization: bearer ${session-token}
-
-            The session token is only issued for API flows, not for Browser flows!
-          type: string
-      required:
-      - session
-      type: object
-    logoutUrl:
+    selfServiceLogoutUrl:
       example:
         logout_url: logout_url
       properties:
@@ -3227,15 +3040,7 @@ components:
             format: uri
           type: string
       type: object
-    nullJsonRawMessage:
-      description: NullJSONRawMessage represents a json.RawMessage that works well
-        with JSON, SQL, and Swagger and is NULLable-
-      type: object
-    nullTime:
-      format: date-time
-      title: NullTime implements sql.NullTime functionality.
-      type: string
-    recoveryFlow:
+    selfServiceRecoveryFlow:
       description: |-
         This request is used when an identity wants to recover their account.
 
@@ -3291,7 +3096,6 @@ components:
             type: type
         active: active
         id: id
-        state: state
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
         request_url: request_url
@@ -3320,7 +3124,7 @@ components:
             to forward information contained in the URL's path or query for example.
           type: string
         state:
-          type: string
+          $ref: '#/components/schemas/selfServiceRecoveryFlowState'
         type:
           description: The flow type can either be `api` or `browser`.
           title: Type is the flow type.
@@ -3336,7 +3140,20 @@ components:
       - ui
       title: A Recovery Flow
       type: object
-    recoveryLink:
+    selfServiceRecoveryFlowState:
+      description: |-
+        The state represents the state of the recovery flow.
+
+        choose_method: ask the user to choose a method (e.g. recover account via email)
+        sent_email: the email has been sent to the user
+        passed_challenge: the request was successful and the recovery challenge was passed.
+      enum:
+      - choose_method
+      - sent_email
+      - passed_challenge
+      title: Recovery Flow State
+      type: string
+    selfServiceRecoveryLink:
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
         recovery_link: recovery_link
@@ -3357,7 +3174,7 @@ components:
       required:
       - recovery_link
       type: object
-    registrationFlow:
+    selfServiceRegistrationFlow:
       example:
         expires_at: 2000-01-23T04:56:07.000+00:00
         ui:
@@ -3449,247 +3266,7 @@ components:
       - request_url
       - ui
       type: object
-    registrationViaApiResponse:
-      description: The Response for Registration Flows via API
-      example:
-        session_token: session_token
-        identity:
-          recovery_addresses:
-          - updated_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
-            value: value
-            via: via
-          - updated_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
-            value: value
-            via: via
-          traits: ""
-          updated_at: 2000-01-23T04:56:07.000+00:00
-          credentials:
-            key:
-              updated_at: 2000-01-23T04:56:07.000+00:00
-              identifiers:
-              - identifiers
-              - identifiers
-              created_at: 2000-01-23T04:56:07.000+00:00
-              type: type
-              config: '{}'
-          verifiable_addresses:
-          - updated_at: 2014-01-01T23:28:56.782Z
-            verified_at: 2000-01-23T04:56:07.000+00:00
-            verified: true
-            created_at: 2014-01-01T23:28:56.782Z
-            id: id
-            value: value
-            status: status
-            via: via
-          - updated_at: 2014-01-01T23:28:56.782Z
-            verified_at: 2000-01-23T04:56:07.000+00:00
-            verified: true
-            created_at: 2014-01-01T23:28:56.782Z
-            id: id
-            value: value
-            status: status
-            via: via
-          schema_id: schema_id
-          state_changed_at: 2000-01-23T04:56:07.000+00:00
-          created_at: 2000-01-23T04:56:07.000+00:00
-          schema_url: schema_url
-          id: id
-          state: active
-        session:
-          expires_at: 2000-01-23T04:56:07.000+00:00
-          identity:
-            recovery_addresses:
-            - updated_at: 2000-01-23T04:56:07.000+00:00
-              created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
-              value: value
-              via: via
-            - updated_at: 2000-01-23T04:56:07.000+00:00
-              created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
-              value: value
-              via: via
-            traits: ""
-            updated_at: 2000-01-23T04:56:07.000+00:00
-            credentials:
-              key:
-                updated_at: 2000-01-23T04:56:07.000+00:00
-                identifiers:
-                - identifiers
-                - identifiers
-                created_at: 2000-01-23T04:56:07.000+00:00
-                type: type
-                config: '{}'
-            verifiable_addresses:
-            - updated_at: 2014-01-01T23:28:56.782Z
-              verified_at: 2000-01-23T04:56:07.000+00:00
-              verified: true
-              created_at: 2014-01-01T23:28:56.782Z
-              id: id
-              value: value
-              status: status
-              via: via
-            - updated_at: 2014-01-01T23:28:56.782Z
-              verified_at: 2000-01-23T04:56:07.000+00:00
-              verified: true
-              created_at: 2014-01-01T23:28:56.782Z
-              id: id
-              value: value
-              status: status
-              via: via
-            schema_id: schema_id
-            state_changed_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            schema_url: schema_url
-            id: id
-            state: active
-          authenticated_at: 2000-01-23T04:56:07.000+00:00
-          active: true
-          id: id
-          issued_at: 2000-01-23T04:56:07.000+00:00
-      properties:
-        identity:
-          $ref: '#/components/schemas/identity'
-        session:
-          $ref: '#/components/schemas/session'
-        session_token:
-          description: |-
-            The Session Token
-
-            This field is only set when the session hook is configured as a post-registration hook.
-
-            A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
-            Header:
-
-            Authorization: bearer ${session-token}
-
-            The session token is only issued for API flows, not for Browser flows!
-          type: string
-      required:
-      - identity
-      type: object
-    selfServiceErrorContainer:
-      example:
-        updated_at: 2000-01-23T04:56:07.000+00:00
-        created_at: 2000-01-23T04:56:07.000+00:00
-        id: id
-        errors:
-        - '{}'
-        - '{}'
-      properties:
-        created_at:
-          description: CreatedAt is a helper struct field for gobuffalo.pop.
-          format: date-time
-          type: string
-        errors:
-          description: Errors in the container
-          items:
-            type: object
-          type: array
-        id:
-          format: uuid4
-          type: string
-        updated_at:
-          description: UpdatedAt is a helper struct field for gobuffalo.pop.
-          format: date-time
-          type: string
-      required:
-      - errors
-      - id
-      type: object
-    session:
-      description: A Session
-      example:
-        expires_at: 2000-01-23T04:56:07.000+00:00
-        identity:
-          recovery_addresses:
-          - updated_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
-            value: value
-            via: via
-          - updated_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
-            value: value
-            via: via
-          traits: ""
-          updated_at: 2000-01-23T04:56:07.000+00:00
-          credentials:
-            key:
-              updated_at: 2000-01-23T04:56:07.000+00:00
-              identifiers:
-              - identifiers
-              - identifiers
-              created_at: 2000-01-23T04:56:07.000+00:00
-              type: type
-              config: '{}'
-          verifiable_addresses:
-          - updated_at: 2014-01-01T23:28:56.782Z
-            verified_at: 2000-01-23T04:56:07.000+00:00
-            verified: true
-            created_at: 2014-01-01T23:28:56.782Z
-            id: id
-            value: value
-            status: status
-            via: via
-          - updated_at: 2014-01-01T23:28:56.782Z
-            verified_at: 2000-01-23T04:56:07.000+00:00
-            verified: true
-            created_at: 2014-01-01T23:28:56.782Z
-            id: id
-            value: value
-            status: status
-            via: via
-          schema_id: schema_id
-          state_changed_at: 2000-01-23T04:56:07.000+00:00
-          created_at: 2000-01-23T04:56:07.000+00:00
-          schema_url: schema_url
-          id: id
-          state: active
-        authenticated_at: 2000-01-23T04:56:07.000+00:00
-        active: true
-        id: id
-        issued_at: 2000-01-23T04:56:07.000+00:00
-      properties:
-        active:
-          description: Whether or not the session is active.
-          type: boolean
-        authenticated_at:
-          description: |-
-            The Session Authentication Timestamp
-
-            When this session was authenticated at.
-          format: date-time
-          type: string
-        expires_at:
-          description: |-
-            The Session Expiry
-
-            When this session expires at.
-          format: date-time
-          type: string
-        id:
-          format: uuid4
-          type: string
-        identity:
-          $ref: '#/components/schemas/identity'
-        issued_at:
-          description: |-
-            The Session Issuance Timestamp
-
-            When this session was authenticated at.
-          format: date-time
-          type: string
-      required:
-      - id
-      - identity
-      type: object
-    settingsFlow:
+    selfServiceSettingsFlow:
       description: |-
         This flow is used when an identity wants to update settings
         (e.g. profile data, passwords, ...) in a selfservice manner.
@@ -3789,10 +3366,9 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: active
+          state: ""
         active: active
         id: id
-        state: state
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
         request_url: request_url
@@ -3823,7 +3399,7 @@ components:
             to forward information contained in the URL's path or query for example.
           type: string
         state:
-          type: string
+          $ref: '#/components/schemas/selfServiceSettingsFlowState'
         type:
           description: The flow type can either be `api` or `browser`.
           title: Type is the flow type.
@@ -3839,6 +3415,217 @@ components:
       - state
       - ui
       title: Flow represents a Settings Flow
+      type: object
+    selfServiceSettingsFlowState:
+      description: |-
+        show_form: No user data has been collected, or it is invalid, and thus the form should be shown.
+        success: Indicates that the settings flow has been updated successfully with the provided data.
+        Done will stay true when repeatedly checking. If set to true, done will revert back to false only
+        when a flow with invalid (e.g. "please use a valid phone number") data was sent.
+      enum:
+      - show_form
+      - success
+      title: 'State represents the state of this flow. It knows two states:'
+      type: string
+    selfServiceVerificationFlow:
+      description: |-
+        Used to verify an out-of-band communication
+        channel such as an email address or a phone number.
+
+        For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation
+      example:
+        expires_at: 2000-01-23T04:56:07.000+00:00
+        ui:
+          nodes:
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            type: type
+            group: group
+          - meta:
+              label:
+                context: '{}'
+                id: 0
+                text: text
+                type: type
+            messages:
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            - context: '{}'
+              id: 0
+              text: text
+              type: type
+            type: type
+            group: group
+          method: method
+          action: action
+          messages:
+          - context: '{}'
+            id: 0
+            text: text
+            type: type
+          - context: '{}'
+            id: 0
+            text: text
+            type: type
+        active: active
+        id: id
+        type: type
+        issued_at: 2000-01-23T04:56:07.000+00:00
+        request_url: request_url
+      properties:
+        active:
+          description: |-
+            Active, if set, contains the registration method that is being used. It is initially
+            not set.
+          type: string
+        expires_at:
+          description: |-
+            ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,
+            a new request has to be initiated.
+          format: date-time
+          type: string
+        id:
+          format: uuid4
+          type: string
+        issued_at:
+          description: IssuedAt is the time (UTC) when the request occurred.
+          format: date-time
+          type: string
+        request_url:
+          description: |-
+            RequestURL is the initial URL that was requested from Ory Kratos. It can be used
+            to forward information contained in the URL's path or query for example.
+          type: string
+        state:
+          $ref: '#/components/schemas/selfServiceVerificationFlowState'
+        type:
+          description: The flow type can either be `api` or `browser`.
+          title: Type is the flow type.
+          type: string
+        ui:
+          $ref: '#/components/schemas/uiContainer'
+      required:
+      - id
+      - state
+      - type
+      - ui
+      title: A Verification Flow
+      type: object
+    selfServiceVerificationFlowState:
+      description: |-
+        The state represents the state of the verification flow.
+
+        choose_method: ask the user to choose a method (e.g. recover account via email)
+        sent_email: the email has been sent to the user
+        passed_challenge: the request was successful and the recovery challenge was passed.
+      enum:
+      - choose_method
+      - sent_email
+      - passed_challenge
+      title: Verification Flow State
+      type: string
+    session:
+      description: A Session
+      example:
+        expires_at: 2000-01-23T04:56:07.000+00:00
+        identity:
+          recovery_addresses:
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
+            value: value
+            via: via
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
+            value: value
+            via: via
+          traits: ""
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
+          verifiable_addresses:
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
+            verified: true
+            created_at: 2014-01-01T23:28:56.782Z
+            id: id
+            value: value
+            status: status
+            via: via
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
+            verified: true
+            created_at: 2014-01-01T23:28:56.782Z
+            id: id
+            value: value
+            status: status
+            via: via
+          schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
+          schema_url: schema_url
+          id: id
+          state: ""
+        authenticated_at: 2000-01-23T04:56:07.000+00:00
+        active: true
+        id: id
+        issued_at: 2000-01-23T04:56:07.000+00:00
+      properties:
+        active:
+          description: Whether or not the session is active.
+          type: boolean
+        authenticated_at:
+          description: |-
+            The Session Authentication Timestamp
+
+            When this session was authenticated at.
+          format: date-time
+          type: string
+        expires_at:
+          description: |-
+            The Session Expiry
+
+            When this session expires at.
+          format: date-time
+          type: string
+        id:
+          format: uuid4
+          type: string
+        identity:
+          $ref: '#/components/schemas/identity'
+        issued_at:
+          description: |-
+            The Session Issuance Timestamp
+
+            When this session was authenticated at.
+          format: date-time
+          type: string
+      required:
+      - id
+      - identity
       type: object
     settingsProfileFormConfig:
       properties:
@@ -3862,7 +3649,485 @@ components:
       - method
       - nodes
       type: object
-    settingsViaApiResponse:
+    submitSelfServiceLoginFlowBody:
+      discriminator:
+        mapping:
+          oidc: '#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody'
+          password: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody'
+        propertyName: method
+      oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody'
+    submitSelfServiceLoginFlowWithOidcMethodBody:
+      description: |-
+        SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload
+        when using the oidc method.
+      properties:
+        csrf_token:
+          description: The CSRF Token
+          type: string
+        method:
+          description: |-
+            Method to use
+
+            This field must be set to `oidc` when using the oidc method.
+          type: string
+        traits:
+          description: The provider to register with
+          type: string
+      required:
+      - method
+      - traits
+      type: object
+    submitSelfServiceLoginFlowWithPasswordMethodBody:
+      properties:
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        method:
+          description: Method should be set to "password" when logging in using the
+            identifier and password strategy.
+          enum:
+          - password
+          - oidc
+          type: string
+        password:
+          description: The user's password.
+          type: string
+        password_identifier:
+          description: Identifier is the email or username of the user trying to log
+            in.
+          type: string
+      required:
+      - method
+      - password
+      - password_identifier
+      title: submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the
+        login form payload.
+      type: object
+    submitSelfServiceLogoutFlowWithoutBrowserBody:
+      description: nolint:deadcode,unused
+      properties:
+        session_token:
+          description: |-
+            The Session Token
+
+            Invalidate this session token.
+          type: string
+      required:
+      - session_token
+      type: object
+    submitSelfServiceRecoveryFlowBody:
+      discriminator:
+        mapping:
+          link: '#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody'
+        propertyName: method
+      oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody'
+    submitSelfServiceRecoveryFlowWithLinkMethodBody:
+      properties:
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        email:
+          description: |-
+            Email to Recover
+
+            Needs to be set when initiating the flow. If the email is a registered
+            recovery email, a recovery link will be sent. If the email is not known,
+            a email with details on what happened will be sent instead.
+
+            format: email
+          type: string
+        method:
+          description: Method supports `link` only right now.
+          enum:
+          - password
+          - oidc
+          type: string
+      required:
+      - email
+      - method
+      type: object
+    submitSelfServiceRegistrationFlowBody:
+      discriminator:
+        mapping:
+          oidc: '#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody'
+          password: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody'
+        propertyName: method
+      oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody'
+    submitSelfServiceRegistrationFlowWithOidcMethodBody:
+      description: |-
+        SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
+        when using the oidc method.
+      properties:
+        csrf_token:
+          description: The CSRF Token
+          type: string
+        method:
+          description: |-
+            Method to use
+
+            This field must be set to `oidc` when using the oidc method.
+          type: string
+        traits:
+          description: The provider to register with
+          type: string
+      required:
+      - method
+      - traits
+      type: object
+    submitSelfServiceRegistrationFlowWithPasswordMethodBody:
+      description: |-
+        SubmitSelfServiceRegistrationFlowWithPasswordMethodBody is used to decode the registration form payload
+        when using the password method.
+      properties:
+        csrf_token:
+          description: The CSRF Token
+          type: string
+        method:
+          description: |-
+            Method to use
+
+            This field must be set to `password` when using the password method.
+          enum:
+          - password
+          - oidc
+          type: string
+        password:
+          description: Password to sign the user up with
+          type: string
+        traits:
+          description: The identity's traits
+          type: object
+      required:
+      - method
+      - password
+      - traits
+      type: object
+    submitSelfServiceSettingsFlowBody:
+      discriminator:
+        mapping:
+          oidc: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
+          password: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
+          profile: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody'
+        propertyName: method
+      oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody'
+    submitSelfServiceSettingsFlowWithOidcMethodBody:
+      description: nolint:deadcode,unused
+      properties:
+        flow:
+          description: |-
+            Flow ID is the flow's ID.
+
+            in: query
+          type: string
+        link:
+          description: |-
+            Link this provider
+
+            Either this or `unlink` must be set.
+
+            type: string
+            in: body
+          type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to profile when trying to update a profile.
+          type: string
+        unlink:
+          description: |-
+            Unlink this provider
+
+            Either this or `link` must be set.
+
+            type: string
+            in: body
+          type: string
+      required:
+      - method
+      type: object
+    submitSelfServiceSettingsFlowWithPasswordMethodBody:
+      properties:
+        csrf_token:
+          description: CSRFToken is the anti-CSRF token
+          type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to password when trying to update a password.
+          enum:
+          - password
+          - profile
+          - oidc
+          type: string
+        password:
+          description: Password is the updated password
+          type: string
+      required:
+      - method
+      - password
+      type: object
+    submitSelfServiceSettingsFlowWithProfileMethodBody:
+      description: nolint:deadcode,unused
+      properties:
+        csrf_token:
+          description: |-
+            The Anti-CSRF Token
+
+            This token is only required when performing browser flows.
+          type: string
+        method:
+          description: |-
+            Method
+
+            Should be set to profile when trying to update a profile.
+          type: string
+        traits:
+          description: Traits contains all of the identity's traits.
+          type: object
+      required:
+      - method
+      - traits
+      type: object
+    submitSelfServiceVerificationFlowBody:
+      description: nolint:deadcode,unused
+      discriminator:
+        mapping:
+          link: '#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody'
+        propertyName: method
+      oneOf:
+      - $ref: '#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody'
+    submitSelfServiceVerificationFlowWithLinkMethodBody:
+      properties:
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        email:
+          description: |-
+            Email to Verify
+
+            Needs to be set when initiating the flow. If the email is a registered
+            verification email, a verification link will be sent. If the email is not known,
+            a email with details on what happened will be sent instead.
+
+            format: email
+          type: string
+        method:
+          description: Method supports `link` only right now.
+          enum:
+          - password
+          - oidc
+          type: string
+      required:
+      - email
+      - method
+      type: object
+    successfulSelfServiceLoginWithoutBrowser:
+      description: The Response for Login Flows via API
+      example:
+        session_token: session_token
+        session:
+          expires_at: 2000-01-23T04:56:07.000+00:00
+          identity:
+            recovery_addresses:
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
+              value: value
+              via: via
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
+              value: value
+              via: via
+            traits: ""
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
+            verifiable_addresses:
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
+              verified: true
+              created_at: 2014-01-01T23:28:56.782Z
+              id: id
+              value: value
+              status: status
+              via: via
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
+              verified: true
+              created_at: 2014-01-01T23:28:56.782Z
+              id: id
+              value: value
+              status: status
+              via: via
+            schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            schema_url: schema_url
+            id: id
+            state: ""
+          authenticated_at: 2000-01-23T04:56:07.000+00:00
+          active: true
+          id: id
+          issued_at: 2000-01-23T04:56:07.000+00:00
+      properties:
+        session:
+          $ref: '#/components/schemas/session'
+        session_token:
+          description: |-
+            The Session Token
+
+            A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
+            Header:
+
+            Authorization: bearer ${session-token}
+
+            The session token is only issued for API flows, not for Browser flows!
+          type: string
+      required:
+      - session
+      type: object
+    successfulSelfServiceRegistrationWithoutBrowser:
+      description: The Response for Registration Flows via API
+      example:
+        session_token: session_token
+        identity:
+          recovery_addresses:
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
+            value: value
+            via: via
+          - updated_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            id: id
+            value: value
+            via: via
+          traits: ""
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          credentials:
+            key:
+              updated_at: 2000-01-23T04:56:07.000+00:00
+              identifiers:
+              - identifiers
+              - identifiers
+              created_at: 2000-01-23T04:56:07.000+00:00
+              type: type
+              config: '{}'
+          verifiable_addresses:
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
+            verified: true
+            created_at: 2014-01-01T23:28:56.782Z
+            id: id
+            value: value
+            status: status
+            via: via
+          - updated_at: 2014-01-01T23:28:56.782Z
+            verified_at: 2000-01-23T04:56:07.000+00:00
+            verified: true
+            created_at: 2014-01-01T23:28:56.782Z
+            id: id
+            value: value
+            status: status
+            via: via
+          schema_id: schema_id
+          state_changed_at: 2000-01-23T04:56:07.000+00:00
+          created_at: 2000-01-23T04:56:07.000+00:00
+          schema_url: schema_url
+          id: id
+          state: ""
+        session:
+          expires_at: 2000-01-23T04:56:07.000+00:00
+          identity:
+            recovery_addresses:
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
+              value: value
+              via: via
+            - updated_at: 2000-01-23T04:56:07.000+00:00
+              created_at: 2000-01-23T04:56:07.000+00:00
+              id: id
+              value: value
+              via: via
+            traits: ""
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            credentials:
+              key:
+                updated_at: 2000-01-23T04:56:07.000+00:00
+                identifiers:
+                - identifiers
+                - identifiers
+                created_at: 2000-01-23T04:56:07.000+00:00
+                type: type
+                config: '{}'
+            verifiable_addresses:
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
+              verified: true
+              created_at: 2014-01-01T23:28:56.782Z
+              id: id
+              value: value
+              status: status
+              via: via
+            - updated_at: 2014-01-01T23:28:56.782Z
+              verified_at: 2000-01-23T04:56:07.000+00:00
+              verified: true
+              created_at: 2014-01-01T23:28:56.782Z
+              id: id
+              value: value
+              status: status
+              via: via
+            schema_id: schema_id
+            state_changed_at: 2000-01-23T04:56:07.000+00:00
+            created_at: 2000-01-23T04:56:07.000+00:00
+            schema_url: schema_url
+            id: id
+            state: ""
+          authenticated_at: 2000-01-23T04:56:07.000+00:00
+          active: true
+          id: id
+          issued_at: 2000-01-23T04:56:07.000+00:00
+      properties:
+        identity:
+          $ref: '#/components/schemas/identity'
+        session:
+          $ref: '#/components/schemas/session'
+        session_token:
+          description: |-
+            The Session Token
+
+            This field is only set when the session hook is configured as a post-registration hook.
+
+            A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
+            Header:
+
+            Authorization: bearer ${session-token}
+
+            The session token is only issued for API flows, not for Browser flows!
+          type: string
+      required:
+      - identity
+      type: object
+    successfulSelfServiceSettingsWithoutBrowser:
       description: The Response for Settings Flows via API
       example:
         identity:
@@ -3910,7 +4175,7 @@ components:
           created_at: 2000-01-23T04:56:07.000+00:00
           schema_url: schema_url
           id: id
-          state: active
+          state: ""
         flow:
           expires_at: 2000-01-23T04:56:07.000+00:00
           ui:
@@ -4005,226 +4270,20 @@ components:
             created_at: 2000-01-23T04:56:07.000+00:00
             schema_url: schema_url
             id: id
-            state: active
+            state: ""
           active: active
           id: id
-          state: state
           type: type
           issued_at: 2000-01-23T04:56:07.000+00:00
           request_url: request_url
       properties:
         flow:
-          $ref: '#/components/schemas/settingsFlow'
+          $ref: '#/components/schemas/selfServiceSettingsFlow'
         identity:
           $ref: '#/components/schemas/identity'
       required:
       - flow
       - identity
-      type: object
-    submitSelfServiceBrowserSettingsOIDCFlowPayload:
-      properties:
-        flow:
-          description: |-
-            Flow ID is the flow's ID.
-
-            in: query
-          type: string
-        link:
-          description: |-
-            Link this provider
-
-            Either this or `unlink` must be set.
-
-            type: string
-            in: body
-          type: string
-        unlink:
-          description: |-
-            Unlink this provider
-
-            Either this or `link` must be set.
-
-            type: string
-            in: body
-          type: string
-      type: object
-    submitSelfServiceLoginFlow:
-      oneOf:
-      - $ref: '#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethod'
-    submitSelfServiceLoginFlowWithPasswordMethod:
-      properties:
-        csrf_token:
-          description: Sending the anti-csrf token is only required for browser login
-            flows.
-          type: string
-        method:
-          description: Method should be set to "password" when logging in using the
-            identifier and password strategy.
-          type: string
-        password:
-          description: The user's password.
-          type: string
-        password_identifier:
-          description: Identifier is the email or username of the user trying to log
-            in.
-          type: string
-      title: submitSelfServiceLoginFlowWithPasswordMethod is used to decode the login
-        form payload.
-      type: object
-    submitSelfServiceLogoutFlowWithoutBrowserBody:
-      description: nolint:deadcode,unused
-      properties:
-        session_token:
-          description: |-
-            The Session Token
-
-            Invalidate this session token.
-          type: string
-      required:
-      - session_token
-      type: object
-    submitSelfServiceRecoveryFlowBody:
-      description: nolint:deadcode,unused
-      properties:
-        email:
-          description: Email is the email to which to send the Recovery message to.
-          type: string
-        method:
-          description: Method supports `link` only right now.
-          type: string
-      required:
-      - email
-      - method
-      type: object
-    submitSelfServiceRecoveryFlowWithLinkMethod:
-      properties:
-        csrf_token:
-          description: Sending the anti-csrf token is only required for browser login
-            flows.
-          type: string
-        email:
-          description: |-
-            Email to Recover
-
-            Needs to be set when initiating the flow. If the email is a registered
-            recovery email, a recovery link will be sent. If the email is not known,
-            a email with details on what happened will be sent instead.
-
-            format: email
-            in: body
-          type: string
-      type: object
-    submitSelfServiceRegistrationFlow:
-      oneOf:
-      - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethod'
-    submitSelfServiceRegistrationFlowWithPasswordMethod:
-      description: |-
-        SubmitSelfServiceRegistrationFlowWithPasswordMethod is used to decode the registration form payload
-        when using the password method.
-      properties:
-        csrf_token:
-          description: The CSRF Token
-          type: string
-        method:
-          description: |-
-            Method to use
-
-            This field must be set to `password` when using the password method.
-          pattern: ^password$
-          type: string
-        password:
-          description: Password to sign the user up with
-          type: string
-        traits:
-          description: The identity's traits
-          type: object
-      required:
-      - method
-      type: object
-    submitSelfServiceSettingsFlow:
-      oneOf:
-      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethod'
-      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethod'
-    submitSelfServiceSettingsFlowWithPasswordMethod:
-      properties:
-        csrf_token:
-          description: |-
-            CSRFToken is the anti-CSRF token
-
-            type: string
-          type: string
-        method:
-          description: |-
-            Method
-
-            Should be set to password when trying to update a password.
-
-            type: string
-          type: string
-        password:
-          description: |-
-            Password is the updated password
-
-            type: string
-          type: string
-      required:
-      - password
-      type: object
-    submitSelfServiceSettingsFlowWithProfileMethod:
-      description: nolint:deadcode,unused
-      properties:
-        csrf_token:
-          description: |-
-            The Anti-CSRF Token
-
-            This token is only required when performing browser flows.
-          type: string
-        method:
-          description: |-
-            Method
-
-            Should be set to profile when trying to update a profile.
-
-            type: string
-          type: string
-        traits:
-          description: Traits contains all of the identity's traits.
-          type: object
-      required:
-      - traits
-      type: object
-    submitSelfServiceVerificationFlowBody:
-      description: nolint:deadcode,unused
-      properties:
-        email:
-          description: Email is the email to which to send the verification message
-            to.
-          type: string
-        method:
-          description: Method supports `link` only right now.
-          type: string
-      required:
-      - email
-      - method
-      type: object
-    submitSelfServiceVerificationFlowWithLinkMethod:
-      description: nolint:deadcode,unused
-      properties:
-        csrf_token:
-          description: Sending the anti-csrf token is only required for browser login
-            flows.
-          type: string
-        email:
-          description: |-
-            Email to Verify
-
-            Needs to be set when initiating the flow. If the email is a registered
-            verification email, a verification link will be sent. If the email is not known,
-            a email with details on what happened will be sent instead.
-
-            format: email
-            in: body
-          type: string
       type: object
     uiContainer:
       description: Container represents a HTML Form. The container can work with both
@@ -4448,29 +4507,6 @@ components:
       items:
         $ref: '#/components/schemas/uiText'
       type: array
-    updateIdentity:
-      properties:
-        schema_id:
-          description: |-
-            SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
-            will update the Identity's SchemaID.
-          type: string
-        state:
-          description: State is the identity's state.
-          enum:
-          - active
-          - inactive
-          type: string
-        traits:
-          description: |-
-            Traits represent an identity's traits. The identity is able to create, modify, and delete traits
-            in a self-service manner. The input will always be validated against the JSON Schema defined
-            in `schema_id`.
-          type: object
-      required:
-      - state
-      - traits
-      type: object
     verifiableIdentityAddress:
       description: VerifiableAddress is an identity's verifiable address
       example:
@@ -4525,106 +4561,6 @@ components:
       - verified
       - via
       type: object
-    verificationFlow:
-      description: |-
-        Used to verify an out-of-band communication
-        channel such as an email address or a phone number.
-
-        For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation
-      example:
-        expires_at: 2000-01-23T04:56:07.000+00:00
-        ui:
-          nodes:
-          - meta:
-              label:
-                context: '{}'
-                id: 0
-                text: text
-                type: type
-            messages:
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            type: type
-            group: group
-          - meta:
-              label:
-                context: '{}'
-                id: 0
-                text: text
-                type: type
-            messages:
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            type: type
-            group: group
-          method: method
-          action: action
-          messages:
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-          - context: '{}'
-            id: 0
-            text: text
-            type: type
-        active: active
-        id: id
-        state: state
-        type: type
-        issued_at: 2000-01-23T04:56:07.000+00:00
-        request_url: request_url
-      properties:
-        active:
-          description: |-
-            Active, if set, contains the registration method that is being used. It is initially
-            not set.
-          type: string
-        expires_at:
-          description: |-
-            ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,
-            a new request has to be initiated.
-          format: date-time
-          type: string
-        id:
-          format: uuid4
-          type: string
-        issued_at:
-          description: IssuedAt is the time (UTC) when the request occurred.
-          format: date-time
-          type: string
-        request_url:
-          description: |-
-            RequestURL is the initial URL that was requested from Ory Kratos. It can be used
-            to forward information contained in the URL's path or query for example.
-          type: string
-        state:
-          type: string
-        type:
-          description: The flow type can either be `api` or `browser`.
-          title: Type is the flow type.
-          type: string
-        ui:
-          $ref: '#/components/schemas/uiContainer'
-      required:
-      - id
-      - state
-      - type
-      - ui
-      title: A Verification Flow
-      type: object
     version:
       properties:
         version:
@@ -4663,10 +4599,12 @@ components:
       - version
       type: object
   securitySchemes:
-    oryToken:
-      scheme: bearer
-      type: http
-    sessionToken:
+    oryAccessToken:
+      description: |
+        This security mechanism is only applicable when using the [Ory Platform](https://console.ory.sh) by
+        creating an [Ory Personal Access Token](https://www.ory.sh/docs/guides/create-personal-access-token).
+        If you are using the open source version, this security mechanism
+        will not work out of the box as you will need to add a security mechanism yourself.
       scheme: bearer
       type: http
 x-forwarded-proto: string

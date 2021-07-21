@@ -31,6 +31,8 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	assert.EqualValues(t, "aHR0cDovL2Zvby5jb20vYmFy_csrf_token", cookie.Name, "base64 representation of http://foo.com/bar")
 	assert.EqualValues(t, http.SameSiteLaxMode, cookie.SameSite, "is set to lax because https/secure is false - chrome rejects none samesite on non-https")
 	assert.EqualValues(t, nosurf.MaxAge, cookie.MaxAge)
+	assert.EqualValues(t, "/", cookie.Path, "cookie path is site root by default")
+	assert.EqualValues(t, "", cookie.Domain, "domain for the cookie is set to empty per default")
 	assert.False(t, cookie.Secure, "false because insecure dev mode")
 	assert.True(t, cookie.HttpOnly)
 
@@ -45,11 +47,38 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 		assert.True(t, matches, "does not have any special chars")
 	}
 
+	require.NoError(t, conf.Set(config.ViperKeyCookieSameSite, "None"))
 	require.NoError(t, conf.Source().Set("dev", false))
 	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 	assert.EqualValues(t, http.SameSiteNoneMode, cookie.SameSite, "can be none because https/secure is true")
 	assert.True(t, cookie.Secure, "true because secure mode")
 	assert.True(t, cookie.HttpOnly)
+}
+
+func TestNosurfBaseCookieHandlerAliasing(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
+	require.NoError(t, conf.Source().Set(config.ViperKeyPublicDomainAliases, [...]config.DomainAlias{{MatchDomain: "example.com", BasePath: "/bar", Scheme: "http"}}))
+
+	cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
+	assert.EqualValues(t, "", cookie.Domain, "remains unset")
+	assert.EqualValues(t, "/", cookie.Path, "cookie path is site root by default")
+
+	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://example.com/bar", nil))
+	assert.EqualValues(t, "example.com", cookie.Domain, "alias domain is used when request is from an alias")
+	assert.EqualValues(t, "/bar", cookie.Path, "cookie path is alias root")
+
+	// Check root settings
+	require.NoError(t, conf.Source().Set(config.ViperKeyCookieDomain, "bar.com"))
+	require.NoError(t, conf.Source().Set(config.ViperKeyCookiePath, "/baz"))
+	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://foo.com/bar", nil))
+	assert.EqualValues(t, "bar.com", cookie.Domain, "domain doesn't change when request not from an alias but is overwritten by ViperKeyCookieDomain")
+	assert.EqualValues(t, "/baz", cookie.Path, "cookie path is site root by default but is overwritten by ViperKeyCookiePath")
+
+	cookie = x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "http://example.com/bar", nil))
+	assert.EqualValues(t, "example.com", cookie.Domain, "alias domain is used when request is from an alias and ignores global config")
+	assert.EqualValues(t, "/bar", cookie.Path, "cookie path is alias root and ignores global config")
 }
 
 func TestNosurfBaseCookieErrorHandler(t *testing.T) {

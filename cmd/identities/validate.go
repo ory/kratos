@@ -39,7 +39,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 
 			for src, i := range is {
 				err = ValidateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
-					return c.PublicApi.GetSchema(ctx, id).Execute()
+					return c.V0alpha1Api.GetJsonSchema(ctx, id).Execute()
 				})
 				if err != nil {
 					return err
@@ -56,7 +56,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 
 var schemas = make(map[string]*jsonschema.Schema)
 
-const createIdentityPath = "openapi.json#/components/schemas/createIdentity"
+const createIdentityPath = "api.json#/components/schemas/adminCreateIdentityBody"
 
 type SchemaGetter = func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error)
 
@@ -68,7 +68,7 @@ func ValidateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema SchemaG
 	if !ok {
 		// add swagger schema
 		schemaCompiler := jsonschema.NewCompiler()
-		err := schemaCompiler.AddResource("openapi.json", bytes.NewReader(spec.API))
+		err := schemaCompiler.AddResource("api.json", bytes.NewReader(spec.API))
 		if err != nil {
 			return errors.Wrap(err, "Could not add swagger schema to the schema compiler. This is an error with the binary you use and should be reported. Thanks ;)")
 		}

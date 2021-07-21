@@ -24,7 +24,7 @@ import (
 //
 // We recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)
 //
-// swagger:model recoveryFlow
+// swagger:model selfServiceRecoveryFlow
 type Flow struct {
 	// ID represents the request's unique ID. When performing the recovery flow, this
 	// represents the id in the recovery ui's query parameter: http://<selfservice.flows.recovery.ui_url>?request=<id>

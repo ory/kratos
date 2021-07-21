@@ -103,10 +103,12 @@ func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
 }
 
 func (p *Persister) NetworkMigrateUp(ctx context.Context) error {
+	// nolint
 	return p.p.MigrateUp(ctx)
 }
 
 func (p *Persister) MigrateUp(ctx context.Context) error {
+	// nolint
 	if err := p.p.MigrateUp(ctx); err != nil {
 		return err
 	}

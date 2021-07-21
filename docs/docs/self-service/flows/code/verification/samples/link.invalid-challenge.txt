@@ -7,9 +7,9 @@ $ curl -H "Accept: application/json" -s \
   "type": "browser",
   "expires_at": "2021-04-28T13:44:02.334708332Z",
   "issued_at": "2021-04-28T12:44:02.334708332Z",
-  "request_url": "http://127.0.0.1:4433/self-service/verification?flow=388891f2-32ed-4c79-a429-7c7fb7a92986&token=123123",
+  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification?flow=388891f2-32ed-4c79-a429-7c7fb7a92986&token=123123",
   "ui": {
-    "action": "http://127.0.0.1:4433/self-service/verification?flow=9040cdea-3674-4c3e-8b2d-b35b268c696e",
+    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/verification?flow=9040cdea-3674-4c3e-8b2d-b35b268c696e",
     "method": "POST",
     "nodes": [
       {

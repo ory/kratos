@@ -74,6 +74,11 @@
     },
     "/identities": {
       "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "Lists all identities. Does not support search at the moment.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "produces": [
           "application/json"
@@ -83,10 +88,10 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha1"
         ],
         "summary": "List Identities",
-        "operationId": "listIdentities",
+        "operationId": "adminListIdentities",
         "parameters": [
           {
             "maximum": 500,
@@ -110,7 +115,10 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/identityList"
+            "description": "identityList",
+            "schema": {
+              "$ref": "#/definitions/identityList"
+            }
           },
           "500": {
             "description": "jsonError",
@@ -121,6 +129,11 @@
         }
       },
       "post": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "consumes": [
           "application/json"
@@ -133,22 +146,25 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha1"
         ],
         "summary": "Create an Identity",
-        "operationId": "createIdentity",
+        "operationId": "adminCreateIdentity",
         "parameters": [
           {
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/createIdentity"
+              "$ref": "#/definitions/adminCreateIdentityBody"
             }
           }
         ],
         "responses": {
           "201": {
-            "$ref": "#/responses/identityResponse"
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
           },
           "400": {
             "description": "jsonError",
@@ -173,6 +189,11 @@
     },
     "/identities/{id}": {
       "get": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "consumes": [
           "application/json"
@@ -185,10 +206,10 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha1"
         ],
         "summary": "Get an Identity",
-        "operationId": "getIdentity",
+        "operationId": "adminGetIdentity",
         "parameters": [
           {
             "type": "string",
@@ -200,7 +221,10 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/identityResponse"
+            "description": "identity",
+            "schema": {
+              "$ref": "#/definitions/identity"
+            }
           },
           "404": {
             "description": "jsonError",
@@ -217,6 +241,11 @@
         }
       },
       "put": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nThe full identity payload (except credentials) is expected. This endpoint does not support patching.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "consumes": [
           "application/json"
@@ -229,10 +258,10 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha1"
         ],
         "summary": "Update an Identity",
-        "operationId": "updateIdentity",
+        "operationId": "adminUpdateIdentity",
         "parameters": [
           {
             "type": "string",
@@ -245,7 +274,7 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/updateIdentity"
+              "$ref": "#/definitions/AdminUpdateIdentityBody"
             }
           }
         ],
@@ -283,6 +312,11 @@
         }
       },
       "delete": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
         "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "produces": [
           "application/json"
@@ -292,10 +326,10 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha1"
         ],
         "summary": "Delete an Identity",
-        "operationId": "deleteIdentity",
+        "operationId": "adminDeleteIdentity",
         "parameters": [
           {
             "type": "string",
@@ -331,7 +365,7 @@
           "plain/text"
         ],
         "tags": [
-          "admin"
+          "metadata"
         ],
         "summary": "Get snapshot metrics from the service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
         "operationId": "prometheus",
@@ -356,24 +390,24 @@
           "https"
         ],
         "tags": [
-          "admin"
+          "v0alpha1"
         ],
         "summary": "Create a Recovery Link",
-        "operationId": "createRecoveryLink",
+        "operationId": "adminCreateSelfServiceRecoveryLink",
         "parameters": [
           {
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/CreateRecoveryLink"
+              "$ref": "#/definitions/adminCreateSelfServiceRecoveryLinkBody"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "recoveryLink",
+            "description": "selfServiceRecoveryLink",
             "schema": {
-              "$ref": "#/definitions/recoveryLink"
+              "$ref": "#/definitions/selfServiceRecoveryLink"
             }
           },
           "400": {
@@ -399,7 +433,7 @@
     },
     "/schemas/{id}": {
       "get": {
-        "description": "Get a Traits Schema Definition",
+        "description": "Get a JSON Schema",
         "produces": [
           "application/json"
         ],
@@ -408,10 +442,9 @@
           "https"
         ],
         "tags": [
-          "public",
-          "admin"
+          "v0alpha1"
         ],
-        "operationId": "getSchema",
+        "operationId": "getJsonSchema",
         "parameters": [
           {
             "type": "string",
@@ -445,7 +478,7 @@
     },
     "/self-service/errors": {
       "get": {
-        "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nThis endpoint supports stub values to help you implement the error UI:\n\n`?error=stub:500` - returns a stub 500 (Internal Server Error) error.\n\nMore information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
+        "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nThis endpoint supports stub values to help you implement the error UI:\n\n`?id=stub:500` - returns a stub 500 (Internal Server Error) error.\n\nMore information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
         "produces": [
           "application/json"
         ],
@@ -454,23 +487,25 @@
           "https"
         ],
         "tags": [
-          "public",
-          "admin"
+          "v0alpha1"
         ],
-        "summary": "Get User-Facing Self-Service Errors",
+        "summary": "Get Self-Service Errors",
         "operationId": "getSelfServiceError",
         "parameters": [
           {
             "type": "string",
-            "description": "Error is the container's ID",
-            "name": "error",
+            "description": "Error is the error's ID",
+            "name": "id",
             "in": "query",
             "required": true
           }
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/selfServiceErrorResponse"
+            "description": "selfServiceError",
+            "schema": {
+              "$ref": "#/definitions/selfServiceError"
+            }
           },
           "403": {
             "description": "jsonError",
@@ -510,7 +545,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Submit a Login Flow",
         "operationId": "submitSelfServiceLoginFlow",
@@ -526,24 +561,24 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/submitSelfServiceLoginFlow"
+              "$ref": "#/definitions/submitSelfServiceLoginFlowBody"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "loginViaApiResponse",
+            "description": "successfulSelfServiceLoginWithoutBrowser",
             "schema": {
-              "$ref": "#/definitions/loginViaApiResponse"
+              "$ref": "#/definitions/successfulSelfServiceLoginWithoutBrowser"
             }
           },
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "400": {
-            "description": "loginFlow",
+            "description": "selfServiceLoginFlow",
             "schema": {
-              "$ref": "#/definitions/loginFlow"
+              "$ref": "#/definitions/selfServiceLoginFlow"
             }
           },
           "500": {
@@ -557,7 +592,7 @@
     },
     "/self-service/login/api": {
       "get": {
-        "description": "This endpoint initiates a login flow for API clients that do not use a browser, such as mobile devices, smart TVs, and so on.\n\n:::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing login flow call `/self-service/login/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks, including CSRF login attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint initiates a login flow for API clients that do not use a browser, such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing login flow call `/self-service/login/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks, including CSRF login attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -566,10 +601,10 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Login Flow for APIs, Services, Apps, ...",
-        "operationId": "initializeSelfServiceLoginWithoutBrowser",
+        "operationId": "initializeSelfServiceLoginFlowWithoutBrowser",
         "parameters": [
           {
             "type": "boolean",
@@ -580,9 +615,9 @@
         ],
         "responses": {
           "200": {
-            "description": "loginFlow",
+            "description": "selfServiceLoginFlow",
             "schema": {
-              "$ref": "#/definitions/loginFlow"
+              "$ref": "#/definitions/selfServiceLoginFlow"
             }
           },
           "400": {
@@ -602,7 +637,7 @@
     },
     "/self-service/login/browser": {
       "get": {
-        "description": "This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate\ncookies and anti-CSRF measures required for browser-based flows.\n\n:::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nIf this endpoint is called via an AJAX request, the response contains the login flow without a redirect.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate\ncookies and anti-CSRF measures required for browser-based flows.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\nIf this endpoint is called via an AJAX request, the response contains the login flow without a redirect.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -611,10 +646,10 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Login Flow for Browsers",
-        "operationId": "initializeSelfServiceLoginForBrowsers",
+        "operationId": "initializeSelfServiceLoginFlowForBrowsers",
         "parameters": [
           {
             "type": "boolean",
@@ -625,9 +660,9 @@
         ],
         "responses": {
           "200": {
-            "description": "loginFlow",
+            "description": "selfServiceLoginFlow",
             "schema": {
-              "$ref": "#/definitions/loginFlow"
+              "$ref": "#/definitions/selfServiceLoginFlow"
             }
           },
           "302": {
@@ -644,7 +679,7 @@
     },
     "/self-service/login/flows": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint returns a login flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/login', async function (req, res) {\nconst flow = await client.getSelfServiceLoginFlow(req.header('cookie'), req.query['flow'])\n\nres.render('login', flow)\n})\n```\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint returns a login flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/login', async function (req, res) {\nconst flow = await client.getSelfServiceLoginFlow(req.header('cookie'), req.query['flow'])\n\nres.render('login', flow)\n})\n```\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -653,7 +688,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Get Login Flow",
         "operationId": "getSelfServiceLoginFlow",
@@ -674,9 +709,9 @@
         ],
         "responses": {
           "200": {
-            "description": "loginFlow",
+            "description": "selfServiceLoginFlow",
             "schema": {
-              "$ref": "#/definitions/loginFlow"
+              "$ref": "#/definitions/selfServiceLoginFlow"
             }
           },
           "403": {
@@ -707,8 +742,8 @@
       }
     },
     "/self-service/logout": {
-      "post": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint logs out an identity in a self-service manner.\n\nIf the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)\nto the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.\n\nIf the `Accept` HTTP header is set to `application/json`, a 204 No Content response\nwill be sent on successful logout instead.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...). For API clients you can\ncall the `/self-service/logout/api` URL directly with the Ory Session Token.\n\n:::\n\nMore information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).",
+      "get": {
+        "description": "This endpoint logs out an identity in a self-service manner.\n\nIf the `Accept` HTTP header is not set to `application/json`, the browser will be redirected (HTTP 302 Found)\nto the `return_to` parameter of the initial request or fall back to `urls.default_return_to`.\n\nIf the `Accept` HTTP header is set to `application/json`, a 204 No Content response\nwill be sent on successful logout instead.\n\nThis endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...). For API clients you can\ncall the `/self-service/logout/api` URL directly with the Ory Session Token.\n\nMore information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).",
         "produces": [
           "application/json"
         ],
@@ -717,10 +752,18 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Complete Self-Service Logout",
         "operationId": "submitSelfServiceLogoutFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "A Valid Logout Token\n\nIf you do not have a logout token because you only have a session cookie,\ncall `/self-service/logout/urls` to generate a URL for this endpoint.",
+            "name": "token",
+            "in": "query"
+          }
+        ],
         "responses": {
           "204": {
             "$ref": "#/responses/emptyResponse"
@@ -739,7 +782,7 @@
     },
     "/self-service/logout/api": {
       "delete": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to log out an identity using an Ory Session Token. If the Ory Session Token was successfully\nrevoked, the server returns a 204 No Content response. A 204 No Content response is also sent when\nthe Ory Session Token has been revoked already before.\n\nIf the Ory Session Token is malformed or does not exist a 403 Forbidden response will be returned.\n\nThis endpoint does not remove any HTTP\nCookies - use the Browser-Based Self-Service Logout Flow instead.",
+        "description": "Use this endpoint to log out an identity using an Ory Session Token. If the Ory Session Token was successfully\nrevoked, the server returns a 204 No Content response. A 204 No Content response is also sent when\nthe Ory Session Token has been revoked already before.\n\nIf the Ory Session Token is malformed or does not exist a 403 Forbidden response will be returned.\n\nThis endpoint does not remove any HTTP\nCookies - use the Browser-Based Self-Service Logout Flow instead.",
         "consumes": [
           "application/json"
         ],
@@ -751,7 +794,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Perform Logout for APIs, Services, Apps, ...",
         "operationId": "submitSelfServiceLogoutFlowWithoutBrowser",
@@ -786,7 +829,7 @@
     },
     "/self-service/logout/browser": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...). For API clients you can\ncall the `/self-service/logout/api` URL directly with the Ory Session Token.\n\n:::\n\nThe URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns\na 401 error.\n\nWhen calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.",
+        "description": "This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.\n\nThis endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...). For API clients you can\ncall the `/self-service/logout/api` URL directly with the Ory Session Token.\n\nThe URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns\na 401 error.\n\nWhen calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.",
         "produces": [
           "application/json"
         ],
@@ -795,10 +838,10 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
-        "summary": "Initialize Logout Flow for Browsers",
-        "operationId": "createSelfServiceLogoutUrlForBrowsers",
+        "summary": "Create a Logout URL for Browsers",
+        "operationId": "createSelfServiceLogoutFlowUrlForBrowsers",
         "parameters": [
           {
             "type": "string",
@@ -809,9 +852,9 @@
         ],
         "responses": {
           "200": {
-            "description": "logoutUrl",
+            "description": "selfServiceLogoutUrl",
             "schema": {
-              "$ref": "#/definitions/logoutUrl"
+              "$ref": "#/definitions/selfServiceLogoutUrl"
             }
           },
           "401": {
@@ -844,17 +887,23 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Complete Recovery Flow",
         "operationId": "submitSelfServiceRecoveryFlow",
         "parameters": [
           {
             "type": "string",
-            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
+            "description": "The Recovery Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/recovery?flow=abcde`).",
             "name": "flow",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "Recovery Token\n\nThe recovery token which completes the recovery request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.\n\nThis parameter is usually set in a link and not used by any direct API call.",
+            "name": "token",
+            "in": "query"
           },
           {
             "name": "Body",
@@ -866,18 +915,18 @@
         ],
         "responses": {
           "200": {
-            "description": "recoveryFlow",
+            "description": "selfServiceRecoveryFlow",
             "schema": {
-              "$ref": "#/definitions/recoveryFlow"
+              "$ref": "#/definitions/selfServiceRecoveryFlow"
             }
           },
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "400": {
-            "description": "recoveryFlow",
+            "description": "selfServiceRecoveryFlow",
             "schema": {
-              "$ref": "#/definitions/recoveryFlow"
+              "$ref": "#/definitions/selfServiceRecoveryFlow"
             }
           },
           "500": {
@@ -891,21 +940,21 @@
     },
     "/self-service/recovery/api": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nTo fetch an existing recovery flow call `/self-service/recovery/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
+        "description": "This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nTo fetch an existing recovery flow call `/self-service/recovery/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
         "schemes": [
           "http",
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Recovery Flow for APIs, Services, Apps, ...",
-        "operationId": "initializeSelfServiceRecoveryWithoutBrowser",
+        "operationId": "initializeSelfServiceRecoveryFlowWithoutBrowser",
         "responses": {
           "200": {
-            "description": "recoveryFlow",
+            "description": "selfServiceRecoveryFlow",
             "schema": {
-              "$ref": "#/definitions/recoveryFlow"
+              "$ref": "#/definitions/selfServiceRecoveryFlow"
             }
           },
           "400": {
@@ -925,21 +974,21 @@
     },
     "/self-service/recovery/browser": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists, the browser is returned to the configured return URL.\n\nIf this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects\nor a 400 bad request error if the user is already authenticated.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
+        "description": "This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists, the browser is returned to the configured return URL.\n\nIf this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects\nor a 400 bad request error if the user is already authenticated.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
         "schemes": [
           "http",
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Recovery Flow for Browsers",
-        "operationId": "initializeSelfServiceRecoveryForBrowsers",
+        "operationId": "initializeSelfServiceRecoveryFlowForBrowsers",
         "responses": {
           "200": {
-            "description": "recoveryFlow",
+            "description": "selfServiceRecoveryFlow",
             "schema": {
-              "$ref": "#/definitions/recoveryFlow"
+              "$ref": "#/definitions/selfServiceRecoveryFlow"
             }
           },
           "302": {
@@ -962,7 +1011,7 @@
     },
     "/self-service/recovery/flows": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint returns a recovery flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/recovery', async function (req, res) {\nconst flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])\n\nres.render('recovery', flow)\n})\n```\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
+        "description": "This endpoint returns a recovery flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/recovery', async function (req, res) {\nconst flow = await client.getSelfServiceRecoveryFlow(req.header('Cookie'), req.query['flow'])\n\nres.render('recovery', flow)\n})\n```\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
         "produces": [
           "application/json"
         ],
@@ -971,7 +1020,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Get Recovery Flow",
         "operationId": "getSelfServiceRecoveryFlow",
@@ -992,9 +1041,9 @@
         ],
         "responses": {
           "200": {
-            "description": "recoveryFlow",
+            "description": "selfServiceRecoveryFlow",
             "schema": {
-              "$ref": "#/definitions/recoveryFlow"
+              "$ref": "#/definitions/selfServiceRecoveryFlow"
             }
           },
           "404": {
@@ -1018,68 +1067,9 @@
         }
       }
     },
-    "/self-service/recovery/methods/link": {
-      "post": {
-        "description": "Use this endpoint to complete a recovery flow using the link method. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.\n`sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a recovery link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with\na new Recovery Flow ID which contains an error message that the recovery link was invalid.\n\nMore information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).",
-        "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Complete Recovery Flow with Link Method",
-        "operationId": "submitSelfServiceRecoveryFlowWithLinkMethod",
-        "parameters": [
-          {
-            "name": "Body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/submitSelfServiceRecoveryFlowWithLinkMethod"
-            }
-          },
-          {
-            "type": "string",
-            "description": "Recovery Token\n\nThe recovery token which completes the recovery request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.",
-            "name": "token",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "The Flow ID\n\nformat: uuid",
-            "name": "flow",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "302": {
-            "$ref": "#/responses/emptyResponse"
-          },
-          "400": {
-            "description": "recoveryFlow",
-            "schema": {
-              "$ref": "#/definitions/recoveryFlow"
-            }
-          },
-          "500": {
-            "description": "jsonError",
-            "schema": {
-              "$ref": "#/definitions/jsonError"
-            }
-          }
-        }
-      }
-    },
     "/self-service/registration": {
       "post": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1092,7 +1082,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Submit a Registration Flow",
         "operationId": "submitSelfServiceRegistrationFlow",
@@ -1108,24 +1098,24 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/submitSelfServiceRegistrationFlow"
+              "$ref": "#/definitions/submitSelfServiceRegistrationFlowBody"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "registrationViaApiResponse",
+            "description": "successfulSelfServiceRegistrationWithoutBrowser",
             "schema": {
-              "$ref": "#/definitions/registrationViaApiResponse"
+              "$ref": "#/definitions/successfulSelfServiceRegistrationWithoutBrowser"
             }
           },
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "400": {
-            "description": "registrationFlow",
+            "description": "selfServiceRegistrationFlow",
             "schema": {
-              "$ref": "#/definitions/registrationFlow"
+              "$ref": "#/definitions/selfServiceRegistrationFlow"
             }
           },
           "500": {
@@ -1139,21 +1129,21 @@
     },
     "/self-service/registration/api": {
       "get": {
-        "description": "This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.\n\n:::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing registration flow call `/self-service/registration/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing registration flow call `/self-service/registration/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "schemes": [
           "http",
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Registration Flow for APIs, Services, Apps, ...",
-        "operationId": "initializeSelfServiceRegistrationWithoutBrowser",
+        "operationId": "initializeSelfServiceRegistrationFlowWithoutBrowser",
         "responses": {
           "200": {
-            "description": "registrationFlow",
+            "description": "selfServiceRegistrationFlow",
             "schema": {
-              "$ref": "#/definitions/registrationFlow"
+              "$ref": "#/definitions/selfServiceRegistrationFlow"
             }
           },
           "400": {
@@ -1182,15 +1172,15 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Registration Flow for Browsers",
-        "operationId": "initializeSelfServiceRegistrationForBrowsers",
+        "operationId": "initializeSelfServiceRegistrationFlowForBrowsers",
         "responses": {
           "200": {
-            "description": "registrationFlow",
+            "description": "selfServiceRegistrationFlow",
             "schema": {
-              "$ref": "#/definitions/registrationFlow"
+              "$ref": "#/definitions/selfServiceRegistrationFlow"
             }
           },
           "302": {
@@ -1207,7 +1197,7 @@
     },
     "/self-service/registration/flows": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint returns a registration flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/registration', async function (req, res) {\nconst flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])\n\nres.render('registration', flow)\n})\n```\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint returns a registration flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/registration', async function (req, res) {\nconst flow = await client.getSelfServiceRegistrationFlow(req.header('cookie'), req.query['flow'])\n\nres.render('registration', flow)\n})\n```\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -1216,7 +1206,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Get Registration Flow",
         "operationId": "getSelfServiceRegistrationFlow",
@@ -1237,9 +1227,9 @@
         ],
         "responses": {
           "200": {
-            "description": "registrationFlow",
+            "description": "selfServiceRegistrationFlow",
             "schema": {
-              "$ref": "#/definitions/registrationFlow"
+              "$ref": "#/definitions/selfServiceRegistrationFlow"
             }
           },
           "403": {
@@ -1289,7 +1279,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Complete Settings Flow",
         "operationId": "submitSelfServiceSettingsFlow",
@@ -1305,7 +1295,7 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/submitSelfServiceSettingsFlow"
+              "$ref": "#/definitions/submitSelfServiceSettingsFlowBody"
             }
           },
           {
@@ -1317,18 +1307,18 @@
         ],
         "responses": {
           "200": {
-            "description": "settingsViaApiResponse",
+            "description": "successfulSelfServiceSettingsWithoutBrowser",
             "schema": {
-              "$ref": "#/definitions/settingsViaApiResponse"
+              "$ref": "#/definitions/successfulSelfServiceSettingsWithoutBrowser"
             }
           },
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "400": {
-            "description": "settingsFlow",
+            "description": "selfServiceSettingsFlow",
             "schema": {
-              "$ref": "#/definitions/settingsFlow"
+              "$ref": "#/definitions/selfServiceSettingsFlow"
             }
           },
           "401": {
@@ -1354,40 +1344,29 @@
     },
     "/self-service/settings/api": {
       "get": {
-        "security": [
-          {
-            "sessionToken": []
-          }
-        ],
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.\nYou must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.\n\nTo fetch an existing settings flow call `/self-service/settings/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.\nYou must provide a valid Ory Kratos Session Token for this endpoint to respond with HTTP 200 OK.\n\nTo fetch an existing settings flow call `/self-service/settings/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "schemes": [
           "http",
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Settings Flow for APIs, Services, Apps, ...",
-        "operationId": "initializeSelfServiceSettingsWithoutBrowser",
+        "operationId": "initializeSelfServiceSettingsFlowWithoutBrowser",
         "parameters": [
           {
             "type": "string",
             "description": "The Session Token of the Identity performing the settings flow.",
             "name": "X-Session-Token",
             "in": "header"
-          },
-          {
-            "type": "string",
-            "description": "The Session Cookie of the Identity performing the settings flow.",
-            "name": "X-Session-Cookie",
-            "in": "header"
           }
         ],
         "responses": {
           "200": {
-            "description": "settingsFlow",
+            "description": "selfServiceSettingsFlow",
             "schema": {
-              "$ref": "#/definitions/settingsFlow"
+              "$ref": "#/definitions/selfServiceSettingsFlow"
             }
           },
           "400": {
@@ -1407,26 +1386,29 @@
     },
     "/self-service/settings/browser": {
       "get": {
-        "security": [
-          {
-            "sessionToken": []
-          }
-        ],
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid\nOry Kratos Session Cookie is included in the request, a login flow will be initialized.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session\nwas set, the browser will be redirected to the login endpoint.\n\nIf this endpoint is called via an AJAX request, the response contains the settings flow without any redirects\nor a 403 forbidden error if no valid session was set.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid\nOry Kratos Session Cookie is included in the request, a login flow will be initialized.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session\nwas set, the browser will be redirected to the login endpoint.\n\nIf this endpoint is called via an AJAX request, the response contains the settings flow without any redirects\nor a 403 forbidden error if no valid session was set.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "schemes": [
           "http",
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Settings Flow for Browsers",
-        "operationId": "initializeSelfServiceSettingsForBrowsers",
+        "operationId": "initializeSelfServiceSettingsFlowForBrowsers",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Session Cookie of the Identity performing the settings flow.",
+            "name": "Cookie",
+            "in": "header"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "settingsFlow",
+            "description": "selfServiceSettingsFlow",
             "schema": {
-              "$ref": "#/definitions/settingsFlow"
+              "$ref": "#/definitions/selfServiceSettingsFlow"
             }
           },
           "302": {
@@ -1449,12 +1431,7 @@
     },
     "/self-service/settings/flows": {
       "get": {
-        "security": [
-          {
-            "sessionToken": []
-          }
-        ],
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nWhen accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie\nor the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes\nbut instead 403 or 500 to improve data privacy.\n\nYou can access this endpoint without credentials when using Ory Kratos' Admin API.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie\nor the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes\nbut instead 403 or 500 to improve data privacy.\n\nYou can access this endpoint without credentials when using Ory Kratos' Admin API.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "produces": [
           "application/json"
         ],
@@ -1463,7 +1440,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Get Settings Flow",
         "operationId": "getSelfServiceSettingsFlow",
@@ -1490,9 +1467,9 @@
         ],
         "responses": {
           "200": {
-            "description": "settingsFlow",
+            "description": "selfServiceSettingsFlow",
             "schema": {
-              "$ref": "#/definitions/settingsFlow"
+              "$ref": "#/definitions/selfServiceSettingsFlow"
             }
           },
           "403": {
@@ -1537,17 +1514,23 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Complete Verification Flow",
         "operationId": "submitSelfServiceVerificationFlow",
         "parameters": [
           {
             "type": "string",
-            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
+            "description": "The Verification Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/verification?flow=abcde`).",
             "name": "flow",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "Verification Token\n\nThe verification token which completes the verification request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.\n\nThis parameter is usually set in a link and not used by any direct API call.",
+            "name": "token",
+            "in": "query"
           },
           {
             "name": "Body",
@@ -1559,18 +1542,18 @@
         ],
         "responses": {
           "200": {
-            "description": "verificationFlow",
+            "description": "selfServiceVerificationFlow",
             "schema": {
-              "$ref": "#/definitions/verificationFlow"
+              "$ref": "#/definitions/selfServiceVerificationFlow"
             }
           },
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
           "400": {
-            "description": "verificationFlow",
+            "description": "selfServiceVerificationFlow",
             "schema": {
-              "$ref": "#/definitions/verificationFlow"
+              "$ref": "#/definitions/selfServiceVerificationFlow"
             }
           },
           "500": {
@@ -1584,21 +1567,21 @@
     },
     "/self-service/verification/api": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.\n\nTo fetch an existing verification flow call `/self-service/verification/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.\n\nTo fetch an existing verification flow call `/self-service/verification/flows?flow=\u003cflow_id\u003e`.\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
         "schemes": [
           "http",
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Verification Flow for APIs, Services, Apps, ...",
-        "operationId": "initializeSelfServiceVerificationWithoutBrowser",
+        "operationId": "initializeSelfServiceVerificationFlowWithoutBrowser",
         "responses": {
           "200": {
-            "description": "verificationFlow",
+            "description": "selfServiceVerificationFlow",
             "schema": {
-              "$ref": "#/definitions/verificationFlow"
+              "$ref": "#/definitions/selfServiceVerificationFlow"
             }
           },
           "400": {
@@ -1618,21 +1601,21 @@
     },
     "/self-service/verification/browser": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.\n\nIf this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.\n\nIf this endpoint is called via an AJAX request, the response contains the recovery flow without any redirects.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
         "schemes": [
           "http",
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Initialize Verification Flow for Browser Clients",
-        "operationId": "initializeSelfServiceVerificationForBrowsers",
+        "operationId": "initializeSelfServiceVerificationFlowForBrowsers",
         "responses": {
           "200": {
-            "description": "verificationFlow",
+            "description": "selfServiceVerificationFlow",
             "schema": {
-              "$ref": "#/definitions/verificationFlow"
+              "$ref": "#/definitions/selfServiceVerificationFlow"
             }
           },
           "302": {
@@ -1649,7 +1632,7 @@
     },
     "/self-service/verification/flows": {
       "get": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nThis endpoint returns a verification flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/recovery', async function (req, res) {\nconst flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])\n\nres.render('verification', flow)\n})\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint returns a verification flow's context with, for example, error details and other information.\n\nBrowser flows expect the anti-CSRF cookie to be included in the request's HTTP Cookie Header.\nFor AJAX requests you must ensure that cookies are included in the request or requests will fail.\n\nIf you use the browser-flow for server-side apps, the services need to run on a common top-level-domain\nand you need to forward the incoming HTTP Cookie header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/recovery', async function (req, res) {\nconst flow = await client.getSelfServiceVerificationFlow(req.header('cookie'), req.query['flow'])\n\nres.render('verification', flow)\n})\n\nMore information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
         "produces": [
           "application/json"
         ],
@@ -1658,7 +1641,7 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Get Verification Flow",
         "operationId": "getSelfServiceVerificationFlow",
@@ -1679,9 +1662,9 @@
         ],
         "responses": {
           "200": {
-            "description": "verificationFlow",
+            "description": "selfServiceVerificationFlow",
             "schema": {
-              "$ref": "#/definitions/verificationFlow"
+              "$ref": "#/definitions/selfServiceVerificationFlow"
             }
           },
           "403": {
@@ -1707,7 +1690,7 @@
     },
     "/sessions/whoami": {
       "get": {
-        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!\n\nThis endpoint authenticates users by checking\n\nif the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;\nif the `Authorization: bearer \u003cory-session-token\u003e` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).\n\nIf none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.",
+        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nIf you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/protected-endpoint', async function (req, res) {\nconst session = await client.toSession(undefined, req.header('cookie'))\n\nconsole.log(session)\n})\n```\n\nWhen calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:\n\n```js\npseudo-code example\n...\nconst session = await client.toSession(\"the-session-token\")\n\nconsole.log(session)\n```\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!\n\nThis endpoint authenticates users by checking\n\nif the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;\nif the `Authorization: bearer \u003cory-session-token\u003e` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.\n\nIf none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.",
         "produces": [
           "application/json"
         ],
@@ -1716,19 +1699,21 @@
           "https"
         ],
         "tags": [
-          "public"
+          "v0alpha1"
         ],
         "summary": "Check Who the Current HTTP Session Belongs To",
         "operationId": "toSession",
         "parameters": [
           {
             "type": "string",
+            "description": "Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.",
             "name": "X-Session-Token",
             "in": "header"
           },
           {
             "type": "string",
-            "name": "X-Session-Cookie",
+            "description": "Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that\nscenario you must include the HTTP Cookie Header which originally was included in the request to your server.\nAn example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.\n\nIt is ok if more than one cookie are included here as all other cookies will be ignored.",
+            "name": "Cookie",
             "in": "header"
           }
         ],
@@ -1777,6 +1762,26 @@
     }
   },
   "definitions": {
+    "AdminUpdateIdentityBody": {
+      "type": "object",
+      "required": [
+        "traits",
+        "state"
+      ],
+      "properties": {
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
+          "type": "string"
+        },
+        "state": {
+          "description": "State is the identity's state."
+        },
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
+          "type": "object"
+        }
+      }
+    },
     "AuthenticateOKBody": {
       "description": "AuthenticateOKBody authenticate o k body",
       "type": "object",
@@ -1903,22 +1908,6 @@
         "Message": {
           "description": "Details of an error",
           "type": "string"
-        }
-      }
-    },
-    "CreateRecoveryLink": {
-      "type": "object",
-      "required": [
-        "identity_id"
-      ],
-      "properties": {
-        "expires_in": {
-          "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
-          "type": "string",
-          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
-        },
-        "identity_id": {
-          "$ref": "#/definitions/UUID"
         }
       }
     },
@@ -2577,14 +2566,6 @@
         }
       }
     },
-    "State": {
-      "type": "string"
-    },
-    "Type": {
-      "description": "The flow type can either be `api` or `browser`.",
-      "type": "string",
-      "title": "Type is the flow type."
-    },
     "UUID": {"type": "string", "format": "uuid4"},
     "Volume": {
       "description": "Volume volume",
@@ -2662,7 +2643,7 @@
         }
       }
     },
-    "createIdentity": {
+    "adminCreateIdentityBody": {
       "type": "object",
       "required": [
         "schema_id",
@@ -2676,6 +2657,22 @@
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
           "type": "object"
+        }
+      }
+    },
+    "adminCreateSelfServiceRecoveryLinkBody": {
+      "type": "object",
+      "required": [
+        "identity_id"
+      ],
+      "properties": {
+        "expires_in": {
+          "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+          "type": "string",
+          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+        },
+        "identity_id": {
+          "$ref": "#/definitions/UUID"
         }
       }
     },
@@ -2788,12 +2785,7 @@
           "type": "string"
         },
         "state": {
-          "description": "State is the identity's state.",
-          "type": "string",
-          "enum": [
-            "active",
-            "inactive"
-          ]
+          "description": "State is the identity's state."
         },
         "state_changed_at": {
           "$ref": "#/definitions/nullTime"
@@ -2845,6 +2837,13 @@
         }
       }
     },
+    "identityList": {
+      "type": "array",
+      "title": "A list of identities.",
+      "items": {
+        "$ref": "#/definitions/identity"
+      }
+    },
     "identityTraits": {
       "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
       "type": "object"
@@ -2874,7 +2873,46 @@
       "description": "Raw JSON Schema",
       "type": "object"
     },
-    "loginFlow": {
+    "nullJsonRawMessage": {
+      "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
+      "type": "object"
+    },
+    "nullTime": {
+      "type": "string",
+      "format": "date-time",
+      "title": "NullTime implements sql.NullTime functionality."
+    },
+    "selfServiceError": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "created_at": {
+          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "description": "The error",
+          "type": "object"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "updated_at": {
+          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "selfServiceFlowType": {
+      "description": "The flow type can either be `api` or `browser`.",
+      "type": "string",
+      "title": "Type is the flow type."
+    },
+    "selfServiceLoginFlow": {
       "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
       "type": "object",
       "title": "Login Flow",
@@ -2917,7 +2955,7 @@
           "type": "string"
         },
         "type": {
-          "$ref": "#/definitions/Type"
+          "$ref": "#/definitions/selfServiceFlowType"
         },
         "ui": {
           "$ref": "#/definitions/uiContainer"
@@ -2929,23 +2967,7 @@
         }
       }
     },
-    "loginViaApiResponse": {
-      "description": "The Response for Login Flows via API",
-      "type": "object",
-      "required": [
-        "session"
-      ],
-      "properties": {
-        "session": {
-          "$ref": "#/definitions/session"
-        },
-        "session_token": {
-          "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
-          "type": "string"
-        }
-      }
-    },
-    "logoutUrl": {
+    "selfServiceLogoutUrl": {
       "type": "object",
       "properties": {
         "logout_url": {
@@ -2954,16 +2976,7 @@
         }
       }
     },
-    "nullJsonRawMessage": {
-      "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
-      "type": "object"
-    },
-    "nullTime": {
-      "type": "string",
-      "format": "date-time",
-      "title": "NullTime implements sql.NullTime functionality."
-    },
-    "recoveryFlow": {
+    "selfServiceRecoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
       "title": "A Recovery Flow",
@@ -2998,17 +3011,22 @@
           "type": "string"
         },
         "state": {
-          "$ref": "#/definitions/State"
+          "$ref": "#/definitions/selfServiceRecoveryFlowState"
         },
         "type": {
-          "$ref": "#/definitions/Type"
+          "$ref": "#/definitions/selfServiceFlowType"
         },
         "ui": {
           "$ref": "#/definitions/uiContainer"
         }
       }
     },
-    "recoveryLink": {
+    "selfServiceRecoveryFlowState": {
+      "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
+      "type": "string",
+      "title": "Recovery Flow State"
+    },
+    "selfServiceRecoveryLink": {
       "type": "object",
       "required": [
         "recovery_link"
@@ -3025,7 +3043,7 @@
         }
       }
     },
-    "registrationFlow": {
+    "selfServiceRegistrationFlow": {
       "type": "object",
       "required": [
         "id",
@@ -3056,94 +3074,14 @@
           "type": "string"
         },
         "type": {
-          "$ref": "#/definitions/Type"
+          "$ref": "#/definitions/selfServiceFlowType"
         },
         "ui": {
           "$ref": "#/definitions/uiContainer"
         }
       }
     },
-    "registrationViaApiResponse": {
-      "description": "The Response for Registration Flows via API",
-      "type": "object",
-      "required": [
-        "identity"
-      ],
-      "properties": {
-        "identity": {
-          "$ref": "#/definitions/identity"
-        },
-        "session": {
-          "$ref": "#/definitions/session"
-        },
-        "session_token": {
-          "description": "The Session Token\n\nThis field is only set when the session hook is configured as a post-registration hook.\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
-          "type": "string"
-        }
-      }
-    },
-    "selfServiceErrorContainer": {
-      "type": "object",
-      "required": [
-        "id",
-        "errors"
-      ],
-      "properties": {
-        "created_at": {
-          "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "errors": {
-          "description": "Errors in the container",
-          "type": "object"
-        },
-        "id": {
-          "$ref": "#/definitions/UUID"
-        },
-        "updated_at": {
-          "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
-    "session": {
-      "description": "A Session",
-      "type": "object",
-      "required": [
-        "id",
-        "identity"
-      ],
-      "properties": {
-        "active": {
-          "description": "Whether or not the session is active.",
-          "type": "boolean"
-        },
-        "authenticated_at": {
-          "description": "The Session Authentication Timestamp\n\nWhen this session was authenticated at.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "expires_at": {
-          "description": "The Session Expiry\n\nWhen this session expires at.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "id": {
-          "$ref": "#/definitions/UUID"
-        },
-        "identity": {
-          "$ref": "#/definitions/identity"
-        },
-        "issued_at": {
-          "description": "The Session Issuance Timestamp\n\nWhen this session was authenticated at.",
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
-    "settingsFlow": {
+    "selfServiceSettingsFlow": {
       "description": "This flow is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nWe recommend reading the [User Settings Documentation](../self-service/flows/user-settings)",
       "type": "object",
       "title": "Flow represents a Settings Flow",
@@ -3182,13 +3120,101 @@
           "type": "string"
         },
         "state": {
-          "$ref": "#/definitions/State"
+          "$ref": "#/definitions/selfServiceSettingsFlowState"
         },
         "type": {
-          "$ref": "#/definitions/Type"
+          "$ref": "#/definitions/selfServiceFlowType"
         },
         "ui": {
           "$ref": "#/definitions/uiContainer"
+        }
+      }
+    },
+    "selfServiceSettingsFlowState": {
+      "description": "show_form: No user data has been collected, or it is invalid, and thus the form should be shown.\nsuccess: Indicates that the settings flow has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a flow with invalid (e.g. \"please use a valid phone number\") data was sent.",
+      "type": "string",
+      "title": "State represents the state of this flow. It knows two states:"
+    },
+    "selfServiceVerificationFlow": {
+      "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
+      "type": "object",
+      "title": "A Verification Flow",
+      "required": [
+        "id",
+        "type",
+        "ui",
+        "state"
+      ],
+      "properties": {
+        "active": {
+          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "issued_at": {
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "request_url": {
+          "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/definitions/selfServiceVerificationFlowState"
+        },
+        "type": {
+          "$ref": "#/definitions/selfServiceFlowType"
+        },
+        "ui": {
+          "$ref": "#/definitions/uiContainer"
+        }
+      }
+    },
+    "selfServiceVerificationFlowState": {
+      "description": "The state represents the state of the verification flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
+      "type": "string",
+      "title": "Verification Flow State"
+    },
+    "session": {
+      "description": "A Session",
+      "type": "object",
+      "required": [
+        "id",
+        "identity"
+      ],
+      "properties": {
+        "active": {
+          "description": "Whether or not the session is active.",
+          "type": "boolean"
+        },
+        "authenticated_at": {
+          "description": "The Session Authentication Timestamp\n\nWhen this session was authenticated at.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "description": "The Session Expiry\n\nWhen this session expires at.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "identity": {
+          "$ref": "#/definitions/identity"
+        },
+        "issued_at": {
+          "description": "The Session Issuance Timestamp\n\nWhen this session was authenticated at.",
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -3216,45 +3242,39 @@
         }
       }
     },
-    "settingsViaApiResponse": {
-      "description": "The Response for Settings Flows via API",
-      "type": "object",
-      "required": [
-        "flow",
-        "identity"
-      ],
-      "properties": {
-        "flow": {
-          "$ref": "#/definitions/settingsFlow"
-        },
-        "identity": {
-          "$ref": "#/definitions/identity"
-        }
-      }
-    },
-    "submitSelfServiceBrowserSettingsOIDCFlowPayload": {
-      "type": "object",
-      "properties": {
-        "flow": {
-          "description": "Flow ID is the flow's ID.\n\nin: query",
-          "type": "string"
-        },
-        "link": {
-          "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
-          "type": "string"
-        },
-        "unlink": {
-          "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
-          "type": "string"
-        }
-      }
-    },
-    "submitSelfServiceLoginFlow": {
+    "submitSelfServiceLoginFlowBody": {
       "type": "object"
     },
-    "submitSelfServiceLoginFlowWithPasswordMethod": {
+    "submitSelfServiceLoginFlowWithOidcMethodBody": {
+      "description": "SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload\nwhen using the oidc method.",
       "type": "object",
-      "title": "submitSelfServiceLoginFlowWithPasswordMethod is used to decode the login form payload.",
+      "required": [
+        "traits",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "The CSRF Token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The provider to register with",
+          "type": "string"
+        }
+      }
+    },
+    "submitSelfServiceLoginFlowWithPasswordMethodBody": {
+      "type": "object",
+      "title": "submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.",
+      "required": [
+        "method",
+        "password",
+        "password_identifier"
+      ],
       "properties": {
         "csrf_token": {
           "description": "Sending the anti-csrf token is only required for browser login flows.",
@@ -3288,15 +3308,21 @@
       }
     },
     "submitSelfServiceRecoveryFlowBody": {
-      "description": "nolint:deadcode,unused",
+      "type": "object"
+    },
+    "submitSelfServiceRecoveryFlowWithLinkMethodBody": {
       "type": "object",
       "required": [
-        "method",
-        "email"
+        "email",
+        "method"
       ],
       "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
         "email": {
-          "description": "Email is the email to which to send the Recovery message to.",
+          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
           "type": "string"
         },
         "method": {
@@ -3305,26 +3331,37 @@
         }
       }
     },
-    "submitSelfServiceRecoveryFlowWithLinkMethod": {
+    "submitSelfServiceRegistrationFlowBody": {
+      "type": "object"
+    },
+    "submitSelfServiceRegistrationFlowWithOidcMethodBody": {
+      "description": "SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload\nwhen using the oidc method.",
       "type": "object",
+      "required": [
+        "traits",
+        "method"
+      ],
       "properties": {
         "csrf_token": {
-          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "description": "The CSRF Token",
           "type": "string"
         },
-        "email": {
-          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+        "method": {
+          "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "The provider to register with",
           "type": "string"
         }
       }
     },
-    "submitSelfServiceRegistrationFlow": {
-      "type": "object"
-    },
-    "submitSelfServiceRegistrationFlowWithPasswordMethod": {
-      "description": "SubmitSelfServiceRegistrationFlowWithPasswordMethod is used to decode the registration form payload\nwhen using the password method.",
+    "submitSelfServiceRegistrationFlowWithPasswordMethodBody": {
+      "description": "SubmitSelfServiceRegistrationFlowWithPasswordMethodBody is used to decode the registration form payload\nwhen using the password method.",
       "type": "object",
       "required": [
+        "password",
+        "traits",
         "method"
       ],
       "properties": {
@@ -3334,8 +3371,7 @@
         },
         "method": {
           "description": "Method to use\n\nThis field must be set to `password` when using the password method.",
-          "type": "string",
-          "pattern": "^password$"
+          "type": "string"
         },
         "password": {
           "description": "Password to sign the user up with",
@@ -3347,34 +3383,61 @@
         }
       }
     },
-    "submitSelfServiceSettingsFlow": {
+    "submitSelfServiceSettingsFlowBody": {
       "type": "object"
     },
-    "submitSelfServiceSettingsFlowWithPasswordMethod": {
+    "submitSelfServiceSettingsFlowWithOidcMethodBody": {
+      "description": "nolint:deadcode,unused",
       "type": "object",
       "required": [
-        "password"
+        "method"
       ],
       "properties": {
-        "csrf_token": {
-          "description": "CSRFToken is the anti-CSRF token\n\ntype: string",
+        "flow": {
+          "description": "Flow ID is the flow's ID.\n\nin: query",
+          "type": "string"
+        },
+        "link": {
+          "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
           "type": "string"
         },
         "method": {
-          "description": "Method\n\nShould be set to password when trying to update a password.\n\ntype: string",
+          "description": "Method\n\nShould be set to profile when trying to update a profile.",
           "type": "string"
         },
-        "password": {
-          "description": "Password is the updated password\n\ntype: string",
+        "unlink": {
+          "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
           "type": "string"
         }
       }
     },
-    "submitSelfServiceSettingsFlowWithProfileMethod": {
+    "submitSelfServiceSettingsFlowWithPasswordMethodBody": {
+      "type": "object",
+      "required": [
+        "password",
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to password when trying to update a password.",
+          "type": "string"
+        },
+        "password": {
+          "description": "Password is the updated password",
+          "type": "string"
+        }
+      }
+    },
+    "submitSelfServiceSettingsFlowWithProfileMethodBody": {
       "description": "nolint:deadcode,unused",
       "type": "object",
       "required": [
-        "traits"
+        "traits",
+        "method"
       ],
       "properties": {
         "csrf_token": {
@@ -3382,7 +3445,7 @@
           "type": "string"
         },
         "method": {
-          "description": "Method\n\nShould be set to profile when trying to update a profile.\n\ntype: string",
+          "description": "Method\n\nShould be set to profile when trying to update a profile.",
           "type": "string"
         },
         "traits": {
@@ -3393,14 +3456,21 @@
     },
     "submitSelfServiceVerificationFlowBody": {
       "description": "nolint:deadcode,unused",
+      "type": "object"
+    },
+    "submitSelfServiceVerificationFlowWithLinkMethodBody": {
       "type": "object",
       "required": [
-        "method",
-        "email"
+        "email",
+        "method"
       ],
       "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
         "email": {
-          "description": "Email is the email to which to send the verification message to.",
+          "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
           "type": "string"
         },
         "method": {
@@ -3409,17 +3479,54 @@
         }
       }
     },
-    "submitSelfServiceVerificationFlowWithLinkMethod": {
-      "description": "nolint:deadcode,unused",
+    "successfulSelfServiceLoginWithoutBrowser": {
+      "description": "The Response for Login Flows via API",
       "type": "object",
+      "required": [
+        "session"
+      ],
       "properties": {
-        "csrf_token": {
-          "description": "Sending the anti-csrf token is only required for browser login flows.",
-          "type": "string"
+        "session": {
+          "$ref": "#/definitions/session"
         },
-        "email": {
-          "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+        "session_token": {
+          "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
           "type": "string"
+        }
+      }
+    },
+    "successfulSelfServiceRegistrationWithoutBrowser": {
+      "description": "The Response for Registration Flows via API",
+      "type": "object",
+      "required": [
+        "identity"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/identity"
+        },
+        "session": {
+          "$ref": "#/definitions/session"
+        },
+        "session_token": {
+          "description": "The Session Token\n\nThis field is only set when the session hook is configured as a post-registration hook.\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
+          "type": "string"
+        }
+      }
+    },
+    "successfulSelfServiceSettingsWithoutBrowser": {
+      "description": "The Response for Settings Flows via API",
+      "type": "object",
+      "required": [
+        "flow",
+        "identity"
+      ],
+      "properties": {
+        "flow": {
+          "$ref": "#/definitions/selfServiceSettingsFlow"
+        },
+        "identity": {
+          "$ref": "#/definitions/identity"
         }
       }
     },
@@ -3608,31 +3715,6 @@
         "$ref": "#/definitions/uiText"
       }
     },
-    "updateIdentity": {
-      "type": "object",
-      "required": [
-        "traits",
-        "state"
-      ],
-      "properties": {
-        "schema_id": {
-          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
-          "type": "string"
-        },
-        "state": {
-          "description": "State is the identity's state.",
-          "type": "string",
-          "enum": [
-            "active",
-            "inactive"
-          ]
-        },
-        "traits": {
-          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
-          "type": "object"
-        }
-      }
-    },
     "verifiableIdentityAddress": {
       "description": "VerifiableAddress is an identity's verifiable address",
       "type": "object",
@@ -3679,49 +3761,6 @@
         }
       }
     },
-    "verificationFlow": {
-      "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
-      "type": "object",
-      "title": "A Verification Flow",
-      "required": [
-        "id",
-        "type",
-        "ui",
-        "state"
-      ],
-      "properties": {
-        "active": {
-          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
-          "type": "string"
-        },
-        "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "id": {
-          "$ref": "#/definitions/UUID"
-        },
-        "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "request_url": {
-          "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
-          "type": "string"
-        },
-        "state": {
-          "$ref": "#/definitions/State"
-        },
-        "type": {
-          "$ref": "#/definitions/Type"
-        },
-        "ui": {
-          "$ref": "#/definitions/uiContainer"
-        }
-      }
-    },
     "version": {
       "type": "object",
       "properties": {
@@ -3735,33 +3774,12 @@
   "responses": {
     "emptyResponse": {
       "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is typically 201."
-    },
-    "identityList": {
-      "description": "A list of identities.",
-      "schema": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/identity"
-        }
-      }
-    },
-    "identityResponse": {
-      "description": "A single identity.",
-      "schema": {
-        "$ref": "#/definitions/identity"
-      }
-    },
-    "selfServiceErrorResponse": {
-      "description": "User-facing error response",
-      "schema": {
-        "$ref": "#/definitions/selfServiceErrorContainer"
-      }
     }
   },
   "securityDefinitions": {
-    "sessionToken": {
+    "oryAccessToken": {
       "type": "apiKey",
-      "name": "X-Session-Token",
+      "name": "Authorization",
       "in": "header"
     }
   },

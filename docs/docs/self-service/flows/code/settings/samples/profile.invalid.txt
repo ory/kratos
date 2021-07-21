@@ -1,7 +1,7 @@
 $ curl -s -X GET \
     -H "Authorization: Bearer $sessionToken" \
     -H "Accept: application/json" \
-    'http://127.0.0.1:4433/self-service/settings/flows?id=f71743cd-700d-4a30-9275-8edc90de07cc' | \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/settings/flows?id=f71743cd-700d-4a30-9275-8edc90de07cc' | \
       jq -r '.ui.nodes[] | select(.group=="profile")'
 
 {
