@@ -2,6 +2,7 @@ package link_test
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -51,6 +52,12 @@ import (
 func init() {
 	corpx.RegisterFakes()
 }
+
+//go:embed fixtures/recovery_init.json
+var recoveryInitFixture []byte
+
+//go:embed fixtures/recovery_submit.json
+var recoverySubmitFixture []byte
 
 func TestAdminStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -198,55 +205,18 @@ func TestRecovery(t *testing.T) {
 		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
+	t.Run("description=should set all the correct recovery payloads after submission", func(t *testing.T) {
+		body := expectSuccess(t, nil, false, false, func(v url.Values) {
+			v.Set("email", "test@ory.sh")
+		})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), json.RawMessage(recoverySubmitFixture), []string{"0.attributes.value"})
+	})
+
 	t.Run("description=should set all the correct recovery payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(`[
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "required": true,
-      "type": "hidden",
-      "value": ""
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "email",
-      "required": true,
-      "type": "email"
-    },
-    "group": "link",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "method",
-      "type": "submit",
-      "value": "link"
-    },
-    "group": "link",
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1070005,
-        "text": "Submit",
-        "type": "info"
-      }
-    },
-    "type": "input"
-  }
-]`), rs.Ui.Nodes, []string{"0.attributes.value"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(recoveryInitFixture), rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+recovery.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
