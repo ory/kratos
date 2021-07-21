@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-07-15)](#unreleased-2021-07-15)
+- [Unreleased (2021-07-21)](#unreleased-2021-07-21)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Tests](#tests)
@@ -186,7 +186,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.7.0-alpha.1...cc7ed4b5f65d2971a45d5d0ec6188908d070d915) (2021-07-15)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.7.0-alpha.1...835fb3127bc10b1642b4a7573722e5dce63fedc7) (2021-07-21)
 
 
 ### Bug Fixes
@@ -195,6 +195,7 @@
 * Bump kratos ui image for quickstart ([aedbb5a](https://github.com/ory/kratos/commit/aedbb5a259ea8ee63fb06c36fb1c7af78bb63ffc)), closes [#1537](https://github.com/ory/kratos/issues/1537)
 * Cleanup lint errors and add doc to x ([#1545](https://github.com/ory/kratos/issues/1545)) ([3cfd784](https://github.com/ory/kratos/commit/3cfd7845730685a4493c2b5d1974b79d873eea86))
 * Correct meta schema ([8d4f3ff](https://github.com/ory/kratos/commit/8d4f3ff22d4ade6ae3f923c33303002e5f534cff))
+* Do not reset link method ([#1573](https://github.com/ory/kratos/issues/1573)) ([835fb31](https://github.com/ory/kratos/commit/835fb3127bc10b1642b4a7573722e5dce63fedc7))
 * Export extensionschemas ([#1553](https://github.com/ory/kratos/issues/1553)) ([6af7638](https://github.com/ory/kratos/commit/6af76387caf37160ded75d83dc09ba0bc177a895))
 * Generate CSRF token on validation creation ([#1549](https://github.com/ory/kratos/issues/1549)) ([6612c5f](https://github.com/ory/kratos/commit/6612c5f62e5cc242a808032def5714715ce49d11)), closes [#1547](https://github.com/ory/kratos/issues/1547)
 * Identity extension meta schema ([#1554](https://github.com/ory/kratos/issues/1554)) ([ba5ca64](https://github.com/ory/kratos/commit/ba5ca642d01917b43d49e009bf140ae13b4f1313)):
@@ -204,6 +205,7 @@
 * Remove domain alias config constraint ([#1542](https://github.com/ory/kratos/issues/1542)) ([c6145db](https://github.com/ory/kratos/commit/c6145dbfb278369c8e3ad6eae7e8574ed49ba193))
 * Resolve wrong openapi types ([b07927c](https://github.com/ory/kratos/commit/b07927cd23cbfce23f3b0676303a2d0ca564143b))
 * Update identity state openapi spec ([0217737](https://github.com/ory/kratos/commit/0217737f5a2860e299ccec4387a2cc83aaac1557))
+* Use legacy ssl in quickstart config ([6c13c2b](https://github.com/ory/kratos/commit/6c13c2bedd45c10713907e24976658d4a4b88de6)), closes [#1569](https://github.com/ory/kratos/issues/1569)
 
 ### Documentation
 
