@@ -1,0 +1,46 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "value": "6WV6E5HEM1RThDMQ0oXg2U9cymYBMCbbIXR1PkYBlQEpmMoVy8avpXR/rdC+aHOJCfjnwWi0jS5VFVKqVbkcaw==",
+      "required": true,
+      "disabled": false
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "link",
+    "attributes": {
+      "name": "email",
+      "type": "email",
+      "value": "test@ory.sh",
+      "required": true,
+      "disabled": false
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "link",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "link",
+      "disabled": false
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070005,
+        "text": "Submit",
+        "type": "info"
+      }
+    }
+  }
+]

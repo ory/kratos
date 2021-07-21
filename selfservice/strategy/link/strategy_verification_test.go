@@ -3,6 +3,7 @@ package link_test
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -32,6 +33,12 @@ import (
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlxx"
 )
+
+//go:embed fixtures/verification_init.json
+var verificationInitFixture []byte
+
+//go:embed fixtures/verification_submit.json
+var verificationSubmitFixture []byte
 
 func TestVerification(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -79,55 +86,18 @@ func TestVerification(t *testing.T) {
 		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
+	t.Run("description=should set all the correct verification payloads after submission", func(t *testing.T) {
+		body := expectSuccess(t, nil, false, false, func(v url.Values) {
+			v.Set("email", "test@ory.sh")
+		})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), json.RawMessage(verificationSubmitFixture), []string{"0.attributes.value"})
+	})
+
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(`[
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "required": true,
-      "type": "hidden",
-      "value": ""
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "email",
-      "required": true,
-      "type": "email"
-    },
-    "group": "link",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "method",
-      "type": "submit",
-      "value": "link"
-    },
-    "group": "link",
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1070005,
-        "text": "Submit",
-        "type": "info"
-      }
-    },
-    "type": "input"
-  }
-]`), rs.Ui.Nodes, []string{"0.attributes.value"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(verificationInitFixture), rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
