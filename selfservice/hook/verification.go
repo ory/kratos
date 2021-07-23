@@ -63,7 +63,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
-		token := link.NewSelfServiceVerificationToken(address, verificationFlow)
+		token := link.NewSelfServiceVerificationToken(address, verificationFlow, e.r.Config(r.Context()).SelfServiceLinkMethodLifespan())
 		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
 			return err
 		}

@@ -37,7 +37,7 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool) *kratos.RegistrationFlow {
+func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool) *kratos.SelfServiceRegistrationFlow {
 	req, err := http.NewRequest("GET", ts.URL+registration.RouteInitBrowserFlow, nil)
 	require.NoError(t, err)
 
@@ -55,15 +55,15 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).V0alpha1Api.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
-	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.InitializeSelfServiceRegistrationWithoutBrowser(context.Background()).Execute()
+func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRegistrationFlow {
+	rs, _, err := NewSDKCustomClient(ts, client).V0alpha1Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs
@@ -73,7 +73,7 @@ func RegistrationMakeRequest(
 	t *testing.T,
 	isAPI bool,
 	isSPA bool,
-	f *kratos.RegistrationFlow,
+	f *kratos.SelfServiceRegistrationFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -109,7 +109,7 @@ func SubmitRegistrationForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var payload *kratos.RegistrationFlow
+	var payload *kratos.SelfServiceRegistrationFlow
 	if isAPI {
 		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS)
 	} else {

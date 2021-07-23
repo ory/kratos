@@ -138,7 +138,7 @@ func TestLogout(t *testing.T) {
 			body, res := makeBrowserLogout(t, hc, public.URL+"/self-service/logout")
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Please include a token in the URL query.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
+			assert.EqualValues(t, "Please include a token in the URL query.", gjson.GetBytes(body, "reason").String(), "%s", body)
 		})
 
 		t.Run("type=ajax", func(t *testing.T) {
@@ -157,7 +157,7 @@ func TestLogout(t *testing.T) {
 			body, res := makeBrowserLogout(t, http.DefaultClient, logoutUrl)
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "No active session was found in this request.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
+			assert.EqualValues(t, "No active session was found in this request.", gjson.GetBytes(body, "reason").String(), "%s", body)
 		})
 
 		t.Run("type=ajax", func(t *testing.T) {
@@ -178,7 +178,7 @@ func TestLogout(t *testing.T) {
 			body, res := makeBrowserLogout(t, otherUser, logoutUrl)
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Unable to log out because the logout token in the URL query does not match the session cookie.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
+			assert.EqualValues(t, "Unable to log out because the logout token in the URL query does not match the session cookie.", gjson.GetBytes(body, "reason").String(), "%s", body)
 		})
 
 		t.Run("type=ajax", func(t *testing.T) {
@@ -199,7 +199,7 @@ func TestLogout(t *testing.T) {
 			body, res := makeBrowserLogout(t, hc, logoutUrl+"invalid")
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
-			assert.EqualValues(t, "Unable to log out because the logout token in the URL query does not match the session cookie.", gjson.GetBytes(body, "0.reason").String(), "%s", body)
+			assert.EqualValues(t, "Unable to log out because the logout token in the URL query does not match the session cookie.", gjson.GetBytes(body, "reason").String(), "%s", body)
 		})
 
 		t.Run("type=ajax", func(t *testing.T) {

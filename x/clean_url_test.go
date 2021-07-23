@@ -29,6 +29,7 @@ func TestCleanPath(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			body, err := ioutil.ReadAll(res.Body)
+			require.NoError(t, err)
 			assert.Equal(t, string(body), tc[1])
 		})
 	}

@@ -32,7 +32,7 @@ func TestVerificationToken(t *testing.T) {
 
 			tokens := make([]string, 10)
 			for k := range tokens {
-				tokens[k] = NewSelfServiceVerificationToken(nil, f).Token
+				tokens[k] = NewSelfServiceVerificationToken(nil, f, time.Hour).Token
 			}
 
 			assert.Len(t, stringslice.Unique(tokens), len(tokens))
@@ -43,7 +43,7 @@ func TestVerificationToken(t *testing.T) {
 			f, err := verification.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := NewSelfServiceVerificationToken(nil, f)
+			token := NewSelfServiceVerificationToken(nil, f, -time.Hour)
 			require.Error(t, token.Valid())
 			assert.EqualError(t, token.Valid(), f.Valid().Error())
 		})

@@ -14,21 +14,21 @@ context('OIDC Profile', () => {
       cy.clearCookies()
       email = gen.email()
 
-      cy.registerOidc({email, expectSession: true, website})
-    cy.visit(APP_URL + '/settings')
-  })
-
-  describe('oidc', () => {
-    it('should fail to link google because id token is missing', () => {
-      cy.get('button[value="google"]').click()
-      cy.get('#remember').click()
-      cy.get('#accept').click()
-
-      cy.get('.messages .message').should(
-        'contain.text',
-        'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
-      )
+      cy.registerOidc({ email, expectSession: true, website })
+      cy.visit(APP_URL + '/settings')
     })
-  })
+
+    describe('oidc', () => {
+      it('should fail to link google because id token is missing', () => {
+        cy.get('button[value="google"]').click()
+        cy.get('#remember').click()
+        cy.get('#accept').click()
+
+        cy.get('.messages .message').should(
+          'contain.text',
+          'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
+        )
+      })
+    })
   })
 })

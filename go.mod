@@ -14,7 +14,9 @@ replace github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.2021
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 
-replace github.com/ory/x => github.com/ory/x v0.0.255
+replace github.com/ory/x => github.com/ory/x v0.0.262
+
+replace github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
 
 require (
 	github.com/DataDog/datadog-go v4.7.0+incompatible // indirect
@@ -27,6 +29,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/containerd/containerd v1.5.2 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/fatih/color v1.9.0
 	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
@@ -70,7 +73,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.3
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
-	github.com/ory/nosurf v1.2.4
+	github.com/ory/nosurf v1.2.5
 	github.com/ory/x v0.0.256
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/philhofer/fwd v1.1.1 // indirect

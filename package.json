@@ -2,7 +2,7 @@
   "private": true,
   "prettier": "ory-prettier-styles",
   "config": {
-    "prettierTarget": "test/e2e/cypress/**/*.js"
+    "prettierTarget": "test/e2e/cypress/**/*{.js,.spec.js}"
   },
   "scripts": {
     "format": "prettier --write ${npm_package_config_prettierTarget}",
@@ -14,7 +14,7 @@
     "text-run": "exit 0"
   },
   "devDependencies": {
-    "cypress": "^7.6.0",
+    "cypress": "^7.7.0",
     "dayjs": "^1.10.4",
     "ory-prettier-styles": "1.1.1",
     "prettier": "2.2.1",

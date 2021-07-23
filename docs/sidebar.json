@@ -62,6 +62,7 @@
       "guides/secret-key-rotation",
       "guides/high-availability-ha",
       "guides/docker",
+      "guides/https-tls",
       "guides/setting-up-password-hashing-parameters",
       "guides/integration-with-other-systems-using-web-hooks",
       "guides/tracing"

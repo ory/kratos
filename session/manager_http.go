@@ -54,9 +54,15 @@ func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseW
 func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName(ctx))
 
+	if s.r.Config(ctx).SessionPath() != "" {
+		cookie.Options.Path = s.r.Config(ctx).SessionPath()
+	}
+
 	if domain := s.r.Config(ctx).SessionDomain(); domain != "" {
 		cookie.Options.Domain = domain
-	} else if alias := s.r.Config(ctx).SelfPublicURL(r); s.r.Config(ctx).SelfPublicURL(nil).String() != alias.String() {
+	}
+
+	if alias := s.r.Config(ctx).SelfPublicURL(r); s.r.Config(ctx).SelfPublicURL(nil).String() != alias.String() {
 		// If a domain alias is detected use that instead.
 		cookie.Options.Domain = alias.Hostname()
 		cookie.Options.Path = alias.Path
@@ -69,10 +75,6 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 	} else if old.Identity.ID != session.Identity.ID {
 		// No session was set prior -> regenerate anti-csrf token
 		_ = s.r.CSRFHandler().RegenerateToken(w, r)
-	}
-
-	if s.r.Config(ctx).SessionPath() != "" {
-		cookie.Options.Path = s.r.Config(ctx).SessionPath()
 	}
 
 	if s.r.Config(ctx).SessionSameSiteMode() != 0 {

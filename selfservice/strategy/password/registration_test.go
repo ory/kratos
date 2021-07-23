@@ -179,7 +179,7 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
 			}
 
-			fakeFlow := &kratos.RegistrationFlow{Ui: kratos.UiContainer{
+			fakeFlow := &kratos.SelfServiceRegistrationFlow{Ui: kratos.UiContainer{
 				Action: publicTS.URL + registration.RouteSubmitFlow + "?flow=" + x.NewUUID().String(),
 			}}
 
@@ -200,7 +200,7 @@ func TestRegistration(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				actual, res := testhelpers.RegistrationMakeRequest(t, false, false, fakeFlow, browserClient, "")
 				assert.Contains(t, res.Request.URL.String(), errTS.URL)
-				check(t, gjson.Get(actual, "0").Raw)
+				check(t, actual)
 			})
 		})
 
@@ -323,7 +323,7 @@ func TestRegistration(t *testing.T) {
 				actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
 				assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
-					json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
+					json.RawMessage(actual), "%s", actual)
 			})
 
 			t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {
@@ -464,7 +464,7 @@ func TestRegistration(t *testing.T) {
 				})
 				body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, apiClient, values.Encode())
 				assert.Contains(t, res.Request.URL.String(), errTS.URL)
-				check(t, gjson.Get(body, "0").Raw)
+				check(t, body)
 			})
 		})
 

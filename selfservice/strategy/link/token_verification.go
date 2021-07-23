@@ -54,18 +54,19 @@ func (VerificationToken) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "identity_verification_tokens")
 }
 
-func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *verification.Flow) *VerificationToken {
+func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *verification.Flow, expiresIn time.Duration) *VerificationToken {
+	now := time.Now().UTC()
 	return &VerificationToken{
 		ID:                x.NewUUID(),
 		Token:             randx.MustString(32, randx.AlphaNum),
 		VerifiableAddress: address,
-		ExpiresAt:         f.ExpiresAt,
-		IssuedAt:          time.Now().UTC(),
+		ExpiresAt:         now.Add(expiresIn),
+		IssuedAt:          now,
 		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true}}
 }
 
 func (f *VerificationToken) Valid() error {
-	if f.ExpiresAt.Before(time.Now()) {
+	if f.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(verification.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil

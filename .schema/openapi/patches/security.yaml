@@ -1,11 +1,10 @@
 - op: replace
-  path: /components/securitySchemes/oryToken
+  path: /components/securitySchemes/oryAccessToken
   value:
     type: http
     scheme: bearer
-
-- op: replace
-  path: /components/securitySchemes/sessionToken
-  value:
-    type: http
-    scheme: bearer
+    description: |
+      This security mechanism is only applicable when using the [Ory Platform](https://console.ory.sh) by
+      creating an [Ory Personal Access Token](https://www.ory.sh/docs/guides/create-personal-access-token).
+      If you are using the open source version, this security mechanism
+      will not work out of the box as you will need to add a security mechanism yourself.
