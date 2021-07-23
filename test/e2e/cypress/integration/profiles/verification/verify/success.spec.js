@@ -31,6 +31,10 @@ context('Verification Profile', () => {
           'An email containing a verification'
         )
 
+        cy.get('button[type="submit"][name="method"][value="link"]').should(
+          'exist'
+        )
+
         cy.verifyEmail({ expect: { email: identity.email } })
 
         cy.location('pathname').should('eq', '/')

@@ -27,6 +27,8 @@ Affects documentation.
 
 #### Issues
 
+- [ ] Different payload for stub:500
+      ([kratos#1568](https://github.com/ory/kratos/issues/1568))
 - [x] Update CSRF pitfall section for admin endpoints
       ([kratos#1557](https://github.com/ory/kratos/issues/1557)) -
       [@hackerman](https://github.com/aeneasr)
@@ -127,6 +129,8 @@ New feature or request.
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [ ] Write new recovery and verification strategy that does not rely on links
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
+- [ ] Field validation answer status code 422 instead of 400
+      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -153,6 +157,8 @@ A request for comments to discuss and share ideas.
       [@hackerman](https://github.com/aeneasr)
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
+- [ ] Field validation answer status code 422 instead of 400
+      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
 

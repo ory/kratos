@@ -248,7 +248,7 @@ func (h *Handler) submitLogout(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), sess.Token); err != nil {
+	if err := h.d.SessionManager().PurgeFromRequest(r.Context(), w, r); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}

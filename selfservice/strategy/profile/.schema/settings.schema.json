@@ -11,8 +11,7 @@
     },
     "traits": {},
     "csrf_token": {
-      "type": "string",
-      "minLength": 1
+      "type": "string"
     }
   }
 }
