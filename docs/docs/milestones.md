@@ -3,7 +3,7 @@ id: milestones
 title: Milestones and Roadmap
 ---
 
-## [v0.7.1-alpha.1](https://github.com/ory/kratos/milestone/12)
+## [v0.7.x](https://github.com/ory/kratos/milestone/12)
 
 _This milestone does not have a description._
 
