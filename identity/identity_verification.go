@@ -15,6 +15,7 @@ import (
 
 const (
 	VerifiableAddressTypeEmail VerifiableAddressType = AddressTypeEmail
+	VerifiableAddressTypePhone VerifiableAddressType = AddressTypePhone
 
 	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
 	VerifiableAddressStatusSent      VerifiableAddressStatus = "sent"

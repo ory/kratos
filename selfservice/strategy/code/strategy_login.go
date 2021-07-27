@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -195,6 +196,8 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}
 		return nil, nil
 	case flow.StateEmailSent:
+		fallthrough
+	case flow.StateSMSSent:
 		i, err := s.loginVerifyCode(ctx, r, f, &p)
 		if err != nil {
 			return nil, s.HandleLoginError(r, f, &p, err)
@@ -219,6 +222,7 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 
 	var addresses []Address
 	var i *identity.Identity
+	isTestNumber := false
 	if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
 		address, found := lo.Find(sess.Identity.VerifiableAddresses, func(va identity.VerifiableAddress) bool {
 			return va.Value == p.Identifier
@@ -237,9 +241,18 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 		if err != nil {
 			return err
 		}
+		address, found := lo.Find(i.VerifiableAddresses, func(va identity.VerifiableAddress) bool {
+			return va.Value == p.Identifier
+		})
+		_, isTestNumber = lo.Find(s.deps.Config().SelfServiceCodeTestNumbers(ctx), func(n string) bool {
+			return n == p.Identifier
+		})
+		if !found {
+			return errors.WithStack(schema.NewUnknownAddressError())
+		}
 		addresses = []Address{{
 			To:  p.Identifier,
-			Via: identity.CodeAddressType(identity.AddressTypeEmail),
+			Via: address.Via,
 		}}
 	}
 
@@ -248,14 +261,21 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 		return errors.WithStack(err)
 	}
 
-	// kratos only supports `email` identifiers at the moment with the code method
-	// this is validated in the identity validation step above
-	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
-		return errors.WithStack(err)
+	if !isTestNumber {
+		if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	// sets the flow state to code sent
-	f.SetState(flow.NextState(f.GetState()))
+	switch addresses[0].Via {
+	case identity.ChannelTypeEmail:
+		f.SetState(flow.StateEmailSent)
+	case identity.ChannelTypeSMS:
+		f.SetState(flow.StateSMSSent)
+	default:
+		return fmt.Errorf("Unexpected address Via: %v", addresses[0])
+	}
 
 	if err := s.NewCodeUINodes(r, f, &codeIdentifier{Identifier: p.Identifier}); err != nil {
 		return err
@@ -318,12 +338,27 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 		}
 	}
 
-	loginCode, err := s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
-	if err != nil {
-		if errors.Is(err, ErrCodeNotFound) {
+	_, isTestNumber := lo.Find(s.deps.Config().SelfServiceCodeTestNumbers(ctx), func(n string) bool {
+		return n == p.Identifier
+	})
+
+	var loginCode *LoginCode
+	if isTestNumber {
+		if p.Code != "0000" {
 			return nil, schema.NewLoginCodeInvalid()
 		}
-		return nil, errors.WithStack(err)
+		loginCode = &LoginCode{
+			IdentityID: i.ID,
+			Address:    p.Identifier,
+		}
+	} else {
+		loginCode, err = s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
+		if err != nil {
+			if errors.Is(err, ErrCodeNotFound) {
+				return nil, schema.NewLoginCodeInvalid()
+			}
+			return nil, errors.WithStack(err)
+		}
 	}
 
 	i, err = s.deps.PrivilegedIdentityPool().GetIdentity(ctx, loginCode.IdentityID, identity.ExpandDefault)
@@ -366,6 +401,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, r *http.Request, f *logi
 			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, &va); err != nil {
 				return nil, err
 			}
+			i.VerifiableAddresses[idx] = va
 			break
 		}
 	}

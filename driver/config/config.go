@@ -202,6 +202,11 @@ const (
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
+	CodeTestNumbers                                          = "selfservice.methods.code.config.test_numbers"
+	CodeSMSSpamProtectionEnabled                             = "selfservice.methods.code.config.sms_spam_protection.enabled"
+	CodeSMSSpamProtectionMaxSingleNumber                     = "selfservice.methods.code.config.sms_spam_protection.max_single_number"
+	CodeSMSSpamProtectionMaxNumbersRange                     = "selfservice.methods.code.config.sms_spam_protection.max_numbers_range"
+	ViperKeyCourierTemplatesLoginValidSMS                    = "courier.templates.login.valid.sms"
 )
 
 const (
@@ -317,6 +322,7 @@ type (
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
 		CourierChannels(context.Context) ([]*CourierChannel, error)
+		CourierTemplatesLoginValidSMS(ctx context.Context) string
 	}
 )
 
@@ -1563,6 +1569,26 @@ func (p *Config) getTLSCertificates(ctx context.Context, daemon, certBase64, key
 	}
 	p.l.Infof("TLS has not been configured for %s, skipping", daemon)
 	return nil
+}
+
+func (p *Config) SelfServiceCodeTestNumbers(ctx context.Context) []string {
+	return p.GetProvider(ctx).Strings(CodeTestNumbers)
+}
+
+func (p *Config) SelfServiceCodeSMSSpamProtectionEnabled() bool {
+	return p.p.Bool(CodeSMSSpamProtectionEnabled)
+}
+
+func (p *Config) SelfServiceCodeSMSSpamProtectionMaxSingleNumber() int {
+	return p.p.Int(CodeSMSSpamProtectionMaxSingleNumber)
+}
+
+func (p *Config) SelfServiceCodeSMSSpamProtectionMaxNumbersRange() int {
+	return p.p.Int(CodeSMSSpamProtectionMaxNumbersRange)
+}
+
+func (p *Config) CourierTemplatesLoginValidSMS(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeyCourierTemplatesLoginValidSMS)
 }
 
 func (p *Config) GetProvider(ctx context.Context) *configx.Provider {

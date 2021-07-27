@@ -112,7 +112,7 @@
   path: /components/schemas/verificationFlowState/enum
   value:
     - choose_method
-    - sent_email
+    - sent
     - passed_challenge
 # End
 

@@ -114,12 +114,14 @@ func SubmitVerificationForm(
 	withValues func(v url.Values),
 	expectedStatusCode int,
 	expectedURL string,
+	f *kratos.VerificationFlow,
 ) string {
-	var f *kratos.VerificationFlow
-	if isAPI {
-		f = InitializeVerificationFlowViaAPI(t, hc, publicTS)
-	} else {
-		f = InitializeVerificationFlowViaBrowser(t, hc, isSPA, publicTS)
+	if f == nil {
+		if isAPI {
+			f = InitializeVerificationFlowViaAPI(t, hc, publicTS)
+		} else {
+			f = InitializeVerificationFlowViaBrowser(t, hc, isSPA, publicTS)
+		}
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.

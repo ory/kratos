@@ -6,6 +6,7 @@ package code
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/randx"
 	"net/http"
 	"time"
 
@@ -72,6 +73,9 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 		f.UI.GetNodes().Upsert(
 			node.NewInputField("email", body.Email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
 		)
+		f.UI.GetNodes().Upsert(
+			node.NewInputField("phone", body.Phone, node.CodeGroup, node.InputAttributeTypeTel, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputPhone()),
+		)
 	}
 
 	return err
@@ -91,6 +95,10 @@ type updateVerificationFlowWithCodeMethod struct {
 	// format: email
 	// required: false
 	Email string `form:"email" json:"email"`
+
+	// Phone to Verify
+	// format: tel
+	Phone string `form:"phone" json:"phone"`
 
 	// Sending the anti-csrf token is only required for browser login flows.
 	CSRFToken string `form:"csrf_token" json:"csrf_token"`
@@ -154,6 +162,8 @@ func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verificatio
 	case flow.StateChooseMethod:
 		fallthrough
 	case flow.StateEmailSent:
+		fallthrough
+	case flow.StateSMSSent:
 		return s.verificationHandleFormSubmission(w, r, f, body)
 	case flow.StatePassedChallenge:
 		return s.retryVerificationFlowWithMessage(w, r, f.Type, text.NewErrorValidationVerificationRetrySuccess())
@@ -195,8 +205,8 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 
 		// If not GET: try to use the submitted code
 		return s.verificationUseCode(w, r, body.Code, f)
-	} else if len(body.Email) == 0 {
-		// If no code and no email was provided, fail with a validation error
+	} else if len(body.Email) == 0 && len(body.Phone) == 0 {
+		// If no code and no email or phone was provided, fail with a validation error
 		return s.handleVerificationError(w, r, f, body, schema.NewRequiredError("#/email", "email"))
 	}
 
@@ -204,18 +214,32 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
+	via := identity.VerifiableAddressTypeEmail
+	to := body.Email
+	if len(body.Phone) != 0 {
+		via = identity.VerifiableAddressTypePhone
+		to = body.Phone
+	}
+
 	if err := s.deps.VerificationCodePersister().DeleteVerificationCodesOfFlow(r.Context(), f.ID); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
 	}
 
-	if err := s.deps.CodeSender().SendVerificationCode(r.Context(), f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendVerificationCode(r.Context(), f, via, to); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.handleVerificationError(w, r, f, body, err)
 		}
 		// Continue execution
 	}
 
-	f.State = flow.StateEmailSent
+	switch via {
+	case identity.VerifiableAddressTypeEmail:
+		f.State = flow.StateEmailSent
+	case identity.VerifiableAddressTypePhone:
+		f.State = flow.StateSMSSent
+	default:
+		return errors.New("Unexpected via: " + via)
+	}
 
 	if err := s.PopulateVerificationMethod(r, f); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)
@@ -282,7 +306,11 @@ func (s *Strategy) verificationUseCode(w http.ResponseWriter, r *http.Request, c
 	f.State = flow.StatePassedChallenge
 	// See https://github.com/ory/kratos/issues/1547
 	f.SetCSRFToken(flow.GetCSRFToken(s.deps, w, r, f.Type))
-	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	if code.VerifiableAddress.Via == identity.VerifiableAddressTypeEmail {
+		f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	} else {
+		f.UI.Messages.Set(text.NewInfoSelfServicePhoneVerificationSuccessful())
+	}
 	f.UI.
 		Nodes.
 		Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).
@@ -362,8 +390,13 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) SendVerificationEmail(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
+func (s *Strategy) SendVerification(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
+
 	rawCode := GenerateCode()
+	//TODO delete after PS-187
+	if a.Via == identity.VerifiableAddressTypePhone {
+		rawCode = randx.MustString(4, randx.Numeric)
+	}
 
 	code, err := s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,

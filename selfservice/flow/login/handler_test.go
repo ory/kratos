@@ -444,7 +444,7 @@ func TestFlowLifecycle(t *testing.T) {
 						Config:      sqlxx.JSONRawMessage(`{"hashed_password": "$argon2id$v=19$m=32,t=2,p=4$cm94YnRVOW5jZzFzcVE4bQ$MNzk5BtR2vUhrp6qQEjRNw"}`),
 					},
 				},
-				Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
+				Traits:   identity.Traits(fmt.Sprintf(`{"username":"%s"}`, email)),
 				SchemaID: config.DefaultIdentityTraitsSchemaID,
 			}
 

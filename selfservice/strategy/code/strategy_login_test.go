@@ -7,10 +7,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/x/assertx"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/snapshotx"
@@ -741,4 +746,240 @@ func TestLoginCodeStrategy(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestLoginCodeStrategy_SMS(t *testing.T) {
+	newReturnTs := func(t *testing.T, reg interface {
+		session.ManagementProvider
+		x.WriterProvider
+		config.Provider
+	}) *httptest.Server {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+			require.NoError(t, err)
+			reg.Writer().Write(w, r, sess)
+		}))
+		t.Cleanup(ts.Close)
+		reg.Config().MustSet(context.Background(), config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
+		return ts
+	}
+
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
+	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
+	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypePassword.String()), false)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
+	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	//conf.MustSet(ctx, config.CodeMaxAttempts, 5)
+	//conf.MustSet(ctx, config.CodeLifespan, "1h")
+
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+	redirTS := newReturnTs(t, reg)
+
+	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
+
+	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+
+	var expectValidationError = func(t *testing.T, isAPI, forced, isSPA bool, values func(url.Values)) string {
+		return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
+			isSPA, forced,
+			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(ctx).String()),
+		)
+	}
+
+	createIdentity := func(identifier string) (error, *identity.Identity) {
+		stateChangedAt := sqlxx.NullTime(time.Now())
+
+		i := &identity.Identity{
+			SchemaID:       "default",
+			Traits:         identity.Traits(fmt.Sprintf(`{"phone":"%s"}`, identifier)),
+			State:          identity.StateActive,
+			StateChangedAt: &stateChangedAt}
+		if err := reg.IdentityManager().Create(ctx, i); err != nil {
+			return err, nil
+		}
+
+		return nil, i
+	}
+
+	getLoginNode := func(f *oryClient.LoginFlow, nodeName string) *oryClient.UiNode {
+		for _, n := range f.Ui.Nodes {
+			if n.Attributes.UiNodeInputAttributes.Name == nodeName {
+				return &n
+			}
+		}
+		return nil
+	}
+
+	var loginWithPhone = func(
+		t *testing.T, isAPI, refresh, isSPA bool,
+		expectedStatusCode int, expectedURL string,
+		values func(url.Values),
+	) string {
+		f := testhelpers.InitializeLoginFlow(t, isAPI, nil, publicTS, false, false)
+
+		assert.Empty(t, getLoginNode(f, "code"))
+		assert.NotEmpty(t, getLoginNode(f, "identifier"))
+
+		body := testhelpers.SubmitLoginFormWithFlow(t, isAPI, nil, values,
+			false, testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
+			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(ctx).String()),
+			f)
+
+		assertx.EqualAsJSON(t,
+			text.NewLoginEmailWithCodeSent(),
+			json.RawMessage(gjson.Get(body, "ui.messages.0").Raw),
+			"%s", body,
+		)
+		assert.Equal(t, flow.StateSMSSent.String(), gjson.Get(body, "state").String(),
+			"%s", testhelpers.PrettyJSON(t, []byte(body)))
+		assert.Equal(t, "code", gjson.Get(body, "active").String(), "%s", body)
+		assert.NotEmpty(t, gjson.Get(body, "ui.nodes.#(attributes.name==code)"), "%s", body)
+		assert.Empty(t, gjson.Get(body, "ui.nodes.#(attributes.name==code).attirbutes.value"), "%s", body)
+
+		st := gjson.Get(body, "session_token").String()
+		assert.Empty(t, st, "Response body: %s", body) //No session token as we have not presented the code yet
+
+		values = func(v url.Values) {
+			v.Del("resend")
+			if isAPI {
+				v.Set("method", "code")
+			}
+			v.Set("code", "0000")
+		}
+
+		publicClient := testhelpers.NewSDKCustomClient(publicTS, &http.Client{})
+		f, _, err := publicClient.FrontendApi.GetLoginFlow(ctx).Id(f.Id).Execute()
+		assert.NoError(t, err)
+		body = testhelpers.SubmitLoginFormWithFlow(t, isAPI, nil, values, false, expectedStatusCode, expectedURL, f)
+
+		return body
+	}
+
+	t.Run("should return an error because no phone is set", func(t *testing.T) {
+		var check = func(t *testing.T, body string) {
+			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
+
+			assert.Equal(t, "Property identifier is missing.",
+				gjson.Get(body, "ui.nodes.#(attributes.name==identifier).messages.0.text").String(), "%s", body)
+
+			// The code value should not be returned!
+			assert.Empty(t, gjson.Get(body, "ui.nodes.#(attributes.name==code).attributes.value").String())
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			var values = func(v url.Values) {
+				v.Set("method", "code")
+				v.Del("identifier")
+			}
+
+			check(t, expectValidationError(t, true, false, false, values))
+		})
+	})
+
+	t.Run("should not send code as user was not registered", func(t *testing.T) {
+		var check = func(t *testing.T, isAPI bool, values func(url.Values)) {
+			f := testhelpers.InitializeLoginFlow(t, isAPI, nil, publicTS, false, false)
+			body := testhelpers.SubmitLoginFormWithFlow(t, isAPI, nil, values,
+				false, testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
+				testhelpers.ExpectURL(isAPI, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(ctx).String()),
+				f)
+
+			assertx.EqualAsJSON(t,
+				text.NewErrorValidationNoCodeUser(),
+				json.RawMessage(gjson.Get(body, "ui.messages.0").Raw),
+				"%s", body,
+			)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			var values = func(v url.Values) {
+				v.Set("method", "code")
+				v.Set("identifier", "+99999999999")
+			}
+
+			check(t, true, values)
+		})
+		t.Run("type=browser", func(t *testing.T) {
+			var values = func(v url.Values) {
+				v.Set("identifier", "+99999999999")
+			}
+
+			check(t, false, values)
+		})
+	})
+
+	t.Run("should pass with registered user", func(t *testing.T) {
+		identifier := fmt.Sprintf("+452%s", fmt.Sprint(rand.Int())[0:7])
+		conf.MustSet(ctx, config.CodeTestNumbers, []string{identifier})
+		err, createdIdentity := createIdentity(identifier)
+		assert.NoError(t, err)
+
+		var values = func(v url.Values) {
+			v.Set("method", "code")
+			v.Set("identifier", identifier)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			body := loginWithPhone(t, true, false, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow, values)
+			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.phone").String(), "%s", body)
+			assert.NotEmpty(t, gjson.Get(body, "session_token").String(), "%s", body)
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, createdIdentity.ID)
+			assert.NoError(t, err)
+			assert.NotEmpty(t, i.VerifiableAddresses, "%s", body)
+			assert.Equal(t, identifier, i.VerifiableAddresses[0].Value)
+			assert.True(t, i.VerifiableAddresses[0].Verified)
+
+			assert.Equal(t, identifier, gjson.Get(body, "session.identity.verifiable_addresses.0.value").String())
+			assert.Equal(t, "true", gjson.Get(body, "session.identity.verifiable_addresses.0.verified").String(), "%s", body)
+		})
+		t.Run("type=browser", func(t *testing.T) {
+			body := loginWithPhone(t, false, false, false, http.StatusOK, redirTS.URL, values)
+			assert.Equal(t, identifier, gjson.Get(body, "identity.traits.phone").String(), "%s", body)
+			assert.True(t, gjson.Get(body, "active").Bool(), "%s", body)
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, createdIdentity.ID)
+			assert.NoError(t, err)
+			assert.NotEmpty(t, i.VerifiableAddresses, "%s", body)
+			assert.Equal(t, identifier, i.VerifiableAddresses[0].Value)
+			assert.True(t, i.VerifiableAddresses[0].Verified)
+
+			assert.Equal(t, identifier, gjson.Get(body, "identity.verifiable_addresses.0.value").String())
+			assert.Equal(t, "true", gjson.Get(body, "identity.verifiable_addresses.0.verified").String())
+		})
+	})
+
+	t.Run("should save transient payload to SMS template data", func(t *testing.T) {
+		identifier := fmt.Sprintf("+452%s", fmt.Sprint(rand.Int())[0:7])
+		err, _ := createIdentity(identifier)
+		assert.NoError(t, err)
+
+		var values = func(v url.Values) {
+			v.Set("method", "code")
+			v.Set("identifier", identifier)
+			v.Set("transient_payload", `{"branding": "brand-1"}`)
+		}
+
+		var doTest = func(t *testing.T, isAPI bool) {
+			f := testhelpers.InitializeLoginFlow(t, isAPI, nil, publicTS, false, false)
+			testhelpers.SubmitLoginFormWithFlow(t, isAPI, nil, values,
+				false, testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
+				testhelpers.ExpectURL(isAPI, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(ctx).String()),
+				f)
+
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, identifier, "")
+			assert.Equal(t, "brand-1", gjson.GetBytes(message.TemplateData, "transient_payload.branding").String(), "%s", message.TemplateData)
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			doTest(t, false)
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			doTest(t, true)
+		})
+	})
+
 }

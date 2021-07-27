@@ -650,6 +650,8 @@ func TestRegistration(t *testing.T) {
 
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
+		conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth),
+			map[string]interface{}{"enabled": false})
 
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 		conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)

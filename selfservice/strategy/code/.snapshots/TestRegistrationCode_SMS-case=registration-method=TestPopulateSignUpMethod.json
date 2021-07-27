@@ -1,0 +1,61 @@
+{
+  "method": "POST",
+  "nodes": [
+    {
+      "type": "input",
+      "group": "default",
+      "attributes": {
+        "name": "traits.email",
+        "type": "text",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {}
+    },
+    {
+      "type": "input",
+      "group": "default",
+      "attributes": {
+        "name": "traits.phone",
+        "type": "text",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {}
+    },
+    {
+      "type": "input",
+      "group": "code",
+      "attributes": {
+        "name": "method",
+        "type": "submit",
+        "value": "code",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040006,
+          "text": "Sign up with code",
+          "type": "info"
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "default",
+      "attributes": {
+        "name": "csrf_token",
+        "type": "hidden",
+        "required": true,
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {}
+    }
+  ]
+}

@@ -130,18 +130,57 @@ func SubmitRegistrationForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var payload *kratos.RegistrationFlow
+
+	var f = InitializeRegistrationFlow(t, isAPI, hc, publicTS, isSPA)
+
+	return SubmitRegistrationFormWithFlow(t, isAPI, hc, withValues, isSPA, expectedStatusCode, expectedURL, f)
+}
+
+func InitializeRegistrationFlow(
+	t *testing.T,
+	isAPI bool,
+	hc *http.Client,
+	publicTS *httptest.Server,
+	isSPA bool,
+) *kratos.RegistrationFlow {
+	if hc == nil {
+		hc = new(http.Client)
+	}
+
+	hc.Transport = NewTransportWithLogger(hc.Transport, t)
+
+	var flow *kratos.RegistrationFlow
 	if isAPI {
-		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS)
+		flow = InitializeRegistrationFlowViaAPI(t, hc, publicTS)
 	} else {
-		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS, isSPA, false, false)
+		flow = InitializeRegistrationFlowViaBrowser(t, hc, publicTS, isSPA, false, false)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-	values := SDKFormFieldsToURLValues(payload.Ui.Nodes)
+	return flow
+}
+
+func SubmitRegistrationFormWithFlow(
+	t *testing.T,
+	isAPI bool,
+	hc *http.Client,
+	withValues func(v url.Values),
+	isSPA bool,
+	expectedStatusCode int,
+	expectedURL string,
+	flow *kratos.RegistrationFlow,
+) string {
+	if hc == nil {
+		hc = new(http.Client)
+	}
+
+	hc.Transport = NewTransportWithLogger(hc.Transport, t)
+
+	values := SDKFormFieldsToURLValues(flow.Ui.Nodes)
 	withValues(values)
-	b, res := RegistrationMakeRequest(t, isAPI, isSPA, payload, hc, EncodeFormAsJSON(t, isAPI, values))
+
+	b, res := RegistrationMakeRequest(t, isAPI, isSPA, flow, hc, EncodeFormAsJSON(t, isAPI, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, assertx.PrettifyJSONPayload(t, b))
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, b))
 	return b

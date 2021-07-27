@@ -67,7 +67,11 @@ func (v *Validator) Validate(ctx context.Context, i *Identity) error {
 	return otelx.WithSpan(ctx, "identity.Validator.Validate", func(ctx context.Context) error {
 		return v.ValidateWithRunner(ctx, i,
 			NewSchemaExtensionCredentials(i),
-			NewSchemaExtensionVerification(i, v.d.Config().SelfServiceFlowVerificationRequestLifespan(ctx)),
+			NewSchemaExtensionVerification(
+				i,
+				v.d.Config().SelfServiceFlowVerificationRequestLifespan(ctx),
+				v.d.Config().SelfServiceCodeTestNumbers(ctx),
+			),
 			NewSchemaExtensionRecovery(i),
 		)
 	})

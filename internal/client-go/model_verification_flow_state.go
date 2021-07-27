@@ -22,7 +22,7 @@ type VerificationFlowState string
 // List of verificationFlowState
 const (
 	VERIFICATIONFLOWSTATE_CHOOSE_METHOD    VerificationFlowState = "choose_method"
-	VERIFICATIONFLOWSTATE_SENT_EMAIL       VerificationFlowState = "sent_email"
+	VERIFICATIONFLOWSTATE_SENT             VerificationFlowState = "sent"
 	VERIFICATIONFLOWSTATE_PASSED_CHALLENGE VerificationFlowState = "passed_challenge"
 )
 
@@ -33,7 +33,7 @@ func (v *VerificationFlowState) UnmarshalJSON(src []byte) error {
 		return err
 	}
 	enumTypeValue := VerificationFlowState(value)
-	for _, existing := range []VerificationFlowState{"choose_method", "sent_email", "passed_challenge"} {
+	for _, existing := range []VerificationFlowState{"choose_method", "sent", "passed_challenge"} {
 		if existing == enumTypeValue {
 			*v = enumTypeValue
 			return nil

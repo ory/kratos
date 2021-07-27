@@ -75,6 +75,7 @@ var loginFixtureSuccessEmail = gjson.GetBytes(loginFixtureSuccessIdentity, "trai
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth)+".enabled", false)
 	enableWebAuthn(conf)
 
 	router := x.NewRouterPublic()

@@ -587,6 +587,9 @@ func TestDoesSessionSatisfy(t *testing.T) {
 		t.Run(fmt.Sprintf("run=%d/desc=%s", k, tc.d), func(t *testing.T) {
 			id := identity.NewIdentity("")
 			for _, c := range tc.creds {
+				if c.Type == identity.CredentialsTypePassword {
+					id.Traits = []byte(`{"email":"` + c.Identifiers[0] + `"}`)
+				}
 				id.SetCredentials(c.Type, c)
 			}
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))

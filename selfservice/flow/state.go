@@ -28,12 +28,13 @@ type State string
 const (
 	StateChooseMethod    State = "choose_method"
 	StateEmailSent       State = "sent_email"
+	StateSMSSent         State = "sent_sms"
 	StatePassedChallenge State = "passed_challenge"
 	StateShowForm        State = "show_form"
 	StateSuccess         State = "success"
 )
 
-var states = []State{StateChooseMethod, StateEmailSent, StatePassedChallenge}
+var states = []State{StateChooseMethod, StateEmailSent, StateSMSSent, StatePassedChallenge}
 
 func indexOf(current State) int {
 	for k, s := range states {
@@ -45,10 +46,17 @@ func indexOf(current State) int {
 }
 
 func HasReachedState(expected, actual State) bool {
+	if expected == StateEmailSent && actual == StateSMSSent ||
+		expected == StateSMSSent && actual == StateEmailSent {
+		return true
+	}
 	return indexOf(actual) >= indexOf(expected)
 }
 
 func NextState(current State) State {
+	if current == StateEmailSent {
+		return StatePassedChallenge
+	}
 	if current == StatePassedChallenge {
 		return StatePassedChallenge
 	}

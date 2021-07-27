@@ -81,7 +81,8 @@ func TestVerification(t *testing.T) {
 		}
 
 		return testhelpers.SubmitVerificationForm(t, isAPI, isSPA, hc, public, values, c,
-			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI(ctx).String()))
+			testhelpers.ExpectURL(isAPI || isSPA, public.URL+verification.RouteSubmitFlow, conf.SelfServiceFlowVerificationUI(ctx).String()),
+			nil)
 	}
 
 	expectValidationError := func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values)) string {
@@ -117,7 +118,7 @@ func TestVerification(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"2.attributes.value"})
+		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"3.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
@@ -229,7 +230,7 @@ func TestVerification(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.SubmitVerificationForm(t, false, false, c, public, func(v url.Values) {
 			v.Set("email", verificationEmail)
-		}, 200, "")
+		}, 200, "", nil)
 		fID := gjson.Get(f, "id").String()
 		res, err := c.Get(public.URL + verification.RouteSubmitFlow + "?flow=" + fID + "&code=12312312")
 		require.NoError(t, err)
@@ -245,7 +246,7 @@ func TestVerification(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		f := testhelpers.SubmitVerificationForm(t, false, false, c, public, func(v url.Values) {
 			v.Set("email", verificationEmail)
-		}, 200, "")
+		}, 200, "", nil)
 
 		body, res := submitVerificationCode(t, f, c, "12312312")
 		assert.Equal(t, http.StatusOK, res.StatusCode)

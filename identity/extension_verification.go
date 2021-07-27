@@ -22,14 +22,15 @@ func init() {
 }
 
 type SchemaExtensionVerification struct {
-	lifespan time.Duration
-	l        sync.Mutex
-	v        []VerifiableAddress
-	i        *Identity
+	lifespan        time.Duration
+	codeTestNumbers []string
+	l               sync.Mutex
+	v               []VerifiableAddress
+	i               *Identity
 }
 
-func NewSchemaExtensionVerification(i *Identity, lifespan time.Duration) *SchemaExtensionVerification {
-	return &SchemaExtensionVerification{i: i, lifespan: lifespan}
+func NewSchemaExtensionVerification(i *Identity, lifespan time.Duration, codeTestNumbers []string) *SchemaExtensionVerification {
+	return &SchemaExtensionVerification{i: i, lifespan: lifespan, codeTestNumbers: codeTestNumbers}
 }
 
 const (
@@ -119,6 +120,23 @@ func has(haystack []VerifiableAddress, needle *VerifiableAddress) *VerifiableAdd
 		if has.Value == needle.Value && has.Via == needle.Via {
 			return &has
 		}
+	}
+	return nil
+}
+
+func (r *SchemaExtensionVerification) checkTelFormat(ctx jsonschema.ValidationContext, value interface{}) error {
+	validationError := ctx.Error("format", "%q is not valid %q", value, "phone")
+	num, ok := value.(string)
+	if !ok {
+		return validationError
+	}
+	for _, n := range r.codeTestNumbers {
+		if num == n {
+			return nil
+		}
+	}
+	if !jsonschema.Formats["tel"](num) {
+		return validationError
 	}
 	return nil
 }
