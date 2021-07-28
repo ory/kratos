@@ -374,7 +374,6 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		// Continue execution
 	}
 
-	req.UI.Reset("email")
 	req.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	req.UI.GetNodes().Upsert(
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
@@ -398,7 +397,6 @@ func (s *Strategy) HandleRecoveryError(w http.ResponseWriter, r *http.Request, r
 			email = body.Email
 		}
 
-		req.UI.Reset("email")
 		req.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		req.UI.GetNodes().Upsert(
 			// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}

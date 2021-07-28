@@ -48,6 +48,9 @@ context('Recovery Profile', () => {
           'contain.text',
           '"" is not valid "email"'
         )
+        cy.get('button[type="submit"][name="method"][value="link"]').should(
+          'exist'
+        )
       })
 
       it('is unable to recover the email address if the code is expired', () => {

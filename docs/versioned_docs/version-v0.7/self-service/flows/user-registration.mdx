@@ -1028,3 +1028,46 @@ IPs coming from your internal network or other logic.
 
 For more information about hooks please read the
 [Hook Documentation](../hooks.mdx).
+
+## API Examples
+
+### Registering New User Information
+
+Using the `/self-service/registration` with `POST` allows the creation of new
+user information
+
+```shell-session
+$ actionUrl=$(curl -s -X GET  -H "Accept: application/json" \
+    https:/playground.projects.oryapis.com/api/kratos/public/self-service/registration/api  \
+    | jq -r '.ui.action')
+
+$ curl -s -X POST -H "Content-Type: application/json" \
+    -d '{"traits.email": "iminvisibleagain@google.com", "password": "__MY__PASSWORD__", "method": "password"}' \
+    "$actionUrl" | jq
+```
+
+On successful response will get JSON response like the following:
+
+```
+{
+  "session_token": "UA8rB8ydXyMyiIWcX8VeSWjUB7Z21YF1",
+  "session": {
+    "id": "5a55e850-6eea-4e34-a716-c2f5dbea6db6",
+    "active": true,
+    "expires_at": "2021-07-15T08:41:26.339781706Z",
+    "authenticated_at": "2021-07-14T08:41:26.379062124Z",
+    "issued_at": "2021-07-14T08:41:26.339798436Z",
+    "identity": {
+      "id": "bd1fbe06-7273-462c-ad8c-d077bfc370b9",
+      "schema_id": "default",
+      "schema_url": "https://playground.projects.oryapis.com/api/kratos/public/schemas/default",
+      "state": "active",
+      "state_changed_at": "2021-07-14T08:41:26.29470737Z",
+      "traits": {
+        "email": "iminvisibleagain@google.com"
+      },
+      // ...
+    }
+  }
+}
+```

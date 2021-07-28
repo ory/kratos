@@ -4,6 +4,7 @@ title: Common Cookie and CSRF Pitfalls
 ---
 
 import useBaseUrl from '@docusaurus/useBaseUrl'
+import CodeFromRemote from '@theme/CodeFromRemote'
 
 Because Ory Kratos is not just an API, but instead talks to your users' browsers
 directly, several security measures have been implemented in Ory Kratos. One of
@@ -119,8 +120,24 @@ for example.
 ### Accessing Ory Kratos APIs from a server-side application
 
 When implementing a server-side application (e.g. in PHP, Java, Go, NodeJS, ...)
-make sure to only call Ory Kratos' APIs through the Admin Port (default `4434`),
-**not** the Public Port (default `4433`) as the Public Port requires CSRF
-Cookies and the Admin Port doesn't! Since your server-side application does not
-use a browser to interact with Kratos, CSRF Cookies will not be available which
-causes API calls to fail.
+make sure to include the `Cookie` header from the client when fetching the
+self-service flows (e.g. `GET /self-service/login/flows?id=...`):
+
+```ts
+export default (req: Request, res: Response) => {
+  // ...
+  kratos.getSelfServiceLoginFlow(flow, req.header('cookie'))
+}
+```
+
+A complete example looks as follows:
+
+<CodeFromRemote
+  lang="js"
+  link="https://github.com/ory/kratos-selfservice-ui-node/blob/782f20cb023c140b230dfa0f5358c76999e9b938/src/routes/login.ts#L25"
+  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/routes/login.ts"
+/>
+
+Without forwarding the `Cookie` HTTP Header it will not be possible to fetch the
+flow due to a security error. This protection prevents accidental leak of
+personal information when users copy/paste, for example, the login URL.

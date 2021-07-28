@@ -31,29 +31,31 @@ func send(code int) httprouter.Handle {
 	}
 }
 
+func assertNoCSRFCookieInResponse(t *testing.T, ts *httptest.Server, c *http.Client, res *http.Response) {
+	assert.Len(t, res.Cookies(), 0, res.Cookies())
+}
+
 func TestSessionWhoAmI(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	ts, _, r, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
+
+	// set this intermediate because kratos needs some valid url for CRUDE operations
+	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
+	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
+	r.GET("/set", h)
+
+	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+
 	t.Run("public", func(t *testing.T) {
-		conf, reg := internal.NewFastRegistryWithMocks(t)
-		r := x.NewRouterPublic()
-
-		// set this intermediate because kratos needs some valid url for CRUDE operations
-		conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
-		h, _ := testhelpers.MockSessionCreateHandler(t, reg)
-		r.GET("/set", h)
-
-		NewHandler(reg).RegisterPublicRoutes(r)
-		ts := httptest.NewServer(r)
-		defer ts.Close()
-
-		conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
 		client := testhelpers.NewClientWithCookies(t)
 
 		// No cookie yet -> 401
 		res, err := client.Get(ts.URL + RouteWhoami)
 		require.NoError(t, err)
-		assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
+		assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
 
 		// Set cookie
+		reg.CSRFHandler().IgnorePath("/set")
 		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set")
 
 		// Cookie set -> 200 (GET)
@@ -69,6 +71,8 @@ func TestSessionWhoAmI(t *testing.T) {
 
 				res, err = client.Do(req)
 				require.NoError(t, err)
+				assertNoCSRFCookieInResponse(t, ts, client, res) // Test that no CSRF cookie is ever set here.
+
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
 				assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
 			})

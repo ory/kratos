@@ -3,6 +3,7 @@ package logout_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -107,9 +108,11 @@ func TestLogout(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			hc, logoutUrl := getLogoutUrl(t)
 			originalCookies := hc.Jar.Cookies(urlx.ParseOrPanic(public.URL))
+			require.Contains(t, fmt.Sprintf("%v", hc.Jar.Cookies(urlx.ParseOrPanic(public.URL))), "ory_kratos_session")
 
 			body, res := makeBrowserLogout(t, hc, logoutUrl)
 			assert.EqualValues(t, public.URL+"/session/browser/get", res.Request.URL.String())
+			require.NotContains(t, fmt.Sprintf("%v", hc.Jar.Cookies(urlx.ParseOrPanic(public.URL))), "ory_kratos_session")
 
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
 			assert.EqualValues(t, "No active session was found in this request.", gjson.GetBytes(body, "error.reason").String())
@@ -121,11 +124,13 @@ func TestLogout(t *testing.T) {
 		t.Run("type=ajax", func(t *testing.T) {
 			hc, logoutUrl := getLogoutUrl(t)
 			originalCookies := hc.Jar.Cookies(urlx.ParseOrPanic(public.URL))
+			require.Contains(t, fmt.Sprintf("%v", hc.Jar.Cookies(urlx.ParseOrPanic(public.URL))), "ory_kratos_session")
 
 			body, res := testhelpers.HTTPRequestJSON(t, hc, "GET", logoutUrl, nil)
 			assert.EqualValues(t, logoutUrl, res.Request.URL.String())
 
 			assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", body)
+			require.NotContains(t, fmt.Sprintf("%v", hc.Jar.Cookies(urlx.ParseOrPanic(public.URL))), "ory_kratos_session")
 
 			// Logout means CSRF has also been changed.
 			ensurePrincipalChange(t, originalCookies)

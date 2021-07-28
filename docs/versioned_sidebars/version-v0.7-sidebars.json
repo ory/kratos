@@ -169,6 +169,11 @@
                   "href": "https://www.ory.sh/docs/cli/ory-proxy-local"
                 },
                 {
+                  "label": "ory proxy production",
+                  "type": "link",
+                  "href": "https://www.ory.sh/docs/cli/ory-proxy-production"
+                },
+                {
                   "label": "ory version",
                   "type": "link",
                   "href": "https://www.ory.sh/docs/cli/ory-version"
