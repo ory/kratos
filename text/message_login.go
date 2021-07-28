@@ -22,6 +22,15 @@ const (
 	ErrorValidationVerificationNoStrategyFound                     // 4010006
 )
 
+func NewVerificationConfirmation() *Message {
+	return &Message{
+		ID:      InfoSelfServiceVerificationConfirmation,
+		Type:    Info,
+		Text:    "Please confirm this action by verifying that it's you.",
+		Context: context(nil),
+	}
+}
+
 func NewInfoLogin() *Message {
 	return &Message{
 		ID:      InfoSelfServiceLogin,
