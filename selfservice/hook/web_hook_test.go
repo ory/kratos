@@ -1,6 +1,7 @@
 package hook
 
 import (
+	_ "embed"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -91,47 +91,78 @@ func TestApiKeyInCookieStrategy(t *testing.T) {
 	assert.Equal(t, "my-api-key-value", cookies[0].Value)
 }
 
+//go:embed stub/test_body.jsonnet
+var testBodyJSONNet []byte
+
 func TestJsonNetSupport(t *testing.T) {
-	f := login.Flow{ID: x.NewUUID()}
+	f := &login.Flow{ID: x.NewUUID()}
 	i := identity.NewIdentity("")
 
-	headers := http.Header{}
-	headers.Add("Some-Header", "Some-Value")
-	headers.Add("Cookie", "c1=v1")
-	headers.Add("Cookie", "c2=v2")
-	data := &templateContext{
-		Flow:           &f,
-		RequestHeaders: headers,
-		RequestMethod:  "POST",
-		RequestUrl:     "https://test.kratos.ory.sh/some-test-path",
-		Identity:       i,
-	}
-
-	b, err := createBody("./stub/test_body.jsonnet", data)
-	assert.NoError(t, err)
-
-	buf := new(strings.Builder)
-	io.Copy(buf, b)
-
-	expected := fmt.Sprintf(`
+	for _, tc := range []struct {
+		desc, template string
+		data           *templateContext
+	}{
 		{
-			"flow_id": "%s",
-			"identity_id": "%s",
-			"headers": {
-				"Cookie": ["%s", "%s"],
-				"Some-Header": ["%s"]
+			desc:     "simple file URI",
+			template: "file://./stub/test_body.jsonnet",
+			data: &templateContext{
+				Flow: f,
+				RequestHeaders: http.Header{
+					"Cookie":      []string{"c1=v1", "c2=v2"},
+					"Some-Header": []string{"Some-Value"},
+				},
+				RequestMethod: "POST",
+				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
+				Identity:      i,
 			},
-			"method": "%s",
-			"url": "%s"
-		}`,
-		f.ID, i.ID,
-		data.RequestHeaders.Values("Cookie")[0],
-		data.RequestHeaders.Values("Cookie")[1],
-		data.RequestHeaders.Get("Some-Header"),
-		data.RequestMethod,
-		data.RequestUrl)
+		},
+		{
+			desc:     "filepath without scheme",
+			template: "./stub/test_body.jsonnet",
+			data: &templateContext{
+				Flow: f,
+				RequestHeaders: http.Header{
+					"Cookie":      []string{"c1=v1", "c2=v2"},
+					"Some-Header": []string{"Some-Value"},
+				},
+				RequestMethod: "POST",
+				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
+				Identity:      i,
+			},
+		},
+		{
+			desc:     "base64 encoded template URI",
+			template: "base64://" + base64.StdEncoding.EncodeToString(testBodyJSONNet),
+			data: &templateContext{
+				Flow: f,
+				RequestHeaders: http.Header{
+					"Cookie":           []string{"foo=bar"},
+					"My-Custom-Header": []string{"Cumstom-Value"},
+				},
+				RequestMethod: "PUT",
+				RequestUrl:    "https://test.kratos.ory.sh/other-test-path",
+				Identity:      i,
+			},
+		},
+	} {
+		t.Run("case="+tc.desc, func(t *testing.T) {
+			b, err := createBody(tc.template, tc.data)
+			require.NoError(t, err)
+			body, err := io.ReadAll(b)
+			require.NoError(t, err)
 
-	assert.JSONEq(t, expected, buf.String())
+			expected, err := json.Marshal(map[string]interface{}{
+				"flow_id":     tc.data.Flow.GetID(),
+				"identity_id": tc.data.Identity.ID,
+				"headers":     tc.data.RequestHeaders,
+				"method":      tc.data.RequestMethod,
+				"url":         tc.data.RequestUrl,
+			})
+			require.NoError(t, err)
+
+			assert.JSONEq(t, string(expected), string(body))
+		})
+	}
 }
 
 func TestWebHookConfig(t *testing.T) {
@@ -221,7 +252,7 @@ func TestWebHookConfig(t *testing.T) {
 
 			assert.Equal(t, tc.url, conf.url)
 			assert.Equal(t, tc.method, conf.method)
-			assert.Equal(t, tc.body, conf.templatePath)
+			assert.Equal(t, tc.body, conf.templateURI)
 			assert.NotNil(t, conf.auth)
 			assert.IsTypef(t, tc.authStrategy, conf.auth, "Auth should be of the expected type")
 		})

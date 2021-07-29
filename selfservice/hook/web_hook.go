@@ -7,6 +7,9 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/pkg/errors"
+
+	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/kratos/identity"
@@ -49,10 +52,10 @@ type (
 	}
 
 	webHookConfig struct {
-		method       string
-		url          string
-		templatePath string
-		auth         AuthStrategy
+		method      string
+		url         string
+		templateURI string
+		auth        AuthStrategy
 	}
 
 	webHookDependencies interface {
@@ -166,10 +169,10 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 	}
 
 	return &webHookConfig{
-		method:       rc.Method,
-		url:          rc.Url,
-		templatePath: rc.Body,
-		auth:         as,
+		method:      rc.Method,
+		url:         rc.Url,
+		templateURI: rc.Body,
+		auth:        as,
 	}, nil
 }
 
@@ -257,7 +260,7 @@ func (e *WebHook) execute(data *templateContext) error {
 		// According to the HTTP spec any request method, but TRACE is allowed to
 		// have a body. Even this is a really bad practice for some of them, like for
 		// GET
-		body, err = createBody(conf.templatePath, data)
+		body, err = createBody(conf.templateURI, data)
 		if err != nil {
 			return fmt.Errorf("failed to create web hook body: %w", err)
 		}
@@ -269,10 +272,20 @@ func (e *WebHook) execute(data *templateContext) error {
 	return nil
 }
 
-func createBody(templatePath string, data *templateContext) (io.Reader, error) {
-	var body io.Reader
-	if len(templatePath) == 0 {
-		return body, nil
+func createBody(templateURI string, data *templateContext) (*bytes.Reader, error) {
+	if len(templateURI) == 0 {
+		return nil, nil
+	}
+
+	r, err := jsonschema.LoadURL(templateURI)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer r.Close()
+
+	template, err := io.ReadAll(r)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	vm := jsonnet.MakeVM()
@@ -287,7 +300,7 @@ func createBody(templatePath string, data *templateContext) (io.Reader, error) {
 	}
 	vm.TLACode("ctx", buf.String())
 
-	if res, err := vm.EvaluateFile(templatePath); err != nil {
+	if res, err := vm.EvaluateAnonymousSnippet(templateURI, string(template)); err != nil {
 		return nil, err
 	} else {
 		return bytes.NewReader([]byte(res)), nil
