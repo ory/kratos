@@ -147,7 +147,13 @@
             },
             "body": {
               "type": "string",
-              "description": "Path to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads"
+              "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
+              "examples": [
+                "file:///path/to/body.jsonnet",
+                "/path/to/body.jsonnet",
+                "./body.jsonnet",
+                "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9="
+              ]
             },
             "auth": {
               "type": "object",
