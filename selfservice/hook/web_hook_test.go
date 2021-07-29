@@ -494,7 +494,8 @@ func TestWebHooks(t *testing.T) {
 								"body": "%s",
 								"auth": %s
 							}`, ts.URL+path, method, "./stub/test_body.jsonnet", auth.createAuthConfig()))
-							wh := NewWebHook(nil, conf)
+
+							wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 							err := tc.callWebHook(wh, req, f, s)
 							if method == "GARBAGE" {
@@ -536,11 +537,8 @@ func TestWebHooks(t *testing.T) {
 			Method:     http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage(fmt.Sprintf(`{
-					"url": "/foo",
-					"method": "BAR"
-				`)) // closing } is missing
-		wh := NewWebHook(nil, conf)
+		conf := json.RawMessage("not valid json")
+		wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
@@ -559,7 +557,7 @@ func TestWebHooks(t *testing.T) {
 					"method": "%s",
 					"body": "%s"
 				}`, ts.URL+path, "POST", "./stub/bad_template.jsonnet"))
-		wh := NewWebHook(nil, conf)
+		wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
@@ -599,7 +597,7 @@ func TestWebHooks(t *testing.T) {
 					"method": "%s",
 					"body": "%s"
 				}`, ts.URL+path, "POST", "./stub/test_body.jsonnet"))
-			wh := NewWebHook(nil, conf)
+			wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 			err := wh.ExecuteLoginPreHook(nil, req, f)
 			if tc.mustSuccess {

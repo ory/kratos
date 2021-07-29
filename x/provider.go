@@ -28,3 +28,17 @@ type CookieProvider interface {
 type TracingProvider interface {
 	Tracer(ctx context.Context) *tracing.Tracer
 }
+
+type SimpleLogger struct {
+	L *logrusx.Logger
+}
+
+func (s *SimpleLogger) Logger() *logrusx.Logger {
+	return s.L
+}
+
+func (s *SimpleLogger) Audit() *logrusx.Logger {
+	return s.L
+}
+
+var _ LoggingProvider = (*SimpleLogger)(nil)
