@@ -7,21 +7,18 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/pkg/errors"
-
-	"github.com/ory/jsonschema/v3"
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/flow/settings"
-
-	"github.com/ory/kratos/selfservice/flow/login"
-
-	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/x/fetcher"
+	"github.com/ory/x/logrusx"
 
 	"github.com/google/go-jsonnet"
+	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -260,7 +257,7 @@ func (e *WebHook) execute(data *templateContext) error {
 		// According to the HTTP spec any request method, but TRACE is allowed to
 		// have a body. Even this is a really bad practice for some of them, like for
 		// GET
-		body, err = createBody(conf.templateURI, data)
+		body, err = createBody(e.r.Logger(), conf.templateURI, data)
 		if err != nil {
 			return fmt.Errorf("failed to create web hook body: %w", err)
 		}
@@ -272,20 +269,23 @@ func (e *WebHook) execute(data *templateContext) error {
 	return nil
 }
 
-func createBody(templateURI string, data *templateContext) (*bytes.Reader, error) {
+func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*bytes.Reader, error) {
 	if len(templateURI) == 0 {
 		return nil, nil
 	}
 
-	r, err := jsonschema.LoadURL(templateURI)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	defer r.Close()
+	f := fetcher.NewFetcher()
 
-	template, err := io.ReadAll(r)
+	template, err := f.Fetch(templateURI)
+	if errors.Is(err, fetcher.ErrUnknownScheme) {
+		// legacy filepath
+		templateURI = "file://" + templateURI
+		l.WithError(err).Warnf("support for filepaths without a 'file://' scheme will be dropped in the next release, please use %s instead in your config", templateURI)
+		template, err = f.Fetch(templateURI)
+	}
+	// this handles the first error if it is a known scheme error, or the second fetch error
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	vm := jsonnet.MakeVM()
@@ -300,7 +300,7 @@ func createBody(templateURI string, data *templateContext) (*bytes.Reader, error
 	}
 	vm.TLACode("ctx", buf.String())
 
-	if res, err := vm.EvaluateAnonymousSnippet(templateURI, string(template)); err != nil {
+	if res, err := vm.EvaluateAnonymousSnippet(templateURI, template.String()); err != nil {
 		return nil, err
 	} else {
 		return bytes.NewReader([]byte(res)), nil

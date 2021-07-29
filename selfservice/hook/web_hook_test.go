@@ -12,6 +12,10 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/sirupsen/logrus/hooks/test"
+
+	"github.com/ory/x/logrusx"
+
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -97,6 +101,7 @@ var testBodyJSONNet []byte
 func TestJsonNetSupport(t *testing.T) {
 	f := &login.Flow{ID: x.NewUUID()}
 	i := identity.NewIdentity("")
+	l := logrusx.New("kratos", "test")
 
 	for _, tc := range []struct {
 		desc, template string
@@ -117,7 +122,7 @@ func TestJsonNetSupport(t *testing.T) {
 			},
 		},
 		{
-			desc:     "filepath without scheme",
+			desc:     "legacy filepath without scheme",
 			template: "./stub/test_body.jsonnet",
 			data: &templateContext{
 				Flow: f,
@@ -146,7 +151,7 @@ func TestJsonNetSupport(t *testing.T) {
 		},
 	} {
 		t.Run("case="+tc.desc, func(t *testing.T) {
-			b, err := createBody(tc.template, tc.data)
+			b, err := createBody(l, tc.template, tc.data)
 			require.NoError(t, err)
 			body, err := io.ReadAll(b)
 			require.NoError(t, err)
@@ -163,6 +168,16 @@ func TestJsonNetSupport(t *testing.T) {
 			assert.JSONEq(t, string(expected), string(body))
 		})
 	}
+
+	t.Run("case=warns about legacy usage", func(t *testing.T) {
+		hook := test.Hook{}
+		l := logrusx.New("kratos", "test", logrusx.WithHook(&hook))
+
+		_, _ = createBody(l, "./foo", nil)
+
+		require.Len(t, hook.Entries, 1)
+		assert.Contains(t, hook.LastEntry().Message, "support for filepaths without a 'file://' scheme will be dropped")
+	})
 }
 
 func TestWebHookConfig(t *testing.T) {
