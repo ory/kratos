@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/identity"
@@ -91,6 +93,10 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 
 	if err := sortNodes(f.UI.Nodes); err != nil {
 		return nil, err
+	}
+
+	if f.Forced {
+		f.UI.Messages.Set(text.NewInfoLoginReAuth())
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
