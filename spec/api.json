@@ -937,7 +937,7 @@
             "type": "string"
           },
           "details": {
-            "additionalProperties": true,
+            "additionalProperties": false,
             "description": "Further error details",
             "type": "object"
           },
@@ -2129,9 +2129,9 @@
     },
     "securitySchemes": {
       "oryAccessToken": {
-        "description": "This security mechanism is only applicable when using the [Ory Platform](https://console.ory.sh) by\ncreating an [Ory Personal Access Token](https://www.ory.sh/docs/guides/create-personal-access-token).\nIf you are using the open source version, this security mechanism\nwill not work out of the box as you will need to add a security mechanism yourself.\n",
-        "scheme": "bearer",
-        "type": "http"
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
       }
     }
   },
