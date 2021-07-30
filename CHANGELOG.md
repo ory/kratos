@@ -2,8 +2,9 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-07-24)](#unreleased-2021-07-24)
+- [Unreleased (2021-07-30)](#unreleased-2021-07-30)
     - [Bug Fixes](#bug-fixes)
+    - [Features](#features)
 - [0.7.1-alpha.1 (2021-07-22)](#071-alpha1-2021-07-22)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Generation](#code-generation)
@@ -15,7 +16,7 @@
     - [Code Generation](#code-generation-1)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-1)
-    - [Features](#features)
+    - [Features](#features-1)
     - [Tests](#tests-1)
     - [Unclassified](#unclassified)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
@@ -28,25 +29,25 @@
     - [Documentation](#documentation-2)
 - [0.6.1-alpha.1 (2021-05-11)](#061-alpha1-2021-05-11)
     - [Code Generation](#code-generation-4)
-    - [Features](#features-1)
+    - [Features](#features-2)
 - [0.6.0-alpha.2 (2021-05-07)](#060-alpha2-2021-05-07)
     - [Bug Fixes](#bug-fixes-4)
     - [Code Generation](#code-generation-5)
-    - [Features](#features-2)
+    - [Features](#features-3)
 - [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
   - [Breaking Changes](#breaking-changes-2)
     - [Bug Fixes](#bug-fixes-5)
     - [Code Generation](#code-generation-6)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-3)
-    - [Features](#features-3)
+    - [Features](#features-4)
     - [Tests](#tests-2)
     - [Unclassified](#unclassified-1)
 - [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
     - [Bug Fixes](#bug-fixes-6)
     - [Code Generation](#code-generation-7)
     - [Documentation](#documentation-4)
-    - [Features](#features-4)
+    - [Features](#features-5)
     - [Tests](#tests-3)
     - [Unclassified](#unclassified-2)
 - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
@@ -54,12 +55,12 @@
     - [Code Generation](#code-generation-8)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-5)
-    - [Features](#features-5)
+    - [Features](#features-6)
 - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
     - [Bug Fixes](#bug-fixes-8)
     - [Code Generation](#code-generation-9)
     - [Documentation](#documentation-6)
-    - [Features](#features-6)
+    - [Features](#features-7)
     - [Tests](#tests-4)
 - [0.5.2-alpha.1 (2020-10-22)](#052-alpha1-2020-10-22)
     - [Bug Fixes](#bug-fixes-9)
@@ -70,7 +71,7 @@
     - [Bug Fixes](#bug-fixes-10)
     - [Code Generation](#code-generation-11)
     - [Documentation](#documentation-8)
-    - [Features](#features-7)
+    - [Features](#features-8)
     - [Tests](#tests-6)
     - [Unclassified](#unclassified-3)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
@@ -79,7 +80,7 @@
     - [Code Generation](#code-generation-12)
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-9)
-    - [Features](#features-8)
+    - [Features](#features-9)
     - [Tests](#tests-7)
     - [Unclassified](#unclassified-4)
 - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
@@ -104,7 +105,7 @@
     - [Code Generation](#code-generation-18)
     - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-11)
-    - [Features](#features-9)
+    - [Features](#features-10)
     - [Unclassified](#unclassified-5)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
   - [Breaking Changes](#breaking-changes-5)
@@ -112,7 +113,7 @@
     - [Chores](#chores)
     - [Code Refactoring](#code-refactoring-6)
     - [Documentation](#documentation-12)
-    - [Features](#features-10)
+    - [Features](#features-11)
     - [Unclassified](#unclassified-6)
 - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Chores](#chores-1)
@@ -123,7 +124,7 @@
     - [Chores](#chores-2)
     - [Code Refactoring](#code-refactoring-7)
     - [Documentation](#documentation-14)
-    - [Features](#features-11)
+    - [Features](#features-12)
     - [Unclassified](#unclassified-7)
 - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-20)
@@ -133,10 +134,10 @@
     - [Bug Fixes](#bug-fixes-21)
     - [Code Refactoring](#code-refactoring-9)
     - [Documentation](#documentation-16)
-    - [Features](#features-12)
+    - [Features](#features-13)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
     - [Documentation](#documentation-17)
-    - [Features](#features-13)
+    - [Features](#features-14)
 - [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
     - [Continuous Integration](#continuous-integration)
     - [Documentation](#documentation-18)
@@ -145,7 +146,7 @@
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
     - [Bug Fixes](#bug-fixes-22)
     - [Documentation](#documentation-19)
-    - [Features](#features-14)
+    - [Features](#features-15)
     - [Unclassified](#unclassified-8)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-20)
@@ -189,16 +190,29 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...de5fb3e52af9f2d0f1209eed217403a5d7d1ae2d) (2021-07-24)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...05256232bf85d68e068eece6c883f46a447ba5bd) (2021-07-30)
 
 
 ### Bug Fixes
 
+* Add new message when refresh parameter is true ([#1560](https://github.com/ory/kratos/issues/1560)) ([0525623](https://github.com/ory/kratos/commit/05256232bf85d68e068eece6c883f46a447ba5bd)), closes [#1117](https://github.com/ory/kratos/issues/1117)
+* Register argon2 CLI commands properly ([#1592](https://github.com/ory/kratos/issues/1592)) ([45c28d9](https://github.com/ory/kratos/commit/45c28d99064baf8051521a1078ac2b59bb3206ec))
 * Remove session cookie on logout ([#1587](https://github.com/ory/kratos/issues/1587)) ([cdb30bb](https://github.com/ory/kratos/commit/cdb30bb65ac932a17e4924b4efc8952113452513)), closes [#1584](https://github.com/ory/kratos/issues/1584):
 
     Before, the logout endpoint would invalidate the session cookie, but not remove it. This was a regression introduced in 0.7.0. This patch resolves that issue.
 
+* Update csrf token cookie name ([#1601](https://github.com/ory/kratos/issues/1601)) ([64c90bf](https://github.com/ory/kratos/commit/64c90bf5e5cec6545a81f88ad5fabb29e9e80850)):
+
+    See https://github.com/ory-corp/cloud/issues/1252
+
 * Use eager preloading for list identites endpoint ([#1588](https://github.com/ory/kratos/issues/1588)) ([de5fb3e](https://github.com/ory/kratos/commit/de5fb3e52af9f2d0f1209eed217403a5d7d1ae2d))
+
+### Features
+
+* Allow multiple webhook body sources ([#1606](https://github.com/ory/kratos/issues/1606)) ([51b1311](https://github.com/ory/kratos/commit/51b131177c9e0db018eced939fef43742c9e86cf)):
+
+    This patch adds support for loading webhooks from the local filesystem, base64 encoded inline string, and remote (http/https) sources. Please note that support for relative/absolute paths without an URI scheme are deprecated and will eventually be removed.
+
 
 
 # [0.7.1-alpha.1](https://github.com/ory/kratos/compare/v0.7.0-alpha.1...v0.7.1-alpha.1) (2021-07-22)
