@@ -22,7 +22,7 @@ type GenericError struct {
 	// Debug information  This field is often not exposed to protect against leaking sensitive information.
 	Debug *string `json:"debug,omitempty"`
 	// Further error details
-	Details map[string]map[string]interface{} `json:"details,omitempty"`
+	Details map[string]interface{} `json:"details,omitempty"`
 	// Error message  The error's message.
 	Message string `json:"message"`
 	// A human-readable reason for the error
@@ -116,9 +116,9 @@ func (o *GenericError) SetDebug(v string) {
 }
 
 // GetDetails returns the Details field value if set, zero value otherwise.
-func (o *GenericError) GetDetails() map[string]map[string]interface{} {
+func (o *GenericError) GetDetails() map[string]interface{} {
 	if o == nil || o.Details == nil {
-		var ret map[string]map[string]interface{}
+		var ret map[string]interface{}
 		return ret
 	}
 	return o.Details
@@ -126,7 +126,7 @@ func (o *GenericError) GetDetails() map[string]map[string]interface{} {
 
 // GetDetailsOk returns a tuple with the Details field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GenericError) GetDetailsOk() (map[string]map[string]interface{}, bool) {
+func (o *GenericError) GetDetailsOk() (map[string]interface{}, bool) {
 	if o == nil || o.Details == nil {
 		return nil, false
 	}
@@ -142,8 +142,8 @@ func (o *GenericError) HasDetails() bool {
 	return false
 }
 
-// SetDetails gets a reference to the given map[string]map[string]interface{} and assigns it to the Details field.
-func (o *GenericError) SetDetails(v map[string]map[string]interface{}) {
+// SetDetails gets a reference to the given map[string]interface{} and assigns it to the Details field.
+func (o *GenericError) SetDetails(v map[string]interface{}) {
 	o.Details = v
 }
 
