@@ -15,7 +15,8 @@ func NewRootCmd() *cobra.Command {
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(NewRootCmd())
+	rootCmd := NewRootCmd()
+	parent.AddCommand(rootCmd)
 
-	argon2.RegisterCommandRecursive(NewRootCmd())
+	argon2.RegisterCommandRecursive(rootCmd)
 }

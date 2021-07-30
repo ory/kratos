@@ -252,7 +252,7 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("nid = ?", corp.ContextualizeNID(ctx, p.nid)).
-		Eager("VerifiableAddresses", "RecoveryAddresses").
+		EagerPreload("VerifiableAddresses", "RecoveryAddresses").
 		Paginate(page, perPage).Order("id DESC").
 		All(&is)); err != nil {
 		return nil, err
