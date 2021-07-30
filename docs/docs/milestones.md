@@ -67,6 +67,9 @@ Something is not working.
       ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [ ] /schemas/default does not work with base64 identity schemas
       ([kratos#1529](https://github.com/ory/kratos/issues/1529))
+- [ ] Auto-Login on Registration flow does not return `session`, only `identity`
+      for SPA requests
+      ([kratos#1604](https://github.com/ory/kratos/issues/1604))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -190,6 +193,9 @@ New feature or request.
 
 #### Issues
 
+- [ ] Add `return_to` to self-service SDK methods including logout
+      ([kratos#1605](https://github.com/ory/kratos/issues/1605)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
