@@ -106,16 +106,15 @@ responses with an HTTP code > 300.
 The configuration for a web-hook goes into the `hooks` property either on the
 flow before/after, or the method level and has the following structure:
 
-```.yaml
-  - hook: web_hook
-    config:
-      url: https://test.kratos.ory.sh/after_verification_hook
-      method: POST # GET, DELETE, etc
-      body: /link/to/my/jsonnet/file
-      auth:
-        type: <some-type>
-        config:
-          <type-specific-config>
+```yaml title="path/to/my/kratos.config.yml
+- hook: web_hook
+  config:
+    url: https://test.kratos.ory.sh/after_verification_hook
+    method: POST # GET, DELETE, etc
+    body: file:///path/of/my/jsonnet/file
+    auth:
+      type: <some-type>
+      config: <type-specific-config>
 ```
 
 The configuration section of a web-hook consists of
@@ -123,9 +122,10 @@ The configuration section of a web-hook consists of
 - `url` - the url, the web-hook should call (mandatory)
 - `method` - the HTTP method (GET, POST, ...), the web-hook should use
   (mandatory)
-- `body` - path to a jsonnet template, used by the web-hook to render the
-  payload to send (optional). This property is ignored for HTTP `method`s, which
-  do not support sending of HTTP body payloads.
+- `body` - URI of a jsonnet template, used by the web-hook to render the payload
+  to send (optional). Use a `file://path/to/body.jsonnet` URL for referring to
+  local files. This property is ignored for HTTP `method`s, which do not support
+  sending of HTTP body payloads.
 - `auth` - configuration of authentication and authorization mechanisms to be
   used by the web-hook
 
@@ -147,7 +147,7 @@ For `auth` following mechanisms are supported:
 
 For `api_key` the config looks as follows:
 
-```.yaml
+```yaml
 name: Some-Name
 value: The-Value-of-My-Key
 in: header # alternatively cookie
@@ -157,7 +157,7 @@ All properties are mandatory.
 
 For `basic_auth` the config looks as follows:
 
-```.yaml
+```yaml
 user: My-User
 password: My-Pass-Value
 ```
