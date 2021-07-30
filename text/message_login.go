@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	InfoSelfServiceLoginRoot                ID = 1010000 + iota // 1010000
-	InfoSelfServiceLogin                                        // 1010001
-	InfoSelfServiceLoginWith                                    // 1010002
-	InfoSelfServiceVerificationConfirmation                     // 1010003
+	InfoSelfServiceLoginRoot   ID = 1010000 + iota // 1010000
+	InfoSelfServiceLogin                           // 1010001
+	InfoSelfServiceLoginWith                       // 1010002
+	InfoSelfServiceLoginReAuth                     // 1010003
 )
 
 const (
@@ -22,9 +22,9 @@ const (
 	ErrorValidationVerificationNoStrategyFound                     // 4010006
 )
 
-func NewVerificationConfirmation() *Message {
+func NewInfoLoginReAuth() *Message {
 	return &Message{
-		ID:      InfoSelfServiceVerificationConfirmation,
+		ID:      InfoSelfServiceLoginReAuth,
 		Type:    Info,
 		Text:    "Please confirm this action by verifying that it's you.",
 		Context: context(nil),

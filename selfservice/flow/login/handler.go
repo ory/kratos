@@ -96,7 +96,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 	}
 
 	if f.Forced {
-		f.UI.Messages.Set(text.NewVerificationConfirmation())
+		f.UI.Messages.Set(text.NewInfoLoginReAuth())
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {

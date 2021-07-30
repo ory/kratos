@@ -131,7 +131,7 @@ func TestInitFlow(t *testing.T) {
 			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}}, true)
 			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
 			assertion(body, true, true)
-			assert.Equal(t, gjson.GetBytes(body, "ui.messages.0.text").String(), text.NewVerificationConfirmation().Text)
+			assert.Equal(t, gjson.GetBytes(body, "ui.messages.0.text").String(), text.NewInfoLoginReAuth().Text)
 		})
 	})
 
