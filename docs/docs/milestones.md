@@ -21,6 +21,12 @@ Something is not working.
       ([kratos#1547](https://github.com/ory/kratos/issues/1547)) -
       [@hackerman](https://github.com/aeneasr)
 
+#### Pull Requests
+
+- [x] fix(sdk): use proper annotation for genericError
+      ([kratos#1611](https://github.com/ory/kratos/pull/1611)) -
+      [@hackerman](https://github.com/aeneasr)
+
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
 Affects documentation.
@@ -196,6 +202,9 @@ New feature or request.
 - [ ] Add `return_to` to self-service SDK methods including logout
       ([kratos#1605](https://github.com/ory/kratos/issues/1605)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Deprecate webhook loader without URI scheme
+      ([kratos#1610](https://github.com/ory/kratos/issues/1610)) -
+      [@Patrik](https://github.com/zepatrik)
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
