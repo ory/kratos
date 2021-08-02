@@ -225,3 +225,6 @@ Affects documentation.
 - [x] Include changelog in docs navigation
       ([kratos#1443](https://github.com/ory/kratos/issues/1443)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Config reference has not been updated since 0.5.0
+      ([kratos#1597](https://github.com/ory/kratos/issues/1597)) -
+      [@hackerman](https://github.com/aeneasr)
