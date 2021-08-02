@@ -190,7 +190,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...f6b3aa45b1f39ca5e9ee7ef4cd96de1970b2ed71) (2021-08-02)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...a6672554b02378eb2dac7b1af99ea2915395867b) (2021-08-02)
 
 
 ### Bug Fixes
@@ -216,6 +216,10 @@
     Before, the logout endpoint would invalidate the session cookie, but not remove it. This was a regression introduced in 0.7.0. This patch resolves that issue.
 
 * **sdk:** Use proper annotation for genericError ([#1611](https://github.com/ory/kratos/issues/1611)) ([da214b2](https://github.com/ory/kratos/commit/da214b2933ae2a91d8c5bf6aa8eea613a2078b9d)), closes [#1609](https://github.com/ory/kratos/issues/1609)
+* Skip prompt on discord authorization by default ([#1594](https://github.com/ory/kratos/issues/1594)) ([a667255](https://github.com/ory/kratos/commit/a6672554b02378eb2dac7b1af99ea2915395867b)):
+
+    When a value for prompt is not provided, Discord defaults to `prompt="consent"`. This change makes it so that if the request is not forced, prompt is explicitly set to "none".
+
 * Update csrf token cookie name ([#1601](https://github.com/ory/kratos/issues/1601)) ([64c90bf](https://github.com/ory/kratos/commit/64c90bf5e5cec6545a81f88ad5fabb29e9e80850)):
 
     See https://github.com/ory-corp/cloud/issues/1252
