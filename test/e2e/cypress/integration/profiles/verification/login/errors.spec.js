@@ -1,30 +1,24 @@
 import {
   APP_URL,
-  assertVerifiableAddress,
   gen,
-  parseHtml,
-  verifyHrefPattern
 } from '../../../../helpers'
 
 context('Verification Profile', () => {
   describe('Login', () => {
     before(() => {
       cy.useConfigProfile('verification')
+      cy.enableLoginForVerifiedAddressOnly()
     })
 
     describe('error flow', () => {
-      let identity
-      beforeEach(() => {
-        cy.dontLoginUserAfterRegistration()
-        cy.enableLoginForVerifiedAddressOnly()
+      it('Is unable to login as long as the email is not verified', () => {
         cy.deleteMail()
 
-        identity = gen.identity()
+        const identity = gen.identity()
         cy.register(identity)
-        cy.visit(APP_URL + '/')
-      })
 
-      it('Is unable to login as long as the email is not verified', () => {
+        cy.visit(APP_URL + '/')
+
         cy.get('input[name="password_identifier"]').type(identity.email)
         cy.get('input[name="password"]').type(identity.password)
         cy.get('button[value="password"]').click()

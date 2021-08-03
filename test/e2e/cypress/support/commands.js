@@ -116,15 +116,8 @@ Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
     return config
   })
 })
-Cypress.Commands.add('dontLoginUserAfterRegistration', ({} = {}) => {
-  updateConfigFile((config) => {
-    if (config.selfservice.flows.registration.after) {
-      delete config.selfservice.flows.registration.after['password']
-    }
-    return config
-  })
-})
-Cypress.Commands.add('enableLoginForVerifiedAddressOnly', ({} = {}) => {
+
+Cypress.Commands.add('enableLoginForVerifiedAddressOnly', () => {
   updateConfigFile((config) => {
     config.selfservice.flows.login['after'] = {
       password: { hooks: [{ hook: 'require_verified_address' }] }

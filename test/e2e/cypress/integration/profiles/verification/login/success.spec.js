@@ -1,33 +1,24 @@
 import {
   APP_URL,
-  assertVerifiableAddress,
   gen,
-  parseHtml,
-  verifyHrefPattern
 } from '../../../../helpers'
 
 context('Verification Profile', () => {
-  describe('Registration', () => {
+  describe('Login', () => {
     before(() => {
       cy.useConfigProfile('verification')
+      cy.enableLoginForVerifiedAddressOnly()
     })
 
     describe('success flow', () => {
-      let identity
-      beforeEach(() => {
-        cy.dontLoginUserAfterRegistration()
-        cy.enableLoginForVerifiedAddressOnly()
-        cy.deleteMail()
-        cy.visit(APP_URL + '/')
-
-        identity = gen.identity()
-        cy.register(identity)
-      })
-
       it('Is able to login after successful email verification', () => {
+        cy.deleteMail()
+
+        const identity = gen.identity()
+        cy.register(identity)
         cy.performEmailVerification({ expect: { email: identity.email } })
 
-        cy.visit(APP_URL + '/auth/login')
+        cy.visit(APP_URL + '/')
 
         cy.get('input[name="password_identifier"]').type(identity.email)
         cy.get('input[name="password"]').type(identity.password)
