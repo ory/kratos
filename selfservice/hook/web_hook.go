@@ -53,11 +53,11 @@ type (
 	}
 
 	webHookConfig struct {
-		method      string
-		url         string
-		templateURI string
-		auth        AuthStrategy
-		interrupt   bool
+		method       string
+		url          string
+		templateURI  string
+		auth         AuthStrategy
+		canInterrupt bool
 	}
 
 	webHookDependencies interface {
@@ -194,7 +194,7 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 		url:         rc.Url,
 		templateURI: rc.Body,
 		auth:        as,
-		interrupt:    rc.Interrupt,
+		canInterrupt: rc.Interrupt,
 	}, nil
 }
 
@@ -302,7 +302,7 @@ func (e *WebHook) execute(data *templateContext) error {
 		}
 	}
 
-	err = doHttpCall(conf.method, conf.url, conf.auth, conf.interrupt, body)
+	err = doHttpCall(conf.method, conf.url, conf.auth, conf.canInterrupt, body)
 	if err != nil {
 		return errors.Wrap(err, "failed to call web hook")
 	}
@@ -348,7 +348,7 @@ func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*
 	}
 }
 
-func doHttpCall(method string, url string, as AuthStrategy, interrupt bool, body io.Reader) error {
+func doHttpCall(method string, url string, as AuthStrategy, canInterrupt bool, body io.Reader) error {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return err
@@ -362,7 +362,7 @@ func doHttpCall(method string, url string, as AuthStrategy, interrupt bool, body
 	if err != nil {
 		return err
 	} else if resp.StatusCode >= http.StatusBadRequest {
-		if interrupt {
+		if canInterrupt {
 			if err := parseResponse(resp); err != nil {
 				return err
 			}

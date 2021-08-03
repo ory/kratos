@@ -195,7 +195,7 @@
                 }
               ]
             },
-            "can_interrupt": {
+            "canInterrupt": {
               "type": "boolean",
               "default": false,
               "description": "If enabled allows the web hook to interrupt / abort the self-service flow. It only applies to a certain flows (registration/verification/login/settings) and requires a valid response format."
