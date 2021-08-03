@@ -190,7 +190,6 @@ func (c *Container) ParseError(group node.Group, err error) error {
 		}
 		return nil
 	} else if e := schema.NewValidationListError(); errors.As(err, &e) {
-		fmt.Println("list error validation")
 		for _, ee := range e.Validations {
 			if err := c.ParseError(group, ee); err != nil {
 				return err
