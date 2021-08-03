@@ -6,32 +6,36 @@ import {
   verifyHrefPattern,
 } from '../../../../helpers'
 
-context('Verify', () => {
-  describe('success flow', () => {
-    let identity
+context('Verification Profile', () => {
+  describe('Registration', () => {
     before(() => {
-      cy.deleteMail()
+      cy.useConfigProfile('verification')
     })
 
-    beforeEach(() => {
-      cy.dontLoginUserAfterRegistration()
-      cy.enableLoginForVerifiedAddressOnly()
+    describe('success flow', () => {
+      let identity
+      beforeEach(() => {
+        cy.dontLoginUserAfterRegistration()
+        cy.enableLoginForVerifiedAddressOnly()
+        cy.deleteMail()
+        cy.visit(APP_URL + '/')
 
-      identity = gen.identity()
-      cy.register(identity)
-    })
+        identity = gen.identity()
+        cy.register(identity)
+      })
 
-    it('Is able to login after successful email verification', () => {
-      cy.verifyEmail({ expect: { email: identity.email } })
+      it('Is able to login after successful email verification', () => {
+        cy.verifyEmail({expect: {email: identity.email}})
 
-      cy.visit(APP_URL)
+        cy.visit(APP_URL)
 
-      cy.get("form")
-      cy.get('input[name="password_identifier"]').type(identity.email)
-      cy.get('input[name="password"]').type(identity.password)
-      cy.get('button[value="password"]').click()
+        cy.get("form")
+        cy.get('input[name="password_identifier"]').type(identity.email)
+        cy.get('input[name="password"]').type(identity.password)
+        cy.get('button[value="password"]').click()
 
-      cy.getCookie('ory_kratos_session').should('exist')
+        cy.getCookie('ory_kratos_session').should('exist')
+      })
     })
   })
 })

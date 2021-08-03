@@ -106,7 +106,9 @@ Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
 })
 Cypress.Commands.add('dontLoginUserAfterRegistration', ({} = {}) => {
   updateConfigFile((config) => {
-    delete config.selfservice.flows.registration.after['password']
+    if (config.selfservice.flows.registration.after) {
+      delete config.selfservice.flows.registration.after['password']
+    }
     return config
   })
 })
@@ -132,37 +134,47 @@ Cypress.Commands.add(
     query = {},
     fields = {}
   } = {}) => {
-    const urlRedirects = [];
-
-    cy.on('url:changed', (url) => {
-      urlRedirects.push(url);
-    });
-
     console.log('Creating user account: ', { email, password })
 
     // see https://github.com/cypress-io/cypress/issues/408
     cy.visit(APP_URL)
     cy.clearCookies()
 
-    cy.get('a[href*="/auth/registration"]').click()
-
-    cy.then(() => {
-        expect(urlRedirects).to.have.length(2)
-        expect(urlRedirects[1]).to.contain(APP_URL + '/auth/registration?flow=')
-      })
-
-    cy.get("form")
-    cy.get('input[name="traits.email"]').type(email)
-    cy.get('input[name="password"]').type(password)
-    cy.get('input[name="traits.website"]').type('http://ory.sh')
-    cy.get('button[value="password"]').click()
-
-    cy.then(() => {
-      expect(urlRedirects).to.have.length(3)
-      expect(urlRedirects[2]).to.not.contain(APP_URL + '/auth/registration?flow=')
+    //
+    // cy.request({
+    //   url: APP_URL + '/self-service/registration/browser',
+    //   followRedirect: false,
+    //   headers: {
+    //     'Accept': 'application/json'
+    //   },
+    //   qs: query
+    // })
+    cy.request({
+      url: APP_URL + '/self-service/registration/browser',
+      followRedirect: false,
+      headers: {
+        Accept: 'application/json'
+      },
+      qs: query
     })
-
-    console.log('Registration sequence completed: ', { email, password })
+      .then(({ body, status }) => {
+        expect(status).to.eq(200)
+        const form = body.ui
+        return cy.request({
+          method: form.method,
+          body: mergeFields(form, {
+            ...fields,
+            'traits.email': email,
+            password,
+            method: 'password'
+          }),
+          url: form.action,
+          followRedirect: false
+        })
+      })
+      .then(({ body }) => {
+        expect(body.identity.traits.email).to.contain(email)
+      })
   }
 )
 
