@@ -118,7 +118,7 @@ func TestStrategyTraits(t *testing.T) {
 		actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser1,
 			url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}.Encode())
 		assert.EqualValues(t, http.StatusOK, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
+		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(actual), "%s", actual)
 	})
 
 	t.Run("description=should fail to post data if CSRF is invalid/type=spa", func(t *testing.T) {
@@ -184,7 +184,7 @@ func TestStrategyTraits(t *testing.T) {
 	t.Run("description=hydrate the proper fields", func(t *testing.T) {
 		setPrivileged(t)
 
-		var run = func(t *testing.T, id *identity.Identity, payload *kratos.SettingsFlow, route string) {
+		var run = func(t *testing.T, id *identity.Identity, payload *kratos.SelfServiceSettingsFlow, route string) {
 			assert.NotEmpty(t, payload.Identity)
 			assert.Equal(t, id.ID.String(), string(payload.Identity.Id))
 			assert.JSONEq(t, string(id.Traits), x.MustEncodeJSON(t, payload.Identity.Traits))
@@ -343,13 +343,13 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).PublicApi.InitializeSelfServiceSettingsWithoutBrowser(context.Background()).Execute()
+			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).V0alpha1Api.InitializeSelfServiceSettingsFlowWithoutBrowser(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, apiIdentity1, pr, settings.RouteInitAPIFlow)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).PublicApi.InitializeSelfServiceSettingsForBrowsers(context.Background()).Execute()
+			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).V0alpha1Api.InitializeSelfServiceSettingsFlowForBrowsers(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, browserIdentity1, pr, settings.RouteInitBrowserFlow)
 		})
@@ -362,7 +362,7 @@ func TestStrategyTraits(t *testing.T) {
 			rid := res.Request.URL.Query().Get("flow")
 			require.NotEmpty(t, rid)
 
-			pr, res, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+			pr, res, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 			require.NoError(t, err, "%s", rid)
 
 			run(t, browserIdentity1, pr, settings.RouteInitBrowserFlow)
@@ -437,7 +437,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should end up at the login endpoint if trying to update protected field without sudo mode", func(t *testing.T) {
-		var run = func(t *testing.T, config *kratos.SettingsFlow, isAPI bool, c *http.Client) *http.Response {
+		var run = func(t *testing.T, config *kratos.SelfServiceSettingsFlow, isAPI bool, c *http.Client) *http.Response {
 			time.Sleep(time.Millisecond)
 
 			values := testhelpers.SDKFormFieldsToURLValues(config.Ui.Nodes)

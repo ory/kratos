@@ -1,45 +1,61 @@
 {
-  "properties": {
-    "ory.sh/kratos": {
-      "type": "object",
-      "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "allOf": [
+    {
       "properties": {
-        "credentials": {
+        "ory.sh/kratos": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "password": {
+            "credentials": {
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "identifier": {
-                  "type": "string"
+                "password": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "identifier": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "verification": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "via": {
+                  "type": "string",
+                  "enum": [
+                    "email"
+                  ]
+                }
+              }
+            },
+            "recovery": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "via": {
+                  "type": "string",
+                  "enum": [
+                    "email"
+                  ]
                 }
               }
             }
           }
-        },
-        "verification": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "via": {
-              "type": "string",
-              "enum": ["email"]
-            }
-          }
-        },
-        "recovery": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "via": {
-              "type": "string",
-              "enum": ["email"]
-            }
-          }
+        }
+      }
+    },
+    {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#"
         }
       }
     }
-  }
+  ]
 }

@@ -45,7 +45,7 @@ func (m *Manager) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return "", addErr
 	}
 	q := url.Values{}
-	q.Set("error", id.String())
+	q.Set("id", id.String())
 
 	return urlx.CopyWithQuery(m.d.Config(ctx).SelfServiceFlowErrorURL(), q).String(), nil
 }

@@ -7,7 +7,7 @@ context('Mobile Profile', () => {
     })
 
     beforeEach(() => {
-      cy.visit(MOBILE_URL + "/Registration")
+      cy.visit(MOBILE_URL + '/Registration')
     })
 
     it('should sign up and be logged in', () => {

@@ -22,18 +22,20 @@ type SubmitSelfServiceRegistrationFlowWithPasswordMethod struct {
 	// Method to use  This field must be set to `password` when using the password method.
 	Method string `json:"method"`
 	// Password to sign the user up with
-	Password *string `json:"password,omitempty"`
+	Password string `json:"password"`
 	// The identity's traits
-	Traits map[string]interface{} `json:"traits,omitempty"`
+	Traits map[string]interface{} `json:"traits"`
 }
 
 // NewSubmitSelfServiceRegistrationFlowWithPasswordMethod instantiates a new SubmitSelfServiceRegistrationFlowWithPasswordMethod object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitSelfServiceRegistrationFlowWithPasswordMethod(method string) *SubmitSelfServiceRegistrationFlowWithPasswordMethod {
+func NewSubmitSelfServiceRegistrationFlowWithPasswordMethod(method string, password string, traits map[string]interface{}) *SubmitSelfServiceRegistrationFlowWithPasswordMethod {
 	this := SubmitSelfServiceRegistrationFlowWithPasswordMethod{}
 	this.Method = method
+	this.Password = password
+	this.Traits = traits
 	return &this
 }
 
@@ -101,66 +103,50 @@ func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) SetMethod(v string
 	o.Method = v
 }
 
-// GetPassword returns the Password field value if set, zero value otherwise.
+// GetPassword returns the Password field value
 func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) GetPassword() string {
-	if o == nil || o.Password == nil {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Password
+
+	return o.Password
 }
 
-// GetPasswordOk returns a tuple with the Password field value if set, nil otherwise
+// GetPasswordOk returns a tuple with the Password field value
 // and a boolean to check if the value has been set.
 func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) GetPasswordOk() (*string, bool) {
-	if o == nil || o.Password == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Password, true
+	return &o.Password, true
 }
 
-// HasPassword returns a boolean if a field has been set.
-func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) HasPassword() bool {
-	if o != nil && o.Password != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetPassword gets a reference to the given string and assigns it to the Password field.
+// SetPassword sets field value
 func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) SetPassword(v string) {
-	o.Password = &v
+	o.Password = v
 }
 
-// GetTraits returns the Traits field value if set, zero value otherwise.
+// GetTraits returns the Traits field value
 func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) GetTraits() map[string]interface{} {
-	if o == nil || o.Traits == nil {
+	if o == nil {
 		var ret map[string]interface{}
 		return ret
 	}
+
 	return o.Traits
 }
 
-// GetTraitsOk returns a tuple with the Traits field value if set, nil otherwise
+// GetTraitsOk returns a tuple with the Traits field value
 // and a boolean to check if the value has been set.
 func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) GetTraitsOk() (map[string]interface{}, bool) {
-	if o == nil || o.Traits == nil {
+	if o == nil {
 		return nil, false
 	}
 	return o.Traits, true
 }
 
-// HasTraits returns a boolean if a field has been set.
-func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) HasTraits() bool {
-	if o != nil && o.Traits != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetTraits gets a reference to the given map[string]interface{} and assigns it to the Traits field.
+// SetTraits sets field value
 func (o *SubmitSelfServiceRegistrationFlowWithPasswordMethod) SetTraits(v map[string]interface{}) {
 	o.Traits = v
 }
@@ -173,10 +159,10 @@ func (o SubmitSelfServiceRegistrationFlowWithPasswordMethod) MarshalJSON() ([]by
 	if true {
 		toSerialize["method"] = o.Method
 	}
-	if o.Password != nil {
+	if true {
 		toSerialize["password"] = o.Password
 	}
-	if o.Traits != nil {
+	if true {
 		toSerialize["traits"] = o.Traits
 	}
 	return json.Marshal(toSerialize)

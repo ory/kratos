@@ -1,6 +1,7 @@
 package hook
 
 import (
+	_ "embed"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -9,8 +10,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
-	"strings"
 	"testing"
+
+	"github.com/sirupsen/logrus/hooks/test"
+
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -91,47 +95,89 @@ func TestApiKeyInCookieStrategy(t *testing.T) {
 	assert.Equal(t, "my-api-key-value", cookies[0].Value)
 }
 
-func TestJsonNetSupport(t *testing.T) {
-	f := login.Flow{ID: x.NewUUID()}
-	i := identity.NewIdentity("")
+//go:embed stub/test_body.jsonnet
+var testBodyJSONNet []byte
 
-	headers := http.Header{}
-	headers.Add("Some-Header", "Some-Value")
-	headers.Add("Cookie", "c1=v1")
-	headers.Add("Cookie", "c2=v2")
-	data := &templateContext{
-		Flow:           &f,
-		RequestHeaders: headers,
-		RequestMethod:  "POST",
-		RequestUrl:     "https://test.kratos.ory.sh/some-test-path",
-		Identity:       i,
+func TestJsonNetSupport(t *testing.T) {
+	f := &login.Flow{ID: x.NewUUID()}
+	i := identity.NewIdentity("")
+	l := logrusx.New("kratos", "test")
+
+	for _, tc := range []struct {
+		desc, template string
+		data           *templateContext
+	}{
+		{
+			desc:     "simple file URI",
+			template: "file://./stub/test_body.jsonnet",
+			data: &templateContext{
+				Flow: f,
+				RequestHeaders: http.Header{
+					"Cookie":      []string{"c1=v1", "c2=v2"},
+					"Some-Header": []string{"Some-Value"},
+				},
+				RequestMethod: "POST",
+				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
+				Identity:      i,
+			},
+		},
+		{
+			desc:     "legacy filepath without scheme",
+			template: "./stub/test_body.jsonnet",
+			data: &templateContext{
+				Flow: f,
+				RequestHeaders: http.Header{
+					"Cookie":      []string{"c1=v1", "c2=v2"},
+					"Some-Header": []string{"Some-Value"},
+				},
+				RequestMethod: "POST",
+				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
+				Identity:      i,
+			},
+		},
+		{
+			desc:     "base64 encoded template URI",
+			template: "base64://" + base64.StdEncoding.EncodeToString(testBodyJSONNet),
+			data: &templateContext{
+				Flow: f,
+				RequestHeaders: http.Header{
+					"Cookie":           []string{"foo=bar"},
+					"My-Custom-Header": []string{"Cumstom-Value"},
+				},
+				RequestMethod: "PUT",
+				RequestUrl:    "https://test.kratos.ory.sh/other-test-path",
+				Identity:      i,
+			},
+		},
+	} {
+		t.Run("case="+tc.desc, func(t *testing.T) {
+			b, err := createBody(l, tc.template, tc.data)
+			require.NoError(t, err)
+			body, err := io.ReadAll(b)
+			require.NoError(t, err)
+
+			expected, err := json.Marshal(map[string]interface{}{
+				"flow_id":     tc.data.Flow.GetID(),
+				"identity_id": tc.data.Identity.ID,
+				"headers":     tc.data.RequestHeaders,
+				"method":      tc.data.RequestMethod,
+				"url":         tc.data.RequestUrl,
+			})
+			require.NoError(t, err)
+
+			assert.JSONEq(t, string(expected), string(body))
+		})
 	}
 
-	b, err := createBody("./stub/test_body.jsonnet", data)
-	assert.NoError(t, err)
+	t.Run("case=warns about legacy usage", func(t *testing.T) {
+		hook := test.Hook{}
+		l := logrusx.New("kratos", "test", logrusx.WithHook(&hook))
 
-	buf := new(strings.Builder)
-	io.Copy(buf, b)
+		_, _ = createBody(l, "./foo", nil)
 
-	expected := fmt.Sprintf(`
-		{
-			"flow_id": "%s",
-			"identity_id": "%s",
-			"headers": {
-				"Cookie": ["%s", "%s"],
-				"Some-Header": ["%s"]
-			},
-			"method": "%s",
-			"url": "%s"
-		}`,
-		f.ID, i.ID,
-		data.RequestHeaders.Values("Cookie")[0],
-		data.RequestHeaders.Values("Cookie")[1],
-		data.RequestHeaders.Get("Some-Header"),
-		data.RequestMethod,
-		data.RequestUrl)
-
-	assert.JSONEq(t, expected, buf.String())
+		require.Len(t, hook.Entries, 1)
+		assert.Contains(t, hook.LastEntry().Message, "support for filepaths without a 'file://' scheme will be dropped")
+	})
 }
 
 func TestWebHookConfig(t *testing.T) {
@@ -221,7 +267,7 @@ func TestWebHookConfig(t *testing.T) {
 
 			assert.Equal(t, tc.url, conf.url)
 			assert.Equal(t, tc.method, conf.method)
-			assert.Equal(t, tc.body, conf.templatePath)
+			assert.Equal(t, tc.body, conf.templateURI)
 			assert.NotNil(t, conf.auth)
 			assert.IsTypef(t, tc.authStrategy, conf.auth, "Auth should be of the expected type")
 		})
@@ -448,7 +494,8 @@ func TestWebHooks(t *testing.T) {
 								"body": "%s",
 								"auth": %s
 							}`, ts.URL+path, method, "./stub/test_body.jsonnet", auth.createAuthConfig()))
-							wh := NewWebHook(nil, conf)
+
+							wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 							err := tc.callWebHook(wh, req, f, s)
 							if method == "GARBAGE" {
@@ -490,11 +537,8 @@ func TestWebHooks(t *testing.T) {
 			Method:     http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		conf := json.RawMessage(fmt.Sprintf(`{
-					"url": "/foo",
-					"method": "BAR"
-				`)) // closing } is missing
-		wh := NewWebHook(nil, conf)
+		conf := json.RawMessage("not valid json")
+		wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
@@ -513,7 +557,7 @@ func TestWebHooks(t *testing.T) {
 					"method": "%s",
 					"body": "%s"
 				}`, ts.URL+path, "POST", "./stub/bad_template.jsonnet"))
-		wh := NewWebHook(nil, conf)
+		wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
@@ -553,7 +597,7 @@ func TestWebHooks(t *testing.T) {
 					"method": "%s",
 					"body": "%s"
 				}`, ts.URL+path, "POST", "./stub/test_body.jsonnet"))
-			wh := NewWebHook(nil, conf)
+			wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 			err := wh.ExecuteLoginPreHook(nil, req, f)
 			if tc.mustSuccess {

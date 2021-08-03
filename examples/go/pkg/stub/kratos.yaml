@@ -4,11 +4,8 @@ dsn: memory
 
 serve:
   public:
-    base_url: http://127.0.0.1:4433/
     cors:
       enabled: true
-  admin:
-    base_url: http://kratos:4434/
 
 selfservice:
   default_browser_return_url: http://127.0.0.1:4455/

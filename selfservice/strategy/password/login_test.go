@@ -114,7 +114,7 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
 		}
 
-		fakeFlow := &kratos.LoginFlow{
+		fakeFlow := &kratos.SelfServiceLoginFlow{
 			Ui: kratos.UiContainer{
 				Action: publicTS.URL + login.RouteSubmitFlow + "?flow=" + x.NewUUID().String()},
 		}
@@ -130,7 +130,7 @@ func TestCompleteLogin(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, fakeFlow, browserClient, "")
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
-			check(t, gjson.Get(actual, "0").Raw)
+			check(t, actual)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
@@ -200,7 +200,7 @@ func TestCompleteLogin(t *testing.T) {
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
-				json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
+				json.RawMessage(actual), "%s", actual)
 		})
 
 		t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {
@@ -534,6 +534,16 @@ func TestCompleteLogin(t *testing.T) {
 					assert.True(t, gjson.GetBytes(body, "forced").Bool())
 					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password_identifier).attributes.value").String(), "%s", body)
 					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
+				})
+
+				t.Run("show verification confirmation when refresh is set to true", func(t *testing.T) {
+					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
+					require.NoError(t, err)
+					defer res.Body.Close()
+					body := ioutilx.MustReadAll(res.Body)
+
+					assert.True(t, gjson.GetBytes(body, "forced").Bool())
+					assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "verifying that", "%s", body)
 				})
 			})
 		})

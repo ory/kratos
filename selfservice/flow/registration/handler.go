@@ -81,7 +81,13 @@ func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request, ps htt
 	handler(w, r, ps)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {}
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteInitAPIFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteGetFlow, x.RedirectToPublicRoute(h.d))
+	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
+}
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
 	f := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
@@ -106,24 +112,16 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	return f, nil
 }
 
-// swagger:route GET /self-service/registration/api public initializeSelfServiceRegistrationWithoutBrowser
+// swagger:route GET /self-service/registration/api v0alpha1 initializeSelfServiceRegistrationFlowWithoutBrowser
 //
 // Initialize Registration Flow for APIs, Services, Apps, ...
 //
 // This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.
 //
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
-//
 // If a valid provided session cookie or session token is provided, a 400 Bad Request error
 // will be returned unless the URL query parameter `?refresh=true` is set.
 //
 // To fetch an existing registration flow call `/self-service/registration/flows?flow=<flow_id>`.
-//
-// :::warning
 //
 // You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 // Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
@@ -131,14 +129,12 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// :::
-//
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Schemes: http, https
 //
 //     Responses:
-//       200: registrationFlow
+//       200: selfServiceRegistrationFlow
 //       400: jsonError
 //       500: jsonError
 func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -151,7 +147,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, a)
 }
 
-// swagger:route GET /self-service/registration/browser public initializeSelfServiceRegistrationForBrowsers
+// swagger:route GET /self-service/registration/browser v0alpha1 initializeSelfServiceRegistrationFlowForBrowsers
 //
 // Initialize Registration Flow for Browsers
 //
@@ -180,7 +176,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //     - application/json
 //
 //     Responses:
-//       200: registrationFlow
+//       200: selfServiceRegistrationFlow
 //       302: emptyResponse
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -226,15 +222,9 @@ type getSelfServiceRegistrationFlow struct {
 	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/registration/flows public getSelfServiceRegistrationFlow
+// swagger:route GET /self-service/registration/flows v0alpha1 getSelfServiceRegistrationFlow
 //
 // Get Registration Flow
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint returns a registration flow's context with, for example, error details and other information.
 //
@@ -261,7 +251,7 @@ type getSelfServiceRegistrationFlow struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: registrationFlow
+//       200: selfServiceRegistrationFlow
 //       403: jsonError
 //       404: jsonError
 //       410: jsonError
@@ -297,8 +287,8 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 	h.d.Writer().Write(w, r, ar)
 }
 
-// nolint:deadcode,unused
 // swagger:parameters submitSelfServiceRegistrationFlow
+// nolint:deadcode,unused
 type submitSelfServiceRegistrationFlow struct {
 	// The Registration Flow ID
 	//
@@ -313,19 +303,13 @@ type submitSelfServiceRegistrationFlow struct {
 	Body submitSelfServiceRegistrationFlowBody
 }
 
-// swagger:model submitSelfServiceRegistrationFlow
+// swagger:model submitSelfServiceRegistrationFlowBody
 // nolint:deadcode,unused
 type submitSelfServiceRegistrationFlowBody struct{}
 
-// swagger:route POST /self-service/registration public submitSelfServiceRegistrationFlow
+// swagger:route POST /self-service/registration v0alpha1 submitSelfServiceRegistrationFlow
 //
 // Submit a Registration Flow
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
 // behaves differently for API and browser flows.
@@ -357,9 +341,9 @@ type submitSelfServiceRegistrationFlowBody struct{}
 //     - application/json
 //
 //     Responses:
-//       200: registrationViaApiResponse
+//       200: successfulSelfServiceRegistrationWithoutBrowser
 //       302: emptyResponse
-//       400: registrationFlow
+//       400: selfServiceRegistrationFlow
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid, err := flow.GetFlowID(r)
