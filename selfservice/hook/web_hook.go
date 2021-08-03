@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 
@@ -21,8 +22,8 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
-
 	"github.com/ory/x/fetcher"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 )
 
@@ -75,6 +76,7 @@ type (
 	WebHook struct {
 		r webHookDependencies
 		c json.RawMessage
+		h *retryablehttp.Client
 	}
 
 	detailedMessage struct {
@@ -198,7 +200,7 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 }
 
 func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
-	return &WebHook{r: r, c: c}
+	return &WebHook{r: r, c: c, h: httpx.NewResilientClient()}
 }
 
 func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
@@ -297,7 +299,7 @@ func (e *WebHook) execute(data *templateContext) error {
 		}
 	}
 
-	err = doHttpCall(conf.method, conf.url, conf.auth, conf.canInterrupt, body)
+	err = doHttpCall(e.h, conf.method, conf.url, conf.auth, conf.canInterrupt, body)
 	if err != nil {
 		return errors.Wrap(err, "failed to call web hook")
 	}
@@ -343,16 +345,16 @@ func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*
 	}
 }
 
-func doHttpCall(method string, url string, as AuthStrategy, canInterrupt bool, body io.Reader) error {
-	req, err := http.NewRequest(method, url, body)
+func doHttpCall(client *retryablehttp.Client, method string, url string, as AuthStrategy, canInterrupt bool, body io.Reader) error {
+	req, err := retryablehttp.NewRequest(method, url, body)
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	as.apply(req)
+	as.apply(req.Request)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 
 	if err != nil {
 		return err
