@@ -410,7 +410,7 @@ func parseResponse(resp *http.Response) (err error) {
 		validationErr.Add(schema.NewHookValidationError(msg.InstancePtr, msg.Message, messages))
 	}
 
-	if validationErr.Empty() {
+	if validationErr.HasErrors() {
 		return errors.New("error while parsing hook response: got no validation errors")
 	}
 

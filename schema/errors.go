@@ -273,7 +273,7 @@ func (e *ValidationListError) Add(v *ValidationError) {
 	e.Validations = append(e.Validations, v)
 }
 
-func (e ValidationListError) Empty() bool {
+func (e ValidationListError) HasErrors() bool {
 	return len(e.Validations) == 0
 }
 
