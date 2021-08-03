@@ -70,7 +70,6 @@ type (
 		RequestMethod  string                `json:"request_method"`
 		RequestUrl     string                `json:"request_url"`
 		Identity       *identity.Identity    `json:"identity,omitempty"`
-		Credentials    *identity.Credentials `json:"credentials,omitempty"`
 	}
 
 	WebHook struct {
@@ -250,27 +249,23 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 	})
 }
 
-func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity, ct identity.CredentialsType) error {
-	credentials, _ := id.GetCredentials(ct)
+func (e *WebHook) ExecutePostRegistrationPrePersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, id *identity.Identity) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
 		Identity:       id,
-		Credentials:    credentials,
 	})
 }
 
-func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session, ct identity.CredentialsType) error {
-	credentials, _ := session.Identity.GetCredentials(ct)
+func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
 		Identity:       session.Identity,
-		Credentials:    credentials,
 	})
 }
 

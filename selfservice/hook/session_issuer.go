@@ -6,8 +6,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/identity"
-
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/session"
@@ -36,7 +34,7 @@ func NewSessionIssuer(r sessionIssuerDependencies) *SessionIssuer {
 	return &SessionIssuer{r: r}
 }
 
-func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session, _ identity.CredentialsType) error {
+func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
 	s.AuthenticatedAt = time.Now().UTC()
 	if err := e.r.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 		return err
