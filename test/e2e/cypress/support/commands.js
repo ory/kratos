@@ -126,7 +126,9 @@ Cypress.Commands.add('dontLoginUserAfterRegistration', ({} = {}) => {
 })
 Cypress.Commands.add('enableLoginForVerifiedAddressOnly', ({} = {}) => {
   updateConfigFile((config) => {
-    config.selfservice.flows.login['after'] = {password: {hooks: [{hook: 'require_verified_address'}]}}
+    config.selfservice.flows.login['after'] = {
+      password: { hooks: [{ hook: 'require_verified_address' }] }
+    }
     return config
   })
 })

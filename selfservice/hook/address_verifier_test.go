@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAddressVerifier(t *testing.T) {
@@ -21,7 +22,7 @@ func TestAddressVerifier(t *testing.T) {
 		{&login.Flow{Active: identity.CredentialsTypePassword}, false},
 		{&login.Flow{Active: identity.CredentialsTypeOIDC}, true},
 	} {
-		t.Run(tc.flow.Active.String() + " flow", func(t *testing.T) {
+		t.Run(tc.flow.Active.String()+" flow", func(t *testing.T) {
 			for _, uc := range []struct {
 				name                string
 				verifiableAddresses []identity.VerifiableAddress
@@ -30,38 +31,38 @@ func TestAddressVerifier(t *testing.T) {
 				{
 					name: "Single Address Not Verified",
 					verifiableAddresses: []identity.VerifiableAddress{
-						{ ID: uuid.UUID{}, Verified: false },
+						{ID: uuid.UUID{}, Verified: false},
 					},
 					expectError: true,
 				},
 				{
 					name: "Single Address Verified",
 					verifiableAddresses: []identity.VerifiableAddress{
-						{ ID: uuid.UUID{}, Verified: true},
+						{ID: uuid.UUID{}, Verified: true},
 					},
 					expectError: false,
 				},
 				{
 					name: "Multiple Addresses Verified",
 					verifiableAddresses: []identity.VerifiableAddress{
-						{ ID: uuid.UUID{}, Verified: true },
-						{ ID: uuid.UUID{}, Verified: true },
+						{ID: uuid.UUID{}, Verified: true},
+						{ID: uuid.UUID{}, Verified: true},
 					},
 					expectError: false,
 				},
 				{
 					name: "Multiple Addresses Not Verified",
 					verifiableAddresses: []identity.VerifiableAddress{
-						{ ID: uuid.UUID{}, Verified: false },
-						{ ID: uuid.UUID{}, Verified: false },
+						{ID: uuid.UUID{}, Verified: false},
+						{ID: uuid.UUID{}, Verified: false},
 					},
 					expectError: true,
 				},
 				{
 					name: "One Address Verified And One Not",
 					verifiableAddresses: []identity.VerifiableAddress{
-						{ ID: uuid.UUID{}, Verified: true },
-						{ ID: uuid.UUID{}, Verified: false },
+						{ID: uuid.UUID{}, Verified: true},
+						{ID: uuid.UUID{}, Verified: false},
 					},
 					expectError: false,
 				},

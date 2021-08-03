@@ -3,7 +3,7 @@ import {
   assertVerifiableAddress,
   gen,
   parseHtml,
-  verifyHrefPattern,
+  verifyHrefPattern
 } from '../../../../helpers'
 
 context('Verification Profile', () => {
@@ -25,11 +25,10 @@ context('Verification Profile', () => {
       })
 
       it('Is able to login after successful email verification', () => {
-        cy.verifyEmail({expect: {email: identity.email}})
+        cy.performEmailVerification({ expect: { email: identity.email } })
 
-        cy.visit(APP_URL)
+        cy.visit(APP_URL + '/auth/login')
 
-        cy.get("form")
         cy.get('input[name="password_identifier"]').type(identity.email)
         cy.get('input[name="password"]').type(identity.password)
         cy.get('button[value="password"]').click()

@@ -72,7 +72,7 @@ func TestCompleteLogin(t *testing.T) {
 					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
 				},
 			},
-			VerifiableAddresses: []identity.VerifiableAddress {
+			VerifiableAddresses: []identity.VerifiableAddress{
 				{
 					ID:         x.NewUUID(),
 					Value:      identifier,
