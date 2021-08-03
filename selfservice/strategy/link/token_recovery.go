@@ -54,13 +54,14 @@ func (RecoveryToken) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "identity_recovery_tokens")
 }
 
-func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow) *RecoveryToken {
+func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryToken {
+	now := time.Now().UTC()
 	return &RecoveryToken{
 		ID:              x.NewUUID(),
 		Token:           randx.MustString(32, randx.AlphaNum),
 		RecoveryAddress: address,
-		ExpiresAt:       f.ExpiresAt,
-		IssuedAt:        time.Now().UTC(),
+		ExpiresAt:       now.Add(expiresIn),
+		IssuedAt:        now,
 		FlowID:          uuid.NullUUID{UUID: f.ID, Valid: true}}
 }
 

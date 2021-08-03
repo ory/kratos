@@ -1,11 +1,3 @@
 - op: replace
-  path: /components/securitySchemes/oryToken
-  value:
-    type: http
-    scheme: bearer
-
-- op: replace
-  path: /components/securitySchemes/sessionToken
-  value:
-    type: http
-    scheme: bearer
+  path: /components/schemas/genericError/properties/details/additionalProperties
+  value: false

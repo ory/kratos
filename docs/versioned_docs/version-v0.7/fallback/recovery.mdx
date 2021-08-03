@@ -1,0 +1,19 @@
+---
+id: recovery
+title: This should be the Recovery UI
+---
+
+You ended up here because you did not set the following configuration value:
+
+```yaml title="path/to/kratos/config.yml
+selfservice:
+  flows:
+    recovery:
+      ui_url: http://my-app.com/recovery
+```
+
+You can set this configuration value using environment variable
+`SELFSERVICE_FLOWS_RECOVERY_UI_URL` as well!
+
+If you don't know what that means, head over to our
+[User Verification](../self-service/flows/account-recovery)!

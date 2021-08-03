@@ -94,7 +94,19 @@ Cypress.Commands.add('longVerificationLifespan', ({} = {}) => {
 })
 Cypress.Commands.add('shortVerificationLifespan', ({} = {}) => {
   updateConfigFile((config) => {
-    config.selfservice.flows.verification.lifespan = '4s'
+    config.selfservice.flows.verification.lifespan = '1ms'
+    return config
+  })
+})
+Cypress.Commands.add('shortLinkLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.link.config.lifespan = '1ms'
+    return config
+  })
+})
+Cypress.Commands.add('longLinkLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.methods.link.config.lifespan = '1m'
     return config
   })
 })
@@ -121,7 +133,7 @@ Cypress.Commands.add('enableLoginForVerifiedAddressOnly', ({} = {}) => {
 
 Cypress.Commands.add('shortRecoveryLifespan', ({} = {}) => {
   updateConfigFile((config) => {
-    config.selfservice.flows.recovery.lifespan = '4s'
+    config.selfservice.flows.recovery.lifespan = '1ms'
     return config
   })
 })
@@ -307,7 +319,11 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
       })
     })
     .then(({ status }) => {
-      console.log('Login sequence completed: ', { email, password })
+      console.log('Login sequence completed: ', {
+        email,
+        password,
+        expectSession
+      })
       if (expectSession) {
         expect(status).to.eq(200)
         return cy.session()
@@ -462,7 +478,6 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
-      cy.longRecoveryLifespan()
       cy.visit(link.href)
     })
 )
@@ -500,7 +515,6 @@ Cypress.Commands.add(
         // specified in base...
       })
 
-      cy.longVerificationLifespan()
       cy.visit(link.href)
       cy.location('pathname').should('include', 'verify')
       cy.location('search').should('not.be.empty', 'request')

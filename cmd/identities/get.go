@@ -32,7 +32,7 @@ func NewGetCmd() *cobra.Command {
 			identities := make([]kratos.Identity, 0, len(args))
 			failed := make(map[string]error)
 			for _, id := range args {
-				identity, _, err := c.AdminApi.GetIdentity(cmd.Context(), id).Execute()
+				identity, _, err := c.V0alpha1Api.AdminGetIdentity(cmd.Context(), id).Execute()
 				if x.SDKError(err) != nil {
 					failed[id] = err
 					continue

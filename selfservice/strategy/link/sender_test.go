@@ -3,6 +3,7 @@ package link_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -31,14 +32,16 @@ func TestManager(t *testing.T) {
 	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
+	hr := httptest.NewRequest("GET", "https://www.ory.sh", nil)
+
 	t.Run("method=SendRecoveryLink", func(t *testing.T) {
 		f, err := recovery.NewFlow(conf, time.Hour, "", u, reg.RecoveryStrategies(context.Background()), flow.TypeBrowser)
 		require.NoError(t, err)
 
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 
-		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), nil, f, "email", "tracked@ory.sh"))
-		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), nil, f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
+		require.NoError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "tracked@ory.sh"))
+		require.EqualError(t, reg.LinkSender().SendRecoveryLink(context.Background(), hr, f, "email", "not-tracked@ory.sh"), link.ErrUnknownAddress.Error())
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)

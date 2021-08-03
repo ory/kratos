@@ -9,7 +9,7 @@ context('OIDC Profile', () => {
     const email = gen.email()
 
     before(() => {
-      cy.registerOidc({email, website})
+      cy.registerOidc({ email, website })
     })
 
     beforeEach(() => {

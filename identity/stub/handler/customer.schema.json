@@ -20,10 +20,10 @@
               }
             },
             "verification": {
-              "email": true
+              "via": "email"
             },
             "recovery": {
-              "email": true
+              "via": "email"
             }
           }
         }

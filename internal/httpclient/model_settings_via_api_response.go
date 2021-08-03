@@ -17,15 +17,15 @@ import (
 
 // SettingsViaApiResponse The Response for Settings Flows via API
 type SettingsViaApiResponse struct {
-	Flow     SettingsFlow `json:"flow"`
-	Identity Identity     `json:"identity"`
+	Flow     SelfServiceSettingsFlow `json:"flow"`
+	Identity Identity                `json:"identity"`
 }
 
 // NewSettingsViaApiResponse instantiates a new SettingsViaApiResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSettingsViaApiResponse(flow SettingsFlow, identity Identity) *SettingsViaApiResponse {
+func NewSettingsViaApiResponse(flow SelfServiceSettingsFlow, identity Identity) *SettingsViaApiResponse {
 	this := SettingsViaApiResponse{}
 	this.Flow = flow
 	this.Identity = identity
@@ -41,9 +41,9 @@ func NewSettingsViaApiResponseWithDefaults() *SettingsViaApiResponse {
 }
 
 // GetFlow returns the Flow field value
-func (o *SettingsViaApiResponse) GetFlow() SettingsFlow {
+func (o *SettingsViaApiResponse) GetFlow() SelfServiceSettingsFlow {
 	if o == nil {
-		var ret SettingsFlow
+		var ret SelfServiceSettingsFlow
 		return ret
 	}
 
@@ -52,7 +52,7 @@ func (o *SettingsViaApiResponse) GetFlow() SettingsFlow {
 
 // GetFlowOk returns a tuple with the Flow field value
 // and a boolean to check if the value has been set.
-func (o *SettingsViaApiResponse) GetFlowOk() (*SettingsFlow, bool) {
+func (o *SettingsViaApiResponse) GetFlowOk() (*SelfServiceSettingsFlow, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -60,7 +60,7 @@ func (o *SettingsViaApiResponse) GetFlowOk() (*SettingsFlow, bool) {
 }
 
 // SetFlow sets field value
-func (o *SettingsViaApiResponse) SetFlow(v SettingsFlow) {
+func (o *SettingsViaApiResponse) SetFlow(v SelfServiceSettingsFlow) {
 	o.Flow = v
 }
 

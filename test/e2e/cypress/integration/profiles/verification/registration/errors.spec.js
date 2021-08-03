@@ -3,19 +3,21 @@ import {
   assertVerifiableAddress,
   gen,
   parseHtml,
-  verifyHrefPattern,
+  verifyHrefPattern
 } from '../../../../helpers'
 
 context('Verification Profile', () => {
   describe('Registration', () => {
     before(() => {
-      //cy.useConfigProfile('verification')
+      cy.useConfigProfile('verification')
     })
 
     describe('error flow', () => {
       let identity
       beforeEach(() => {
-        cy.shortVerificationLifespan()
+        cy.shortLinkLifespan()
+        cy.longVerificationLifespan()
+
         cy.visit(APP_URL + '/')
         cy.deleteMail()
 
@@ -25,8 +27,9 @@ context('Verification Profile', () => {
       })
 
       it('is unable to verify the email address if the code is no longer valid and resend the code', () => {
-        cy.wait(4000)
         cy.verifyEmailButExpired({ expect: { email: identity.email } })
+
+        cy.longLinkLifespan()
 
         cy.get('input[name="email"]').should('be.empty')
         cy.get('input[name="email"]').type(identity.email)
@@ -35,8 +38,6 @@ context('Verification Profile', () => {
           'contain.text',
           'An email containing a verification'
         )
-
-        cy.longVerificationLifespan()
         cy.verifyEmail({ expect: { email: identity.email } })
       })
 
@@ -49,7 +50,10 @@ context('Verification Profile', () => {
 
           cy.visit(link.href + '-not') // add random stuff to the confirm challenge
           cy.session().then(
-            assertVerifiableAddress({isVerified: false, email: identity.email})
+            assertVerifiableAddress({
+              isVerified: false,
+              email: identity.email
+            })
           )
         })
       })

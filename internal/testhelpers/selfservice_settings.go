@@ -41,7 +41,7 @@ func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 	return ts
 }
 
-func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.SettingsFlow {
+func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.SelfServiceSettingsFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	req, err := http.NewRequest("GET", ts.URL+settings.RouteInitBrowserFlow, nil)
@@ -63,7 +63,7 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.PublicApi.GetSelfServiceSettingsFlow(context.Background()).
+	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).
 		Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
@@ -71,10 +71,10 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 	return rs
 }
 
-func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SettingsFlow {
+func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceSettingsFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.PublicApi.InitializeSelfServiceSettingsWithoutBrowser(context.Background()).Execute()
+	rs, _, err := publicClient.V0alpha1Api.InitializeSelfServiceSettingsFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -153,7 +153,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 
 		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-		res, _, err := publicClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
+		res, _, err := publicClient.V0alpha1Api.GetSelfServiceLoginFlow(context.Background()).Id(r.URL.Query().Get("flow")).Execute()
 
 		require.NoError(t, err)
 		require.NotEmpty(t, res.RequestUrl)
@@ -222,7 +222,7 @@ func SettingsMakeRequest(
 	t *testing.T,
 	isAPI bool,
 	isSPA bool,
-	f *kratos.SettingsFlow,
+	f *kratos.SelfServiceSettingsFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -260,7 +260,7 @@ func SubmitSettingsForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var payload *kratos.SettingsFlow
+	var payload *kratos.SelfServiceSettingsFlow
 	if isAPI {
 		payload = InitializeSettingsFlowViaAPI(t, hc, publicTS)
 	} else {
