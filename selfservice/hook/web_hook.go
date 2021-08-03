@@ -375,22 +375,12 @@ func parseResponse(resp *http.Response) (err error) {
 		return fmt.Errorf("empty response provided from the webhook")
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return errors.Wrap(err, "could not read response body")
-	}
-	defer func(Body io.ReadCloser) {
-		if closeErr := Body.Close(); closeErr != nil {
-			err = closeErr
-		}
-	}(resp.Body)
-
 	hookResponse := &rawHookResponse{
 		Messages: []errorMessage{},
 	}
 
-	if err = json.Unmarshal(body, &hookResponse); err != nil {
-		return errors.Wrap(err, "hook response could not be unmarshalled properly")
+	if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
+		return errors.Wrap(err, "hook response could not be unmarshalled properly from JSON")
 	}
 
 	validationErr := schema.NewValidationListError()
