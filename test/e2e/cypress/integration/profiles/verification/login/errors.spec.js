@@ -1,7 +1,4 @@
-import {
-  APP_URL,
-  gen,
-} from '../../../../helpers'
+import { APP_URL, gen } from '../../../../helpers'
 
 context('Verification Profile', () => {
   describe('Login', () => {
