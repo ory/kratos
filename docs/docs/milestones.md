@@ -65,8 +65,6 @@ Something is not working.
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [ ] Recovery link doesn't log out existing users
       ([kratos#1077](https://github.com/ory/kratos/issues/1077))
-- [ ] recovery link is open by email app
-      ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 - [ ] Email verification link is automatically opened by mail provider
       ([kratos#1202](https://github.com/ory/kratos/issues/1202))
 - [ ] Relative path in ui_url or default_browser_return_url cause runtime crash
@@ -76,6 +74,8 @@ Something is not working.
 - [ ] Auto-Login on Registration flow does not return `session`, only `identity`
       for SPA requests
       ([kratos#1604](https://github.com/ory/kratos/issues/1604))
+- [x] recovery link is open by email app
+      ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -140,6 +140,8 @@ New feature or request.
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [ ] Field validation answer status code 422 instead of 400
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
+- [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
+      ([kratos#1589](https://github.com/ory/kratos/issues/1589))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
