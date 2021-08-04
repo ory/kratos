@@ -173,3 +173,13 @@ func NewNoVerificationStrategyResponsible() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationVerificationNoStrategyFound()),
 	})
 }
+
+func NewAddressNotVerifiedError() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `account address not yet verified`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationAddressNotVerified()),
+	})
+}

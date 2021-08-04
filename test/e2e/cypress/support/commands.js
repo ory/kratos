@@ -61,12 +61,7 @@ const updateConfigFile = (cb) => {
   cy.wait(100)
 }
 
-let previousProfile = ''
 Cypress.Commands.add('useConfigProfile', (profile) => {
-  if (profile === previousProfile) {
-    return
-  }
-
   cy.readFile(`test/e2e/kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
@@ -113,6 +108,15 @@ Cypress.Commands.add('longLinkLifespan', ({} = {}) => {
 Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.lifespan = '1m'
+    return config
+  })
+})
+
+Cypress.Commands.add('enableLoginForVerifiedAddressOnly', () => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.login['after'] = {
+      password: { hooks: [{ hook: 'require_verified_address' }] }
+    }
     return config
   })
 })
