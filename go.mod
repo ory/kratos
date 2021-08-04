@@ -48,8 +48,8 @@ require (
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/go-jsonnet v0.17.0
 	github.com/google/uuid v1.2.0
-	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/gorilla/sessions v1.2.1
+	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/hashicorp/consul/api v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.6.8
 	github.com/hashicorp/golang-lru v0.5.4
