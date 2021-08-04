@@ -352,12 +352,12 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	cat, err := s.d.Crypt().Encrypt(r.Context(), token.AccessToken)
+	cat, err := s.d.Cipher().Encrypt(r.Context(), token.AccessToken)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	crt, err := s.d.Crypt().Encrypt(r.Context(), token.RefreshToken)
+	crt, err := s.d.Cipher().Encrypt(r.Context(), token.RefreshToken)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}

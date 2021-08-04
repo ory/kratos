@@ -16,8 +16,8 @@ import (
 
 	"github.com/gobuffalo/pop/v5"
 
+	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/crypt"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -91,7 +91,7 @@ type RegistryDefault struct {
 	passwordHasher    hash.Hasher
 	passwordValidator password2.Validator
 
-	crypter crypt.Crypt
+	crypter cipher.Cipher
 
 	errorHandler *errorx.Handler
 	errorManager *errorx.Manager
@@ -362,9 +362,9 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 	return m.sessionHandler
 }
 
-func (m *RegistryDefault) Crypt() crypt.Crypt {
+func (m *RegistryDefault) Cipher() cipher.Cipher {
 	if m.crypter == nil {
-		m.crypter = crypt.NewCryptAES(m)
+		m.crypter = cipher.NewCryptAES(m)
 	}
 	return m.crypter
 }

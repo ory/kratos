@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/crypt"
+	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/herodot"
 
@@ -39,7 +39,7 @@ type (
 	Handler struct {
 		r handlerDependencies
 
-		crypter crypt.Crypt
+		crypter cipher.Cipher
 	}
 )
 
@@ -188,7 +188,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 			h.r.Writer().WriteErrorCode(w, r, http.StatusNotFound, errors.WithStack(errors.New("identifier does not exist in this identity")))
 			return
 		}
-		cr := h.Crypt()
+		cr := h.Cipher()
 		accessToken, err := cr.Decrypt(r.Context(), cred.Providers[0].EncryptedAccessToken)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, errors.WithStack(err))
@@ -419,9 +419,9 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *Handler) Crypt() crypt.Crypt {
+func (h *Handler) Cipher() cipher.Cipher {
 	if h.crypter == nil {
-		h.crypter = crypt.NewCryptAES(h)
+		h.crypter = cipher.NewCryptAES(h)
 	}
 	return h.crypter
 }
