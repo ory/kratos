@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/ory/herodot"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/identity"
@@ -26,26 +27,25 @@ func TestAddressVerifier(t *testing.T) {
 			for _, uc := range []struct {
 				name                string
 				verifiableAddresses []identity.VerifiableAddress
-				expectError         bool
+				expectedError       error
 			}{
 				{
 					name:                "No Verification Address",
 					verifiableAddresses: []identity.VerifiableAddress{},
-					expectError:         true,
+					expectedError:       herodot.ErrInternalServerError.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."),
 				},
 				{
 					name: "Single Address Not Verified",
 					verifiableAddresses: []identity.VerifiableAddress{
 						{ID: uuid.UUID{}, Verified: false},
 					},
-					expectError: true,
+					expectedError: login.ErrAddressNotVerified,
 				},
 				{
 					name: "Single Address Verified",
 					verifiableAddresses: []identity.VerifiableAddress{
 						{ID: uuid.UUID{}, Verified: true},
 					},
-					expectError: false,
 				},
 				{
 					name: "Multiple Addresses Verified",
@@ -53,7 +53,6 @@ func TestAddressVerifier(t *testing.T) {
 						{ID: uuid.UUID{}, Verified: true},
 						{ID: uuid.UUID{}, Verified: true},
 					},
-					expectError: false,
 				},
 				{
 					name: "Multiple Addresses Not Verified",
@@ -61,7 +60,7 @@ func TestAddressVerifier(t *testing.T) {
 						{ID: uuid.UUID{}, Verified: false},
 						{ID: uuid.UUID{}, Verified: false},
 					},
-					expectError: true,
+					expectedError: login.ErrAddressNotVerified,
 				},
 				{
 					name: "One Address Verified And One Not",
@@ -69,7 +68,6 @@ func TestAddressVerifier(t *testing.T) {
 						{ID: uuid.UUID{}, Verified: true},
 						{ID: uuid.UUID{}, Verified: false},
 					},
-					expectError: false,
 				},
 			} {
 				t.Run(uc.name, func(t *testing.T) {
@@ -80,10 +78,10 @@ func TestAddressVerifier(t *testing.T) {
 
 					err := verifier.ExecuteLoginPostHook(nil, nil, tc.flow, sessions)
 
-					if tc.neverError || !uc.expectError {
+					if tc.neverError || uc.expectedError == nil {
 						assert.NoError(t, err)
 					} else {
-						assert.ErrorIs(t, err, login.ErrAddressNotVerified)
+						assert.ErrorIs(t, err, uc.expectedError)
 					}
 				})
 			}
