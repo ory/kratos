@@ -1,9 +1,9 @@
-package crypt
+package cipher
 
 import "context"
 
-// Crypt provides methods for encrypt and decrypt string
-type Crypt interface {
+// Cipher provides methods for encrypt and decrypt string
+type Cipher interface {
 	// Encrypt return a encrypted string from the clearString or an error if the encryption method failed.
 	Encrypt(ctx context.Context, clearString string) ([]byte, error)
 
@@ -11,6 +11,6 @@ type Crypt interface {
 	Decrypt(ctx context.Context, encryptedString []byte) (string, error)
 }
 
-type CryptProvider interface {
-	Crypt() Crypt
+type Provider interface {
+	Cipher() Cipher
 }

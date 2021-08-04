@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ory/kratos/crypt"
+	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/kratos/text"
 
@@ -89,7 +89,7 @@ type dependencies interface {
 
 	continuity.ManagementProvider
 
-	crypt.CryptProvider
+	cipher.Provider
 }
 
 func isForced(req interface{}) bool {

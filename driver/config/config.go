@@ -15,8 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gtank/cryptopasta"
-
 	"github.com/ory/x/tlsx"
 
 	"github.com/google/uuid"
@@ -548,9 +546,6 @@ func (p *Config) SecretsSession() [][]byte {
 
 func (p *Config) SecretsAES() [][32]byte {
 	secrets := p.p.Strings(ViperKeySecretsAES)
-	if len(secrets) == 0 {
-		return [][32]byte{*cryptopasta.NewEncryptionKey()}
-	}
 	result := make([][32]byte, len(secrets))
 	for n, s := range secrets {
 		if len(s) != 32 {

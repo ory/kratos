@@ -1644,9 +1644,13 @@
           "items": {
             "type": "string",
             "length": 32
-          }
+          },
+          "minItems": 1
         }
       },
+      "required": [
+        "aes"
+      ],
       "additionalProperties": false
     },
     "hashers": {
@@ -1926,7 +1930,8 @@
   "required": [
     "identity",
     "dsn",
-    "selfservice"
+    "selfservice",
+    "secrets"
   ],
   "additionalProperties": false
 }

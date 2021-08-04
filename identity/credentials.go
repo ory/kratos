@@ -41,7 +41,7 @@ type Credentials struct {
 	Identifiers []string `json:"identifiers" db:"-"`
 
 	// Config contains the concrete credential payload. This might contain the bcrypt-hashed password, the email
-	// for passwordless authentication or access_token and refresh token.
+	// for passwordless authentication or access_token and refresh tokens from OpenID Connect flows.
 	Config sqlxx.JSONRawMessage `json:"config,omitempty" db:"config"`
 
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
