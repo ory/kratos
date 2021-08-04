@@ -44,7 +44,10 @@ func NewHandler(
 }
 
 const (
-	RouteWhoami = "/sessions/whoami"
+	RouteCollection = "/sessions"
+	RouteWhoami     = RouteCollection + "/whoami"
+	RouteIdentity   = RouteCollection + "/identity"
+	RouteLogout     = RouteIdentity + "/:id"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -53,16 +56,20 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 		// Redirect to public endpoint
 		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
 	}
+
+	admin.DELETE(RouteLogout, h.logout)
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	// We need to completely ignore the whoami path so that we do not accidentally set
+	// We need to completely ignore the whoami/logout path so that we do not accidentally set
 	// some cookie.
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
+	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
+		public.Handle(m, RouteLogout, x.RedirectToAdminRoute(h.r))
 	}
 }
 
@@ -151,6 +158,42 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
 	h.r.Writer().Write(w, r, s)
+}
+
+// swagger:parameters adminLogoutIdentity
+// nolint:deadcode,unused
+type adminLogoutIdentity struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route DELETE /sessions/identity/{id} v0alpha1 adminLogoutIdentity
+//
+// Calling this endpoint irrecoverably and permanently Invalidates all sessions tha belongs to a given Identity.
+//
+// This endpoint is useful for:
+//
+// - To forcefully logout Identity from all devices and sessions
+//
+//     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
+//
+//     Responses:
+//       202: emptyResponse
+//       401: jsonError
+//       500: jsonError
+func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {
