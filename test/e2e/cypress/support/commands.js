@@ -61,12 +61,7 @@ const updateConfigFile = (cb) => {
   cy.wait(100)
 }
 
-let previousProfile = ''
 Cypress.Commands.add('useConfigProfile', (profile) => {
-  if (profile === previousProfile) {
-    return
-  }
-
   cy.readFile(`test/e2e/kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
