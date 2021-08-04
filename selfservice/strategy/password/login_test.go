@@ -680,11 +680,11 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, expectValidationError(t, false, false, values))
+			check(t, expectValidationError(t, false, false, false, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, expectValidationError(t, true, false, values))
+			check(t, expectValidationError(t, true, false, false, values))
 		})
 
 	})
