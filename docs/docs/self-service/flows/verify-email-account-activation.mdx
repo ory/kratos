@@ -112,6 +112,13 @@ Gateways, or make Ory Kratos prevent signing into accounts without verified
 addresses. Latter is possible by the usage of `require_verified_address` hook
 (See [Hooks](../hooks.mdx) for more details).
 
+Please be aware, that since `require_verified_address` hook is enforcing a
+verified address before the user can login, a typo in an email address done by
+the user either during the registration or as part of a self service flow (email
+change) will make the login for that user impossible. So you should think about
+measures to prevent such situations, like requiring two email addresses being
+configured by the user, thus having a backup if something goes wrong.
+
 ## Verification Methods
 
 Currently, Ory Kratos only supports one verification method:
