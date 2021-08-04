@@ -3,6 +3,7 @@ package link_test
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,6 +11,8 @@ import (
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/ui/node"
@@ -30,6 +33,12 @@ import (
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlxx"
 )
+
+//go:embed fixtures/verification_init.json
+var verificationInitFixture []byte
+
+//go:embed fixtures/verification_submit.json
+var verificationSubmitFixture []byte
 
 func TestVerification(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -77,55 +86,18 @@ func TestVerification(t *testing.T) {
 		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
+	t.Run("description=should set all the correct verification payloads after submission", func(t *testing.T) {
+		body := expectSuccess(t, nil, false, false, func(v url.Values) {
+			v.Set("email", "test@ory.sh")
+		})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), json.RawMessage(verificationSubmitFixture), []string{"0.attributes.value"})
+	})
+
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(`[
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "required": true,
-      "type": "hidden",
-      "value": ""
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "email",
-      "required": true,
-      "type": "email"
-    },
-    "group": "link",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "method",
-      "type": "submit",
-      "value": "link"
-    },
-    "group": "link",
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1070005,
-        "text": "Submit",
-        "type": "info"
-      }
-    },
-    "type": "input"
-  }
-]`), rs.Ui.Nodes, []string{"0.attributes.value"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(verificationInitFixture), rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
@@ -343,6 +315,36 @@ func TestVerification(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			check(t, expectSuccess(t, nil, true, false, values))
 		})
+	})
+
+	t.Run("description=should verify an email address when the link is opened in another browser", func(t *testing.T) {
+		var check = func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")
+			verificationLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			cl := testhelpers.NewClientWithCookies(t)
+			res, err := cl.Get(verificationLink)
+			require.NoError(t, err)
+			body := string(ioutilx.MustReadAll(res.Body))
+			require.NoError(t, res.Body.Close())
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 1)
+			assert.Contains(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL))[0].Name, x.CSRFTokenName)
+
+			actualRes, err := cl.Get(public.URL + verification.RouteGetFlow + "?id=" + gjson.Get(body, "id").String())
+			require.NoError(t, err)
+			actualBody := string(ioutilx.MustReadAll(actualRes.Body))
+			require.NoError(t, actualRes.Body.Close())
+			assert.Equal(t, http.StatusOK, actualRes.StatusCode)
+
+			assertx.EqualAsJSON(t, body, actualBody)
+			assert.EqualValues(t, "passed_challenge", gjson.Get(actualBody, "state").String())
+		}
+
+		var values = func(v url.Values) {
+			v.Set("email", verificationEmail)
+		}
+
+		check(t, expectSuccess(t, nil, false, false, values))
 	})
 
 	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {

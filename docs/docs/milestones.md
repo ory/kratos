@@ -3,6 +3,42 @@ id: milestones
 title: Milestones and Roadmap
 ---
 
+## [v0.7.x](https://github.com/ory/kratos/milestone/12)
+
+_This milestone does not have a description._
+
+### [Bug](https://github.com/ory/kratos/labels/bug)
+
+Something is not working.
+
+#### Issues
+
+- [x] Submitting successful link verification again ends up with JSON response
+      ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Opening verification link in another browser causes GET request to fail
+      due to CSRF issue
+      ([kratos#1547](https://github.com/ory/kratos/issues/1547)) -
+      [@hackerman](https://github.com/aeneasr)
+
+#### Pull Requests
+
+- [x] fix(sdk): use proper annotation for genericError
+      ([kratos#1611](https://github.com/ory/kratos/pull/1611)) -
+      [@hackerman](https://github.com/aeneasr)
+
+### [Docs](https://github.com/ory/kratos/labels/docs)
+
+Affects documentation.
+
+#### Issues
+
+- [ ] Different payload for stub:500
+      ([kratos#1568](https://github.com/ory/kratos/issues/1568))
+- [x] Update CSRF pitfall section for admin endpoints
+      ([kratos#1557](https://github.com/ory/kratos/issues/1557)) -
+      [@hackerman](https://github.com/aeneasr)
+
 ## [v0.9.0-alpha.1](https://github.com/ory/kratos/milestone/11)
 
 _This milestone does not have a description._
@@ -29,14 +65,17 @@ Something is not working.
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [ ] Recovery link doesn't log out existing users
       ([kratos#1077](https://github.com/ory/kratos/issues/1077))
-- [ ] recovery link is open by email app
-      ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 - [ ] Email verification link is automatically opened by mail provider
       ([kratos#1202](https://github.com/ory/kratos/issues/1202))
 - [ ] Relative path in ui_url or default_browser_return_url cause runtime crash
       ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [ ] /schemas/default does not work with base64 identity schemas
       ([kratos#1529](https://github.com/ory/kratos/issues/1529))
+- [ ] Auto-Login on Registration flow does not return `session`, only `identity`
+      for SPA requests
+      ([kratos#1604](https://github.com/ory/kratos/issues/1604))
+- [x] recovery link is open by email app
+      ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -78,7 +117,8 @@ New feature or request.
       ([kratos#683](https://github.com/ory/kratos/issues/683)) -
       [@hackerman](https://github.com/aeneasr)
 - [ ] Validate identity schema on load
-      ([kratos#701](https://github.com/ory/kratos/issues/701))
+      ([kratos#701](https://github.com/ory/kratos/issues/701)) -
+      [@Alano Terblanche](https://github.com/Benehiko)
 - [ ] Support OAuth2 and OpenID Connect in API-based flows
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
@@ -98,6 +138,10 @@ New feature or request.
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [ ] Write new recovery and verification strategy that does not rely on links
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
+- [ ] Field validation answer status code 422 instead of 400
+      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
+- [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
+      ([kratos#1589](https://github.com/ory/kratos/issues/1589))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -124,6 +168,8 @@ A request for comments to discuss and share ideas.
       [@hackerman](https://github.com/aeneasr)
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
+- [ ] Field validation answer status code 422 instead of 400
+      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
 
@@ -155,6 +201,12 @@ New feature or request.
 
 #### Issues
 
+- [ ] Add `return_to` to self-service SDK methods including logout
+      ([kratos#1605](https://github.com/ory/kratos/issues/1605)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Deprecate webhook loader without URI scheme
+      ([kratos#1610](https://github.com/ory/kratos/issues/1610)) -
+      [@Patrik](https://github.com/zepatrik)
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
@@ -174,4 +226,7 @@ Affects documentation.
       [@hackerman](https://github.com/aeneasr)
 - [x] Include changelog in docs navigation
       ([kratos#1443](https://github.com/ory/kratos/issues/1443)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Config reference has not been updated since 0.5.0
+      ([kratos#1597](https://github.com/ory/kratos/issues/1597)) -
       [@hackerman](https://github.com/aeneasr)

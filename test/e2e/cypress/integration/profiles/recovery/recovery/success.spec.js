@@ -35,6 +35,10 @@ context('Recovery Profile', () => {
         )
         cy.get('input[name="email"]').should('have.value', identity.email)
 
+        cy.get('button[type="submit"][name="method"][value="link"]').should(
+          'exist'
+        )
+
         cy.recoverEmail({ expect: identity })
 
         cy.session()

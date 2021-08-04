@@ -1,7 +1,9 @@
 package x
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"net/http"
 
 	"github.com/ory/kratos/driver/config"
@@ -122,7 +124,7 @@ type CSRFHandler interface {
 func CSRFCookieName(reg interface {
 	config.Provider
 }, r *http.Request) string {
-	return base64.RawURLEncoding.EncodeToString([]byte(reg.Config(r.Context()).SelfPublicURL(r).String())) + "_csrf_token"
+	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(reg.Config(r.Context()).SelfPublicURL(r).String())))
 }
 
 func NosurfBaseCookieHandler(reg interface {

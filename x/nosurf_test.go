@@ -28,7 +28,7 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
 
 	cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
-	assert.EqualValues(t, "aHR0cDovL2Zvby5jb20vYmFy_csrf_token", cookie.Name, "base64 representation of http://foo.com/bar")
+	assert.EqualValues(t, "csrf_token_01c86631efd1537ee34a98e75884a6e21dd8e2d9e944934bca21204106bfd32f", cookie.Name, "base64 representation of http://foo.com/bar")
 	assert.EqualValues(t, http.SameSiteLaxMode, cookie.SameSite, "is set to lax because https/secure is false - chrome rejects none samesite on non-https")
 	assert.EqualValues(t, nosurf.MaxAge, cookie.MaxAge)
 	assert.EqualValues(t, "/", cookie.Path, "cookie path is site root by default")
@@ -36,15 +36,13 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 	assert.False(t, cookie.Secure, "false because insecure dev mode")
 	assert.True(t, cookie.HttpOnly)
 
+	alNum := regexp.MustCompile("[a-zA-Z_0-9]+")
 	for i := 0; i < 10; i++ {
 		require.NoError(t, conf.Source().Set(config.ViperKeyPublicBaseURL, randx.MustString(16, randx.AlphaNum)))
 		cookie := x.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
 
 		assert.NotEqual(t, "aHR0cDovL2Zvby5jb20vYmFy_csrf_token", cookie.Name, "should no longer be http://foo.com/bar")
-
-		matches, err := regexp.MatchString("[a-zA-Z_0-9]+", cookie.Name)
-		require.NoError(t, err)
-		assert.True(t, matches, "does not have any special chars")
+		assert.True(t, alNum.MatchString(cookie.Name), "does not have any special chars")
 	}
 
 	require.NoError(t, conf.Set(config.ViperKeyCookieSameSite, "None"))

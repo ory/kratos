@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/ory/x/tlsx"
 
@@ -79,54 +80,47 @@ func StartE2EServer(t *testing.T, configFile string, configOptions ConfigOptions
 func CheckE2EServerOnHTTP(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
 	publicUrl = fmt.Sprintf("http://127.0.0.1:%d", publicPort)
 	adminUrl = fmt.Sprintf("http://127.0.0.1:%d", adminPort)
-
-	require.NoError(t, retry.Do(func() error {
-		res, err := http.Get(publicUrl + "/health/ready")
-		if err != nil {
-			return err
-		}
-		defer res.Body.Close()
-		body := x.MustReadAll(res.Body)
-		if res.StatusCode != http.StatusOK {
-			t.Logf("%s", body)
-			return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
-		}
-		return nil
-	}))
-
+	waitToComeAlive(t, publicUrl, adminUrl)
 	return
 }
 
-func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
-	publicUrl = fmt.Sprintf("https://127.0.0.1:%d", publicPort)
-	adminUrl = fmt.Sprintf("https://127.0.0.1:%d", adminPort)
-
+func waitToComeAlive(t *testing.T, publicUrl, adminUrl string) {
 	require.NoError(t, retry.Do(func() error {
 		/* #nosec G402: TLS InsecureSkipVerify set true. */
 		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		client := &http.Client{Transport: tr}
 
-		for _, url := range []string{publicUrl + "/health/ready", adminUrl + "/health/ready"} {
+		for _, url := range []string{
+			publicUrl + "/health/ready",
+			adminUrl + "/health/ready",
+			publicUrl + "/health/alive",
+			adminUrl + "/health/alive",
+		} {
 			res, err := client.Get(url)
 			if err != nil {
 				return err
 			}
 
 			body := x.MustReadAll(res.Body)
-
-			err = res.Body.Close()
-			if err != nil {
+			if err := res.Body.Close(); err != nil {
 				return err
 			}
+			t.Logf("%s", body)
 
 			if res.StatusCode != http.StatusOK {
-				t.Logf("%s", body)
 				return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
 			}
 		}
 		return nil
-	}))
+	}),
+		retry.MaxDelay(time.Second),
+		retry.Attempts(60))
+}
 
+func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
+	publicUrl = fmt.Sprintf("https://127.0.0.1:%d", publicPort)
+	adminUrl = fmt.Sprintf("https://127.0.0.1:%d", adminPort)
+	waitToComeAlive(t, publicUrl, adminUrl)
 	return
 }
 

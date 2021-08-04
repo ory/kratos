@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
 
@@ -123,6 +125,13 @@ func TestInitFlow(t *testing.T) {
 			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}}, true)
 			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
 			assertion(body, true, true)
+		})
+
+		t.Run("case=check info message on authenticated request with refresh=true", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertion(body, true, true)
+			assert.Equal(t, gjson.GetBytes(body, "ui.messages.0.text").String(), text.NewInfoLoginReAuth().Text)
 		})
 	})
 

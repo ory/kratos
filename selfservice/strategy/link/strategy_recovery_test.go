@@ -2,6 +2,7 @@ package link_test
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/gofrs/uuid"
 
@@ -49,6 +52,12 @@ import (
 func init() {
 	corpx.RegisterFakes()
 }
+
+//go:embed fixtures/recovery_init.json
+var recoveryInitFixture []byte
+
+//go:embed fixtures/recovery_submit.json
+var recoverySubmitFixture []byte
 
 func TestAdminStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -196,55 +205,18 @@ func TestRecovery(t *testing.T) {
 		return expect(t, hc, isAPI, isSPA, values, http.StatusOK)
 	}
 
+	t.Run("description=should set all the correct recovery payloads after submission", func(t *testing.T) {
+		body := expectSuccess(t, nil, false, false, func(v url.Values) {
+			v.Set("email", "test@ory.sh")
+		})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), json.RawMessage(recoverySubmitFixture), []string{"0.attributes.value"})
+	})
+
 	t.Run("description=should set all the correct recovery payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(`[
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "required": true,
-      "type": "hidden",
-      "value": ""
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "email",
-      "required": true,
-      "type": "email"
-    },
-    "group": "link",
-    "messages": [],
-    "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "method",
-      "type": "submit",
-      "value": "link"
-    },
-    "group": "link",
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1070005,
-        "text": "Submit",
-        "type": "info"
-      }
-    },
-    "type": "input"
-  }
-]`), rs.Ui.Nodes, []string{"0.attributes.value"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(recoveryInitFixture), rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+recovery.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
@@ -374,6 +346,39 @@ func TestRecovery(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			check(t, expectSuccess(t, nil, true, false, values))
 		})
+	})
+
+	t.Run("description=should recover an account and set the csrf cookies", func(t *testing.T) {
+		var check = func(t *testing.T, actual string) {
+			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			cl := testhelpers.NewClientWithCookies(t)
+			cl.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+			res, err := cl.Get(recoveryLink)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, http.StatusFound, res.StatusCode)
+			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 2)
+			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
+			assert.Contains(t, cookies, x.CSRFTokenName)
+			assert.Contains(t, cookies, "ory_kratos_session")
+
+			rl := urlx.ParseOrPanic(recoveryLink)
+			actualRes, err := cl.Get(public.URL + recovery.RouteGetFlow + "?id=" + rl.Query().Get("flow"))
+			require.NoError(t, err)
+			body := x.MustReadAll(actualRes.Body)
+			require.NoError(t, actualRes.Body.Close())
+			assert.Equal(t, http.StatusOK, actualRes.StatusCode, "%s", body)
+		}
+
+		var values = func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		}
+
+		check(t, expectSuccess(t, nil, false, false, values))
 	})
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {

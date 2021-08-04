@@ -150,3 +150,8 @@ func (f Flow) GetID() uuid.UUID {
 func (f Flow) GetNID() uuid.UUID {
 	return f.NID
 }
+
+func (f *Flow) SetCSRFToken(token string) {
+	f.CSRFToken = token
+	f.UI.SetCSRF(token)
+}

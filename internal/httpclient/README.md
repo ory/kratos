@@ -216,14 +216,11 @@ Class | Method | HTTP request | Description
 
 ### oryAccessToken
 
-- **Type**: HTTP Bearer token authentication
+- **Type**: API key
+- **API key parameter name**: Authorization
+- **Location**: HTTP header
 
-Example
-
-```golang
-auth := context.WithValue(context.Background(), sw.ContextAccessToken, "BEARER_TOKEN_STRING")
-r, err := client.Service.Operation(auth, args)
-```
+Note, each API key must be added to a map of `map[string]APIKey` where the key is: Authorization and passed in as the auth context for each request.
 
 
 ## Documentation for Utility Methods
