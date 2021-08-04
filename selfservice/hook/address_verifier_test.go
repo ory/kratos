@@ -29,6 +29,11 @@ func TestAddressVerifier(t *testing.T) {
 				expectError         bool
 			}{
 				{
+					name:                "No Verification Address",
+					verifiableAddresses: []identity.VerifiableAddress{},
+					expectError:         true,
+				},
+				{
 					name: "Single Address Not Verified",
 					verifiableAddresses: []identity.VerifiableAddress{
 						{ID: uuid.UUID{}, Verified: false},
