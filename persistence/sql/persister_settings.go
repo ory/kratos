@@ -16,6 +16,7 @@ var _ settings.FlowPersister = new(Persister)
 
 func (p *Persister) CreateSettingsFlow(ctx context.Context, r *settings.Flow) error {
 	r.NID = corp.ContextualizeNID(ctx, p.nid)
+	r.EnsureInternalContext()
 	return sqlcon.HandleError(p.GetConnection(ctx).Create(r))
 }
 
@@ -38,5 +39,6 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*setting
 func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) error {
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)
+	cp.EnsureInternalContext()
 	return p.update(ctx, cp)
 }
