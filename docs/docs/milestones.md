@@ -149,12 +149,12 @@ Affects documentation.
 
 #### Issues
 
-- [ ] Document that identity information (traits, etc) are available to token
-      holders and backend systems
-      ([kratos#43](https://github.com/ory/kratos/issues/43)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Document that identity information (traits, etc) are available to token
+      holders and backend systems
+      ([kratos#43](https://github.com/ory/kratos/issues/43)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
