@@ -14,6 +14,10 @@ selfservice:
     link:
       config:
         lifespan: 1h
+    totp:
+      enabled: true
+      config:
+        issuer: issuer.ory.sh
   flows:
     login:
       ui_url: http://127.0.0.1:4455/auth/login
