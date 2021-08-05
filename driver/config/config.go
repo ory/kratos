@@ -136,6 +136,7 @@ const (
 	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
+	ViperKeyTOTPIssuer                                              = "selfservice.methods.totp.config.issuer"
 	ViperKeyVersion                                                 = "version"
 	Argon2DefaultMemory                                             = 128 * bytesize.MB
 	Argon2DefaultIterations                                  uint32 = 1
@@ -414,6 +415,10 @@ func (p *Config) listenOn(key string) string {
 
 func (p *Config) DefaultIdentityTraitsSchemaURL() *url.URL {
 	return p.ParseURIOrFail(ViperKeyDefaultIdentitySchemaURL)
+}
+
+func (p *Config) TOTPIssuer() string {
+	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL(nil).Hostname())
 }
 
 func (p *Config) IdentityTraitsSchemas() Schemas {

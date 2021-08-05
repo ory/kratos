@@ -51,6 +51,10 @@ selfservice:
     - http://return-to-1-test.ory.sh/
     - http://return-to-2-test.ory.sh/
   methods:
+    totp:
+      enabled: true
+      config:
+        issuer: issuer.ory.sh
     password:
       enabled: true
     oidc:

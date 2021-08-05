@@ -33,6 +33,7 @@ const (
 	ProfileGroup          Group = "profile"
 	RecoveryLinkGroup     Group = "link"
 	VerificationLinkGroup Group = "link"
+	TOTPGroup             Group = "totp"
 
 	Text   Type = "text"
 	Input  Type = "input"

@@ -1107,6 +1107,29 @@
                 }
               }
             },
+            "totp": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the TOTP method",
+                  "default": true
+                },
+                "config": {
+                  "type": "object",
+                  "title": "TOTP Configuration",
+                  "properties": {
+                    "issuer": {
+                      "title": "TOTP Issuer",
+                      "description": "The issuer (e.g. a domain name) will be shown in the TOTP app (e.g. Google Authenticator). It helps the user differentiate between different codes.",
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
             "oidc": {
               "type": "object",
               "title": "Specify OpenID Connect and OAuth2 Configuration",

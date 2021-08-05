@@ -175,6 +175,7 @@ func TestViperProvider(t *testing.T) {
 			}{
 				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","haveibeenpwned_enabled":true,"ignore_network_errors":true,"max_breaches":0}`},
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
+				{id: "totp", enabled: true, config: `{"issuer":"issuer.ory.sh"}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
 				assert.Equal(t, tc.enabled, strategy.Enabled)

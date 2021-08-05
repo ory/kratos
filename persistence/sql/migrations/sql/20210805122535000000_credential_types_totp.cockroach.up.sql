@@ -1,0 +1,1 @@
+INSERT INTO identity_credential_types (id, name) SELECT '5e29b036-aa47-457f-9fe6-aa8b854a752b', 'totp' WHERE NOT EXISTS ( SELECT * FROM identity_credential_types WHERE name = 'totp');
