@@ -76,6 +76,11 @@ type ImageAttributes struct {
 	// format: uri
 	// required: true
 	Source string `json:"src"`
+
+	// A unique identifier
+	//
+	// required: true
+	Identifier string `json:"id"`
 }
 
 // AnchorAttributes represents the attributes of an anchor node.
@@ -92,6 +97,11 @@ type AnchorAttributes struct {
 	//
 	// required: true
 	Title *text.Message `json:"title"`
+
+	// A unique identifier
+	//
+	// required: true
+	Identifier string `json:"id"`
 }
 
 // TextAttributes represents the attributes of a text node.
@@ -103,6 +113,11 @@ type TextAttributes struct {
 	//
 	// required: true
 	Text *text.Message `json:"text"`
+
+	// A unique identifier
+	//
+	// required: true
+	Identifier string `json:"id"`
 }
 
 var (
@@ -117,15 +132,15 @@ func (a *InputAttributes) ID() string {
 }
 
 func (a *ImageAttributes) ID() string {
-	return ""
+	return a.Identifier
 }
 
 func (a *AnchorAttributes) ID() string {
-	return ""
+	return a.Identifier
 }
 
 func (a *TextAttributes) ID() string {
-	return ""
+	return a.Identifier
 }
 
 func (a *InputAttributes) SetValue(value interface{}) {

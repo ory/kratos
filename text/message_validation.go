@@ -94,7 +94,7 @@ func NewErrorValidationDuplicateCredentials() *Message {
 func NewErrorValidationTOTPVerifierWrong() *Message {
 	return &Message{
 		ID:      ErrorValidationTOTPVerifierWrong,
-		Text:    "The provided authentication code is invalid.",
+		Text:    "The provided authentication code is invalid, please try again.",
 		Type:    Error,
 		Context: context(nil),
 	}

@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/totp"
+
 	"github.com/luna-duclos/instrumentedsql"
 	"github.com/luna-duclos/instrumentedsql/opentracing"
 
@@ -258,6 +260,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			oidc.NewStrategy(m),
 			profile.NewStrategy(m),
 			link.NewStrategy(m),
+			totp.NewStrategy(m),
 		}
 	}
 

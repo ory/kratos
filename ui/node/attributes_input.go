@@ -50,7 +50,8 @@ func applyInputAttributes(opts []InputAttributesModifier, attributes *InputAttri
 
 func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...InputAttributesModifier) *Node {
 	return &Node{
-		Type: Input, Group: group,
+		Type:       Input,
+		Group:      group,
 		Attributes: applyInputAttributes(opts, &InputAttributes{Name: name, Type: toFormType(name, value), FieldValue: value}),
 		Meta:       &Meta{},
 	}
@@ -58,8 +59,36 @@ func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...
 
 func NewInputField(name string, value interface{}, group Group, inputType InputAttributeType, opts ...InputAttributesModifier) *Node {
 	return &Node{
-		Type: Input, Group: group,
+		Type:       Input,
+		Group:      group,
 		Attributes: applyInputAttributes(opts, &InputAttributes{Name: name, Type: inputType, FieldValue: value}),
+		Meta:       &Meta{},
+	}
+}
+
+func NewImageField(id string, src string, group Group) *Node {
+	return &Node{
+		Type:       Image,
+		Group:      group,
+		Attributes: &ImageAttributes{Source: src, Identifier: id},
+		Meta:       &Meta{},
+	}
+}
+
+func NewTextField(id string, text *text.Message, group Group) *Node {
+	return &Node{
+		Type:       Text,
+		Group:      group,
+		Attributes: &TextAttributes{Text: text, Identifier: id},
+		Meta:       &Meta{},
+	}
+}
+
+func NewAnchorField(id string, href string, title *text.Message, group Group) *Node {
+	return &Node{
+		Type:       Text,
+		Group:      group,
+		Attributes: &AnchorAttributes{Title: title, HREF: href, Identifier: id},
 		Meta:       &Meta{},
 	}
 }

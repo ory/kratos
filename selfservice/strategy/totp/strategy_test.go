@@ -1,27 +1,24 @@
-package password_test
+package totp_test
 
 import (
 	"context"
 	"fmt"
 	"testing"
 
-	hash2 "github.com/ory/kratos/hash"
+	"github.com/ory/kratos/selfservice/strategy/totp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/strategy/password"
 )
 
 func TestCountActiveCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	strategy := password.NewStrategy(reg)
+	strategy := totp.NewStrategy(reg)
 
-	h1, err := hash2.NewHasherBcrypt(reg).Generate(context.Background(), []byte("a password"))
-	require.NoError(t, err)
-	h2, err := reg.Hasher().Generate(context.Background(), []byte("a password"))
+	key, err := totp.NewKey(context.Background(), "foo", reg)
 	require.NoError(t, err)
 
 	for k, tc := range []struct {
@@ -38,15 +35,7 @@ func TestCountActiveCredentials(t *testing.T) {
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: []byte(`{"hashed_password": "` + string(h1) + `"}`),
-			}},
-			expected: 0,
-		},
-		{
-			in: identity.CredentialsCollection{{
-				Type:        strategy.ID(),
-				Identifiers: []string{""},
-				Config:      []byte(`{"hashed_password": "` + string(h1) + `"}`),
+				Config: []byte(`{"totp_url": ""}`),
 			}},
 			expected: 0,
 		},
@@ -54,24 +43,9 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
-				Config:      []byte(`{"hashed_password": "` + string(h1) + `"}`),
+				Config:      []byte(`{"totp_url": "` + key.URL() + `"}`),
 			}},
 			expected: 1,
-		},
-		{
-			in: identity.CredentialsCollection{{
-				Type:        strategy.ID(),
-				Identifiers: []string{"foo"},
-				Config:      []byte(`{"hashed_password": "` + string(h2) + `"}`),
-			}},
-			expected: 1,
-		},
-		{
-			in: identity.CredentialsCollection{{
-				Type:   strategy.ID(),
-				Config: []byte(`{"hashed_password": "asdf"}`),
-			}},
-			expected: 0,
 		},
 		{
 			in: identity.CredentialsCollection{{

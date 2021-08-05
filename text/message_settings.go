@@ -10,6 +10,9 @@ const (
 	InfoSelfServiceSettingsUpdateSuccess
 	InfoSelfServiceSettingsUpdateLinkOidc
 	InfoSelfServiceSettingsUpdateUnlinkOidc
+	InfoSelfServiceSettingsUpdateUnlinkTOTP
+	InfoSelfServiceSettingsTOTPQRCode
+	InfoSelfServiceSettingsTOTPSecret
 )
 
 const (
@@ -28,10 +31,37 @@ func NewErrorValidationSettingsFlowExpired(ago time.Duration) *Message {
 	}
 }
 
+func NewInfoSelfServiceSettingsTOTPQRCode() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsTOTPQRCode,
+		Text: "Authenticator app QR code",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceSettingsTOTPSecret(secret string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsTOTPSecret,
+		Text: fmt.Sprintf("Your authenticator app secret: %s", secret),
+		Type: Info,
+		Context: context(map[string]interface{}{
+			"secret": secret,
+		}),
+	}
+}
+
 func NewInfoSelfServiceSettingsUpdateSuccess() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsUpdateSuccess,
 		Text: "Your changes have been saved!",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceSettingsUpdateUnlinkTOTP() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsUpdateUnlinkTOTP,
+		Text: "Unlink TOTP Authenticator App",
 		Type: Info,
 	}
 }

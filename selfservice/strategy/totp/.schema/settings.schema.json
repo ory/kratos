@@ -1,0 +1,21 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/totp/settings.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "verification_totp": {
+      "type": "string",
+      "maxLength": 6,
+      "minLength": 6
+    },
+    "unlink_totp": {
+      "type": "boolean"
+    }
+  }
+}
