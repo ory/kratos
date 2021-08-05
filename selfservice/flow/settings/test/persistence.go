@@ -65,6 +65,17 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			})
 		})
 
+		t.Run("case=should ensure that internal context is an object", func(t *testing.T) {
+			r := newFlow(t)
+			r.InternalContext = []byte("null")
+			require.NoError(t, p.CreateSettingsFlow(ctx, r))
+			assert.Equal(t, "{}", string(r.InternalContext))
+
+			r.InternalContext = nil
+			require.NoError(t, p.UpdateSettingsFlow(ctx, r))
+			assert.Equal(t, "{}", string(r.InternalContext))
+		})
+
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r settings.Flow
 			require.NoError(t, faker.FakeData(&r))

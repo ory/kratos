@@ -2,9 +2,12 @@ package settings
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/ui/container"
@@ -86,6 +89,9 @@ type Flow struct {
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
 
+	// InternalContext stores internal context used by internals - for example MFA keys.
+	InternalContext json.RawMessage `db:"internal_context" json:"-" faker:"-"`
+
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
@@ -128,6 +134,7 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
+		InternalContext: []byte("{}"),
 	}
 }
 
@@ -166,4 +173,10 @@ func (f *Flow) Valid(s *session.Session) error {
 	}
 
 	return nil
+}
+
+func (f *Flow) EnsureInternalContext() {
+	if !gjson.ParseBytes(f.InternalContext).IsObject() {
+		f.InternalContext = []byte("{}")
+	}
 }
