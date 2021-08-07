@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-08-04)](#unreleased-2021-08-04)
+- [ (2021-08-07)](#2021-08-07)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -191,7 +191,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...1cf61cdeedbd8bf5b66310793249681ff976baab) (2021-08-04)
+# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-07)
 
 
 ### Bug Fixes
@@ -230,6 +230,10 @@
 ### Documentation
 
 * Identity traits are visible to user ([#1621](https://github.com/ory/kratos/issues/1621)) ([641eba6](https://github.com/ory/kratos/commit/641eba675bdc583661565a6378776bfad26067c6))
+* Make qickstart URLs consistent (playground vs. localhost) ([#1626](https://github.com/ory/kratos/issues/1626)) ([bae1847](https://github.com/ory/kratos/commit/bae1847eba0d925f28a010876e35e3c2093bc8c6)):
+
+    Since the quick-start describes how to run Kratos locally the actual location of the redirect is `http://127.0.0.1:4433/self-service/login/browser`.
+
 
 ### Features
 
