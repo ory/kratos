@@ -230,7 +230,7 @@ Here's a play-by-play of what happened:
    Kratos' browser API requires a `<flow_id>` in order to log you in. It looked
    for this ID in the URL as a query parameter but couldn't find it.
 3. `/auth/login` redirected you to
-   `https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser`,
+   `http://127.0.0.1:4433/self-service/login/browser`,
    which is one of Ory Kratos' APIs used for logging in browser-based
    applications.
 4. Kratos handled `/self-service/login/browser` which created and persisted a
