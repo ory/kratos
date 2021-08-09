@@ -142,6 +142,8 @@ New feature or request.
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
       ([kratos#1589](https://github.com/ory/kratos/issues/1589))
+- [ ] EMail on registration with existing identifier
+      ([kratos#1625](https://github.com/ory/kratos/issues/1625))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -149,12 +151,12 @@ Affects documentation.
 
 #### Issues
 
-- [ ] Document that identity information (traits, etc) are available to token
-      holders and backend systems
-      ([kratos#43](https://github.com/ory/kratos/issues/43)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Document that identity information (traits, etc) are available to token
+      holders and backend systems
+      ([kratos#43](https://github.com/ory/kratos/issues/43)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
@@ -215,6 +217,12 @@ New feature or request.
 - [x] More meta information about the managed identity
       ([kratos#820](https://github.com/ory/kratos/issues/820))
 
+#### Pull Requests
+
+- [ ] feat: add mfa using totp
+      ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
+      [@hackerman](https://github.com/aeneasr)
+
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
 Affects documentation.
@@ -229,4 +237,14 @@ Affects documentation.
       [@hackerman](https://github.com/aeneasr)
 - [x] Config reference has not been updated since 0.5.0
       ([kratos#1597](https://github.com/ory/kratos/issues/1597)) -
+      [@hackerman](https://github.com/aeneasr)
+
+### [Blocking](https://github.com/ory/kratos/labels/blocking)
+
+Blocks milestones or other issues or pulls.
+
+#### Pull Requests
+
+- [ ] feat: add mfa using totp
+      ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)

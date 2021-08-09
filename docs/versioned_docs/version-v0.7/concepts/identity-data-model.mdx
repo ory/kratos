@@ -181,6 +181,16 @@ from the user!
 
 :::
 
+:::warning
+
+Please keep in mind that the Identity Model is not a place to store sensitive
+information that should not be visible to the end-user! Users can see traits and
+other data - except credentials - using the `/sessions/whoami` endpoint. The
+Identity Model is not the right place to store data that should be obfuscated
+from the user!
+
+:::
+
 ## JSON Schema Vocabulary Extensions
 
 Because Ory Kratos does not know that a particular field has a system-relevant
