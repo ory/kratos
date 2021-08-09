@@ -85,7 +85,7 @@
               "href": "https://www.ory.sh/docs/concepts/personal-access-token"
             },
             {
-              "label": "Identity Data Model, Custom Fields",
+              "label": "Identity Schema, Custom Fields",
               "type": "link",
               "href": "https://www.ory.sh/docs/concepts/identity"
             },
