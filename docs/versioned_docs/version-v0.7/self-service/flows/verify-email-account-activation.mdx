@@ -87,17 +87,17 @@ selfservice:
   methods:
     link:
       enabled: true
-  config:
-    # Defines how long a recovery link is valid for (default 1h)
-    lifespan: 15m
+      config:
+        # Defines how long a recovery link is valid for (default 1h)
+        lifespan: 15m
 
   flows:
     verification:
       enabled: true
 
-  # Defines how long a recovery flow (the UI interaction, not the link!)
-  # is valid for (default 1h)
-  lifespan: 15m
+      # Defines how long a recovery flow (the UI interaction, not the link!)
+      # is valid for (default 1h)
+      lifespan: 15m
 ```
 
   </TabItem>
