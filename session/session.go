@@ -39,7 +39,7 @@ type Session struct {
 
 	// The Session Issuance Timestamp
 	//
-	// When this session was authenticated at.
+	// When this session was issued at.
 	IssuedAt time.Time `json:"issued_at" db:"issued_at" faker:"time_type"`
 
 	// The Logout Token
