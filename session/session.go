@@ -90,9 +90,10 @@ func NewActiveSession(i *identity.Identity, c interface {
 	}, nil
 }
 
+// swagger:model sessionDevice
 type Device struct {
-	UserAgent string      `json:"user_agent"`
-	SeenAt    []time.Time `json:"seen_at" faker:"time_types"`
+	// UserAgent of this device
+	UserAgent string   `json:"user_agent"`
 }
 
 func (s *Session) Declassify() *Session {
