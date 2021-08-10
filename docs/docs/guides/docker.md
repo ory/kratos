@@ -84,10 +84,10 @@ FROM oryd/kratos:latest
 COPY contrib/quickstart/kratos/email-password/kratos.yml /home/ory
 ```
 
-**Note that in both cases**, you must supply the location of the configuration file using the `--config` flag when running the container.
+**Note that in both cases**, you must supply the location of the configuration
+file using the `--config` flag when running the container.
 
 `$ docker run <theimage> --config /home/ory/kratos.yml`
-
 
 ### Examples
 
