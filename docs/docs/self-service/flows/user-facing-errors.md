@@ -64,7 +64,7 @@ $ curl -s \
 
 {
   "id": "9f900efa-a5ea-4dfd-8311-a8c7448ffeec",
-  "errors": [
+  "error": [
     {
       "code": 500,
       "status": "Internal Server Error",
