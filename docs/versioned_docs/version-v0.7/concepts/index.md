@@ -260,7 +260,7 @@ very easy to get started there is a reference implementation
 For more details about each individual flow, consult the
 [Self-Service Flows Chapter](../self-service.mdx).
 
-### Bring your own Identity Model(s)
+### Bring your own Identity Schema(s)
 
 Sometimes it is necessary to store more than one type of identity in your
 system:
@@ -271,7 +271,7 @@ system:
   attached to the profile.
 
 Ory Kratos implements both scenarios by using
-[JSON Schemas for Identities](./identity-data-model.mdx)
+[Identity Schema](./identity-schema.mdx)
 
 ### Forget passport-js, oidc-client, ...
 

@@ -36,7 +36,7 @@ Kubernetes) most:
 - The workflow engine allows you to fully customize your user experience.
   Whether your users need to activate their account after registration, or have
   a multi-step (progressive) registration - it's all possible!
-- One Identity Data Model does not fit all - you may have customers that need a
+- One Identity Schema does not fit all - you may have customers that need a
   billing address, internal support staff that is assigned to a cost center, and
   that smart fridge on floor 4. You can express the different data models using
   [JSON Schema](https://json-schema.org/) and make the system work for you - not

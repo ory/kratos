@@ -14,7 +14,7 @@
       "concepts/index",
       "concepts/terminology",
       "concepts/ui-user-interface",
-      "concepts/identity-data-model",
+      "concepts/identity-schema",
       {
         "label": "Identity Credentials",
         "type": "category",
