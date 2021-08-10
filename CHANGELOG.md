@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-08-07)](#2021-08-07)
+- [ (2021-08-10)](#2021-08-10)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -191,7 +191,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-07)
+# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-10)
 
 
 ### Bug Fixes
@@ -229,10 +229,15 @@
 
 ### Documentation
 
+* Fixes incorrect yaml identation ([#1641](https://github.com/ory/kratos/issues/1641)) ([6b58278](https://github.com/ory/kratos/commit/6b582784b49c1d103bbf7a6843cdf197fbd93931))
 * Identity traits are visible to user ([#1621](https://github.com/ory/kratos/issues/1621)) ([641eba6](https://github.com/ory/kratos/commit/641eba675bdc583661565a6378776bfad26067c6))
 * Make qickstart URLs consistent (playground vs. localhost) ([#1626](https://github.com/ory/kratos/issues/1626)) ([bae1847](https://github.com/ory/kratos/commit/bae1847eba0d925f28a010876e35e3c2093bc8c6)):
 
     Since the quick-start describes how to run Kratos locally the actual location of the redirect is `http://127.0.0.1:4433/self-service/login/browser`.
+
+* Update docker.md - Outdated information ([#1627](https://github.com/ory/kratos/issues/1627)) ([dc32720](https://github.com/ory/kratos/commit/dc32720de25f52b7deb3e32f7530c7827a6ce5df)), closes [#1619](https://github.com/ory/kratos/issues/1619):
+
+    Kratos does not automatically use a config file that exists at `$HOME/.kratos.yaml`, or any other similar pattern. The documentation in the Docker Images section of the guides could lead developers to believe that the --config flag is unnecessary if they are binding the directory the configuration file is in to $HOME or using a custom docker image to provide the file.
 
 
 ### Features
