@@ -80,8 +80,8 @@ type Flow struct {
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
 	CSRFToken string `json:"-" db:"csrf_token"`
 
-	// Forced stores whether this login flow should enforce re-authentication.
-	Forced bool `json:"forced" db:"forced"`
+	// Refresh stores whether this login flow should enforce re-authentication.
+	Refresh bool `json:"forced" db:"forced"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
@@ -95,10 +95,10 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
-		RequestURL: x.RequestURL(r).String(),
-		CSRFToken:  csrf,
-		Type:       flowType,
-		Forced:     r.URL.Query().Get("refresh") == "true",
+		RequestURL:   x.RequestURL(r).String(),
+		CSRFToken:    csrf,
+		Type:         flowType,
+		Refresh:      r.URL.Query().Get("refresh") == "true",
 	}
 }
 
@@ -130,7 +130,7 @@ func (f Flow) GetID() uuid.UUID {
 }
 
 func (f *Flow) IsForced() bool {
-	return f.Forced
+	return f.Refresh
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
