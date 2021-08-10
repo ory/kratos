@@ -41,7 +41,7 @@ func TestNewFlow(t *testing.T) {
 		}, flow.TypeBrowser)
 		assert.EqualValues(t, r.IssuedAt, r.ExpiresAt)
 		assert.Equal(t, flow.TypeBrowser, r.Type)
-		assert.False(t, r.Forced)
+		assert.False(t, r.Refresh)
 		assert.Equal(t, "https://ory.sh/", r.RequestURL)
 	})
 
@@ -51,7 +51,7 @@ func TestNewFlow(t *testing.T) {
 			Host: "ory.sh"}, flow.TypeAPI)
 		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
 		assert.Equal(t, flow.TypeAPI, r.Type)
-		assert.True(t, r.Forced)
+		assert.True(t, r.Refresh)
 		assert.Equal(t, "http://ory.sh/?refresh=true", r.RequestURL)
 	})
 

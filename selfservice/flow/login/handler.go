@@ -95,7 +95,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 		return nil, err
 	}
 
-	if f.Forced {
+	if f.Refresh {
 		f.UI.Messages.Set(text.NewInfoLoginReAuth())
 	}
 
@@ -173,7 +173,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
-	if a.Forced {
+	if a.Refresh {
 		if err := h.d.LoginFlowPersister().ForceLoginFlow(r.Context(), a.ID); err != nil {
 			h.d.Writer().WriteError(w, r, err)
 			return
@@ -225,7 +225,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if a.Forced {
+	if a.Refresh {
 		if err := h.d.LoginFlowPersister().ForceLoginFlow(r.Context(), a.ID); err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
@@ -417,7 +417,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil && !f.Forced {
+	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil && !f.Refresh {
 		if f.Type == flow.TypeBrowser {
 			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return
@@ -453,7 +453,20 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	// TODO Handle n+1 authentication factor
+	for _, ss := range h.d.AllLoginStrategies() {
+		interim, err := ss.Login(w, r, f)
+		if errors.Is(err, flow.ErrStrategyNotResponsible) {
+			continue
+		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+			return
+		} else if err != nil {
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
+			return
+		}
+
+		i = interim
+		break
+	}
 
 	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, f, i); err != nil {
 		if err == ErrAddressNotVerified {
