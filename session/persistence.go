@@ -22,8 +22,8 @@ type Persister interface {
 	// GetSession retrieves a session from the store.
 	GetSession(ctx context.Context, sid uuid.UUID) (*Session, error)
 
-	// CreateSession adds a session to the store.
-	CreateSession(ctx context.Context, s *Session) error
+	// UpsertSession inserts or updates a session into / in the store.
+	UpsertSession(ctx context.Context, s *Session) error
 
 	// DeleteSession removes a session from the store.
 	DeleteSession(ctx context.Context, id uuid.UUID) error
@@ -66,7 +66,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 
 			assert.Equal(t, uuid.Nil, expected.ID)
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 			assert.NotEqual(t, uuid.Nil, expected.ID)
 
 			check := func(actual *Session, err error) {
@@ -95,7 +95,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			var expected Session
 			require.NoError(t, faker.FakeData(&expected))
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			require.NoError(t, p.DeleteSession(ctx, expected.ID))
 			_, err := p.GetSession(ctx, expected.ID)
@@ -106,7 +106,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			var expected Session
 			require.NoError(t, faker.FakeData(&expected))
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			require.NoError(t, p.DeleteSessionByToken(ctx, expected.Token))
 			_, err := p.GetSession(ctx, expected.ID)
@@ -118,7 +118,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, faker.FakeData(&expected))
 			expected.Active = true
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			actual, err := p.GetSession(ctx, expected.ID)
 			require.NoError(t, err)
@@ -137,12 +137,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, faker.FakeData(&expected1))
 			require.NoError(t, p.CreateIdentity(ctx, expected1.Identity))
 
-			require.NoError(t, p.CreateSession(ctx, &expected1))
+			require.NoError(t, p.UpsertSession(ctx, &expected1))
 
 			require.NoError(t, faker.FakeData(&expected2))
 			expected2.Identity = expected1.Identity
 			expected2.IdentityID = expected1.IdentityID
-			require.NoError(t, p.CreateSession(ctx, &expected2))
+			require.NoError(t, p.UpsertSession(ctx, &expected2))
 
 			require.NoError(t, p.DeleteSessionsByIdentity(ctx, expected2.IdentityID))
 			_, err := p.GetSession(ctx, expected1.ID)
