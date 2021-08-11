@@ -39,8 +39,8 @@ func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 	}
 }
 
-func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
-	if err := s.r.SessionPersister().CreateSession(ctx, ss); err != nil {
+func (s *ManagerHTTP) UpsertAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
+	if err := s.r.SessionPersister().UpsertSession(ctx, ss); err != nil {
 		return err
 	}
 
