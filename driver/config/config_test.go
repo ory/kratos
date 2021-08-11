@@ -235,6 +235,10 @@ func TestViperProvider(t *testing.T) {
 			}
 		})
 
+		t.Run("method=totp", func(t *testing.T) {
+			assert.Equal(t, "issuer.ory.sh", p.TOTPIssuer())
+		})
+
 		t.Run("method=login", func(t *testing.T) {
 			assert.Equal(t, time.Minute*99, p.SelfServiceFlowLoginRequestLifespan())
 
