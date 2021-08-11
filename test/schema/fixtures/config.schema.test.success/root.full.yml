@@ -48,6 +48,10 @@ selfservice:
       enabled: true
     password:
       enabled: true
+    totp:
+      enabled: true
+      config:
+        issuer: "foobar"
     oidc:
       enabled: true
       config:
