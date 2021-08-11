@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"github.com/ory/kratos/identity"
 	"testing"
 	"time"
 
@@ -53,6 +54,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.EqualValues(t, expected.ExpiresAt.Unix(), actual.ExpiresAt.Unix())
 				assert.Equal(t, expected.AuthenticatedAt.Unix(), actual.AuthenticatedAt.Unix())
 				assert.Equal(t, expected.IssuedAt.Unix(), actual.IssuedAt.Unix())
+				assert.Equal(t, expected.AuthenticatorAssuranceLevel, actual.AuthenticatorAssuranceLevel)
+				assert.Equal(t, expected.AMR, actual.AMR)
 			}
 
 			t.Run("method=get by id", func(t *testing.T) {
@@ -73,6 +76,15 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					_, err := p.GetSessionByToken(ctx, expected.Token)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
+			})
+
+			t.Run("case=update session", func(t *testing.T) {
+				expected.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel3
+				require.NoError(t, p.UpsertSession(ctx, &expected))
+
+				actual, err := p.GetSessionByToken(ctx, expected.Token)
+				check(actual, err)
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel3, actual.AuthenticatorAssuranceLevel)
 			})
 		})
 
