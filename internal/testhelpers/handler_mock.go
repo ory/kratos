@@ -35,8 +35,8 @@ func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
-		activeSession, _ := session.NewActiveSession(i, conf, time.Now().UTC())
-		require.NoError(t, reg.SessionManager().CreateAndIssueCookie(context.Background(), w, r, activeSession))
+		activeSession, _ := session.NewActiveSession(i, conf, time.Now().UTC(), identity.CredentialsTypePassword)
+		require.NoError(t, reg.SessionManager().UpsertAndIssueCookie(context.Background(), w, r, activeSession))
 
 		w.WriteHeader(http.StatusOK)
 	}
@@ -112,7 +112,7 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	require.NoError(t, err)
 	sess.Identity = inserted
 
-	require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), &sess))
+	require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), &sess))
 	require.Len(t, inserted.Credentials, len(i.Credentials))
 
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

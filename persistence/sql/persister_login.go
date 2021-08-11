@@ -45,7 +45,7 @@ func (p *Persister) ForceLoginFlow(ctx context.Context, id uuid.UUID) error {
 			return err
 		}
 
-		lr.Forced = true
+		lr.Refresh = true
 		return tx.Save(lr, "nid")
 	})
 }

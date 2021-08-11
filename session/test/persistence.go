@@ -39,7 +39,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 
 			assert.Equal(t, uuid.Nil, expected.ID)
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 			assert.NotEqual(t, uuid.Nil, expected.ID)
 
 			check := func(actual *session.Session, err error) {
@@ -80,7 +80,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
@@ -100,7 +100,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
@@ -121,7 +121,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, faker.FakeData(&expected))
 			expected.Active = true
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			actual, err := p.GetSession(ctx, expected.ID)
 			require.NoError(t, err)
@@ -150,12 +150,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, faker.FakeData(&expected1))
 			require.NoError(t, p.CreateIdentity(ctx, expected1.Identity))
 
-			require.NoError(t, p.CreateSession(ctx, &expected1))
+			require.NoError(t, p.UpsertSession(ctx, &expected1))
 
 			require.NoError(t, faker.FakeData(&expected2))
 			expected2.Identity = expected1.Identity
 			expected2.IdentityID = expected1.IdentityID
-			require.NoError(t, p.CreateSession(ctx, &expected2))
+			require.NoError(t, p.UpsertSession(ctx, &expected2))
 
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)

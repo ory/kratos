@@ -267,8 +267,8 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
-	sess, _ := session.NewActiveSession(id, s.d.Config(r.Context()), time.Now().UTC())
-	if err := s.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, sess); err != nil {
+	sess, _ := session.NewActiveSession(id, s.d.Config(r.Context()), time.Now().UTC(), identity.CredentialsTypeRecoveryLink)
+	if err := s.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, sess); err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 

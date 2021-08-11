@@ -16,6 +16,7 @@ const (
 	ErrorValidationTOTPVerifierWrong
 	ErrorValidationIdentifierMissing
 	ErrorValidationAddressNotVerified
+	ErrorValidationInvalidTOTPCode
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
@@ -113,5 +114,14 @@ func NewErrorValidationAddressNotVerified() *Message {
 		ID:   ErrorValidationAddressNotVerified,
 		Text: "Account not active yet. Did you forget to verify your email address?",
 		Type: Error,
+	}
+}
+
+func NewErrorValidationInvalidTOTPCode() *Message {
+	return &Message{
+		ID:      ErrorValidationInvalidTOTPCode,
+		Text:    "The provided authentication code is not valid.",
+		Type:    Error,
+		Context: context(nil),
 	}
 }

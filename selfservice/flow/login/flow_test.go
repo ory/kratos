@@ -34,32 +34,47 @@ func TestFakeFlow(t *testing.T) {
 
 func TestNewFlow(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
-	t.Run("case=0", func(t *testing.T) {
-		r := login.NewFlow(conf, 0, "csrf", &http.Request{
-			URL:  urlx.ParseOrPanic("/"),
-			Host: "ory.sh", TLS: &tls.ConnectionState{},
-		}, flow.TypeBrowser)
-		assert.EqualValues(t, r.IssuedAt, r.ExpiresAt)
-		assert.Equal(t, flow.TypeBrowser, r.Type)
-		assert.False(t, r.Refresh)
-		assert.Equal(t, "https://ory.sh/", r.RequestURL)
+
+	t.Run("type=browser", func(t *testing.T) {
+		t.Run("case=regular flow creation without a session", func(t *testing.T) {
+			r := login.NewFlow(conf, 0, "csrf", &http.Request{
+				URL:  urlx.ParseOrPanic("/"),
+				Host: "ory.sh", TLS: &tls.ConnectionState{},
+			}, flow.TypeBrowser)
+			assert.EqualValues(t, r.IssuedAt, r.ExpiresAt)
+			assert.Equal(t, flow.TypeBrowser, r.Type)
+			assert.False(t, r.Refresh)
+			assert.Equal(t, "https://ory.sh/", r.RequestURL)
+		})
+
+		t.Run("case=regular flow creation", func(t *testing.T) {
+			r := login.NewFlow(conf, 0, "csrf", &http.Request{
+				URL:  urlx.ParseOrPanic("https://ory.sh/"),
+				Host: "ory.sh"}, flow.TypeBrowser)
+			assert.Equal(t, "https://ory.sh/", r.RequestURL)
+		})
 	})
 
-	t.Run("case=1", func(t *testing.T) {
-		r := login.NewFlow(conf, 0, "csrf", &http.Request{
-			URL:  urlx.ParseOrPanic("/?refresh=true"),
-			Host: "ory.sh"}, flow.TypeAPI)
-		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
-		assert.Equal(t, flow.TypeAPI, r.Type)
-		assert.True(t, r.Refresh)
-		assert.Equal(t, "http://ory.sh/?refresh=true", r.RequestURL)
-	})
+	t.Run("type=api", func(t *testing.T) {
+		t.Run("case=flow with refresh", func(t *testing.T) {
+			r := login.NewFlow(conf, 0, "csrf", &http.Request{
+				URL:  urlx.ParseOrPanic("/?refresh=true"),
+				Host: "ory.sh"}, flow.TypeAPI)
+			assert.Equal(t, r.IssuedAt, r.ExpiresAt)
+			assert.Equal(t, flow.TypeAPI, r.Type)
+			assert.True(t, r.Refresh)
+			assert.Equal(t, "http://ory.sh/?refresh=true", r.RequestURL)
+		})
 
-	t.Run("case=2", func(t *testing.T) {
-		r := login.NewFlow(conf, 0, "csrf", &http.Request{
-			URL:  urlx.ParseOrPanic("https://ory.sh/"),
-			Host: "ory.sh"}, flow.TypeBrowser)
-		assert.Equal(t, "https://ory.sh/", r.RequestURL)
+		t.Run("case=flow without refresh", func(t *testing.T) {
+			r := login.NewFlow(conf, 0, "csrf", &http.Request{
+				URL:  urlx.ParseOrPanic("/"),
+				Host: "ory.sh"}, flow.TypeAPI)
+			assert.Equal(t, r.IssuedAt, r.ExpiresAt)
+			assert.Equal(t, flow.TypeAPI, r.Type)
+			assert.False(t, r.Refresh)
+			assert.Equal(t, "http://ory.sh/", r.RequestURL)
+		})
 	})
 }
 

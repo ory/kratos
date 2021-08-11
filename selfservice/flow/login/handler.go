@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/text"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/nosurf"
 
@@ -85,18 +87,77 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
 	conf := h.d.Config(r.Context())
 	f := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
+
+	cases := stringsx.RegisteredCases{}
+	switch cs := stringsx.SwitchExact(string(f.RequestedAAL)); {
+	case cs.AddCase(""):
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel1)):
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel2)):
+		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+	default:
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cases.ToUnknownCaseErr()))
+	}
+
+	if f.Refresh && f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time."))
+	}
+
+	// We assume an error means the user has no session
+	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	if errors.Is(err, session.ErrNoActiveSessionFound) {
+		// No session exists yet
+
+		// We can not request an AAL > 1 because we must first verify the first factor.
+		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+			return nil, errors.WithStack(ErrSessionRequiredForHigherAAL)
+		}
+
+		goto preLoginHook
+	} else if err != nil {
+		// Some other error happened - return that one.
+		return nil, err
+	} else {
+		// A session exists already
+
+		if f.Refresh {
+			// We are refreshing so let's continue
+			goto preLoginHook
+		}
+
+		// We are not refreshing - so are we requesting MFA?
+
+		// If level is 1 we are not requesting AAL -> we are logged in already.
+		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
+			return nil, errors.WithStack(ErrAlreadyLoggedIn)
+		}
+
+		// We are requesting an assurance level which the session already has. So we are not upgrading the session
+		// in which case we want to return an error.
+		if f.RequestedAAL <= sess.AuthenticatorAssuranceLevel {
+			return nil, errors.WithStack(ErrSessionHasAALAlready)
+		}
+
+		f.UI.Messages.Set(text.NewInfoLoginMFA())
+
+		// Looks like we are requesting an AAL which is higher than what the session has.
+		goto preLoginHook
+	}
+
+preLoginHook:
+	if f.Refresh {
+		f.UI.Messages.Set(text.NewInfoLoginReAuth())
+	}
+
 	for _, s := range h.d.LoginStrategies(r.Context()) {
-		if err := s.PopulateLoginMethod(r, f); err != nil {
+		if err := s.PopulateLoginMethod(r, f.RequestedAAL, f); err != nil {
 			return nil, err
 		}
 	}
 
 	if err := sortNodes(f.UI.Nodes); err != nil {
 		return nil, err
-	}
-
-	if f.Refresh {
-		f.UI.Messages.Set(text.NewInfoLoginReAuth())
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
@@ -106,6 +167,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), f); err != nil {
 		return nil, err
 	}
+
 	return f, nil
 }
 
@@ -130,6 +192,16 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 	//
 	// in: query
 	Refresh bool `json:"refresh"`
+
+	// Request a Specific AuthenticationMethod Assurance Level
+	//
+	// Use this parameter to upgrade an existing session's authenticator assurance level (AAL). This
+	// allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password,
+	// the AAL is 1. If you wish to "upgrade" the session's security by asking the user to perform TOTP / WebAuth/ ...
+	// you would set this to "aal2"
+	//
+	// in: query
+	RequestAAL identity.AuthenticatorAssuranceLevel `json:"aal"`
 }
 
 // swagger:route GET /self-service/login/api v0alpha1 initializeSelfServiceLoginFlowWithoutBrowser
@@ -161,28 +233,13 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 //       400: jsonError
 //       500: jsonError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	a, err := h.NewLoginFlow(w, r, flow.TypeAPI)
+	f, err := h.NewLoginFlow(w, r, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	// we assume an error means the user has no session
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		h.d.Writer().Write(w, r, a)
-		return
-	}
-
-	if a.Refresh {
-		if err := h.d.LoginFlowPersister().ForceLoginFlow(r.Context(), a.ID); err != nil {
-			h.d.Writer().WriteError(w, r, err)
-			return
-		}
-		h.d.Writer().Write(w, r, a)
-		return
-	}
-
-	h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+	h.d.Writer().Write(w, r, f)
 }
 
 // swagger:route GET /self-service/login/browser v0alpha1 initializeSelfServiceLoginFlowForBrowsers
@@ -214,41 +271,24 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
-	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	}
-
-	// we assume an error means the user has no session
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		x.AcceptToRedirectOrJson(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
-		return
-	}
-
-	if a.Refresh {
-		if err := h.d.LoginFlowPersister().ForceLoginFlow(r.Context(), a.ID); err != nil {
+	if errors.Is(err, ErrAlreadyLoggedIn) {
+		returnTo, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(),
+			x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL(r)),
+			x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
+		)
+		if err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
-		x.AcceptToRedirectOrJson(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
-		return
-	}
 
-	if x.IsJSONRequest(r) {
-		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+		x.AcceptToRedirectOrJsonError(w, r, h.d.Writer(), err, returnTo.String())
 		return
-	}
-
-	returnTo, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(),
-		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL(r)),
-		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
-	)
-	if err != nil {
+	} else if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
+	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
 }
 
 // nolint:deadcode,unused
@@ -417,16 +457,37 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil && !f.Refresh {
-		if f.Type == flow.TypeBrowser {
-			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	if err == nil {
+		if f.Refresh {
+			// If we want to refresh, continue the login
+			goto continueLogin
+		}
+
+		if f.RequestedAAL > sess.AuthenticatorAssuranceLevel {
+			// If we want to upgrade AAL, continue the login
+			goto continueLogin
+		}
+
+		// We are not upgrading AAL, nor are we refreshing. Error!
+		x.AcceptToRedirectOrJsonError(w, r, h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn), h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String())
+		return
+	} else if errors.Is(err, session.ErrNoActiveSessionFound) {
+
+		// Only failure scenario here is if we try to upgrade the session to a higher AAL without actually
+		// having a session.
+		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+			h.d.Writer().WriteError(w, r, errors.WithStack(ErrSessionRequiredForHigherAAL))
 			return
 		}
 
-		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+		sess = session.NewInactiveSession()
+	} else {
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
+continueLogin:
 	if err := f.Valid(); err != nil {
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 		return
@@ -434,7 +495,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 
 	var i *identity.Identity
 	for _, ss := range h.d.AllLoginStrategies() {
-		interim, err := ss.Login(w, r, f)
+		interim, err := ss.Login(w, r, f, sess)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
@@ -444,6 +505,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 			return
 		}
 
+		sess.CompletedLoginFor(ss.ID())
 		i = interim
 		break
 	}
@@ -453,22 +515,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	for _, ss := range h.d.AllLoginStrategies() {
-		interim, err := ss.Login(w, r, f)
-		if errors.Is(err, flow.ErrStrategyNotResponsible) {
-			continue
-		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return
-		} else if err != nil {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
-			return
-		}
-
-		i = interim
-		break
-	}
-
-	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, f, i); err != nil {
+	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, f, i, sess); err != nil {
 		if err == ErrAddressNotVerified {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
 		} else {

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -43,8 +45,10 @@ func TestLoginExecutor(t *testing.T) {
 					a := login.NewFlow(conf, time.Minute, "", r, ft)
 					a.Active = identity.CredentialsType(strategy)
 					a.RequestURL = x.RequestURL(r).String()
+					sess := session.NewInactiveSession()
+					sess.CompletedLoginFor(identity.CredentialsTypePassword)
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
-						reg.LoginHookExecutor().PostLoginHook(w, r, a, testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)))
+						reg.LoginHookExecutor().PostLoginHook(w, r, a, testhelpers.SelfServiceHookCreateFakeIdentity(t, reg), sess))
 				})
 
 				ts := httptest.NewServer(router)

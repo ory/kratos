@@ -60,9 +60,8 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
-	s, err := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC())
-	if err != nil {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error {
+	if err := s.Activate(i, e.d.Config(r.Context()), time.Now()); err != nil {
 		return err
 	}
 	s = s.Declassify()
@@ -99,7 +98,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 	}
 
 	if a.Type == flow.TypeAPI {
-		if err := e.d.SessionPersister().CreateSession(r.Context(), s); err != nil {
+		if err := e.d.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 			return errors.WithStack(err)
 		}
 		e.d.Audit().
@@ -112,7 +111,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 		return nil
 	}
 
-	if err := e.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, s); err != nil {
+	if err := e.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s); err != nil {
 		return errors.WithStack(err)
 	}
 
