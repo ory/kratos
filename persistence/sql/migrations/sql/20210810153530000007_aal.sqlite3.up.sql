@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "sessions_nid_idx";

@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" DROP COLUMN "_authentication_methods_tmp";

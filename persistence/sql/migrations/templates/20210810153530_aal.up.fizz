@@ -1,0 +1,7 @@
+add_column("sessions", "aal", "string", { "default": "aal1", "size": 4 })
+
+add_column("sessions", "authentication_methods", "json", { "null": true })
+sql("UPDATE sessions SET authentication_methods='[]'")
+change_column("sessions", "authentication_methods", "json")
+
+add_column("selfservice_login_flows", "requested_aal", "string", { "default": "aal1", "size": 4 })

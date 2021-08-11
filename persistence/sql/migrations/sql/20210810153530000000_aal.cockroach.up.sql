@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ADD COLUMN "aal" VARCHAR (4) NOT NULL DEFAULT 'aal1';
