@@ -19,14 +19,14 @@ func TestSession(t *testing.T) {
 
 	i := new(identity.Identity)
 	i.State = identity.StateActive
-	s, _ := session.NewActiveSession(i, conf, authAt)
+	s, _ := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword)
 	assert.True(t, s.IsActive())
 
 	require.NotEmpty(t, s.Token)
 	require.NotEmpty(t, s.LogoutToken)
 
 	i = new(identity.Identity)
-	s, err := session.NewActiveSession(i, conf, authAt)
+	s, err := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword)
 	assert.Nil(t, s)
 	assert.Equal(t, session.ErrIdentityDisabled, err)
 

@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/driver/config"
 
@@ -82,6 +85,11 @@ type Flow struct {
 
 	// Refresh stores whether this login flow should enforce re-authentication.
 	Refresh bool `json:"forced" db:"forced"`
+
+	// RequestedAAL stores if the flow was requested to update the authenticator assurance level.
+	//
+	// This value can be one of "aal1", "aal2", "aal3".
+	RequestedAAL identity.AuthenticatorAssuranceLevel `json:"requested_aal" db:"requested_aal"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
@@ -95,10 +103,13 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
-		RequestURL:   x.RequestURL(r).String(),
-		CSRFToken:    csrf,
-		Type:         flowType,
-		Refresh:      r.URL.Query().Get("refresh") == "true",
+		RequestURL: x.RequestURL(r).String(),
+		CSRFToken:  csrf,
+		Type:       flowType,
+		Refresh:    r.URL.Query().Get("refresh") == "true",
+		RequestedAAL: identity.AuthenticatorAssuranceLevel(strings.ToLower(stringsx.Coalesce(
+			r.URL.Query().Get("aal"),
+			string(identity.AuthenticatorAssuranceLevel1)))),
 	}
 }
 

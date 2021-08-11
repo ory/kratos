@@ -183,3 +183,13 @@ func NewAddressNotVerifiedError() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationAddressNotVerified()),
 	})
 }
+
+func NewInvalidTOTPCode() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `the authentication code is not correct`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationInvalidTOTPCode()),
+	})
+}

@@ -6,10 +6,13 @@ import (
 )
 
 const (
-	InfoSelfServiceLoginRoot   ID = 1010000 + iota // 1010000
-	InfoSelfServiceLogin                           // 1010001
-	InfoSelfServiceLoginWith                       // 1010002
-	InfoSelfServiceLoginReAuth                     // 1010003
+	InfoSelfServiceLoginRoot      ID = 1010000 + iota // 1010000
+	InfoSelfServiceLogin                              // 1010001
+	InfoSelfServiceLoginWith                          // 1010002
+	InfoSelfServiceLoginReAuth                        // 1010003
+	InfoSelfServiceLoginMFA                           // 1010004
+	InfoSelfServiceLoginVerify                        // 1010005
+	InfoSelfServiceLoginTOTPLabel                     // 1010006
 )
 
 const (
@@ -26,7 +29,25 @@ func NewInfoLoginReAuth() *Message {
 	return &Message{
 		ID:      InfoSelfServiceLoginReAuth,
 		Type:    Info,
-		Text:    "Please confirm this action by verifying that it's you.",
+		Text:    "Please confirm this action by verifying that it is you.",
+		Context: context(nil),
+	}
+}
+
+func NewInfoLoginMFA() *Message {
+	return &Message{
+		ID:      InfoSelfServiceLoginMFA,
+		Type:    Info,
+		Text:    "Please complete the second authentication challenge.",
+		Context: context(nil),
+	}
+}
+
+func NewInfoLoginTOTPLabel() *Message {
+	return &Message{
+		ID:      InfoSelfServiceLoginTOTPLabel,
+		Type:    Info,
+		Text:    "Authentication code",
 		Context: context(nil),
 	}
 }
@@ -35,6 +56,15 @@ func NewInfoLogin() *Message {
 	return &Message{
 		ID:      InfoSelfServiceLogin,
 		Text:    "Sign in",
+		Type:    Info,
+		Context: context(map[string]interface{}{}),
+	}
+}
+
+func NewInfoLoginVerify() *Message {
+	return &Message{
+		ID:      InfoSelfServiceLoginVerify,
+		Text:    "Verify",
 		Type:    Info,
 		Context: context(map[string]interface{}{}),
 	}

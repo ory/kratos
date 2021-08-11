@@ -120,6 +120,22 @@ func AcceptToRedirectOrJson(
 	}
 }
 
+func AcceptToRedirectOrJsonError(
+	w http.ResponseWriter, r *http.Request, writer herodot.Writer, err error, redirectTo string,
+) {
+	switch httputil.NegotiateContentType(r, []string{
+		"text/html",
+		"application/json",
+	}, "text/html") {
+	case "application/json":
+		writer.WriteError(w, r, err)
+	case "text/html":
+		fallthrough
+	default:
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+	}
+}
+
 func AcceptsJSON(r *http.Request) bool {
 	return httputil.NegotiateContentType(r, []string{
 		"text/html",

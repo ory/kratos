@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/identity"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/ui/node"
@@ -62,7 +64,7 @@ func TestHandleError(t *testing.T) {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		f := login.NewFlow(conf, ttl, "csrf_token", req, ft)
 		for _, s := range reg.LoginStrategies(context.Background()) {
-			require.NoError(t, s.PopulateLoginMethod(req, f))
+			require.NoError(t, s.PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
 		}
 
 		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), f))
