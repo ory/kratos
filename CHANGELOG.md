@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-08-10)](#2021-08-10)
+- [ (2021-08-11)](#2021-08-11)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -191,7 +191,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-10)
+# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-11)
 
 
 ### Bug Fixes
@@ -229,6 +229,8 @@
 
 ### Documentation
 
+* Change model to schema ([#1639](https://github.com/ory/kratos/issues/1639)) ([09c403e](https://github.com/ory/kratos/commit/09c403e55482e91a5bfe9a253e514b7a90826709))
+* Fix stub error example ([#1642](https://github.com/ory/kratos/issues/1642)) ([9bc2fd0](https://github.com/ory/kratos/commit/9bc2fd088ed9b3e7334713e63bae3c7bbcb922db)), closes [#1568](https://github.com/ory/kratos/issues/1568)
 * Fixes incorrect yaml identation ([#1641](https://github.com/ory/kratos/issues/1641)) ([6b58278](https://github.com/ory/kratos/commit/6b582784b49c1d103bbf7a6843cdf197fbd93931))
 * Identity traits are visible to user ([#1621](https://github.com/ory/kratos/issues/1621)) ([641eba6](https://github.com/ory/kratos/commit/641eba675bdc583661565a6378776bfad26067c6))
 * Make qickstart URLs consistent (playground vs. localhost) ([#1626](https://github.com/ory/kratos/issues/1626)) ([bae1847](https://github.com/ory/kratos/commit/bae1847eba0d925f28a010876e35e3c2093bc8c6)):
