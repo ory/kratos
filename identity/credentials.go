@@ -12,19 +12,47 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
+// Authenticator Assurance Level (AAL)
+//
+// The authenticator assurance level can be one of "aal1", "aal2", or "aal3". A higher number means that it is harder
+// for an attacker to compromise the account.
+//
+// Generally, "aal1" implies that one authentication factor was used while AAL2 implies that two factors (e.g.
+// password + TOTP) have been used.
+//
+// To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials
+//
+// swagger:model authenticatorAssuranceLevel
+type AuthenticatorAssuranceLevel string
+
+const (
+	NoAuthenticatorAssuranceLevel AuthenticatorAssuranceLevel = "aal0"
+	AuthenticatorAssuranceLevel1  AuthenticatorAssuranceLevel = "aal1"
+	AuthenticatorAssuranceLevel2  AuthenticatorAssuranceLevel = "aal2"
+	AuthenticatorAssuranceLevel3  AuthenticatorAssuranceLevel = "aal3"
+)
+
 // CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
 // and so on.
+//
+// swagger:model identityCredentialsType
 type CredentialsType string
 
 func (c CredentialsType) String() string {
 	return string(c)
 }
 
+// Please make sure to add all of these values to the test that ensures they are created during migration
 const (
-	// make sure to add all of these values to the test that ensures they are created during migration
 	CredentialsTypePassword CredentialsType = "password"
 	CredentialsTypeOIDC     CredentialsType = "oidc"
 	CredentialsTypeTOTP     CredentialsType = "totp"
+)
+
+const (
+	// CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).
+	// It is not used within the credentials object itself.
+	CredentialsTypeRecoveryLink CredentialsType = "link_recovery"
 )
 
 // Credentials represents a specific credential type
