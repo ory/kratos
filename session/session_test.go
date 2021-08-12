@@ -36,4 +36,13 @@ func TestSession(t *testing.T) {
 		assert.False(t, (&session.Session{ExpiresAt: time.Now().Add(time.Hour)}).IsActive())
 		assert.False(t, (&session.Session{Active: true}).IsActive())
 	})
+
+	t.Run("case=amr", func(t *testing.T) {
+		s := session.NewInactiveSession()
+		s.CompletedLoginFor(identity.CredentialsTypeOIDC)
+		assert.EqualValues(t, identity.CredentialsTypeOIDC, s.AMR[0].Method)
+		s.CompletedLoginFor(identity.CredentialsTypeRecoveryLink)
+		assert.EqualValues(t, identity.CredentialsTypeOIDC, s.AMR[0].Method)
+		assert.EqualValues(t, identity.CredentialsTypeRecoveryLink, s.AMR[1].Method)
+	})
 }
