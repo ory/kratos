@@ -3,7 +3,9 @@ package login_test
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/ory/kratos/identity"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -34,6 +36,16 @@ func TestFakeFlow(t *testing.T) {
 
 func TestNewFlow(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
+
+	t.Run("type=aal", func(t *testing.T) {
+		r := login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "aal=aal2&refresh=true"}, Host: "ory.sh"}, flow.TypeBrowser)
+		assert.True(t, r.Refresh)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel2, r.RequestedAAL)
+
+		r = login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "refresh=true"}, Host: "ory.sh"}, flow.TypeBrowser)
+		assert.True(t, r.Refresh)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel1, r.RequestedAAL)
+	})
 
 	t.Run("type=browser", func(t *testing.T) {
 		t.Run("case=regular flow creation without a session", func(t *testing.T) {
