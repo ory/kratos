@@ -138,5 +138,5 @@ func TestGetRequestURL(t *testing.T) {
 func TestEnsureInternalContext(t *testing.T) {
 	f := new(settings.Flow)
 	f.EnsureInternalContext()
-	assert.Equal(t, "{}", f.InternalContext)
+	assert.Equal(t, "{}", string(f.InternalContext))
 }
