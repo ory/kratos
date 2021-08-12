@@ -45,4 +45,18 @@ func TestSession(t *testing.T) {
 		assert.EqualValues(t, identity.CredentialsTypeOIDC, s.AMR[0].Method)
 		assert.EqualValues(t, identity.CredentialsTypeRecoveryLink, s.AMR[1].Method)
 	})
+
+	t.Run("case=activate", func(t *testing.T) {
+		s := session.NewInactiveSession()
+		require.NoError(t, s.Activate(&identity.Identity{State: identity.StateActive}, conf, authAt))
+		assert.True(t, s.Active)
+		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
+		assert.Equal(t, authAt, s.AuthenticatedAt)
+
+		s = session.NewInactiveSession()
+		require.ErrorIs(t, s.Activate(&identity.Identity{State: identity.StateInactive}, conf, authAt), session.ErrIdentityDisabled)
+		assert.False(t, s.Active)
+		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
+		assert.Empty(t, s.AuthenticatedAt)
+	})
 }
