@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/x/urlx"
+
 	"github.com/tidwall/gjson"
 
 	"github.com/stretchr/testify/assert"
@@ -45,15 +48,46 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 	return ts
 }
 
-func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool) *kratos.SelfServiceLoginFlow {
-	publicClient := NewSDKCustomClient(ts, client)
+type initFlowOptions struct {
+	aal identity.AuthenticatorAssuranceLevel
+}
 
-	q := ""
+func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
+	for _, opt := range opts {
+		opt(o)
+	}
+	return o
+}
+
+func getURLFromInitOptions(ts *httptest.Server, path string, forced bool, opts ...InitFlowWithOption) string {
+	o := new(initFlowOptions).apply(opts)
+	q := url.Values{}
+
 	if forced {
-		q = "?refresh=true"
+		q.Set("refresh", "true")
 	}
 
-	req, err := http.NewRequest("GET", ts.URL+login.RouteInitBrowserFlow+q, nil)
+	if o.aal != "" {
+		q.Set("aal", string(o.aal))
+	}
+
+	u := urlx.ParseOrPanic(ts.URL + path)
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
+type InitFlowWithOption func(*initFlowOptions)
+
+func InitFlowWithAAL(aal identity.AuthenticatorAssuranceLevel) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.aal = aal
+	}
+}
+
+func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool, opts ...InitFlowWithOption) *kratos.SelfServiceLoginFlow {
+	publicClient := NewSDKCustomClient(ts, client)
+
+	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, login.RouteInitBrowserFlow, forced, opts...), nil)
 	require.NoError(t, err)
 
 	if isSPA {
@@ -77,10 +111,16 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	return rs
 }
 
-func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *kratos.SelfServiceLoginFlow {
+func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.SelfServiceLoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.V0alpha1Api.InitializeSelfServiceLoginFlowWithoutBrowser(context.Background()).Refresh(forced).Execute()
+	o := new(initFlowOptions).apply(opts)
+	req := publicClient.V0alpha1Api.InitializeSelfServiceLoginFlowWithoutBrowser(context.Background()).Refresh(forced)
+	if o.aal != "" {
+		req = req.Aal(string(o.aal))
+	}
+
+	rs, _, err := req.Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 

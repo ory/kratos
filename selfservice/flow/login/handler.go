@@ -470,21 +470,26 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 			goto continueLogin
 		}
 
-		// We are not upgrading AAL, nor are we refreshing. Error!
-		x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn), h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String())
+		if x.IsJSONRequest(r) || f.Type == flow.TypeAPI {
+			// We are not upgrading AAL, nor are we refreshing. Error!
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(ErrAlreadyLoggedIn))
+			return
+		}
+
+		http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusSeeOther)
 		return
 	} else if errors.Is(err, session.ErrNoActiveSessionFound) {
 
 		// Only failure scenario here is if we try to upgrade the session to a higher AAL without actually
 		// having a session.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-			h.d.Writer().WriteError(w, r, errors.WithStack(ErrSessionRequiredForHigherAAL))
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(ErrSessionRequiredForHigherAAL))
 			return
 		}
 
 		sess = session.NewInactiveSession()
 	} else {
-		h.d.Writer().WriteError(w, r, err)
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 		return
 	}
 
