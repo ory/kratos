@@ -199,7 +199,7 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 	// Use this parameter to upgrade an existing session's authenticator assurance level (AAL). This
 	// allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password,
 	// the AAL is 1. If you wish to "upgrade" the session's security by asking the user to perform TOTP / WebAuth/ ...
-	// you would set this to "aal2"
+	// you would set this to "aal2".
 	//
 	// in: query
 	RequestAAL identity.AuthenticatorAssuranceLevel `json:"aal"`

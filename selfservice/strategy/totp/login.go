@@ -64,11 +64,11 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) e
 	return err
 }
 
-// submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.
+// submitSelfServiceLoginFlowWithTOTPMethodBody is used to decode the login form payload.
 //
-// swagger:model submitSelfServiceLoginFlowWithPasswordMethodBody
-type submitSelfServiceLoginFlowWithPasswordMethodBody struct {
-	// Method should be set to "password" when logging in using the identifier and password strategy.
+// swagger:model submitSelfServiceLoginFlowWithTOTPMethodBody
+type submitSelfServiceLoginFlowWithTOTPMethodBody struct {
+	// Method should be set to "totp" when logging in using the TOTP strategy.
 	//
 	// required: true
 	Method string `json:"method"`
@@ -91,7 +91,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	var p submitSelfServiceLoginFlowWithPasswordMethodBody
+	var p submitSelfServiceLoginFlowWithTOTPMethodBody
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
@@ -110,7 +110,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	var o CredentialsConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The TOTP credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err))
 	}
 
 	key, err := otp.NewKeyFromURL(o.TOTPURL)

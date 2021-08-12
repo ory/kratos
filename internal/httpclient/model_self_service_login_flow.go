@@ -24,13 +24,15 @@ type SelfServiceLoginFlow struct {
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
-	// Forced stores whether this login flow should enforce re-authentication.
+	// Refresh stores whether this login flow should enforce re-authentication.
 	Forced *bool  `json:"forced,omitempty"`
 	Id     string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow started.
 	IssuedAt time.Time `json:"issued_at"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
+	// The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder for an attacker to compromise the account.  Generally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g. password + TOTP) have been used.  To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials
+	RequestedAal *string `json:"requested_aal,omitempty"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`
 	Ui   UiContainer `json:"ui"`
@@ -253,6 +255,38 @@ func (o *SelfServiceLoginFlow) SetRequestUrl(v string) {
 	o.RequestUrl = v
 }
 
+// GetRequestedAal returns the RequestedAal field value if set, zero value otherwise.
+func (o *SelfServiceLoginFlow) GetRequestedAal() string {
+	if o == nil || o.RequestedAal == nil {
+		var ret string
+		return ret
+	}
+	return *o.RequestedAal
+}
+
+// GetRequestedAalOk returns a tuple with the RequestedAal field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceLoginFlow) GetRequestedAalOk() (*string, bool) {
+	if o == nil || o.RequestedAal == nil {
+		return nil, false
+	}
+	return o.RequestedAal, true
+}
+
+// HasRequestedAal returns a boolean if a field has been set.
+func (o *SelfServiceLoginFlow) HasRequestedAal() bool {
+	if o != nil && o.RequestedAal != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetRequestedAal gets a reference to the given string and assigns it to the RequestedAal field.
+func (o *SelfServiceLoginFlow) SetRequestedAal(v string) {
+	o.RequestedAal = &v
+}
+
 // GetType returns the Type field value
 func (o *SelfServiceLoginFlow) GetType() string {
 	if o == nil {
@@ -355,6 +389,9 @@ func (o SelfServiceLoginFlow) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["request_url"] = o.RequestUrl
+	}
+	if o.RequestedAal != nil {
+		toSerialize["requested_aal"] = o.RequestedAal
 	}
 	if true {
 		toSerialize["type"] = o.Type
