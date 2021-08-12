@@ -3,6 +3,19 @@ id: milestones
 title: Milestones and Roadmap
 ---
 
+## [v0.10.0-alpha.1](https://github.com/ory/kratos/milestone/13)
+
+_This milestone does not have a description._
+
+### [Feat](https://github.com/ory/kratos/labels/feat)
+
+New feature or request.
+
+#### Issues
+
+- [ ] Require second factor only if device is unknown
+      ([kratos#1643](https://github.com/ory/kratos/issues/1643))
+
 ## [v0.7.x](https://github.com/ory/kratos/milestone/12)
 
 _This milestone does not have a description._
@@ -33,11 +46,11 @@ Affects documentation.
 
 #### Issues
 
-- [ ] Different payload for stub:500
-      ([kratos#1568](https://github.com/ory/kratos/issues/1568))
 - [x] Update CSRF pitfall section for admin endpoints
       ([kratos#1557](https://github.com/ory/kratos/issues/1557)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Different payload for stub:500
+      ([kratos#1568](https://github.com/ory/kratos/issues/1568))
 
 ## [v0.9.0-alpha.1](https://github.com/ory/kratos/milestone/11)
 
