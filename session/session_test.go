@@ -59,4 +59,80 @@ func TestSession(t *testing.T) {
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Empty(t, s.AuthenticatedAt)
 	})
+
+	t.Run("case=aal", func(t *testing.T) {
+		for _, tc := range []struct {
+			d        string
+			methods  []identity.CredentialsType
+			expected identity.AuthenticatorAssuranceLevel
+		}{
+			{
+				d:        "no amr means no assurance",
+				expected: identity.NoAuthenticatorAssuranceLevel,
+			},
+			{
+				d:        "password is aal1",
+				methods:  []identity.CredentialsType{identity.CredentialsTypePassword},
+				expected: identity.AuthenticatorAssuranceLevel1,
+			},
+			{
+				d:        "oidc is aal1",
+				methods:  []identity.CredentialsType{identity.CredentialsTypeOIDC},
+				expected: identity.AuthenticatorAssuranceLevel1,
+			},
+			{
+				d:        "recovery is aal1",
+				methods:  []identity.CredentialsType{identity.CredentialsTypeRecoveryLink},
+				expected: identity.AuthenticatorAssuranceLevel1,
+			},
+			{
+				d: "mix of password, oidc, recovery is still aal1",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypeRecoveryLink, identity.CredentialsTypeOIDC, identity.CredentialsTypePassword,
+				},
+				expected: identity.AuthenticatorAssuranceLevel1,
+			},
+			{
+				d: "just totp is aal0",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypeTOTP,
+				},
+				expected: identity.NoAuthenticatorAssuranceLevel,
+			},
+			{
+				d: "password + totp is aal2",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypePassword,
+					identity.CredentialsTypeTOTP,
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+			{
+				d: "oidc + totp is aal2",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypeOIDC,
+					identity.CredentialsTypeTOTP,
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+			{
+				d: "recovery link + totp is aal2",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypeRecoveryLink,
+					identity.CredentialsTypeTOTP,
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+		} {
+			t.Run("case="+tc.d, func(t *testing.T) {
+				s := session.NewInactiveSession()
+				for _, m := range tc.methods {
+					s.CompletedLoginFor(m)
+				}
+
+				s.SetAuthenticatorAssuranceLevel()
+				assert.Equal(t, tc.expected, s.AuthenticatorAssuranceLevel)
+			})
+		}
+	})
 }
