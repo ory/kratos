@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/urlx"
 
 	kratos "github.com/ory/kratos-client-go"
@@ -40,7 +42,8 @@ func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
-	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+	router := x.NewRouterPublic()
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -115,6 +118,24 @@ func TestCompleteLogin(t *testing.T) {
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "invalid URL escape", "%s", body)
 		})
+	})
+
+	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
+		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+
+		update, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+		require.NoError(t, err)
+		update.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), update))
+
+		req, err := http.NewRequest("POST", f.Ui.Action, bytes.NewBufferString(`{"method":"password"}`))
+		require.NoError(t, err)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+
+		actual, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
+		assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+		assert.Equal(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.GetBytes(actual, "ui.messages.0.text").String())
 	})
 
 	t.Run("should return an error because the request does not exist", func(t *testing.T) {
