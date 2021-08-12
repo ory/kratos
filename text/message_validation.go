@@ -17,6 +17,7 @@ const (
 	ErrorValidationIdentifierMissing
 	ErrorValidationAddressNotVerified
 	ErrorValidationInvalidTOTPCode
+	ErrorValidationNoTOTPDevice
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
@@ -121,6 +122,15 @@ func NewErrorValidationInvalidTOTPCode() *Message {
 	return &Message{
 		ID:      ErrorValidationInvalidTOTPCode,
 		Text:    "The provided authentication code is not valid.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationNoTOTPDevice() *Message {
+	return &Message{
+		ID:      ErrorValidationNoTOTPDevice,
+		Text:    "You have no TOTP device set up.",
 		Type:    Error,
 		Context: context(nil),
 	}

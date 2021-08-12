@@ -193,3 +193,13 @@ func NewInvalidTOTPCode() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationInvalidTOTPCode()),
 	})
 }
+
+func NewNoTOTPDeviceRegistered() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `you have no TOTP device set up`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationNoTOTPDevice()),
+	})
+}

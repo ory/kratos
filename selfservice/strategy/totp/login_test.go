@@ -1,16 +1,24 @@
 package totp_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"github.com/ory/kratos/text"
+	"net/http"
+	"net/url"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/pquerna/otp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	stdtotp "github.com/pquerna/otp/totp"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -67,7 +75,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
-	//redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
+	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two to make it more explicit when tests fail
 	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
@@ -78,6 +86,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
+
 		t.Run("type=api", func(t *testing.T) {
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
@@ -109,87 +118,210 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should fail if code is empty", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
-		t.Run("type=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		values.Set("method", "totp")
+		v(values)
+		payload := testhelpers.EncodeFormAsJSON(t, true, values)
+		return testhelpers.LoginMakeRequest(t, true, false, f, apiClient, payload)
+	}
 
-			body, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, `{"method":"totp","totp_code":""}`)
-			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
-			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, "length must be >= 6, but got 0", gjson.Get(body, "ui.nodes.#(attributes.name==totp_code).messages.0.text").String(), "%s", body)
-		})
+	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		values.Set("method", "totp")
+		v(values)
+		return testhelpers.LoginMakeRequest(t, false, spa, f, browserClient, values.Encode())
+	}
 
-		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-
-			vals := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
-			vals.Set("totp_code", "")
-
-			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, vals.Encode())
+	checkURL := func(t *testing.T, shouldRedirect bool, res *http.Response) {
+		if shouldRedirect {
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
-			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, "length must be >= 6, but got 0", gjson.Get(body, "ui.nodes.#(attributes.name==totp_code).messages.0.text").String(), "%s", body)
-		})
-
-		t.Run("type=spa", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-
-			vals := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
-			vals.Set("totp_code", "")
-
-			body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, vals.Encode())
+		} else {
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
-			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, "length must be >= 6, but got 0", gjson.Get(body, "ui.nodes.#(attributes.name==totp_code).messages.0.text").String(), "%s", body)
-		})
-	})
+		}
+	}
 
 	t.Run("case=should fail if code is empty", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
-		t.Run("type=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		payload := func(v url.Values) {
+			v.Set("totp_code", "")
+		}
 
-			body, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, `{"method":"totp","totp_code":"111111"}`)
-			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
+			checkURL(t, shouldRedirect, res)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, text.NewErrorValidationInvalidTOTPCode().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			assert.Equal(t, "length must be >= 6, but got 0", gjson.Get(body, "ui.nodes.#(attributes.name==totp_code).messages.0.text").String(), "%s", body)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			body, res := doAPIFlow(t, payload, id)
+			check(t, false, body, res)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-
-			vals := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
-			vals.Set("totp_code", "111111")
-
-			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, vals.Encode())
-			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
-			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, text.NewErrorValidationInvalidTOTPCode().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			body, res := doBrowserFlow(t, false, payload, id)
+			check(t, true, body, res)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-
-			vals := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
-			vals.Set("totp_code", "111111")
-
-			body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, vals.Encode())
-			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
-			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, text.NewErrorValidationInvalidTOTPCode().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			body, res := doBrowserFlow(t, true, payload, id)
+			check(t, false, body, res)
 		})
 	})
 
-	// check what happens if identity has no totp set up
+	t.Run("case=should fail if code is invalid", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+		payload := func(v url.Values) {
+			v.Set("totp_code", "111111")
+		}
 
-	// check what happens if good code is sent
+		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
+			checkURL(t, shouldRedirect, res)
+			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+			assert.Equal(t, text.NewErrorValidationInvalidTOTPCode().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+		}
 
-	// One test where we check AAL1 with TOTP (need to fake the flow)
+		t.Run("type=api", func(t *testing.T) {
+			body, res := doAPIFlow(t, payload, id)
+			check(t, false, body, res)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			body, res := doBrowserFlow(t, false, payload, id)
+			check(t, true, body, res)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			body, res := doBrowserFlow(t, true, payload, id)
+			check(t, false, body, res)
+		})
+	})
+
+	t.Run("case=should fail if code is too long", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+		payload := func(v url.Values) {
+			v.Set("totp_code", "1111111111")
+		}
+
+		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
+			checkURL(t, shouldRedirect, res)
+			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+			assert.Equal(t, text.NewErrorValidationInvalidTOTPCode().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			body, res := doAPIFlow(t, payload, id)
+			check(t, false, body, res)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			body, res := doBrowserFlow(t, false, payload, id)
+			check(t, true, body, res)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			body, res := doBrowserFlow(t, true, payload, id)
+			check(t, false, body, res)
+		})
+	})
+
+	t.Run("case=should fail if TOTP was not set up for identity", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+		id.Credentials = nil
+		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+
+		payload := func(v url.Values) {
+			v.Set("totp_code", "111111")
+		}
+
+		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
+			checkURL(t, shouldRedirect, res)
+			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+			assert.Equal(t, text.NewErrorValidationNoTOTPDevice().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			body, res := doAPIFlow(t, payload, id)
+			check(t, false, body, res)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			body, res := doBrowserFlow(t, false, payload, id)
+			check(t, true, body, res)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			body, res := doBrowserFlow(t, true, payload, id)
+			check(t, false, body, res)
+		})
+	})
+
+	t.Run("case=should pass when TOTP is supplied correctly", func(t *testing.T) {
+		id, key := createIdentity(t, reg)
+		code, err := stdtotp.GenerateCode(key.Secret(), time.Now())
+		require.NoError(t, err)
+		payload := func(v url.Values) {
+			v.Set("totp_code", code)
+		}
+
+		startAt := time.Now()
+		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
+			prefix := "session."
+			if shouldRedirect {
+				assert.Contains(t, res.Request.URL.String(), redirTS.URL+"/return-ts")
+				prefix = ""
+			} else {
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+			}
+			assert.True(t, gjson.Get(body, prefix+"active").Bool(), "%s", body)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, gjson.Get(body, prefix+"authenticator_assurance_level").String())
+			require.Len(t, gjson.Get(body, prefix+"authentication_methods").Array(), 2)
+			assert.EqualValues(t, identity.CredentialsTypePassword, gjson.Get(body, prefix+"authentication_methods.0.method").String(), 2)
+			assert.True(t, gjson.Get(body, prefix+"authentication_methods.0.completed_at").Time().After(startAt), 2)
+			assert.EqualValues(t, identity.CredentialsTypeTOTP, gjson.Get(body, prefix+"authentication_methods.1.method").String(), 2)
+			assert.True(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().After(startAt), 2)
+			assert.True(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().After(gjson.Get(body, prefix+"authentication_methods.0.completed_at").Time()), 2)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			body, res := doAPIFlow(t, payload, id)
+			check(t, false, body, res)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			body, res := doBrowserFlow(t, false, payload, id)
+			check(t, true, body, res)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			body, res := doBrowserFlow(t, true, payload, id)
+			check(t, false, body, res)
+		})
+	})
+
+	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
+		apiClient := testhelpers.NewDebugClient(t)
+		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+
+		update, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+		require.NoError(t, err)
+		update.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), update))
+
+		req, err := http.NewRequest("POST", f.Ui.Action, bytes.NewBufferString(`{"method":"totp"}`))
+		require.NoError(t, err)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		body := x.MustReadAll(res.Body)
+		require.NoError(t, res.Body.Close())
+		assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+		assert.Equal(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.GetBytes(body, "ui.messages.0.text").String())
+	})
 }
