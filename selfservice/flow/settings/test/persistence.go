@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -63,6 +64,29 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 				_, err := p.GetSettingsFlow(ctx, r.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
+		})
+
+		t.Run("case=should create and update and properly deal with internal context", func(t *testing.T) {
+			for k, tc := range []struct {
+				in     []byte
+				expect string
+			}{
+				{in: []byte("[]"), expect: "{}"},
+				{expect: "{}"},
+				{in: []byte("null"), expect: "{}"},
+				{in: []byte(`"{"foo":"bar"}"`), expect: `"{"foo":"bar"}"`},
+			} {
+				t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
+					r := newFlow(t)
+					r.InternalContext = tc.in
+					require.NoError(t, p.CreateSettingsFlow(ctx, r))
+					assert.Equal(t, tc.expect, string(r.InternalContext))
+
+					r.InternalContext = tc.in
+					require.NoError(t, p.UpdateSettingsFlow(ctx, r))
+					assert.Equal(t, tc.expect, string(r.InternalContext))
+				})
+			}
 		})
 
 		t.Run("case=should ensure that internal context is an object", func(t *testing.T) {
