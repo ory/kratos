@@ -2,9 +2,10 @@ package test
 
 import (
 	"context"
-	"github.com/ory/kratos/identity"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
