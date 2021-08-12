@@ -134,3 +134,9 @@ func TestGetRequestURL(t *testing.T) {
 	f := &settings.Flow{RequestURL: expectedURL}
 	assert.Equal(t, expectedURL, f.GetRequestURL())
 }
+
+func TestEnsureInternalContext(t *testing.T) {
+	f := new(settings.Flow)
+	f.EnsureInternalContext()
+	assert.Equal(t, "{}", f.InternalContext)
+}
