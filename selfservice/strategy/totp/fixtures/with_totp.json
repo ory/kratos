@@ -1,0 +1,54 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "totp_code",
+      "required": true,
+      "type": "text",
+      "value": ""
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {},
+        "id": 1010006,
+        "text": "Authentication code",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "totp"
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {},
+        "id": 1010001,
+        "text": "Sign in",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "N2RvMDkwbzQ4cm5qeGh6MzB3cGhmd2JmcW42eXc2Yno="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  }
+]

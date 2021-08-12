@@ -3,11 +3,14 @@ package totp_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/gofrs/uuid"
 
@@ -29,6 +32,8 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
+
+	_ "embed"
 )
 
 func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, *otp.Key) {
@@ -65,6 +70,9 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, *otp
 	return i, key
 }
 
+//go:embed fixtures/with_totp.json
+var fixtureWithTOTP []byte
+
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
@@ -83,6 +91,24 @@ func TestCompleteLogin(t *testing.T) {
 
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+
+	t.Run("case=totp payload is set when identity has totp", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureWithTOTP), f.Ui.Nodes, []string{"2.attributes.value"})
+	})
+
+	t.Run("case=totp payload is set when identity has no totp", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+		id.Credentials = nil
+		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
+	})
 
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
