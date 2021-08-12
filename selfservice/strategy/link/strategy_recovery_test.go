@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/davecgh/go-spew/spew"
 
 	"github.com/gofrs/uuid"
@@ -361,6 +363,13 @@ func TestRecovery(t *testing.T) {
 			assert.True(t, addr.Verified)
 			assert.NotEqual(t, sqlxx.NullTime{}, addr.VerifiedAt)
 			assert.Equal(t, identity.VerifiableAddressStatusCompleted, addr.Status)
+
+			res, err = cl.Get(public.URL + session.RouteWhoami)
+			require.NoError(t, err)
+			body = x.MustReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, "link_recovery", gjson.GetBytes(body, "authentication_methods.0.method").String(), "%s", body)
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
