@@ -17,19 +17,23 @@ func TestSession(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 	authAt := time.Now()
 
-	i := new(identity.Identity)
-	i.State = identity.StateActive
-	s, _ := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword)
-	assert.True(t, s.IsActive())
+	t.Run("case=active session", func(t *testing.T) {
+		i := new(identity.Identity)
+		i.State = identity.StateActive
+		s, _ := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword)
+		assert.True(t, s.IsActive())
+		require.NotEmpty(t, s.Token)
+		require.NotEmpty(t, s.LogoutToken)
+		assert.EqualValues(t, identity.CredentialsTypePassword, s.AMR[0].Method)
 
-	require.NotEmpty(t, s.Token)
-	require.NotEmpty(t, s.LogoutToken)
+		i = new(identity.Identity)
+		s, err := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword)
+		assert.Nil(t, s)
+		assert.ErrorIs(t, err, session.ErrIdentityDisabled)
+	})
 
-	i = new(identity.Identity)
-	s, err := session.NewActiveSession(i, conf, authAt, identity.CredentialsTypePassword)
-	assert.Nil(t, s)
-	assert.Equal(t, session.ErrIdentityDisabled, err)
-
-	assert.False(t, (&session.Session{ExpiresAt: time.Now().Add(time.Hour)}).IsActive())
-	assert.False(t, (&session.Session{Active: true}).IsActive())
+	t.Run("case=expired", func(t *testing.T) {
+		assert.False(t, (&session.Session{ExpiresAt: time.Now().Add(time.Hour)}).IsActive())
+		assert.False(t, (&session.Session{Active: true}).IsActive())
+	})
 }
