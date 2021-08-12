@@ -114,7 +114,6 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 			fallthrough
 		case identity.CredentialsTypePassword:
 			firstFactor = true
-
 		case identity.CredentialsTypeTOTP:
 			secondFactor = true
 		}
@@ -140,10 +139,11 @@ func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt 
 
 func NewInactiveSession() *Session {
 	return &Session{
-		ID:          x.NewUUID(),
-		Token:       randx.MustString(32, randx.AlphaNum),
-		LogoutToken: randx.MustString(32, randx.AlphaNum),
-		Active:      false,
+		ID:                          x.NewUUID(),
+		Token:                       randx.MustString(32, randx.AlphaNum),
+		LogoutToken:                 randx.MustString(32, randx.AlphaNum),
+		Active:                      false,
+		AuthenticatorAssuranceLevel: identity.NoAuthenticatorAssuranceLevel,
 	}
 }
 
@@ -161,10 +161,6 @@ func (s *Session) Activate(i *identity.Identity, c lifespanProvider, authenticat
 
 	s.SetAuthenticatorAssuranceLevel()
 	return nil
-}
-
-func (s *Session) ActivateNow(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time) error {
-	return s.Activate(i, c, time.Now().UTC())
 }
 
 // swagger:model sessionDevice
