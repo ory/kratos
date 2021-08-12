@@ -40,6 +40,7 @@ func TestInitFlow(t *testing.T) {
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
+	errorTS := testhelpers.NewErrorTestServer(t, reg)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
@@ -103,6 +104,42 @@ func TestInitFlow(t *testing.T) {
 			assertion(body, false, true)
 		})
 
+		t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertx.EqualAsJSON(t, "You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time.", gjson.GetBytes(body, "error.reason").String())
+		})
+
+		t.Run("case=can not request refresh and aal at the same time on authenticated request", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertx.EqualAsJSON(t, "You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time.", gjson.GetBytes(body, "error.reason").String())
+		})
+
+		t.Run("case=can not request aal2 on unauthenticated request", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{"aal": {"aal2"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "error.reason").String())
+		})
+
+		t.Run("case=ignores aal1 if session has aal1 already", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"aal": {"aal1"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertx.EqualAsJSON(t, "A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?", gjson.GetBytes(body, "error.reason").String())
+		})
+
+		t.Run("case=aal0 is not a valid value", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"aal": {"aal0"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertx.EqualAsJSON(t, "Unable to parse AuthenticationMethod Assurance Level (AAL): expected one of [aal1, aal2] but got aal0", gjson.GetBytes(body, "error.reason").String())
+		})
+
+		t.Run("case=indicates two factor auth", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"aal": {"aal2"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assert.Equal(t, gjson.GetBytes(body, "ui.messages.0.text").String(), text.NewInfoLoginMFA().Text)
+		})
+
 		t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
 			res, body := initFlow(t, url.Values{"refresh": {"true"}}, true)
 			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
@@ -140,6 +177,41 @@ func TestInitFlow(t *testing.T) {
 			res, body := initFlow(t, url.Values{}, false)
 			assertion(body, false, false)
 			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+		})
+
+		t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, false)
+			assert.Contains(t, res.Request.URL.String(), errorTS.URL)
+			assertx.EqualAsJSON(t, "You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time.", gjson.GetBytes(body, "reason").String(), string(body))
+		})
+
+		t.Run("case=can not request refresh and aal at the same time on authenticated request", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, false)
+			assert.Contains(t, res.Request.URL.String(), errorTS.URL)
+			assertx.EqualAsJSON(t, "You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time.", gjson.GetBytes(body, "reason").String())
+		})
+
+		t.Run("case=can not request aal2 on unauthenticated request", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{"aal": {"aal2"}}, false)
+			assert.Contains(t, res.Request.URL.String(), errorTS.URL)
+			assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String())
+		})
+
+		t.Run("case=ignores aal1 if session has aal1 already", func(t *testing.T) {
+			res, _ := initAuthenticatedFlow(t, url.Values{"aal": {"aal1"}}, false)
+			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
+		})
+
+		t.Run("case=aal0 is not a valid value", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"aal": {"aal0"}}, false)
+			assert.Contains(t, res.Request.URL.String(), errorTS.URL)
+			assertx.EqualAsJSON(t, "Unable to parse AuthenticationMethod Assurance Level (AAL): expected one of [aal1, aal2] but got aal0", gjson.GetBytes(body, "reason").String())
+		})
+
+		t.Run("case=indicates two factor auth", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"aal": {"aal2"}}, false)
+			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+			assert.Equal(t, gjson.GetBytes(body, "ui.messages.0.text").String(), text.NewInfoLoginMFA().Text)
 		})
 
 		t.Run("case=makes request with JSON", func(t *testing.T) {

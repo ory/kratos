@@ -23,8 +23,8 @@ import (
 
 var (
 	ErrHookAbortFlow      = errors.New("aborted login hook execution")
-	ErrAlreadyLoggedIn    = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
-	ErrAddressNotVerified = herodot.ErrBadRequest.WithReason("The email address is not verified yet.")
+	ErrAlreadyLoggedIn    = herodot.ErrBadRequest.WithError("you are already logged in").WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
+	ErrAddressNotVerified = herodot.ErrBadRequest.WithError("your email or phone address is not yet verified").WithReason("Your account's email or phone address are not verified yet. Please check your email or phone inbox or re-request verification.")
 
 	// ErrSessionHasAALAlready is returned when one attempts to upgrade the AAL of an active session which already has that AAL.
 	ErrSessionHasAALAlready = herodot.ErrUnauthorized.WithError("session has the requested authenticator assurance level already").WithReason("The session has the requested AAL already.")

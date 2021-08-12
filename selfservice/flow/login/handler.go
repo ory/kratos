@@ -88,16 +88,17 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 	conf := h.d.Config(r.Context())
 	f := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
 
-	cases := stringsx.RegisteredCases{}
-	switch cs := stringsx.SwitchExact(string(f.RequestedAAL)); {
-	case cs.AddCase(""):
+	if f.RequestedAAL == "" {
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
+	}
+
+	switch cs := stringsx.SwitchExact(string(f.RequestedAAL)); {
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel1)):
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel2)):
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 	default:
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cases.ToUnknownCaseErr()))
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
 	}
 
 	if f.Refresh && f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
