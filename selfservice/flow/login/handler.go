@@ -273,12 +273,12 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if errors.Is(err, ErrAlreadyLoggedIn) {
-		returnTo, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(),
+		returnTo, redirErr := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(),
 			x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL(r)),
 			x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
 		)
-		if err != nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		if redirErr != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, redirErr)
 			return
 		}
 
@@ -461,6 +461,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err == nil {
 		if f.Refresh {
+			sess = session.NewInactiveSession()
 			// If we want to refresh, continue the login
 			goto continueLogin
 		}

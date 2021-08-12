@@ -131,13 +131,13 @@ func TestFlowLifecycle(t *testing.T) {
 
 			t.Run("case=end up with method missing when aal is ok", func(t *testing.T) {
 				t.Run("type=api", func(t *testing.T) {
-					body, res := run(t, flow.TypeAPI, "aal1", url.Values{})
+					body, res := run(t, flow.TypeAPI, "aal1", url.Values{"method": {"not-exist"}})
 					assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
 					assertx.EqualAsJSON(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.Get(body, "ui.messages.0.text").String(), body)
 				})
 
 				t.Run("type=browser", func(t *testing.T) {
-					body, res := run(t, flow.TypeBrowser, "aal1", url.Values{})
+					body, res := run(t, flow.TypeBrowser, "aal1", url.Values{"method": {"not-exist"}})
 					assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 					assertx.EqualAsJSON(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.Get(body, "ui.messages.0.text").String(), body)
 				})

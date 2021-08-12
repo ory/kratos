@@ -38,7 +38,7 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *l
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
-	if err := login.CheckAAL(f, identity.NoAuthenticatorAssuranceLevel); err != nil {
+	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, err
 	}
 
