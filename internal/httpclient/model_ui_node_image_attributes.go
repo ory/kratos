@@ -17,6 +17,8 @@ import (
 
 // UiNodeImageAttributes struct for UiNodeImageAttributes
 type UiNodeImageAttributes struct {
+	// A unique identifier
+	Id string `json:"id"`
 	// The image's source URL.  format: uri
 	Src string `json:"src"`
 }
@@ -25,8 +27,9 @@ type UiNodeImageAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeImageAttributes(src string) *UiNodeImageAttributes {
+func NewUiNodeImageAttributes(id string, src string) *UiNodeImageAttributes {
 	this := UiNodeImageAttributes{}
+	this.Id = id
 	this.Src = src
 	return &this
 }
@@ -37,6 +40,30 @@ func NewUiNodeImageAttributes(src string) *UiNodeImageAttributes {
 func NewUiNodeImageAttributesWithDefaults() *UiNodeImageAttributes {
 	this := UiNodeImageAttributes{}
 	return &this
+}
+
+// GetId returns the Id field value
+func (o *UiNodeImageAttributes) GetId() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Id
+}
+
+// GetIdOk returns a tuple with the Id field value
+// and a boolean to check if the value has been set.
+func (o *UiNodeImageAttributes) GetIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Id, true
+}
+
+// SetId sets field value
+func (o *UiNodeImageAttributes) SetId(v string) {
+	o.Id = v
 }
 
 // GetSrc returns the Src field value
@@ -65,6 +92,9 @@ func (o *UiNodeImageAttributes) SetSrc(v string) {
 
 func (o UiNodeImageAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if true {
+		toSerialize["id"] = o.Id
+	}
 	if true {
 		toSerialize["src"] = o.Src
 	}

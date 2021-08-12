@@ -17,6 +17,8 @@ import (
 
 // UiNodeTextAttributes struct for UiNodeTextAttributes
 type UiNodeTextAttributes struct {
+	// A unique identifier
+	Id   string `json:"id"`
 	Text UiText `json:"text"`
 }
 
@@ -24,8 +26,9 @@ type UiNodeTextAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeTextAttributes(text UiText) *UiNodeTextAttributes {
+func NewUiNodeTextAttributes(id string, text UiText) *UiNodeTextAttributes {
 	this := UiNodeTextAttributes{}
+	this.Id = id
 	this.Text = text
 	return &this
 }
@@ -36,6 +39,30 @@ func NewUiNodeTextAttributes(text UiText) *UiNodeTextAttributes {
 func NewUiNodeTextAttributesWithDefaults() *UiNodeTextAttributes {
 	this := UiNodeTextAttributes{}
 	return &this
+}
+
+// GetId returns the Id field value
+func (o *UiNodeTextAttributes) GetId() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Id
+}
+
+// GetIdOk returns a tuple with the Id field value
+// and a boolean to check if the value has been set.
+func (o *UiNodeTextAttributes) GetIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Id, true
+}
+
+// SetId sets field value
+func (o *UiNodeTextAttributes) SetId(v string) {
+	o.Id = v
 }
 
 // GetText returns the Text field value
@@ -64,6 +91,9 @@ func (o *UiNodeTextAttributes) SetText(v UiText) {
 
 func (o UiNodeTextAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if true {
+		toSerialize["id"] = o.Id
+	}
 	if true {
 		toSerialize["text"] = o.Text
 	}

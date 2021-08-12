@@ -182,7 +182,7 @@ func (s *Session) IsActive() bool {
 //
 // A list of authenticators which were used to authenticate the session.
 //
-// swagger:model sessionAuthenticationMethod
+// swagger:model sessionAuthenticationMethods
 type AuthenticationMethods []AuthenticationMethod
 
 // AuthenticationMethod identifies an authentication method

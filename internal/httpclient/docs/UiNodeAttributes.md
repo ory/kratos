@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
 **Type** | **string** |  | 
 **Value** | Pointer to **interface{}** | The input&#39;s value. | [optional] 
+**Id** | **string** | A unique identifier | 
 **Text** | [**UiText**](UiText.md) |  | 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
@@ -20,7 +21,7 @@ Name | Type | Description | Notes
 
 ### NewUiNodeAttributes
 
-`func NewUiNodeAttributes(disabled bool, name string, type_ string, text UiText, src string, href string, title UiText, ) *UiNodeAttributes`
+`func NewUiNodeAttributes(disabled bool, name string, type_ string, id string, text UiText, src string, href string, title UiText, ) *UiNodeAttributes`
 
 NewUiNodeAttributes instantiates a new UiNodeAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -205,6 +206,26 @@ HasValue returns a boolean if a field has been set.
 `func (o *UiNodeAttributes) UnsetValue()`
 
 UnsetValue ensures that no value is present for Value, not even an explicit nil
+### GetId
+
+`func (o *UiNodeAttributes) GetId() string`
+
+GetId returns the Id field if non-nil, zero value otherwise.
+
+### GetIdOk
+
+`func (o *UiNodeAttributes) GetIdOk() (*string, bool)`
+
+GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetId
+
+`func (o *UiNodeAttributes) SetId(v string)`
+
+SetId sets Id field to given value.
+
+
 ### GetText
 
 `func (o *UiNodeAttributes) GetText() UiText`

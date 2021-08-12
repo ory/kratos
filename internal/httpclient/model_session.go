@@ -18,15 +18,19 @@ import (
 
 // Session A Session
 type Session struct {
-	// Whether or not the session is active.
+	// Active state. If false the session is no longer active.
 	Active *bool `json:"active,omitempty"`
-	// The Session Authentication Timestamp  When this session was authenticated at.
+	// The Session Authentication Timestamp  When this session was authenticated at. If multi-factor authentication was used this is the time when the last factor was authenticated (e.g. the TOTP code challenge was completed).
 	AuthenticatedAt *time.Time `json:"authenticated_at,omitempty"`
+	// A list of authenticators which were used to authenticate the session.
+	AuthenticationMethods []SessionAuthenticationMethod `json:"authentication_methods,omitempty"`
+	// The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder for an attacker to compromise the account.  Generally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g. password + TOTP) have been used.  To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials
+	AuthenticatorAssuranceLevel *string `json:"authenticator_assurance_level,omitempty"`
 	// The Session Expiry  When this session expires at.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	Id        string     `json:"id"`
 	Identity  Identity   `json:"identity"`
-	// The Session Issuance Timestamp  When this session was authenticated at.
+	// The Session Issuance Timestamp  When this session was issued at. Usually equal or close to `authenticated_at`.
 	IssuedAt *time.Time `json:"issued_at,omitempty"`
 }
 
@@ -111,6 +115,70 @@ func (o *Session) HasAuthenticatedAt() bool {
 // SetAuthenticatedAt gets a reference to the given time.Time and assigns it to the AuthenticatedAt field.
 func (o *Session) SetAuthenticatedAt(v time.Time) {
 	o.AuthenticatedAt = &v
+}
+
+// GetAuthenticationMethods returns the AuthenticationMethods field value if set, zero value otherwise.
+func (o *Session) GetAuthenticationMethods() []SessionAuthenticationMethod {
+	if o == nil || o.AuthenticationMethods == nil {
+		var ret []SessionAuthenticationMethod
+		return ret
+	}
+	return o.AuthenticationMethods
+}
+
+// GetAuthenticationMethodsOk returns a tuple with the AuthenticationMethods field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Session) GetAuthenticationMethodsOk() ([]SessionAuthenticationMethod, bool) {
+	if o == nil || o.AuthenticationMethods == nil {
+		return nil, false
+	}
+	return o.AuthenticationMethods, true
+}
+
+// HasAuthenticationMethods returns a boolean if a field has been set.
+func (o *Session) HasAuthenticationMethods() bool {
+	if o != nil && o.AuthenticationMethods != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAuthenticationMethods gets a reference to the given []SessionAuthenticationMethod and assigns it to the AuthenticationMethods field.
+func (o *Session) SetAuthenticationMethods(v []SessionAuthenticationMethod) {
+	o.AuthenticationMethods = v
+}
+
+// GetAuthenticatorAssuranceLevel returns the AuthenticatorAssuranceLevel field value if set, zero value otherwise.
+func (o *Session) GetAuthenticatorAssuranceLevel() string {
+	if o == nil || o.AuthenticatorAssuranceLevel == nil {
+		var ret string
+		return ret
+	}
+	return *o.AuthenticatorAssuranceLevel
+}
+
+// GetAuthenticatorAssuranceLevelOk returns a tuple with the AuthenticatorAssuranceLevel field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Session) GetAuthenticatorAssuranceLevelOk() (*string, bool) {
+	if o == nil || o.AuthenticatorAssuranceLevel == nil {
+		return nil, false
+	}
+	return o.AuthenticatorAssuranceLevel, true
+}
+
+// HasAuthenticatorAssuranceLevel returns a boolean if a field has been set.
+func (o *Session) HasAuthenticatorAssuranceLevel() bool {
+	if o != nil && o.AuthenticatorAssuranceLevel != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAuthenticatorAssuranceLevel gets a reference to the given string and assigns it to the AuthenticatorAssuranceLevel field.
+func (o *Session) SetAuthenticatorAssuranceLevel(v string) {
+	o.AuthenticatorAssuranceLevel = &v
 }
 
 // GetExpiresAt returns the ExpiresAt field value if set, zero value otherwise.
@@ -232,6 +300,12 @@ func (o Session) MarshalJSON() ([]byte, error) {
 	}
 	if o.AuthenticatedAt != nil {
 		toSerialize["authenticated_at"] = o.AuthenticatedAt
+	}
+	if o.AuthenticationMethods != nil {
+		toSerialize["authentication_methods"] = o.AuthenticationMethods
+	}
+	if o.AuthenticatorAssuranceLevel != nil {
+		toSerialize["authenticator_assurance_level"] = o.AuthenticatorAssuranceLevel
 	}
 	if o.ExpiresAt != nil {
 		toSerialize["expires_at"] = o.ExpiresAt

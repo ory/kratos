@@ -4,12 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **bool** | Whether or not the session is active. | [optional] 
-**AuthenticatedAt** | Pointer to **time.Time** | The Session Authentication Timestamp  When this session was authenticated at. | [optional] 
+**Active** | Pointer to **bool** | Active state. If false the session is no longer active. | [optional] 
+**AuthenticatedAt** | Pointer to **time.Time** | The Session Authentication Timestamp  When this session was authenticated at. If multi-factor authentication was used this is the time when the last factor was authenticated (e.g. the TOTP code challenge was completed). | [optional] 
+**AuthenticationMethods** | Pointer to [**[]SessionAuthenticationMethod**](SessionAuthenticationMethod.md) | A list of authenticators which were used to authenticate the session. | [optional] 
+**AuthenticatorAssuranceLevel** | Pointer to **string** | The authenticator assurance level can be one of \&quot;aal1\&quot;, \&quot;aal2\&quot;, or \&quot;aal3\&quot;. A higher number means that it is harder for an attacker to compromise the account.  Generally, \&quot;aal1\&quot; implies that one authentication factor was used while AAL2 implies that two factors (e.g. password + TOTP) have been used.  To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials | [optional] 
 **ExpiresAt** | Pointer to **time.Time** | The Session Expiry  When this session expires at. | [optional] 
 **Id** | **string** |  | 
 **Identity** | [**Identity**](Identity.md) |  | 
-**IssuedAt** | Pointer to **time.Time** | The Session Issuance Timestamp  When this session was authenticated at. | [optional] 
+**IssuedAt** | Pointer to **time.Time** | The Session Issuance Timestamp  When this session was issued at. Usually equal or close to &#x60;authenticated_at&#x60;. | [optional] 
 
 ## Methods
 
@@ -79,6 +81,56 @@ SetAuthenticatedAt sets AuthenticatedAt field to given value.
 `func (o *Session) HasAuthenticatedAt() bool`
 
 HasAuthenticatedAt returns a boolean if a field has been set.
+
+### GetAuthenticationMethods
+
+`func (o *Session) GetAuthenticationMethods() []SessionAuthenticationMethod`
+
+GetAuthenticationMethods returns the AuthenticationMethods field if non-nil, zero value otherwise.
+
+### GetAuthenticationMethodsOk
+
+`func (o *Session) GetAuthenticationMethodsOk() (*[]SessionAuthenticationMethod, bool)`
+
+GetAuthenticationMethodsOk returns a tuple with the AuthenticationMethods field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAuthenticationMethods
+
+`func (o *Session) SetAuthenticationMethods(v []SessionAuthenticationMethod)`
+
+SetAuthenticationMethods sets AuthenticationMethods field to given value.
+
+### HasAuthenticationMethods
+
+`func (o *Session) HasAuthenticationMethods() bool`
+
+HasAuthenticationMethods returns a boolean if a field has been set.
+
+### GetAuthenticatorAssuranceLevel
+
+`func (o *Session) GetAuthenticatorAssuranceLevel() string`
+
+GetAuthenticatorAssuranceLevel returns the AuthenticatorAssuranceLevel field if non-nil, zero value otherwise.
+
+### GetAuthenticatorAssuranceLevelOk
+
+`func (o *Session) GetAuthenticatorAssuranceLevelOk() (*string, bool)`
+
+GetAuthenticatorAssuranceLevelOk returns a tuple with the AuthenticatorAssuranceLevel field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAuthenticatorAssuranceLevel
+
+`func (o *Session) SetAuthenticatorAssuranceLevel(v string)`
+
+SetAuthenticatorAssuranceLevel sets AuthenticatorAssuranceLevel field to given value.
+
+### HasAuthenticatorAssuranceLevel
+
+`func (o *Session) HasAuthenticatorAssuranceLevel() bool`
+
+HasAuthenticatorAssuranceLevel returns a boolean if a field has been set.
 
 ### GetExpiresAt
 
