@@ -38,6 +38,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
 			expected.Active = true
+			expected.AMR = session.AuthenticationMethods{
+				{Method: identity.CredentialsTypePassword, CompletedAt: time.Now().UTC().Round(time.Second)},
+				{Method: identity.CredentialsTypeOIDC, CompletedAt: time.Now().UTC().Round(time.Second)},
+			}
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 
 			assert.Equal(t, uuid.Nil, expected.ID)
@@ -86,6 +90,15 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				actual, err := p.GetSessionByToken(ctx, expected.Token)
 				check(actual, err)
 				assert.Equal(t, identity.AuthenticatorAssuranceLevel3, actual.AuthenticatorAssuranceLevel)
+			})
+
+			t.Run("case=remove amr and update", func(t *testing.T) {
+				expected.AMR = nil
+				require.NoError(t, p.UpsertSession(ctx, &expected))
+
+				actual, err := p.GetSessionByToken(ctx, expected.Token)
+				check(actual, err)
+				assert.Empty(t, actual.AMR)
 			})
 		})
 
