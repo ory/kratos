@@ -1,6 +1,7 @@
 package oidc_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/ioutilx"
 
@@ -57,7 +60,9 @@ func TestStrategy(t *testing.T) {
 	returnTS := newReturnTs(t, reg)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	ts, tsA := testhelpers.NewKratosServers(t)
+	routerP := x.NewRouterPublic()
+	routerA := x.NewRouterAdmin()
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 
 	viperSetProviderConfig(
 		t,
@@ -72,7 +77,6 @@ func TestStrategy(t *testing.T) {
 			Mapper:       "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
-	testhelpers.InitKratosServers(t, reg, ts, tsA)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
@@ -266,6 +270,29 @@ func TestStrategy(t *testing.T) {
 				aue(t, res, body, "no id_token was returned")
 			})
 		}
+	})
+
+	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration-aal.schema.json")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+		})
+		bc := testhelpers.NewDebugClient(t)
+		f := testhelpers.InitializeLoginFlowViaAPI(t, bc, ts, false)
+
+		update, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+		require.NoError(t, err)
+		update.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), update))
+
+		req, err := http.NewRequest("POST", f.Ui.Action, bytes.NewBufferString(`{"method":"oidc"}`))
+		require.NoError(t, err)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+
+		actual, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, routerP.Router, req)
+		assert.Contains(t, res.Request.URL.String(), ts.URL+login.RouteSubmitFlow)
+		assert.Equal(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.GetBytes(actual, "ui.messages.0.text").String())
 	})
 
 	t.Run("case=should fail login because scope was not provided", func(t *testing.T) {
