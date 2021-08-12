@@ -47,7 +47,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
-	redirTS := newReturnTs(t, reg)
+	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	// Overwrite these two:
 	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
