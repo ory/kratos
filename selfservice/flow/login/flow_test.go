@@ -3,11 +3,12 @@ package login_test
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/ory/kratos/identity"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/kratos/internal"
 

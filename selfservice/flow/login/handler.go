@@ -281,14 +281,14 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 			return
 		}
 
-		x.AcceptToRedirectOrJsonError(w, r, h.d.Writer(), err, returnTo.String())
+		x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 		return
 	} else if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
+	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
 }
 
 // nolint:deadcode,unused
@@ -470,7 +470,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		}
 
 		// We are not upgrading AAL, nor are we refreshing. Error!
-		x.AcceptToRedirectOrJsonError(w, r, h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn), h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String())
+		x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn), h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String())
 		return
 	} else if errors.Is(err, session.ErrNoActiveSessionFound) {
 

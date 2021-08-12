@@ -159,7 +159,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	redirTo := req.AppendTo(h.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String()
-	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), req, redirTo)
+	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), req, redirTo)
 }
 
 // swagger:parameters getSelfServiceVerificationFlow
