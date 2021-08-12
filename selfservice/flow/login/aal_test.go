@@ -1,11 +1,13 @@
 package login_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestCheckAAL(t *testing.T) {
