@@ -105,7 +105,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), ss.IdentityID.String())
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewInvalidCredentialsError()))
+		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoTOTPDeviceRegistered()))
 	}
 
 	var o CredentialsConfig
@@ -122,9 +122,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewInvalidTOTPCode()))
 	}
 
-	ss.CompletedLoginFor(s.ID())
 	f.Active = s.ID()
-
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}

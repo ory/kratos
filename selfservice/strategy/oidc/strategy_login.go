@@ -108,7 +108,6 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginFor(s.ID())
-
 	for _, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, a, i, sess); err != nil {
@@ -169,9 +168,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	ss.CompletedLoginFor(s.ID())
 	f.Active = s.ID()
-
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}

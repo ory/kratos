@@ -84,9 +84,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
+func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
 	conf := h.d.Config(r.Context())
-	f := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
+	f := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
 
 	if f.RequestedAAL == "" {
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
@@ -159,6 +159,10 @@ preLoginHook:
 
 	if err := sortNodes(f.UI.Nodes); err != nil {
 		return nil, err
+	}
+
+	if f.Type == flow.TypeBrowser {
+		f.UI.SetCSRF(h.d.GenerateCSRFToken(r))
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
