@@ -169,6 +169,53 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 			})
 		})
+
+		t.Run("case=should return an error because the request is expired", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "50ms")
+			t.Cleanup(func() {
+				conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "10m")
+			})
+
+			run := func(t *testing.T, tt flow.Type, aal string, values string, isSPA bool) (string, *http.Response) {
+				f := login.Flow{Type: tt, ExpiresAt: time.Now().Add(-time.Minute), IssuedAt: time.Now(),
+					UI: container.New(""), Refresh: false, RequestedAAL: identity.AuthenticatorAssuranceLevel(aal)}
+				require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
+
+				req, err := http.NewRequest("POST", ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), strings.NewReader(values))
+				require.NoError(t, err)
+
+				if isSPA {
+					req.Header.Set("Accept", "application/json")
+					req.Header.Set("Content-Type", "application/json")
+				} else {
+					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				}
+
+				res, err := http.DefaultClient.Do(req)
+				require.NoError(t, err)
+				body := x.MustReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+				return string(body), res
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				body, res := run(t, flow.TypeAPI, "aal1", `{"method":"password"}`, false)
+				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
+				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "expired", "%s", body)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				body, res := run(t, flow.TypeBrowser, "aal1", url.Values{"method": {"password"}}.Encode(), false)
+				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "expired", "%s", body)
+			})
+
+			t.Run("type=SPA", func(t *testing.T) {
+				body, res := run(t, flow.TypeBrowser, "aal1", `{"method":"password"}`, true)
+				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
+				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "expired", "%s", body)
+			})
+		})
 	})
 
 	t.Run("lifecycle=init", func(t *testing.T) {
