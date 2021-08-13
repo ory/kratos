@@ -116,6 +116,8 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 			firstFactor = true
 		case identity.CredentialsTypeTOTP:
 			secondFactor = true
+		case identity.CredentialsTypeLookup:
+			secondFactor = true
 		}
 	}
 

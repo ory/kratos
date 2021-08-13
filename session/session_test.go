@@ -108,6 +108,14 @@ func TestSession(t *testing.T) {
 				expected: identity.AuthenticatorAssuranceLevel2,
 			},
 			{
+				d: "password + lookup is aal2",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypePassword,
+					identity.CredentialsTypeLookup,
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+			{
 				d: "oidc + totp is aal2",
 				methods: []identity.CredentialsType{
 					identity.CredentialsTypeOIDC,
@@ -116,10 +124,26 @@ func TestSession(t *testing.T) {
 				expected: identity.AuthenticatorAssuranceLevel2,
 			},
 			{
+				d: "oidc + lookup is aal2",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypeOIDC,
+					identity.CredentialsTypeLookup,
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+			{
 				d: "recovery link + totp is aal2",
 				methods: []identity.CredentialsType{
 					identity.CredentialsTypeRecoveryLink,
 					identity.CredentialsTypeTOTP,
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+			{
+				d: "recovery link + lookup is aal2",
+				methods: []identity.CredentialsType{
+					identity.CredentialsTypeRecoveryLink,
+					identity.CredentialsTypeLookup,
 				},
 				expected: identity.AuthenticatorAssuranceLevel2,
 			},
