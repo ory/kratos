@@ -184,16 +184,6 @@ func NewAddressNotVerifiedError() error {
 	})
 }
 
-func NewInvalidTOTPCode() error {
-	return errors.WithStack(&ValidationError{
-		ValidationError: &jsonschema.ValidationError{
-			Message:     `the authentication code is not correct`,
-			InstancePtr: "#/",
-		},
-		Messages: new(text.Messages).Add(text.NewErrorValidationInvalidTOTPCode()),
-	})
-}
-
 func NewNoTOTPDeviceRegistered() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
