@@ -5,7 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CompletedAt** | Pointer to **time.Time** | When the authentication challenge was completed. | [optional] 
-**Method** | Pointer to **string** | and so on. | [optional] 
+**Method** | Pointer to **string** |  | [optional] 
 
 ## Methods
 

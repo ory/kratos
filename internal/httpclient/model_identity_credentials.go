@@ -22,9 +22,8 @@ type IdentityCredentials struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// Identifiers represents a list of unique identifiers this credential type matches.
-	Identifiers []string `json:"identifiers,omitempty"`
-	// and so on.
-	Type *string `json:"type,omitempty"`
+	Identifiers []string                 `json:"identifiers,omitempty"`
+	Type        *IdentityCredentialsType `json:"type,omitempty"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
@@ -143,9 +142,9 @@ func (o *IdentityCredentials) SetIdentifiers(v []string) {
 }
 
 // GetType returns the Type field value if set, zero value otherwise.
-func (o *IdentityCredentials) GetType() string {
+func (o *IdentityCredentials) GetType() IdentityCredentialsType {
 	if o == nil || o.Type == nil {
-		var ret string
+		var ret IdentityCredentialsType
 		return ret
 	}
 	return *o.Type
@@ -153,7 +152,7 @@ func (o *IdentityCredentials) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *IdentityCredentials) GetTypeOk() (*string, bool) {
+func (o *IdentityCredentials) GetTypeOk() (*IdentityCredentialsType, bool) {
 	if o == nil || o.Type == nil {
 		return nil, false
 	}
@@ -169,8 +168,8 @@ func (o *IdentityCredentials) HasType() bool {
 	return false
 }
 
-// SetType gets a reference to the given string and assigns it to the Type field.
-func (o *IdentityCredentials) SetType(v string) {
+// SetType gets a reference to the given IdentityCredentialsType and assigns it to the Type field.
+func (o *IdentityCredentials) SetType(v IdentityCredentialsType) {
 	o.Type = &v
 }
 

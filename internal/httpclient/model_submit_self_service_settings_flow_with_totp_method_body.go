@@ -15,8 +15,8 @@ import (
 	"encoding/json"
 )
 
-// SubmitSelfServiceSettingsFlowWithTOTPMethodBody struct for SubmitSelfServiceSettingsFlowWithTOTPMethodBody
-type SubmitSelfServiceSettingsFlowWithTOTPMethodBody struct {
+// SubmitSelfServiceSettingsFlowWithTotpMethodBody struct for SubmitSelfServiceSettingsFlowWithTotpMethodBody
+type SubmitSelfServiceSettingsFlowWithTotpMethodBody struct {
 	// CSRFToken is the anti-CSRF token
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Method  Should be set to \"totp\" when trying to add, update, or remove a totp pairing.
@@ -27,26 +27,26 @@ type SubmitSelfServiceSettingsFlowWithTOTPMethodBody struct {
 	TotpUnlink *bool `json:"totp_unlink,omitempty"`
 }
 
-// NewSubmitSelfServiceSettingsFlowWithTOTPMethodBody instantiates a new SubmitSelfServiceSettingsFlowWithTOTPMethodBody object
+// NewSubmitSelfServiceSettingsFlowWithTotpMethodBody instantiates a new SubmitSelfServiceSettingsFlowWithTotpMethodBody object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitSelfServiceSettingsFlowWithTOTPMethodBody(method string) *SubmitSelfServiceSettingsFlowWithTOTPMethodBody {
-	this := SubmitSelfServiceSettingsFlowWithTOTPMethodBody{}
+func NewSubmitSelfServiceSettingsFlowWithTotpMethodBody(method string) *SubmitSelfServiceSettingsFlowWithTotpMethodBody {
+	this := SubmitSelfServiceSettingsFlowWithTotpMethodBody{}
 	this.Method = method
 	return &this
 }
 
-// NewSubmitSelfServiceSettingsFlowWithTOTPMethodBodyWithDefaults instantiates a new SubmitSelfServiceSettingsFlowWithTOTPMethodBody object
+// NewSubmitSelfServiceSettingsFlowWithTotpMethodBodyWithDefaults instantiates a new SubmitSelfServiceSettingsFlowWithTotpMethodBody object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewSubmitSelfServiceSettingsFlowWithTOTPMethodBodyWithDefaults() *SubmitSelfServiceSettingsFlowWithTOTPMethodBody {
-	this := SubmitSelfServiceSettingsFlowWithTOTPMethodBody{}
+func NewSubmitSelfServiceSettingsFlowWithTotpMethodBodyWithDefaults() *SubmitSelfServiceSettingsFlowWithTotpMethodBody {
+	this := SubmitSelfServiceSettingsFlowWithTotpMethodBody{}
 	return &this
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetCsrfToken() string {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) GetCsrfToken() string {
 	if o == nil || o.CsrfToken == nil {
 		var ret string
 		return ret
@@ -56,7 +56,7 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetCsrfToken() string 
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetCsrfTokenOk() (*string, bool) {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) GetCsrfTokenOk() (*string, bool) {
 	if o == nil || o.CsrfToken == nil {
 		return nil, false
 	}
@@ -64,7 +64,7 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetCsrfTokenOk() (*str
 }
 
 // HasCsrfToken returns a boolean if a field has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasCsrfToken() bool {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) HasCsrfToken() bool {
 	if o != nil && o.CsrfToken != nil {
 		return true
 	}
@@ -73,12 +73,12 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasCsrfToken() bool {
 }
 
 // SetCsrfToken gets a reference to the given string and assigns it to the CsrfToken field.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetCsrfToken(v string) {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) SetCsrfToken(v string) {
 	o.CsrfToken = &v
 }
 
 // GetMethod returns the Method field value
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetMethod() string {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) GetMethod() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -89,7 +89,7 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetMethod() string {
 
 // GetMethodOk returns a tuple with the Method field value
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetMethodOk() (*string, bool) {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) GetMethodOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -97,12 +97,12 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetMethodOk() (*string
 }
 
 // SetMethod sets field value
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetMethod(v string) {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) SetMethod(v string) {
 	o.Method = v
 }
 
 // GetTotpCode returns the TotpCode field value if set, zero value otherwise.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpCode() string {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) GetTotpCode() string {
 	if o == nil || o.TotpCode == nil {
 		var ret string
 		return ret
@@ -112,7 +112,7 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpCode() string {
 
 // GetTotpCodeOk returns a tuple with the TotpCode field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpCodeOk() (*string, bool) {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) GetTotpCodeOk() (*string, bool) {
 	if o == nil || o.TotpCode == nil {
 		return nil, false
 	}
@@ -120,7 +120,7 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpCodeOk() (*stri
 }
 
 // HasTotpCode returns a boolean if a field has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasTotpCode() bool {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) HasTotpCode() bool {
 	if o != nil && o.TotpCode != nil {
 		return true
 	}
@@ -129,12 +129,12 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasTotpCode() bool {
 }
 
 // SetTotpCode gets a reference to the given string and assigns it to the TotpCode field.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetTotpCode(v string) {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) SetTotpCode(v string) {
 	o.TotpCode = &v
 }
 
 // GetTotpUnlink returns the TotpUnlink field value if set, zero value otherwise.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpUnlink() bool {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) GetTotpUnlink() bool {
 	if o == nil || o.TotpUnlink == nil {
 		var ret bool
 		return ret
@@ -144,7 +144,7 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpUnlink() bool {
 
 // GetTotpUnlinkOk returns a tuple with the TotpUnlink field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpUnlinkOk() (*bool, bool) {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) GetTotpUnlinkOk() (*bool, bool) {
 	if o == nil || o.TotpUnlink == nil {
 		return nil, false
 	}
@@ -152,7 +152,7 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpUnlinkOk() (*bo
 }
 
 // HasTotpUnlink returns a boolean if a field has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasTotpUnlink() bool {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) HasTotpUnlink() bool {
 	if o != nil && o.TotpUnlink != nil {
 		return true
 	}
@@ -161,11 +161,11 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasTotpUnlink() bool {
 }
 
 // SetTotpUnlink gets a reference to the given bool and assigns it to the TotpUnlink field.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetTotpUnlink(v bool) {
+func (o *SubmitSelfServiceSettingsFlowWithTotpMethodBody) SetTotpUnlink(v bool) {
 	o.TotpUnlink = &v
 }
 
-func (o SubmitSelfServiceSettingsFlowWithTOTPMethodBody) MarshalJSON() ([]byte, error) {
+func (o SubmitSelfServiceSettingsFlowWithTotpMethodBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
@@ -182,38 +182,38 @@ func (o SubmitSelfServiceSettingsFlowWithTOTPMethodBody) MarshalJSON() ([]byte, 
 	return json.Marshal(toSerialize)
 }
 
-type NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody struct {
-	value *SubmitSelfServiceSettingsFlowWithTOTPMethodBody
+type NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody struct {
+	value *SubmitSelfServiceSettingsFlowWithTotpMethodBody
 	isSet bool
 }
 
-func (v NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody) Get() *SubmitSelfServiceSettingsFlowWithTOTPMethodBody {
+func (v NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody) Get() *SubmitSelfServiceSettingsFlowWithTotpMethodBody {
 	return v.value
 }
 
-func (v *NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody) Set(val *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) {
+func (v *NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody) Set(val *SubmitSelfServiceSettingsFlowWithTotpMethodBody) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody) IsSet() bool {
+func (v NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody) Unset() {
+func (v *NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody(val *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) *NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody {
-	return &NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody{value: val, isSet: true}
+func NewNullableSubmitSelfServiceSettingsFlowWithTotpMethodBody(val *SubmitSelfServiceSettingsFlowWithTotpMethodBody) *NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody {
+	return &NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody{value: val, isSet: true}
 }
 
-func (v NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody) MarshalJSON() ([]byte, error) {
+func (v NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableSubmitSelfServiceSettingsFlowWithTOTPMethodBody) UnmarshalJSON(src []byte) error {
+func (v *NullableSubmitSelfServiceSettingsFlowWithTotpMethodBody) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

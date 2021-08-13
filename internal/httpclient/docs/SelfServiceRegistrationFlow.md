@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **string** | and so on. | [optional] 
+**Active** | Pointer to [**IdentityCredentialsType**](IdentityCredentialsType.md) |  | [optional] 
 **ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
 **Id** | **string** |  | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow occurred. | 
@@ -33,20 +33,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetActive
 
-`func (o *SelfServiceRegistrationFlow) GetActive() string`
+`func (o *SelfServiceRegistrationFlow) GetActive() IdentityCredentialsType`
 
 GetActive returns the Active field if non-nil, zero value otherwise.
 
 ### GetActiveOk
 
-`func (o *SelfServiceRegistrationFlow) GetActiveOk() (*string, bool)`
+`func (o *SelfServiceRegistrationFlow) GetActiveOk() (*IdentityCredentialsType, bool)`
 
 GetActiveOk returns a tuple with the Active field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetActive
 
-`func (o *SelfServiceRegistrationFlow) SetActive(v string)`
+`func (o *SelfServiceRegistrationFlow) SetActive(v IdentityCredentialsType)`
 
 SetActive sets Active field to given value.
 

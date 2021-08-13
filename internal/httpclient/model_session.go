@@ -23,9 +23,8 @@ type Session struct {
 	// The Session Authentication Timestamp  When this session was authenticated at. If multi-factor authentication was used this is the time when the last factor was authenticated (e.g. the TOTP code challenge was completed).
 	AuthenticatedAt *time.Time `json:"authenticated_at,omitempty"`
 	// A list of authenticators which were used to authenticate the session.
-	AuthenticationMethods []SessionAuthenticationMethod `json:"authentication_methods,omitempty"`
-	// The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder for an attacker to compromise the account.  Generally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g. password + TOTP) have been used.  To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials
-	AuthenticatorAssuranceLevel *string `json:"authenticator_assurance_level,omitempty"`
+	AuthenticationMethods       []SessionAuthenticationMethod `json:"authentication_methods,omitempty"`
+	AuthenticatorAssuranceLevel *AuthenticatorAssuranceLevel  `json:"authenticator_assurance_level,omitempty"`
 	// The Session Expiry  When this session expires at.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	Id        string     `json:"id"`
@@ -150,9 +149,9 @@ func (o *Session) SetAuthenticationMethods(v []SessionAuthenticationMethod) {
 }
 
 // GetAuthenticatorAssuranceLevel returns the AuthenticatorAssuranceLevel field value if set, zero value otherwise.
-func (o *Session) GetAuthenticatorAssuranceLevel() string {
+func (o *Session) GetAuthenticatorAssuranceLevel() AuthenticatorAssuranceLevel {
 	if o == nil || o.AuthenticatorAssuranceLevel == nil {
-		var ret string
+		var ret AuthenticatorAssuranceLevel
 		return ret
 	}
 	return *o.AuthenticatorAssuranceLevel
@@ -160,7 +159,7 @@ func (o *Session) GetAuthenticatorAssuranceLevel() string {
 
 // GetAuthenticatorAssuranceLevelOk returns a tuple with the AuthenticatorAssuranceLevel field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Session) GetAuthenticatorAssuranceLevelOk() (*string, bool) {
+func (o *Session) GetAuthenticatorAssuranceLevelOk() (*AuthenticatorAssuranceLevel, bool) {
 	if o == nil || o.AuthenticatorAssuranceLevel == nil {
 		return nil, false
 	}
@@ -176,8 +175,8 @@ func (o *Session) HasAuthenticatorAssuranceLevel() bool {
 	return false
 }
 
-// SetAuthenticatorAssuranceLevel gets a reference to the given string and assigns it to the AuthenticatorAssuranceLevel field.
-func (o *Session) SetAuthenticatorAssuranceLevel(v string) {
+// SetAuthenticatorAssuranceLevel gets a reference to the given AuthenticatorAssuranceLevel and assigns it to the AuthenticatorAssuranceLevel field.
+func (o *Session) SetAuthenticatorAssuranceLevel(v AuthenticatorAssuranceLevel) {
 	o.AuthenticatorAssuranceLevel = &v
 }
 

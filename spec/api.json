@@ -923,6 +923,12 @@
       },
       "authenticatorAssuranceLevel": {
         "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
+        "enum": [
+          "aal0",
+          "aal1",
+          "aal2",
+          "aal3"
+        ],
         "title": "Authenticator Assurance Level (AAL)",
         "type": "string"
       },
@@ -1088,6 +1094,11 @@
       },
       "identityCredentialsType": {
         "description": "and so on.",
+        "enum": [
+          "password",
+          "totp",
+          "oidc"
+        ],
         "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
         "type": "string"
       },
@@ -1531,7 +1542,14 @@
             "type": "string"
           },
           "method": {
-            "$ref": "#/components/schemas/identityCredentialsType"
+            "enum": [
+              "link_recovery",
+              "password",
+              "totp",
+              "oidc"
+            ],
+            "title": "The method used",
+            "type": "string"
           }
         },
         "title": "AuthenticationMethod identifies an authentication method",
@@ -1582,13 +1600,20 @@
         "discriminator": {
           "mapping": {
             "oidc": "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody",
-            "password": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
+            "password": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody",
+            "totp": "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody"
           },
           "propertyName": "method"
         },
         "oneOf": [
           {
             "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithTotpMethodBody"
           }
         ]
       },
@@ -1624,7 +1649,8 @@
             "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
             "enum": [
               "password",
-              "oidc"
+              "oidc",
+              "totp"
             ],
             "type": "string"
           },
@@ -1645,7 +1671,7 @@
         "title": "submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.",
         "type": "object"
       },
-      "submitSelfServiceLoginFlowWithTOTPMethodBody": {
+      "submitSelfServiceLoginFlowWithTotpMethodBody": {
         "properties": {
           "csrf_token": {
             "description": "Sending the anti-csrf token is only required for browser login flows.",
@@ -1664,7 +1690,7 @@
           "method",
           "totp_code"
         ],
-        "title": "submitSelfServiceLoginFlowWithTOTPMethodBody is used to decode the login form payload.",
+        "title": "submitSelfServiceLoginFlowWithTotpMethodBody is used to decode the login form payload.",
         "type": "object"
       },
       "submitSelfServiceLogoutFlowWithoutBrowserBody": {
@@ -1789,7 +1815,8 @@
           "mapping": {
             "oidc": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody",
             "password": "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody",
-            "profile": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
+            "profile": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody",
+            "totp": "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody"
           },
           "propertyName": "method"
         },
@@ -1799,6 +1826,12 @@
           },
           {
             "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithTotpMethodBody"
           }
         ]
       },
@@ -1838,7 +1871,8 @@
             "enum": [
               "password",
               "profile",
-              "oidc"
+              "oidc",
+              "totp"
             ],
             "type": "string"
           },
@@ -1875,7 +1909,7 @@
         ],
         "type": "object"
       },
-      "submitSelfServiceSettingsFlowWithTOTPMethodBody": {
+      "submitSelfServiceSettingsFlowWithTotpMethodBody": {
         "properties": {
           "csrf_token": {
             "description": "CSRFToken is the anti-CSRF token",
