@@ -40,12 +40,12 @@ func (s *Strategy) SettingsStrategyID() string {
 // swagger:model submitSelfServiceSettingsFlowWithTOTPMethodBody
 type submitSelfServiceSettingsFlowWithTOTPMethodBody struct {
 	// ValidationTOTP must contain a valid TOTP based on the
-	ValidationTOTP string `json:"verification_totp"`
+	ValidationTOTP string `json:"totp_code"`
 
 	// UnlinkTOTP if true will remove the TOTP pairing,
 	// effectively removing the credential. This can be used
 	// to set up a new TOTP device.
-	UnlinkTOTP bool `json:"unlink_totp"`
+	UnlinkTOTP bool `json:"totp_unlink"`
 
 	// CSRFToken is the anti-CSRF token
 	CSRFToken string `json:"csrf_token"`
@@ -171,11 +171,11 @@ func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Re
 	}
 
 	if p.ValidationTOTP == "" {
-		return nil, schema.NewRequiredError("#/verification_totp", "verification_totp")
+		return nil, schema.NewRequiredError("#/totp_code", "totp_code")
 	}
 
 	if !totp.Validate(p.ValidationTOTP, key.Secret()) {
-		return nil, schema.NewTOTPVerifierWrongError("#/verification_totp")
+		return nil, schema.NewTOTPVerifierWrongError("#/totp_code")
 	}
 
 	co, err := json.Marshal(&CredentialsConfig{TOTPURL: key.URL()})
@@ -251,8 +251,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 			return err
 		}
 
-		f.UI.Nodes.Upsert(qr)
 		f.UI.Nodes.Upsert(NewTOTPSourceURLNode(key))
+		f.UI.Nodes.Upsert(qr)
 		f.UI.Nodes.Upsert(NewVerifyTOTPNode())
 	}
 

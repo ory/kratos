@@ -9,12 +9,12 @@
     "method": {
       "type": "string"
     },
-    "verification_totp": {
+    "totp_code": {
       "type": "string",
       "maxLength": 6,
       "minLength": 6
     },
-    "unlink_totp": {
+    "totp_unlink": {
       "type": "boolean"
     }
   }

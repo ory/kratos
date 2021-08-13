@@ -8,7 +8,7 @@ import (
 )
 
 func NewVerifyTOTPNode() *node.Node {
-	return node.NewInputField("verification_totp", nil, node.TOTPGroup,
+	return node.NewInputField(node.TOTPCode, nil, node.TOTPGroup,
 		node.InputAttributeTypeText,
 		node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoNodeLabelVerifyOTP())
@@ -20,16 +20,16 @@ func NewTOTPImageQRNode(key *otp.Key) (*node.Node, error) {
 		return nil, err
 	}
 
-	return node.NewImageField("totp_key_qr", src, node.TOTPGroup).
+	return node.NewImageField(node.TOTPQR, src, node.TOTPGroup).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsTOTPQRCode()), nil
 }
 
 func NewTOTPSourceURLNode(key *otp.Key) *node.Node {
-	return node.NewTextField("totp_key_secret", text.NewInfoSelfServiceSettingsTOTPSecret(key.Secret()), node.TOTPGroup)
+	return node.NewTextField(node.TOTPSecretKey, text.NewInfoSelfServiceSettingsTOTPSecret(key.Secret()), node.TOTPGroup)
 }
 
 func NewUnlinkTOTPNode() *node.Node {
-	return node.NewInputField("unlink_totp", "true", node.TOTPGroup,
+	return node.NewInputField(node.TOTPUnlink, "true", node.TOTPGroup,
 		node.InputAttributeTypeSubmit,
 		node.WithRequiredInputAttribute).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsUpdateUnlinkTOTP())
