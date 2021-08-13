@@ -10,12 +10,24 @@
       "type": "string"
     },
     "totp_code": {
-      "type": "string",
-      "maxLength": 6,
-      "minLength": 6
+      "type": "string"
     },
     "totp_unlink": {
       "type": "boolean"
+    }
+  },
+  "if": {
+    "properties": {
+      "method": {
+        "const": "totp"
+      }
+    }
+  },
+  "then": {
+    "totp_code": {
+      "type": "string",
+      "maxLength": 6,
+      "minLength": 6
     }
   }
 }

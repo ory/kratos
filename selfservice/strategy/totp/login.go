@@ -48,7 +48,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.SetNode(node.NewInputField("totp_code", "", node.TOTPGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoLoginTOTPLabel()))
-	sr.UI.GetNodes().Append(node.NewInputField("method", "totp", node.TOTPGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
+	sr.UI.GetNodes().Append(node.NewInputField("method", s.ID(), node.TOTPGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoLogin()))
 
 	return nil
 }

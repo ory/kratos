@@ -59,6 +59,28 @@ func NewTOTPVerifierWrongError(instancePtr string) error {
 	})
 }
 
+func NewLookupAlreadyUsed() error {
+	t := text.NewErrorValidationLookupAlreadyUsed()
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     t.Text,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(t),
+	})
+}
+
+func NewErrorValidationLookupInvalid() error {
+	t := text.NewErrorValidationLookupInvalid()
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     t.Text,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(t),
+	})
+}
+
 type ValidationErrorContextPasswordPolicyViolation struct {
 	Reason string
 }
