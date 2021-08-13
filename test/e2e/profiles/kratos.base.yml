@@ -18,6 +18,8 @@ selfservice:
       enabled: true
       config:
         issuer: issuer.ory.sh
+    lookup_secret:
+      enabled: true
   flows:
     login:
       ui_url: http://127.0.0.1:4455/auth/login
