@@ -47,7 +47,7 @@ const (
 	CredentialsTypePassword CredentialsType = "password"
 	CredentialsTypeOIDC     CredentialsType = "oidc"
 	CredentialsTypeTOTP     CredentialsType = "totp"
-	CredentialsTypeBackupCode   CredentialsType = "backup_code"
+	CredentialsTypeLookup   CredentialsType = "lookup_secret"
 )
 
 const (
