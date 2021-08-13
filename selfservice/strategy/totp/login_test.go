@@ -36,6 +36,15 @@ import (
 	_ "embed"
 )
 
+const totpCodeGJSONQuery = "ui.nodes.#(attributes.name==totp_code)"
+
+func createIdentityWithoutTOTP(t *testing.T, reg driver.Registry) *identity.Identity {
+	id, _ := createIdentity(t, reg)
+	delete(id.Credentials, identity.CredentialsTypeTOTP)
+	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+	return id
+}
+
 func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, *otp.Key) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
@@ -70,8 +79,8 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, *otp
 	return i, key
 }
 
-//go:embed fixtures/with_totp.json
-var fixtureWithTOTP []byte
+//go:embed fixtures/login/with_totp.json
+var loginFixtureWithTOTP []byte
 
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -97,13 +106,11 @@ func TestCompleteLogin(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureWithTOTP), f.Ui.Nodes, []string{"2.attributes.value"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithTOTP), f.Ui.Nodes, []string{"2.attributes.value"})
 	})
 
 	t.Run("case=totp payload is set when identity has no totp", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
-		id.Credentials = nil
-		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+		id := createIdentityWithoutTOTP(t, reg)
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
@@ -180,7 +187,7 @@ func TestCompleteLogin(t *testing.T) {
 		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
 			checkURL(t, shouldRedirect, res)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, "length must be >= 6, but got 0", gjson.Get(body, "ui.nodes.#(attributes.name==totp_code).messages.0.text").String(), "%s", body)
+			assert.Equal(t, "length must be >= 6, but got 0", gjson.Get(body, totpCodeGJSONQuery+".messages.0.text").String(), "%s", body)
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -208,7 +215,7 @@ func TestCompleteLogin(t *testing.T) {
 		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
 			checkURL(t, shouldRedirect, res)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, text.NewErrorValidationInvalidTOTPCode().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			assert.Equal(t, text.NewErrorValidationTOTPVerifierWrong().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -236,7 +243,7 @@ func TestCompleteLogin(t *testing.T) {
 		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
 			checkURL(t, shouldRedirect, res)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, text.NewErrorValidationInvalidTOTPCode().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+			assert.Equal(t, text.NewErrorValidationTOTPVerifierWrong().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -256,9 +263,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should fail if TOTP was not set up for identity", func(t *testing.T) {
-		id, _ := createIdentity(t, reg)
-		id.Credentials = nil
-		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+		id := createIdentityWithoutTOTP(t, reg)
 
 		payload := func(v url.Values) {
 			v.Set("totp_code", "111111")
@@ -349,5 +354,39 @@ func TestCompleteLogin(t *testing.T) {
 		require.NoError(t, res.Body.Close())
 		assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 		assert.Equal(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.GetBytes(body, "ui.messages.0.text").String())
+	})
+
+	t.Run("case=should pass without csrf if API flow", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+		body, res := doAPIFlow(t, func(v url.Values) {
+			v.Del("csrf_token")
+			v.Set("totp_code", "111111")
+		}, id)
+
+		assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+		assert.Equal(t, text.NewErrorValidationTOTPVerifierWrong().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+	})
+
+	t.Run("case=should fail if CSRF token is invalid", func(t *testing.T) {
+		id, _ := createIdentity(t, reg)
+		t.Run("type=browser", func(t *testing.T) {
+			body, res := doBrowserFlow(t, false, func(v url.Values) {
+				v.Del("csrf_token")
+				v.Set("totp_code", "111111")
+			}, id)
+
+			assert.Contains(t, res.Request.URL.String(), errTS.URL)
+			assert.Equal(t, x.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "reason").String(), body)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			body, res := doBrowserFlow(t, true, func(v url.Values) {
+				v.Del("csrf_token")
+				v.Set("totp_code", "111111")
+			}, id)
+
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+			assert.Equal(t, x.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
+		})
 	})
 }

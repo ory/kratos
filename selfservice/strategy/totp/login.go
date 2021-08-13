@@ -119,7 +119,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if !totp.Validate(p.TOTPCode, key.Secret()) {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewInvalidTOTPCode()))
+		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewTOTPVerifierWrongError("#/")))
 	}
 
 	f.Active = s.ID()
