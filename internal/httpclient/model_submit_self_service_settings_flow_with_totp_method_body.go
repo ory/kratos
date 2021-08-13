@@ -21,10 +21,10 @@ type SubmitSelfServiceSettingsFlowWithTOTPMethodBody struct {
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Method  Should be set to \"totp\" when trying to add, update, or remove a totp pairing.
 	Method string `json:"method"`
-	// UnlinkTOTP if true will remove the TOTP pairing, effectively removing the credential. This can be used to set up a new TOTP device.
-	UnlinkTotp *bool `json:"unlink_totp,omitempty"`
 	// ValidationTOTP must contain a valid TOTP based on the
-	VerificationTotp *string `json:"verification_totp,omitempty"`
+	TotpCode *string `json:"totp_code,omitempty"`
+	// UnlinkTOTP if true will remove the TOTP pairing, effectively removing the credential. This can be used to set up a new TOTP device.
+	TotpUnlink *bool `json:"totp_unlink,omitempty"`
 }
 
 // NewSubmitSelfServiceSettingsFlowWithTOTPMethodBody instantiates a new SubmitSelfServiceSettingsFlowWithTOTPMethodBody object
@@ -101,68 +101,68 @@ func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetMethod(v string) {
 	o.Method = v
 }
 
-// GetUnlinkTotp returns the UnlinkTotp field value if set, zero value otherwise.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetUnlinkTotp() bool {
-	if o == nil || o.UnlinkTotp == nil {
-		var ret bool
-		return ret
-	}
-	return *o.UnlinkTotp
-}
-
-// GetUnlinkTotpOk returns a tuple with the UnlinkTotp field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetUnlinkTotpOk() (*bool, bool) {
-	if o == nil || o.UnlinkTotp == nil {
-		return nil, false
-	}
-	return o.UnlinkTotp, true
-}
-
-// HasUnlinkTotp returns a boolean if a field has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasUnlinkTotp() bool {
-	if o != nil && o.UnlinkTotp != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetUnlinkTotp gets a reference to the given bool and assigns it to the UnlinkTotp field.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetUnlinkTotp(v bool) {
-	o.UnlinkTotp = &v
-}
-
-// GetVerificationTotp returns the VerificationTotp field value if set, zero value otherwise.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetVerificationTotp() string {
-	if o == nil || o.VerificationTotp == nil {
+// GetTotpCode returns the TotpCode field value if set, zero value otherwise.
+func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpCode() string {
+	if o == nil || o.TotpCode == nil {
 		var ret string
 		return ret
 	}
-	return *o.VerificationTotp
+	return *o.TotpCode
 }
 
-// GetVerificationTotpOk returns a tuple with the VerificationTotp field value if set, nil otherwise
+// GetTotpCodeOk returns a tuple with the TotpCode field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetVerificationTotpOk() (*string, bool) {
-	if o == nil || o.VerificationTotp == nil {
+func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpCodeOk() (*string, bool) {
+	if o == nil || o.TotpCode == nil {
 		return nil, false
 	}
-	return o.VerificationTotp, true
+	return o.TotpCode, true
 }
 
-// HasVerificationTotp returns a boolean if a field has been set.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasVerificationTotp() bool {
-	if o != nil && o.VerificationTotp != nil {
+// HasTotpCode returns a boolean if a field has been set.
+func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasTotpCode() bool {
+	if o != nil && o.TotpCode != nil {
 		return true
 	}
 
 	return false
 }
 
-// SetVerificationTotp gets a reference to the given string and assigns it to the VerificationTotp field.
-func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetVerificationTotp(v string) {
-	o.VerificationTotp = &v
+// SetTotpCode gets a reference to the given string and assigns it to the TotpCode field.
+func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetTotpCode(v string) {
+	o.TotpCode = &v
+}
+
+// GetTotpUnlink returns the TotpUnlink field value if set, zero value otherwise.
+func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpUnlink() bool {
+	if o == nil || o.TotpUnlink == nil {
+		var ret bool
+		return ret
+	}
+	return *o.TotpUnlink
+}
+
+// GetTotpUnlinkOk returns a tuple with the TotpUnlink field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpUnlinkOk() (*bool, bool) {
+	if o == nil || o.TotpUnlink == nil {
+		return nil, false
+	}
+	return o.TotpUnlink, true
+}
+
+// HasTotpUnlink returns a boolean if a field has been set.
+func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasTotpUnlink() bool {
+	if o != nil && o.TotpUnlink != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTotpUnlink gets a reference to the given bool and assigns it to the TotpUnlink field.
+func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetTotpUnlink(v bool) {
+	o.TotpUnlink = &v
 }
 
 func (o SubmitSelfServiceSettingsFlowWithTOTPMethodBody) MarshalJSON() ([]byte, error) {
@@ -173,11 +173,11 @@ func (o SubmitSelfServiceSettingsFlowWithTOTPMethodBody) MarshalJSON() ([]byte, 
 	if true {
 		toSerialize["method"] = o.Method
 	}
-	if o.UnlinkTotp != nil {
-		toSerialize["unlink_totp"] = o.UnlinkTotp
+	if o.TotpCode != nil {
+		toSerialize["totp_code"] = o.TotpCode
 	}
-	if o.VerificationTotp != nil {
-		toSerialize["verification_totp"] = o.VerificationTotp
+	if o.TotpUnlink != nil {
+		toSerialize["totp_unlink"] = o.TotpUnlink
 	}
 	return json.Marshal(toSerialize)
 }

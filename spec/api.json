@@ -1885,13 +1885,13 @@
             "description": "Method\n\nShould be set to \"totp\" when trying to add, update, or remove a totp pairing.",
             "type": "string"
           },
-          "unlink_totp": {
-            "description": "UnlinkTOTP if true will remove the TOTP pairing,\neffectively removing the credential. This can be used\nto set up a new TOTP device.",
-            "type": "boolean"
-          },
-          "verification_totp": {
+          "totp_code": {
             "description": "ValidationTOTP must contain a valid TOTP based on the",
             "type": "string"
+          },
+          "totp_unlink": {
+            "description": "UnlinkTOTP if true will remove the TOTP pairing,\neffectively removing the credential. This can be used\nto set up a new TOTP device.",
+            "type": "boolean"
           }
         },
         "required": [
