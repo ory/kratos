@@ -140,6 +140,16 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
+	if errors.Is(err, flow.ErrStrategyAsksToReturnToUI) {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
+				RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
+		}
+		return
+	}
+
 	if e := new(FlowNeedsReAuth); errors.As(err, &e) {
 		s.reauthenticate(w, r, f, err)
 		return
