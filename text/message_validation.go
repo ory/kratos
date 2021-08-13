@@ -18,6 +18,7 @@ const (
 	ErrorValidationAddressNotVerified
 	ErrorValidationInvalidTOTPCode
 	ErrorValidationNoTOTPDevice
+	ErrorValidationLookupAlreadyUsed
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
@@ -97,6 +98,23 @@ func NewErrorValidationTOTPVerifierWrong() *Message {
 	return &Message{
 		ID:      ErrorValidationTOTPVerifierWrong,
 		Text:    "The provided authentication code is invalid, please try again.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+func NewErrorValidationLookupAlreadyUsed() *Message {
+	return &Message{
+		ID:      ErrorValidationLookupAlreadyUsed,
+		Text:    "This backup recovery code has already been used.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationLookupInvalid() *Message {
+	return &Message{
+		ID:      ErrorValidationLookupAlreadyUsed,
+		Text:    "The backup recovery code is not valid.",
 		Type:    Error,
 		Context: context(nil),
 	}

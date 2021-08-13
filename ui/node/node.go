@@ -34,6 +34,7 @@ const (
 	RecoveryLinkGroup     Group = "link"
 	VerificationLinkGroup Group = "link"
 	TOTPGroup             Group = "totp"
+	LookupGroup           Group = "lookup_secret"
 
 	Text   Type = "text"
 	Input  Type = "input"
