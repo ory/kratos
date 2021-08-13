@@ -6,8 +6,8 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | CSRFToken is the anti-CSRF token | [optional] 
 **Method** | **string** | Method  Should be set to \&quot;totp\&quot; when trying to add, update, or remove a totp pairing. | 
-**UnlinkTotp** | Pointer to **bool** | UnlinkTOTP if true will remove the TOTP pairing, effectively removing the credential. This can be used to set up a new TOTP device. | [optional] 
-**VerificationTotp** | Pointer to **string** | ValidationTOTP must contain a valid TOTP based on the | [optional] 
+**TotpCode** | Pointer to **string** | ValidationTOTP must contain a valid TOTP based on the | [optional] 
+**TotpUnlink** | Pointer to **bool** | UnlinkTOTP if true will remove the TOTP pairing, effectively removing the credential. This can be used to set up a new TOTP device. | [optional] 
 
 ## Methods
 
@@ -73,55 +73,55 @@ and a boolean to check if the value has been set.
 SetMethod sets Method field to given value.
 
 
-### GetUnlinkTotp
+### GetTotpCode
 
-`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetUnlinkTotp() bool`
+`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpCode() string`
 
-GetUnlinkTotp returns the UnlinkTotp field if non-nil, zero value otherwise.
+GetTotpCode returns the TotpCode field if non-nil, zero value otherwise.
 
-### GetUnlinkTotpOk
+### GetTotpCodeOk
 
-`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetUnlinkTotpOk() (*bool, bool)`
+`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpCodeOk() (*string, bool)`
 
-GetUnlinkTotpOk returns a tuple with the UnlinkTotp field if it's non-nil, zero value otherwise
+GetTotpCodeOk returns a tuple with the TotpCode field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetUnlinkTotp
+### SetTotpCode
 
-`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetUnlinkTotp(v bool)`
+`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetTotpCode(v string)`
 
-SetUnlinkTotp sets UnlinkTotp field to given value.
+SetTotpCode sets TotpCode field to given value.
 
-### HasUnlinkTotp
+### HasTotpCode
 
-`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasUnlinkTotp() bool`
+`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasTotpCode() bool`
 
-HasUnlinkTotp returns a boolean if a field has been set.
+HasTotpCode returns a boolean if a field has been set.
 
-### GetVerificationTotp
+### GetTotpUnlink
 
-`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetVerificationTotp() string`
+`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpUnlink() bool`
 
-GetVerificationTotp returns the VerificationTotp field if non-nil, zero value otherwise.
+GetTotpUnlink returns the TotpUnlink field if non-nil, zero value otherwise.
 
-### GetVerificationTotpOk
+### GetTotpUnlinkOk
 
-`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetVerificationTotpOk() (*string, bool)`
+`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) GetTotpUnlinkOk() (*bool, bool)`
 
-GetVerificationTotpOk returns a tuple with the VerificationTotp field if it's non-nil, zero value otherwise
+GetTotpUnlinkOk returns a tuple with the TotpUnlink field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetVerificationTotp
+### SetTotpUnlink
 
-`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetVerificationTotp(v string)`
+`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) SetTotpUnlink(v bool)`
 
-SetVerificationTotp sets VerificationTotp field to given value.
+SetTotpUnlink sets TotpUnlink field to given value.
 
-### HasVerificationTotp
+### HasTotpUnlink
 
-`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasVerificationTotp() bool`
+`func (o *SubmitSelfServiceSettingsFlowWithTOTPMethodBody) HasTotpUnlink() bool`
 
-HasVerificationTotp returns a boolean if a field has been set.
+HasTotpUnlink returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
