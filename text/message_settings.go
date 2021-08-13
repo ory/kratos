@@ -2,6 +2,7 @@ package text
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -13,6 +14,10 @@ const (
 	InfoSelfServiceSettingsUpdateUnlinkTOTP
 	InfoSelfServiceSettingsTOTPQRCode
 	InfoSelfServiceSettingsTOTPSecret
+	InfoSelfServiceSettingsRevealLookup
+	InfoSelfServiceSettingsRegenerateLookup
+	InfoSelfServiceSettingsLookupSecrets
+	InfoSelfServiceSettingsLookupConfirm
 )
 
 const (
@@ -63,6 +68,41 @@ func NewInfoSelfServiceSettingsUpdateUnlinkTOTP() *Message {
 		ID:   InfoSelfServiceSettingsUpdateUnlinkTOTP,
 		Text: "Unlink TOTP Authenticator App",
 		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceSettingsRevealLookup() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsRevealLookup,
+		Text: "Reveal backup recovery codes",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceSettingsRegenerateLookup() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsRegenerateLookup,
+		Text: "Generate new backup recovery codes",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceSettingsLookupConfirm() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsLookupConfirm,
+		Text: "Confirm backup recovery codes",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceSettingsLookupSecrets(secrets []string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsLookupSecrets,
+		Text: fmt.Sprintf("Please keep your new back up recovery codes in a safe place. They are: %s", strings.Join(secrets, " ")),
+		Type: Info,
+		Context: context(map[string]interface{}{
+			"secrets": secrets,
+		}),
 	}
 }
 

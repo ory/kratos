@@ -13,6 +13,7 @@ const (
 	InfoSelfServiceLoginMFA                           // 1010004
 	InfoSelfServiceLoginVerify                        // 1010005
 	InfoSelfServiceLoginTOTPLabel                     // 1010006
+	InfoLoginLookupLabel                              // 1010007
 )
 
 const (
@@ -48,6 +49,15 @@ func NewInfoLoginTOTPLabel() *Message {
 		ID:      InfoSelfServiceLoginTOTPLabel,
 		Type:    Info,
 		Text:    "Authentication code",
+		Context: context(nil),
+	}
+}
+
+func NewInfoLoginLookupLabel() *Message {
+	return &Message{
+		ID:      InfoLoginLookupLabel,
+		Type:    Info,
+		Text:    "Backup recovery code",
 		Context: context(nil),
 	}
 }

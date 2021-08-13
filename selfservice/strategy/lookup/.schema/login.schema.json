@@ -1,0 +1,20 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/lookup/login.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "lookup_secret",
+    "method"
+  ],
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "lookup_secret": {
+      "type": "string"
+    }
+  }
+}
