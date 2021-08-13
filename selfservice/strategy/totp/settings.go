@@ -30,6 +30,8 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
+const internalContextKeyURL = "url"
+
 func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {
 }
 
@@ -156,7 +158,7 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithTotpMethodBody) (*identity.Identity, error) {
-	keyURL := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.InternalContextKeyTOTPURL).String()
+	keyURL := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyURL)).String()
 	if len(keyURL) == 0 {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find they TOTP key in the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
 	}
@@ -192,6 +194,17 @@ func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Re
 	c := &identity.Credentials{Type: s.ID(), Identifiers: []string{i.ID.String()}, Config: co}
 	c.Config = co
 	i.SetCredentials(s.ID(), *c)
+
+	// Remove the TOTP URL from the internal context now that it is set!
+	ctxUpdate.Flow.InternalContext, err = sjson.DeleteBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyURL))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), ctxUpdate.Flow); err != nil {
+		return nil, err
+	}
+
 	return i, nil
 }
 
@@ -241,7 +254,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 			return err
 		}
 
-		f.InternalContext, err = sjson.SetBytes(f.InternalContext, flow.InternalContextKeyTOTPURL, key.URL())
+		f.InternalContext, err = sjson.SetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyURL), key.URL())
 		if err != nil {
 			return err
 		}
