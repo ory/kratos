@@ -1130,6 +1130,17 @@
                 }
               }
             },
+            "lookup_secret": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the lookup secret method",
+                  "default": false
+                }
+              }
+            },
             "oidc": {
               "type": "object",
               "title": "Specify OpenID Connect and OAuth2 Configuration",
