@@ -11,8 +11,9 @@ func sortNodes(n node.Nodes, schemaRef string) error {
 			node.DefaultGroup,
 			node.ProfileGroup,
 			node.PasswordGroup,
-			node.TOTPGroup,
 			node.OpenIDConnectGroup,
+			node.TOTPGroup,
+			node.LookupGroup,
 		}),
 		node.SortUseOrder([]string{
 			// TOTP
@@ -20,6 +21,12 @@ func sortNodes(n node.Nodes, schemaRef string) error {
 			node.TOTPQR,
 			node.TOTPUnlink,
 			node.TOTPCode,
+
+			// Lookup
+			node.LookupReveal,
+			node.LookupRegenerate,
+			node.LookupCodes,
+			node.LookupConfirm,
 		}),
 	)
 }
