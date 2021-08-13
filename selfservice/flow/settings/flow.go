@@ -2,7 +2,6 @@ package settings
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -90,7 +89,7 @@ type Flow struct {
 	State State `json:"state" faker:"-" db:"state"`
 
 	// InternalContext stores internal context used by internals - for example MFA keys.
-	InternalContext json.RawMessage `db:"internal_context" json:"-" faker:"-"`
+	InternalContext sqlxx.JSONRawMessage `db:"internal_context" json:"-" faker:"-"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
