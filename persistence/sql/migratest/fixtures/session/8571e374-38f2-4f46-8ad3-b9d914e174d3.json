@@ -3,6 +3,8 @@
   "active": false,
   "expires_at": "2013-10-07T08:23:19Z",
   "authenticated_at": "2013-10-07T08:23:19Z",
+  "authenticator_assurance_level": "aal1",
+  "authentication_methods": [],
   "issued_at": "2013-10-07T08:23:19Z",
   "identity": {
     "id": "5ff66179-c240-4703-b0d8-494592cefff5",
