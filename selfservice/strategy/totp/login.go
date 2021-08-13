@@ -64,10 +64,10 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) e
 	return err
 }
 
-// submitSelfServiceLoginFlowWithTOTPMethodBody is used to decode the login form payload.
+// submitSelfServiceLoginFlowWithTotpMethodBody is used to decode the login form payload.
 //
-// swagger:model submitSelfServiceLoginFlowWithTOTPMethodBody
-type submitSelfServiceLoginFlowWithTOTPMethodBody struct {
+// swagger:model submitSelfServiceLoginFlowWithTotpMethodBody
+type submitSelfServiceLoginFlowWithTotpMethodBody struct {
 	// Method should be set to "totp" when logging in using the TOTP strategy.
 	//
 	// required: true
@@ -91,7 +91,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	var p submitSelfServiceLoginFlowWithTOTPMethodBody
+	var p submitSelfServiceLoginFlowWithTotpMethodBody
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),

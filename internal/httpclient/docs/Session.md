@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 **Active** | Pointer to **bool** | Active state. If false the session is no longer active. | [optional] 
 **AuthenticatedAt** | Pointer to **time.Time** | The Session Authentication Timestamp  When this session was authenticated at. If multi-factor authentication was used this is the time when the last factor was authenticated (e.g. the TOTP code challenge was completed). | [optional] 
 **AuthenticationMethods** | Pointer to [**[]SessionAuthenticationMethod**](SessionAuthenticationMethod.md) | A list of authenticators which were used to authenticate the session. | [optional] 
-**AuthenticatorAssuranceLevel** | Pointer to **string** | The authenticator assurance level can be one of \&quot;aal1\&quot;, \&quot;aal2\&quot;, or \&quot;aal3\&quot;. A higher number means that it is harder for an attacker to compromise the account.  Generally, \&quot;aal1\&quot; implies that one authentication factor was used while AAL2 implies that two factors (e.g. password + TOTP) have been used.  To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials | [optional] 
+**AuthenticatorAssuranceLevel** | Pointer to [**AuthenticatorAssuranceLevel**](AuthenticatorAssuranceLevel.md) |  | [optional] 
 **ExpiresAt** | Pointer to **time.Time** | The Session Expiry  When this session expires at. | [optional] 
 **Id** | **string** |  | 
 **Identity** | [**Identity**](Identity.md) |  | 
@@ -109,20 +109,20 @@ HasAuthenticationMethods returns a boolean if a field has been set.
 
 ### GetAuthenticatorAssuranceLevel
 
-`func (o *Session) GetAuthenticatorAssuranceLevel() string`
+`func (o *Session) GetAuthenticatorAssuranceLevel() AuthenticatorAssuranceLevel`
 
 GetAuthenticatorAssuranceLevel returns the AuthenticatorAssuranceLevel field if non-nil, zero value otherwise.
 
 ### GetAuthenticatorAssuranceLevelOk
 
-`func (o *Session) GetAuthenticatorAssuranceLevelOk() (*string, bool)`
+`func (o *Session) GetAuthenticatorAssuranceLevelOk() (*AuthenticatorAssuranceLevel, bool)`
 
 GetAuthenticatorAssuranceLevelOk returns a tuple with the AuthenticatorAssuranceLevel field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetAuthenticatorAssuranceLevel
 
-`func (o *Session) SetAuthenticatorAssuranceLevel(v string)`
+`func (o *Session) SetAuthenticatorAssuranceLevel(v AuthenticatorAssuranceLevel)`
 
 SetAuthenticatorAssuranceLevel sets AuthenticatorAssuranceLevel field to given value.
 

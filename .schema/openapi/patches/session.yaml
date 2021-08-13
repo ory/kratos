@@ -4,3 +4,20 @@
 - op: add
   path: /paths/~1sessions~1whoami/get/parameters/1/example
   value: ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==
+- op: add
+  path: /components/schemas/authenticatorAssuranceLevel/enum
+  value:
+    - aal0
+    - aal1
+    - aal2
+    - aal3
+- op: replace
+  path: /components/schemas/sessionAuthenticationMethod/properties/method
+  value:
+    title: The method used
+    type: string
+    enum:
+      - link_recovery
+      - password
+      - totp
+      - oidc

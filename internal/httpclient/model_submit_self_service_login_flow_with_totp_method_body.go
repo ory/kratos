@@ -15,8 +15,8 @@ import (
 	"encoding/json"
 )
 
-// SubmitSelfServiceLoginFlowWithTOTPMethodBody struct for SubmitSelfServiceLoginFlowWithTOTPMethodBody
-type SubmitSelfServiceLoginFlowWithTOTPMethodBody struct {
+// SubmitSelfServiceLoginFlowWithTotpMethodBody struct for SubmitSelfServiceLoginFlowWithTotpMethodBody
+type SubmitSelfServiceLoginFlowWithTotpMethodBody struct {
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Method should be set to \"totp\" when logging in using the TOTP strategy.
@@ -25,27 +25,27 @@ type SubmitSelfServiceLoginFlowWithTOTPMethodBody struct {
 	TotpCode string `json:"totp_code"`
 }
 
-// NewSubmitSelfServiceLoginFlowWithTOTPMethodBody instantiates a new SubmitSelfServiceLoginFlowWithTOTPMethodBody object
+// NewSubmitSelfServiceLoginFlowWithTotpMethodBody instantiates a new SubmitSelfServiceLoginFlowWithTotpMethodBody object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitSelfServiceLoginFlowWithTOTPMethodBody(method string, totpCode string) *SubmitSelfServiceLoginFlowWithTOTPMethodBody {
-	this := SubmitSelfServiceLoginFlowWithTOTPMethodBody{}
+func NewSubmitSelfServiceLoginFlowWithTotpMethodBody(method string, totpCode string) *SubmitSelfServiceLoginFlowWithTotpMethodBody {
+	this := SubmitSelfServiceLoginFlowWithTotpMethodBody{}
 	this.Method = method
 	this.TotpCode = totpCode
 	return &this
 }
 
-// NewSubmitSelfServiceLoginFlowWithTOTPMethodBodyWithDefaults instantiates a new SubmitSelfServiceLoginFlowWithTOTPMethodBody object
+// NewSubmitSelfServiceLoginFlowWithTotpMethodBodyWithDefaults instantiates a new SubmitSelfServiceLoginFlowWithTotpMethodBody object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewSubmitSelfServiceLoginFlowWithTOTPMethodBodyWithDefaults() *SubmitSelfServiceLoginFlowWithTOTPMethodBody {
-	this := SubmitSelfServiceLoginFlowWithTOTPMethodBody{}
+func NewSubmitSelfServiceLoginFlowWithTotpMethodBodyWithDefaults() *SubmitSelfServiceLoginFlowWithTotpMethodBody {
+	this := SubmitSelfServiceLoginFlowWithTotpMethodBody{}
 	return &this
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetCsrfToken() string {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetCsrfToken() string {
 	if o == nil || o.CsrfToken == nil {
 		var ret string
 		return ret
@@ -55,7 +55,7 @@ func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetCsrfToken() string {
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetCsrfTokenOk() (*string, bool) {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetCsrfTokenOk() (*string, bool) {
 	if o == nil || o.CsrfToken == nil {
 		return nil, false
 	}
@@ -63,7 +63,7 @@ func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetCsrfTokenOk() (*string
 }
 
 // HasCsrfToken returns a boolean if a field has been set.
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) HasCsrfToken() bool {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) HasCsrfToken() bool {
 	if o != nil && o.CsrfToken != nil {
 		return true
 	}
@@ -72,12 +72,12 @@ func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) HasCsrfToken() bool {
 }
 
 // SetCsrfToken gets a reference to the given string and assigns it to the CsrfToken field.
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) SetCsrfToken(v string) {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) SetCsrfToken(v string) {
 	o.CsrfToken = &v
 }
 
 // GetMethod returns the Method field value
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetMethod() string {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetMethod() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -88,7 +88,7 @@ func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetMethod() string {
 
 // GetMethodOk returns a tuple with the Method field value
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetMethodOk() (*string, bool) {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetMethodOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -96,12 +96,12 @@ func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetMethodOk() (*string, b
 }
 
 // SetMethod sets field value
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) SetMethod(v string) {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) SetMethod(v string) {
 	o.Method = v
 }
 
 // GetTotpCode returns the TotpCode field value
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetTotpCode() string {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetTotpCode() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -112,7 +112,7 @@ func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetTotpCode() string {
 
 // GetTotpCodeOk returns a tuple with the TotpCode field value
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetTotpCodeOk() (*string, bool) {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetTotpCodeOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -120,11 +120,11 @@ func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetTotpCodeOk() (*string,
 }
 
 // SetTotpCode sets field value
-func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) SetTotpCode(v string) {
+func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) SetTotpCode(v string) {
 	o.TotpCode = v
 }
 
-func (o SubmitSelfServiceLoginFlowWithTOTPMethodBody) MarshalJSON() ([]byte, error) {
+func (o SubmitSelfServiceLoginFlowWithTotpMethodBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
 		toSerialize["csrf_token"] = o.CsrfToken
@@ -138,38 +138,38 @@ func (o SubmitSelfServiceLoginFlowWithTOTPMethodBody) MarshalJSON() ([]byte, err
 	return json.Marshal(toSerialize)
 }
 
-type NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody struct {
-	value *SubmitSelfServiceLoginFlowWithTOTPMethodBody
+type NullableSubmitSelfServiceLoginFlowWithTotpMethodBody struct {
+	value *SubmitSelfServiceLoginFlowWithTotpMethodBody
 	isSet bool
 }
 
-func (v NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody) Get() *SubmitSelfServiceLoginFlowWithTOTPMethodBody {
+func (v NullableSubmitSelfServiceLoginFlowWithTotpMethodBody) Get() *SubmitSelfServiceLoginFlowWithTotpMethodBody {
 	return v.value
 }
 
-func (v *NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody) Set(val *SubmitSelfServiceLoginFlowWithTOTPMethodBody) {
+func (v *NullableSubmitSelfServiceLoginFlowWithTotpMethodBody) Set(val *SubmitSelfServiceLoginFlowWithTotpMethodBody) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody) IsSet() bool {
+func (v NullableSubmitSelfServiceLoginFlowWithTotpMethodBody) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody) Unset() {
+func (v *NullableSubmitSelfServiceLoginFlowWithTotpMethodBody) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableSubmitSelfServiceLoginFlowWithTOTPMethodBody(val *SubmitSelfServiceLoginFlowWithTOTPMethodBody) *NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody {
-	return &NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody{value: val, isSet: true}
+func NewNullableSubmitSelfServiceLoginFlowWithTotpMethodBody(val *SubmitSelfServiceLoginFlowWithTotpMethodBody) *NullableSubmitSelfServiceLoginFlowWithTotpMethodBody {
+	return &NullableSubmitSelfServiceLoginFlowWithTotpMethodBody{value: val, isSet: true}
 }
 
-func (v NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody) MarshalJSON() ([]byte, error) {
+func (v NullableSubmitSelfServiceLoginFlowWithTotpMethodBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableSubmitSelfServiceLoginFlowWithTOTPMethodBody) UnmarshalJSON(src []byte) error {
+func (v *NullableSubmitSelfServiceLoginFlowWithTotpMethodBody) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

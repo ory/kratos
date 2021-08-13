@@ -18,8 +18,7 @@ import (
 
 // SelfServiceLoginFlow This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\" endpoint by a client.  Once a login flow is completed successfully, a session cookie or session token will be issued.
 type SelfServiceLoginFlow struct {
-	// and so on.
-	Active *string `json:"active,omitempty"`
+	Active *IdentityCredentialsType `json:"active,omitempty"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
@@ -30,9 +29,8 @@ type SelfServiceLoginFlow struct {
 	// IssuedAt is the time (UTC) when the flow started.
 	IssuedAt time.Time `json:"issued_at"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
-	RequestUrl string `json:"request_url"`
-	// The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder for an attacker to compromise the account.  Generally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g. password + TOTP) have been used.  To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials
-	RequestedAal *string `json:"requested_aal,omitempty"`
+	RequestUrl   string                       `json:"request_url"`
+	RequestedAal *AuthenticatorAssuranceLevel `json:"requested_aal,omitempty"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`
 	Ui   UiContainer `json:"ui"`
@@ -64,9 +62,9 @@ func NewSelfServiceLoginFlowWithDefaults() *SelfServiceLoginFlow {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *SelfServiceLoginFlow) GetActive() string {
+func (o *SelfServiceLoginFlow) GetActive() IdentityCredentialsType {
 	if o == nil || o.Active == nil {
-		var ret string
+		var ret IdentityCredentialsType
 		return ret
 	}
 	return *o.Active
@@ -74,7 +72,7 @@ func (o *SelfServiceLoginFlow) GetActive() string {
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceLoginFlow) GetActiveOk() (*string, bool) {
+func (o *SelfServiceLoginFlow) GetActiveOk() (*IdentityCredentialsType, bool) {
 	if o == nil || o.Active == nil {
 		return nil, false
 	}
@@ -90,8 +88,8 @@ func (o *SelfServiceLoginFlow) HasActive() bool {
 	return false
 }
 
-// SetActive gets a reference to the given string and assigns it to the Active field.
-func (o *SelfServiceLoginFlow) SetActive(v string) {
+// SetActive gets a reference to the given IdentityCredentialsType and assigns it to the Active field.
+func (o *SelfServiceLoginFlow) SetActive(v IdentityCredentialsType) {
 	o.Active = &v
 }
 
@@ -256,9 +254,9 @@ func (o *SelfServiceLoginFlow) SetRequestUrl(v string) {
 }
 
 // GetRequestedAal returns the RequestedAal field value if set, zero value otherwise.
-func (o *SelfServiceLoginFlow) GetRequestedAal() string {
+func (o *SelfServiceLoginFlow) GetRequestedAal() AuthenticatorAssuranceLevel {
 	if o == nil || o.RequestedAal == nil {
-		var ret string
+		var ret AuthenticatorAssuranceLevel
 		return ret
 	}
 	return *o.RequestedAal
@@ -266,7 +264,7 @@ func (o *SelfServiceLoginFlow) GetRequestedAal() string {
 
 // GetRequestedAalOk returns a tuple with the RequestedAal field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceLoginFlow) GetRequestedAalOk() (*string, bool) {
+func (o *SelfServiceLoginFlow) GetRequestedAalOk() (*AuthenticatorAssuranceLevel, bool) {
 	if o == nil || o.RequestedAal == nil {
 		return nil, false
 	}
@@ -282,8 +280,8 @@ func (o *SelfServiceLoginFlow) HasRequestedAal() bool {
 	return false
 }
 
-// SetRequestedAal gets a reference to the given string and assigns it to the RequestedAal field.
-func (o *SelfServiceLoginFlow) SetRequestedAal(v string) {
+// SetRequestedAal gets a reference to the given AuthenticatorAssuranceLevel and assigns it to the RequestedAal field.
+func (o *SelfServiceLoginFlow) SetRequestedAal(v AuthenticatorAssuranceLevel) {
 	o.RequestedAal = &v
 }
 

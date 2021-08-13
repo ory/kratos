@@ -1,4 +1,4 @@
-# SubmitSelfServiceLoginFlowWithTOTPMethodBody
+# SubmitSelfServiceLoginFlowWithTotpMethodBody
 
 ## Properties
 
@@ -10,84 +10,84 @@ Name | Type | Description | Notes
 
 ## Methods
 
-### NewSubmitSelfServiceLoginFlowWithTOTPMethodBody
+### NewSubmitSelfServiceLoginFlowWithTotpMethodBody
 
-`func NewSubmitSelfServiceLoginFlowWithTOTPMethodBody(method string, totpCode string, ) *SubmitSelfServiceLoginFlowWithTOTPMethodBody`
+`func NewSubmitSelfServiceLoginFlowWithTotpMethodBody(method string, totpCode string, ) *SubmitSelfServiceLoginFlowWithTotpMethodBody`
 
-NewSubmitSelfServiceLoginFlowWithTOTPMethodBody instantiates a new SubmitSelfServiceLoginFlowWithTOTPMethodBody object
+NewSubmitSelfServiceLoginFlowWithTotpMethodBody instantiates a new SubmitSelfServiceLoginFlowWithTotpMethodBody object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewSubmitSelfServiceLoginFlowWithTOTPMethodBodyWithDefaults
+### NewSubmitSelfServiceLoginFlowWithTotpMethodBodyWithDefaults
 
-`func NewSubmitSelfServiceLoginFlowWithTOTPMethodBodyWithDefaults() *SubmitSelfServiceLoginFlowWithTOTPMethodBody`
+`func NewSubmitSelfServiceLoginFlowWithTotpMethodBodyWithDefaults() *SubmitSelfServiceLoginFlowWithTotpMethodBody`
 
-NewSubmitSelfServiceLoginFlowWithTOTPMethodBodyWithDefaults instantiates a new SubmitSelfServiceLoginFlowWithTOTPMethodBody object
+NewSubmitSelfServiceLoginFlowWithTotpMethodBodyWithDefaults instantiates a new SubmitSelfServiceLoginFlowWithTotpMethodBody object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetCsrfToken
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetCsrfToken() string`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetCsrfToken() string`
 
 GetCsrfToken returns the CsrfToken field if non-nil, zero value otherwise.
 
 ### GetCsrfTokenOk
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetCsrfTokenOk() (*string, bool)`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetCsrfTokenOk() (*string, bool)`
 
 GetCsrfTokenOk returns a tuple with the CsrfToken field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetCsrfToken
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) SetCsrfToken(v string)`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) SetCsrfToken(v string)`
 
 SetCsrfToken sets CsrfToken field to given value.
 
 ### HasCsrfToken
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) HasCsrfToken() bool`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) HasCsrfToken() bool`
 
 HasCsrfToken returns a boolean if a field has been set.
 
 ### GetMethod
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetMethod() string`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetMethod() string`
 
 GetMethod returns the Method field if non-nil, zero value otherwise.
 
 ### GetMethodOk
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetMethodOk() (*string, bool)`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetMethodOk() (*string, bool)`
 
 GetMethodOk returns a tuple with the Method field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetMethod
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) SetMethod(v string)`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) SetMethod(v string)`
 
 SetMethod sets Method field to given value.
 
 
 ### GetTotpCode
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetTotpCode() string`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetTotpCode() string`
 
 GetTotpCode returns the TotpCode field if non-nil, zero value otherwise.
 
 ### GetTotpCodeOk
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) GetTotpCodeOk() (*string, bool)`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) GetTotpCodeOk() (*string, bool)`
 
 GetTotpCodeOk returns a tuple with the TotpCode field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTotpCode
 
-`func (o *SubmitSelfServiceLoginFlowWithTOTPMethodBody) SetTotpCode(v string)`
+`func (o *SubmitSelfServiceLoginFlowWithTotpMethodBody) SetTotpCode(v string)`
 
 SetTotpCode sets TotpCode field to given value.
 

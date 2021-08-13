@@ -3,3 +3,9 @@
   value:
     - active
     - inactive
+- op: add
+  path: /components/schemas/identityCredentialsType/enum
+  value:
+    - password
+    - totp
+    - oidc

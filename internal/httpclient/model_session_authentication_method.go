@@ -20,8 +20,7 @@ import (
 type SessionAuthenticationMethod struct {
 	// When the authentication challenge was completed.
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	// and so on.
-	Method *string `json:"method,omitempty"`
+	Method      *string    `json:"method,omitempty"`
 }
 
 // NewSessionAuthenticationMethod instantiates a new SessionAuthenticationMethod object

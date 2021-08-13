@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **string** | and so on. | [optional] 
+**Active** | Pointer to [**IdentityCredentialsType**](IdentityCredentialsType.md) |  | [optional] 
 **CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 **ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
 **Forced** | Pointer to **bool** | Refresh stores whether this login flow should enforce re-authentication. | [optional] 
 **Id** | **string** |  | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow started. | 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
-**RequestedAal** | Pointer to **string** | The authenticator assurance level can be one of \&quot;aal1\&quot;, \&quot;aal2\&quot;, or \&quot;aal3\&quot;. A higher number means that it is harder for an attacker to compromise the account.  Generally, \&quot;aal1\&quot; implies that one authentication factor was used while AAL2 implies that two factors (e.g. password + TOTP) have been used.  To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials | [optional] 
+**RequestedAal** | Pointer to [**AuthenticatorAssuranceLevel**](AuthenticatorAssuranceLevel.md) |  | [optional] 
 **Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
 **Ui** | [**UiContainer**](UiContainer.md) |  | 
 **UpdatedAt** | Pointer to **time.Time** | UpdatedAt is a helper struct field for gobuffalo.pop. | [optional] 
@@ -37,20 +37,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetActive
 
-`func (o *SelfServiceLoginFlow) GetActive() string`
+`func (o *SelfServiceLoginFlow) GetActive() IdentityCredentialsType`
 
 GetActive returns the Active field if non-nil, zero value otherwise.
 
 ### GetActiveOk
 
-`func (o *SelfServiceLoginFlow) GetActiveOk() (*string, bool)`
+`func (o *SelfServiceLoginFlow) GetActiveOk() (*IdentityCredentialsType, bool)`
 
 GetActiveOk returns a tuple with the Active field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetActive
 
-`func (o *SelfServiceLoginFlow) SetActive(v string)`
+`func (o *SelfServiceLoginFlow) SetActive(v IdentityCredentialsType)`
 
 SetActive sets Active field to given value.
 
@@ -192,20 +192,20 @@ SetRequestUrl sets RequestUrl field to given value.
 
 ### GetRequestedAal
 
-`func (o *SelfServiceLoginFlow) GetRequestedAal() string`
+`func (o *SelfServiceLoginFlow) GetRequestedAal() AuthenticatorAssuranceLevel`
 
 GetRequestedAal returns the RequestedAal field if non-nil, zero value otherwise.
 
 ### GetRequestedAalOk
 
-`func (o *SelfServiceLoginFlow) GetRequestedAalOk() (*string, bool)`
+`func (o *SelfServiceLoginFlow) GetRequestedAalOk() (*AuthenticatorAssuranceLevel, bool)`
 
 GetRequestedAalOk returns a tuple with the RequestedAal field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetRequestedAal
 
-`func (o *SelfServiceLoginFlow) SetRequestedAal(v string)`
+`func (o *SelfServiceLoginFlow) SetRequestedAal(v AuthenticatorAssuranceLevel)`
 
 SetRequestedAal sets RequestedAal field to given value.
 

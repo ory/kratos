@@ -21,6 +21,14 @@ type SubmitSelfServiceSettingsFlowBody struct {
 	SubmitSelfServiceSettingsFlowWithOidcMethodBody     *SubmitSelfServiceSettingsFlowWithOidcMethodBody
 	SubmitSelfServiceSettingsFlowWithPasswordMethodBody *SubmitSelfServiceSettingsFlowWithPasswordMethodBody
 	SubmitSelfServiceSettingsFlowWithProfileMethodBody  *SubmitSelfServiceSettingsFlowWithProfileMethodBody
+	SubmitSelfServiceSettingsFlowWithTotpMethodBody     *SubmitSelfServiceSettingsFlowWithTotpMethodBody
+}
+
+// SubmitSelfServiceSettingsFlowWithOidcMethodBodyAsSubmitSelfServiceSettingsFlowBody is a convenience function that returns SubmitSelfServiceSettingsFlowWithOidcMethodBody wrapped in SubmitSelfServiceSettingsFlowBody
+func SubmitSelfServiceSettingsFlowWithOidcMethodBodyAsSubmitSelfServiceSettingsFlowBody(v *SubmitSelfServiceSettingsFlowWithOidcMethodBody) SubmitSelfServiceSettingsFlowBody {
+	return SubmitSelfServiceSettingsFlowBody{
+		SubmitSelfServiceSettingsFlowWithOidcMethodBody: v,
+	}
 }
 
 // SubmitSelfServiceSettingsFlowWithOidcMethodBodyAsSubmitSelfServiceSettingsFlowBody is a convenience function that returns SubmitSelfServiceSettingsFlowWithOidcMethodBody wrapped in SubmitSelfServiceSettingsFlowBody
@@ -41,6 +49,13 @@ func SubmitSelfServiceSettingsFlowWithPasswordMethodBodyAsSubmitSelfServiceSetti
 func SubmitSelfServiceSettingsFlowWithProfileMethodBodyAsSubmitSelfServiceSettingsFlowBody(v *SubmitSelfServiceSettingsFlowWithProfileMethodBody) SubmitSelfServiceSettingsFlowBody {
 	return SubmitSelfServiceSettingsFlowBody{
 		SubmitSelfServiceSettingsFlowWithProfileMethodBody: v,
+	}
+}
+
+// SubmitSelfServiceSettingsFlowWithTotpMethodBodyAsSubmitSelfServiceSettingsFlowBody is a convenience function that returns SubmitSelfServiceSettingsFlowWithTotpMethodBody wrapped in SubmitSelfServiceSettingsFlowBody
+func SubmitSelfServiceSettingsFlowWithTotpMethodBodyAsSubmitSelfServiceSettingsFlowBody(v *SubmitSelfServiceSettingsFlowWithTotpMethodBody) SubmitSelfServiceSettingsFlowBody {
+	return SubmitSelfServiceSettingsFlowBody{
+		SubmitSelfServiceSettingsFlowWithTotpMethodBody: v,
 	}
 }
 
@@ -87,11 +102,25 @@ func (dst *SubmitSelfServiceSettingsFlowBody) UnmarshalJSON(data []byte) error {
 		dst.SubmitSelfServiceSettingsFlowWithProfileMethodBody = nil
 	}
 
+	// try to unmarshal data into SubmitSelfServiceSettingsFlowWithTotpMethodBody
+	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceSettingsFlowWithTotpMethodBody)
+	if err == nil {
+		jsonSubmitSelfServiceSettingsFlowWithTotpMethodBody, _ := json.Marshal(dst.SubmitSelfServiceSettingsFlowWithTotpMethodBody)
+		if string(jsonSubmitSelfServiceSettingsFlowWithTotpMethodBody) == "{}" { // empty struct
+			dst.SubmitSelfServiceSettingsFlowWithTotpMethodBody = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.SubmitSelfServiceSettingsFlowWithTotpMethodBody = nil
+	}
+
 	if match > 1 { // more than 1 match
 		// reset to nil
 		dst.SubmitSelfServiceSettingsFlowWithOidcMethodBody = nil
 		dst.SubmitSelfServiceSettingsFlowWithPasswordMethodBody = nil
 		dst.SubmitSelfServiceSettingsFlowWithProfileMethodBody = nil
+		dst.SubmitSelfServiceSettingsFlowWithTotpMethodBody = nil
 
 		return fmt.Errorf("Data matches more than one schema in oneOf(SubmitSelfServiceSettingsFlowBody)")
 	} else if match == 1 {
@@ -115,6 +144,10 @@ func (src SubmitSelfServiceSettingsFlowBody) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.SubmitSelfServiceSettingsFlowWithProfileMethodBody)
 	}
 
+	if src.SubmitSelfServiceSettingsFlowWithTotpMethodBody != nil {
+		return json.Marshal(&src.SubmitSelfServiceSettingsFlowWithTotpMethodBody)
+	}
+
 	return nil, nil // no data in oneOf schemas
 }
 
@@ -133,6 +166,10 @@ func (obj *SubmitSelfServiceSettingsFlowBody) GetActualInstance() interface{} {
 
 	if obj.SubmitSelfServiceSettingsFlowWithProfileMethodBody != nil {
 		return obj.SubmitSelfServiceSettingsFlowWithProfileMethodBody
+	}
+
+	if obj.SubmitSelfServiceSettingsFlowWithTotpMethodBody != nil {
+		return obj.SubmitSelfServiceSettingsFlowWithTotpMethodBody
 	}
 
 	// all schemas are nil
