@@ -15,6 +15,19 @@ New feature or request.
 
 - [ ] Require second factor only if device is unknown
       ([kratos#1643](https://github.com/ory/kratos/issues/1643))
+- [ ] Potentially encrypt settings InternalContext
+      ([kratos#1647](https://github.com/ory/kratos/issues/1647))
+- [ ] Regenerate lookup secrets as part of login when last secret was used
+      ([kratos#1649](https://github.com/ory/kratos/issues/1649))
+
+### [Rfc](https://github.com/ory/kratos/labels/rfc)
+
+A request for comments to discuss and share ideas.
+
+#### Issues
+
+- [ ] Potentially encrypt settings InternalContext
+      ([kratos#1647](https://github.com/ory/kratos/issues/1647))
 
 ## [v0.7.x](https://github.com/ory/kratos/milestone/12)
 
