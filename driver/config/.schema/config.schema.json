@@ -1643,7 +1643,8 @@
           "description": "The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.",
           "items": {
             "type": "string",
-            "length": 32
+            "minLength": 32,
+            "maxLength": 32
           },
           "minItems": 1
         }

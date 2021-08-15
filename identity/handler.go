@@ -3,6 +3,7 @@ package identity
 import (
 	"context"
 	"encoding/json"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"time"
 
@@ -32,14 +33,13 @@ type (
 		x.WriterProvider
 		config.Provider
 		x.CSRFProvider
+		cipher.Provider
 	}
 	HandlerProvider interface {
 		IdentityHandler() *Handler
 	}
 	Handler struct {
 		r handlerDependencies
-
-		crypter cipher.Cipher
 	}
 )
 
@@ -172,42 +172,47 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	identifier := r.URL.Query().Get("identifier")
-	if identifier != "" {
-		_, c, err := h.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), CredentialsTypeOIDC, identifier)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(err))
-			return
-		}
-		cred, err := i.GetCredential(r.Context(), c.Config)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(err))
-			return
-		}
-		if len(cred.Providers) == 0 {
-			h.r.Writer().WriteErrorCode(w, r, http.StatusNotFound, errors.WithStack(errors.New("identifier does not exist in this identity")))
-			return
-		}
-		cr := h.Cipher()
-		accessToken, err := cr.Decrypt(r.Context(), cred.Providers[0].EncryptedAccessToken)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(err))
-			return
-		}
-		refreshToken, err := cr.Decrypt(r.Context(), cred.Providers[0].EncryptedRefreshToken)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(err))
-			return
-		}
-		i.IdentifierCredential = &IdentifierCredential{
-			Subject:      cred.Providers[0].Subject,
-			Provider:     cred.Providers[0].Provider,
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
+	if revealCreds := r.URL.Query().Get("reveal_credentials"); revealCreds == "oidc_token" {
+		for credType, credential := range i.Credentials {
+			if credType != CredentialsTypeOIDC {
+				continue
+			}
+			var encryptedAccessToken []byte
+			if err := json.Unmarshal([]byte(gjson.GetBytes(credential.Config, "providers.0.encrypted_access_token").Raw), &encryptedAccessToken); err != nil {
+				h.r.Writer().WriteError(w, r, errors.WithStack(err))
+				return
+			}
+
+			var encryptedRefreshToken []byte
+			if err := json.Unmarshal([]byte(gjson.GetBytes(credential.Config, "providers.0.encrypted_refresh_token").Raw), &encryptedRefreshToken); err != nil {
+				h.r.Writer().WriteError(w, r, errors.WithStack(err))
+				return
+			}
+			if len(encryptedAccessToken) == 0 || len(encryptedRefreshToken) == 0 {
+				continue
+			}
+			accessToken, err :=  h.r.Cipher().Decrypt(r.Context(), encryptedAccessToken)
+			if err != nil {
+				h.r.Writer().WriteError(w, r, errors.WithStack(err))
+				return
+			}
+			refreshToken, err :=  h.r.Cipher().Decrypt(r.Context(), encryptedRefreshToken)
+			if err != nil {
+				h.r.Writer().WriteError(w, r, errors.WithStack(err))
+				return
+			}
+			i.IdentifierCredentials = append(i.IdentifierCredentials, IdentifierCredential{
+				Subject: gjson.GetBytes(credential.Config, "providers.0.subject").String(),
+				Provider: gjson.GetBytes(credential.Config, "providers.0.provider").String(),
+				AccessToken: accessToken,
+				RefreshToken: refreshToken,
+			})
 		}
 	}
+
 	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
 }
+
 
 // swagger:parameters adminCreateIdentity
 // nolint:deadcode,unused
@@ -417,12 +422,5 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func (h *Handler) Cipher() cipher.Cipher {
-	if h.crypter == nil {
-		h.crypter = cipher.NewCryptAES(h)
-	}
-	return h.crypter
 }
 

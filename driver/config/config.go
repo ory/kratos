@@ -15,13 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/tlsx"
 
 	"github.com/google/uuid"
 
-	"github.com/ory/x/dbal"
-
-	"github.com/ory/x/stringsx"
 
 	"github.com/stretchr/testify/require"
 
@@ -32,8 +28,11 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/configx"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/stringsx"
+	"github.com/ory/x/tlsx"
 	"github.com/ory/x/tracing"
 )
 
@@ -546,11 +545,17 @@ func (p *Config) SecretsSession() [][]byte {
 
 func (p *Config) SecretsAES() [][32]byte {
 	secrets := p.p.Strings(ViperKeySecretsAES)
-	result := make([][32]byte, len(secrets))
-	for n, s := range secrets {
-		if len(s) != 32 {
-			continue
+	var cleanSecrets []string
+	for k := range secrets {
+		if len(secrets[k]) == 32 {
+			cleanSecrets = append(cleanSecrets, secrets[k])
 		}
+	}
+	if len(cleanSecrets) == 0 {
+		return [][32]byte{}
+	}
+	result := make([][32]byte, len(cleanSecrets))
+	for n, s := range secrets {
 		for k, v := range []byte(s) {
 			result[n][k] = byte(v)
 		}

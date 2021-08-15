@@ -54,9 +54,10 @@ func (a *AES) Decrypt(ctx context.Context, encryptedString []byte) (string, erro
 
 	for i := range secrets {
 		plaintext, err := cryptopasta.Decrypt(encryptedString, &secrets[i])
-		if err != nil {
+		if err == nil {
 			return string(plaintext), nil
 		}
+
 	}
 
 	return "", errors.WithStack(herodot.ErrForbidden.WithReason("Unable to decipher the encrypted message."))
