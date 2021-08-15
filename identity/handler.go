@@ -3,9 +3,10 @@ package identity
 import (
 	"context"
 	"encoding/json"
-	"github.com/tidwall/gjson"
 	"net/http"
 	"time"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/cipher"
 
@@ -188,20 +189,20 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 				h.r.Writer().WriteError(w, r, errors.WithStack(err))
 				return
 			}
-			accessToken, err :=  h.r.Cipher().Decrypt(r.Context(), encryptedAccessToken)
+			accessToken, err := h.r.Cipher().Decrypt(r.Context(), encryptedAccessToken)
 			if err != nil {
 				h.r.Writer().WriteError(w, r, errors.WithStack(err))
 				return
 			}
-			refreshToken, err :=  h.r.Cipher().Decrypt(r.Context(), encryptedRefreshToken)
+			refreshToken, err := h.r.Cipher().Decrypt(r.Context(), encryptedRefreshToken)
 			if err != nil {
 				h.r.Writer().WriteError(w, r, errors.WithStack(err))
 				return
 			}
 			i.IdentifierCredentials = append(i.IdentifierCredentials, IdentifierCredential{
-				Subject: gjson.GetBytes(credential.Config, "providers.0.subject").String(),
-				Provider: gjson.GetBytes(credential.Config, "providers.0.provider").String(),
-				AccessToken: accessToken,
+				Subject:      gjson.GetBytes(credential.Config, "providers.0.subject").String(),
+				Provider:     gjson.GetBytes(credential.Config, "providers.0.provider").String(),
+				AccessToken:  accessToken,
 				RefreshToken: refreshToken,
 			})
 		}
@@ -209,7 +210,6 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 
 	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
 }
-
 
 // swagger:parameters adminCreateIdentity
 // nolint:deadcode,unused
@@ -420,4 +420,3 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	w.WriteHeader(http.StatusNoContent)
 }
-

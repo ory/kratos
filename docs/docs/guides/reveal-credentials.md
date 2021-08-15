@@ -5,11 +5,10 @@ title: Reveal Credentials
 
 This document describe how to reveal credentials from `/identities` URI.
 
-
 ## Retrieve OIDC Access Token and Refresh Token
 
-The access token and refresh token from oidc
-provider. This assumes that you have oidc method configured.
+The access token and refresh token from oidc provider. This assumes that you
+have oidc method configured.
 
 ```
 /identities/{id}/reveal_credentials
