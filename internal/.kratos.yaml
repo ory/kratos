@@ -39,6 +39,8 @@ secrets:
   cookie:
     - session-key-7f8a9b77-1
     - session-key-7f8a9b77-2
+  aes:
+    - secret-thirty-two-character-long
 
 selfservice:
   default_browser_return_url: http://return-to-3-test.ory.sh/

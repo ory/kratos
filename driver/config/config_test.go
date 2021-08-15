@@ -143,6 +143,13 @@ func TestViperProvider(t *testing.T) {
 				[]byte("session-key-7f8a9b77-1"),
 				[]byte("session-key-7f8a9b77-2"),
 			}, p.SecretsSession())
+			var aesExpected [32]byte
+			for k, v := range []byte("secret-thirty-two-character-long") {
+				aesExpected[k] = byte(v)
+			}
+			assert.Equal(t, [][32]byte{
+				aesExpected,
+			}, p.SecretsAES())
 		})
 
 		t.Run("group=methods", func(t *testing.T) {
@@ -435,6 +442,10 @@ func TestViperProvider_Secrets(t *testing.T) {
 	assert.NotEmpty(t, def)
 	assert.Equal(t, def, p.SecretsSession())
 	assert.Equal(t, def, p.SecretsDefault())
+	assert.Empty(t, p.SecretsAES())
+	err := p.Set(config.ViperKeySecretsAES, []string{"short-secret-key"})
+	require.NoError(t, err)
+	assert.Equal(t, [][32]byte{}, p.SecretsAES())
 }
 
 func TestViperProvider_Defaults(t *testing.T) {
