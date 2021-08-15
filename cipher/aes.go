@@ -27,7 +27,9 @@ func NewCryptAES(c AESConfiguration) *AES {
 // Encrypt return a AES encrypt of plaintext
 func (a *AES) Encrypt(ctx context.Context, clearString string) ([]byte, error) {
 	if len(clearString) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Can not encrypt empty string."))
+		// do nothing if empty instead of return an error
+		//return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Can not encrypt empty string."))
+		return []byte{}, nil
 	}
 
 	if len(a.c.Config(ctx).SecretsAES()) == 0 {
@@ -44,7 +46,9 @@ func (a *AES) Encrypt(ctx context.Context, clearString string) ([]byte, error) {
 // Decrypt returns the decrypted aes data
 func (a *AES) Decrypt(ctx context.Context, encryptedString []byte) (string, error) {
 	if len(encryptedString) == 0 {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Can not decrypt empty message."))
+		// do nothing if empty instead of return an error
+		//return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Can not decrypt empty message."))
+		return "", nil
 	}
 
 	secrets := a.c.Config(ctx).SecretsAES()

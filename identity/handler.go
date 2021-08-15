@@ -188,9 +188,6 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 				h.r.Writer().WriteError(w, r, errors.WithStack(err))
 				return
 			}
-			if len(encryptedAccessToken) == 0 || len(encryptedRefreshToken) == 0 {
-				continue
-			}
 			accessToken, err :=  h.r.Cipher().Decrypt(r.Context(), encryptedAccessToken)
 			if err != nil {
 				h.r.Writer().WriteError(w, r, errors.WithStack(err))

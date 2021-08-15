@@ -28,8 +28,16 @@ $ curl --request GET -sL \
       "identifiers": [
         "google:j8kf7a3..."
       ],
-      "created_at": "2021-08-14T11:09:32.460548Z",
-      "updated_at": "2021-08-14T11:09:32.460548Z"
+      "created_at": "2021-08-15T17:18:17.104721Z",
+      "updated_at": "2021-08-15T17:18:17.104721Z"
+    },
+    "password": {
+      "type": "password",
+      "identifiers": [
+        "foo@ory.sh"
+      ],
+      "created_at": "2021-08-15T17:18:17.102464Z",
+      "updated_at": "2021-08-15T17:18:17.102464Z"
     }
   },
   "identifier_credentials": [
@@ -43,7 +51,7 @@ $ curl --request GET -sL \
   "schema_id": "default",
   "schema_url": "http://127.0.0.1:4433/schemas/default",
   "state": "active",
-  "state_changed_at": "2021-08-14T11:08:42.5200046Z",
+  "state_changed_at": "2021-08-15T17:18:17.0940169Z",
   "traits": {
     "name": {
       "first": "Foo",
@@ -59,8 +67,8 @@ $ curl --request GET -sL \
       "via": "email",
       "status": "sent",
       "verified_at": null,
-      "created_at": "2021-08-14T11:08:42.52204Z",
-      "updated_at": "2021-08-14T11:09:32.457381Z"
+      "created_at": "2021-08-15T17:18:17.096753Z",
+      "updated_at": "2021-08-15T17:18:17.096753Z"
     }
   ],
   "recovery_addresses": [
@@ -68,11 +76,11 @@ $ curl --request GET -sL \
       "id": "f9ecd4a2-3e41-4384-9614-cf97f60acbf9",
       "value": "foo@ory.sh",
       "via": "email",
-      "created_at": "2021-08-14T11:08:42.522253Z",
-      "updated_at": "2021-08-14T11:09:32.457889Z"
+      "created_at": "2021-08-15T17:18:17.098976Z",
+      "updated_at": "2021-08-15T17:18:17.098976Z"
     }
   ],
-  "created_at": "2021-08-14T11:08:42.521706Z",
-  "updated_at": "2021-08-14T11:08:42.521706Z"
+  "created_at": "2021-08-15T17:18:17.096187Z",
+  "updated_at": "2021-08-15T17:18:17.096187Z"
 }
 ```
