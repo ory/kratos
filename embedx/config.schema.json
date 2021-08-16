@@ -490,6 +490,21 @@
         },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
+        },
+        "allowed_audiences": {
+          "title": "List of values to check audience field of ID Token",
+          "description": "The audience field of ID Token should be equal to one of the items in this list",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "com.my-app.app",
+              "com.my-app.app.bundle.id"
+            ]
+          ],
+          "uniqueItems": true
         }
       },
       "additionalProperties": false,
@@ -1012,6 +1027,15 @@
       "properties": {
         "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
+        },
+        "webview_redirect_uri": {
+          "type": "string",
+          "title": "Final webview redirect URI",
+          "description": "Mobile app should detect this webview redirect and read a session token from the response body.",
+          "format": "uri",
+          "examples": [
+            "https://auth.myexample.org/oidc/success"
+          ]
         },
         "allowed_return_urls": {
           "title": "Allowed Return To URLs",

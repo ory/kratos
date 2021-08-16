@@ -3,7 +3,14 @@
 
 package oidc
 
-import "github.com/ory/herodot"
+import (
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
+	"github.com/ory/jsonschema/v3"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/text"
+)
 
 var (
 	ErrScopeMissing = herodot.ErrBadRequest.
@@ -14,6 +21,26 @@ var (
 				WithError("authentication failed because id_token is missing").
 				WithReasonf(`Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.`)
 
-	ErrAPIFlowNotSupported = herodot.ErrBadRequest.WithError("API-based flows are not supported for this method").
-				WithReasonf("Social Sign In and OpenID Connect are only supported for flows initiated using the Browser endpoint.")
+	ErrProviderNoAPISupport = herodot.ErrBadRequest.
+				WithError("request failed because oidc provider does not implement API flows").
+				WithReasonf(`Request failed because oidc provider does not implement API flows.`)
 )
+
+type ValidationErrorContextOIDCPolicyViolation struct {
+	Reason string
+}
+
+func (r *ValidationErrorContextOIDCPolicyViolation) AddContext(_, _ string) {}
+
+func (r *ValidationErrorContextOIDCPolicyViolation) FinishInstanceContext() {}
+
+func NewUserNotFoundError() error {
+	return errors.WithStack(&schema.ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `user with the provided credentials not found`,
+			InstancePtr: "#/",
+			Context:     &ValidationErrorContextOIDCPolicyViolation{},
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationOIDCUserNotFound()),
+	})
+}

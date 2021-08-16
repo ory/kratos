@@ -6,10 +6,13 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	"golang.org/x/oauth2"
+
+	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/session"
 
@@ -39,10 +42,6 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
-	if l.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	// This strategy can only solve AAL1
 	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
 		return nil
@@ -72,6 +71,11 @@ type UpdateLoginFlowWithOidcMethod struct {
 
 	// The identity traits. This is a placeholder for the registration flow.
 	Traits json.RawMessage `json:"traits"`
+
+	// Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.
+	//
+	// required: false
+	IDToken string `json:"id_token"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
@@ -97,6 +101,9 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			}
 
 			// This flow only works for browsers anyways.
+			query := r.URL.Query()
+			query.Set("return_to", a.ReturnTo)
+			r.URL.RawQuery = query.Encode()
 			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser, opts...)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
@@ -141,12 +148,31 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
+	var pid = ""
+	var idToken = ""
+
 	var p UpdateLoginFlowWithOidcMethod
-	if err := s.newLinkDecoder(&p, r); err != nil {
-		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+	if f.Type == flow.TypeBrowser {
+		if err := s.newLinkDecoder(&p, r); err != nil {
+			return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+		}
+		pid = p.Provider // this can come from both url query and post body
+	} else {
+		if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
+			return nil, err
+		}
+
+		if err := s.dec.Decode(r, &p,
+			decoderx.HTTPDecoderSetValidatePayloads(true),
+			decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
+			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+			return nil, s.handleError(w, r, f, "", nil, err)
+		}
+
+		idToken = p.IDToken
+		pid = p.Provider
 	}
 
-	var pid = p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
@@ -175,27 +201,58 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	state := generateState(f.ID.String())
-	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
-			State:  state,
-			FlowID: f.ID.String(),
-			Traits: p.Traits,
-		}),
-		continuity.WithLifespan(time.Minute*30)); err != nil {
-		return nil, s.handleError(w, r, f, pid, nil, err)
-	}
+	if f.Type == flow.TypeBrowser {
+		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
+			continuity.WithPayload(&authCodeContainer{
+				State:  state,
+				FlowID: f.ID.String(),
+				Traits: p.Traits,
+			}),
+			continuity.WithLifespan(time.Minute*30)); err != nil {
+			return nil, s.handleError(w, r, f, pid, nil, err)
+		}
 
-	f.Active = s.ID()
-	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
-		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
-	}
+		f.Active = s.ID()
+		if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+			return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+		}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
-	if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
+		codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+		if x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
+		} else {
+			http.Redirect(w, r, codeURL, http.StatusSeeOther)
+		}
+
+		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+
+	} else if f.Type == flow.TypeAPI {
+		var claims *Claims
+		if apiFlowProvider, ok := provider.(APIFlowProvider); ok {
+			if len(idToken) > 0 {
+				claims, err = apiFlowProvider.ClaimsFromIDToken(r.Context(), idToken)
+				if err != nil {
+					return nil, errors.WithStack(err)
+				}
+			} else {
+				return nil, s.handleError(w, r, f, p.Provider, nil, ErrIDTokenMissing)
+			}
+		} else {
+			return nil, s.handleError(w, r, f, p.Provider, nil, ErrProviderNoAPISupport)
+		}
+
+		i, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(),
+			identity.CredentialsTypeOIDC,
+			identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
+		if err != nil {
+			if errors.Is(err, sqlcon.ErrNoRows) {
+				return nil, s.handleError(w, r, f, p.Provider, nil, NewUserNotFoundError())
+			}
+			return nil, err
+		}
+		return i, nil
+
 	} else {
-		http.Redirect(w, r, codeURL, http.StatusSeeOther)
+		return nil, errors.WithStack(errors.New(fmt.Sprintf("Not supported flow type: %s", f.Type)))
 	}
-
-	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 }

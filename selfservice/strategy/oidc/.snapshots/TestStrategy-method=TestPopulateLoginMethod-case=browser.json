@@ -27,8 +27,8 @@
       "messages": [],
       "meta": {
         "label": {
-          "id": 1040002,
-          "text": "Sign up with valid",
+          "id": 1010002,
+          "text": "Sign in with valid",
           "type": "info",
           "context": {
             "provider": "valid"
@@ -49,8 +49,8 @@
       "messages": [],
       "meta": {
         "label": {
-          "id": 1040002,
-          "text": "Sign up with invalid-issuer",
+          "id": 1010002,
+          "text": "Sign in with invalid-issuer",
           "type": "info",
           "context": {
             "provider": "invalid-issuer"
@@ -71,8 +71,8 @@
       "messages": [],
       "meta": {
         "label": {
-          "id": 1040002,
-          "text": "Sign up with check_audience",
+          "id": 1010002,
+          "text": "Sign in with check_audience",
           "type": "info",
           "context": {
             "provider": "check_audience"

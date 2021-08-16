@@ -6,6 +6,8 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/google/go-jsonnet"
 	"net/http"
 	"time"
 
@@ -76,6 +78,11 @@ type UpdateRegistrationFlowWithOidcMethod struct {
 	//
 	// required: true
 	Method string `json:"method"`
+
+	// Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.
+	//
+	// required: false
+	IDToken string `json:"id_token"`
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
@@ -108,12 +115,32 @@ func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
 }
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
+	var pid = ""
+	var idToken = ""
+
 	var p UpdateRegistrationFlowWithOidcMethod
-	if err := s.newLinkDecoder(&p, r); err != nil {
-		return s.handleError(w, r, f, "", nil, err)
+	if f.Type == flow.TypeBrowser {
+		if err := s.newLinkDecoder(&p, r); err != nil {
+			return s.handleError(w, r, f, "", nil, err)
+		}
+
+		pid = p.Provider // this can come from both url query and post body
+	} else {
+		if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
+			return err
+		}
+
+		if err := s.dec.Decode(r, &p,
+			decoderx.HTTPDecoderSetValidatePayloads(true),
+			decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
+			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+			return s.handleError(w, r, f, "", nil, err)
+		}
+
+		idToken = p.IDToken
+		pid = p.Provider
 	}
 
-	var pid = p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
@@ -142,24 +169,99 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	state := generateState(f.ID.String())
-	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
-			State:  state,
-			FlowID: f.ID.String(),
-			Traits: p.Traits,
-		}),
-		continuity.WithLifespan(time.Minute*30)); err != nil {
-		return s.handleError(w, r, f, pid, nil, err)
-	}
+	if f.Type == flow.TypeBrowser {
+		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
+			continuity.WithPayload(&authCodeContainer{
+				State:  state,
+				FlowID: f.ID.String(),
+				Traits: p.Traits,
+			}),
+			continuity.WithLifespan(time.Minute*30)); err != nil {
+			return s.handleError(w, r, f, pid, nil, err)
+		}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
-	if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
+		codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+		if x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
+		} else {
+			http.Redirect(w, r, codeURL, http.StatusSeeOther)
+		}
+
+		return errors.WithStack(flow.ErrCompletedByStrategy)
+	} else if f.Type == flow.TypeAPI {
+		var claims *Claims
+		if apiFlowProvider, ok := provider.(APIFlowProvider); ok {
+			if len(idToken) > 0 {
+				claims, err = apiFlowProvider.ClaimsFromIDToken(r.Context(), idToken)
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			} else {
+				return s.handleError(w, r, f, p.Provider, nil, ErrIDTokenMissing)
+			}
+		} else {
+			return s.handleError(w, r, f, p.Provider, nil, ErrProviderNoAPISupport)
+		}
+
+		fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())))
+		jn, err := fetch.Fetch(provider.Config().Mapper)
+		if err != nil {
+			return s.handleError(w, r, f, provider.Config().ID, nil, err)
+		}
+
+		var jsonClaims bytes.Buffer
+		if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
+			return s.handleError(w, r, f, provider.Config().ID, nil, err)
+		}
+
+		vm := jsonnet.MakeVM()
+		vm.ExtCode("claims", jsonClaims.String())
+		evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
+		if err != nil {
+			return s.handleError(w, r, f, provider.Config().ID, nil, err)
+		} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
+			i.Traits = []byte{'{', '}'}
+			s.d.Logger().
+				WithRequest(r).
+				WithField("oidc_provider", provider.Config().ID).
+				WithSensitiveField("oidc_claims", claims).
+				WithField("mapper_jsonnet_output", evaluated).
+				WithField("mapper_jsonnet_url", provider.Config().Mapper).
+				Error("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
+		} else {
+			i.Traits = []byte(traits.Raw)
+		}
+
+		s.d.Logger().
+			WithRequest(r).
+			WithField("oidc_provider", provider.Config().ID).
+			WithSensitiveField("oidc_claims", claims).
+			WithField("mapper_jsonnet_output", evaluated).
+			WithField("mapper_jsonnet_url", provider.Config().Mapper).
+			Debug("OpenID Connect Jsonnet mapper completed.")
+
+		// Validate the identity itself
+		if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
+			return s.handleError(w, r, f, provider.Config().ID, i.Traits, err)
+		}
+
+		creds, err := identity.NewCredentialsOIDC(
+			idToken,
+			"",
+			"",
+			provider.Config().ID,
+			claims.Subject)
+		if err != nil {
+			return s.handleError(w, r, f, provider.Config().ID, i.Traits, err)
+		}
+
+		i.SetCredentials(s.ID(), *creds)
+
+		return nil
+
 	} else {
-		http.Redirect(w, r, codeURL, http.StatusSeeOther)
+		return errors.WithStack(errors.New(fmt.Sprintf("Not supported flow type: %s", f.Type)))
 	}
-
-	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {

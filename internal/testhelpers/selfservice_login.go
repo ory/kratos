@@ -206,6 +206,7 @@ func SubmitLoginForm(
 	forced bool,
 	expectedStatusCode int,
 	expectedURL string,
+	opts ...InitFlowWithOption,
 ) string {
 	if hc == nil {
 		hc = new(http.Client)
@@ -217,9 +218,9 @@ func SubmitLoginForm(
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var f *kratos.LoginFlow
 	if isAPI {
-		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced)
+		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced, opts...)
 	} else {
-		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced, isSPA, false, false)
+		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced, isSPA, false, false, opts...)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.

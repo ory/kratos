@@ -19,6 +19,10 @@ type Provider interface {
 	AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 }
 
+type APIFlowProvider interface {
+	ClaimsFromIDToken(ctx context.Context, rawIDToken string) (*Claims, error)
+}
+
 type TokenExchanger interface {
 	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 }

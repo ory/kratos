@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/internal/testhelpers"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -73,7 +74,7 @@ func (token *idTokenClaims) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func createClient(t *testing.T, remote string, redir string) (id, secret string) {
+func createClient(t *testing.T, remote string, redir []string) (id, secret string) {
 	require.NoError(t, resilience.Retry(logrusx.New("", ""), time.Second*10, time.Minute*2, func() error {
 		var b bytes.Buffer
 		require.NoError(t, json.NewEncoder(&b).Encode(&struct {
@@ -85,7 +86,7 @@ func createClient(t *testing.T, remote string, redir string) (id, secret string)
 			GrantTypes:    []string{"authorization_code", "refresh_token"},
 			ResponseTypes: []string{"code"},
 			Scope:         "offline offline_access openid",
-			RedirectURIs:  []string{redir},
+			RedirectURIs:  redir,
 		}))
 
 		res, err := http.Post(remote+"/admin/clients", "application/json", &b)
@@ -282,17 +283,38 @@ func newOIDCProvider(
 	hydraPublic string,
 	hydraAdmin string,
 	id string,
+	testCallbackUrl string,
+	allowedAudiences []string,
 ) oidc.Configuration {
-	clientID, secret := createClient(t, hydraAdmin, kratos.URL+oidc.RouteBase+"/callback/"+id)
+	redir := []string{
+		kratos.URL + oidc.RouteBase + "/callback/" + id,
+	}
+	if testCallbackUrl != "" {
+		redir = append(redir, testCallbackUrl)
+	}
+	clientID, secret := createClient(t, hydraAdmin, redir)
 
 	return oidc.Configuration{
-		Provider:     "generic",
-		ID:           id,
-		ClientID:     clientID,
-		ClientSecret: secret,
-		IssuerURL:    hydraPublic + "/",
-		Mapper:       "file://./stub/oidc.hydra.jsonnet",
+		Provider:         "generic",
+		ID:               id,
+		ClientID:         clientID,
+		ClientSecret:     secret,
+		IssuerURL:        hydraPublic + "/",
+		Mapper:           "file://./stub/oidc.hydra.jsonnet",
+		AllowedAudiences: allowedAudiences,
 	}
+}
+
+func newTestCallback(t *testing.T, reg driver.Registry) string {
+	router := httprouter.New()
+	path := "/testcallback"
+	router.GET(path, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		reg.Writer().Write(w, r, map[string]string{"code": r.URL.Query().Get("code")})
+	})
+
+	server := httptest.NewServer(router)
+	t.Cleanup(server.Close)
+	return server.URL + path
 }
 
 func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc.Configuration) {
@@ -307,4 +329,79 @@ func AssertSystemError(t *testing.T, errTS *httptest.Server, res *http.Response,
 
 	assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
 	assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", body)
+}
+
+type oauthTokens struct {
+	IDToken     string `json:"id_token"`
+	AccessToken string `json:"access_token"`
+}
+
+func getOauthTokens(
+	t *testing.T,
+	hydraPublic string,
+	clientId string,
+	clientSecret string,
+	testCallbackUrl string,
+) (error, *oauthTokens) {
+	hydra := testhelpers.NewClientWithCookieJar(t, nil, true)
+	var (
+		res *http.Response
+		req *http.Request
+		err error
+	)
+
+	if req, err = http.NewRequest("GET", hydraPublic+"/oauth2/auth", nil); err != nil {
+		return err, nil
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+	q := req.URL.Query()
+	q.Add("response_type", "code")
+	q.Add("client_id", clientId)
+	q.Add("redirect_uri", testCallbackUrl)
+	q.Add("state", x.NewUUID().String())
+	req.URL.RawQuery = q.Encode()
+
+	if res, err = hydra.Do(req); err != nil {
+		return err, nil
+	}
+	defer res.Body.Close()
+	var body = ioutilx.MustReadAll(res.Body)
+	require.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
+	var responseAuth struct {
+		Code string `json:"code"`
+	}
+	require.NoError(t, json.NewDecoder(bytes.NewBuffer(body)).Decode(&responseAuth))
+	require.NotNil(t, responseAuth.Code, "%s", body)
+
+	params := url.Values{
+		"grant_type":   {"authorization_code"},
+		"redirect_uri": {testCallbackUrl},
+		"client_id":    {clientId},
+		"code":         {responseAuth.Code},
+	}
+	if req, err = http.NewRequest(
+		"POST",
+		hydraPublic+"/oauth2/token",
+		bytes.NewBufferString(params.Encode()),
+	); err != nil {
+		return err, nil
+	}
+	req.SetBasicAuth(clientId, clientSecret)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+
+	if res, err = hydra.Do(req); err != nil {
+		return err, nil
+	}
+	defer res.Body.Close()
+	body = ioutilx.MustReadAll(res.Body)
+	require.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
+
+	var tokens oauthTokens
+
+	require.NoError(t, json.NewDecoder(bytes.NewBuffer(body)).Decode(&tokens))
+	require.NotNil(t, tokens.IDToken, "%s", body)
+
+	return nil, &tokens
 }

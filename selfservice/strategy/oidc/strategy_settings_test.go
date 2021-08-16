@@ -62,12 +62,15 @@ func TestSettingsStrategy(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
 
+	testCallbackUrl := newTestCallback(t, reg)
+	googleProviderConfig := newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google", testCallbackUrl, nil)
 	viperSetProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory"),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory", "", nil),
+		googleProviderConfig,
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github", "", nil),
+		//newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "valid", clientID, clientSecret, testCallbackUrl),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
@@ -417,30 +420,59 @@ func TestSettingsStrategy(t *testing.T) {
 		})
 
 		t.Run("case=should link a connection", func(t *testing.T) {
-			t.Cleanup(reset(t))
+			t.Run("api", func(t *testing.T) {
+				t.Cleanup(reset(t))
 
-			subject = "hackerman+new-connection+" + testID
-			scope = []string{"openid", "offline"}
+				subject = "hackerman+new-connection+" + testID
+				scope = []string{"openid", "offline"}
 
-			agent, provider := "githuber", "google"
-			updatedFlow, res, originalFlow := link(t, agent, provider)
-			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+				agent, provider := "githuber", "google"
+				f := testhelpers.InitializeSettingsFlowViaAPI(t, agents[agent], publicTS)
 
-			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
-			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
+				err, tokens := getOauthTokens(t, remotePublic,
+					googleProviderConfig.ClientID,
+					googleProviderConfig.ClientSecret,
+					testCallbackUrl)
+				require.NoError(t, err)
 
-			t.Run("flow=original", func(t *testing.T) {
-				snapshotx.SnapshotTExcept(t, originalFlow.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+				values := url.Values{}
+				values.Add("csrf_token", x.FakeCSRFToken)
+				values.Add("link", provider)
+				values.Add("id_token", tokens.IDToken)
+
+				testhelpers.SettingsMakeRequest(t, true, false, f, agents[agent],
+					testhelpers.EncodeFormAsJSON(t, true, values))
+
+				checkCredentials(t, true, users[agent].ID, provider, subject, false)
 			})
-			t.Run("flow=response", func(t *testing.T) {
-				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), []string{"0.attributes.value", "1.attributes.value"})
-			})
-			t.Run("flow=fetch", func(t *testing.T) {
-				snapshotx.SnapshotTExcept(t, updatedFlowSDK.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+
+			t.Run("browser", func(t *testing.T) {
+				t.Cleanup(reset(t))
+
+				subject = "hackerman+new-connection+" + testID
+				scope = []string{"openid", "offline"}
+
+				agent, provider := "githuber", "google"
+				updatedFlow, res, originalFlow := link(t, agent, provider)
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+
+				updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, agents[agent]).FrontendApi.GetSettingsFlow(context.Background()).Id(originalFlow.Id).Execute()
+				require.NoError(t, err)
+				require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
+
+				t.Run("flow=original", func(t *testing.T) {
+					snapshotx.SnapshotTExcept(t, originalFlow.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+				})
+				t.Run("flow=response", func(t *testing.T) {
+					snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), []string{"0.attributes.value", "1.attributes.value"})
+				})
+				t.Run("flow=fetch", func(t *testing.T) {
+					snapshotx.SnapshotTExcept(t, updatedFlowSDK.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+				})
+
+				checkCredentials(t, true, users[agent].ID, provider, subject, true)
 			})
 
-			checkCredentials(t, true, users[agent].ID, provider, subject, true)
 		})
 
 		t.Run("case=should link a connection even if user does not have oidc credentials yet", func(t *testing.T) {
@@ -524,8 +556,8 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		return ss.(*oidc.Strategy)
 	}
 
-	nr := func() *settings.Flow {
-		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), UI: container.New("")}
+	nr := func(t flow.Type) *settings.Flow {
+		return &settings.Flow{Type: t, ID: x.NewUUID(), UI: container.New("")}
 	}
 
 	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *container.Container {
@@ -542,15 +574,6 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{Provider: "generic", ID: "google"},
 		{Provider: "generic", ID: "github"},
 	}
-
-	t.Run("case=should not populate non-browser flow", func(t *testing.T) {
-		reg := nreg(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
-		i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`)}
-		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), UI: container.New("")}
-		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
-		require.Empty(t, req.UI.Nodes)
-	})
 
 	for k, tc := range []struct {
 		c      []oidc.Configuration
@@ -633,23 +656,30 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		},
 	} {
 		t.Run("iteration="+strconv.Itoa(k), func(t *testing.T) {
-			reg := nreg(t, &oidc.ConfigurationCollection{Providers: tc.c})
-			i := &identity.Identity{
-				Traits:      []byte(`{"subject":"foo@bar.com"}`),
-				Credentials: make(map[identity.CredentialsType]identity.Credentials, 2),
+			for runName, f := range map[string]*settings.Flow{
+				"browser": nr(flow.TypeBrowser),
+				"api":     nr(flow.TypeAPI),
+			} {
+				t.Run(runName, func(t *testing.T) {
+					reg := nreg(t, &oidc.ConfigurationCollection{Providers: tc.c})
+					i := &identity.Identity{
+						Traits:      []byte(`{"subject":"foo@bar.com"}`),
+						Credentials: make(map[identity.CredentialsType]identity.Credentials, 2),
+					}
+					if tc.i != nil {
+						i.Credentials[identity.CredentialsTypeOIDC] = *tc.i
+					}
+					if tc.withpw {
+						i.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+							Type:        identity.CredentialsTypePassword,
+							Identifiers: []string{"foo@bar.com"},
+							Config:      []byte(`{"hashed_password":"$argon2id$..."}`),
+						}
+					}
+					actual := populate(t, reg, i, f)
+					assert.EqualValues(t, tc.e, actual.Nodes)
+				})
 			}
-			if tc.i != nil {
-				i.Credentials[identity.CredentialsTypeOIDC] = *tc.i
-			}
-			if tc.withpw {
-				i.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
-					Type:        identity.CredentialsTypePassword,
-					Identifiers: []string{"foo@bar.com"},
-					Config:      []byte(`{"hashed_password":"$argon2id$..."}`),
-				}
-			}
-			actual := populate(t, reg, i, nr())
-			assert.EqualValues(t, tc.e, actual.Nodes)
 		})
 	}
 }

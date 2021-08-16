@@ -27,7 +27,7 @@ require (
 	github.com/bwmarrin/discordgo v0.23.0
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/coreos/go-oidc/v3 v3.1.0
 	github.com/cortesi/modd v0.0.0-20210323234521-b35eddab86cc
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6

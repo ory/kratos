@@ -98,6 +98,10 @@ type Configuration struct {
 	//
 	// More information: https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter
 	RequestedClaims json.RawMessage `json:"requested_claims"`
+
+	// List of values to check audience field of ID Token.
+	// The audience field of ID Token should be equal to one of the items in this list.
+	AllowedAudiences []string `json:"allowed_audiences"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
