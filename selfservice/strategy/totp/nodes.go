@@ -25,7 +25,9 @@ func NewTOTPImageQRNode(key *otp.Key) (*node.Node, error) {
 }
 
 func NewTOTPSourceURLNode(key *otp.Key) *node.Node {
-	return node.NewTextField(node.TOTPSecretKey, text.NewInfoSelfServiceSettingsTOTPSecret(key.Secret()), node.TOTPGroup)
+	return node.NewTextField(node.TOTPSecretKey,
+		text.NewInfoSelfServiceSettingsTOTPSecret(key.Secret()), node.TOTPGroup).
+		WithMetaLabel(text.NewInfoSelfServiceSettingsTOTPSecretLabel())
 }
 
 func NewUnlinkTOTPNode() *node.Node {

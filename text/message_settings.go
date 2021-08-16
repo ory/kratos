@@ -47,11 +47,18 @@ func NewInfoSelfServiceSettingsTOTPQRCode() *Message {
 func NewInfoSelfServiceSettingsTOTPSecret(secret string) *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsTOTPSecret,
-		Text: fmt.Sprintf("Your authenticator app secret: %s", secret),
+		Text: secret,
 		Type: Info,
 		Context: context(map[string]interface{}{
 			"secret": secret,
 		}),
+	}
+}
+func NewInfoSelfServiceSettingsTOTPSecretLabel() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsTOTPSecret,
+		Text: "This is your authenticator app secret. Use it if you can not scan the QR code.",
+		Type: Info,
 	}
 }
 
@@ -98,11 +105,19 @@ func NewInfoSelfServiceSettingsLookupConfirm() *Message {
 func NewInfoSelfServiceSettingsLookupSecrets(secrets []string) *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsLookupSecrets,
-		Text: fmt.Sprintf("Please keep your new back up recovery codes in a safe place. They are: %s", strings.Join(secrets, " ")),
+		Text: fmt.Sprintf("%s", strings.Join(secrets, " ")),
 		Type: Info,
 		Context: context(map[string]interface{}{
 			"secrets": secrets,
 		}),
+	}
+}
+
+func NewInfoSelfServiceSettingsLookupSecretsLabel() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsLookupSecrets,
+		Text: "These are your back up recovery codes. Please keep them in a safe place!",
+		Type: Info,
 	}
 }
 
