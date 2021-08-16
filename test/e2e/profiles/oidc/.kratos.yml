@@ -50,3 +50,7 @@ selfservice:
 
 identity:
   default_schema_url: file://test/e2e/profiles/oidc/identity.traits.schema.json
+
+secrets:
+  aes:
+    - secret-thirty-two-character-long

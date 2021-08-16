@@ -13,3 +13,7 @@ identity:
 session:
   cookie:
     domain: foobar
+
+secrets:
+  aes:
+    - secret-thirty-two-character-long

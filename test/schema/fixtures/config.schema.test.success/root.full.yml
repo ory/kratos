@@ -85,6 +85,8 @@ secrets:
     - default secret with a lot of chars
   cookie:
     - cookie secret with a lot of chars
+  aes:
+    - secret-thirty-two-character-long
 
 hashers:
   argon2:

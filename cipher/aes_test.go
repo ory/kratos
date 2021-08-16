@@ -41,15 +41,20 @@ func TestAES_Cipher(t *testing.T) {
 		decryptedSecret, err := aes.Decrypt(context.Background(), encryptedSecret)
 		require.NoError(t, err, "encrypted", encryptedSecret)
 		assert.Equal(t, secret, decryptedSecret)
+
+		// data to encrypt return blank result
+		_, err = aes.Encrypt(context.Background(), "")
+		require.NoError(t, err)
+
+		// encrypted data could not be empty
+		_, err = aes.Decrypt(context.Background(), []byte{})
+		require.NoError(t, err)
+
 	})
 	t.Run("case=encrypt_failed", func(t *testing.T) {
 		// set secret
 		err := cfg.Set(config.ViperKeySecretsAES, goodSecret)
 		require.NoError(t, err)
-
-		// data to encrypt can not be empty
-		_, err = aes.Encrypt(context.Background(), "")
-		require.Error(t, err)
 
 		// unset secret
 		err = cfg.Set(config.ViperKeySecretsAES, []string{})
@@ -64,10 +69,6 @@ func TestAES_Cipher(t *testing.T) {
 		// set secret
 		err := cfg.Set(config.ViperKeySecretsAES, goodSecret)
 		require.NoError(t, err)
-
-		// encrypted data could not be empty
-		_, err = aes.Decrypt(context.Background(), []byte{})
-		require.Error(t, err)
 
 		//
 		_, err = aes.Decrypt(context.Background(), []byte("bad-data"))
