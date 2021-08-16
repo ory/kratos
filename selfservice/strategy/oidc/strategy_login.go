@@ -3,6 +3,12 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/google/go-jsonnet"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/fetcher"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"time"
 
@@ -35,10 +41,6 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
-	if l.Type != flow.TypeBrowser {
-		return nil
-	}
-
 	// This strategy can only solve AAL1
 	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
 		return nil
@@ -69,6 +71,11 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 
 	// The identity traits. This is a placeholder for the registration flow.
 	Traits json.RawMessage `json:"traits"`
+
+	// Only used in API-type flows, when an id token has been received by mobile app directly from oidc provider.
+	//
+	// required: false
+	IdToken string `json:"id_token"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
@@ -128,12 +135,31 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
+	var pid = ""
+	var idToken = ""
+
 	var p SubmitSelfServiceLoginFlowWithOidcMethodBody
-	if err := s.newLinkDecoder(&p, r); err != nil {
-		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+	if f.Type == flow.TypeBrowser {
+		if err := s.newLinkDecoder(&p, r); err != nil {
+			return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+		}
+		pid = p.Provider // this can come from both url query and post body
+	} else {
+		if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
+			return nil, err
+		}
+
+		if err := s.dec.Decode(r, &p,
+			decoderx.HTTPDecoderSetValidatePayloads(true),
+			decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
+			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+			return nil, s.handleError(w, r, f, "", nil, err)
+		}
+
+		idToken = p.IdToken
+		pid = p.Provider
 	}
 
-	var pid = p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
@@ -162,14 +188,133 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	state := x.NewUUID().String()
-	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
-		continuity.WithPayload(&authCodeContainer{
-			State:  state,
-			FlowID: f.ID.String(),
-			Traits: p.Traits,
-		}),
-		continuity.WithLifespan(time.Minute*30)); err != nil {
-		return nil, s.handleError(w, r, f, pid, nil, err)
+	if f.Type == flow.TypeBrowser {
+		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
+			continuity.WithPayload(&authCodeContainer{
+				State:  state,
+				FlowID: f.ID.String(),
+				Traits: p.Traits,
+			}),
+			continuity.WithLifespan(time.Minute*30)); err != nil {
+			return nil, s.handleError(w, r, f, pid, nil, err)
+		}
+
+		http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
+	} else if f.Type == flow.TypeAPI {
+		var claims *Claims
+		if apiFlowProvider, ok := provider.(APIFlowProvider); ok {
+			if len(idToken) > 0 {
+				claims, err = apiFlowProvider.ClaimsFromIdToken(r.Context(), idToken)
+				if err != nil {
+					return nil, errors.WithStack(err)
+				}
+			} else {
+				return nil, s.handleError(w, r, f, p.Provider, nil, ErrApiTokenMissing)
+			}
+		} else {
+			return nil, s.handleError(w, r, f, p.Provider, nil, ErrProviderNoAPISupport)
+		}
+
+		i, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(),
+			identity.CredentialsTypeOIDC,
+			identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
+		if err != nil {
+			if !errors.Is(err, sqlcon.ErrNoRows) {
+				return nil, err
+			}
+			i = identity.NewIdentity(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaID())
+
+			fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())))
+			jn, err := fetch.Fetch(provider.Config().Mapper)
+			if err != nil {
+				return nil, s.handleError(w, r, f, provider.Config().ID, nil, err)
+			}
+
+			var jsonClaims bytes.Buffer
+			if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
+				return nil, s.handleError(w, r, f, provider.Config().ID, nil, err)
+			}
+
+			vm := jsonnet.MakeVM()
+			vm.ExtCode("claims", jsonClaims.String())
+			evaluated, err := vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jn.String())
+			if err != nil {
+				return nil, s.handleError(w, r, f, provider.Config().ID, nil, err)
+			} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
+				i.Traits = []byte{'{', '}'}
+				s.d.Logger().
+					WithRequest(r).
+					WithField("oidc_provider", provider.Config().ID).
+					WithSensitiveField("oidc_claims", claims).
+					WithField("mapper_jsonnet_output", evaluated).
+					WithField("mapper_jsonnet_url", provider.Config().Mapper).
+					Error("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
+			} else {
+				i.Traits = []byte(traits.Raw)
+			}
+
+			s.d.Logger().
+				WithRequest(r).
+				WithField("oidc_provider", provider.Config().ID).
+				WithSensitiveField("oidc_claims", claims).
+				WithField("mapper_jsonnet_output", evaluated).
+				WithField("mapper_jsonnet_url", provider.Config().Mapper).
+				Debug("OpenID Connect Jsonnet mapper completed.")
+
+			//option, err := decoderRegistration(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String())
+			//if err != nil {
+			//	return nil, s.handleError(w, r, f, provider.Config().ID, nil, err)
+			//}
+			//
+			//i.Traits, err = merge(container.Form.Encode(), json.RawMessage(i.Traits), option)
+			//if err != nil {
+			//	return nil, s.handleError(w, r, f, provider.Config().ID, nil, err)
+			//}
+
+			// Validate the identity itself
+			if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
+				return nil, s.handleError(w, r, f, provider.Config().ID, i.Traits, err)
+			}
+
+			creds, err := identity.NewCredentialsOIDC(
+				idToken,
+				"",
+				"",
+				provider.Config().ID,
+				claims.Subject)
+			if err != nil {
+				return nil, s.handleError(w, r, f, provider.Config().ID, i.Traits, err)
+			}
+
+			i.SetCredentials(s.ID(), *creds)
+
+			if err := s.d.IdentityManager().Create(r.Context(), i); err != nil {
+				if errors.Is(err, sqlcon.ErrUniqueViolation) {
+					return nil, schema.NewDuplicateCredentialsError()
+				}
+				return nil, errors.WithStack(err)
+			}
+
+			//i.Traits = identity.Traits(fmt.Sprintf("{\"phone\": \"%s\"}", p.Phone))
+			//
+			//if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
+			//	return nil, err
+			//} else if err := s.d.IdentityManager().Create(r.Context(), i); err != nil {
+			//	if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			//		return nil, schema.NewDuplicateCredentialsError()
+			//	}
+			//	return nil, err
+			//}
+			//
+			//s.d.Audit().
+			//	WithRequest(r).
+			//	WithField("identity_id", i.ID).
+			//	Info("A new identity has registered using self-service login auto-provisioning.")
+
+		}
+		return i, nil
+	} else {
+		return nil, errors.WithStack(errors.New(fmt.Sprintf("Not supported flow type: %s", f.Type)))
 	}
 
 	f.Active = s.ID()

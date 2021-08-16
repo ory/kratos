@@ -448,6 +448,21 @@
         },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
+        },
+        "audiences": {
+          "title": "List of values to check audience field of ID Token",
+          "description": "The audience field of ID Token should be equal to one of the items in this list",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "com.my-app.app",
+              "com.my-app.app.bundle.id"
+            ]
+          ],
+          "uniqueItems": true
         }
       },
       "additionalProperties": false,
