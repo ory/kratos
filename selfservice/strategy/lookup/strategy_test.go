@@ -1,7 +1,6 @@
 package lookup_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -17,9 +16,6 @@ import (
 func TestCountActiveCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := lookup.NewStrategy(reg)
-
-	key, err := lookup.NewKey(context.Background(), "foo", reg)
-	require.NoError(t, err)
 
 	for k, tc := range []struct {
 		in       identity.CredentialsCollection
@@ -43,7 +39,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
-				Config:      []byte(`{"lookup_url": "` + key.URL() + `"}`),
+				Config:      []byte(`{"lookup_url": ""}`),
 			}},
 			expected: 1,
 		},
