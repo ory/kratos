@@ -141,7 +141,7 @@ run() {
     $kratos migrate sql -e --yes
   fi
 
-  for profile in email mobile oidc recovery verification; do
+  for profile in email mobile oidc recovery verification mfa; do
     yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
