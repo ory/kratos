@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -113,6 +114,29 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 					a.Pattern = "zab"
 				})),
 			}, actual.UI.Nodes)
+		})
+
+		t.Run("case=should create and update and properly deal with internal context", func(t *testing.T) {
+			for k, tc := range []struct {
+				in     []byte
+				expect string
+			}{
+				{in: []byte("[]"), expect: "{}"},
+				{expect: "{}"},
+				{in: []byte("null"), expect: "{}"},
+				{in: []byte(`{"foo":"bar"}`), expect: `{"foo":"bar"}`},
+			} {
+				t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
+					r := newFlow(t)
+					r.InternalContext = tc.in
+					require.NoError(t, p.CreateRegistrationFlow(ctx, r))
+					assert.Equal(t, tc.expect, string(r.InternalContext))
+
+					r.InternalContext = tc.in
+					require.NoError(t, p.UpdateRegistrationFlow(ctx, r))
+					assert.Equal(t, tc.expect, string(r.InternalContext))
+				})
+			}
 		})
 
 		t.Run("case=network", func(t *testing.T) {

@@ -56,7 +56,7 @@ type Session struct {
 	// password + TOTP) have been used.
 	//
 	// To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials
-	AuthenticatorAssuranceLevel identity.AuthenticatorAssuranceLevel `db:"aal" json:"authenticator_assurance_level"`
+	AuthenticatorAssuranceLevel identity.AuthenticatorAssuranceLevel `faker:"len=4" db:"aal" json:"authenticator_assurance_level"`
 
 	// Authentication Method References (AMR)
 	//

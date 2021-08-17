@@ -37,8 +37,8 @@ func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*setting
 }
 
 func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) error {
+	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)
-	cp.EnsureInternalContext()
 	return p.update(ctx, cp)
 }

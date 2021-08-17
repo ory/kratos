@@ -23,9 +23,9 @@ func (p *Persister) CreateLoginFlow(ctx context.Context, r *login.Flow) error {
 }
 
 func (p *Persister) UpdateLoginFlow(ctx context.Context, r *login.Flow) error {
+	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)
-	cp.EnsureInternalContext()
 	return p.update(ctx, cp)
 }
 

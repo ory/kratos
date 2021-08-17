@@ -5,7 +5,7 @@
       "name": "csrf_token",
       "required": true,
       "type": "hidden",
-      "value": "NzVxbWl1M3M4ZGFibWdwZmhkMTk4MDk2bm9mbDRjdDc="
+      "value": "Z3c5c202ZWptbzBubmFmMmRvNml1MjRwaW5peHE0ZjI="
     },
     "group": "default",
     "messages": [],
@@ -14,25 +14,49 @@
   },
   {
     "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "totp"
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
       "id": "totp_secret_key",
       "text": {
         "context": {
-          "secret": "L5BRXD2H4Z3SVGXPDMD5MN2BVZIKBW5U"
+          "secret": "OOVOQZ63XVOTBJ3LEGVPY7TA4E65M56K"
         },
         "id": 1050006,
-        "text": "Your authenticator app secret: L5BRXD2H4Z3SVGXPDMD5MN2BVZIKBW5U",
+        "text": "OOVOQZ63XVOTBJ3LEGVPY7TA4E65M56K",
         "type": "info"
       }
     },
     "group": "totp",
     "messages": [],
-    "meta": {},
+    "meta": {
+      "label": {
+        "id": 1050006,
+        "text": "This is your authenticator app secret. Use it if you can not scan the QR code.",
+        "type": "info"
+      }
+    },
     "type": "text"
   },
   {
     "attributes": {
       "id": "totp_qr",
-      "src": "data:image/png;base64,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"
+      "src": "data:image/png;base64,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"
     },
     "group": "totp",
     "messages": [],
@@ -58,24 +82,6 @@
       "label": {
         "id": 1070006,
         "text": "Verify code",
-        "type": "info"
-      }
-    },
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "method",
-      "type": "submit",
-      "value": "totp"
-    },
-    "group": "totp",
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1070003,
-        "text": "Save",
         "type": "info"
       }
     },

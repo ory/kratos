@@ -3,8 +3,10 @@ package profile_test
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/jsonx"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,8 +14,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/ory/x/jsonx"
 
 	kratos "github.com/ory/kratos-client-go"
 
@@ -39,6 +39,9 @@ import (
 func init() {
 	corpx.RegisterFakes()
 }
+
+//go:embed fixtures/expected.json
+var fixtureExpected []byte
 
 func newIdentityWithPassword(email string) *identity.Identity {
 	return &identity.Identity{
@@ -195,151 +198,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.EqualValues(t, payload.Identity.Traits.(map[string]interface{})["email"], gjson.Get(actual, "nodes.#(attributes.name==traits.email).attributes.value").String())
 			assert.NotEmpty(t, gjson.Get(actual, "nodes.#(attributes.name==csrf_token).attributes.value").String(), "csrf token missing")
 
-			assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "http://127.0.0.1:56924/self-service/settings?flow=35b466af-a256-47b8-9949-4b72ee6b3247",
-  "method": "POST",
-  "nodes": [
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "csrf_token",
-        "required": true,
-        "type": "hidden",
-        "value": "a3F2b3l2bzUzeDd2cHR2aTI0aXAxNmRqcm5rN3poM20="
-      },
-      "group": "default",
-      "messages": [],
-      "meta": {},
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "traits.email",
-        "type": "text",
-        "value": "john-api@doe.com"
-      },
-      "group": "profile",
-      "messages": [],
-      "meta": {},
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "traits.stringy",
-        "type": "text",
-        "value": "foobar"
-      },
-      "group": "profile",
-      "messages": [],
-      "meta": {},
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "traits.numby",
-        "type": "number",
-        "value": 2.5
-      },
-      "group": "profile",
-      "messages": [],
-      "meta": {},
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "traits.booly",
-        "type": "checkbox",
-        "value": false
-      },
-      "group": "profile",
-      "messages": [],
-      "meta": {},
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "traits.should_big_number",
-        "type": "number",
-        "value": 2048
-      },
-      "group": "profile",
-      "messages": [],
-      "meta": {},
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "traits.should_long_string",
-        "type": "text",
-        "value": "asdfasdfasdfasdfasfdasdfasdfasdf"
-      },
-      "group": "profile",
-      "messages": [],
-      "meta": {},
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "method",
-        "type": "submit",
-        "value": "profile"
-      },
-      "group": "profile",
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1070003,
-          "text": "Save",
-          "type": "info"
-        }
-      },
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "password",
-        "required": true,
-        "type": "password"
-      },
-      "group": "password",
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1070001,
-          "text": "Password",
-          "type": "info"
-        }
-      },
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "method",
-        "type": "submit",
-        "value": "password"
-      },
-      "group": "password",
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1070003,
-          "text": "Save",
-          "type": "info"
-        }
-      },
-      "type": "input"
-    }
-  ]
-}`), payload.Ui, []string{"action", "nodes.0.attributes.value", "nodes.1.attributes.value"})
+			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureExpected), payload.Ui, []string{"action", "nodes.0.attributes.value", "nodes.1.attributes.value"})
 		}
 
 		t.Run("type=api", func(t *testing.T) {
