@@ -48,6 +48,7 @@ const (
 	CredentialsTypeOIDC     CredentialsType = "oidc"
 	CredentialsTypeTOTP     CredentialsType = "totp"
 	CredentialsTypeLookup   CredentialsType = "lookup_secret"
+	CredentialsTypeWebAuthn CredentialsType = "webauthn"
 )
 
 const (
