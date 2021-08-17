@@ -14,21 +14,6 @@ selfservice:
     link:
       config:
         lifespan: 1h
-
-    totp:
-      enabled: true
-      config:
-        issuer: issuer.ory.sh
-    lookup_secret:
-      enabled: true
-    webauthn:
-      enabled: true
-      config:
-        rp:
-          id: localhost
-          origin: http://localhost:4455
-          display_name: Ory
-
   flows:
     login:
       ui_url: http://localhost:4455/auth/login
@@ -42,7 +27,6 @@ selfservice:
       ui_url: http://localhost:4455/recovery
     settings:
       ui_url: http://localhost:4455/settings
-      authenticated_if: aal1 | aal2 | highest_available_aal
 
 serve:
   public:
@@ -58,7 +42,3 @@ hashers:
 courier:
   smtp:
     connection_uri: smtps://test:test@localhost:1025/?skip_ssl_verify=true
-
-session:
-  whoami:
-    authenticated_if: aal1 | aal2 | highest_available_aal
