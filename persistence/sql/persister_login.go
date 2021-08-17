@@ -18,12 +18,14 @@ var _ login.FlowPersister = new(Persister)
 
 func (p *Persister) CreateLoginFlow(ctx context.Context, r *login.Flow) error {
 	r.NID = corp.ContextualizeNID(ctx, p.nid)
+	r.EnsureInternalContext()
 	return p.GetConnection(ctx).Create(r)
 }
 
 func (p *Persister) UpdateLoginFlow(ctx context.Context, r *login.Flow) error {
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)
+	cp.EnsureInternalContext()
 	return p.update(ctx, cp)
 }
 
