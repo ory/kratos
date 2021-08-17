@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/duo-labs/webauthn/webauthn"
+
 	"github.com/spf13/cobra"
 
 	"github.com/ory/x/jsonschemax"
@@ -137,6 +139,10 @@ const (
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyTOTPIssuer                                              = "selfservice.methods.totp.config.issuer"
+	ViperKeyWebAuthnRPDisplayName                                   = "selfservice.methods.webauthn.config.rp.display_name"
+	ViperKeyWebAuthnRPID                                            = "selfservice.methods.webauthn.config.rp.id"
+	ViperKeyWebAuthnRPOrigin                                        = "selfservice.methods.webauthn.config.rp.origin"
+	ViperKeyWebAuthnRPIcon                                          = "selfservice.methods.webauthn.config.rp.issuer"
 	ViperKeyVersion                                                 = "version"
 	Argon2DefaultMemory                                             = 128 * bytesize.MB
 	Argon2DefaultIterations                                  uint32 = 1
@@ -993,6 +999,15 @@ func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 		HaveIBeenPwnedEnabled: p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
 		MaxBreaches:           uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
 		IgnoreNetworkErrors:   p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+	}
+}
+
+func (p *Config) WebAuthnConfig() *webauthn.Config {
+	return &webauthn.Config{
+		RPDisplayName: p.p.String(ViperKeyWebAuthnRPDisplayName),
+		RPID:          p.p.String(ViperKeyWebAuthnRPID),
+		RPOrigin:      p.p.String(ViperKeyWebAuthnRPOrigin),
+		RPIcon:        p.p.String(ViperKeyWebAuthnRPIcon),
 	}
 }
 

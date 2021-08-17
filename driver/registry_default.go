@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
+
 	"github.com/ory/kratos/selfservice/strategy/lookup"
 
 	"github.com/ory/kratos/selfservice/strategy/totp"
@@ -263,6 +265,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			profile.NewStrategy(m),
 			link.NewStrategy(m),
 			totp.NewStrategy(m),
+			webauthn.NewStrategy(m),
 			lookup.NewStrategy(m),
 		}
 	}

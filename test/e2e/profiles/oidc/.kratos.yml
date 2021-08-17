@@ -10,7 +10,7 @@ selfservice:
             provider: generic
             client_id: kratos-client
             client_secret: kratos-secret
-            issuer_url: http://127.0.0.1:4444/
+            issuer_url: http://localhost:4444/
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
@@ -19,7 +19,7 @@ selfservice:
             provider: generic
             client_id: google-client
             client_secret: kratos-secret
-            issuer_url: http://127.0.0.1:4444/
+            issuer_url: http://localhost:4444/
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
@@ -28,7 +28,7 @@ selfservice:
             provider: generic
             client_id: github-client
             client_secret: kratos-secret
-            issuer_url: http://127.0.0.1:4444/
+            issuer_url: http://localhost:4444/
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
@@ -39,7 +39,7 @@ selfservice:
 
     logout:
       after:
-        default_browser_return_url: http://127.0.0.1:4455/auth/login
+        default_browser_return_url: http://localhost:4455/auth/login
 
     registration:
       after:

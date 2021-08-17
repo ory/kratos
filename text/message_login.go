@@ -14,6 +14,7 @@ const (
 	InfoSelfServiceLoginVerify                        // 1010005
 	InfoSelfServiceLoginTOTPLabel                     // 1010006
 	InfoLoginLookupLabel                              // 1010007
+	InfoSelfServiceLoginWebAuthn                      // 1010008
 )
 
 const (
@@ -139,5 +140,13 @@ func NewErrorValidationVerificationNoStrategyFound() *Message {
 		ID:   ErrorValidationVerificationNoStrategyFound,
 		Text: "Could not find a strategy to verify your account with. Did you fill out the form correctly?",
 		Type: Error,
+	}
+}
+
+func NewInfoSelfServiceLoginWebAuthn() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginWebAuthn,
+		Text: "Use security key",
+		Type: Info,
 	}
 }

@@ -8,10 +8,10 @@ make .bin/hydra
 make .bin/yq
 
 export PATH=.bin:$PATH
-export KRATOS_PUBLIC_URL=http://127.0.0.1:4433/
-export KRATOS_BROWSER_URL=http://127.0.0.1:4433/
-export KRATOS_ADMIN_URL=http://127.0.0.1:4434/
-export KRATOS_UI_URL=http://127.0.0.1:4456/
+export KRATOS_PUBLIC_URL=http://localhost:4433/
+export KRATOS_BROWSER_URL=http://localhost:4433/
+export KRATOS_ADMIN_URL=http://localhost:4434/
+export KRATOS_UI_URL=http://localhost:4456/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
@@ -21,9 +21,9 @@ if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
   docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
 
-  export TEST_DATABASE_MYSQL="mysql://root:secret@(127.0.0.1:3444)/mysql?parseTime=true&multiStatements=true"
-  export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@127.0.0.1:3445/postgres?sslmode=disable"
-  export TEST_DATABASE_COCKROACHDB="cockroach://root@127.0.0.1:3446/defaultdb?sslmode=disable"
+  export TEST_DATABASE_MYSQL="mysql://root:secret@(localhost:3444)/mysql?parseTime=true&multiStatements=true"
+  export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@localhost:3445/postgres?sslmode=disable"
+  export TEST_DATABASE_COCKROACHDB="cockroach://root@localhost:3446/defaultdb?sslmode=disable"
 fi
 
 base=$(pwd)
@@ -72,54 +72,54 @@ run() {
   killall hydra-login-consent || true
 
   # Check if any ports that we need are open already
-  ! nc -zv 127.0.0.1 4434
-  ! nc -zv 127.0.0.1 4433
-  ! nc -zv 127.0.0.1 4446
-  ! nc -zv 127.0.0.1 4455
-  ! nc -zv 127.0.0.1 4456
-  ! nc -zv 127.0.0.1 4457
+  ! nc -zv localhost 4434
+  ! nc -zv localhost 4433
+  ! nc -zv localhost 4446
+  ! nc -zv localhost 4455
+  ! nc -zv localhost 4456
+  ! nc -zv localhost 4457
 
-  (cd "$rn_ui_dir"; WEB_PORT=4457 KRATOS_URL=http://127.0.0.1:4433 npm run web -- --non-interactive \
+  (cd "$rn_ui_dir"; WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
    > "${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &)
 
-  DSN=memory URLS_SELF_ISSUER=http://127.0.0.1:4444 \
+  DSN=memory URLS_SELF_ISSUER=http://localhost:4444 \
     LOG_LEVEL=trace \
-    URLS_LOGIN=http://127.0.0.1:4446/login \
-    URLS_CONSENT=http://127.0.0.1:4446/consent \
+    URLS_LOGIN=http://localhost:4446/login \
+    URLS_CONSENT=http://localhost:4446/consent \
     hydra serve all --dangerous-force-http > "${base}/test/e2e/hydra.e2e.log" 2>&1 &
 
-  npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive
+  npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive
 
   hydra clients delete \
-    --endpoint http://127.0.0.1:4445 \
+    --endpoint http://localhost:4445 \
     kratos-client google-client github-client || true
 
   hydra clients create \
-    --endpoint http://127.0.0.1:4445 \
+    --endpoint http://localhost:4445 \
     --id kratos-client \
     --secret kratos-secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/hydra
+    --callbacks http://localhost:4455/self-service/methods/oidc/callback/hydra
 
   hydra clients create \
-    --endpoint http://127.0.0.1:4445 \
+    --endpoint http://localhost:4445 \
     --id google-client \
     --secret kratos-secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/google
+    --callbacks http://localhost:4455/self-service/methods/oidc/callback/google
 
   hydra clients create \
-    --endpoint http://127.0.0.1:4445 \
+    --endpoint http://localhost:4445 \
     --id github-client \
     --secret kratos-secret \
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/github
+    --callbacks http://localhost:4455/self-service/methods/oidc/callback/github
 
   if [ -z ${NODE_UI_PATH+x} ]; then
     (cd "$node_ui_dir"; PORT=4456 SECURITY_MODE=cookie npm run serve \
@@ -134,7 +134,7 @@ run() {
 
   (cd test/e2e/hydra-login-consent; \
     go build . && \
-    PORT=4446 HYDRA_ADMIN_URL=http://127.0.0.1:4445 ./hydra-login-consent > "${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &)
+    PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent > "${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &)
 
   export DSN=${1}
   if [ "$DSN" != "memory" ]; then
@@ -147,13 +147,13 @@ run() {
   done
   ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4434/health/ready \
-    http-get://127.0.0.1:4455/health \
-    http-get://127.0.0.1:4445/health/ready \
-    http-get://127.0.0.1:4446/ \
-    http-get://127.0.0.1:4456/health \
-    http-get://127.0.0.1:4457/ \
-    http-get://127.0.0.1:4437/mail
+  npm run wait-on -- -l -t 300000 http-get://localhost:4434/health/ready \
+    http-get://localhost:4455/health \
+    http-get://localhost:4445/health/ready \
+    http-get://localhost:4446/ \
+    http-get://localhost:4456/health \
+    http-get://localhost:4457/ \
+    http-get://localhost:4437/mail
 
   if [[ $dev = "yes" ]]; then
     npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration"
@@ -210,10 +210,11 @@ the path where the kratos-selfservice-ui-node project is checked out:
 }
 
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
-export TEST_DATABASE_MEMOry="memory"
+export TEST_DATABASE_MEMORY="memory"
 
 case "$1" in
         sqlite)
+          echo "Database set up at: $TEST_DATABASE_SQLITE"
           db="${TEST_DATABASE_SQLITE}"
           ;;
 

@@ -7,9 +7,9 @@ secrets:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
 
 selfservice:
-  default_browser_return_url: http://127.0.0.1:4455/
+  default_browser_return_url: http://localhost:4455/
   whitelisted_return_urls:
-    - http://127.0.0.1:4455
+    - http://localhost:4455
   methods:
     link:
       config:
@@ -20,23 +20,30 @@ selfservice:
         issuer: issuer.ory.sh
     lookup_secret:
       enabled: true
+    webauthn:
+      enabled: true
+      config:
+        rp:
+          id: localhost
+          origin: http://localhost:4455
+          display_name: Ory
   flows:
     login:
-      ui_url: http://127.0.0.1:4455/auth/login
+      ui_url: http://localhost:4455/auth/login
     registration:
-      ui_url: http://127.0.0.1:4455/auth/registration
+      ui_url: http://localhost:4455/auth/registration
     error:
-      ui_url: http://127.0.0.1:4455/error
+      ui_url: http://localhost:4455/error
     settings:
-      ui_url: http://127.0.0.1:4455/settings
+      ui_url: http://localhost:4455/settings
     verification:
-      ui_url: http://127.0.0.1:4455/verify
+      ui_url: http://localhost:4455/verify
     recovery:
-      ui_url: http://127.0.0.1:4455/recovery
+      ui_url: http://localhost:4455/recovery
 
 serve:
   public:
-    base_url: http://127.0.0.1:4455/
+    base_url: http://localhost:4455/
   admin:
     base_url: http://kratos:4434/
 
@@ -47,4 +54,4 @@ hashers:
 
 courier:
   smtp:
-    connection_uri: smtps://test:test@127.0.0.1:1025/?skip_ssl_verify=true
+    connection_uri: smtps://test:test@localhost:1025/?skip_ssl_verify=true
