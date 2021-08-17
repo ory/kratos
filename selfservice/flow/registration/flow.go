@@ -6,6 +6,10 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/ui/container"
 
@@ -42,6 +46,9 @@ type Flow struct {
 	//
 	// required: true
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
+
+	// InternalContext stores internal context used by internals - for example MFA keys.
+	InternalContext sqlxx.JSONRawMessage `db:"internal_context" json:"-" faker:"-"`
 
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
@@ -81,8 +88,9 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
-		CSRFToken: csrf,
-		Type:      ft,
+		CSRFToken:       csrf,
+		Type:            ft,
+		InternalContext: []byte("{}"),
 	}
 }
 
@@ -115,4 +123,10 @@ func (f *Flow) GetType() flow.Type {
 
 func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
+}
+
+func (f *Flow) EnsureInternalContext() {
+	if !gjson.ParseBytes(f.InternalContext).IsObject() {
+		f.InternalContext = []byte("{}")
+	}
 }
