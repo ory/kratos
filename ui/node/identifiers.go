@@ -14,3 +14,11 @@ const (
 	LookupConfirm    = "lookup_secret_confirm"
 	LookupCodeEnter  = "lookup_secret"
 )
+
+const (
+	WebAuthnRegister            = "webauthn_register"
+	WebAuthnIdentifier          = "webauthn_identifier"
+	WebAuthnLogin               = "webauthn_login"
+	WebAuthnRegisterDisplayName = "webauthn_register_displayname"
+	WebAuthnRemove              = "webauthn_remove"
+)

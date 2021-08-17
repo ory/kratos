@@ -65,6 +65,10 @@ type InputAttributes struct {
 	//
 	// required: true
 	Disabled bool `json:"disabled"`
+
+	// OnClick may contain javascript which should be executed on click. This is primarily
+	// used for WebAuthn.
+	OnClick string `json:"onclick,omitempty"`
 }
 
 // ImageAttributes represents the attributes of an image node.
