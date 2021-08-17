@@ -4,6 +4,8 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"net/http"
 	"net/url"
 	"testing"
@@ -150,7 +152,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	t.Run("case=add a security key", func(t *testing.T) {
+	t.Run("case=login with a security key", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
 			// We load our identity which we will use to replay the webauth session
 			var id identity.Identity
@@ -189,6 +191,10 @@ func TestCompleteLogin(t *testing.T) {
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, gjson.Get(body, prefix+"authenticator_assurance_level").String(), "%s", body)
 			assert.EqualValues(t, identity.CredentialsTypeWebAuthn, gjson.Get(body, prefix+"authentication_methods.#(method==webauthn).method").String(), "%s", body)
 			assert.EqualValues(t, id.ID.String(), gjson.Get(body, prefix+"identity.id").String(), "%s", body)
+
+			actualFlow, err:= reg.LoginFlowPersister().GetLoginFlow(context.Background(),uuid.FromStringOrNil(f.Id))
+			require.NoError(t, err)
+			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext,flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
