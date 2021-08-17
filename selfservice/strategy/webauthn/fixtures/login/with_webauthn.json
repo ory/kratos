@@ -1,0 +1,34 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "webauthn_login",
+      "onclick": "// noinspection JSAnnotator\nreturn (function (e) {\n  if (e.value) {\n    return true\n  }\n\n  if (!window.PublicKeyCredential) {\n    alert('This browser does not support WebAuthn!');\n    return false;\n  }\n\n  function bufferDecode(value) {\n    return Uint8Array.from(atob(value), c =\u003e c.charCodeAt(0));\n  }\n\n  function bufferEncode(value) {\n    return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))\n      .replace(/\\+/g, '-')\n      .replace(/\\//g, '_')\n      .replace(/=/g, '');\n  }\n\n  const opt = {\"publicKey\":{\"challenge\":\"aRC10c1g71+HDPU7PGUVnhPxsLfXclLWcjJLwKvKmG8=\",\"timeout\":60000,\"rpId\":\"localhost\",\"allowCredentials\":[{\"type\":\"public-key\",\"id\":\"Zm9vZm9v\"},{\"type\":\"public-key\",\"id\":\"YmFyYmFy\"}]}}\n  opt.publicKey.challenge = bufferDecode(opt.publicKey.challenge);\n  opt.publicKey.allowCredentials = opt.publicKey.allowCredentials.map(function (value) {\n    return {\n      ...value,\n      id: bufferDecode(value.id)\n    }\n  });\n\n  console.log(\"requesting\", opt)\n  navigator.credentials.get(opt).then(function (credential) {\n    e.value = JSON.stringify({\n      id: credential.id,\n      rawId: bufferEncode(credential.rawId),\n      type: credential.type,\n      response: {\n        authenticatorData: bufferEncode(credential.response.authenticatorData),\n        clientDataJSON: bufferEncode(credential.response.clientDataJSON),\n        signature: bufferEncode(credential.response.signature),\n        userHandle: bufferEncode(credential.response.userHandle),\n      },\n    })\n    e.click()\n  }).catch((err) =\u003e {\n    alert(err)\n  })\n\n  return false\n})(this)\n",
+      "type": "submit",
+      "value": ""
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1010008,
+        "text": "Use security key",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "ZDRtbGttNjRhMTNkOGIwZmo4aHQyNDQ1ODByODFvbnI="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  }
+]

@@ -37,16 +37,13 @@ var settingsFixtureHasWebAuthn []byte
 //go:embed fixtures/settings/no_webauth.json
 var settingsFixtureNoWebauthn []byte
 
-//go:embed fixtures/success/challenge.json
-var settingsFixtureSuccessChallenge []byte
-
-//go:embed fixtures/success/identity.json
+//go:embed fixtures/settings/success/identity.json
 var settingsFixtureSuccessIdentity []byte
 
-//go:embed fixtures/success/response.json
+//go:embed fixtures/settings/success/response.json
 var settingsFixtureSuccessResponse []byte
 
-//go:embed fixtures/success/internal_context.json
+//go:embed fixtures/settings/success/internal_context.json
 var settingsFixtureSuccessInternalContext []byte
 
 const registerDisplayNameGJSONQuery = "ui.nodes.#(attributes.name==" + node.WebAuthnRegisterDisplayName + ")"
@@ -90,14 +87,23 @@ func createIdentity(t *testing.T, reg driver.Registry) *identity.Identity {
 	return i
 }
 
-func TestCompleteSettings(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
+func enableWebAuthn(conf *config.Config) {
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".enabled", true)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.display_name", "Ory Corp")
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.id", "localhost")
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeWebAuthn)+".config.rp.origin", "http://localhost:4455")
+}
 
+func ensureReplacement(t *testing.T, index string, ui kratos.UiContainer, expected string) {
+	actual, err := json.Marshal(ui.Nodes)
+	require.NoError(t, err)
+	assert.Contains(t, gjson.GetBytes(actual, index+".attributes.onclick").String(), expected, "ensure that the replacement works")
+}
+
+func TestCompleteSettings(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
+	enableWebAuthn(conf)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
 
 	router := x.NewRouterPublic()
@@ -113,12 +119,6 @@ func TestCompleteSettings(t *testing.T) {
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
-	var ensureReplacement = func(t *testing.T, index string, f *kratos.SelfServiceSettingsFlow) {
-		actual, err := json.Marshal(f.Ui.Nodes)
-		require.NoError(t, err)
-		assert.Contains(t, gjson.GetBytes(actual, index+".attributes.onclick").String(), "Ory Corp", "ensure that the replacement works")
-	}
-
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
 		id := createIdentity(t, reg)
 
@@ -129,7 +129,7 @@ func TestCompleteSettings(t *testing.T) {
 			"4.attributes.onclick",
 		})
 
-		ensureReplacement(t, "4", f)
+		ensureReplacement(t, "4", f.Ui, "Ory Corp")
 	})
 
 	t.Run("case=one activation element is shown", func(t *testing.T) {
@@ -143,7 +143,7 @@ func TestCompleteSettings(t *testing.T) {
 			"2.attributes.onclick",
 		})
 
-		ensureReplacement(t, "2", f)
+		ensureReplacement(t, "2", f.Ui, "Ory Corp")
 	})
 
 	t.Run("case=webauthn only works for browsers", func(t *testing.T) {
