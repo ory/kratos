@@ -177,7 +177,7 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode lookup codes from JSON.").WithDebug(err.Error()))
 	}
 
-	ctxUpdate.Flow.UI.Nodes.Upsert(NewLookupNode(creds.ToReadableList()))
+	ctxUpdate.Flow.UI.Nodes.Upsert(creds.ToNode())
 	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewRegenerateLookupNode())
 	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRevealed), true)
@@ -193,12 +193,12 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 }
 
 func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
-	codes := make([]string, numCodes)
+	codes := make([]RecoveryCode, numCodes)
 	for k := range codes {
-		codes[k] = randx.MustString(8, randx.AlphaLowerNum)
+		codes[k] = RecoveryCode{Code:randx.MustString(8, randx.AlphaLowerNum)}
 	}
 
-	ctxUpdate.Flow.UI.Nodes.Upsert(NewLookupNode(codes))
+	ctxUpdate.Flow.UI.Nodes.Upsert((&CredentialsConfig{RecoveryCodes: codes}).ToNode())
 	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupRegenerate)
 	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewConfirmLookupNode())

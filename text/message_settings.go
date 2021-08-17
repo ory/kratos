@@ -16,10 +16,13 @@ const (
 	InfoSelfServiceSettingsTOTPSecret
 	InfoSelfServiceSettingsRevealLookup
 	InfoSelfServiceSettingsRegenerateLookup
-	InfoSelfServiceSettingsLookupSecrets
+	InfoSelfServiceSettingsLookupSecret
+	InfoSelfServiceSettingsLookupSecretLabel
 	InfoSelfServiceSettingsLookupConfirm
 	InfoSelfServiceSettingsRegisterWebAuthn
 	InfoSelfServiceSettingsRegisterWebAuthnDisplayName
+	InfoSelfServiceSettingsLookupSecretUsed
+	InfoSelfServiceSettingsLookupSecretList
 )
 
 const (
@@ -104,20 +107,41 @@ func NewInfoSelfServiceSettingsLookupConfirm() *Message {
 	}
 }
 
-func NewInfoSelfServiceSettingsLookupSecrets(secrets []string) *Message {
+func NewInfoSelfServiceSettingsLookupSecretList(secrets []string, raw interface{}) *Message {
 	return &Message{
-		ID:   InfoSelfServiceSettingsLookupSecrets,
-		Text: fmt.Sprintf("%s", strings.Join(secrets, " ")),
+		ID:   InfoSelfServiceSettingsLookupSecretList,
+		Text: fmt.Sprintf("%s", strings.Join(secrets, ", ")),
 		Type: Info,
 		Context: context(map[string]interface{}{
-			"secrets": secrets,
+			"secrets": raw,
+		}),
+	}
+}
+func NewInfoSelfServiceSettingsLookupSecret(secret string) *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsLookupSecret,
+		Text: secret,
+		Type: Info,
+		Context: context(map[string]interface{}{
+			"secret": secret,
+		}),
+	}
+}
+
+func NewInfoSelfServiceSettingsLookupSecretUsed(usedAt time.Time) *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsLookupSecretUsed,
+		Text: fmt.Sprintf("Secret was used at %s", usedAt),
+		Type: Info,
+		Context: context(map[string]interface{}{
+			"used_at": usedAt,
 		}),
 	}
 }
 
 func NewInfoSelfServiceSettingsLookupSecretsLabel() *Message {
 	return &Message{
-		ID:   InfoSelfServiceSettingsLookupSecrets,
+		ID:   InfoSelfServiceSettingsLookupSecretLabel,
 		Text: "These are your back up recovery codes. Please keep them in a safe place!",
 		Type: Info,
 	}
