@@ -1,5 +1,3 @@
-// TODO: implement wrong credentials when reauthing
-// TODO: implement other account when reauthing
 import {
   APP_URL,
   gen,
