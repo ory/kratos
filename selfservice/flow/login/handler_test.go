@@ -229,13 +229,14 @@ func TestFlowLifecycle(t *testing.T) {
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
-				assertx.EqualAsJSON(t, "You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time.", gjson.GetBytes(body, "error.reason").String())
+				assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "error.reason").String())
 			})
 
-			t.Run("case=can not request refresh and aal at the same time on authenticated request", func(t *testing.T) {
+			t.Run("case=can request refresh and aal at the same time on authenticated request", func(t *testing.T) {
 				res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
-				assertx.EqualAsJSON(t, "You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time.", gjson.GetBytes(body, "error.reason").String())
+				assertx.EqualAsJSON(t, "Please confirm this action by verifying that it is you.", gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", body)
+				assertx.EqualAsJSON(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.1.text").String(), "%s", body)
 			})
 
 			t.Run("case=can not request aal2 on unauthenticated request", func(t *testing.T) {
@@ -304,13 +305,14 @@ func TestFlowLifecycle(t *testing.T) {
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, false)
 				assert.Contains(t, res.Request.URL.String(), errorTS.URL)
-				assertx.EqualAsJSON(t, "You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time.", gjson.GetBytes(body, "reason").String(), string(body))
+				assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String(), "%s", body)
 			})
 
 			t.Run("case=can not request refresh and aal at the same time on authenticated request", func(t *testing.T) {
 				res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, false)
-				assert.Contains(t, res.Request.URL.String(), errorTS.URL)
-				assertx.EqualAsJSON(t, "You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time.", gjson.GetBytes(body, "reason").String())
+				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+				assertx.EqualAsJSON(t, "Please confirm this action by verifying that it is you.", gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", body)
+				assertx.EqualAsJSON(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.1.text").String(), "%s", body)
 			})
 
 			t.Run("case=can not request aal2 on unauthenticated request", func(t *testing.T) {

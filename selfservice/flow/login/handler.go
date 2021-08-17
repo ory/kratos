@@ -101,10 +101,6 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
 	}
 
-	if f.Refresh && f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can not request a higher AuthenticationMethod Assurance Level and refresh the session at the same time."))
-	}
-
 	// We assume an error means the user has no session
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if errors.Is(err, session.ErrNoActiveSessionFound) {
@@ -121,7 +117,6 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		return nil, err
 	} else {
 		// A session exists already
-
 		if f.Refresh {
 			// We are refreshing so let's continue
 			goto preLoginHook
@@ -140,8 +135,6 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 			return nil, errors.WithStack(ErrSessionHasAALAlready)
 		}
 
-		f.UI.Messages.Set(text.NewInfoLoginMFA())
-
 		// Looks like we are requesting an AAL which is higher than what the session has.
 		goto preLoginHook
 	}
@@ -149,6 +142,10 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 preLoginHook:
 	if f.Refresh {
 		f.UI.Messages.Set(text.NewInfoLoginReAuth())
+	}
+
+	if sess != nil && f.RequestedAAL > sess.AuthenticatorAssuranceLevel && f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		f.UI.Messages.Add(text.NewInfoLoginMFA())
 	}
 
 	for _, s := range h.d.LoginStrategies(r.Context()) {
