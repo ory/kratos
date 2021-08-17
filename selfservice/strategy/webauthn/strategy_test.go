@@ -2,9 +2,8 @@ package webauthn_test
 
 import (
 	"fmt"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"testing"
-
-	"github.com/ory/kratos/selfservice/strategy/lookup"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +14,7 @@ import (
 
 func TestCountActiveCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	strategy := lookup.NewStrategy(reg)
+	strategy := webauthn.NewStrategy(reg)
 
 	for k, tc := range []struct {
 		in       identity.CredentialsCollection
@@ -31,7 +30,7 @@ func TestCountActiveCredentials(t *testing.T) {
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: []byte(`{"lookup_url": ""}`),
+				Config: []byte(`{"credentials": []}`),
 			}},
 			expected: 0,
 		},
@@ -39,7 +38,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
-				Config:      []byte(`{"lookup_url": ""}`),
+				Config:      []byte(`{"credentials": [{}]}`),
 			}},
 			expected: 1,
 		},
