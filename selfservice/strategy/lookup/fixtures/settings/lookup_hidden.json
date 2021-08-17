@@ -1,0 +1,33 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "dHlmZ251enczMWl6YnR5Y2syN2l3YXJmYmZ3NWI5ZDU="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "lookup_secret_reveal",
+      "type": "submit",
+      "value": "true"
+    },
+    "group": "lookup_secret",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050007,
+        "text": "Reveal backup recovery codes",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]
