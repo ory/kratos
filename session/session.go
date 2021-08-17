@@ -118,6 +118,8 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 			secondFactor = true
 		case identity.CredentialsTypeLookup:
 			secondFactor = true
+		case identity.CredentialsTypeWebAuthn:
+			secondFactor = true
 		}
 	}
 
