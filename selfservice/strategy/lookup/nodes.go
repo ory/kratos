@@ -22,7 +22,3 @@ func NewConfirmLookupNode() *node.Node {
 		node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsLookupConfirm())
 }
-
-func NewLookupNode(secrets []string) *node.Node {
-	return node.NewTextField(node.LookupCodes, text.NewInfoSelfServiceSettingsLookupSecrets(secrets), node.LookupGroup).WithMetaLabel(text.NewInfoSelfServiceSettingsLookupSecretsLabel())
-}

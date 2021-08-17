@@ -31,7 +31,7 @@ func TestCountActiveCredentials(t *testing.T) {
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: []byte(`{"lookup_url": ""}`),
+				Config: []byte(`{"recovery_codes": []}`),
 			}},
 			expected: 0,
 		},
@@ -39,7 +39,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
-				Config:      []byte(`{"lookup_url": ""}`),
+				Config:      []byte(`{"recovery_codes": [{}]}`),
 			}},
 			expected: 1,
 		},

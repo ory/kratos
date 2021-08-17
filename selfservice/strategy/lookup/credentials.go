@@ -1,6 +1,8 @@
 package lookup
 
 import (
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"time"
 
 	"github.com/ory/x/sqlxx"
@@ -12,16 +14,20 @@ type CredentialsConfig struct {
 	RecoveryCodes []RecoveryCode `json:"recovery_codes"`
 }
 
-func (c *CredentialsConfig) ToReadableList() []string {
-	codes := make([]string, len(c.RecoveryCodes))
+func (c *CredentialsConfig) ToNode() *node.Node {
+	messages := make([]text.Message, len(c.RecoveryCodes))
+	formatted := make([]string, len(c.RecoveryCodes))
 	for k, code := range c.RecoveryCodes {
 		if time.Time(code.UsedAt).IsZero() {
-			codes[k] = code.Code
+			messages[k] = *text.NewInfoSelfServiceSettingsLookupSecret(code.Code)
+			formatted[k] = code.Code
 		} else {
-			codes[k] = "already used"
+			messages[k] = *text.NewInfoSelfServiceSettingsLookupSecretUsed(time.Time(code.UsedAt))
+			formatted[k] = "used"
 		}
 	}
-	return codes
+
+	return node.NewTextField(node.LookupCodes, text.NewInfoSelfServiceSettingsLookupSecretList(formatted, messages), node.LookupGroup).WithMetaLabel(text.NewInfoSelfServiceSettingsLookupSecretsLabel())
 }
 
 type RecoveryCode struct {
