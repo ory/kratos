@@ -273,7 +273,7 @@ func TestCompleteSettings(t *testing.T) {
 				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(body, "error").Raw))
 			} else {
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL+"/login-ts")
-				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(body, "ui.messages.0").Raw))
+				assertx.EqualAsJSON(t, text.NewInfoLoginReAuth(), json.RawMessage(gjson.Get(body, "ui.messages.0").Raw))
 			}
 		}
 
