@@ -109,7 +109,7 @@ func TestCompleteLogin(t *testing.T) {
 		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithTOTP), f.Ui.Nodes, []string{"2.attributes.value"})
 	})
 
-	t.Run("case=totp payload is set when identity has no totp", func(t *testing.T) {
+	t.Run("case=totp payload is not set when identity has no totp", func(t *testing.T) {
 		id := createIdentityWithoutTOTP(t, reg)
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)

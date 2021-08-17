@@ -115,6 +115,10 @@ type submitSelfServiceLoginFlowWithWebAuthnMethodBody struct {
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+	if f.Type != flow.TypeBrowser {
+		return nil, flow.ErrStrategyNotResponsible
+	}
+
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
 		return nil, err
 	}
