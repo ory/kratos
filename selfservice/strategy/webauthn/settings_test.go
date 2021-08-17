@@ -5,6 +5,8 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"net/http"
 	"net/url"
 	"testing"
@@ -321,6 +323,10 @@ func TestCompleteSettings(t *testing.T) {
 			cred, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
 			assert.True(t, ok)
 			assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1)
+
+			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+			require.NoError(t, err)
+			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
