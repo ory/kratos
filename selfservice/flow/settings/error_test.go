@@ -45,7 +45,7 @@ func TestHandleError(t *testing.T) {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	testhelpers.NewSettingsUIFlowEchoServer(t, reg)
+	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	testhelpers.NewErrorTestServer(t, reg)
 	testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
@@ -59,6 +59,7 @@ func TestHandleError(t *testing.T) {
 	require.NoError(t, faker.FakeData(&id))
 	id.SchemaID = "default"
 	id.State = identity.StateActive
+	reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &id)
 
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		h.WriteFlowError(w, r, flowMethod, settingsFlow, &id, flowError)
@@ -174,6 +175,24 @@ func TestHandleError(t *testing.T) {
 				assert.Equal(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
 			})
 
+			t.Run("case=return to UI error", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+				settingsFlow.IdentityID = id.ID
+				flowError = flow.ErrStrategyAsksToReturnToUI
+				flowMethod = settings.StrategyProfile
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Equal(t, http.StatusOK, res.StatusCode)
+
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.Equal(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
+			})
+
 			t.Run("case=generic error", func(t *testing.T) {
 				t.Cleanup(reset)
 
@@ -215,6 +234,18 @@ func TestHandleError(t *testing.T) {
 			lf, _ := expectSettingsUI(t)
 			require.Len(t, lf.UI.Messages, 1)
 			assert.Equal(t, int(text.ErrorValidationSettingsFlowExpired), int(lf.UI.Messages[0].ID))
+		})
+
+		t.Run("case=return to ui error", func(t *testing.T) {
+			t.Cleanup(reset)
+
+			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+			settingsFlow.IdentityID = id.ID
+			flowError = flow.ErrStrategyAsksToReturnToUI
+			flowMethod = settings.StrategyProfile
+
+			lf, _ := expectSettingsUI(t)
+			assert.EqualValues(t, settingsFlow.ID, lf.ID)
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {
