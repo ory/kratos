@@ -316,6 +316,7 @@ func TestCompleteLogin(t *testing.T) {
 			assert.EqualValues(t, identity.CredentialsTypeTOTP, gjson.Get(body, prefix+"authentication_methods.1.method").String(), 2)
 			assert.True(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().After(startAt), 2)
 			assert.True(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().After(gjson.Get(body, prefix+"authentication_methods.0.completed_at").Time()), 2)
+			assert.Equal(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().Unix(), gjson.Get(body, prefix+"authenticated_at").Time().Unix(), "%s", body)
 		}
 
 		t.Run("type=api", func(t *testing.T) {
