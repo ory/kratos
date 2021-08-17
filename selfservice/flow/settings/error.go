@@ -142,8 +142,7 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if errors.Is(err, flow.ErrStrategyAsksToReturnToUI) {
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
-				RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
+			s.d.Writer().Write(w, r, f)
 		} else {
 			http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
 		}
