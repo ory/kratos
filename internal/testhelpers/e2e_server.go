@@ -66,6 +66,7 @@ func StartE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 
 	go func() {
 		t.Log("Starting server...")
+		t.Log("config file",configFile)
 		_ = executor.ExecNoErr(t, "serve", "--config", configFile, "--watch-courier")
 	}()
 

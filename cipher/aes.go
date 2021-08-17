@@ -2,6 +2,7 @@ package cipher
 
 import (
 	"context"
+	"encoding/hex"
 
 	"github.com/gtank/cryptopasta"
 
@@ -25,26 +26,26 @@ func NewCryptAES(c AESConfiguration) *AES {
 }
 
 // Encrypt return a AES encrypt of plaintext
-func (a *AES) Encrypt(ctx context.Context, clearString string) ([]byte, error) {
+func (a *AES) Encrypt(ctx context.Context, clearString string) (string, error) {
 	if len(clearString) == 0 {
 		// do nothing if empty instead of return an error
 		//return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Can not encrypt empty string."))
-		return []byte{}, nil
+		return "", nil
 	}
 
 	if len(a.c.Config(ctx).SecretsAES()) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encrypt message because no AES secrets were configured."))
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encrypt message because no AES secrets were configured."))
 	}
 
 	ciphertext, err := cryptopasta.Encrypt([]byte(clearString), &a.c.Config(ctx).SecretsAES()[0])
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
 	}
-	return ciphertext, nil
+	return hex.EncodeToString(ciphertext), nil
 }
 
 // Decrypt returns the decrypted aes data
-func (a *AES) Decrypt(ctx context.Context, encryptedString []byte) (string, error) {
+func (a *AES) Decrypt(ctx context.Context, encryptedString string) (string, error) {
 	if len(encryptedString) == 0 {
 		// do nothing if empty instead of return an error
 		//return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Can not decrypt empty message."))
@@ -56,13 +57,16 @@ func (a *AES) Decrypt(ctx context.Context, encryptedString []byte) (string, erro
 		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decipher the encrypted message because no AES secrets were configured."))
 	}
 
+	decode, err := hex.DecodeString(encryptedString)
+	if err != nil {
+		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+	}
 	for i := range secrets {
-		plaintext, err := cryptopasta.Decrypt(encryptedString, &secrets[i])
+		plaintext, err := cryptopasta.Decrypt(decode, &secrets[i])
 		if err == nil {
 			return string(plaintext), nil
 		}
-
 	}
 
-	return "", errors.WithStack(herodot.ErrForbidden.WithReason("Unable to decipher the encrypted message."))
+	return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decipher the encrypted message."))
 }

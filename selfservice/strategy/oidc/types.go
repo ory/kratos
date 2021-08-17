@@ -23,7 +23,7 @@ type CredentialsConfig struct {
 	Providers []ProviderCredentialsConfig `json:"providers"`
 }
 
-func NewCredentials(accessToken, refreshToken []byte, provider, subject string) (*identity.Credentials, error) {
+func NewCredentials(accessToken, refreshToken, provider, subject string) (*identity.Credentials, error) {
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(CredentialsConfig{
 		Providers: []ProviderCredentialsConfig{
@@ -48,8 +48,8 @@ func NewCredentials(accessToken, refreshToken []byte, provider, subject string) 
 type ProviderCredentialsConfig struct {
 	Subject               string `json:"subject"`
 	Provider              string `json:"provider"`
-	EncryptedAccessToken  []byte `json:"encrypted_access_token"`
-	EncryptedRefreshToken []byte `json:"encrypted_refresh_token"`
+	EncryptedAccessToken  string `json:"encrypted_access_token"`
+	EncryptedRefreshToken string `json:"encrypted_refresh_token"`
 }
 
 type FlowMethod struct {

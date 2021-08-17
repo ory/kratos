@@ -17,6 +17,7 @@ package cipher_test
 
 import (
 	"context"
+	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,8 +47,8 @@ func TestAES_Cipher(t *testing.T) {
 		_, err = aes.Encrypt(context.Background(), "")
 		require.NoError(t, err)
 
-		// encrypted data could not be empty
-		_, err = aes.Decrypt(context.Background(), []byte{})
+		// empty encrypted data return blank
+		_, err = aes.Decrypt(context.Background(), "")
 		require.NoError(t, err)
 
 	})
@@ -71,14 +72,17 @@ func TestAES_Cipher(t *testing.T) {
 		require.NoError(t, err)
 
 		//
-		_, err = aes.Decrypt(context.Background(), []byte("bad-data"))
+		_, err = aes.Decrypt(context.Background(), hex.EncodeToString([]byte("bad-data")))
+		require.Error(t, err)
+
+		_, err = aes.Decrypt(context.Background(), "not-empty")
 		require.Error(t, err)
 
 		// unset secret
 		err = cfg.Set(config.ViperKeySecretsAES, []string{})
 		require.NoError(t, err)
 
-		_, err = aes.Decrypt(context.Background(), []byte("not-empty"))
+		_, err = aes.Decrypt(context.Background(), "not-empty")
 		require.Error(t, err)
 	})
 }

@@ -178,22 +178,13 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 			if credType != CredentialsTypeOIDC {
 				continue
 			}
-			var encryptedAccessToken []byte
-			if err := json.Unmarshal([]byte(gjson.GetBytes(credential.Config, "providers.0.encrypted_access_token").Raw), &encryptedAccessToken); err != nil {
-				h.r.Writer().WriteError(w, r, errors.WithStack(err))
-				return
-			}
-
-			var encryptedRefreshToken []byte
-			if err := json.Unmarshal([]byte(gjson.GetBytes(credential.Config, "providers.0.encrypted_refresh_token").Raw), &encryptedRefreshToken); err != nil {
-				h.r.Writer().WriteError(w, r, errors.WithStack(err))
-				return
-			}
+			encryptedAccessToken := gjson.GetBytes(credential.Config, "providers.0.encrypted_access_token").String()
 			accessToken, err := h.r.Cipher().Decrypt(r.Context(), encryptedAccessToken)
 			if err != nil {
 				h.r.Writer().WriteError(w, r, errors.WithStack(err))
 				return
 			}
+			encryptedRefreshToken := gjson.GetBytes(credential.Config, "providers.0.encrypted_refresh_token").String()
 			refreshToken, err := h.r.Cipher().Decrypt(r.Context(), encryptedRefreshToken)
 			if err != nil {
 				h.r.Writer().WriteError(w, r, errors.WithStack(err))
