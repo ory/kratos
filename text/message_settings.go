@@ -18,6 +18,8 @@ const (
 	InfoSelfServiceSettingsRegenerateLookup
 	InfoSelfServiceSettingsLookupSecrets
 	InfoSelfServiceSettingsLookupConfirm
+	InfoSelfServiceSettingsRegisterWebAuthn
+	InfoSelfServiceSettingsRegisterWebAuthnDisplayName
 )
 
 const (
@@ -139,6 +141,34 @@ func NewInfoSelfServiceSettingsUpdateUnlinkOIDC(provider string) *Message {
 		Type: Info,
 		Context: context(map[string]interface{}{
 			"provider": provider,
+		}),
+	}
+}
+
+func NewInfoSelfServiceRegisterWebAuthn() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsRegisterWebAuthn,
+		Text: "Add security key",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceRegisterWebAuthnDisplayName() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsRegisterWebAuthnDisplayName,
+		Text: "Name of the security key",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceRemoveWebAuthn(name string, createdAt time.Time) *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsRegisterWebAuthn,
+		Text: fmt.Sprintf("Remove security key \"%s\"", name),
+		Type: Info,
+		Context: context(map[string]interface{}{
+			"display_name": name,
+			"added_at":     createdAt,
 		}),
 	}
 }

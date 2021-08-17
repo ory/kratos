@@ -19,6 +19,8 @@ const (
 	ErrorValidationInvalidTOTPCode
 	ErrorValidationNoTOTPDevice
 	ErrorValidationLookupAlreadyUsed
+	ErrorValidationNoWebAuthnDevice
+	ErrorValidationWebAuthnVerifierWrong
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
@@ -102,6 +104,16 @@ func NewErrorValidationTOTPVerifierWrong() *Message {
 		Context: context(nil),
 	}
 }
+
+func NewErrorValidationWebAuthnVerifierWrong() *Message {
+	return &Message{
+		ID:      ErrorValidationWebAuthnVerifierWrong,
+		Text:    "The provided WebAuthn result is invalid, please try again.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationLookupAlreadyUsed() *Message {
 	return &Message{
 		ID:      ErrorValidationLookupAlreadyUsed,
@@ -149,6 +161,15 @@ func NewErrorValidationNoTOTPDevice() *Message {
 	return &Message{
 		ID:      ErrorValidationNoTOTPDevice,
 		Text:    "You have no TOTP device set up.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationNoWebAuthnDevice() *Message {
+	return &Message{
+		ID:      ErrorValidationNoWebAuthnDevice,
+		Text:    "You have no WebAuthn device set up.",
 		Type:    Error,
 		Context: context(nil),
 	}

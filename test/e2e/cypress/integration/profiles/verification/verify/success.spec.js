@@ -109,7 +109,7 @@ context('Verification Profile', () => {
         cy.login(identity2)
 
         cy.visit(APP_URL + '/self-service/verification/browser', {
-          qs: { return_to: 'http://127.0.0.1:4455/verification_callback' }
+          qs: { return_to: 'http://localhost:4455/verification_callback' }
         })
         // request verification link for identity
         cy.get('input[name="email"]').type(identity2.email)
@@ -117,7 +117,7 @@ context('Verification Profile', () => {
         cy.verifyEmail({
           expect: {
             email: identity2.email,
-            redirectTo: 'http://127.0.0.1:4455/verification_callback'
+            redirectTo: 'http://localhost:4455/verification_callback'
           }
         })
       })

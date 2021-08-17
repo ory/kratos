@@ -43,14 +43,14 @@ context('Verification Profile', () => {
           password,
           query: {
             after_verification_return_to:
-              'http://127.0.0.1:4455/verification_callback'
+              'http://localhost:4455/verification_callback'
           }
         })
         cy.login({ email, password })
         cy.verifyEmail({
           expect: {
             email,
-            redirectTo: 'http://127.0.0.1:4455/verification_callback'
+            redirectTo: 'http://localhost:4455/verification_callback'
           }
         })
       })

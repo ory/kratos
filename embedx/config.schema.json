@@ -1141,6 +1141,84 @@
                 }
               }
             },
+            "webauthn": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the WebAuthn method",
+                  "default": false
+                },
+                "config": {
+                  "type": "object",
+                  "title": "WebAuthn Configuration",
+                  "properties": {
+                    "rp": {
+                      "title": "Relying Party (RP) Config",
+                      "required": [
+                        "id",
+                        "display_name"
+                      ],
+                      "properties": {
+                        "display_name": {
+                          "type": "string",
+                          "title": "Relying Party Display Name",
+                          "description": "An name to help the user identify this RP.",
+                          "examples": [
+                            "Ory Foundation"
+                          ]
+                        },
+                        "id": {
+                          "type": "string",
+                          "title": "Relying Party Identifier",
+                          "description": "The id must be a subset of the domain currently in the browser.",
+                          "examples": [
+                            "ory.sh"
+                          ]
+                        },
+                        "origin": {
+                          "type": "string",
+                          "title": "Relying Party Origin",
+                          "description": "An explicit RP origin. If left empty, this defaults to `id`.",
+                          "format": "uri",
+                          "examples": [
+                            "https://www.ory.sh/login"
+                          ]
+                        },
+                        "icon": {
+                          "type": "string",
+                          "title": "Relying Party Icon",
+                          "description": "An icon to help the user identify this RP.",
+                          "format": "uri",
+                          "examples": [
+                            "https://www.ory.sh/an-icon.png"
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              },
+              "then": {
+                "required": [
+                  "config"
+                ]
+              }
+            },
             "oidc": {
               "type": "object",
               "title": "Specify OpenID Connect and OAuth2 Configuration",
