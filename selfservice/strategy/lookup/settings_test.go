@@ -5,13 +5,15 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/gofrs/uuid"
-	kratos "github.com/ory/kratos-client-go"
-	"github.com/ory/kratos/selfservice/flow"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
+
+	kratos "github.com/ory/kratos-client-go"
+	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

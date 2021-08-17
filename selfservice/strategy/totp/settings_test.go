@@ -3,12 +3,14 @@ package totp_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/selfservice/flow"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/pquerna/otp"
 	stdtotp "github.com/pquerna/otp/totp"
@@ -330,9 +332,9 @@ func TestCompleteSettings(t *testing.T) {
 				assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			}
 
-			actualFlow, err:= reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),uuid.FromStringOrNil(f.Id))
+			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 			require.NoError(t, err)
-			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext,flow.PrefixInternalContextKey(identity.CredentialsTypeTOTP, totp.InternalContextKeyURL)))
+			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeTOTP, totp.InternalContextKeyURL)))
 
 			checkIdentity(t, id, key)
 		}

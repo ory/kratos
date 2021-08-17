@@ -4,11 +4,12 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -192,9 +193,9 @@ func TestCompleteLogin(t *testing.T) {
 			assert.EqualValues(t, identity.CredentialsTypeWebAuthn, gjson.Get(body, prefix+"authentication_methods.#(method==webauthn).method").String(), "%s", body)
 			assert.EqualValues(t, id.ID.String(), gjson.Get(body, prefix+"identity.id").String(), "%s", body)
 
-			actualFlow, err:= reg.LoginFlowPersister().GetLoginFlow(context.Background(),uuid.FromStringOrNil(f.Id))
+			actualFlow, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 			require.NoError(t, err)
-			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext,flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
+			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
 		}
 
 		t.Run("type=browser", func(t *testing.T) {

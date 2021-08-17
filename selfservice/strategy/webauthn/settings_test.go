@@ -5,12 +5,13 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
