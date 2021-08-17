@@ -5,6 +5,9 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/gofrs/uuid"
+	kratos "github.com/ory/kratos-client-go"
+	"github.com/ory/kratos/selfservice/flow"
 	"net/http"
 	"net/url"
 	"testing"
@@ -383,11 +386,15 @@ func TestCompleteSettings(t *testing.T) {
 					v.Set(node.LookupConfirm, "true")
 				}
 
-				checkIdentity := func(t *testing.T, id *identity.Identity) {
+				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SelfServiceSettingsFlow) {
 					_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
 					require.NoError(t, err)
 					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-1")
 					assert.NotContains(t, gjson.GetBytes(cred.Config, "recovery_codes").Raw, "key-0")
+
+					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+					require.NoError(t, err)
+					assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)))
 				}
 
 				t.Run("type=api", func(t *testing.T) {
@@ -406,7 +413,7 @@ func TestCompleteSettings(t *testing.T) {
 					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
 					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "flow.state").String()))
 
-					checkIdentity(t, id)
+					checkIdentity(t, id, f)
 				})
 
 				runBrowser := func(t *testing.T, spa bool) {
@@ -431,7 +438,7 @@ func TestCompleteSettings(t *testing.T) {
 						assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					}
 
-					checkIdentity(t, id)
+					checkIdentity(t, id, f)
 				}
 
 				t.Run("type=browser", func(t *testing.T) {

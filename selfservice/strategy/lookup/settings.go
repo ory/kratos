@@ -35,7 +35,7 @@ func (s *Strategy) SettingsStrategyID() string {
 
 const (
 	internalContextKeyRevealed    = "revealed"
-	internalContextKeyRegenerated = "regenerated"
+	InternalContextKeyRegenerated = "regenerated"
 )
 
 const numCodes = 12
@@ -204,7 +204,7 @@ func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewConfirmLookupNode())
 
 	var err error
-	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRegenerated), codes)
+	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyRegenerated), codes)
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http
 }
 
 func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
-	codes := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRegenerated)).Array()
+	codes := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyRegenerated)).Array()
 	if len(codes) != numCodes {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
 	}
@@ -243,7 +243,7 @@ func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Re
 	i.SetCredentials(s.ID(), *c)
 
 	// Remove the TOTP URL from the internal context now that it is set!
-	ctxUpdate.Flow.InternalContext, err = sjson.DeleteBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRegenerated))
+	ctxUpdate.Flow.InternalContext, err = sjson.DeleteBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyRegenerated))
 	if err != nil {
 		return err
 	}
