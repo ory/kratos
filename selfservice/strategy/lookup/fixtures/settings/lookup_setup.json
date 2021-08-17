@@ -1,0 +1,33 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "dDVzdjQ5bWI3bWZrYnhta2dlczBmeDU4NHFzYWt2cW4="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "lookup_secret_regenerate",
+      "type": "submit",
+      "value": "true"
+    },
+    "group": "lookup_secret",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050008,
+        "text": "Generate new backup recovery codes",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]

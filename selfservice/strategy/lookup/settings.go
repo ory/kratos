@@ -219,7 +219,7 @@ func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http
 func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
 	codes := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRegenerated)).Array()
 	if len(codes) != numCodes {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected to find lookup secrets in the internal context but found none."))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
 	}
 
 	rc := make([]RecoveryCode, len(codes))
