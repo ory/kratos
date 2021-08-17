@@ -144,9 +144,10 @@ func (p *Persister) createIdentityCredentials(ctx context.Context, i *identity.I
 			}
 
 			if err := c.Create(&identity.CredentialIdentifier{
-				Identifier:            ids,
-				IdentityCredentialsID: cred.ID,
-				NID:                   corp.ContextualizeNID(ctx, p.nid),
+				Identifier:                ids,
+				IdentityCredentialsID:     cred.ID,
+				IdentityCredentialsTypeID: ct.ID,
+				NID:                       corp.ContextualizeNID(ctx, p.nid),
 			}); err != nil {
 				return sqlcon.HandleError(err)
 			}
