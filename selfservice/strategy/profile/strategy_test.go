@@ -6,7 +6,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/jsonx"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/jsonx"
 
 	kratos "github.com/ory/kratos-client-go"
 
