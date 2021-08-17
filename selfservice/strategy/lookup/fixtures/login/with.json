@@ -1,0 +1,54 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "lookup_secret",
+      "required": true,
+      "type": "text",
+      "value": ""
+    },
+    "group": "lookup_secret",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {},
+        "id": 1010007,
+        "text": "Backup recovery code",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "lookup_secret"
+    },
+    "group": "lookup_secret",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {},
+        "id": 1010001,
+        "text": "Sign in",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "anhicmI2dWFhMWlwbHlydWNhZnF4cW13dXhmOW1ucDc="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  }
+]

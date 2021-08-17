@@ -195,7 +195,7 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
 	codes := make([]RecoveryCode, numCodes)
 	for k := range codes {
-		codes[k] = RecoveryCode{Code:randx.MustString(8, randx.AlphaLowerNum)}
+		codes[k] = RecoveryCode{Code: randx.MustString(8, randx.AlphaLowerNum)}
 	}
 
 	ctxUpdate.Flow.UI.Nodes.Upsert((&CredentialsConfig{RecoveryCodes: codes}).ToNode())

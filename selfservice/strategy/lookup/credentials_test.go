@@ -3,10 +3,11 @@ package lookup
 import (
 	_ "embed"
 	"encoding/json"
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/sqlxx"
 	"testing"
 	"time"
+
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlxx"
 )
 
 //go:embed fixtures/node.json

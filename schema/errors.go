@@ -227,6 +227,16 @@ func NewNoTOTPDeviceRegistered() error {
 	})
 }
 
+func NewNoLookupDefined() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `you have no TOTP device set up`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationNoLookup()),
+	})
+}
+
 func NewNoWebAuthnRegistered() error {
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{

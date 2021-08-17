@@ -2,8 +2,9 @@ package webauthn_test
 
 import (
 	"fmt"
-	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"testing"
+
+	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
