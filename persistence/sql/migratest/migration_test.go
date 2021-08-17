@@ -203,7 +203,7 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						found = append(found, id.ID.String())
 						actual, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
-						require.NoError(t, err)
+						require.NoError(t, err, id.ID.String())
 						migratest.CompareWithFixture(t, actual, "settings_flow", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "settings_flow"), found)
