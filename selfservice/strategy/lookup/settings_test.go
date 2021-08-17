@@ -5,6 +5,15 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -17,13 +26,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/sqlxx"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
-	"net/http"
-	"net/url"
-	"testing"
-	"time"
 )
 
 //go:embed fixtures/settings/lookup_setup.json

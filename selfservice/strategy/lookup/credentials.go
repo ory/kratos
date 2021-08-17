@@ -1,9 +1,10 @@
 package lookup
 
 import (
+	"time"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
-	"time"
 
 	"github.com/ory/x/sqlxx"
 )

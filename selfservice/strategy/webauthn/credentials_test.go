@@ -1,9 +1,10 @@
 package webauthn
 
 import (
+	"testing"
+
 	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestCredentialConversion(t *testing.T) {

@@ -334,7 +334,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
+	t.Run("case=should fail because totp can not handle AAL1", func(t *testing.T) {
 		apiClient := testhelpers.NewDebugClient(t)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
 
