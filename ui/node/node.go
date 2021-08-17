@@ -35,6 +35,7 @@ const (
 	VerificationLinkGroup Group = "link"
 	TOTPGroup             Group = "totp"
 	LookupGroup           Group = "lookup_secret"
+	WebAuthnGroup         Group = "webauthn"
 
 	Text   Type = "text"
 	Input  Type = "input"
