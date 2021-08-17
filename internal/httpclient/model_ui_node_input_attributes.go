@@ -22,6 +22,8 @@ type UiNodeInputAttributes struct {
 	Label    *UiText `json:"label,omitempty"`
 	// The input's element name.
 	Name string `json:"name"`
+	// OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn.
+	Onclick *string `json:"onclick,omitempty"`
 	// The input's pattern.
 	Pattern *string `json:"pattern,omitempty"`
 	// Mark this input field as required.
@@ -129,6 +131,38 @@ func (o *UiNodeInputAttributes) GetNameOk() (*string, bool) {
 // SetName sets field value
 func (o *UiNodeInputAttributes) SetName(v string) {
 	o.Name = v
+}
+
+// GetOnclick returns the Onclick field value if set, zero value otherwise.
+func (o *UiNodeInputAttributes) GetOnclick() string {
+	if o == nil || o.Onclick == nil {
+		var ret string
+		return ret
+	}
+	return *o.Onclick
+}
+
+// GetOnclickOk returns a tuple with the Onclick field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UiNodeInputAttributes) GetOnclickOk() (*string, bool) {
+	if o == nil || o.Onclick == nil {
+		return nil, false
+	}
+	return o.Onclick, true
+}
+
+// HasOnclick returns a boolean if a field has been set.
+func (o *UiNodeInputAttributes) HasOnclick() bool {
+	if o != nil && o.Onclick != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOnclick gets a reference to the given string and assigns it to the Onclick field.
+func (o *UiNodeInputAttributes) SetOnclick(v string) {
+	o.Onclick = &v
 }
 
 // GetPattern returns the Pattern field value if set, zero value otherwise.
@@ -262,6 +296,9 @@ func (o UiNodeInputAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["name"] = o.Name
+	}
+	if o.Onclick != nil {
+		toSerialize["onclick"] = o.Onclick
 	}
 	if o.Pattern != nil {
 		toSerialize["pattern"] = o.Pattern
