@@ -5,7 +5,7 @@
       "name": "csrf_token",
       "required": true,
       "type": "hidden",
-      "value": "a21rem5xdjF3a2tlbm5nYWVpdWVobDN4YWo2anRnOGc="
+      "value": "MWZqMmQ5bXdzbG41a2VtYmMzdm1iN2c2aHY3N3ZyajQ="
     },
     "group": "default",
     "messages": [],
@@ -27,7 +27,7 @@
           "added_at": "0001-01-01T00:00:00Z",
           "display_name": "bar"
         },
-        "id": 1050011,
+        "id": 1050012,
         "text": "Remove security key \"bar\"",
         "type": "info"
       }
@@ -49,7 +49,7 @@
           "added_at": "0001-01-01T00:00:00Z",
           "display_name": "foo"
         },
-        "id": 1050011,
+        "id": 1050012,
         "text": "Remove security key \"foo\"",
         "type": "info"
       }
@@ -67,7 +67,7 @@
     "messages": [],
     "meta": {
       "label": {
-        "id": 1050012,
+        "id": 1050013,
         "text": "Name of the security key",
         "type": "info"
       }
@@ -78,7 +78,7 @@
     "attributes": {
       "disabled": false,
       "name": "webauthn_register",
-      "onclick": "// noinspection JSAnnotator\nreturn (function (e) {\n  if (e.value) {\n    return true\n  }\n\n  if (!window.PublicKeyCredential) {\n    alert('This browser does not support WebAuthn!');\n    return false;\n  }\n\n  function bufferDecode(value) {\n    return Uint8Array.from(atob(value), c =\u003e c.charCodeAt(0));\n  }\n\n  function bufferEncode(value) {\n    return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))\n      .replace(/\\+/g, '-')\n      .replace(/\\//g, '_')\n      .replace(/=/g, '');\n  }\n\n  const opt = {\"publicKey\":{\"challenge\":\"ptJCNMcJ2AmBtlVN560qrkp0OO3/QXe7/0gpyxVtAIQ=\",\"rp\":{\"name\":\"Ory Corp\",\"id\":\"localhost\"},\"user\":{\"name\":\"placeholder\",\"icon\":\"https://via.placeholder.com/128\",\"displayName\":\"placeholder\",\"id\":\"Bl93tLpiTCCkfGzSWOU7/A==\"},\"pubKeyCredParams\":[{\"type\":\"public-key\",\"alg\":-7},{\"type\":\"public-key\",\"alg\":-35},{\"type\":\"public-key\",\"alg\":-36},{\"type\":\"public-key\",\"alg\":-257},{\"type\":\"public-key\",\"alg\":-258},{\"type\":\"public-key\",\"alg\":-259},{\"type\":\"public-key\",\"alg\":-37},{\"type\":\"public-key\",\"alg\":-38},{\"type\":\"public-key\",\"alg\":-39},{\"type\":\"public-key\",\"alg\":-8}],\"authenticatorSelection\":{\"requireResidentKey\":false,\"userVerification\":\"preferred\"},\"timeout\":60000}}\n  opt.publicKey.user.id = bufferDecode(opt.publicKey.user.id);\n  opt.publicKey.challenge = bufferDecode(opt.publicKey.challenge);\n\n  if (opt.publicKey.excludeCredentials) {\n    opt.publicKey.excludeCredentials = opt.publicKey.excludeCredentials.map(function (value) {\n      return {\n        ...value,\n        id: bufferDecode(value.id)\n      }\n    })\n  }\n\n  navigator.credentials.create(opt).then(function (credential) {\n    e.value = JSON.stringify({\n      id: credential.id,\n      rawId: bufferEncode(credential.rawId),\n      type: credential.type,\n      response: {\n        attestationObject: bufferEncode(credential.response.attestationObject),\n        clientDataJSON: bufferEncode(credential.response.clientDataJSON),\n      },\n    })\n    console.log(\"setting\", e.value)\n    e.click()\n  }).catch((err) =\u003e {\n    alert(err)\n  })\n\n  return false\n})(this)\n",
+      "onclick": "// noinspection JSAnnotator\nreturn (function (e) {\n  if (e.value) {\n    return true\n  }\n\n  if (!window.PublicKeyCredential) {\n    alert('This browser does not support WebAuthn!');\n    return false;\n  }\n\n  function bufferDecode(value) {\n    return Uint8Array.from(atob(value), c =\u003e c.charCodeAt(0));\n  }\n\n  function bufferEncode(value) {\n    return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))\n      .replace(/\\+/g, '-')\n      .replace(/\\//g, '_')\n      .replace(/=/g, '');\n  }\n\n  const opt = {\"publicKey\":{\"challenge\":\"otysaR5IHXnVN9hQLPfGR06gjP0Gj8CDb+q38lGtACo=\",\"rp\":{\"name\":\"Ory Corp\",\"id\":\"localhost\"},\"user\":{\"name\":\"placeholder\",\"icon\":\"https://via.placeholder.com/128\",\"displayName\":\"placeholder\",\"id\":\"yU7xCyefQOOehsGquoQ+Yw==\"},\"pubKeyCredParams\":[{\"type\":\"public-key\",\"alg\":-7},{\"type\":\"public-key\",\"alg\":-35},{\"type\":\"public-key\",\"alg\":-36},{\"type\":\"public-key\",\"alg\":-257},{\"type\":\"public-key\",\"alg\":-258},{\"type\":\"public-key\",\"alg\":-259},{\"type\":\"public-key\",\"alg\":-37},{\"type\":\"public-key\",\"alg\":-38},{\"type\":\"public-key\",\"alg\":-39},{\"type\":\"public-key\",\"alg\":-8}],\"authenticatorSelection\":{\"requireResidentKey\":false,\"userVerification\":\"preferred\"},\"timeout\":60000}}\n  opt.publicKey.user.id = bufferDecode(opt.publicKey.user.id);\n  opt.publicKey.challenge = bufferDecode(opt.publicKey.challenge);\n\n  if (opt.publicKey.excludeCredentials) {\n    opt.publicKey.excludeCredentials = opt.publicKey.excludeCredentials.map(function (value) {\n      return {\n        ...value,\n        id: bufferDecode(value.id)\n      }\n    })\n  }\n\n  navigator.credentials.create(opt).then(function (credential) {\n    e.value = JSON.stringify({\n      id: credential.id,\n      rawId: bufferEncode(credential.rawId),\n      type: credential.type,\n      response: {\n        attestationObject: bufferEncode(credential.response.attestationObject),\n        clientDataJSON: bufferEncode(credential.response.clientDataJSON),\n      },\n    })\n    console.log(\"setting\", e.value)\n    e.click()\n  }).catch((err) =\u003e {\n    alert(err)\n  })\n\n  return false\n})(this)\n",
       "type": "submit",
       "value": ""
     },
@@ -86,7 +86,7 @@
     "messages": [],
     "meta": {
       "label": {
-        "id": 1050011,
+        "id": 1050012,
         "text": "Add security key",
         "type": "info"
       }

@@ -75,9 +75,9 @@ func TestCompleteSettings(t *testing.T) {
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		assertx.EqualAsJSONExcept(t, json.RawMessage(settingsFixtureSetupTOTP), f.Ui.Nodes, []string{
 			"0.attributes.value",
-			"1.attributes.text.context.secret",
-			"1.attributes.text.text",
-			"2.attributes.src",
+			"2.attributes.text.context.secret",
+			"2.attributes.text.text",
+			"3.attributes.src",
 		})
 	})
 

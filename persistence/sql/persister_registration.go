@@ -19,9 +19,9 @@ func (p *Persister) CreateRegistrationFlow(ctx context.Context, r *registration.
 }
 
 func (p *Persister) UpdateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
+	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)
-	cp.EnsureInternalContext()
 	return p.update(ctx, cp)
 }
 

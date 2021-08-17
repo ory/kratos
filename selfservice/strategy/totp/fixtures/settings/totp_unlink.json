@@ -5,11 +5,29 @@
       "name": "csrf_token",
       "required": true,
       "type": "hidden",
-      "value": "NzVxbWl1M3M4ZGFibWdwZmhkMTk4MDk2bm9mbDRjdDc="
+      "value": "Z3c5c202ZWptbzBubmFmMmRvNml1MjRwaW5peHE0ZjI="
     },
     "group": "default",
     "messages": [],
     "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "totp"
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
     "type": "input"
   },
   {
@@ -26,24 +44,6 @@
       "label": {
         "id": 1050004,
         "text": "Unlink TOTP Authenticator App",
-        "type": "info"
-      }
-    },
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "method",
-      "type": "submit",
-      "value": "totp"
-    },
-    "group": "totp",
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1070003,
-        "text": "Save",
         "type": "info"
       }
     },

@@ -1,0 +1,145 @@
+{
+  "action": "http://127.0.0.1:57783/self-service/settings?flow=43dadb18-009f-4e1b-80ce-d1c1c31cbec7",
+  "method": "POST",
+  "nodes": [
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "csrf_token",
+        "required": true,
+        "type": "hidden",
+        "value": "YTUycXZiN2ZxZThvbmZmOHg1N3hzd3lyZHFucTVwenY="
+      },
+      "group": "default",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.email",
+        "type": "text",
+        "value": "john-browser@doe.com"
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "method",
+        "type": "submit",
+        "value": "profile"
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1070003,
+          "text": "Save",
+          "type": "info"
+        }
+      },
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.stringy",
+        "type": "text",
+        "value": "foobar"
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.numby",
+        "type": "number",
+        "value": 2.5
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.booly",
+        "type": "checkbox",
+        "value": false
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.should_big_number",
+        "type": "number",
+        "value": 2048
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.should_long_string",
+        "type": "text",
+        "value": "asdfasdfasdfasdfasfdasdfasdfasdf"
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "method",
+        "type": "submit",
+        "value": "password"
+      },
+      "group": "password",
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1070003,
+          "text": "Save",
+          "type": "info"
+        }
+      },
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "password",
+        "required": true,
+        "type": "password"
+      },
+      "group": "password",
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1070001,
+          "text": "Password",
+          "type": "info"
+        }
+      },
+      "type": "input"
+    }
+  ]
+}
