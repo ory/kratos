@@ -3316,6 +3316,28 @@
     "submitSelfServiceLoginFlowBody": {
       "type": "object"
     },
+    "submitSelfServiceLoginFlowWithLookupSecretMethodBody": {
+      "type": "object",
+      "title": "submitSelfServiceLoginFlowWithLookupSecretMethodBody is used to decode the login form payload.",
+      "required": [
+        "method",
+        "lookup_secret"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "lookup_secret": {
+          "description": "The lookup secret.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method should be set to \"lookup_secret\" when logging in using the lookup_secret strategy.",
+          "type": "string"
+        }
+      }
+    },
     "submitSelfServiceLoginFlowWithOidcMethodBody": {
       "description": "SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload\nwhen using the oidc method.",
       "type": "object",
@@ -3383,6 +3405,27 @@
         },
         "totp_code": {
           "description": "The TOTP code.",
+          "type": "string"
+        }
+      }
+    },
+    "submitSelfServiceLoginFlowWithWebAuthnMethodBody": {
+      "type": "object",
+      "title": "submitSelfServiceLoginFlowWithWebAuthnMethodBody is used to decode the login form payload.",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method should be set to \"webAuthn\" when logging in using the WebAuthn strategy.",
+          "type": "string"
+        },
+        "webauthn_login": {
+          "description": "Login a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
           "type": "string"
         }
       }
@@ -3479,6 +3522,34 @@
     "submitSelfServiceSettingsFlowBody": {
       "type": "object"
     },
+    "submitSelfServiceSettingsFlowWithLookupMethodBody": {
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "lookup_secret_confirm": {
+          "description": "If set to true will save the regenerated lookup secrets",
+          "type": "boolean"
+        },
+        "lookup_secret_regenerate": {
+          "description": "If set to true will regenerate the lookup secrets",
+          "type": "boolean"
+        },
+        "lookup_secret_reveal": {
+          "description": "If set to true will reveal the lookup secrets",
+          "type": "boolean"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to \"lookup\" when trying to add, update, or remove a lookup pairing.",
+          "type": "string"
+        }
+      }
+    },
     "submitSelfServiceSettingsFlowWithOidcMethodBody": {
       "description": "nolint:deadcode,unused",
       "type": "object",
@@ -3568,6 +3639,34 @@
         "totp_unlink": {
           "description": "UnlinkTOTP if true will remove the TOTP pairing,\neffectively removing the credential. This can be used\nto set up a new TOTP device.",
           "type": "boolean"
+        }
+      }
+    },
+    "submitSelfServiceSettingsFlowWithWebAuthnMethodBody": {
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method\n\nShould be set to \"webauthn\" when trying to add, update, or remove a webAuthn pairing.",
+          "type": "string"
+        },
+        "webauthn_register": {
+          "description": "Register a WebAuthn Security Key\n\nIt is expected that the JSON returned by the WebAuthn registration process\nis included here.",
+          "type": "string"
+        },
+        "webauthn_register_displayname": {
+          "description": "Name of the WebAuthn Security Key to be Added\n\nA human-readable name for the security key which will be added.",
+          "type": "string"
+        },
+        "webauthn_remove": {
+          "description": "Remove a WebAuthn Security Key\n\nThis must contain the ID of the WebAuthN connection.",
+          "type": "string"
         }
       }
     },
@@ -3769,6 +3868,10 @@
         },
         "name": {
           "description": "The input's element name.",
+          "type": "string"
+        },
+        "onclick": {
+          "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
           "type": "string"
         },
         "pattern": {

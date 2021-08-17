@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Disabled** | **bool** | Sets the input&#39;s disabled field to true or false. | 
 **Label** | Pointer to [**UiText**](UiText.md) |  | [optional] 
 **Name** | **string** | The input&#39;s element name. | 
+**Onclick** | Pointer to **string** | OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn. | [optional] 
 **Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
 **Type** | **string** |  | 
@@ -95,6 +96,31 @@ and a boolean to check if the value has been set.
 
 SetName sets Name field to given value.
 
+
+### GetOnclick
+
+`func (o *UiNodeInputAttributes) GetOnclick() string`
+
+GetOnclick returns the Onclick field if non-nil, zero value otherwise.
+
+### GetOnclickOk
+
+`func (o *UiNodeInputAttributes) GetOnclickOk() (*string, bool)`
+
+GetOnclickOk returns a tuple with the Onclick field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetOnclick
+
+`func (o *UiNodeInputAttributes) SetOnclick(v string)`
+
+SetOnclick sets Onclick field to given value.
+
+### HasOnclick
+
+`func (o *UiNodeInputAttributes) HasOnclick() bool`
+
+HasOnclick returns a boolean if a field has been set.
 
 ### GetPattern
 
