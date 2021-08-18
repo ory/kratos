@@ -1,12 +1,3 @@
-serve:
-  public:
-    cors:
-      enabled: true
-      allowed_headers:
-        - Authorization
-        - Content-Type
-        - X-Session-Token
-
 selfservice:
   flows:
     settings:
@@ -22,6 +13,21 @@ selfservice:
           hooks:
             -
               hook: session
+
+  methods:
+    totp:
+      enabled: true
+      config:
+        issuer: issuer.ory.sh
+    lookup_secret:
+      enabled: true
+    webauthn:
+      enabled: true
+      config:
+        rp:
+          id: localhost
+          origin: http://localhost:4455
+          display_name: Ory
 
 identity:
   default_schema_url: file://test/e2e/profiles/email/identity.traits.schema.json
