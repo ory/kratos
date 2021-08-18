@@ -2,9 +2,10 @@ package lookup
 
 import (
 	"encoding/json"
-	"github.com/ory/x/sqlcon"
 	"net/http"
 	"time"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/x/sqlxx"
 

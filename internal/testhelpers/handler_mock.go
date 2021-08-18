@@ -62,7 +62,7 @@ func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Confi
 	router.GET(set, MockSetSession(t, reg, conf))
 
 	client := NewClientWithCookies(t)
-	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set + "?" + req.URL.Query().Encode())
+	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set+"?"+req.URL.Query().Encode())
 
 	res, err := client.Do(req)
 	require.NoError(t, errors.WithStack(err))

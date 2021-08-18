@@ -87,7 +87,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
-		var p submitSelfServiceSettingsFlowWithWebAuthnMethodBody
+	var p submitSelfServiceSettingsFlowWithWebAuthnMethodBody
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueSettingsFlow(w, r, ctxUpdate, &p)
