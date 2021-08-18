@@ -224,7 +224,7 @@ func (s *Strategy) continueSettingsFlowConfirm(w http.ResponseWriter, r *http.Re
 
 	rc := make([]RecoveryCode, len(codes))
 	for k := range rc {
-		rc[k] = RecoveryCode{Code: codes[k].String()}
+		rc[k] = RecoveryCode{Code: codes[k].Get("code").String()}
 	}
 
 	co, err := json.Marshal(&CredentialsConfig{RecoveryCodes: rc})
