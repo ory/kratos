@@ -28,7 +28,8 @@ func (c *CredentialsConfig) ToNode() *node.Node {
 		}
 	}
 
-	return node.NewTextField(node.LookupCodes, text.NewInfoSelfServiceSettingsLookupSecretList(formatted, messages), node.LookupGroup).WithMetaLabel(text.NewInfoSelfServiceSettingsLookupSecretsLabel())
+	return node.NewTextField(node.LookupCodes, text.NewInfoSelfServiceSettingsLookupSecretList(formatted, messages), node.LookupGroup).
+		WithMetaLabel(text.NewInfoSelfServiceSettingsLookupSecretsLabel())
 }
 
 type RecoveryCode struct {
