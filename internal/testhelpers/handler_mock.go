@@ -36,6 +36,9 @@ func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
 		activeSession, _ := session.NewActiveSession(i, conf, time.Now().UTC(), identity.CredentialsTypePassword)
+		if aal := r.URL.Query().Get("set_aal"); len(aal) > 0 {
+			activeSession.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel(aal)
+		}
 		require.NoError(t, reg.SessionManager().UpsertAndIssueCookie(context.Background(), w, r, activeSession))
 
 		w.WriteHeader(http.StatusOK)
@@ -59,7 +62,7 @@ func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Confi
 	router.GET(set, MockSetSession(t, reg, conf))
 
 	client := NewClientWithCookies(t)
-	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set)
+	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set + "?" + req.URL.Query().Encode())
 
 	res, err := client.Do(req)
 	require.NoError(t, errors.WithStack(err))
