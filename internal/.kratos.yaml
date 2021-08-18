@@ -39,7 +39,7 @@ secrets:
   cookie:
     - session-key-7f8a9b77-1
     - session-key-7f8a9b77-2
-  aes:
+  cipher:
     - secret-thirty-two-character-long
 
 selfservice:

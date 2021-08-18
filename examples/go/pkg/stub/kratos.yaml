@@ -59,7 +59,7 @@ log:
 secrets:
   cookie:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
-  aes:
+  cipher:
     - 32-LONG-SECRET-NOT-SECURE-AT-ALL
 
 hashers:

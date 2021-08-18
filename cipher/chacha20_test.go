@@ -4,39 +4,36 @@ import (
 	"context"
 	"encoding/hex"
 	"github.com/ory/herodot"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
-func TestAES_Cipher(t *testing.T) {
+func TestChaChat20_Cipher(t *testing.T) {
 	cfg, reg := internal.NewFastRegistryWithMocks(t)
-	aes := cipher.NewCryptAES(reg)
+	chacha := cipher.NewCryptChaCha20(reg)
 	goodSecret := []string{"secret-thirty-two-character-long"}
 
 	t.Run("case=all_work", func(t *testing.T) {
-		secret := "sc8cIZp7RlNDEc2Qg8isN"
+		secret := "TEKVrcINeH7DhNow9wPayQm9"
 
-		encryptedSecret, err := aes.Encrypt(context.Background(), secret)
+		encryptedSecret, err := chacha.Encrypt(context.Background(), secret)
 		require.NoError(t, err)
 
-		decryptedSecret, err := aes.Decrypt(context.Background(), encryptedSecret)
+		decryptedSecret, err := chacha.Decrypt(context.Background(), encryptedSecret)
 		require.NoError(t, err, "encrypted", encryptedSecret)
 		assert.Equal(t, secret, decryptedSecret)
 
 		// data to encrypt return blank result
-		_, err = aes.Encrypt(context.Background(), "")
+		_, err = chacha.Encrypt(context.Background(), "")
 		require.NoError(t, err)
 
 		// empty encrypted data return blank
-		_, err = aes.Decrypt(context.Background(), "")
+		_, err = chacha.Decrypt(context.Background(), "")
 		require.NoError(t, err)
-
 	})
 	t.Run("case=encryption_failed", func(t *testing.T) {
 		// unset secret
@@ -44,7 +41,7 @@ func TestAES_Cipher(t *testing.T) {
 		require.NoError(t, err)
 
 		// secret have to be set
-		_, err = aes.Encrypt(context.Background(), "not-empty")
+		_, err = chacha.Encrypt(context.Background(), "not-empty")
 		require.Error(t, err)
 
 		// unset secret
@@ -52,13 +49,12 @@ func TestAES_Cipher(t *testing.T) {
 		require.NoError(t, err)
 
 		// bad secret length
-		_, err = aes.Encrypt(context.Background(), "not-empty")
+		_, err = chacha.Encrypt(context.Background(), "not-empty")
 		if e, ok := err.(*herodot.DefaultError); ok {
 			t.Logf("reason contains: %s", e.Reason())
 		}
 		t.Logf("err type %T contains: %s", err, err.Error())
 		require.Error(t, err)
-
 	})
 	t.Run("case=decryption_failed", func(t *testing.T) {
 		// set secret
@@ -66,17 +62,17 @@ func TestAES_Cipher(t *testing.T) {
 		require.NoError(t, err)
 
 		//
-		_, err = aes.Decrypt(context.Background(), hex.EncodeToString([]byte("bad-data")))
+		_, err = chacha.Decrypt(context.Background(), hex.EncodeToString([]byte("bad-data")))
 		require.Error(t, err)
 
-		_, err = aes.Decrypt(context.Background(), "not-empty")
+		_, err = chacha.Decrypt(context.Background(), "not-empty")
 		require.Error(t, err)
 
 		// unset secret
 		err = cfg.Set(config.ViperKeySecretsCipher, []string{})
 		require.NoError(t, err)
 
-		_, err = aes.Decrypt(context.Background(), "not-empty")
+		_, err = chacha.Decrypt(context.Background(), "not-empty")
 		require.Error(t, err)
 	})
 }

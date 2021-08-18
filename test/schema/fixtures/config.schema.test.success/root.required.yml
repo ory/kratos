@@ -7,5 +7,5 @@ identity:
   default_schema_url: https://example.com
 
 secrets:
-  aes:
+  cipher:
     - secret-thirty-two-character-long

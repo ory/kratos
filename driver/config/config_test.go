@@ -149,7 +149,7 @@ func TestViperProvider(t *testing.T) {
 			}
 			assert.Equal(t, [][32]byte{
 				aesExpected,
-			}, p.SecretsAES())
+			}, p.SecretsCipher())
 		})
 
 		t.Run("group=methods", func(t *testing.T) {
@@ -325,6 +325,18 @@ func TestViperProvider(t *testing.T) {
 				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
 		})
 
+		t.Run("group=hashers", func(t *testing.T) {
+			c := p.HasherArgon2()
+			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
+				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
+		})
+
+		t.Run("group=crypt", func(t *testing.T) {
+			c := p.HasherArgon2()
+			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
+				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
+		})
+
 		t.Run("group=set_provider_by_json", func(t *testing.T) {
 			providerConfigJSON := `{"providers": [{"id":"github-test","provider":"github","client_id":"set_json_test","client_secret":"secret","mapper_url":"http://mapper-url","scope":["user:email"]}]}`
 			strategyConfigJSON := fmt.Sprintf(`{"enabled":true, "config": %s}`, providerConfigJSON)
@@ -443,10 +455,10 @@ func TestViperProvider_Secrets(t *testing.T) {
 	assert.NotEmpty(t, def)
 	assert.Equal(t, def, p.SecretsSession())
 	assert.Equal(t, def, p.SecretsDefault())
-	assert.Empty(t, p.SecretsAES())
-	err := p.Set(config.ViperKeySecretsAES, []string{"short-secret-key"})
+	assert.Empty(t, p.SecretsCipher())
+	err := p.Set(config.ViperKeySecretsCipher, []string{"short-secret-key"})
 	require.NoError(t, err)
-	assert.Equal(t, [][32]byte{}, p.SecretsAES())
+	assert.Equal(t, [][32]byte{}, p.SecretsCipher())
 }
 
 func TestViperProvider_Defaults(t *testing.T) {

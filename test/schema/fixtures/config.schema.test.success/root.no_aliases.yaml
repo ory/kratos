@@ -15,5 +15,5 @@ session:
     domain: foobar
 
 secrets:
-  aes:
+  cipher:
     - secret-thirty-two-character-long

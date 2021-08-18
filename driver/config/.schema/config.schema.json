@@ -1638,9 +1638,9 @@
           },
           "uniqueItems": true
         },
-        "aes": {
+        "cipher": {
           "type": "array",
-          "title": "Secrets for AES",
+          "title": "Secrets to use for encryption by cipher",
           "description": "The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.",
           "items": {
             "type": "string",
@@ -1651,7 +1651,7 @@
         }
       },
       "required": [
-        "aes"
+        "cipher"
       ],
       "additionalProperties": false
     },
@@ -1737,6 +1737,22 @@
         }
       },
       "additionalProperties": false
+    },
+    "ciphers" : {
+      "title": "Cipher Algorithm Configuration",
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "title": "ciphering algorithm",
+          "description": "One of the values: aes, chacha20",
+          "type": "string",
+          "default": "aes",
+          "enum": [
+            "aes",
+            "chacha20"
+          ]
+        }
+      }
     },
     "cookies": {
       "type": "object",

@@ -187,6 +187,9 @@ func TestHandler(t *testing.T) {
 					assert.EqualValues(t, defaultSchemaExternalURL, res.Get("schema_url").String(), "%s", res.Raw)
 					assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
 					assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
+					t.Logf("get oidc token")
+					res = get(t, ts, "/identities/"+i.ID.String()+"?reveal_credentials=oidc_token", http.StatusOK)
+					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
 				})
 			}
 		})

@@ -85,7 +85,7 @@ secrets:
     - default secret with a lot of chars
   cookie:
     - cookie secret with a lot of chars
-  aes:
+  cipher:
     - secret-thirty-two-character-long
 
 hashers:

@@ -52,5 +52,5 @@ identity:
   default_schema_url: file://test/e2e/profiles/oidc/identity.traits.schema.json
 
 secrets:
-  aes:
+  cipher:
     - secret-thirty-two-character-long

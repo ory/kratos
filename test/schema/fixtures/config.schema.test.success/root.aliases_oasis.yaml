@@ -3,7 +3,7 @@ identity:
 secrets:
   default:
     - 10yn1c7grc46j6zg284vtynebjpcvakj
-  aes:
+  cipher:
     - secret-thirty-two-character-long
 
 selfservice:

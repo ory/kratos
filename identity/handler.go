@@ -173,7 +173,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	if revealCreds := r.URL.Query().Get("reveal_credentials"); revealCreds == "oidc_token" {
+	if r.URL.Query().Get("reveal_credentials") == "oidc_token" {
 		for credType, credential := range i.Credentials {
 			if credType != CredentialsTypeOIDC {
 				continue

@@ -1742,7 +1742,7 @@ secrets:
   # - Windows Command Line (CMD):
   #    > set SECRETS_AES=<value>
   #
-  aes:
+  cipher:
     - ipsumipsumipsumi
 
   ## Default Encryption Signing Secrets ##
