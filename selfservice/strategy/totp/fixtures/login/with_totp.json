@@ -2,6 +2,19 @@
   {
     "attributes": {
       "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "ODk1MmhqeGFyeHI1bzF6czFnNTN5ZWF1ZHh3bzcwNWU="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
       "name": "totp_code",
       "required": true,
       "type": "text",
@@ -31,24 +44,11 @@
     "meta": {
       "label": {
         "context": {},
-        "id": 1010001,
-        "text": "Sign in",
+        "id": 1010009,
+        "text": "Use Authenticator",
         "type": "info"
       }
     },
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "required": true,
-      "type": "hidden",
-      "value": "N2RvMDkwbzQ4cm5qeGh6MzB3cGhmd2JmcW42eXc2Yno="
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
     "type": "input"
   }
 ]

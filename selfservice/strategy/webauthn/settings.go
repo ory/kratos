@@ -87,8 +87,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	if f.Type != flow.TypeBrowser {
 		return nil, flow.ErrStrategyNotResponsible
 	}
-
-	var p submitSelfServiceSettingsFlowWithWebAuthnMethodBody
+		var p submitSelfServiceSettingsFlowWithWebAuthnMethodBody
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueSettingsFlow(w, r, ctxUpdate, &p)
@@ -126,6 +125,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 	}
 
 	return decoderx.NewHTTP().Decode(r, dest, compiler,
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	)
@@ -322,7 +322,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	}
 
 	f.UI.Nodes.Upsert(NewWebAuthnConnectionName())
-	f.UI.Nodes.Upsert(NewWebAuthnConnection(string(injectWebAuthnOptions)))
+	f.UI.Nodes.Upsert(NewWebAuthnConnectionTrigger(string(injectWebAuthnOptions)))
+	f.UI.Nodes.Upsert(NewWebAuthnConnectionInput())
 	return nil
 }
 

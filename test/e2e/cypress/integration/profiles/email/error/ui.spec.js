@@ -1,4 +1,4 @@
-const {APP_URL} = require('../../../../helpers')
+const { APP_URL } = require('../../../../helpers')
 
 context('Email Profile', () => {
   describe('Self-Service Error UI', () => {
@@ -7,7 +7,7 @@ context('Email Profile', () => {
     })
 
     it('should show the error', () => {
-      cy.visit(`${APP_URL}/error?error=stub:500`, {
+      cy.visit(`${APP_URL}/error?id=stub:500`, {
         failOnStatusCode: false
       })
 

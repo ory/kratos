@@ -80,7 +80,8 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	sr.UI.SetNode(NewWebAuthnLogin(string(injectWebAuthnOptions)))
+	sr.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)))
+	sr.UI.Nodes.Upsert(NewWebAuthnLoginInput())
 
 	return nil
 }
