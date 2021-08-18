@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-08-11)](#2021-08-11)
+- [ (2021-08-18)](#2021-08-18)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -191,12 +191,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-11)
+# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-18)
 
 
 ### Bug Fixes
 
 * Add new message when refresh parameter is true ([#1560](https://github.com/ory/kratos/issues/1560)) ([0525623](https://github.com/ory/kratos/commit/05256232bf85d68e068eece6c883f46a447ba5bd)), closes [#1117](https://github.com/ory/kratos/issues/1117)
+* Add session in spa registration if session cook is configured ([#1657](https://github.com/ory/kratos/issues/1657)) ([639a7dd](https://github.com/ory/kratos/commit/639a7dd52d43c57e9708ed3e7360c17d6efde6a5)), closes [#1604](https://github.com/ory/kratos/issues/1604)
 * **docs:** Ensure config reference is updated ([f6b3aa4](https://github.com/ory/kratos/commit/f6b3aa45b1f39ca5e9ee7ef4cd96de1970b2ed71)), closes [#1597](https://github.com/ory/kratos/issues/1597)
 * Http context memory leak ([b21bd22](https://github.com/ory/kratos/commit/b21bd224059e8a42da9814237572a118297c5210)):
 
