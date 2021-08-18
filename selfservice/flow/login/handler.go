@@ -132,7 +132,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		// We are requesting an assurance level which the session already has. So we are not upgrading the session
 		// in which case we want to return an error.
 		if f.RequestedAAL <= sess.AuthenticatorAssuranceLevel {
-			return nil, errors.WithStack(ErrSessionHasAALAlready)
+			return nil, errors.WithStack(ErrAlreadyLoggedIn)
 		}
 
 		// Looks like we are requesting an AAL which is higher than what the session has.
@@ -462,7 +462,6 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err == nil {
 		if f.Refresh {
-			sess = session.NewInactiveSession()
 			// If we want to refresh, continue the login
 			goto continueLogin
 		}
@@ -481,7 +480,6 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusSeeOther)
 		return
 	} else if errors.Is(err, session.ErrNoActiveSessionFound) {
-
 		// Only failure scenario here is if we try to upgrade the session to a higher AAL without actually
 		// having a session.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {

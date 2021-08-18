@@ -308,11 +308,16 @@ func TestFlowLifecycle(t *testing.T) {
 				assertx.EqualAsJSON(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String(), "%s", body)
 			})
 
-			t.Run("case=can not request refresh and aal at the same time on authenticated request", func(t *testing.T) {
+			t.Run("case=can request refresh and aal at the same time on authenticated request", func(t *testing.T) {
 				res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, false)
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 				assertx.EqualAsJSON(t, "Please confirm this action by verifying that it is you.", gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", body)
 				assertx.EqualAsJSON(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.1.text").String(), "%s", body)
+			})
+
+			t.Run("case=redirects if aal2 is requested and set up already without refresh", func(t *testing.T) {
+				res, _ := initAuthenticatedFlow(t, url.Values{"aal": {"aal2"}, "set_aal": {"aal2"}}, false)
+				assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 			})
 
 			t.Run("case=can not request aal2 on unauthenticated request", func(t *testing.T) {
