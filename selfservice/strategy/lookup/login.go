@@ -2,6 +2,7 @@ package lookup
 
 import (
 	"encoding/json"
+	"github.com/ory/x/sqlcon"
 	"net/http"
 	"time"
 
@@ -105,8 +106,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), ss.IdentityID.String())
-	if err != nil {
+	if errors.Is(err, sqlcon.ErrNoRows) {
 		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoLookupDefined()))
+	} else if err != nil {
+		return nil, s.handleLoginError(r, f, err)
 	}
 
 	var o CredentialsConfig
