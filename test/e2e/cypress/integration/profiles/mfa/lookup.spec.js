@@ -1,4 +1,4 @@
-import {APP_URL, gen, website} from '../../../helpers'
+import { APP_URL, gen, website } from '../../../helpers'
 
 context('MFA Profile', () => {
   describe('Test Lookup Secrets', () => {
@@ -13,41 +13,56 @@ context('MFA Profile', () => {
       cy.clearCookies()
       email = gen.email()
       password = gen.password()
-      cy.registerApi({email, password, fields: {'traits.website': website}})
-      cy.login({email, password})
+      cy.registerApi({ email, password, fields: { 'traits.website': website } })
+      cy.login({ email, password })
       cy.longPrivilegedSessionTime()
     })
 
     it('should go through several lookup secret lifecycles', () => {
       cy.visit(APP_URL + '/settings')
 
-      cy.get('p[data-testid="text-lookup_secret_codes-label"]').should('not.exist')
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should('not.exist')
+      cy.get('p[data-testid="text-lookup_secret_codes-label"]').should(
+        'not.exist'
+      )
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(
+        'not.exist'
+      )
       cy.get('button[name="lookup_secret_confirm"]').should('not.exist')
       cy.get('button[name="lookup_secret_regenerate"]').click()
-      cy.get('p[data-testid="text-lookup_secret_codes-label"]').should('contain.text', 'These are your back up recovery codes.')
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should('not.be.empty')
+      cy.get('p[data-testid="text-lookup_secret_codes-label"]').should(
+        'contain.text',
+        'These are your back up recovery codes.'
+      )
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(
+        'not.be.empty'
+      )
 
       let codes
       let codesText
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]')
-        .then(($e) => {
-          codesText = $e.text()
-          codes = codesText.trim().split(', ')
-        })
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').then(($e) => {
+        codesText = $e.text()
+        codes = codesText.trim().split(', ')
+      })
 
       cy.get('button[name="lookup_secret_confirm"]').click()
-      cy.get('form .messages .message').should('contain.text', 'Your changes have been saved!')
+      cy.get('form .messages .message').should(
+        'contain.text',
+        'Your changes have been saved!'
+      )
 
       cy.get('button[name="lookup_secret_reveal"]').should('exist')
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should('not.exist')
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(
+        'not.exist'
+      )
       cy.get('button[name="lookup_secret_confirm"]').should('not.exist')
       cy.get('button[name="lookup_secret_regenerate"]').should('not.exist')
 
       cy.get('button[name="lookup_secret_reveal"]').click()
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(($e) => {
-        expect($e.text()).to.equal(codesText)
-      })
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(
+        ($e) => {
+          expect($e.text()).to.equal(codesText)
+        }
+      )
 
       // Try to log in with a recovery code now
       cy.visit(APP_URL + '/auth/login?aal=aal2')
@@ -60,20 +75,26 @@ context('MFA Profile', () => {
 
       // Type an invalid code
       cy.get('input[name="lookup_secret"]').should('exist')
-      cy.get('input[name="lookup_secret"]').type("invalid-code")
+      cy.get('input[name="lookup_secret"]').type('invalid-code')
       cy.get('*[name="method"][value="lookup_secret"]').click()
-      cy.get('form .messages .message').should('contain.text', 'The backup recovery code is not valid.')
+      cy.get('form .messages .message').should(
+        'contain.text',
+        'The backup recovery code is not valid.'
+      )
 
       // Type a valid code
       cy.get('input[name="lookup_secret"]').should('exist')
-      cy.get('input[name="lookup_secret"]').should("have.value", '')
+      cy.get('input[name="lookup_secret"]').should('have.value', '')
       cy.get('input[name="lookup_secret"]').then(($e) => {
         cy.wrap($e).type(codes[0])
       })
       cy.get('*[name="method"][value="lookup_secret"]').click()
 
       let authenticatedAt
-      cy.session({expectAal: 'aal2', expectMethods: ['password', 'lookup_secret']}).then((session) => {
+      cy.session({
+        expectAal: 'aal2',
+        expectMethods: ['password', 'lookup_secret']
+      }).then((session) => {
         authenticatedAt = session.authenticated_at
         expect(session.authenticator_assurance_level).to.equal('aal2')
       })
@@ -89,7 +110,10 @@ context('MFA Profile', () => {
       cy.get('*[name="method"][value="lookup_secret"]').click()
 
       // Use a valid code
-      cy.get('form .messages .message').should('contain.text', 'This backup recovery code has already been used.')
+      cy.get('form .messages .message').should(
+        'contain.text',
+        'This backup recovery code has already been used.'
+      )
       cy.get('input[name="lookup_secret"]').then(($e) => {
         cy.wrap($e).type(codes[1])
       })
@@ -105,29 +129,32 @@ context('MFA Profile', () => {
       // Going back to the settings UI we should see that the codes have been "used"
       cy.visit(APP_URL + '/settings')
       cy.get('button[name="lookup_secret_reveal"]').click()
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(($e) => {
-        let newCodes = codes
-        newCodes[0] = 'used'
-        newCodes[1] = 'used'
-        expect($e.text()).to.contain(newCodes.join(', '))
-      })
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(
+        ($e) => {
+          let newCodes = codes
+          newCodes[0] = 'used'
+          newCodes[1] = 'used'
+          expect($e.text()).to.contain(newCodes.join(', '))
+        }
+      )
 
       // Regenerating the codes means the old one become invalid
       cy.get('*[name=lookup_secret_regenerate]').click()
       let regenCodes
       let regenCodesText
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]')
-        .then(($e) => {
-          regenCodesText = $e.text()
-          regenCodes = regenCodesText.trim().split(', ')
-        })
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').then(($e) => {
+        regenCodesText = $e.text()
+        regenCodes = regenCodesText.trim().split(', ')
+      })
 
       // Confirm it
       cy.get('*[name=lookup_secret_confirm]').click()
       cy.get('*[name="lookup_secret_reveal"]').click()
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(($e) => {
-        expect($e.text()).to.equal(regenCodesText)
-      })
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(
+        ($e) => {
+          expect($e.text()).to.equal(regenCodesText)
+        }
+      )
 
       // Log in and see if we can use the old / new keys
       cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
@@ -140,7 +167,10 @@ context('MFA Profile', () => {
         cy.wrap($e).type(codes[3])
       })
       cy.get('*[name="method"][value="lookup_secret"]').click()
-      cy.get('form .messages .message').should('contain.text', 'The backup recovery code is not valid.')
+      cy.get('form .messages .message').should(
+        'contain.text',
+        'The backup recovery code is not valid.'
+      )
 
       // Using a new code succeeds
       cy.get('input[name="lookup_secret"]').then(($e) => {
@@ -151,11 +181,13 @@ context('MFA Profile', () => {
       // Going back to the settings UI we should see that the codes have been "used"
       cy.visit(APP_URL + '/settings')
       cy.get('button[name="lookup_secret_reveal"]').click()
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(($e) => {
-        let newCodes = regenCodes
-        newCodes[0] = 'used'
-        expect($e.text()).to.contain(newCodes.join(', '))
-      })
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').should(
+        ($e) => {
+          let newCodes = regenCodes
+          newCodes[0] = 'used'
+          expect($e.text()).to.contain(newCodes.join(', '))
+        }
+      )
     })
 
     it('should end up at login screen if trying to reveal without privileged session', () => {
@@ -163,28 +195,27 @@ context('MFA Profile', () => {
       cy.visit(APP_URL + '/settings')
       cy.get('button[name="lookup_secret_regenerate"]').click()
       cy.reauth({
-        expect: {email},
-        type: {email: email, password: password}
+        expect: { email },
+        type: { email: email, password: password }
       })
 
       let codes
-      cy.get('p[data-testid="text-lookup_secret_codes-content"]')
-        .then(($e) => {
-          codes = $e.text().trim().split(', ')
-        })
+      cy.get('p[data-testid="text-lookup_secret_codes-content"]').then(($e) => {
+        codes = $e.text().trim().split(', ')
+      })
 
       cy.shortPrivilegedSessionTime()
       cy.get('button[name="lookup_secret_confirm"]').click()
       cy.reauth({
-        expect: {email},
-        type: {email: email, password: password}
+        expect: { email },
+        type: { email: email, password: password }
       })
 
       cy.shortPrivilegedSessionTime()
       cy.get('button[name="lookup_secret_reveal"]').click()
       cy.reauth({
-        expect: {email},
-        type: {email: email, password: password}
+        expect: { email },
+        type: { email: email, password: password }
       })
     })
 
@@ -197,7 +228,10 @@ context('MFA Profile', () => {
       cy.get('*[name="method"][value="totp"]').should('not.exist')
       cy.get('*[name="method"][value="lookup_secret"]').should('not.exist')
       cy.get('*[name="method"][value="password"]').should('not.exist')
-      cy.get('form .messages .message').should('contain.text', 'Please complete the second authentication challenge.')
+      cy.get('form .messages .message').should(
+        'contain.text',
+        'Please complete the second authentication challenge.'
+      )
     })
   })
 })
