@@ -7,16 +7,18 @@
   "scripts": {
     "format": "prettier --write ${npm_package_config_prettierTarget}",
     "format:check": "prettier --check ${npm_package_config_prettierTarget}",
-    "test": "cypress run",
-    "test:watch": "cypress open",
+    "test": "cypress run --browser chrome",
+    "test:watch": "cypress open --browser chrome",
     "openapi-generator-cli": "openapi-generator-cli",
     "wait-on": "wait-on",
     "text-run": "exit 0"
   },
   "devDependencies": {
+    "chrome-remote-interface": "^0.31.0",
     "cypress": "^8.3.0",
     "dayjs": "^1.10.4",
     "ory-prettier-styles": "1.1.1",
+    "otplib": "^12.0.1",
     "prettier": "2.2.1",
     "wait-on": "5.3.0"
   },

@@ -15,6 +15,8 @@ const (
 	InfoSelfServiceLoginTOTPLabel                     // 1010006
 	InfoLoginLookupLabel                              // 1010007
 	InfoSelfServiceLoginWebAuthn                      // 1010008
+	InfoLoginTOTP                                     // 1010009
+	InfoLoginLookup                                   // 1010010
 )
 
 const (
@@ -67,6 +69,24 @@ func NewInfoLogin() *Message {
 	return &Message{
 		ID:      InfoSelfServiceLogin,
 		Text:    "Sign in",
+		Type:    Info,
+		Context: context(map[string]interface{}{}),
+	}
+}
+
+func NewInfoLoginTOTP() *Message {
+	return &Message{
+		ID:      InfoLoginTOTP,
+		Text:    "Use Authenticator",
+		Type:    Info,
+		Context: context(map[string]interface{}{}),
+	}
+}
+
+func NewInfoLoginLookup() *Message {
+	return &Message{
+		ID:      InfoLoginLookup,
+		Text:    "Use backup recovery code",
 		Type:    Info,
 		Context: context(map[string]interface{}{}),
 	}

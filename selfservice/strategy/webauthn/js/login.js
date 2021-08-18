@@ -29,9 +29,8 @@ return (function (e) {
     }
   });
 
-  console.log("requesting", opt)
   navigator.credentials.get(opt).then(function (credential) {
-    e.value = JSON.stringify({
+    const val = JSON.stringify({
       id: credential.id,
       rawId: bufferEncode(credential.rawId),
       type: credential.type,
@@ -42,7 +41,12 @@ return (function (e) {
         userHandle: bufferEncode(credential.response.userHandle),
       },
     })
-    e.click()
+    console.log('setting value!', val)
+    document.querySelector('input[name="webauthn_login"]').value = val
+
+    console.log('Submitting!')
+    e.closest('form').submit()
+    console.log('Done!')
   }).catch((err) => {
     alert(err)
   })

@@ -106,7 +106,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithTOTP), f.Ui.Nodes, []string{"2.attributes.value"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithTOTP), f.Ui.Nodes, []string{"0.attributes.value"})
 	})
 
 	t.Run("case=totp payload is not set when identity has no totp", func(t *testing.T) {

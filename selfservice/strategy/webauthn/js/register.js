@@ -34,7 +34,7 @@ return (function (e) {
   }
 
   navigator.credentials.create(opt).then(function (credential) {
-    e.value = JSON.stringify({
+    document.querySelector('input[name="webauthn_register"]').value = JSON.stringify({
       id: credential.id,
       rawId: bufferEncode(credential.rawId),
       type: credential.type,
@@ -43,8 +43,10 @@ return (function (e) {
         clientDataJSON: bufferEncode(credential.response.clientDataJSON),
       },
     })
-    console.log("setting", e.value)
-    e.click()
+
+    console.log('Submitting!')
+    e.closest('form').submit()
+    console.log('Done!')
   }).catch((err) => {
     alert(err)
   })

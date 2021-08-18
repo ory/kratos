@@ -57,7 +57,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithLookup), f.Ui.Nodes, []string{"2.attributes.value"})
+		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithLookup), f.Ui.Nodes, []string{"0.attributes.value"})
 	})
 
 	t.Run("case=lookup payload is not set when identity has no lookup", func(t *testing.T) {

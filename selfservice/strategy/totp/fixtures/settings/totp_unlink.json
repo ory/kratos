@@ -5,29 +5,11 @@
       "name": "csrf_token",
       "required": true,
       "type": "hidden",
-      "value": "Z3c5c202ZWptbzBubmFmMmRvNml1MjRwaW5peHE0ZjI="
+      "value": "ODk1MmhqeGFyeHI1bzF6czFnNTN5ZWF1ZHh3bzcwNWU="
     },
     "group": "default",
     "messages": [],
     "meta": {},
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "method",
-      "type": "submit",
-      "value": "totp"
-    },
-    "group": "totp",
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1070003,
-        "text": "Save",
-        "type": "info"
-      }
-    },
     "type": "input"
   },
   {

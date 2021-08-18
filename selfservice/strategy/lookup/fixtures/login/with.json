@@ -2,6 +2,19 @@
   {
     "attributes": {
       "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "YXA2OGtnOXZ3a3F3M3M3MGVtYXBraHJjeHEyMzB5aTU="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
       "name": "lookup_secret",
       "required": true,
       "type": "text",
@@ -31,24 +44,11 @@
     "meta": {
       "label": {
         "context": {},
-        "id": 1010001,
-        "text": "Sign in",
+        "id": 1010010,
+        "text": "Use backup recovery code",
         "type": "info"
       }
     },
-    "type": "input"
-  },
-  {
-    "attributes": {
-      "disabled": false,
-      "name": "csrf_token",
-      "required": true,
-      "type": "hidden",
-      "value": "anhicmI2dWFhMWlwbHlydWNhZnF4cW13dXhmOW1ucDc="
-    },
-    "group": "default",
-    "messages": [],
-    "meta": {},
     "type": "input"
   }
 ]

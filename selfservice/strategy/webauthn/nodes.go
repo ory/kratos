@@ -15,20 +15,30 @@ var jsRegister []byte
 //go:embed js/login.js
 var jsLogin []byte
 
-func NewWebAuthnConnection(options string) *node.Node {
-	return node.NewInputField(node.WebAuthnRegister, "", node.WebAuthnGroup,
+func NewWebAuthnConnectionTrigger(options string) *node.Node {
+	return node.NewInputField(node.WebAuthnRegisterTrigger, "", node.WebAuthnGroup,
 		node.InputAttributeTypeSubmit, node.WithInputAttributes(func(a *node.InputAttributes) {
 			a.OnClick = strings.Replace(string(jsRegister), "injectWebAuthnOptions", options, 1)
 		})).
 		WithMetaLabel(text.NewInfoSelfServiceRegisterWebAuthn())
 }
 
-func NewWebAuthnLogin(options string) *node.Node {
-	return node.NewInputField(node.WebAuthnLogin, "", node.WebAuthnGroup,
+func NewWebAuthnConnectionInput() *node.Node {
+	return node.NewInputField(node.WebAuthnRegister, "", node.WebAuthnGroup,
+		node.InputAttributeTypeHidden)
+}
+
+func NewWebAuthnLoginTrigger(options string) *node.Node {
+	return node.NewInputField(node.WebAuthnLoginTrigger, "", node.WebAuthnGroup,
 		node.InputAttributeTypeSubmit, node.WithInputAttributes(func(a *node.InputAttributes) {
 			a.OnClick = strings.Replace(string(jsLogin), "injectWebAuthnOptions", options, 1)
 		})).
 		WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn())
+}
+
+func NewWebAuthnLoginInput() *node.Node {
+	return node.NewInputField(node.WebAuthnLogin, "", node.WebAuthnGroup,
+		node.InputAttributeTypeHidden)
 }
 
 func NewWebAuthnConnectionName() *node.Node {
