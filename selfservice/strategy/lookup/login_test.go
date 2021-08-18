@@ -76,9 +76,8 @@ func TestCompleteLogin(t *testing.T) {
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
 
-	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+	doAPIFlowWithClient := func(t *testing.T, v func(url.Values), id *identity.Identity, apiClient *http.Client, forced bool) (string, *http.Response) {
+		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, forced, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", identity.CredentialsTypeLookup.String())
 		v(values)
@@ -86,13 +85,22 @@ func TestCompleteLogin(t *testing.T) {
 		return testhelpers.LoginMakeRequest(t, true, false, f, apiClient, payload)
 	}
 
-	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+		return doAPIFlowWithClient(t, v, id, apiClient, false)
+	}
+
+	doBrowserFlowWithClient := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity, browserClient *http.Client, forced bool) (string, *http.Response) {
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, forced, spa, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", identity.CredentialsTypeLookup.String())
 		v(values)
 		return testhelpers.LoginMakeRequest(t, false, spa, f, browserClient, values.Encode())
+	}
+
+	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+		return doBrowserFlowWithClient(t, spa, v, id, browserClient, false)
 	}
 
 	checkURL := func(t *testing.T, shouldRedirect bool, res *http.Response) {
@@ -181,7 +189,7 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		startAt := time.Now()
-		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response, usedKey string) {
+		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response, usedKey string, expectedAuths int) {
 			prefix := "session."
 			if shouldRedirect {
 				assert.Contains(t, res.Request.URL.String(), redirTS.URL+"/return-ts")
@@ -191,12 +199,20 @@ func TestCompleteLogin(t *testing.T) {
 			}
 			assert.True(t, gjson.Get(body, prefix+"active").Bool(), "%s", body)
 			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, gjson.Get(body, prefix+"authenticator_assurance_level").String())
-			require.Len(t, gjson.Get(body, prefix+"authentication_methods").Array(), 2)
-			assert.EqualValues(t, identity.CredentialsTypePassword, gjson.Get(body, prefix+"authentication_methods.0.method").String(), 2)
-			assert.True(t, gjson.Get(body, prefix+"authentication_methods.0.completed_at").Time().After(startAt), 2)
-			assert.EqualValues(t, identity.CredentialsTypeLookup, gjson.Get(body, prefix+"authentication_methods.1.method").String(), 2)
-			assert.True(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().After(startAt), 2)
-			assert.True(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().After(gjson.Get(body, prefix+"authentication_methods.0.completed_at").Time()), 2)
+			require.Len(t, gjson.Get(body, prefix+"authentication_methods").Array(), expectedAuths)
+			assert.EqualValues(t, identity.CredentialsTypePassword, gjson.Get(body, prefix+"authentication_methods.0.method").String())
+			assert.True(t, gjson.Get(body, prefix+"authentication_methods.0.completed_at").Time().After(startAt))
+			assert.EqualValues(t, identity.CredentialsTypeLookup, gjson.Get(body, prefix+"authentication_methods.1.method").String())
+			assert.True(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().After(startAt))
+			assert.True(t, gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time().After(gjson.Get(body, prefix+"authentication_methods.0.completed_at").Time()))
+			if expectedAuths == 3 {
+				assert.EqualValues(t, identity.CredentialsTypeLookup, gjson.Get(body, prefix+"authentication_methods.2.method").String())
+				assert.True(t, gjson.Get(body, prefix+"authentication_methods.2.completed_at").Time().After(startAt))
+				assert.True(t, gjson.Get(body, prefix+"authentication_methods.2.completed_at").Time().After(gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time()))
+				assert.False(t, gjson.Get(body, prefix+"authenticated_at").Time().Before(gjson.Get(body, prefix+"authentication_methods.2.completed_at").Time()))
+			} else {
+				assert.False(t, gjson.Get(body, prefix+"authenticated_at").Time().Before(gjson.Get(body, prefix+"authentication_methods.1.completed_at").Time()))
+			}
 
 			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.Get(body, prefix+"identity.id").String()))
 			require.NoError(t, err)
@@ -218,18 +234,30 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			body, res := doAPIFlow(t, payload("key-0"), id)
-			check(t, false, body, res, "key-0")
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+			body, res := doAPIFlowWithClient(t, payload("key-0"), id, apiClient, false)
+			check(t, false, body, res, "key-0", 2)
+			// We can still use another key
+			body, res = doAPIFlowWithClient(t, payload("key-2"), id, apiClient, true)
+			check(t, false, body, res, "key-2", 3)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			body, res := doBrowserFlow(t, false, payload("key-2"), id)
-			check(t, true, body, res, "key-2")
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			body, res := doBrowserFlowWithClient(t, false, payload("key-3"), id, browserClient, false)
+			check(t, true, body, res, "key-3", 2)
+			// We can still use another key
+			body, res = doBrowserFlowWithClient(t, false, payload("key-5"), id, browserClient, true)
+			check(t, true, body, res, "key-5", 3)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			body, res := doBrowserFlow(t, true, payload("key-3"), id)
-			check(t, false, body, res, "key-3")
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+			body, res := doBrowserFlowWithClient(t, true, payload("key-6"), id, browserClient, false)
+			check(t, false, body, res, "key-6", 2)
+			// We can still use another key
+			body, res = doBrowserFlowWithClient(t, true, payload("key-8"), id, browserClient, true)
+			check(t, false, body, res, "key-8", 3)
 		})
 	})
 
