@@ -4,11 +4,13 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/driver/config"
+	"io"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/chacha20poly1305"
-	"io"
+
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/driver/config"
 )
 
 type ChaCha20Configuration interface {
@@ -50,7 +52,7 @@ func (c *ChaCha20) Encrypt(ctx context.Context, clearString string) (string, err
 }
 
 // Decrypt decrypt data using 256 bit key
-func (c *ChaCha20) Decrypt (ctx context.Context, encryptedString string) (string, error) {
+func (c *ChaCha20) Decrypt(ctx context.Context, encryptedString string) (string, error) {
 	if len(encryptedString) == 0 {
 		return "", nil
 	}

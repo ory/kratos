@@ -3,13 +3,15 @@ package cipher_test
 import (
 	"context"
 	"encoding/hex"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestChaChat20_Cipher(t *testing.T) {

@@ -3,8 +3,9 @@ package cipher_test
 import (
 	"context"
 	"encoding/hex"
-	"github.com/ory/herodot"
 	"testing"
+
+	"github.com/ory/herodot"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
