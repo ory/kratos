@@ -31,20 +31,13 @@ build:
 	@printf "\n------ Building local image `tput setaf 3`$(LOCAL_TAG)`tput sgr0` ------ \n\n"
 	docker build -f .docker/Dockerfile-build -t $(LOCAL_TAG) .
 
-# get-local-hash:
-# 	$(eval LOCAL_HASH := $(shell docker images --no-trunc --quiet $(LOCAL_TAG) | awk -F: '{ print substr($$2,1,12) }'))
-
-# aws-tag: get-local-hash
 aws-tag:
 	@printf "\n------ Preparing image `tput setaf 3`$(ECR_DIRECTORY):$(TAG)`tput sgr0` for AWS ------ \n\n"
 	docker tag $(LOCAL_TAG) $(ECR_PATH):$(TAG)
-# docker tag $(LOCAL_TAG) $(ECR_PATH):$(LOCAL_HASH)
 
-# aws-push: get-local-hash
 aws-push:
 	@printf "\n------ Pushing image `tput setaf 3`$(ECR_DIRECTORY):$(TAG)`tput sgr0` to AWS ------ \n\n"
 	docker push $(ECR_PATH):$(TAG)
-# docker push $(ECR_PATH):$(LOCAL_HASH)
 
 build-publish: LOCAL_TAG="$(LOCAL_TAG_BASE):$(TAG)"
 build-publish: build auth aws-tag aws-push alert-success
