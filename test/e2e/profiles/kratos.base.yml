@@ -31,6 +31,12 @@ selfservice:
 serve:
   public:
     base_url: http://localhost:4455/
+    cors:
+      enabled: true
+      allowed_headers:
+        - Authorization
+        - Content-Type
+        - X-Session-Token
   admin:
     base_url: http://kratos:4434/
 
