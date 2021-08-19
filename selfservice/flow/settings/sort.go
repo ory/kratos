@@ -16,7 +16,7 @@ func sortNodes(n node.Nodes, schemaRef string) error {
 			node.WebAuthnGroup,
 			node.TOTPGroup,
 		}),
-		node.SortUseOrder([]string{
+		node.SortUseOrderAppend([]string{
 			// Lookup
 			node.LookupReveal,
 			node.LookupRegenerate,

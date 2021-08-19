@@ -1,5 +1,5 @@
 {
-  "action": "http://127.0.0.1:57783/self-service/settings?flow=43dadb18-009f-4e1b-80ce-d1c1c31cbec7",
+  "action": "http://127.0.0.1:59016/self-service/settings?flow=39541a0a-753c-41bd-8f59-cc2ac1b02ed4",
   "method": "POST",
   "nodes": [
     {
@@ -8,7 +8,7 @@
         "name": "csrf_token",
         "required": true,
         "type": "hidden",
-        "value": "YTUycXZiN2ZxZThvbmZmOHg1N3hzd3lyZHFucTVwenY="
+        "value": "MGJxbTV5b291N3JnbTNkdTV4ZHlpazYwOGtvb3hzejQ="
       },
       "group": "default",
       "messages": [],
@@ -25,24 +25,6 @@
       "group": "profile",
       "messages": [],
       "meta": {},
-      "type": "input"
-    },
-    {
-      "attributes": {
-        "disabled": false,
-        "name": "method",
-        "type": "submit",
-        "value": "profile"
-      },
-      "group": "profile",
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1070003,
-          "text": "Save",
-          "type": "info"
-        }
-      },
       "type": "input"
     },
     {
@@ -110,9 +92,9 @@
         "disabled": false,
         "name": "method",
         "type": "submit",
-        "value": "password"
+        "value": "profile"
       },
-      "group": "password",
+      "group": "profile",
       "messages": [],
       "meta": {
         "label": {
@@ -136,6 +118,24 @@
         "label": {
           "id": 1070001,
           "text": "Password",
+          "type": "info"
+        }
+      },
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "method",
+        "type": "submit",
+        "value": "password"
+      },
+      "group": "password",
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1070003,
+          "text": "Save",
           "type": "info"
         }
       },

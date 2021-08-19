@@ -1,0 +1,155 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "`+x.FakeCSRFToken+`"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.email",
+      "type": "email",
+      "value": "hackerman+github+`+testID+`@ory.sh"
+    },
+    "group": "profile",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "traits.name",
+      "type": "text"
+    },
+    "group": "profile",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "profile"
+    },
+    "group": "profile",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "password",
+      "required": true,
+      "type": "password"
+    },
+    "group": "password",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "type": "submit",
+      "value": "password"
+    },
+    "group": "password",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "github"
+    },
+    "group": "oidc",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "github"
+        },
+        "id": 1050003,
+        "text": "Unlink github",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "link",
+      "type": "submit",
+      "value": "google"
+    },
+    "group": "oidc",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "google"
+        },
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "unlink",
+      "type": "submit",
+      "value": "ory"
+    },
+    "group": "oidc",
+    "messages": [],
+    "meta": {
+      "label": {
+        "context": {
+          "provider": "ory"
+        },
+        "id": 1050003,
+        "text": "Unlink ory",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]
