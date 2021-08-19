@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **Id** | **string** | A unique identifier | 
 **Text** | [**UiText**](UiText.md) |  | 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
+**Width** | Pointer to **int64** | Height of the image | [optional] 
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
 **Title** | [**UiText**](UiText.md) |  | 
 
@@ -291,6 +292,31 @@ and a boolean to check if the value has been set.
 
 SetSrc sets Src field to given value.
 
+
+### GetWidth
+
+`func (o *UiNodeAttributes) GetWidth() int64`
+
+GetWidth returns the Width field if non-nil, zero value otherwise.
+
+### GetWidthOk
+
+`func (o *UiNodeAttributes) GetWidthOk() (*int64, bool)`
+
+GetWidthOk returns a tuple with the Width field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetWidth
+
+`func (o *UiNodeAttributes) SetWidth(v int64)`
+
+SetWidth sets Width field to given value.
+
+### HasWidth
+
+`func (o *UiNodeAttributes) HasWidth() bool`
+
+HasWidth returns a boolean if a field has been set.
 
 ### GetHref
 

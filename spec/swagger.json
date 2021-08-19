@@ -3844,6 +3844,11 @@
         "src": {
           "description": "The image's source URL.\n\nformat: uri",
           "type": "string"
+        },
+        "width": {
+          "description": "Height of the image",
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

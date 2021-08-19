@@ -85,6 +85,12 @@ type ImageAttributes struct {
 	//
 	// required: true
 	Identifier string `json:"id"`
+
+	// Width of the image
+	Width int `json:"width,omitempty"`
+
+	// Height of the image
+	Height int `json:"height,omitempty"`
 }
 
 // AnchorAttributes represents the attributes of an anchor node.
