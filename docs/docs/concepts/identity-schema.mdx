@@ -1,6 +1,6 @@
 ---
-id: identity-data-model
-title: Identity Data Model
+id: identity-schema
+title: Identity Schema
 ---
 
 import Mermaid from '@theme/Mermaid'
@@ -119,8 +119,8 @@ in the following situations:
   support or staff;
 - the system includes both users and robots sometimes also known as named
   service accounts;
-- the system needs to ingest another company's identity model, and
-- the system's identity model changes or grows over time and requires
+- the system needs to ingest another company's Identity Schema, and
+- the system's Identity Schema changes or grows over time and requires
   versioning.
 
 The following example illustrates a usage scenario with three types of
@@ -171,6 +171,16 @@ switch (session.Identity.SchemaID) {
         // ...
 }
 ```
+
+:::warning
+
+Please keep in mind that the Identity Schema is not a place to store sensitive
+information that should not be visible to the end-user! Users can see traits and
+other data - except credentials - using the `sessions/whoami` endpoint. The
+Identity Schema is not the right place to store data that should be obfuscated
+from the user!
+
+:::
 
 ## JSON Schema Vocabulary Extensions
 

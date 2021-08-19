@@ -87,17 +87,17 @@ selfservice:
   methods:
     link:
       enabled: true
-  config:
-    # Defines how long a recovery link is valid for (default 1h)
-    lifespan: 15m
+      config:
+        # Defines how long a recovery link is valid for (default 1h)
+        lifespan: 15m
 
   flows:
     verification:
       enabled: true
 
-  # Defines how long a recovery flow (the UI interaction, not the link!)
-  # is valid for (default 1h)
-  lifespan: 15m
+      # Defines how long a recovery flow (the UI interaction, not the link!)
+      # is valid for (default 1h)
+      lifespan: 15m
 ```
 
   </TabItem>
@@ -154,7 +154,7 @@ template IDs are:
 - Known email address: `verification_valid`
 
 You must define at least one Identity Traits field as a verification field. You
-can do so by defining the following section in your Identity JSON Schema:
+can do so by defining the following section in your Identity Schema:
 
 ```diff
  {

@@ -10,7 +10,7 @@ payloads.
 
 We rely on JSON Schema heavily internally, from configuration validation to
 generating OpenAPI Spec to writing documentation. By using Ory Kratos, you will
-be exposed to JSON Schema as it is used for defining Identity data models and
+be exposed to JSON Schema as it is used for defining Identity Schemas and
 other things.
 
 To learn more about JSON Schema, head over to
