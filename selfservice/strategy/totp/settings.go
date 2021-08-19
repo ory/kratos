@@ -249,8 +249,11 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	if hasTOTP {
 		f.UI.Nodes.Upsert(NewUnlinkTOTPNode())
 	} else {
+		e := NewSchemaExtension(id.ID.String())
+		_ = s.d.IdentityValidator().ValidateWithRunner(r.Context(), id, e)
+
 		// No TOTP set up yet, add nodes allowing us to add it.
-		key, err := NewKey(r.Context(), id.ID.String(), s.d)
+		key, err := NewKey(r.Context(), e.AccountName, s.d)
 		if err != nil {
 			return err
 		}
