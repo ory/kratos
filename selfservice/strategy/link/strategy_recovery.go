@@ -255,24 +255,19 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	}
 }
 
-func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, f *recovery.Flow, recoveredID uuid.UUID) error {
-	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), recoveredID)
-	if err != nil {
-		return s.HandleRecoveryError(w, r, f, nil, err)
-	}
-
+func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity) error {
 	f.UI.Messages.Clear()
 	f.State = recovery.StatePassedChallenge
 	f.SetCSRFToken(flow.GetCSRFToken(s.d, w, r, f.Type))
 	f.RecoveredIdentityID = uuid.NullUUID{
-		UUID:  recoveredID,
+		UUID:  id.ID,
 		Valid: true,
 	}
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
-	sess, _ := session.NewActiveSession(recovered, s.d.Config(r.Context()), time.Now().UTC())
+	sess, _ := session.NewActiveSession(id, s.d.Config(r.Context()), time.Now().UTC())
 	if err := s.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, sess); err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
@@ -327,7 +322,16 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	return s.recoveryIssueSession(w, r, f, token.RecoveryAddress.IdentityID)
+	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.RecoveryAddress.IdentityID)
+	if err != nil {
+		return s.HandleRecoveryError(w, r, f, nil, err)
+	}
+
+	if err := s.markRecoveryAddressVerified(w, r, f, recovered, token.RecoveryAddress); err != nil {
+		return s.HandleRecoveryError(w, r, f, body, err)
+	}
+
+	return s.recoveryIssueSession(w, r, f, recovered)
 }
 
 func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {
@@ -385,6 +389,27 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	req.UI.Messages.Set(text.NewRecoveryEmailSent())
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), req); err != nil {
 		return s.HandleRecoveryError(w, r, req, body, err)
+	}
+
+	return nil
+}
+
+func (s *Strategy) markRecoveryAddressVerified(w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity, recoveryAddress *identity.RecoveryAddress) error {
+	var address *identity.VerifiableAddress
+	for _, va := range id.VerifiableAddresses {
+		if va.Value == recoveryAddress.Value {
+			address = &va
+			break
+		}
+	}
+
+	if address != nil && !address.Verified { // can it be that the address is nil?
+		address.Verified = true
+		address.VerifiedAt = sqlxx.NullTime(time.Now().UTC())
+		address.Status = identity.VerifiableAddressStatusCompleted
+		if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
+			return s.HandleRecoveryError(w, r, f, nil, err)
+		}
 	}
 
 	return nil
