@@ -223,12 +223,12 @@ func TestSettings(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			actual := testhelpers.SubmitSettingsForm(t, true, false, apiUser1, publicTS, payload, http.StatusOK, publicTS.URL+settings.RouteSubmitFlow)
-			check(t, gjson.Get(actual, "flow").Raw)
+			check(t, actual)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			actual := testhelpers.SubmitSettingsForm(t, false, true, browserUser1, publicTS, payload, http.StatusOK, publicTS.URL+settings.RouteSubmitFlow)
-			check(t, gjson.Get(actual, "flow").Raw)
+			check(t, actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -338,12 +338,12 @@ func TestSettings(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			actual := expectSuccess(t, true, false, apiUser2, payload)
-			check(t, gjson.Get(actual, "flow").Raw, apiIdentity2)
+			check(t, actual, apiIdentity2)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			actual := expectSuccess(t, false, true, browserUser2, payload)
-			check(t, gjson.Get(actual, "flow").Raw, browserIdentity2)
+			check(t, actual, browserIdentity2)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
