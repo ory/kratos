@@ -2,9 +2,9 @@ include .env
 export $(shell sed 's/=.*//' .env)
 
 CONTAINER_NAME := kratos
-ECR_DIRECTORY  := base.cas/api/$(CONTAINER_NAME)
+ECR_DIRECTORY_VERSIONS  := base.cas/api/$(CONTAINER_NAME)
+ECR_DIRECTORY_BRANCHES  := base.cas/api/$(CONTAINER_NAME)-dev
 ECR_DOMAIN     := 140484324944.dkr.ecr.ap-northeast-1.amazonaws.com
-ECR_PATH       := $(ECR_DOMAIN)/$(ECR_DIRECTORY)
 LOCAL_TAG_BASE := aws-emcloud-$(CONTAINER_NAME)-base
 
 .PHONY: branch-var-check
@@ -40,26 +40,27 @@ aws-push:
 	docker push $(ECR_PATH):$(TAG)
 
 build-publish: LOCAL_TAG="$(LOCAL_TAG_BASE):$(TAG)"
+build-publish: ECR_PATH=$(ECR_DOMAIN)/$(ECR_DIRECTORY)
 build-publish: build auth aws-tag aws-push alert-success
 
 .SILENT: branch-safety-check
 branch-safety-check:
 	@printf "The following image tag will be used: `tput setaf 3`$(KRATOS_IMAGE_TAG_BRANCH_NAME)`tput sgr0`\n\
-	This version will be UPLOADED to AWS and may override existing versions of the same name if any.\n\n"; \
+	This branch image will be `tput bold`UPLOADED to AWS`tput sgr0` and `tput smul`may override existing versions`tput sgr0` of the same name if any.\n\n"; \
 	read -p "Type y to proceed: " consent; \
-	if [[ $$consent == "y" ]]; then \
+	if [ $$consent == "y" ]; then \
 		echo "Proceeding..."; \
 	else \
 		echo "Aborting..."; \
-		exit 0; \
+		exit 1; \
 	fi
 
 .SILENT: version-safety-check
 version-safety-check:
 	@printf "`tput smso`SAFETY CHECK`tput sgr0`: please retype the version number to publish (it should match what is in your .env file).\n\
-	This version will be `tput smul`UPLOADED to AWS and may override existing versions`tput sgr0` if the number is the same.\n\n"; \
+	This version image will be `tput bold``tput smul`UPLOADED to AWS and will fail`tput sgr0` if it matches an existing version.\n\n"; \
 	read -p "Version number to publish: " version; \
-	if [[ $$version == "$(KRATOS_IMAGE_TAG_VERSION)" ]]; then \
+	if [ $$version == "$(KRATOS_IMAGE_TAG_VERSION)" ]; then \
 		echo "Proceeding..."; \
 	else \
 		echo "Sorry, this does not match the value in your .env file."; \
@@ -70,19 +71,16 @@ version-safety-check:
 alert-success:
 	@printf "\n`tput setaf 2`The build and upload to AWS succeeded`tput sgr0`\n"
 
-.SILENT: warn-envfile
-warn-envfile:
-	@printf "\n`tput smso`IMPORTANT`tput sgr0`: `tput smul`remove the tag version from your .env file`tput sgr0` just to be extra safe.\nThe next upload will likely use a different version number and you don't want to risk overriding this one now do you?\n"
-
 # build and publish only the branch tag to AWS
 build-publish-branch: branch-var-check
+build-publish-branch: ECR_DIRECTORY:=$(ECR_DIRECTORY_BRANCHES)
 build-publish-branch: TAG:=$(KRATOS_IMAGE_TAG_BRANCH_NAME)
 build-publish-branch: branch-safety-check
 build-publish-branch: build-publish
 
 # build and publish only the version tag to AWS
 build-publish-version: version-var-check
+build-publish-version: ECR_DIRECTORY:=$(ECR_DIRECTORY_VERSIONS)
 build-publish-version: TAG:=$(KRATOS_IMAGE_TAG_VERSION)
 build-publish-version: version-safety-check
 build-publish-version: build-publish
-build-publish-version: warn-envfile
