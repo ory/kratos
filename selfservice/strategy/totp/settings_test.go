@@ -59,7 +59,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/settings.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=device unlinking is available when identity has totp", func(t *testing.T) {
@@ -297,13 +297,14 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("type=set up TOTP device", func(t *testing.T) {
 		checkIdentity := func(t *testing.T, id *identity.Identity, key string) {
-			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			i, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.NoError(t, err)
 			var c totp.CredentialsConfig
 			require.NoError(t, json.Unmarshal(cred.Config, &c))
 			actual, err := otp.NewKeyFromURL(c.TOTPURL)
 			require.NoError(t, err)
 			assert.Equal(t, key, actual.Secret())
+			assert.Contains(t, c.TOTPURL, gjson.GetBytes(i.Traits, "subject").String())
 		}
 
 		run := func(t *testing.T, isAPI, isSPA bool, id *identity.Identity, hc *http.Client, f *kratos.SelfServiceSettingsFlow) {
