@@ -572,6 +572,12 @@
             "schema": {
               "$ref": "#/definitions/submitSelfServiceLoginFlowBody"
             }
+          },
+          {
+            "type": "string",
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "name": "X-Session-Token",
+            "in": "header"
           }
         ],
         "responses": {
@@ -626,6 +632,12 @@
             "description": "Request a Specific AuthenticationMethod Assurance Level\n\nUse this parameter to upgrade an existing session's authenticator assurance level (AAL). This\nallows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password,\nthe AAL is 1. If you wish to \"upgrade\" the session's security by asking the user to perform TOTP / WebAuth/ ...\nyou would set this to \"aal2\".",
             "name": "aal",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "name": "X-Session-Token",
+            "in": "header"
           }
         ],
         "responses": {
@@ -677,6 +689,12 @@
             "description": "Request a Specific AuthenticationMethod Assurance Level\n\nUse this parameter to upgrade an existing session's authenticator assurance level (AAL). This\nallows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password,\nthe AAL is 1. If you wish to \"upgrade\" the session's security by asking the user to perform TOTP / WebAuth/ ...\nyou would set this to \"aal2\".",
             "name": "aal",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "name": "X-Session-Token",
+            "in": "header"
           }
         ],
         "responses": {
@@ -3727,21 +3745,6 @@
         "session_token": {
           "description": "The Session Token\n\nThis field is only set when the session hook is configured as a post-registration hook.\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
           "type": "string"
-        }
-      }
-    },
-    "successfulSelfServiceSettingsWithoutBrowser": {
-      "description": "The Response for Settings Flows via API",
-      "type": "object",
-      "required": [
-        "flow"
-      ],
-      "properties": {
-        "flow": {
-          "$ref": "#/definitions/selfServiceSettingsFlow"
-        },
-        "identity": {
-          "$ref": "#/definitions/identity"
         }
       }
     },

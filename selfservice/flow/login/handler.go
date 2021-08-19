@@ -204,6 +204,11 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 	//
 	// in: query
 	RequestAAL identity.AuthenticatorAssuranceLevel `json:"aal"`
+
+	// The Session Token of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
 }
 
 // swagger:route GET /self-service/login/api v0alpha1 initializeSelfServiceLoginFlowWithoutBrowser
@@ -394,6 +399,11 @@ type submitSelfServiceLoginFlow struct {
 
 	// in: body
 	Body submitSelfServiceLoginFlowBody
+
+	// The Session Token of the Identity performing the settings flow.
+	//
+	// in: header
+	SessionToken string `json:"X-Session-Token"`
 }
 
 // swagger:model submitSelfServiceLoginFlowBody

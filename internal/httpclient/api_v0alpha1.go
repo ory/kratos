@@ -3152,10 +3152,11 @@ func (a *V0alpha1ApiService) GetSelfServiceVerificationFlowExecute(r V0alpha1Api
 }
 
 type V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest struct {
-	ctx        context.Context
-	ApiService V0alpha1Api
-	refresh    *bool
-	aal        *string
+	ctx           context.Context
+	ApiService    V0alpha1Api
+	refresh       *bool
+	aal           *string
+	xSessionToken *string
 }
 
 func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Refresh(refresh bool) V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
@@ -3164,6 +3165,10 @@ func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Refresh(
 }
 func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Aal(aal string) V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
 	r.aal = &aal
+	return r
+}
+func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+	r.xSessionToken = &xSessionToken
 	return r
 }
 
@@ -3244,6 +3249,9 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -3291,10 +3299,11 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 }
 
 type V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest struct {
-	ctx        context.Context
-	ApiService V0alpha1Api
-	refresh    *bool
-	aal        *string
+	ctx           context.Context
+	ApiService    V0alpha1Api
+	refresh       *bool
+	aal           *string
+	xSessionToken *string
 }
 
 func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Refresh(refresh bool) V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
@@ -3303,6 +3312,10 @@ func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Refre
 }
 func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Aal(aal string) V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
 	r.aal = &aal
+	return r
+}
+func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
+	r.xSessionToken = &xSessionToken
 	return r
 }
 
@@ -3383,6 +3396,9 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowWithoutBrowserExecute
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -4495,11 +4511,16 @@ type V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest struct {
 	ctx                            context.Context
 	ApiService                     V0alpha1Api
 	flow                           *string
+	xSessionToken                  *string
 	submitSelfServiceLoginFlowBody *SubmitSelfServiceLoginFlowBody
 }
 
 func (r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) Flow(flow string) V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest {
 	r.flow = &flow
+	return r
+}
+func (r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest {
+	r.xSessionToken = &xSessionToken
 	return r
 }
 func (r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) SubmitSelfServiceLoginFlowBody(submitSelfServiceLoginFlowBody SubmitSelfServiceLoginFlowBody) V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest {
@@ -4592,6 +4613,9 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLoginFlowExecute(r V0alpha1ApiApiS
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	// body params
 	localVarPostBody = r.submitSelfServiceLoginFlowBody
