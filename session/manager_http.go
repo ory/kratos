@@ -20,6 +20,7 @@ type (
 	managerHTTPDependencies interface {
 		config.Provider
 		identity.PoolProvider
+		identity.PrivilegedPoolProvider
 		x.CookieProvider
 		x.CSRFProvider
 		PersistenceProvider
@@ -165,4 +166,32 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, requestedAAL string) error {
+	sess.SetAuthenticatorAssuranceLevel()
+	switch requestedAAL {
+	case string(identity.AuthenticatorAssuranceLevel1):
+		if sess.AuthenticatorAssuranceLevel >= identity.AuthenticatorAssuranceLevel1 {
+			return nil
+		}
+	case "highest_available":
+		i, err := s.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.IdentityID)
+		if err != nil {
+			return err
+		}
+
+		hasCredentials := make([]identity.CredentialsType, 0)
+		for ct := range i.Credentials {
+			hasCredentials = append(hasCredentials, ct)
+		}
+
+		available := identity.DetermineAAL(hasCredentials)
+		if sess.AuthenticatorAssuranceLevel >= available {
+			return nil
+		}
+
+		return errors.WithStack(ErrAALNotSatisfied)
+	}
+	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }

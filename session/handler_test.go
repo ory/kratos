@@ -8,6 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/identity"
+
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -49,10 +53,57 @@ func TestSessionWhoAmI(t *testing.T) {
 	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)
-
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
 
-	t.Run("public", func(t *testing.T) {
+	t.Run("case=aal requirements", func(t *testing.T) {
+		h1, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn})
+		r.GET("/set/aal2-aal2", h1)
+
+		h2, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL2Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
+		r.GET("/set/aal2-aal1", h2)
+
+		h3, _ := testhelpers.MockSessionCreateHandlerWithIdentityAndAMR(t, reg, createAAL1Identity(t, reg), []identity.CredentialsType{identity.CredentialsTypePassword})
+		r.GET("/set/aal1-aal1", h3)
+
+		run := func(t *testing.T, kind string, code int) string {
+			client := testhelpers.NewClientWithCookies(t)
+			testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set/"+kind)
+
+			res, err := client.Get(ts.URL + RouteWhoami)
+			require.NoError(t, err)
+			body := x.MustReadAll(res.Body)
+			assert.EqualValues(t, code, res.StatusCode)
+			return string(body)
+		}
+
+		t.Run("case=aal2-aal2", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+			run(t, "aal2-aal2", http.StatusOK)
+		})
+
+		t.Run("case=aal2-aal2", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "aal1")
+			run(t, "aal2-aal2", http.StatusOK)
+		})
+
+		t.Run("case=aal2-aal1", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+			body := run(t, "aal2-aal1", http.StatusForbidden)
+			assert.EqualValues(t, ErrAALNotSatisfied.Reason(), gjson.Get(body, "error.reason").String(), body)
+		})
+
+		t.Run("case=aal2-aal1", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "aal1")
+			run(t, "aal2-aal1", http.StatusOK)
+		})
+
+		t.Run("case=aal1-aal1", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+			run(t, "aal1-aal1", http.StatusOK)
+		})
+	})
+
+	t.Run("case=http methods", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 
 		// No cookie yet -> 401
@@ -84,6 +135,93 @@ func TestSessionWhoAmI(t *testing.T) {
 			})
 		}
 	})
+
+	/*
+
+
+		t.Run("case=respects AAL config", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+
+			t.Run("required_aal=aal1", func(t *testing.T) {
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+
+				i := identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+				s, err := session.NewActiveSession(&i, conf, time.Now(), identity.CredentialsTypePassword)
+				require.NoError(t, err)
+				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
+				require.NotEmpty(t, s.Token)
+
+				req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+				require.NoError(t, err)
+				req.Header.Set("Authorization", "Bearer "+s.Token)
+
+				c := http.DefaultClient
+				res, err := c.Do(req)
+				require.NoError(t, err)
+				assert.EqualValues(t, http.StatusOK, res.StatusCode)
+			})
+
+			t.Run("required_aal=aal2", func(t *testing.T) {
+				idAAL2 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
+					identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+				}}
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &idAAL2))
+
+				idAAL1 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
+				}}
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &idAAL1))
+
+				run := func(t *testing.T, complete []identity.CredentialsType, expectedCode int, i *identity.Identity) {
+
+					s := session.NewInactiveSession()
+					for _, m := range complete {
+						s.CompletedLoginFor(m)
+					}
+					require.NoError(t, s.Activate(i, conf, time.Now().UTC()))
+
+					require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
+					require.NotEmpty(t, s.Token)
+
+					req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+					require.NoError(t, err)
+					req.Header.Set("Authorization", "Bearer "+s.Token)
+
+					c := http.DefaultClient
+					res, err := c.Do(req)
+					require.NoError(t, err)
+					assert.EqualValues(t, expectedCode, res.StatusCode)
+				}
+
+				t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, 200, &idAAL2)
+				})
+
+				t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, 403, &idAAL2)
+				})
+
+				t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "aal1")
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, 200, &idAAL2)
+				})
+
+				t.Run("fulfilled for aal2 if identity has aal1", func(t *testing.T) {
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, 200, &idAAL1)
+				})
+
+				t.Run("fulfilled for aal1 if identity has aal1", func(t *testing.T) {
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, 200, &idAAL1)
+				})
+			})
+		})
+	*/
 }
 
 func TestIsNotAuthenticatedSecurecookie(t *testing.T) {

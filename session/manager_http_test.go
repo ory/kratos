@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/driver"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/julienschmidt/httprouter"
@@ -44,6 +46,21 @@ func (f *mockCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (f *mockCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request) string {
 	f.c++
 	return x.FakeCSRFToken
+}
+
+func createAAL2Identity(t *testing.T, reg driver.Registry) *identity.Identity {
+	idAAL2 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+		identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
+		identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+	}}
+	return &idAAL2
+}
+
+func createAAL1Identity(t *testing.T, reg driver.Registry) *identity.Identity {
+	idAAL1 := identity.Identity{Traits: []byte("{}"), State: identity.StateActive, Credentials: map[identity.CredentialsType]identity.Credentials{
+		identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
+	}}
+	return &idAAL1
 }
 
 func TestManagerHTTP(t *testing.T) {
@@ -298,6 +315,51 @@ func TestManagerHTTP(t *testing.T) {
 			res, err = c.Get(pts.URL + "/session/get")
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
+		})
+
+		t.Run("case=respects AAL config", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+
+			t.Run("required_aal=aal2", func(t *testing.T) {
+				idAAL2 := createAAL2Identity(t, reg)
+				idAAL1 := createAAL1Identity(t, reg)
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL1))
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), idAAL2))
+
+				run := func(t *testing.T, complete []identity.CredentialsType, requested string, i *identity.Identity, expectedError error) {
+					s := session.NewInactiveSession()
+					for _, m := range complete {
+						s.CompletedLoginFor(m)
+					}
+					require.NoError(t, s.Activate(i, conf, time.Now().UTC()))
+					err := reg.SessionManager().DoesSessionSatisfy(context.Background(), s, requested)
+					if expectedError != nil {
+						require.ErrorIs(t, err, expectedError)
+					} else {
+						require.NoError(t, err)
+					}
+				}
+
+				t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, "highest_available", idAAL2, nil)
+				})
+
+				t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "highest_available", idAAL2, session.ErrAALNotSatisfied)
+				})
+
+				t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
+				})
+
+				t.Run("fulfilled for aal2 if identity has aal1", func(t *testing.T) {
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL2, nil)
+				})
+
+				t.Run("fulfilled for aal1 if identity has aal1", func(t *testing.T) {
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "aal1", idAAL1, nil)
+				})
+			})
 		})
 	})
 }

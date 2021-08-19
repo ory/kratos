@@ -10,11 +10,14 @@ import (
 var (
 	// ErrNoActiveSessionFound is returned when no active cookie session could be found in the request.
 	ErrNoActiveSessionFound = herodot.ErrUnauthorized.WithError("request does not have a valid authentication session").WithReason("No active session was found in this request.")
+
+	// ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.
+	ErrAALNotSatisfied = herodot.ErrForbidden.WithError("session does not fulfill the requested AAL").WithReason("An active session was found but it does not fulfill the requested Authenticator Assurance Level. You might be able to resolve this by signing in with 2FA.")
 )
 
 // Manager handles identity sessions.
 type Manager interface {
-	// CreateAndIssueCookie stores a session in the database and issues a cookie by calling IssueCookie.
+	// UpsertAndIssueCookie stores a session in the database and issues a cookie by calling IssueCookie.
 	//
 	// Also regenerates CSRF tokens due to assumed principal change.
 	UpsertAndIssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
@@ -29,6 +32,9 @@ type Manager interface {
 
 	// PurgeFromRequest removes an HTTP session.
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error
+
+	// DoesSessionSatisfy answers if a session is satisfying the AAL.
+	DoesSessionSatisfy(ctx context.Context, sess *Session, requestedAAL string) error
 }
 
 type ManagementProvider interface {

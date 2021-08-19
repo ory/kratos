@@ -632,6 +632,16 @@
         }
       }
     },
+    "featureRequiredAal": {
+      "title": "Required Authenticator Assurance Level",
+      "description": "Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.",
+      "type": "string",
+      "enum": [
+        "aal1",
+        "highest_available"
+      ],
+      "default": "highest_available"
+    },
     "selfServiceAfterSettings": {
       "type": "object",
       "additionalProperties": false,
@@ -839,6 +849,9 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "required_aal": {
+                  "$ref": "#/definitions/featureRequiredAal"
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterSettings"
@@ -2007,6 +2020,17 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "whoami": {
+          "title": "WhoAmI / ToSession Settings",
+          "description": "Control how the `/sessions/whoami` endpoint is behaving.",
+          "type": "object",
+          "properties": {
+            "required_aal": {
+              "$ref": "#/definitions/featureRequiredAal"
+            }
+          },
+          "additionalProperties": false
+        },
         "lifespan": {
           "title": "Session Lifespan",
           "description": "Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.",

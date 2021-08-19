@@ -97,6 +97,10 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 }
 
 func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identity.Identity) (httprouter.Handle, *session.Session) {
+	return MockSessionCreateHandlerWithIdentityAndAMR(t, reg, i, []identity.CredentialsType{"password"})
+}
+
+func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *identity.Identity, methods []identity.CredentialsType) (httprouter.Handle, *session.Session) {
 	var sess session.Session
 	require.NoError(t, faker.FakeData(&sess))
 	// require AuthenticatedAt to be time.Now() as we always compare it to the current time
@@ -104,6 +108,10 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	sess.IssuedAt = time.Now().UTC()
 	sess.ExpiresAt = time.Now().UTC().Add(time.Hour * 24)
 	sess.Active = true
+	for _, method := range methods {
+		sess.CompletedLoginFor(method)
+	}
+	sess.SetAuthenticatorAssuranceLevel()
 
 	if reg.Config(context.Background()).Source().String(config.ViperKeyDefaultIdentitySchemaURL) == internal.UnsetDefaultIdentitySchema {
 		reg.Config(context.Background()).MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")

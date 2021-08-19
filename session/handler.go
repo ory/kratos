@@ -121,6 +121,11 @@ type toSession struct {
 //  // console.log(session)
 //	```
 //
+// Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
+// Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
+// credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
+// to sign in with the second factor or change the configuration.
+//
 // This endpoint is useful for:
 //
 // - AJAX calls. Remember to send credentials and set up CORS correctly!
@@ -143,12 +148,23 @@ type toSession struct {
 //     Responses:
 //       200: session
 //       401: jsonError
+//       403: jsonError
 //       500: jsonError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		return
+	}
+
+	if err := h.r.SessionManager().DoesSessionSatisfy(r.Context(), s, h.r.Config(r.Context()).SessionWhoAmIAAL()); errors.Is(err, ErrAALNotSatisfied) {
+		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
+		h.r.Writer().WriteError(w, r, err)
+		return
+	} else if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("Unable to determine AAL."))
 		return
 	}
 
