@@ -1,3 +1,47 @@
+# UBnity version of Kratos
+
+This is a UBnity modified version of Kratos, originally forked from `0.6.3.alpha.1`.
+
+## Testing a PR
+
+You should just need to set the branch name in the local Kratos container (see [instructions in the repo][cas-api-instructions]) and test there while reviewing the code changes here.
+
+## Development
+
+Local docker images are built with the modified code and uploaded to AWS in a special registry directory, and can then be referenced in a local Kratos container Dockerfile:
+1. modify code here
+2. publish a branch to AWS (see command below)
+3. reference the branch in your local Kratos container (see [instructions in the repo][cas-api-instructions] there)
+4. rebuild the local Kratos container & test
+5. rinse and repeat
+
+Note: a new image is actually built and uploaded only if the compiled code has changed. If you are making changes to comments only, you do not need to compile a new image.
+
+You can make changes to the source code normally and when you are ready to test just:
+```bash
+make build-publish-branch
+```
+
+You will first need to add the branch name (whatever branch you are working on) to your `.env` file (see instructions in the `.env.example` file for naming restrictions). Make sure this is set to your current branch as this is not yet automatic. When a PR has been merged, a good practice is to **remove the branch name** from your `.env` file to avoid reusing it by mistake.
+
+## Deploying a new version
+
+New versions represent fully functional, full tested, and _any environment ready_ code. Only deploy a new version when fully stable and safe to use it in any environment, including production:
+1. PR or group of PRs accepted
+2. new version deployed (see command below)
+3. the Kratos container in various environments can reference the new version tag (requires a new build there)
+
+When the branch has been fully tested and a PR accepted, you can modify your `.env` file to include the **new** version number you want to publish to AWS. Then run:
+```bash
+make build-publish-version
+```
+
+When you're done, REMOVE THE VERSION from the `.env` file so that you don't risk overriding a previously deployed version.
+
+[cas-api-instructions]: https://github.com/ubnity/emcloud-cas-api#readme
+
+---
+
 <h1 align="center"><img src="https://raw.githubusercontent.com/ory/meta/master/static/banners/kratos.svg" alt="Ory Kratos - Cloud native Identity and User Management"></h1>
 
 <h4 align="center">
