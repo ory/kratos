@@ -404,7 +404,7 @@ type submitSelfServiceSettingsFlowBody struct{}
 //     Schemes: http, https
 //
 //     Responses:
-//       200: successfulSelfServiceSettingsWithoutBrowser
+//       200: selfServiceSettingsFlow
 //       302: emptyResponse
 //       400: selfServiceSettingsFlow
 //       401: jsonError

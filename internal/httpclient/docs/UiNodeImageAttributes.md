@@ -4,9 +4,10 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**Height** | Pointer to **int64** | Height of the image | [optional] 
 **Id** | **string** | A unique identifier | 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
-**Width** | Pointer to **int64** | Height of the image | [optional] 
+**Width** | Pointer to **int64** | Width of the image | [optional] 
 
 ## Methods
 
@@ -26,6 +27,31 @@ will change when the set of required properties is changed
 NewUiNodeImageAttributesWithDefaults instantiates a new UiNodeImageAttributes object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
+
+### GetHeight
+
+`func (o *UiNodeImageAttributes) GetHeight() int64`
+
+GetHeight returns the Height field if non-nil, zero value otherwise.
+
+### GetHeightOk
+
+`func (o *UiNodeImageAttributes) GetHeightOk() (*int64, bool)`
+
+GetHeightOk returns a tuple with the Height field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetHeight
+
+`func (o *UiNodeImageAttributes) SetHeight(v int64)`
+
+SetHeight sets Height field to given value.
+
+### HasHeight
+
+`func (o *UiNodeImageAttributes) HasHeight() bool`
+
+HasHeight returns a boolean if a field has been set.
 
 ### GetId
 

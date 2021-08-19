@@ -2116,8 +2116,7 @@
           }
         },
         "required": [
-          "flow",
-          "identity"
+          "flow"
         ],
         "type": "object"
       },
@@ -2219,6 +2218,11 @@
       },
       "uiNodeImageAttributes": {
         "properties": {
+          "height": {
+            "description": "Height of the image",
+            "format": "int64",
+            "type": "integer"
+          },
           "id": {
             "description": "A unique identifier",
             "type": "string"
@@ -2228,7 +2232,7 @@
             "type": "string"
           },
           "width": {
-            "description": "Height of the image",
+            "description": "Width of the image",
             "format": "int64",
             "type": "integer"
           }
@@ -4003,11 +4007,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/successfulSelfServiceSettingsWithoutBrowser"
+                  "$ref": "#/components/schemas/selfServiceSettingsFlow"
                 }
               }
             },
-            "description": "successfulSelfServiceSettingsWithoutBrowser"
+            "description": "selfServiceSettingsFlow"
           },
           "302": {
             "$ref": "#/components/responses/emptyResponse"

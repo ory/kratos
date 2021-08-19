@@ -17,11 +17,13 @@ import (
 
 // UiNodeImageAttributes struct for UiNodeImageAttributes
 type UiNodeImageAttributes struct {
+	// Height of the image
+	Height *int64 `json:"height,omitempty"`
 	// A unique identifier
 	Id string `json:"id"`
 	// The image's source URL.  format: uri
 	Src string `json:"src"`
-	// Height of the image
+	// Width of the image
 	Width *int64 `json:"width,omitempty"`
 }
 
@@ -42,6 +44,38 @@ func NewUiNodeImageAttributes(id string, src string) *UiNodeImageAttributes {
 func NewUiNodeImageAttributesWithDefaults() *UiNodeImageAttributes {
 	this := UiNodeImageAttributes{}
 	return &this
+}
+
+// GetHeight returns the Height field value if set, zero value otherwise.
+func (o *UiNodeImageAttributes) GetHeight() int64 {
+	if o == nil || o.Height == nil {
+		var ret int64
+		return ret
+	}
+	return *o.Height
+}
+
+// GetHeightOk returns a tuple with the Height field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UiNodeImageAttributes) GetHeightOk() (*int64, bool) {
+	if o == nil || o.Height == nil {
+		return nil, false
+	}
+	return o.Height, true
+}
+
+// HasHeight returns a boolean if a field has been set.
+func (o *UiNodeImageAttributes) HasHeight() bool {
+	if o != nil && o.Height != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetHeight gets a reference to the given int64 and assigns it to the Height field.
+func (o *UiNodeImageAttributes) SetHeight(v int64) {
+	o.Height = &v
 }
 
 // GetId returns the Id field value
@@ -126,6 +160,9 @@ func (o *UiNodeImageAttributes) SetWidth(v int64) {
 
 func (o UiNodeImageAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.Height != nil {
+		toSerialize["height"] = o.Height
+	}
 	if true {
 		toSerialize["id"] = o.Id
 	}

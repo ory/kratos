@@ -5,13 +5,13 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Flow** | [**SelfServiceSettingsFlow**](SelfServiceSettingsFlow.md) |  | 
-**Identity** | [**Identity**](Identity.md) |  | 
+**Identity** | Pointer to [**Identity**](Identity.md) |  | [optional] 
 
 ## Methods
 
 ### NewSuccessfulSelfServiceSettingsWithoutBrowser
 
-`func NewSuccessfulSelfServiceSettingsWithoutBrowser(flow SelfServiceSettingsFlow, identity Identity, ) *SuccessfulSelfServiceSettingsWithoutBrowser`
+`func NewSuccessfulSelfServiceSettingsWithoutBrowser(flow SelfServiceSettingsFlow, ) *SuccessfulSelfServiceSettingsWithoutBrowser`
 
 NewSuccessfulSelfServiceSettingsWithoutBrowser instantiates a new SuccessfulSelfServiceSettingsWithoutBrowser object
 This constructor will assign default values to properties that have it defined,
@@ -65,6 +65,11 @@ and a boolean to check if the value has been set.
 
 SetIdentity sets Identity field to given value.
 
+### HasIdentity
+
+`func (o *SuccessfulSelfServiceSettingsWithoutBrowser) HasIdentity() bool`
+
+HasIdentity returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

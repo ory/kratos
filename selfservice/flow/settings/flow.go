@@ -73,7 +73,9 @@ type Flow struct {
 	// required: true
 	UI *container.Container `json:"ui" db:"ui"`
 
-	// Identity contains all of the identity's data in raw form.
+	// Identity contains the identity's data in raw form.
+	//
+	// If `state` is `success` this will be the updated identity!
 	//
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
@@ -98,23 +100,6 @@ type Flow struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
-}
-
-// The Response for Settings Flows via API
-//
-// swagger:model successfulSelfServiceSettingsWithoutBrowser
-type APIFlowResponse struct {
-	// The Flow
-	//
-	// required: true
-	Flow *Flow `json:"flow"`
-
-	// The Identity
-	//
-	// The updated identity
-	//
-	// required: true
-	Identity *identity.Identity `json:"identity"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
