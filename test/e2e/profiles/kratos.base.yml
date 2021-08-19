@@ -48,3 +48,7 @@ hashers:
 courier:
   smtp:
     connection_uri: smtps://test:test@localhost:1025/?skip_ssl_verify=true
+
+session:
+  whoami:
+    required_aal: aal1

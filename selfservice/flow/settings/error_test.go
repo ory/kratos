@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/ui/node"
@@ -46,8 +48,8 @@ func TestHandleError(t *testing.T) {
 	t.Cleanup(ts.Close)
 
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
-	testhelpers.NewErrorTestServer(t, reg)
-	testhelpers.NewLoginUIFlowEchoServer(t, reg)
+	errorTS := testhelpers.NewErrorTestServer(t, reg)
+	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	h := reg.SettingsFlowErrorHandler()
 	sdk := testhelpers.NewSDKClient(admin)
@@ -59,7 +61,7 @@ func TestHandleError(t *testing.T) {
 	require.NoError(t, faker.FakeData(&id))
 	id.SchemaID = "default"
 	id.State = identity.StateActive
-	reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &id)
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &id))
 
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		h.WriteFlowError(w, r, flowMethod, settingsFlow, &id, flowError)
@@ -193,6 +195,42 @@ func TestHandleError(t *testing.T) {
 				assert.Equal(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
 			})
 
+			t.Run("case=no active session", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+				settingsFlow.IdentityID = id.ID
+				flowError = errors.WithStack(session.ErrNoActiveSessionFound)
+				flowMethod = settings.StrategyProfile
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Equal(t, http.StatusUnauthorized, res.StatusCode)
+
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.Equal(t, session.ErrNoActiveSessionFound.Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			})
+
+			t.Run("case=aal too low", func(t *testing.T) {
+				t.Cleanup(reset)
+
+				settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+				settingsFlow.IdentityID = id.ID
+				flowError = errors.WithStack(session.ErrAALNotSatisfied)
+				flowMethod = settings.StrategyProfile
+
+				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.Equal(t, http.StatusForbidden, res.StatusCode)
+
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.Equal(t, session.ErrAALNotSatisfied.Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			})
+
 			t.Run("case=generic error", func(t *testing.T) {
 				t.Cleanup(reset)
 
@@ -246,6 +284,42 @@ func TestHandleError(t *testing.T) {
 
 			lf, _ := expectSettingsUI(t)
 			assert.EqualValues(t, settingsFlow.ID, lf.ID)
+		})
+
+		t.Run("case=no active session error", func(t *testing.T) {
+			t.Cleanup(reset)
+
+			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+			settingsFlow.IdentityID = id.ID
+			flowError = errors.WithStack(session.ErrNoActiveSessionFound)
+			flowMethod = settings.StrategyProfile
+
+			res, err := ts.Client().Get(ts.URL + "/error")
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+
+			lf, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
+			require.NoError(t, err)
+			assert.Equal(t, identity.AuthenticatorAssuranceLevel1, lf.RequestedAAL)
+		})
+
+		t.Run("case=aal too low", func(t *testing.T) {
+			t.Cleanup(reset)
+
+			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+			settingsFlow.IdentityID = id.ID
+			flowError = errors.WithStack(session.ErrAALNotSatisfied)
+			flowMethod = settings.StrategyProfile
+
+			res, err := ts.Client().Get(ts.URL + "/error")
+			require.NoError(t, err)
+			assert.Contains(t, res.Request.URL.String(), errorTS.URL)
+			body := x.MustReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+
+			// We end up at the error endpoint with an aal2 error message because ts.client has no session.
+			assert.Equal(t, "You can not requested a higher AAL (AAL2/AAL3) without an active session.", gjson.GetBytes(body, "reason").String(), "%s", body)
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {

@@ -296,8 +296,8 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	} else if err != nil {
 		return err
 	} else {
-		for _, webAuthn := range webAuthns.Credentials {
-			f.UI.Nodes.Append(NewWebAuthnUnlink(&webAuthn))
+		for k := range webAuthns.Credentials {
+			f.UI.Nodes.Append(NewWebAuthnUnlink(&webAuthns.Credentials[k]))
 		}
 	}
 

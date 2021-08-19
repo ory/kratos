@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/gofrs/uuid"
 
 	kratos "github.com/ory/kratos-client-go"
@@ -48,6 +50,7 @@ func TestHandler(t *testing.T) {
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
 
 	_ = testhelpers.NewSettingsUITestServer(t, conf)
+	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 
@@ -99,27 +102,68 @@ func TestHandler(t *testing.T) {
 	initSPAFlow := func(t *testing.T, hc *http.Client) (*http.Response, []byte) {
 		return initAuthenticatedFlow(t, hc, false, true)
 	}
+	aal2Identity := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &identity.Identity{
+		State:  identity.StateActive,
+		Traits: []byte(`{"email":"foo@bar"}`),
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
+			identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+		}})
 
 	t.Run("endpoint=init", func(t *testing.T) {
 		t.Run("description=init a flow as API", func(t *testing.T) {
-			user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
-			res, body := initFlow(t, user1, true)
-			assert.Contains(t, res.Request.URL.String(), settings.RouteInitAPIFlow)
-			assertion(t, body, true)
+			t.Run("description=success", func(t *testing.T) {
+				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+				res, body := initFlow(t, user1, true)
+				assert.Contains(t, res.Request.URL.String(), settings.RouteInitAPIFlow)
+				assertion(t, body, true)
+			})
+
+			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				res, body := initFlow(t, aal2Identity, true)
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.EqualValues(t, session.ErrAALNotSatisfied.Reason(), gjson.GetBytes(body, "error.reason").String())
+			})
 		})
 
 		t.Run("description=init a flow as browser", func(t *testing.T) {
-			user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
-			res, body := initFlow(t, user1, false)
-			assert.Contains(t, res.Request.URL.String(), reg.Config(context.Background()).SelfServiceFlowSettingsUI().String())
-			assertion(t, body, false)
+			t.Run("description=success", func(t *testing.T) {
+				user1 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
+				res, body := initFlow(t, user1, false)
+				assert.Contains(t, res.Request.URL.String(), reg.Config(context.Background()).SelfServiceFlowSettingsUI().String())
+				assertion(t, body, false)
+			})
+
+			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				res, body := initFlow(t, aal2Identity, false)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, gjson.GetBytes(body, "requested_aal").String())
+			})
 		})
 
 		t.Run("description=init a flow as SPA", func(t *testing.T) {
-			user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
-			res, body := initSPAFlow(t, user1)
-			assert.Contains(t, res.Request.URL.String(), settings.RouteInitBrowserFlow)
-			assertion(t, body, false)
+			t.Run("description=success", func(t *testing.T) {
+				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+				res, body := initSPAFlow(t, user1)
+				assert.Contains(t, res.Request.URL.String(), settings.RouteInitBrowserFlow)
+				assertion(t, body, false)
+			})
+
+			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				user1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, &identity.Identity{
+					State:  identity.StateActive,
+					Traits: []byte(`{"email":"foo@bar"}`),
+					Credentials: map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypePassword: {Type: identity.CredentialsTypePassword, Config: []byte("{}")},
+						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte("{}")},
+					}})
+				res, body := initSPAFlow(t, user1)
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.EqualValues(t, session.ErrAALNotSatisfied.Reason(), gjson.GetBytes(body, "error.reason").String())
+			})
 		})
 	})
 
@@ -195,17 +239,86 @@ func TestHandler(t *testing.T) {
 				rid := res.Request.URL.Query().Get("flow")
 				require.NotEmpty(t, rid)
 
-				testhelpers.NewSDKCustomClient(publicTS, primaryUser)
-
 				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(rid).Execute()
 				require.Error(t, err)
 				require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 				assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int(), "should return a 403 error because the identities from the cookies do not match")
 			})
+
+			t.Run("description=can not fetch if identity has aal2 but session has aal1", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				})
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+
+				res, body := initFlow(t, aal2Identity, false)
+				require.Equal(t, http.StatusOK, res.StatusCode)
+
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				res, err := aal2Identity.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + gjson.GetBytes(body, "id").String())
+				require.NoError(t, err)
+				body = ioutilx.MustReadAll(res.Body)
+				require.NoError(t, res.Body.Close())
+
+				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
+				assert.Equal(t, session.ErrAALNotSatisfied.Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			})
 		})
 	})
 
 	t.Run("endpoint=submit", func(t *testing.T) {
+		t.Run("description=can not submit if identity has aal2 but session has aal1", func(t *testing.T) {
+			t.Run("type=browser", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				})
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+
+				res, body := initFlow(t, aal2Identity, false)
+				require.Equal(t, http.StatusOK, res.StatusCode)
+				var f kratos.SelfServiceSettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				actual, res := testhelpers.SettingsMakeRequest(t, false, false, &f, aal2Identity, `{"method":"not-exists"}`)
+				assert.Equal(t, http.StatusOK, res.StatusCode)
+				assert.Equal(t, "Please complete the second authentication challenge.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
+			})
+			t.Run("type=spa", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				})
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+
+				res, body := initFlow(t, aal2Identity, false)
+				require.Equal(t, http.StatusOK, res.StatusCode)
+				var f kratos.SelfServiceSettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, aal2Identity, `{"method":"not-exists"}`)
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.Equal(t, session.ErrAALNotSatisfied.Reason(), gjson.Get(actual, "error.reason").String(), actual)
+			})
+
+			t.Run("type=api", func(t *testing.T) {
+				t.Cleanup(func() {
+					conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				})
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+
+				res, body := initFlow(t, aal2Identity, true)
+				require.Equal(t, http.StatusOK, res.StatusCode)
+				var f kratos.SelfServiceSettingsFlow
+				require.NoError(t, json.Unmarshal(body, &f))
+
+				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
+				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, aal2Identity, `{"method":"not-exists"}`)
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.Equal(t, session.ErrAALNotSatisfied.Reason(), gjson.Get(actual, "error.reason").String(), actual)
+			})
+		})
+
 		t.Run("description=fail to submit form as another user", func(t *testing.T) {
 			t.Run("type=api", func(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)

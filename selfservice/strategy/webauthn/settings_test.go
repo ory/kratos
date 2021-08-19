@@ -108,6 +108,7 @@ func TestCompleteSettings(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
 	enableWebAuthn(conf)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
+	conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
