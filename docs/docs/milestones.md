@@ -32,7 +32,7 @@ Something is not working.
       ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [ ] /schemas/default does not work with base64 identity schemas
       ([kratos#1529](https://github.com/ory/kratos/issues/1529))
-- [ ] Auto-Login on Registration flow does not return `session`, only `identity`
+- [x] Auto-Login on Registration flow does not return `session`, only `identity`
       for SPA requests
       ([kratos#1604](https://github.com/ory/kratos/issues/1604))
 
@@ -265,7 +265,7 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] feat: add mfa using totp
+- [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
 
@@ -291,6 +291,6 @@ Blocks milestones or other issues or pulls.
 
 #### Pull Requests
 
-- [ ] feat: add mfa using totp
+- [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
