@@ -413,7 +413,7 @@ func TestCompleteSettings(t *testing.T) {
 					assert.Equal(t, http.StatusOK, res.StatusCode)
 
 					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "flow.state").String()))
+					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 
 					checkIdentity(t, id, f)
 				})
@@ -434,12 +434,11 @@ func TestCompleteSettings(t *testing.T) {
 
 					if spa {
 						assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-						assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "flow.state").String()))
 					} else {
 						assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-						assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					}
 
+					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					checkIdentity(t, id, f)
 				}
 

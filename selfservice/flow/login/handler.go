@@ -211,7 +211,7 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:route GET /self-service/login/api v0alpha1 initializeSelfServiceLoginFlowWithoutBrowser
+// swagger:route GET /self-service/login/api v0alpha2 initializeSelfServiceLoginFlowWithoutBrowser
 //
 // Initialize Login Flow for APIs, Services, Apps, ...
 //
@@ -249,7 +249,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, f)
 }
 
-// swagger:route GET /self-service/login/browser v0alpha1 initializeSelfServiceLoginFlowForBrowsers
+// swagger:route GET /self-service/login/browser v0alpha2 initializeSelfServiceLoginFlowForBrowsers
 //
 // Initialize Login Flow for Browsers
 //
@@ -320,7 +320,7 @@ type getSelfServiceLoginFlow struct {
 	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/login/flows v0alpha1 getSelfServiceLoginFlow
+// swagger:route GET /self-service/login/flows v0alpha2 getSelfServiceLoginFlow
 //
 // Get Login Flow
 //
@@ -410,7 +410,7 @@ type submitSelfServiceLoginFlow struct {
 // nolint:deadcode,unused
 type submitSelfServiceLoginFlowBody struct{}
 
-// swagger:route POST /self-service/login v0alpha1 submitSelfServiceLoginFlow
+// swagger:route POST /self-service/login v0alpha2 submitSelfServiceLoginFlow
 //
 // Submit a Login Flow
 //

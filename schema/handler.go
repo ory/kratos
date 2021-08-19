@@ -67,7 +67,7 @@ type getJsonSchema struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /schemas/{id} v0alpha1 getJsonSchema
+// swagger:route GET /schemas/{id} v0alpha2 getJsonSchema
 //
 // Get a JSON Schema
 //

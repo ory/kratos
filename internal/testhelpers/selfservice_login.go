@@ -104,7 +104,7 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceLoginFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceLoginFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -115,7 +115,7 @@ func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.S
 	publicClient := NewSDKCustomClient(ts, client)
 
 	o := new(initFlowOptions).apply(opts)
-	req := publicClient.V0alpha1Api.InitializeSelfServiceLoginFlowWithoutBrowser(context.Background()).Refresh(forced)
+	req := publicClient.V0alpha2Api.InitializeSelfServiceLoginFlowWithoutBrowser(context.Background()).Refresh(forced)
 	if o.aal != "" {
 		req = req.Aal(string(o.aal))
 	}

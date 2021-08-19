@@ -19,7 +19,7 @@ func performLogout() {
 	_, sessionToken := pkg.CreateIdentityWithSession(client, email, password)
 
 	// Log out using session token
-	res, err := client.V0alpha1Api.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(ory.V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{}.
+	res, err := client.V0alpha2Api.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(ory.V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{}.
 		SubmitSelfServiceLogoutFlowWithoutBrowserBody(ory.SubmitSelfServiceLogoutFlowWithoutBrowserBody{SessionToken: sessionToken}))
 	pkg.SDKExitOnError(err, res)
 }

@@ -55,7 +55,7 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := NewSDKCustomClient(ts, client).V0alpha1Api.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).V0alpha2Api.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -63,7 +63,7 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 }
 
 func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRegistrationFlow {
-	rs, _, err := NewSDKCustomClient(ts, client).V0alpha1Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(context.Background()).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs

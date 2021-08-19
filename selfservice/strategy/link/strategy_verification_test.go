@@ -207,7 +207,7 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String()+"?flow=")
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, sr.Ui.Messages, 1)
@@ -257,7 +257,7 @@ func TestVerification(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, sr.Ui.Messages, 1)

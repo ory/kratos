@@ -80,7 +80,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-// swagger:route GET /self-service/verification/api v0alpha1 initializeSelfServiceVerificationFlowWithoutBrowser
+// swagger:route GET /self-service/verification/api v0alpha2 initializeSelfServiceVerificationFlowWithoutBrowser
 //
 // Initialize Verification Flow for APIs, Services, Apps, ...
 //
@@ -122,7 +122,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
-// swagger:route GET /self-service/verification/browser v0alpha1 initializeSelfServiceVerificationFlowForBrowsers
+// swagger:route GET /self-service/verification/browser v0alpha2 initializeSelfServiceVerificationFlowForBrowsers
 //
 // Initialize Verification Flow for Browser Clients
 //
@@ -184,7 +184,7 @@ type getSelfServiceVerificationFlow struct {
 	Cookie string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/verification/flows v0alpha1 getSelfServiceVerificationFlow
+// swagger:route GET /self-service/verification/flows v0alpha2 getSelfServiceVerificationFlow
 //
 // Get Verification Flow
 //
@@ -283,7 +283,7 @@ type submitSelfServiceVerificationFlow struct {
 // swagger:model submitSelfServiceVerificationFlowBody
 type submitSelfServiceVerificationFlowBody struct{}
 
-// swagger:route POST /self-service/verification v0alpha1 submitSelfServiceVerificationFlow
+// swagger:route POST /self-service/verification v0alpha2 submitSelfServiceVerificationFlow
 //
 // Complete Verification Flow
 //

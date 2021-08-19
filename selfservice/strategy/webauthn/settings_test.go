@@ -348,11 +348,10 @@ func TestCompleteSettings(t *testing.T) {
 
 			if spa {
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-				assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "flow.state").String(), body)
 			} else {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-				assert.EqualValues(t, settings.StateSuccess, gjson.Get(body, "state").String(), body)
 			}
+			assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(body, "state").String()))
 
 			actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
 			require.NoError(t, err)

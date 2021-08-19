@@ -234,7 +234,7 @@ func TestCompleteSettings(t *testing.T) {
 			actual, res := doAPIFlow(t, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "flow.state").String(), actual)
+			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
 		})
 
@@ -243,7 +243,7 @@ func TestCompleteSettings(t *testing.T) {
 			actual, res := doBrowserFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "flow.state").String(), actual)
+			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			checkIdentity(t, id)
 		})
 
@@ -326,7 +326,7 @@ func TestCompleteSettings(t *testing.T) {
 
 			if isAPI || isSPA {
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-				assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "flow.state").String(), actual)
+				assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			} else {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 				assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), actual)

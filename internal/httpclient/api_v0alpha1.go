@@ -25,7 +25,7 @@ var (
 	_ context.Context
 )
 
-type V0alpha1Api interface {
+type V0alpha2Api interface {
 
 	/*
 			 * AdminCreateIdentity Create an Identity
@@ -34,30 +34,30 @@ type V0alpha1Api interface {
 
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiAdminCreateIdentityRequest
+			 * @return V0alpha2ApiApiAdminCreateIdentityRequest
 	*/
-	AdminCreateIdentity(ctx context.Context) V0alpha1ApiApiAdminCreateIdentityRequest
+	AdminCreateIdentity(ctx context.Context) V0alpha2ApiApiAdminCreateIdentityRequest
 
 	/*
 	 * AdminCreateIdentityExecute executes the request
 	 * @return Identity
 	 */
-	AdminCreateIdentityExecute(r V0alpha1ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error)
+	AdminCreateIdentityExecute(r V0alpha2ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
 			 * AdminCreateSelfServiceRecoveryLink Create a Recovery Link
 			 * This endpoint creates a recovery link which should be given to the user in order for them to recover
 		(or activate) their account.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest
+			 * @return V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest
 	*/
-	AdminCreateSelfServiceRecoveryLink(ctx context.Context) V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest
+	AdminCreateSelfServiceRecoveryLink(ctx context.Context) V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest
 
 	/*
 	 * AdminCreateSelfServiceRecoveryLinkExecute executes the request
 	 * @return SelfServiceRecoveryLink
 	 */
-	AdminCreateSelfServiceRecoveryLinkExecute(r V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest) (*SelfServiceRecoveryLink, *http.Response, error)
+	AdminCreateSelfServiceRecoveryLinkExecute(r V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest) (*SelfServiceRecoveryLink, *http.Response, error)
 
 	/*
 			 * AdminDeleteIdentity Delete an Identity
@@ -68,45 +68,29 @@ type V0alpha1Api interface {
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the identity's ID.
-			 * @return V0alpha1ApiApiAdminDeleteIdentityRequest
+			 * @return V0alpha2ApiApiAdminDeleteIdentityRequest
 	*/
-	AdminDeleteIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminDeleteIdentityRequest
+	AdminDeleteIdentity(ctx context.Context, id string) V0alpha2ApiApiAdminDeleteIdentityRequest
 
 	/*
 	 * AdminDeleteIdentityExecute executes the request
 	 */
-	AdminDeleteIdentityExecute(r V0alpha1ApiApiAdminDeleteIdentityRequest) (*http.Response, error)
-
-	/*
-			 * AdminDeleteIdentitySessions Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
-			 * This endpoint is useful for:
-
-		To forcefully logout Identity from all devices and sessions
-			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @param id ID is the identity's ID.
-			 * @return V0alpha1ApiApiAdminDeleteIdentitySessionsRequest
-	*/
-	AdminDeleteIdentitySessions(ctx context.Context, id string) V0alpha1ApiApiAdminDeleteIdentitySessionsRequest
-
-	/*
-	 * AdminDeleteIdentitySessionsExecute executes the request
-	 */
-	AdminDeleteIdentitySessionsExecute(r V0alpha1ApiApiAdminDeleteIdentitySessionsRequest) (*http.Response, error)
+	AdminDeleteIdentityExecute(r V0alpha2ApiApiAdminDeleteIdentityRequest) (*http.Response, error)
 
 	/*
 	 * AdminGetIdentity Get an Identity
 	 * Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param id ID must be set to the ID of identity you want to get
-	 * @return V0alpha1ApiApiAdminGetIdentityRequest
+	 * @return V0alpha2ApiApiAdminGetIdentityRequest
 	 */
-	AdminGetIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminGetIdentityRequest
+	AdminGetIdentity(ctx context.Context, id string) V0alpha2ApiApiAdminGetIdentityRequest
 
 	/*
 	 * AdminGetIdentityExecute executes the request
 	 * @return Identity
 	 */
-	AdminGetIdentityExecute(r V0alpha1ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error)
+	AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
 			 * AdminListIdentities List Identities
@@ -114,15 +98,15 @@ type V0alpha1Api interface {
 
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiAdminListIdentitiesRequest
+			 * @return V0alpha2ApiApiAdminListIdentitiesRequest
 	*/
-	AdminListIdentities(ctx context.Context) V0alpha1ApiApiAdminListIdentitiesRequest
+	AdminListIdentities(ctx context.Context) V0alpha2ApiApiAdminListIdentitiesRequest
 
 	/*
 	 * AdminListIdentitiesExecute executes the request
 	 * @return []Identity
 	 */
-	AdminListIdentitiesExecute(r V0alpha1ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error)
+	AdminListIdentitiesExecute(r V0alpha2ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error)
 
 	/*
 			 * AdminUpdateIdentity Update an Identity
@@ -134,15 +118,15 @@ type V0alpha1Api interface {
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID must be set to the ID of identity you want to update
-			 * @return V0alpha1ApiApiAdminUpdateIdentityRequest
+			 * @return V0alpha2ApiApiAdminUpdateIdentityRequest
 	*/
-	AdminUpdateIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminUpdateIdentityRequest
+	AdminUpdateIdentity(ctx context.Context, id string) V0alpha2ApiApiAdminUpdateIdentityRequest
 
 	/*
 	 * AdminUpdateIdentityExecute executes the request
 	 * @return Identity
 	 */
-	AdminUpdateIdentityExecute(r V0alpha1ApiApiAdminUpdateIdentityRequest) (*Identity, *http.Response, error)
+	AdminUpdateIdentityExecute(r V0alpha2ApiApiAdminUpdateIdentityRequest) (*Identity, *http.Response, error)
 
 	/*
 			 * CreateSelfServiceLogoutFlowUrlForBrowsers Create a Logout URL for Browsers
@@ -157,30 +141,30 @@ type V0alpha1Api interface {
 
 		When calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest
+			 * @return V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest
 	*/
-	CreateSelfServiceLogoutFlowUrlForBrowsers(ctx context.Context) V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest
+	CreateSelfServiceLogoutFlowUrlForBrowsers(ctx context.Context) V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest
 
 	/*
 	 * CreateSelfServiceLogoutFlowUrlForBrowsersExecute executes the request
 	 * @return SelfServiceLogoutUrl
 	 */
-	CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) (*SelfServiceLogoutUrl, *http.Response, error)
+	CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) (*SelfServiceLogoutUrl, *http.Response, error)
 
 	/*
 	 * GetJsonSchema Method for GetJsonSchema
 	 * Get a JSON Schema
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	 * @param id ID must be set to the ID of schema you want to get
-	 * @return V0alpha1ApiApiGetJsonSchemaRequest
+	 * @return V0alpha2ApiApiGetJsonSchemaRequest
 	 */
-	GetJsonSchema(ctx context.Context, id string) V0alpha1ApiApiGetJsonSchemaRequest
+	GetJsonSchema(ctx context.Context, id string) V0alpha2ApiApiGetJsonSchemaRequest
 
 	/*
 	 * GetJsonSchemaExecute executes the request
 	 * @return map[string]interface{}
 	 */
-	GetJsonSchemaExecute(r V0alpha1ApiApiGetJsonSchemaRequest) (map[string]interface{}, *http.Response, error)
+	GetJsonSchemaExecute(r V0alpha2ApiApiGetJsonSchemaRequest) (map[string]interface{}, *http.Response, error)
 
 	/*
 			 * GetSelfServiceError Get Self-Service Errors
@@ -192,15 +176,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiGetSelfServiceErrorRequest
+			 * @return V0alpha2ApiApiGetSelfServiceErrorRequest
 	*/
-	GetSelfServiceError(ctx context.Context) V0alpha1ApiApiGetSelfServiceErrorRequest
+	GetSelfServiceError(ctx context.Context) V0alpha2ApiApiGetSelfServiceErrorRequest
 
 	/*
 	 * GetSelfServiceErrorExecute executes the request
 	 * @return SelfServiceError
 	 */
-	GetSelfServiceErrorExecute(r V0alpha1ApiApiGetSelfServiceErrorRequest) (*SelfServiceError, *http.Response, error)
+	GetSelfServiceErrorExecute(r V0alpha2ApiApiGetSelfServiceErrorRequest) (*SelfServiceError, *http.Response, error)
 
 	/*
 			 * GetSelfServiceLoginFlow Get Login Flow
@@ -223,15 +207,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiGetSelfServiceLoginFlowRequest
+			 * @return V0alpha2ApiApiGetSelfServiceLoginFlowRequest
 	*/
-	GetSelfServiceLoginFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceLoginFlowRequest
+	GetSelfServiceLoginFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceLoginFlowRequest
 
 	/*
 	 * GetSelfServiceLoginFlowExecute executes the request
 	 * @return SelfServiceLoginFlow
 	 */
-	GetSelfServiceLoginFlowExecute(r V0alpha1ApiApiGetSelfServiceLoginFlowRequest) (*SelfServiceLoginFlow, *http.Response, error)
+	GetSelfServiceLoginFlowExecute(r V0alpha2ApiApiGetSelfServiceLoginFlowRequest) (*SelfServiceLoginFlow, *http.Response, error)
 
 	/*
 			 * GetSelfServiceRecoveryFlow Get Recovery Flow
@@ -254,15 +238,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest
+			 * @return V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest
 	*/
-	GetSelfServiceRecoveryFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest
+	GetSelfServiceRecoveryFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest
 
 	/*
 	 * GetSelfServiceRecoveryFlowExecute executes the request
 	 * @return SelfServiceRecoveryFlow
 	 */
-	GetSelfServiceRecoveryFlowExecute(r V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
+	GetSelfServiceRecoveryFlowExecute(r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
 
 	/*
 			 * GetSelfServiceRegistrationFlow Get Registration Flow
@@ -285,15 +269,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest
+			 * @return V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest
 	*/
-	GetSelfServiceRegistrationFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest
+	GetSelfServiceRegistrationFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest
 
 	/*
 	 * GetSelfServiceRegistrationFlowExecute executes the request
 	 * @return SelfServiceRegistrationFlow
 	 */
-	GetSelfServiceRegistrationFlowExecute(r V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest) (*SelfServiceRegistrationFlow, *http.Response, error)
+	GetSelfServiceRegistrationFlowExecute(r V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest) (*SelfServiceRegistrationFlow, *http.Response, error)
 
 	/*
 			 * GetSelfServiceSettingsFlow Get Settings Flow
@@ -305,15 +289,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiGetSelfServiceSettingsFlowRequest
+			 * @return V0alpha2ApiApiGetSelfServiceSettingsFlowRequest
 	*/
-	GetSelfServiceSettingsFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceSettingsFlowRequest
+	GetSelfServiceSettingsFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceSettingsFlowRequest
 
 	/*
 	 * GetSelfServiceSettingsFlowExecute executes the request
 	 * @return SelfServiceSettingsFlow
 	 */
-	GetSelfServiceSettingsFlowExecute(r V0alpha1ApiApiGetSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
+	GetSelfServiceSettingsFlowExecute(r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
 			 * GetSelfServiceVerificationFlow Get Verification Flow
@@ -335,15 +319,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiGetSelfServiceVerificationFlowRequest
+			 * @return V0alpha2ApiApiGetSelfServiceVerificationFlowRequest
 	*/
-	GetSelfServiceVerificationFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceVerificationFlowRequest
+	GetSelfServiceVerificationFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceVerificationFlowRequest
 
 	/*
 	 * GetSelfServiceVerificationFlowExecute executes the request
 	 * @return SelfServiceVerificationFlow
 	 */
-	GetSelfServiceVerificationFlowExecute(r V0alpha1ApiApiGetSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error)
+	GetSelfServiceVerificationFlowExecute(r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceLoginFlowForBrowsers Initialize Login Flow for Browsers
@@ -361,15 +345,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest
 	*/
-	InitializeSelfServiceLoginFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest
+	InitializeSelfServiceLoginFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest
 
 	/*
 	 * InitializeSelfServiceLoginFlowForBrowsersExecute executes the request
 	 * @return SelfServiceLoginFlow
 	 */
-	InitializeSelfServiceLoginFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) (*SelfServiceLoginFlow, *http.Response, error)
+	InitializeSelfServiceLoginFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) (*SelfServiceLoginFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceLoginFlowWithoutBrowser Initialize Login Flow for APIs, Services, Apps, ...
@@ -388,15 +372,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest
 	*/
-	InitializeSelfServiceLoginFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest
+	InitializeSelfServiceLoginFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest
 
 	/*
 	 * InitializeSelfServiceLoginFlowWithoutBrowserExecute executes the request
 	 * @return SelfServiceLoginFlow
 	 */
-	InitializeSelfServiceLoginFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) (*SelfServiceLoginFlow, *http.Response, error)
+	InitializeSelfServiceLoginFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) (*SelfServiceLoginFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceRecoveryFlowForBrowsers Initialize Recovery Flow for Browsers
@@ -411,15 +395,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest
 	*/
-	InitializeSelfServiceRecoveryFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest
+	InitializeSelfServiceRecoveryFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest
 
 	/*
 	 * InitializeSelfServiceRecoveryFlowForBrowsersExecute executes the request
 	 * @return SelfServiceRecoveryFlow
 	 */
-	InitializeSelfServiceRecoveryFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
+	InitializeSelfServiceRecoveryFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceRecoveryFlowWithoutBrowser Initialize Recovery Flow for APIs, Services, Apps, ...
@@ -438,15 +422,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest
 	*/
-	InitializeSelfServiceRecoveryFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest
+	InitializeSelfServiceRecoveryFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest
 
 	/*
 	 * InitializeSelfServiceRecoveryFlowWithoutBrowserExecute executes the request
 	 * @return SelfServiceRecoveryFlow
 	 */
-	InitializeSelfServiceRecoveryFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
+	InitializeSelfServiceRecoveryFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceRegistrationFlowForBrowsers Initialize Registration Flow for Browsers
@@ -469,15 +453,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest
 	*/
-	InitializeSelfServiceRegistrationFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest
+	InitializeSelfServiceRegistrationFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest
 
 	/*
 	 * InitializeSelfServiceRegistrationFlowForBrowsersExecute executes the request
 	 * @return SelfServiceRegistrationFlow
 	 */
-	InitializeSelfServiceRegistrationFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) (*SelfServiceRegistrationFlow, *http.Response, error)
+	InitializeSelfServiceRegistrationFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) (*SelfServiceRegistrationFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceRegistrationFlowWithoutBrowser Initialize Registration Flow for APIs, Services, Apps, ...
@@ -496,15 +480,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest
 	*/
-	InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest
+	InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest
 
 	/*
 	 * InitializeSelfServiceRegistrationFlowWithoutBrowserExecute executes the request
 	 * @return SelfServiceRegistrationFlow
 	 */
-	InitializeSelfServiceRegistrationFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest) (*SelfServiceRegistrationFlow, *http.Response, error)
+	InitializeSelfServiceRegistrationFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest) (*SelfServiceRegistrationFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceSettingsFlowForBrowsers Initialize Settings Flow for Browsers
@@ -523,15 +507,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest
 	*/
-	InitializeSelfServiceSettingsFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest
+	InitializeSelfServiceSettingsFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest
 
 	/*
 	 * InitializeSelfServiceSettingsFlowForBrowsersExecute executes the request
 	 * @return SelfServiceSettingsFlow
 	 */
-	InitializeSelfServiceSettingsFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) (*SelfServiceSettingsFlow, *http.Response, error)
+	InitializeSelfServiceSettingsFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceSettingsFlowWithoutBrowser Initialize Settings Flow for APIs, Services, Apps, ...
@@ -548,15 +532,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest
 	*/
-	InitializeSelfServiceSettingsFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest
+	InitializeSelfServiceSettingsFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest
 
 	/*
 	 * InitializeSelfServiceSettingsFlowWithoutBrowserExecute executes the request
 	 * @return SelfServiceSettingsFlow
 	 */
-	InitializeSelfServiceSettingsFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) (*SelfServiceSettingsFlow, *http.Response, error)
+	InitializeSelfServiceSettingsFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceVerificationFlowForBrowsers Initialize Verification Flow for Browser Clients
@@ -569,15 +553,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest
 	*/
-	InitializeSelfServiceVerificationFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest
+	InitializeSelfServiceVerificationFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest
 
 	/*
 	 * InitializeSelfServiceVerificationFlowForBrowsersExecute executes the request
 	 * @return SelfServiceVerificationFlow
 	 */
-	InitializeSelfServiceVerificationFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) (*SelfServiceVerificationFlow, *http.Response, error)
+	InitializeSelfServiceVerificationFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) (*SelfServiceVerificationFlow, *http.Response, error)
 
 	/*
 			 * InitializeSelfServiceVerificationFlowWithoutBrowser Initialize Verification Flow for APIs, Services, Apps, ...
@@ -593,15 +577,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest
+			 * @return V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest
 	*/
-	InitializeSelfServiceVerificationFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest
+	InitializeSelfServiceVerificationFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest
 
 	/*
 	 * InitializeSelfServiceVerificationFlowWithoutBrowserExecute executes the request
 	 * @return SelfServiceVerificationFlow
 	 */
-	InitializeSelfServiceVerificationFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest) (*SelfServiceVerificationFlow, *http.Response, error)
+	InitializeSelfServiceVerificationFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest) (*SelfServiceVerificationFlow, *http.Response, error)
 
 	/*
 			 * SubmitSelfServiceLoginFlow Submit a Login Flow
@@ -630,15 +614,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest
+			 * @return V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest
 	*/
-	SubmitSelfServiceLoginFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest
+	SubmitSelfServiceLoginFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest
 
 	/*
 	 * SubmitSelfServiceLoginFlowExecute executes the request
 	 * @return SuccessfulSelfServiceLoginWithoutBrowser
 	 */
-	SubmitSelfServiceLoginFlowExecute(r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) (*SuccessfulSelfServiceLoginWithoutBrowser, *http.Response, error)
+	SubmitSelfServiceLoginFlowExecute(r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) (*SuccessfulSelfServiceLoginWithoutBrowser, *http.Response, error)
 
 	/*
 			 * SubmitSelfServiceLogoutFlow Complete Self-Service Logout
@@ -656,14 +640,14 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest
+			 * @return V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest
 	*/
-	SubmitSelfServiceLogoutFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest
+	SubmitSelfServiceLogoutFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest
 
 	/*
 	 * SubmitSelfServiceLogoutFlowExecute executes the request
 	 */
-	SubmitSelfServiceLogoutFlowExecute(r V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest) (*http.Response, error)
+	SubmitSelfServiceLogoutFlowExecute(r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) (*http.Response, error)
 
 	/*
 			 * SubmitSelfServiceLogoutFlowWithoutBrowser Perform Logout for APIs, Services, Apps, ...
@@ -676,14 +660,14 @@ type V0alpha1Api interface {
 		This endpoint does not remove any HTTP
 		Cookies - use the Browser-Based Self-Service Logout Flow instead.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest
+			 * @return V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest
 	*/
-	SubmitSelfServiceLogoutFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest
+	SubmitSelfServiceLogoutFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest
 
 	/*
 	 * SubmitSelfServiceLogoutFlowWithoutBrowserExecute executes the request
 	 */
-	SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) (*http.Response, error)
+	SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) (*http.Response, error)
 
 	/*
 			 * SubmitSelfServiceRecoveryFlow Complete Recovery Flow
@@ -704,15 +688,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest
+			 * @return V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest
 	*/
-	SubmitSelfServiceRecoveryFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest
+	SubmitSelfServiceRecoveryFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest
 
 	/*
 	 * SubmitSelfServiceRecoveryFlowExecute executes the request
 	 * @return SelfServiceRecoveryFlow
 	 */
-	SubmitSelfServiceRecoveryFlowExecute(r V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
+	SubmitSelfServiceRecoveryFlowExecute(r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error)
 
 	/*
 			 * SubmitSelfServiceRegistrationFlow Submit a Registration Flow
@@ -736,15 +720,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest
+			 * @return V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest
 	*/
-	SubmitSelfServiceRegistrationFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest
+	SubmitSelfServiceRegistrationFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest
 
 	/*
 	 * SubmitSelfServiceRegistrationFlowExecute executes the request
 	 * @return SuccessfulSelfServiceRegistrationWithoutBrowser
 	 */
-	SubmitSelfServiceRegistrationFlowExecute(r V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest) (*SuccessfulSelfServiceRegistrationWithoutBrowser, *http.Response, error)
+	SubmitSelfServiceRegistrationFlowExecute(r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) (*SuccessfulSelfServiceRegistrationWithoutBrowser, *http.Response, error)
 
 	/*
 			 * SubmitSelfServiceSettingsFlow Complete Settings Flow
@@ -772,15 +756,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest
+			 * @return V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest
 	*/
-	SubmitSelfServiceSettingsFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest
+	SubmitSelfServiceSettingsFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest
 
 	/*
 	 * SubmitSelfServiceSettingsFlowExecute executes the request
 	 * @return SelfServiceSettingsFlow
 	 */
-	SubmitSelfServiceSettingsFlowExecute(r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
+	SubmitSelfServiceSettingsFlowExecute(r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
 			 * SubmitSelfServiceVerificationFlow Complete Verification Flow
@@ -801,15 +785,15 @@ type V0alpha1Api interface {
 
 		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest
+			 * @return V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest
 	*/
-	SubmitSelfServiceVerificationFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest
+	SubmitSelfServiceVerificationFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest
 
 	/*
 	 * SubmitSelfServiceVerificationFlowExecute executes the request
 	 * @return SelfServiceVerificationFlow
 	 */
-	SubmitSelfServiceVerificationFlowExecute(r V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error)
+	SubmitSelfServiceVerificationFlowExecute(r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error)
 
 	/*
 			 * ToSession Check Who the Current HTTP Session Belongs To
@@ -852,32 +836,32 @@ type V0alpha1Api interface {
 
 		If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha1ApiApiToSessionRequest
+			 * @return V0alpha2ApiApiToSessionRequest
 	*/
-	ToSession(ctx context.Context) V0alpha1ApiApiToSessionRequest
+	ToSession(ctx context.Context) V0alpha2ApiApiToSessionRequest
 
 	/*
 	 * ToSessionExecute executes the request
 	 * @return Session
 	 */
-	ToSessionExecute(r V0alpha1ApiApiToSessionRequest) (*Session, *http.Response, error)
+	ToSessionExecute(r V0alpha2ApiApiToSessionRequest) (*Session, *http.Response, error)
 }
 
-// V0alpha1ApiService V0alpha1Api service
-type V0alpha1ApiService service
+// V0alpha2ApiService V0alpha2Api service
+type V0alpha2ApiService service
 
-type V0alpha1ApiApiAdminCreateIdentityRequest struct {
+type V0alpha2ApiApiAdminCreateIdentityRequest struct {
 	ctx                     context.Context
-	ApiService              V0alpha1Api
+	ApiService              V0alpha2Api
 	adminCreateIdentityBody *AdminCreateIdentityBody
 }
 
-func (r V0alpha1ApiApiAdminCreateIdentityRequest) AdminCreateIdentityBody(adminCreateIdentityBody AdminCreateIdentityBody) V0alpha1ApiApiAdminCreateIdentityRequest {
+func (r V0alpha2ApiApiAdminCreateIdentityRequest) AdminCreateIdentityBody(adminCreateIdentityBody AdminCreateIdentityBody) V0alpha2ApiApiAdminCreateIdentityRequest {
 	r.adminCreateIdentityBody = &adminCreateIdentityBody
 	return r
 }
 
-func (r V0alpha1ApiApiAdminCreateIdentityRequest) Execute() (*Identity, *http.Response, error) {
+func (r V0alpha2ApiApiAdminCreateIdentityRequest) Execute() (*Identity, *http.Response, error) {
 	return r.ApiService.AdminCreateIdentityExecute(r)
 }
 
@@ -888,10 +872,10 @@ using this method! A way to achieve that will be introduced in the future.
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiAdminCreateIdentityRequest
+ * @return V0alpha2ApiApiAdminCreateIdentityRequest
 */
-func (a *V0alpha1ApiService) AdminCreateIdentity(ctx context.Context) V0alpha1ApiApiAdminCreateIdentityRequest {
-	return V0alpha1ApiApiAdminCreateIdentityRequest{
+func (a *V0alpha2ApiService) AdminCreateIdentity(ctx context.Context) V0alpha2ApiApiAdminCreateIdentityRequest {
+	return V0alpha2ApiApiAdminCreateIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -901,7 +885,7 @@ func (a *V0alpha1ApiService) AdminCreateIdentity(ctx context.Context) V0alpha1Ap
  * Execute executes the request
  * @return Identity
  */
-func (a *V0alpha1ApiService) AdminCreateIdentityExecute(r V0alpha1ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error) {
+func (a *V0alpha2ApiService) AdminCreateIdentityExecute(r V0alpha2ApiApiAdminCreateIdentityRequest) (*Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -911,7 +895,7 @@ func (a *V0alpha1ApiService) AdminCreateIdentityExecute(r V0alpha1ApiApiAdminCre
 		localVarReturnValue  *Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminCreateIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminCreateIdentity")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1021,18 +1005,18 @@ func (a *V0alpha1ApiService) AdminCreateIdentityExecute(r V0alpha1ApiApiAdminCre
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest struct {
+type V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest struct {
 	ctx                                    context.Context
-	ApiService                             V0alpha1Api
+	ApiService                             V0alpha2Api
 	adminCreateSelfServiceRecoveryLinkBody *AdminCreateSelfServiceRecoveryLinkBody
 }
 
-func (r V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest) AdminCreateSelfServiceRecoveryLinkBody(adminCreateSelfServiceRecoveryLinkBody AdminCreateSelfServiceRecoveryLinkBody) V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest {
+func (r V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest) AdminCreateSelfServiceRecoveryLinkBody(adminCreateSelfServiceRecoveryLinkBody AdminCreateSelfServiceRecoveryLinkBody) V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest {
 	r.adminCreateSelfServiceRecoveryLinkBody = &adminCreateSelfServiceRecoveryLinkBody
 	return r
 }
 
-func (r V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest) Execute() (*SelfServiceRecoveryLink, *http.Response, error) {
+func (r V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest) Execute() (*SelfServiceRecoveryLink, *http.Response, error) {
 	return r.ApiService.AdminCreateSelfServiceRecoveryLinkExecute(r)
 }
 
@@ -1041,10 +1025,10 @@ func (r V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest) Execute() (*Sel
  * This endpoint creates a recovery link which should be given to the user in order for them to recover
 (or activate) their account.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest
+ * @return V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest
 */
-func (a *V0alpha1ApiService) AdminCreateSelfServiceRecoveryLink(ctx context.Context) V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest {
-	return V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest{
+func (a *V0alpha2ApiService) AdminCreateSelfServiceRecoveryLink(ctx context.Context) V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest {
+	return V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -1054,7 +1038,7 @@ func (a *V0alpha1ApiService) AdminCreateSelfServiceRecoveryLink(ctx context.Cont
  * Execute executes the request
  * @return SelfServiceRecoveryLink
  */
-func (a *V0alpha1ApiService) AdminCreateSelfServiceRecoveryLinkExecute(r V0alpha1ApiApiAdminCreateSelfServiceRecoveryLinkRequest) (*SelfServiceRecoveryLink, *http.Response, error) {
+func (a *V0alpha2ApiService) AdminCreateSelfServiceRecoveryLinkExecute(r V0alpha2ApiApiAdminCreateSelfServiceRecoveryLinkRequest) (*SelfServiceRecoveryLink, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -1064,7 +1048,7 @@ func (a *V0alpha1ApiService) AdminCreateSelfServiceRecoveryLinkExecute(r V0alpha
 		localVarReturnValue  *SelfServiceRecoveryLink
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminCreateSelfServiceRecoveryLink")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminCreateSelfServiceRecoveryLink")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1160,13 +1144,13 @@ func (a *V0alpha1ApiService) AdminCreateSelfServiceRecoveryLinkExecute(r V0alpha
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiAdminDeleteIdentityRequest struct {
+type V0alpha2ApiApiAdminDeleteIdentityRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	id         string
 }
 
-func (r V0alpha1ApiApiAdminDeleteIdentityRequest) Execute() (*http.Response, error) {
+func (r V0alpha2ApiApiAdminDeleteIdentityRequest) Execute() (*http.Response, error) {
 	return r.ApiService.AdminDeleteIdentityExecute(r)
 }
 
@@ -1179,10 +1163,10 @@ assumed that is has been deleted already.
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID is the identity's ID.
- * @return V0alpha1ApiApiAdminDeleteIdentityRequest
+ * @return V0alpha2ApiApiAdminDeleteIdentityRequest
 */
-func (a *V0alpha1ApiService) AdminDeleteIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminDeleteIdentityRequest {
-	return V0alpha1ApiApiAdminDeleteIdentityRequest{
+func (a *V0alpha2ApiService) AdminDeleteIdentity(ctx context.Context, id string) V0alpha2ApiApiAdminDeleteIdentityRequest {
+	return V0alpha2ApiApiAdminDeleteIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -1192,7 +1176,7 @@ func (a *V0alpha1ApiService) AdminDeleteIdentity(ctx context.Context, id string)
 /*
  * Execute executes the request
  */
-func (a *V0alpha1ApiService) AdminDeleteIdentityExecute(r V0alpha1ApiApiAdminDeleteIdentityRequest) (*http.Response, error) {
+func (a *V0alpha2ApiService) AdminDeleteIdentityExecute(r V0alpha2ApiApiAdminDeleteIdentityRequest) (*http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodDelete
 		localVarPostBody     interface{}
@@ -1201,7 +1185,7 @@ func (a *V0alpha1ApiService) AdminDeleteIdentityExecute(r V0alpha1ApiApiAdminDel
 		localVarFileBytes    []byte
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminDeleteIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminDeleteIdentity")
 	if err != nil {
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1291,162 +1275,13 @@ func (a *V0alpha1ApiService) AdminDeleteIdentityExecute(r V0alpha1ApiApiAdminDel
 	return localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiAdminDeleteIdentitySessionsRequest struct {
+type V0alpha2ApiApiAdminGetIdentityRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	id         string
 }
 
-func (r V0alpha1ApiApiAdminDeleteIdentitySessionsRequest) Execute() (*http.Response, error) {
-	return r.ApiService.AdminDeleteIdentitySessionsExecute(r)
-}
-
-/*
- * AdminDeleteIdentitySessions Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
- * This endpoint is useful for:
-
-To forcefully logout Identity from all devices and sessions
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param id ID is the identity's ID.
- * @return V0alpha1ApiApiAdminDeleteIdentitySessionsRequest
-*/
-func (a *V0alpha1ApiService) AdminDeleteIdentitySessions(ctx context.Context, id string) V0alpha1ApiApiAdminDeleteIdentitySessionsRequest {
-	return V0alpha1ApiApiAdminDeleteIdentitySessionsRequest{
-		ApiService: a,
-		ctx:        ctx,
-		id:         id,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *V0alpha1ApiService) AdminDeleteIdentitySessionsExecute(r V0alpha1ApiApiAdminDeleteIdentitySessionsRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminDeleteIdentitySessions")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/identities/{id}/sessions"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["Authorization"] = key
-			}
-		}
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 401 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 404 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
-}
-
-type V0alpha1ApiApiAdminGetIdentityRequest struct {
-	ctx        context.Context
-	ApiService V0alpha1Api
-	id         string
-}
-
-func (r V0alpha1ApiApiAdminGetIdentityRequest) Execute() (*Identity, *http.Response, error) {
+func (r V0alpha2ApiApiAdminGetIdentityRequest) Execute() (*Identity, *http.Response, error) {
 	return r.ApiService.AdminGetIdentityExecute(r)
 }
 
@@ -1455,10 +1290,10 @@ func (r V0alpha1ApiApiAdminGetIdentityRequest) Execute() (*Identity, *http.Respo
  * Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of identity you want to get
- * @return V0alpha1ApiApiAdminGetIdentityRequest
+ * @return V0alpha2ApiApiAdminGetIdentityRequest
  */
-func (a *V0alpha1ApiService) AdminGetIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminGetIdentityRequest {
-	return V0alpha1ApiApiAdminGetIdentityRequest{
+func (a *V0alpha2ApiService) AdminGetIdentity(ctx context.Context, id string) V0alpha2ApiApiAdminGetIdentityRequest {
+	return V0alpha2ApiApiAdminGetIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -1469,7 +1304,7 @@ func (a *V0alpha1ApiService) AdminGetIdentity(ctx context.Context, id string) V0
  * Execute executes the request
  * @return Identity
  */
-func (a *V0alpha1ApiService) AdminGetIdentityExecute(r V0alpha1ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error) {
+func (a *V0alpha2ApiService) AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIdentityRequest) (*Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -1479,7 +1314,7 @@ func (a *V0alpha1ApiService) AdminGetIdentityExecute(r V0alpha1ApiApiAdminGetIde
 		localVarReturnValue  *Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminGetIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminGetIdentity")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1578,23 +1413,23 @@ func (a *V0alpha1ApiService) AdminGetIdentityExecute(r V0alpha1ApiApiAdminGetIde
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiAdminListIdentitiesRequest struct {
+type V0alpha2ApiApiAdminListIdentitiesRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	perPage    *int64
 	page       *int64
 }
 
-func (r V0alpha1ApiApiAdminListIdentitiesRequest) PerPage(perPage int64) V0alpha1ApiApiAdminListIdentitiesRequest {
+func (r V0alpha2ApiApiAdminListIdentitiesRequest) PerPage(perPage int64) V0alpha2ApiApiAdminListIdentitiesRequest {
 	r.perPage = &perPage
 	return r
 }
-func (r V0alpha1ApiApiAdminListIdentitiesRequest) Page(page int64) V0alpha1ApiApiAdminListIdentitiesRequest {
+func (r V0alpha2ApiApiAdminListIdentitiesRequest) Page(page int64) V0alpha2ApiApiAdminListIdentitiesRequest {
 	r.page = &page
 	return r
 }
 
-func (r V0alpha1ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.Response, error) {
+func (r V0alpha2ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.Response, error) {
 	return r.ApiService.AdminListIdentitiesExecute(r)
 }
 
@@ -1604,10 +1439,10 @@ func (r V0alpha1ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.R
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiAdminListIdentitiesRequest
+ * @return V0alpha2ApiApiAdminListIdentitiesRequest
 */
-func (a *V0alpha1ApiService) AdminListIdentities(ctx context.Context) V0alpha1ApiApiAdminListIdentitiesRequest {
-	return V0alpha1ApiApiAdminListIdentitiesRequest{
+func (a *V0alpha2ApiService) AdminListIdentities(ctx context.Context) V0alpha2ApiApiAdminListIdentitiesRequest {
+	return V0alpha2ApiApiAdminListIdentitiesRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -1617,7 +1452,7 @@ func (a *V0alpha1ApiService) AdminListIdentities(ctx context.Context) V0alpha1Ap
  * Execute executes the request
  * @return []Identity
  */
-func (a *V0alpha1ApiService) AdminListIdentitiesExecute(r V0alpha1ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error) {
+func (a *V0alpha2ApiService) AdminListIdentitiesExecute(r V0alpha2ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -1627,7 +1462,7 @@ func (a *V0alpha1ApiService) AdminListIdentitiesExecute(r V0alpha1ApiApiAdminLis
 		localVarReturnValue  []Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminListIdentities")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminListIdentities")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1721,19 +1556,19 @@ func (a *V0alpha1ApiService) AdminListIdentitiesExecute(r V0alpha1ApiApiAdminLis
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiAdminUpdateIdentityRequest struct {
+type V0alpha2ApiApiAdminUpdateIdentityRequest struct {
 	ctx                     context.Context
-	ApiService              V0alpha1Api
+	ApiService              V0alpha2Api
 	id                      string
 	adminUpdateIdentityBody *AdminUpdateIdentityBody
 }
 
-func (r V0alpha1ApiApiAdminUpdateIdentityRequest) AdminUpdateIdentityBody(adminUpdateIdentityBody AdminUpdateIdentityBody) V0alpha1ApiApiAdminUpdateIdentityRequest {
+func (r V0alpha2ApiApiAdminUpdateIdentityRequest) AdminUpdateIdentityBody(adminUpdateIdentityBody AdminUpdateIdentityBody) V0alpha2ApiApiAdminUpdateIdentityRequest {
 	r.adminUpdateIdentityBody = &adminUpdateIdentityBody
 	return r
 }
 
-func (r V0alpha1ApiApiAdminUpdateIdentityRequest) Execute() (*Identity, *http.Response, error) {
+func (r V0alpha2ApiApiAdminUpdateIdentityRequest) Execute() (*Identity, *http.Response, error) {
 	return r.ApiService.AdminUpdateIdentityExecute(r)
 }
 
@@ -1747,10 +1582,10 @@ The full identity payload (except credentials) is expected. This endpoint does n
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of identity you want to update
- * @return V0alpha1ApiApiAdminUpdateIdentityRequest
+ * @return V0alpha2ApiApiAdminUpdateIdentityRequest
 */
-func (a *V0alpha1ApiService) AdminUpdateIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminUpdateIdentityRequest {
-	return V0alpha1ApiApiAdminUpdateIdentityRequest{
+func (a *V0alpha2ApiService) AdminUpdateIdentity(ctx context.Context, id string) V0alpha2ApiApiAdminUpdateIdentityRequest {
+	return V0alpha2ApiApiAdminUpdateIdentityRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -1761,7 +1596,7 @@ func (a *V0alpha1ApiService) AdminUpdateIdentity(ctx context.Context, id string)
  * Execute executes the request
  * @return Identity
  */
-func (a *V0alpha1ApiService) AdminUpdateIdentityExecute(r V0alpha1ApiApiAdminUpdateIdentityRequest) (*Identity, *http.Response, error) {
+func (a *V0alpha2ApiService) AdminUpdateIdentityExecute(r V0alpha2ApiApiAdminUpdateIdentityRequest) (*Identity, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPut
 		localVarPostBody     interface{}
@@ -1771,7 +1606,7 @@ func (a *V0alpha1ApiService) AdminUpdateIdentityExecute(r V0alpha1ApiApiAdminUpd
 		localVarReturnValue  *Identity
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminUpdateIdentity")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.AdminUpdateIdentity")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -1892,18 +1727,18 @@ func (a *V0alpha1ApiService) AdminUpdateIdentityExecute(r V0alpha1ApiApiAdminUpd
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest struct {
+type V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	cookie     *string
 }
 
-func (r V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) Cookie(cookie string) V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest {
+func (r V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) Cookie(cookie string) V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) Execute() (*SelfServiceLogoutUrl, *http.Response, error) {
+func (r V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) Execute() (*SelfServiceLogoutUrl, *http.Response, error) {
 	return r.ApiService.CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r)
 }
 
@@ -1920,10 +1755,10 @@ a 401 error.
 
 When calling this endpoint from a backend, please ensure to properly forward the HTTP cookies.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest
+ * @return V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest
 */
-func (a *V0alpha1ApiService) CreateSelfServiceLogoutFlowUrlForBrowsers(ctx context.Context) V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest {
-	return V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest{
+func (a *V0alpha2ApiService) CreateSelfServiceLogoutFlowUrlForBrowsers(ctx context.Context) V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest {
+	return V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -1933,7 +1768,7 @@ func (a *V0alpha1ApiService) CreateSelfServiceLogoutFlowUrlForBrowsers(ctx conte
  * Execute executes the request
  * @return SelfServiceLogoutUrl
  */
-func (a *V0alpha1ApiService) CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r V0alpha1ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) (*SelfServiceLogoutUrl, *http.Response, error) {
+func (a *V0alpha2ApiService) CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r V0alpha2ApiApiCreateSelfServiceLogoutFlowUrlForBrowsersRequest) (*SelfServiceLogoutUrl, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -1943,7 +1778,7 @@ func (a *V0alpha1ApiService) CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r 
 		localVarReturnValue  *SelfServiceLogoutUrl
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.CreateSelfServiceLogoutFlowUrlForBrowsers")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.CreateSelfServiceLogoutFlowUrlForBrowsers")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2030,13 +1865,13 @@ func (a *V0alpha1ApiService) CreateSelfServiceLogoutFlowUrlForBrowsersExecute(r 
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiGetJsonSchemaRequest struct {
+type V0alpha2ApiApiGetJsonSchemaRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	id         string
 }
 
-func (r V0alpha1ApiApiGetJsonSchemaRequest) Execute() (map[string]interface{}, *http.Response, error) {
+func (r V0alpha2ApiApiGetJsonSchemaRequest) Execute() (map[string]interface{}, *http.Response, error) {
 	return r.ApiService.GetJsonSchemaExecute(r)
 }
 
@@ -2045,10 +1880,10 @@ func (r V0alpha1ApiApiGetJsonSchemaRequest) Execute() (map[string]interface{}, *
  * Get a JSON Schema
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param id ID must be set to the ID of schema you want to get
- * @return V0alpha1ApiApiGetJsonSchemaRequest
+ * @return V0alpha2ApiApiGetJsonSchemaRequest
  */
-func (a *V0alpha1ApiService) GetJsonSchema(ctx context.Context, id string) V0alpha1ApiApiGetJsonSchemaRequest {
-	return V0alpha1ApiApiGetJsonSchemaRequest{
+func (a *V0alpha2ApiService) GetJsonSchema(ctx context.Context, id string) V0alpha2ApiApiGetJsonSchemaRequest {
+	return V0alpha2ApiApiGetJsonSchemaRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -2059,7 +1894,7 @@ func (a *V0alpha1ApiService) GetJsonSchema(ctx context.Context, id string) V0alp
  * Execute executes the request
  * @return map[string]interface{}
  */
-func (a *V0alpha1ApiService) GetJsonSchemaExecute(r V0alpha1ApiApiGetJsonSchemaRequest) (map[string]interface{}, *http.Response, error) {
+func (a *V0alpha2ApiService) GetJsonSchemaExecute(r V0alpha2ApiApiGetJsonSchemaRequest) (map[string]interface{}, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2069,7 +1904,7 @@ func (a *V0alpha1ApiService) GetJsonSchemaExecute(r V0alpha1ApiApiGetJsonSchemaR
 		localVarReturnValue  map[string]interface{}
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.GetJsonSchema")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetJsonSchema")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2154,18 +1989,18 @@ func (a *V0alpha1ApiService) GetJsonSchemaExecute(r V0alpha1ApiApiGetJsonSchemaR
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiGetSelfServiceErrorRequest struct {
+type V0alpha2ApiApiGetSelfServiceErrorRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	id         *string
 }
 
-func (r V0alpha1ApiApiGetSelfServiceErrorRequest) Id(id string) V0alpha1ApiApiGetSelfServiceErrorRequest {
+func (r V0alpha2ApiApiGetSelfServiceErrorRequest) Id(id string) V0alpha2ApiApiGetSelfServiceErrorRequest {
 	r.id = &id
 	return r
 }
 
-func (r V0alpha1ApiApiGetSelfServiceErrorRequest) Execute() (*SelfServiceError, *http.Response, error) {
+func (r V0alpha2ApiApiGetSelfServiceErrorRequest) Execute() (*SelfServiceError, *http.Response, error) {
 	return r.ApiService.GetSelfServiceErrorExecute(r)
 }
 
@@ -2179,10 +2014,10 @@ This endpoint supports stub values to help you implement the error UI:
 
 More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiGetSelfServiceErrorRequest
+ * @return V0alpha2ApiApiGetSelfServiceErrorRequest
 */
-func (a *V0alpha1ApiService) GetSelfServiceError(ctx context.Context) V0alpha1ApiApiGetSelfServiceErrorRequest {
-	return V0alpha1ApiApiGetSelfServiceErrorRequest{
+func (a *V0alpha2ApiService) GetSelfServiceError(ctx context.Context) V0alpha2ApiApiGetSelfServiceErrorRequest {
+	return V0alpha2ApiApiGetSelfServiceErrorRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2192,7 +2027,7 @@ func (a *V0alpha1ApiService) GetSelfServiceError(ctx context.Context) V0alpha1Ap
  * Execute executes the request
  * @return SelfServiceError
  */
-func (a *V0alpha1ApiService) GetSelfServiceErrorExecute(r V0alpha1ApiApiGetSelfServiceErrorRequest) (*SelfServiceError, *http.Response, error) {
+func (a *V0alpha2ApiService) GetSelfServiceErrorExecute(r V0alpha2ApiApiGetSelfServiceErrorRequest) (*SelfServiceError, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2202,7 +2037,7 @@ func (a *V0alpha1ApiService) GetSelfServiceErrorExecute(r V0alpha1ApiApiGetSelfS
 		localVarReturnValue  *SelfServiceError
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.GetSelfServiceError")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetSelfServiceError")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2300,23 +2135,23 @@ func (a *V0alpha1ApiService) GetSelfServiceErrorExecute(r V0alpha1ApiApiGetSelfS
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiGetSelfServiceLoginFlowRequest struct {
+type V0alpha2ApiApiGetSelfServiceLoginFlowRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	id         *string
 	cookie     *string
 }
 
-func (r V0alpha1ApiApiGetSelfServiceLoginFlowRequest) Id(id string) V0alpha1ApiApiGetSelfServiceLoginFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceLoginFlowRequest) Id(id string) V0alpha2ApiApiGetSelfServiceLoginFlowRequest {
 	r.id = &id
 	return r
 }
-func (r V0alpha1ApiApiGetSelfServiceLoginFlowRequest) Cookie(cookie string) V0alpha1ApiApiGetSelfServiceLoginFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceLoginFlowRequest) Cookie(cookie string) V0alpha2ApiApiGetSelfServiceLoginFlowRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha1ApiApiGetSelfServiceLoginFlowRequest) Execute() (*SelfServiceLoginFlow, *http.Response, error) {
+func (r V0alpha2ApiApiGetSelfServiceLoginFlowRequest) Execute() (*SelfServiceLoginFlow, *http.Response, error) {
 	return r.ApiService.GetSelfServiceLoginFlowExecute(r)
 }
 
@@ -2341,10 +2176,10 @@ res.render('login', flow)
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiGetSelfServiceLoginFlowRequest
+ * @return V0alpha2ApiApiGetSelfServiceLoginFlowRequest
 */
-func (a *V0alpha1ApiService) GetSelfServiceLoginFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceLoginFlowRequest {
-	return V0alpha1ApiApiGetSelfServiceLoginFlowRequest{
+func (a *V0alpha2ApiService) GetSelfServiceLoginFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceLoginFlowRequest {
+	return V0alpha2ApiApiGetSelfServiceLoginFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2354,7 +2189,7 @@ func (a *V0alpha1ApiService) GetSelfServiceLoginFlow(ctx context.Context) V0alph
  * Execute executes the request
  * @return SelfServiceLoginFlow
  */
-func (a *V0alpha1ApiService) GetSelfServiceLoginFlowExecute(r V0alpha1ApiApiGetSelfServiceLoginFlowRequest) (*SelfServiceLoginFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) GetSelfServiceLoginFlowExecute(r V0alpha2ApiApiGetSelfServiceLoginFlowRequest) (*SelfServiceLoginFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2364,7 +2199,7 @@ func (a *V0alpha1ApiService) GetSelfServiceLoginFlowExecute(r V0alpha1ApiApiGetS
 		localVarReturnValue  *SelfServiceLoginFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.GetSelfServiceLoginFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetSelfServiceLoginFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2475,23 +2310,23 @@ func (a *V0alpha1ApiService) GetSelfServiceLoginFlowExecute(r V0alpha1ApiApiGetS
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest struct {
+type V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	id         *string
 	cookie     *string
 }
 
-func (r V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest) Id(id string) V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) Id(id string) V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest {
 	r.id = &id
 	return r
 }
-func (r V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest) Cookie(cookie string) V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) Cookie(cookie string) V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
+func (r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
 	return r.ApiService.GetSelfServiceRecoveryFlowExecute(r)
 }
 
@@ -2516,10 +2351,10 @@ res.render('recovery', flow)
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest
+ * @return V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest
 */
-func (a *V0alpha1ApiService) GetSelfServiceRecoveryFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest {
-	return V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest{
+func (a *V0alpha2ApiService) GetSelfServiceRecoveryFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest {
+	return V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2529,7 +2364,7 @@ func (a *V0alpha1ApiService) GetSelfServiceRecoveryFlow(ctx context.Context) V0a
  * Execute executes the request
  * @return SelfServiceRecoveryFlow
  */
-func (a *V0alpha1ApiService) GetSelfServiceRecoveryFlowExecute(r V0alpha1ApiApiGetSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) GetSelfServiceRecoveryFlowExecute(r V0alpha2ApiApiGetSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2539,7 +2374,7 @@ func (a *V0alpha1ApiService) GetSelfServiceRecoveryFlowExecute(r V0alpha1ApiApiG
 		localVarReturnValue  *SelfServiceRecoveryFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.GetSelfServiceRecoveryFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetSelfServiceRecoveryFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2640,23 +2475,23 @@ func (a *V0alpha1ApiService) GetSelfServiceRecoveryFlowExecute(r V0alpha1ApiApiG
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest struct {
+type V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	id         *string
 	cookie     *string
 }
 
-func (r V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest) Id(id string) V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest) Id(id string) V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest {
 	r.id = &id
 	return r
 }
-func (r V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest) Cookie(cookie string) V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest) Cookie(cookie string) V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*SelfServiceRegistrationFlow, *http.Response, error) {
+func (r V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest) Execute() (*SelfServiceRegistrationFlow, *http.Response, error) {
 	return r.ApiService.GetSelfServiceRegistrationFlowExecute(r)
 }
 
@@ -2681,10 +2516,10 @@ res.render('registration', flow)
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest
+ * @return V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest
 */
-func (a *V0alpha1ApiService) GetSelfServiceRegistrationFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest {
-	return V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest{
+func (a *V0alpha2ApiService) GetSelfServiceRegistrationFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest {
+	return V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2694,7 +2529,7 @@ func (a *V0alpha1ApiService) GetSelfServiceRegistrationFlow(ctx context.Context)
  * Execute executes the request
  * @return SelfServiceRegistrationFlow
  */
-func (a *V0alpha1ApiService) GetSelfServiceRegistrationFlowExecute(r V0alpha1ApiApiGetSelfServiceRegistrationFlowRequest) (*SelfServiceRegistrationFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) GetSelfServiceRegistrationFlowExecute(r V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest) (*SelfServiceRegistrationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2704,7 +2539,7 @@ func (a *V0alpha1ApiService) GetSelfServiceRegistrationFlowExecute(r V0alpha1Api
 		localVarReturnValue  *SelfServiceRegistrationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.GetSelfServiceRegistrationFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetSelfServiceRegistrationFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2815,28 +2650,28 @@ func (a *V0alpha1ApiService) GetSelfServiceRegistrationFlowExecute(r V0alpha1Api
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiGetSelfServiceSettingsFlowRequest struct {
+type V0alpha2ApiApiGetSelfServiceSettingsFlowRequest struct {
 	ctx           context.Context
-	ApiService    V0alpha1Api
+	ApiService    V0alpha2Api
 	id            *string
 	xSessionToken *string
 	cookie        *string
 }
 
-func (r V0alpha1ApiApiGetSelfServiceSettingsFlowRequest) Id(id string) V0alpha1ApiApiGetSelfServiceSettingsFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) Id(id string) V0alpha2ApiApiGetSelfServiceSettingsFlowRequest {
 	r.id = &id
 	return r
 }
-func (r V0alpha1ApiApiGetSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiGetSelfServiceSettingsFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiGetSelfServiceSettingsFlowRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r V0alpha1ApiApiGetSelfServiceSettingsFlowRequest) Cookie(cookie string) V0alpha1ApiApiGetSelfServiceSettingsFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) Cookie(cookie string) V0alpha2ApiApiGetSelfServiceSettingsFlowRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha1ApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
+func (r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
 	return r.ApiService.GetSelfServiceSettingsFlowExecute(r)
 }
 
@@ -2850,10 +2685,10 @@ You can access this endpoint without credentials when using Ory Kratos' Admin AP
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiGetSelfServiceSettingsFlowRequest
+ * @return V0alpha2ApiApiGetSelfServiceSettingsFlowRequest
 */
-func (a *V0alpha1ApiService) GetSelfServiceSettingsFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceSettingsFlowRequest {
-	return V0alpha1ApiApiGetSelfServiceSettingsFlowRequest{
+func (a *V0alpha2ApiService) GetSelfServiceSettingsFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceSettingsFlowRequest {
+	return V0alpha2ApiApiGetSelfServiceSettingsFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -2863,7 +2698,7 @@ func (a *V0alpha1ApiService) GetSelfServiceSettingsFlow(ctx context.Context) V0a
  * Execute executes the request
  * @return SelfServiceSettingsFlow
  */
-func (a *V0alpha1ApiService) GetSelfServiceSettingsFlowExecute(r V0alpha1ApiApiGetSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) GetSelfServiceSettingsFlowExecute(r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -2873,7 +2708,7 @@ func (a *V0alpha1ApiService) GetSelfServiceSettingsFlowExecute(r V0alpha1ApiApiG
 		localVarReturnValue  *SelfServiceSettingsFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.GetSelfServiceSettingsFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetSelfServiceSettingsFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -2987,23 +2822,23 @@ func (a *V0alpha1ApiService) GetSelfServiceSettingsFlowExecute(r V0alpha1ApiApiG
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiGetSelfServiceVerificationFlowRequest struct {
+type V0alpha2ApiApiGetSelfServiceVerificationFlowRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	id         *string
 	cookie     *string
 }
 
-func (r V0alpha1ApiApiGetSelfServiceVerificationFlowRequest) Id(id string) V0alpha1ApiApiGetSelfServiceVerificationFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) Id(id string) V0alpha2ApiApiGetSelfServiceVerificationFlowRequest {
 	r.id = &id
 	return r
 }
-func (r V0alpha1ApiApiGetSelfServiceVerificationFlowRequest) Cookie(cookie string) V0alpha1ApiApiGetSelfServiceVerificationFlowRequest {
+func (r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) Cookie(cookie string) V0alpha2ApiApiGetSelfServiceVerificationFlowRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha1ApiApiGetSelfServiceVerificationFlowRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
+func (r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
 	return r.ApiService.GetSelfServiceVerificationFlowExecute(r)
 }
 
@@ -3027,10 +2862,10 @@ res.render('verification', flow)
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiGetSelfServiceVerificationFlowRequest
+ * @return V0alpha2ApiApiGetSelfServiceVerificationFlowRequest
 */
-func (a *V0alpha1ApiService) GetSelfServiceVerificationFlow(ctx context.Context) V0alpha1ApiApiGetSelfServiceVerificationFlowRequest {
-	return V0alpha1ApiApiGetSelfServiceVerificationFlowRequest{
+func (a *V0alpha2ApiService) GetSelfServiceVerificationFlow(ctx context.Context) V0alpha2ApiApiGetSelfServiceVerificationFlowRequest {
+	return V0alpha2ApiApiGetSelfServiceVerificationFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -3040,7 +2875,7 @@ func (a *V0alpha1ApiService) GetSelfServiceVerificationFlow(ctx context.Context)
  * Execute executes the request
  * @return SelfServiceVerificationFlow
  */
-func (a *V0alpha1ApiService) GetSelfServiceVerificationFlowExecute(r V0alpha1ApiApiGetSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) GetSelfServiceVerificationFlowExecute(r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -3050,7 +2885,7 @@ func (a *V0alpha1ApiService) GetSelfServiceVerificationFlowExecute(r V0alpha1Api
 		localVarReturnValue  *SelfServiceVerificationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.GetSelfServiceVerificationFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetSelfServiceVerificationFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -3151,28 +2986,28 @@ func (a *V0alpha1ApiService) GetSelfServiceVerificationFlowExecute(r V0alpha1Api
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest struct {
 	ctx           context.Context
-	ApiService    V0alpha1Api
+	ApiService    V0alpha2Api
 	refresh       *bool
 	aal           *string
 	xSessionToken *string
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Refresh(refresh bool) V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Refresh(refresh bool) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
 	r.refresh = &refresh
 	return r
 }
-func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Aal(aal string) V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Aal(aal string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
 	r.aal = &aal
 	return r
 }
-func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Execute() (*SelfServiceLoginFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Execute() (*SelfServiceLoginFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceLoginFlowForBrowsersExecute(r)
 }
 
@@ -3192,10 +3027,10 @@ This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Fi
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
-	return V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+	return V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -3205,7 +3040,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowForBrowsers(ctx conte
  * Execute executes the request
  * @return SelfServiceLoginFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) (*SelfServiceLoginFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) (*SelfServiceLoginFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -3215,7 +3050,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 		localVarReturnValue  *SelfServiceLoginFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceLoginFlowForBrowsers")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceLoginFlowForBrowsers")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -3298,28 +3133,28 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest struct {
 	ctx           context.Context
-	ApiService    V0alpha1Api
+	ApiService    V0alpha2Api
 	refresh       *bool
 	aal           *string
 	xSessionToken *string
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Refresh(refresh bool) V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Refresh(refresh bool) V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
 	r.refresh = &refresh
 	return r
 }
-func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Aal(aal string) V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Aal(aal string) V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
 	r.aal = &aal
 	return r
 }
-func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Execute() (*SelfServiceLoginFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) Execute() (*SelfServiceLoginFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceLoginFlowWithoutBrowserExecute(r)
 }
 
@@ -3340,10 +3175,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
-	return V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest {
+	return V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -3353,7 +3188,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowWithoutBrowser(ctx co
  * Execute executes the request
  * @return SelfServiceLoginFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) (*SelfServiceLoginFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceLoginFlowWithoutBrowserRequest) (*SelfServiceLoginFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -3363,7 +3198,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowWithoutBrowserExecute
 		localVarReturnValue  *SelfServiceLoginFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceLoginFlowWithoutBrowser")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceLoginFlowWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -3456,12 +3291,12 @@ func (a *V0alpha1ApiService) InitializeSelfServiceLoginFlowWithoutBrowserExecute
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceRecoveryFlowForBrowsersExecute(r)
 }
 
@@ -3478,10 +3313,10 @@ This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Fi
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest {
-	return V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceRecoveryFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest {
+	return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -3491,7 +3326,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowForBrowsers(ctx co
  * Execute executes the request
  * @return SelfServiceRecoveryFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) (*SelfServiceRecoveryFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceRecoveryFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) (*SelfServiceRecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -3501,7 +3336,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowForBrowsersExecute
 		localVarReturnValue  *SelfServiceRecoveryFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceRecoveryFlowForBrowsers")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceRecoveryFlowForBrowsers")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -3585,12 +3420,12 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowForBrowsersExecute
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceRecoveryFlowWithoutBrowserExecute(r)
 }
 
@@ -3611,10 +3446,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest {
-	return V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest {
+	return V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -3624,7 +3459,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowser(ctx
  * Execute executes the request
  * @return SelfServiceRecoveryFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest) (*SelfServiceRecoveryFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowWithoutBrowserRequest) (*SelfServiceRecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -3634,7 +3469,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowserExec
 		localVarReturnValue  *SelfServiceRecoveryFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceRecoveryFlowWithoutBrowser")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceRecoveryFlowWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -3718,12 +3553,12 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowserExec
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) Execute() (*SelfServiceRegistrationFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) Execute() (*SelfServiceRegistrationFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceRegistrationFlowForBrowsersExecute(r)
 }
 
@@ -3748,10 +3583,10 @@ This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Fi
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest {
-	return V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceRegistrationFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest {
+	return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -3761,7 +3596,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowForBrowsers(ct
  * Execute executes the request
  * @return SelfServiceRegistrationFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) (*SelfServiceRegistrationFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceRegistrationFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) (*SelfServiceRegistrationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -3771,7 +3606,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowForBrowsersExe
 		localVarReturnValue  *SelfServiceRegistrationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceRegistrationFlowForBrowsers")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceRegistrationFlowForBrowsers")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -3845,12 +3680,12 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowForBrowsersExe
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest) Execute() (*SelfServiceRegistrationFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest) Execute() (*SelfServiceRegistrationFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceRegistrationFlowWithoutBrowserExecute(r)
 }
 
@@ -3871,10 +3706,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest {
-	return V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest {
+	return V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -3884,7 +3719,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowWithoutBrowser
  * Execute executes the request
  * @return SelfServiceRegistrationFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest) (*SelfServiceRegistrationFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceRegistrationFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowWithoutBrowserRequest) (*SelfServiceRegistrationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -3894,7 +3729,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowWithoutBrowser
 		localVarReturnValue  *SelfServiceRegistrationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceRegistrationFlowWithoutBrowser")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceRegistrationFlowWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -3978,18 +3813,18 @@ func (a *V0alpha1ApiService) InitializeSelfServiceRegistrationFlowWithoutBrowser
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	cookie     *string
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) Cookie(cookie string) V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest {
+func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) Cookie(cookie string) V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceSettingsFlowForBrowsersExecute(r)
 }
 
@@ -4010,10 +3845,10 @@ This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Fi
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest {
-	return V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest {
+	return V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -4023,7 +3858,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowForBrowsers(ctx co
  * Execute executes the request
  * @return SelfServiceSettingsFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -4033,7 +3868,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute
 		localVarReturnValue  *SelfServiceSettingsFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceSettingsFlowForBrowsers")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceSettingsFlowForBrowsers")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -4120,18 +3955,18 @@ func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest struct {
 	ctx           context.Context
-	ApiService    V0alpha1Api
+	ApiService    V0alpha2Api
 	xSessionToken *string
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest {
+func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceSettingsFlowWithoutBrowserExecute(r)
 }
 
@@ -4150,10 +3985,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest {
-	return V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest {
+	return V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -4163,7 +3998,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowWithoutBrowser(ctx
  * Execute executes the request
  * @return SelfServiceSettingsFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -4173,7 +4008,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExec
 		localVarReturnValue  *SelfServiceSettingsFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceSettingsFlowWithoutBrowser")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceSettingsFlowWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -4260,12 +4095,12 @@ func (a *V0alpha1ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExec
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceVerificationFlowForBrowsersExecute(r)
 }
 
@@ -4280,10 +4115,10 @@ This endpoint is NOT INTENDED for API clients and only works with browsers (Chro
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowForBrowsers(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest {
-	return V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceVerificationFlowForBrowsers(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest {
+	return V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -4293,7 +4128,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowForBrowsers(ct
  * Execute executes the request
  * @return SelfServiceVerificationFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowForBrowsersExecute(r V0alpha1ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) (*SelfServiceVerificationFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceVerificationFlowForBrowsersExecute(r V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) (*SelfServiceVerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -4303,7 +4138,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowForBrowsersExe
 		localVarReturnValue  *SelfServiceVerificationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceVerificationFlowForBrowsers")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceVerificationFlowForBrowsers")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -4377,12 +4212,12 @@ func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowForBrowsersExe
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest struct {
+type V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 }
 
-func (r V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
+func (r V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
 	return r.ApiService.InitializeSelfServiceVerificationFlowWithoutBrowserExecute(r)
 }
 
@@ -4400,10 +4235,10 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest
+ * @return V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest
 */
-func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest {
-	return V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest{
+func (a *V0alpha2ApiService) InitializeSelfServiceVerificationFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest {
+	return V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -4413,7 +4248,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowWithoutBrowser
  * Execute executes the request
  * @return SelfServiceVerificationFlow
  */
-func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowWithoutBrowserExecute(r V0alpha1ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest) (*SelfServiceVerificationFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) InitializeSelfServiceVerificationFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest) (*SelfServiceVerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -4423,7 +4258,7 @@ func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowWithoutBrowser
 		localVarReturnValue  *SelfServiceVerificationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.InitializeSelfServiceVerificationFlowWithoutBrowser")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.InitializeSelfServiceVerificationFlowWithoutBrowser")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -4507,28 +4342,28 @@ func (a *V0alpha1ApiService) InitializeSelfServiceVerificationFlowWithoutBrowser
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest struct {
+type V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest struct {
 	ctx                            context.Context
-	ApiService                     V0alpha1Api
+	ApiService                     V0alpha2Api
 	flow                           *string
 	xSessionToken                  *string
 	submitSelfServiceLoginFlowBody *SubmitSelfServiceLoginFlowBody
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) Flow(flow string) V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) Flow(flow string) V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest {
 	r.flow = &flow
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) SubmitSelfServiceLoginFlowBody(submitSelfServiceLoginFlowBody SubmitSelfServiceLoginFlowBody) V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) SubmitSelfServiceLoginFlowBody(submitSelfServiceLoginFlowBody SubmitSelfServiceLoginFlowBody) V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest {
 	r.submitSelfServiceLoginFlowBody = &submitSelfServiceLoginFlowBody
 	return r
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) Execute() (*SuccessfulSelfServiceLoginWithoutBrowser, *http.Response, error) {
+func (r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) Execute() (*SuccessfulSelfServiceLoginWithoutBrowser, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceLoginFlowExecute(r)
 }
 
@@ -4559,10 +4394,10 @@ HTTP 400 on form validation errors.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest
+ * @return V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest
 */
-func (a *V0alpha1ApiService) SubmitSelfServiceLoginFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest {
-	return V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest{
+func (a *V0alpha2ApiService) SubmitSelfServiceLoginFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest {
+	return V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -4572,7 +4407,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLoginFlow(ctx context.Context) V0a
  * Execute executes the request
  * @return SuccessfulSelfServiceLoginWithoutBrowser
  */
-func (a *V0alpha1ApiService) SubmitSelfServiceLoginFlowExecute(r V0alpha1ApiApiSubmitSelfServiceLoginFlowRequest) (*SuccessfulSelfServiceLoginWithoutBrowser, *http.Response, error) {
+func (a *V0alpha2ApiService) SubmitSelfServiceLoginFlowExecute(r V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest) (*SuccessfulSelfServiceLoginWithoutBrowser, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -4582,7 +4417,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLoginFlowExecute(r V0alpha1ApiApiS
 		localVarReturnValue  *SuccessfulSelfServiceLoginWithoutBrowser
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.SubmitSelfServiceLoginFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.SubmitSelfServiceLoginFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -4675,18 +4510,18 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLoginFlowExecute(r V0alpha1ApiApiS
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest struct {
+type V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest struct {
 	ctx        context.Context
-	ApiService V0alpha1Api
+	ApiService V0alpha2Api
 	token      *string
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest) Token(token string) V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) Token(token string) V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest {
 	r.token = &token
 	return r
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest) Execute() (*http.Response, error) {
+func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) Execute() (*http.Response, error) {
 	return r.ApiService.SubmitSelfServiceLogoutFlowExecute(r)
 }
 
@@ -4706,10 +4541,10 @@ call the `/self-service/logout/api` URL directly with the Ory Session Token.
 
 More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest
+ * @return V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest
 */
-func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest {
-	return V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest{
+func (a *V0alpha2ApiService) SubmitSelfServiceLogoutFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest {
+	return V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -4718,7 +4553,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlow(ctx context.Context) V0
 /*
  * Execute executes the request
  */
-func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlowExecute(r V0alpha1ApiApiSubmitSelfServiceLogoutFlowRequest) (*http.Response, error) {
+func (a *V0alpha2ApiService) SubmitSelfServiceLogoutFlowExecute(r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) (*http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -4727,7 +4562,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlowExecute(r V0alpha1ApiApi
 		localVarFileBytes    []byte
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.SubmitSelfServiceLogoutFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.SubmitSelfServiceLogoutFlow")
 	if err != nil {
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -4795,18 +4630,18 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlowExecute(r V0alpha1ApiApi
 	return localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest struct {
+type V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest struct {
 	ctx                                           context.Context
-	ApiService                                    V0alpha1Api
+	ApiService                                    V0alpha2Api
 	submitSelfServiceLogoutFlowWithoutBrowserBody *SubmitSelfServiceLogoutFlowWithoutBrowserBody
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) SubmitSelfServiceLogoutFlowWithoutBrowserBody(submitSelfServiceLogoutFlowWithoutBrowserBody SubmitSelfServiceLogoutFlowWithoutBrowserBody) V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) SubmitSelfServiceLogoutFlowWithoutBrowserBody(submitSelfServiceLogoutFlowWithoutBrowserBody SubmitSelfServiceLogoutFlowWithoutBrowserBody) V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest {
 	r.submitSelfServiceLogoutFlowWithoutBrowserBody = &submitSelfServiceLogoutFlowWithoutBrowserBody
 	return r
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) Execute() (*http.Response, error) {
+func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) Execute() (*http.Response, error) {
 	return r.ApiService.SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r)
 }
 
@@ -4821,10 +4656,10 @@ If the Ory Session Token is malformed or does not exist a 403 Forbidden response
 This endpoint does not remove any HTTP
 Cookies - use the Browser-Based Self-Service Logout Flow instead.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest
+ * @return V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest
 */
-func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlowWithoutBrowser(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest {
-	return V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{
+func (a *V0alpha2ApiService) SubmitSelfServiceLogoutFlowWithoutBrowser(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest {
+	return V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -4833,7 +4668,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlowWithoutBrowser(ctx conte
 /*
  * Execute executes the request
  */
-func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r V0alpha1ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) (*http.Response, error) {
+func (a *V0alpha2ApiService) SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r V0alpha2ApiApiSubmitSelfServiceLogoutFlowWithoutBrowserRequest) (*http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodDelete
 		localVarPostBody     interface{}
@@ -4842,7 +4677,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r 
 		localVarFileBytes    []byte
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.SubmitSelfServiceLogoutFlowWithoutBrowser")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.SubmitSelfServiceLogoutFlowWithoutBrowser")
 	if err != nil {
 		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -4922,28 +4757,28 @@ func (a *V0alpha1ApiService) SubmitSelfServiceLogoutFlowWithoutBrowserExecute(r 
 	return localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest struct {
+type V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest struct {
 	ctx                               context.Context
-	ApiService                        V0alpha1Api
+	ApiService                        V0alpha2Api
 	flow                              *string
 	token                             *string
 	submitSelfServiceRecoveryFlowBody *SubmitSelfServiceRecoveryFlowBody
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest) Flow(flow string) V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) Flow(flow string) V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest {
 	r.flow = &flow
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest) Token(token string) V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) Token(token string) V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest {
 	r.token = &token
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest) SubmitSelfServiceRecoveryFlowBody(submitSelfServiceRecoveryFlowBody SubmitSelfServiceRecoveryFlowBody) V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) SubmitSelfServiceRecoveryFlowBody(submitSelfServiceRecoveryFlowBody SubmitSelfServiceRecoveryFlowBody) V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest {
 	r.submitSelfServiceRecoveryFlowBody = &submitSelfServiceRecoveryFlowBody
 	return r
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
+func (r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceRecoveryFlowExecute(r)
 }
 
@@ -4966,10 +4801,10 @@ a new Recovery Flow ID which contains an error message that the recovery link wa
 
 More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest
+ * @return V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest
 */
-func (a *V0alpha1ApiService) SubmitSelfServiceRecoveryFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest {
-	return V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest{
+func (a *V0alpha2ApiService) SubmitSelfServiceRecoveryFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest {
+	return V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -4979,7 +4814,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceRecoveryFlow(ctx context.Context) 
  * Execute executes the request
  * @return SelfServiceRecoveryFlow
  */
-func (a *V0alpha1ApiService) SubmitSelfServiceRecoveryFlowExecute(r V0alpha1ApiApiSubmitSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) SubmitSelfServiceRecoveryFlowExecute(r V0alpha2ApiApiSubmitSelfServiceRecoveryFlowRequest) (*SelfServiceRecoveryFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -4989,7 +4824,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceRecoveryFlowExecute(r V0alpha1ApiA
 		localVarReturnValue  *SelfServiceRecoveryFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.SubmitSelfServiceRecoveryFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.SubmitSelfServiceRecoveryFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -5082,23 +4917,23 @@ func (a *V0alpha1ApiService) SubmitSelfServiceRecoveryFlowExecute(r V0alpha1ApiA
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest struct {
+type V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest struct {
 	ctx                                   context.Context
-	ApiService                            V0alpha1Api
+	ApiService                            V0alpha2Api
 	flow                                  *string
 	submitSelfServiceRegistrationFlowBody *SubmitSelfServiceRegistrationFlowBody
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest) Flow(flow string) V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) Flow(flow string) V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest {
 	r.flow = &flow
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest) SubmitSelfServiceRegistrationFlowBody(submitSelfServiceRegistrationFlowBody SubmitSelfServiceRegistrationFlowBody) V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) SubmitSelfServiceRegistrationFlowBody(submitSelfServiceRegistrationFlowBody SubmitSelfServiceRegistrationFlowBody) V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest {
 	r.submitSelfServiceRegistrationFlowBody = &submitSelfServiceRegistrationFlowBody
 	return r
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest) Execute() (*SuccessfulSelfServiceRegistrationWithoutBrowser, *http.Response, error) {
+func (r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) Execute() (*SuccessfulSelfServiceRegistrationWithoutBrowser, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceRegistrationFlowExecute(r)
 }
 
@@ -5124,10 +4959,10 @@ HTTP 400 on form validation errors.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest
+ * @return V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest
 */
-func (a *V0alpha1ApiService) SubmitSelfServiceRegistrationFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest {
-	return V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest{
+func (a *V0alpha2ApiService) SubmitSelfServiceRegistrationFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest {
+	return V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -5137,7 +4972,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceRegistrationFlow(ctx context.Conte
  * Execute executes the request
  * @return SuccessfulSelfServiceRegistrationWithoutBrowser
  */
-func (a *V0alpha1ApiService) SubmitSelfServiceRegistrationFlowExecute(r V0alpha1ApiApiSubmitSelfServiceRegistrationFlowRequest) (*SuccessfulSelfServiceRegistrationWithoutBrowser, *http.Response, error) {
+func (a *V0alpha2ApiService) SubmitSelfServiceRegistrationFlowExecute(r V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest) (*SuccessfulSelfServiceRegistrationWithoutBrowser, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -5147,7 +4982,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceRegistrationFlowExecute(r V0alpha1
 		localVarReturnValue  *SuccessfulSelfServiceRegistrationWithoutBrowser
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.SubmitSelfServiceRegistrationFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.SubmitSelfServiceRegistrationFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -5237,28 +5072,28 @@ func (a *V0alpha1ApiService) SubmitSelfServiceRegistrationFlowExecute(r V0alpha1
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest struct {
+type V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest struct {
 	ctx                               context.Context
-	ApiService                        V0alpha1Api
+	ApiService                        V0alpha2Api
 	flow                              *string
 	xSessionToken                     *string
 	submitSelfServiceSettingsFlowBody *SubmitSelfServiceSettingsFlowBody
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) Flow(flow string) V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) Flow(flow string) V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest {
 	r.flow = &flow
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) SubmitSelfServiceSettingsFlowBody(submitSelfServiceSettingsFlowBody SubmitSelfServiceSettingsFlowBody) V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) SubmitSelfServiceSettingsFlowBody(submitSelfServiceSettingsFlowBody SubmitSelfServiceSettingsFlowBody) V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest {
 	r.submitSelfServiceSettingsFlowBody = &submitSelfServiceSettingsFlowBody
 	return r
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
+func (r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceSettingsFlowExecute(r)
 }
 
@@ -5288,10 +5123,10 @@ HTTP 400 on form validation errors.
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest
+ * @return V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest
 */
-func (a *V0alpha1ApiService) SubmitSelfServiceSettingsFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest {
-	return V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest{
+func (a *V0alpha2ApiService) SubmitSelfServiceSettingsFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest {
+	return V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -5301,7 +5136,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceSettingsFlow(ctx context.Context) 
  * Execute executes the request
  * @return SelfServiceSettingsFlow
  */
-func (a *V0alpha1ApiService) SubmitSelfServiceSettingsFlowExecute(r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) SubmitSelfServiceSettingsFlowExecute(r V0alpha2ApiApiSubmitSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -5311,7 +5146,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceSettingsFlowExecute(r V0alpha1ApiA
 		localVarReturnValue  *SelfServiceSettingsFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.SubmitSelfServiceSettingsFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.SubmitSelfServiceSettingsFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -5424,28 +5259,28 @@ func (a *V0alpha1ApiService) SubmitSelfServiceSettingsFlowExecute(r V0alpha1ApiA
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest struct {
+type V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest struct {
 	ctx                                   context.Context
-	ApiService                            V0alpha1Api
+	ApiService                            V0alpha2Api
 	flow                                  *string
 	token                                 *string
 	submitSelfServiceVerificationFlowBody *SubmitSelfServiceVerificationFlowBody
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest) Flow(flow string) V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) Flow(flow string) V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest {
 	r.flow = &flow
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest) Token(token string) V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) Token(token string) V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest {
 	r.token = &token
 	return r
 }
-func (r V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest) SubmitSelfServiceVerificationFlowBody(submitSelfServiceVerificationFlowBody SubmitSelfServiceVerificationFlowBody) V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest {
+func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) SubmitSelfServiceVerificationFlowBody(submitSelfServiceVerificationFlowBody SubmitSelfServiceVerificationFlowBody) V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest {
 	r.submitSelfServiceVerificationFlowBody = &submitSelfServiceVerificationFlowBody
 	return r
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
+func (r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceVerificationFlowExecute(r)
 }
 
@@ -5468,10 +5303,10 @@ a new Verification Flow ID which contains an error message that the verification
 
 More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest
+ * @return V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest
 */
-func (a *V0alpha1ApiService) SubmitSelfServiceVerificationFlow(ctx context.Context) V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest {
-	return V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest{
+func (a *V0alpha2ApiService) SubmitSelfServiceVerificationFlow(ctx context.Context) V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest {
+	return V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -5481,7 +5316,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceVerificationFlow(ctx context.Conte
  * Execute executes the request
  * @return SelfServiceVerificationFlow
  */
-func (a *V0alpha1ApiService) SubmitSelfServiceVerificationFlowExecute(r V0alpha1ApiApiSubmitSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error) {
+func (a *V0alpha2ApiService) SubmitSelfServiceVerificationFlowExecute(r V0alpha2ApiApiSubmitSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
@@ -5491,7 +5326,7 @@ func (a *V0alpha1ApiService) SubmitSelfServiceVerificationFlowExecute(r V0alpha1
 		localVarReturnValue  *SelfServiceVerificationFlow
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.SubmitSelfServiceVerificationFlow")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.SubmitSelfServiceVerificationFlow")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -5584,23 +5419,23 @@ func (a *V0alpha1ApiService) SubmitSelfServiceVerificationFlowExecute(r V0alpha1
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha1ApiApiToSessionRequest struct {
+type V0alpha2ApiApiToSessionRequest struct {
 	ctx           context.Context
-	ApiService    V0alpha1Api
+	ApiService    V0alpha2Api
 	xSessionToken *string
 	cookie        *string
 }
 
-func (r V0alpha1ApiApiToSessionRequest) XSessionToken(xSessionToken string) V0alpha1ApiApiToSessionRequest {
+func (r V0alpha2ApiApiToSessionRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiToSessionRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r V0alpha1ApiApiToSessionRequest) Cookie(cookie string) V0alpha1ApiApiToSessionRequest {
+func (r V0alpha2ApiApiToSessionRequest) Cookie(cookie string) V0alpha2ApiApiToSessionRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha1ApiApiToSessionRequest) Execute() (*Session, *http.Response, error) {
+func (r V0alpha2ApiApiToSessionRequest) Execute() (*Session, *http.Response, error) {
 	return r.ApiService.ToSessionExecute(r)
 }
 
@@ -5645,10 +5480,10 @@ if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Tok
 
 If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha1ApiApiToSessionRequest
+ * @return V0alpha2ApiApiToSessionRequest
 */
-func (a *V0alpha1ApiService) ToSession(ctx context.Context) V0alpha1ApiApiToSessionRequest {
-	return V0alpha1ApiApiToSessionRequest{
+func (a *V0alpha2ApiService) ToSession(ctx context.Context) V0alpha2ApiApiToSessionRequest {
+	return V0alpha2ApiApiToSessionRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -5658,7 +5493,7 @@ func (a *V0alpha1ApiService) ToSession(ctx context.Context) V0alpha1ApiApiToSess
  * Execute executes the request
  * @return Session
  */
-func (a *V0alpha1ApiService) ToSessionExecute(r V0alpha1ApiApiToSessionRequest) (*Session, *http.Response, error) {
+func (a *V0alpha2ApiService) ToSessionExecute(r V0alpha2ApiApiToSessionRequest) (*Session, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -5668,7 +5503,7 @@ func (a *V0alpha1ApiService) ToSessionExecute(r V0alpha1ApiApiToSessionRequest) 
 		localVarReturnValue  *Session
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.ToSession")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.ToSession")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}

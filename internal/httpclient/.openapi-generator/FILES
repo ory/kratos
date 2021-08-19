@@ -3,7 +3,7 @@
 README.md
 api/openapi.yaml
 api_metadata.go
-api_v0alpha1.go
+api_v0alpha2.go
 client.go
 configuration.go
 docs/AdminCreateIdentityBody.md
@@ -97,7 +97,7 @@ docs/UiNodeImageAttributes.md
 docs/UiNodeInputAttributes.md
 docs/UiNodeTextAttributes.md
 docs/UiText.md
-docs/V0alpha1Api.md
+docs/V0alpha2Api.md
 docs/VerifiableIdentityAddress.md
 docs/Version.md
 docs/Volume.md

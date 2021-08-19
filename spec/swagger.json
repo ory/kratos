@@ -88,7 +88,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "List Identities",
         "operationId": "adminListIdentities",
@@ -146,7 +146,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Create an Identity",
         "operationId": "adminCreateIdentity",
@@ -206,7 +206,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Get an Identity",
         "operationId": "adminGetIdentity",
@@ -267,7 +267,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Update an Identity",
         "operationId": "adminUpdateIdentity",
@@ -335,7 +335,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Delete an Identity",
         "operationId": "adminDeleteIdentity",
@@ -399,7 +399,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Create a Recovery Link",
         "operationId": "adminCreateSelfServiceRecoveryLink",
@@ -451,7 +451,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "operationId": "getJsonSchema",
         "parameters": [
@@ -496,7 +496,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Get Self-Service Errors",
         "operationId": "getSelfServiceError",
@@ -554,7 +554,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Submit a Login Flow",
         "operationId": "submitSelfServiceLoginFlow",
@@ -616,7 +616,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Login Flow for APIs, Services, Apps, ...",
         "operationId": "initializeSelfServiceLoginFlowWithoutBrowser",
@@ -673,7 +673,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Login Flow for Browsers",
         "operationId": "initializeSelfServiceLoginFlowForBrowsers",
@@ -727,7 +727,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Get Login Flow",
         "operationId": "getSelfServiceLoginFlow",
@@ -791,7 +791,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Complete Self-Service Logout",
         "operationId": "submitSelfServiceLogoutFlow",
@@ -833,7 +833,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Perform Logout for APIs, Services, Apps, ...",
         "operationId": "submitSelfServiceLogoutFlowWithoutBrowser",
@@ -877,7 +877,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Create a Logout URL for Browsers",
         "operationId": "createSelfServiceLogoutFlowUrlForBrowsers",
@@ -926,7 +926,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Complete Recovery Flow",
         "operationId": "submitSelfServiceRecoveryFlow",
@@ -985,7 +985,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Recovery Flow for APIs, Services, Apps, ...",
         "operationId": "initializeSelfServiceRecoveryFlowWithoutBrowser",
@@ -1019,7 +1019,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Recovery Flow for Browsers",
         "operationId": "initializeSelfServiceRecoveryFlowForBrowsers",
@@ -1059,7 +1059,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Get Recovery Flow",
         "operationId": "getSelfServiceRecoveryFlow",
@@ -1121,7 +1121,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Submit a Registration Flow",
         "operationId": "submitSelfServiceRegistrationFlow",
@@ -1174,7 +1174,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Registration Flow for APIs, Services, Apps, ...",
         "operationId": "initializeSelfServiceRegistrationFlowWithoutBrowser",
@@ -1211,7 +1211,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Registration Flow for Browsers",
         "operationId": "initializeSelfServiceRegistrationFlowForBrowsers",
@@ -1245,7 +1245,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Get Registration Flow",
         "operationId": "getSelfServiceRegistrationFlow",
@@ -1318,7 +1318,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Complete Settings Flow",
         "operationId": "submitSelfServiceSettingsFlow",
@@ -1389,7 +1389,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Settings Flow for APIs, Services, Apps, ...",
         "operationId": "initializeSelfServiceSettingsFlowWithoutBrowser",
@@ -1431,7 +1431,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Settings Flow for Browsers",
         "operationId": "initializeSelfServiceSettingsFlowForBrowsers",
@@ -1479,7 +1479,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Get Settings Flow",
         "operationId": "getSelfServiceSettingsFlow",
@@ -1553,7 +1553,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Complete Verification Flow",
         "operationId": "submitSelfServiceVerificationFlow",
@@ -1612,7 +1612,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Verification Flow for APIs, Services, Apps, ...",
         "operationId": "initializeSelfServiceVerificationFlowWithoutBrowser",
@@ -1646,7 +1646,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Initialize Verification Flow for Browser Clients",
         "operationId": "initializeSelfServiceVerificationFlowForBrowsers",
@@ -1680,7 +1680,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Get Verification Flow",
         "operationId": "getSelfServiceVerificationFlow",
@@ -1738,7 +1738,7 @@
           "https"
         ],
         "tags": [
-          "v0alpha1"
+          "v0alpha2"
         ],
         "summary": "Check Who the Current HTTP Session Belongs To",
         "operationId": "toSession",

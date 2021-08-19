@@ -92,7 +92,7 @@ type toSession struct {
 	Cookie string `json:"Cookie"`
 }
 
-// swagger:route GET /sessions/whoami v0alpha1 toSession
+// swagger:route GET /sessions/whoami v0alpha2 toSession
 //
 // Check Who the Current HTTP Session Belongs To
 //

@@ -91,7 +91,7 @@ type createSelfServiceLogoutFlowUrlForBrowsers struct {
 	Cookie string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/logout/browser v0alpha1 createSelfServiceLogoutFlowUrlForBrowsers
+// swagger:route GET /self-service/logout/browser v0alpha2 createSelfServiceLogoutFlowUrlForBrowsers
 //
 // Create a Logout URL for Browsers
 //
@@ -148,7 +148,7 @@ type submitSelfServiceLogoutFlowWithoutBrowserBody struct {
 	SessionToken string `json:"session_token"`
 }
 
-// swagger:route DELETE /self-service/logout/api v0alpha1 submitSelfServiceLogoutFlowWithoutBrowser
+// swagger:route DELETE /self-service/logout/api v0alpha2 submitSelfServiceLogoutFlowWithoutBrowser
 //
 // Perform Logout for APIs, Services, Apps, ...
 //
@@ -207,7 +207,7 @@ type submitSelfServiceLogoutFlow struct {
 	Token string `json:"token"`
 }
 
-// swagger:route GET /self-service/logout v0alpha1 submitSelfServiceLogoutFlow
+// swagger:route GET /self-service/logout v0alpha2 submitSelfServiceLogoutFlow
 //
 // Complete Self-Service Logout
 //

@@ -17,7 +17,7 @@ func initRegistration() *ory.SuccessfulSelfServiceRegistrationWithoutBrowser {
 	ctx := context.Background()
 
 	// Initialize the flow
-	flow, res, err := client.V0alpha1Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
+	flow, res, err := client.V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -27,7 +27,7 @@ func initRegistration() *ory.SuccessfulSelfServiceRegistrationWithoutBrowser {
 	email, password := pkg.RandomCredentials()
 
 	// Submit the registration flow
-	result, res, err := client.V0alpha1Api.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlowBody(
+	result, res, err := client.V0alpha2Api.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlowBody(
 		ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBodyAsSubmitSelfServiceRegistrationFlowBody(&ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBody{
 			Method:   "password",
 			Password: password,
