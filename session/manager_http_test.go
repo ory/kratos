@@ -136,6 +136,27 @@ func TestManagerHTTP(t *testing.T) {
 		})
 	})
 
+	t.Run("suite=SessionAddAuthenticationMethod", func(t *testing.T) {
+		conf, reg := internal.NewFastRegistryWithMocks(t)
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+
+		i := &identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		sess := session.NewInactiveSession()
+		require.NoError(t, sess.Activate(i, conf, time.Now()))
+		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
+		require.NoError(t, reg.SessionManager().SessionAddAuthenticationMethod(context.Background(), sess.ID, identity.CredentialsTypeOIDC, identity.CredentialsTypeWebAuthn))
+		assert.Len(t, sess.AMR, 0)
+
+		actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)
+		require.NoError(t, err)
+		assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, actual.AuthenticatorAssuranceLevel)
+		for _, amr := range actual.AMR {
+			assert.True(t, amr.Method == identity.CredentialsTypeWebAuthn || amr.Method == identity.CredentialsTypeOIDC)
+		}
+		assert.Len(t, actual.AMR, 2)
+	})
+
 	t.Run("suite=lifecycle", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		conf.MustSet(config.ViperKeySelfServiceLoginUI, "https://www.ory.sh")

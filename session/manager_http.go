@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
@@ -194,4 +196,17 @@ func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, req
 		return errors.WithStack(ErrAALNotSatisfied)
 	}
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
+}
+
+func (s *ManagerHTTP) SessionAddAuthenticationMethod(ctx context.Context, sid uuid.UUID, methods ...identity.CredentialsType) error {
+	// Since we added the method, it also means that we have authenticated it
+	sess, err := s.r.SessionPersister().GetSession(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, m := range methods {
+		sess.CompletedLoginFor(m)
+	}
+	sess.SetAuthenticatorAssuranceLevel()
+	return s.r.SessionPersister().UpsertSession(ctx, sess)
 }

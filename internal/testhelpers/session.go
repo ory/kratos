@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/gjson"
+
 	"github.com/gobuffalo/httptest"
 	"github.com/stretchr/testify/require"
 
@@ -127,4 +130,16 @@ func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDef
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionToken(t, reg, s)
+}
+
+func EnsureAAL(t *testing.T, c *http.Client, ts *httptest.Server, aal string, methods ...string) {
+	res, err := c.Get(ts.URL + session.RouteWhoami)
+	require.NoError(t, err)
+	sess := x.MustReadAll(res.Body)
+	require.NoError(t, res.Body.Close())
+	assert.EqualValues(t, aal, gjson.GetBytes(sess, "authenticator_assurance_level").String())
+	for _, method := range methods {
+		assert.EqualValues(t, method, gjson.GetBytes(sess, "authentication_methods.#(method=="+method+").method").String())
+	}
+	assert.Len(t, gjson.GetBytes(sess, "authentication_methods").Array(), 2)
 }

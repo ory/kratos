@@ -50,7 +50,7 @@ context('MFA Profile', () => {
             query: 'WebAuthn.removeVirtualAuthenticator',
             opts: addResult
           }).then(() => {
-            cy.visit(APP_URL + '/auth/login?aal=aal2')
+            cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
             cy.location().should((loc) => {
               expect(loc.href).to.include('/auth/login')
             })
@@ -59,8 +59,8 @@ context('MFA Profile', () => {
               expect(loc.href).to.include('/auth/login')
             })
             cy.session({
-              expectAal: 'aal1',
-              expectMethods: ['password']
+              expectAal: 'aal2',
+              expectMethods: ['password', 'webauthn']
             })
 
             cy.task('sendCRI', {
@@ -75,7 +75,7 @@ context('MFA Profile', () => {
                 }
               }
             }).then((addResult) => {
-              cy.visit(APP_URL + '/auth/login?aal=aal2')
+              cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
               cy.location().should((loc) => {
                 expect(loc.href).to.include('/auth/login')
               })
@@ -86,8 +86,8 @@ context('MFA Profile', () => {
               })
 
               cy.session({
-                expectAal: 'aal1',
-                expectMethods: ['password']
+                expectAal: 'aal2',
+                expectMethods: ['password', 'webauthn']
               })
             })
           })
@@ -123,7 +123,7 @@ context('MFA Profile', () => {
 
           cy.get('*[name="webauthn_remove"]').should('have.length', 2)
 
-          cy.visit(APP_URL + '/auth/login?aal=aal2')
+          cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
           cy.location().should((loc) => {
             expect(loc.href).to.include('/auth/login')
           })
@@ -182,7 +182,7 @@ context('MFA Profile', () => {
           )
           cy.get('*[name="webauthn_remove"]').should('exist')
 
-          cy.visit(APP_URL + '/auth/login?aal=aal2')
+          cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
           cy.location().should((loc) => {
             expect(loc.href).to.include('/auth/login')
           })
@@ -194,7 +194,7 @@ context('MFA Profile', () => {
 
           cy.session({
             expectAal: 'aal2',
-            expectMethods: ['password', 'webauthn']
+            expectMethods: ['password', 'webauthn', 'webauthn']
           })
           cy.visit(APP_URL + '/settings')
           cy.get('*[name="webauthn_remove"]').click()

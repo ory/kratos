@@ -417,6 +417,7 @@ func TestCompleteSettings(t *testing.T) {
 					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 
 					checkIdentity(t, id, f)
+					testhelpers.EnsureAAL(t, apiClient, publicTS, "aal2", string(identity.CredentialsTypeLookup))
 				})
 
 				runBrowser := func(t *testing.T, spa bool) {
@@ -441,6 +442,7 @@ func TestCompleteSettings(t *testing.T) {
 
 					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					checkIdentity(t, id, f)
+					testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeLookup))
 				}
 
 				t.Run("type=browser", func(t *testing.T) {
