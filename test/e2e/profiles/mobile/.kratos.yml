@@ -2,6 +2,7 @@ selfservice:
   flows:
     settings:
       privileged_session_max_age: 5m
+      required_aal: aal1
 
     logout:
       after:
@@ -35,3 +36,7 @@ identity:
 secrets:
   cipher:
     - secret-thirty-two-character-long
+
+session:
+  whoami:
+    required_aal: aal1

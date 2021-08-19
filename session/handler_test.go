@@ -77,7 +77,7 @@ func TestSessionWhoAmI(t *testing.T) {
 		}
 
 		t.Run("case=aal2-aal2", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			run(t, "aal2-aal2", http.StatusOK)
 		})
 
@@ -87,7 +87,7 @@ func TestSessionWhoAmI(t *testing.T) {
 		})
 
 		t.Run("case=aal2-aal1", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			body := run(t, "aal2-aal1", http.StatusForbidden)
 			assert.EqualValues(t, ErrAALNotSatisfied.Reason(), gjson.Get(body, "error.reason").String(), body)
 		})
@@ -98,7 +98,7 @@ func TestSessionWhoAmI(t *testing.T) {
 		})
 
 		t.Run("case=aal1-aal1", func(t *testing.T) {
-			conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+			conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			run(t, "aal1-aal1", http.StatusOK)
 		})
 	})
@@ -196,12 +196,12 @@ func TestSessionWhoAmI(t *testing.T) {
 				}
 
 				t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, 200, &idAAL2)
 				})
 
 				t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, 403, &idAAL2)
 				})
 
@@ -211,12 +211,12 @@ func TestSessionWhoAmI(t *testing.T) {
 				})
 
 				t.Run("fulfilled for aal2 if identity has aal1", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, 200, &idAAL1)
 				})
 
 				t.Run("fulfilled for aal1 if identity has aal1", func(t *testing.T) {
-					conf.MustSet(config.ViperKeySessionWhoAmIAAL, "highest_available")
+					conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, 200, &idAAL1)
 				})
 			})

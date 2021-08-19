@@ -2,7 +2,10 @@ package settings
 
 import (
 	"net/http"
+	"net/url"
 	"time"
+
+	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlcon"
@@ -182,6 +185,11 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
+	if err := h.d.SessionManager().DoesSessionSatisfy(r.Context(), s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
 	f, err := h.NewFlow(w, r, s.Identity, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -235,6 +243,20 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+
+	if err := h.d.SessionManager().DoesSessionSatisfy(r.Context(), s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); errors.Is(err, session.ErrAALNotSatisfied) {
+		if x.IsJSONRequest(r) {
+			h.d.Writer().WriteError(w, r, err)
+		} else {
+			http.Redirect(w, r, urlx.CopyWithQuery(
+				urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow),
+				url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
+		}
+		return
+	} else if err != nil {
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -334,6 +356,10 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 
 	if pr.IdentityID != sess.Identity.ID {
 		return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
+	}
+
+	if err := h.d.SessionManager().DoesSessionSatisfy(r.Context(), sess, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+		return err
 	}
 
 	if pr.ExpiresAt.Before(time.Now().UTC()) {
@@ -448,11 +474,11 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 
 	ss, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
-		if f.Type == flow.TypeBrowser && !x.IsJSONRequest(r) {
-			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
-			return
-		}
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
+		return
+	}
 
+	if err := h.d.SessionManager().DoesSessionSatisfy(r.Context(), ss, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
 	}

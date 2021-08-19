@@ -48,6 +48,7 @@ func TestCompleteSettings(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": false})
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".profile", map[string]interface{}{"enabled": false})
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
+	conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
 
 	router := x.NewRouterPublic()
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())

@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
@@ -111,7 +113,23 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if e := new(FlowExpiredError); errors.As(err, &e) {
+	if errors.Is(err, session.ErrNoActiveSessionFound) {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, err)
+		} else {
+			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
+		}
+		return
+	} else if errors.Is(err, session.ErrAALNotSatisfied) {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, err)
+		} else {
+			http.Redirect(w, r, urlx.CopyWithQuery(
+				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow),
+				url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
+		}
+		return
+	} else if e := new(FlowExpiredError); errors.As(err, &e) {
 		if id == nil {
 			s.forward(w, r, f, err)
 			return

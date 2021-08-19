@@ -141,6 +141,22 @@ Cypress.Commands.add('shortRecoveryLifespan', ({} = {}) => {
   })
 })
 
+Cypress.Commands.add('requireStrictAal', () => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.settings.required_aal = 'highest_available'
+    config.session.whoami.required_aal = 'highest_available'
+    return config
+  })
+})
+
+Cypress.Commands.add('useLaxAal', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.settings.required_aal = 'aal1'
+    config.session.whoami.required_aal = 'aal1'
+    return config
+  })
+})
+
 Cypress.Commands.add(
   'register',
   ({

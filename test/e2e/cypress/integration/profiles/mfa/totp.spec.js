@@ -17,7 +17,28 @@ context('MFA Profile', () => {
       cy.registerApi({ email, password, fields: { 'traits.website': website } })
       cy.login({ email, password })
       cy.longPrivilegedSessionTime()
+
+     cy.useLaxAal()
     })
+
+    it('should be be asked to sign in with 2fa if set up', () => {
+      cy.visit(APP_URL + '/settings')
+      cy.requireStrictAal()
+
+      let secret
+      cy.get('p[data-testid="text-totp_secret_key-content"]').then(($e) => {
+        secret = $e.text().trim()
+      })
+      cy.get('input[name="totp_code"]').then(($e) => {
+        cy.wrap($e).type(authenticator.generate(secret))
+      })
+      cy.get('*[name="method"][value="totp"]').click()
+
+      cy.location().should((loc) => {
+        expect(loc.href).to.include('/auth/login')
+      })
+    })
+
 
     it('should go through several totp lifecycles', () => {
       cy.visit(APP_URL + '/settings')

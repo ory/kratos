@@ -110,7 +110,7 @@ func NewInfoSelfServiceSettingsLookupConfirm() *Message {
 func NewInfoSelfServiceSettingsLookupSecretList(secrets []string, raw interface{}) *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsLookupSecretList,
-		Text: fmt.Sprintf("%s", strings.Join(secrets, ", ")),
+		Text: strings.Join(secrets, ", "),
 		Type: Info,
 		Context: context(map[string]interface{}{
 			"secrets": raw,

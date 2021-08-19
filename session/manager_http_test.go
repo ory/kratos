@@ -341,11 +341,11 @@ func TestManagerHTTP(t *testing.T) {
 				}
 
 				t.Run("fulfilled for aal2 if identity has aal2", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, "highest_available", idAAL2, nil)
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeWebAuthn}, config.HighestAvailableAAL, idAAL2, nil)
 				})
 
 				t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, "highest_available", idAAL2, session.ErrAALNotSatisfied)
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, config.HighestAvailableAAL, idAAL2, session.ErrAALNotSatisfied)
 				})
 
 				t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {

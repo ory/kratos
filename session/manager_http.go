@@ -175,7 +175,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, req
 		if sess.AuthenticatorAssuranceLevel >= identity.AuthenticatorAssuranceLevel1 {
 			return nil
 		}
-	case "highest_available":
+	case config.HighestAvailableAAL:
 		i, err := s.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.IdentityID)
 		if err != nil {
 			return err
