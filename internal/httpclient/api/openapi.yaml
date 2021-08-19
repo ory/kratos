@@ -1438,8 +1438,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/successfulSelfServiceSettingsWithoutBrowser'
-          description: successfulSelfServiceSettingsWithoutBrowser
+                $ref: '#/components/schemas/selfServiceSettingsFlow'
+          description: selfServiceSettingsFlow
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
@@ -4426,149 +4426,6 @@ components:
       type: object
     successfulSelfServiceSettingsWithoutBrowser:
       description: The Response for Settings Flows via API
-      example:
-        identity:
-          recovery_addresses:
-          - updated_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
-            value: value
-            via: via
-          - updated_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            id: id
-            value: value
-            via: via
-          traits: ""
-          updated_at: 2000-01-23T04:56:07.000+00:00
-          credentials:
-            key:
-              updated_at: 2000-01-23T04:56:07.000+00:00
-              identifiers:
-              - identifiers
-              - identifiers
-              created_at: 2000-01-23T04:56:07.000+00:00
-              config: '{}'
-          verifiable_addresses:
-          - updated_at: 2014-01-01T23:28:56.782Z
-            verified_at: 2000-01-23T04:56:07.000+00:00
-            verified: true
-            created_at: 2014-01-01T23:28:56.782Z
-            id: id
-            value: value
-            status: status
-            via: via
-          - updated_at: 2014-01-01T23:28:56.782Z
-            verified_at: 2000-01-23T04:56:07.000+00:00
-            verified: true
-            created_at: 2014-01-01T23:28:56.782Z
-            id: id
-            value: value
-            status: status
-            via: via
-          schema_id: schema_id
-          state_changed_at: 2000-01-23T04:56:07.000+00:00
-          created_at: 2000-01-23T04:56:07.000+00:00
-          schema_url: schema_url
-          id: id
-        flow:
-          expires_at: 2000-01-23T04:56:07.000+00:00
-          ui:
-            nodes:
-            - meta:
-                label:
-                  context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-              messages:
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              type: type
-              group: group
-            - meta:
-                label:
-                  context: '{}'
-                  id: 0
-                  text: text
-                  type: type
-              messages:
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              - context: '{}'
-                id: 0
-                text: text
-                type: type
-              type: type
-              group: group
-            method: method
-            action: action
-            messages:
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-            - context: '{}'
-              id: 0
-              text: text
-              type: type
-          identity:
-            recovery_addresses:
-            - updated_at: 2000-01-23T04:56:07.000+00:00
-              created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
-              value: value
-              via: via
-            - updated_at: 2000-01-23T04:56:07.000+00:00
-              created_at: 2000-01-23T04:56:07.000+00:00
-              id: id
-              value: value
-              via: via
-            traits: ""
-            updated_at: 2000-01-23T04:56:07.000+00:00
-            credentials:
-              key:
-                updated_at: 2000-01-23T04:56:07.000+00:00
-                identifiers:
-                - identifiers
-                - identifiers
-                created_at: 2000-01-23T04:56:07.000+00:00
-                config: '{}'
-            verifiable_addresses:
-            - updated_at: 2014-01-01T23:28:56.782Z
-              verified_at: 2000-01-23T04:56:07.000+00:00
-              verified: true
-              created_at: 2014-01-01T23:28:56.782Z
-              id: id
-              value: value
-              status: status
-              via: via
-            - updated_at: 2014-01-01T23:28:56.782Z
-              verified_at: 2000-01-23T04:56:07.000+00:00
-              verified: true
-              created_at: 2014-01-01T23:28:56.782Z
-              id: id
-              value: value
-              status: status
-              via: via
-            schema_id: schema_id
-            state_changed_at: 2000-01-23T04:56:07.000+00:00
-            created_at: 2000-01-23T04:56:07.000+00:00
-            schema_url: schema_url
-            id: id
-          active: active
-          id: id
-          type: type
-          issued_at: 2000-01-23T04:56:07.000+00:00
-          request_url: request_url
       properties:
         flow:
           $ref: '#/components/schemas/selfServiceSettingsFlow'
@@ -4576,7 +4433,6 @@ components:
           $ref: '#/components/schemas/identity'
       required:
       - flow
-      - identity
       type: object
     uiContainer:
       description: Container represents a HTML Form. The container can work with both
@@ -4722,6 +4578,10 @@ components:
       type: string
     uiNodeImageAttributes:
       properties:
+        height:
+          description: Height of the image
+          format: int64
+          type: integer
         id:
           description: A unique identifier
           type: string
@@ -4732,7 +4592,7 @@ components:
             format: uri
           type: string
         width:
-          description: Height of the image
+          description: Width of the image
           format: int64
           type: integer
       required:

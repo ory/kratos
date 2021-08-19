@@ -14,8 +14,9 @@ Name | Type | Description | Notes
 **Value** | Pointer to **interface{}** | The input&#39;s value. | [optional] 
 **Id** | **string** | A unique identifier | 
 **Text** | [**UiText**](UiText.md) |  | 
+**Height** | Pointer to **int64** | Height of the image | [optional] 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
-**Width** | Pointer to **int64** | Height of the image | [optional] 
+**Width** | Pointer to **int64** | Width of the image | [optional] 
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
 **Title** | [**UiText**](UiText.md) |  | 
 
@@ -272,6 +273,31 @@ and a boolean to check if the value has been set.
 
 SetText sets Text field to given value.
 
+
+### GetHeight
+
+`func (o *UiNodeAttributes) GetHeight() int64`
+
+GetHeight returns the Height field if non-nil, zero value otherwise.
+
+### GetHeightOk
+
+`func (o *UiNodeAttributes) GetHeightOk() (*int64, bool)`
+
+GetHeightOk returns a tuple with the Height field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetHeight
+
+`func (o *UiNodeAttributes) SetHeight(v int64)`
+
+SetHeight sets Height field to given value.
+
+### HasHeight
+
+`func (o *UiNodeAttributes) HasHeight() bool`
+
+HasHeight returns a boolean if a field has been set.
 
 ### GetSrc
 

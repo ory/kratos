@@ -205,7 +205,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 			return err
 		}
 
-		e.d.Writer().Write(w, r, &APIFlowResponse{Flow: updatedFlow, Identity: i})
+		e.d.Writer().Write(w, r, updatedFlow)
 		return nil
 	}
 

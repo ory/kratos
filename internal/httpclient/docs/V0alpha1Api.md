@@ -2032,7 +2032,7 @@ No authorization required
 
 ## SubmitSelfServiceSettingsFlow
 
-> SuccessfulSelfServiceSettingsWithoutBrowser SubmitSelfServiceSettingsFlow(ctx).Flow(flow).XSessionToken(xSessionToken).SubmitSelfServiceSettingsFlowBody(submitSelfServiceSettingsFlowBody).Execute()
+> SelfServiceSettingsFlow SubmitSelfServiceSettingsFlow(ctx).Flow(flow).XSessionToken(xSessionToken).SubmitSelfServiceSettingsFlowBody(submitSelfServiceSettingsFlowBody).Execute()
 
 Complete Settings Flow
 
@@ -2062,7 +2062,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.SubmitSelfServiceSettingsFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `SubmitSelfServiceSettingsFlow`: SuccessfulSelfServiceSettingsWithoutBrowser
+    // response from `SubmitSelfServiceSettingsFlow`: SelfServiceSettingsFlow
     fmt.Fprintf(os.Stdout, "Response from `V0alpha1Api.SubmitSelfServiceSettingsFlow`: %v\n", resp)
 }
 ```
@@ -2084,7 +2084,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**SuccessfulSelfServiceSettingsWithoutBrowser**](SuccessfulSelfServiceSettingsWithoutBrowser.md)
+[**SelfServiceSettingsFlow**](SelfServiceSettingsFlow.md)
 
 ### Authorization
 

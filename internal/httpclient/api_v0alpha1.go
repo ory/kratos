@@ -778,9 +778,9 @@ type V0alpha1Api interface {
 
 	/*
 	 * SubmitSelfServiceSettingsFlowExecute executes the request
-	 * @return SuccessfulSelfServiceSettingsWithoutBrowser
+	 * @return SelfServiceSettingsFlow
 	 */
-	SubmitSelfServiceSettingsFlowExecute(r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) (*SuccessfulSelfServiceSettingsWithoutBrowser, *http.Response, error)
+	SubmitSelfServiceSettingsFlowExecute(r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error)
 
 	/*
 			 * SubmitSelfServiceVerificationFlow Complete Verification Flow
@@ -5234,7 +5234,7 @@ func (r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) SubmitSelfServiceSet
 	return r
 }
 
-func (r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) Execute() (*SuccessfulSelfServiceSettingsWithoutBrowser, *http.Response, error) {
+func (r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) Execute() (*SelfServiceSettingsFlow, *http.Response, error) {
 	return r.ApiService.SubmitSelfServiceSettingsFlowExecute(r)
 }
 
@@ -5275,16 +5275,16 @@ func (a *V0alpha1ApiService) SubmitSelfServiceSettingsFlow(ctx context.Context) 
 
 /*
  * Execute executes the request
- * @return SuccessfulSelfServiceSettingsWithoutBrowser
+ * @return SelfServiceSettingsFlow
  */
-func (a *V0alpha1ApiService) SubmitSelfServiceSettingsFlowExecute(r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) (*SuccessfulSelfServiceSettingsWithoutBrowser, *http.Response, error) {
+func (a *V0alpha1ApiService) SubmitSelfServiceSettingsFlowExecute(r V0alpha1ApiApiSubmitSelfServiceSettingsFlowRequest) (*SelfServiceSettingsFlow, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  *SuccessfulSelfServiceSettingsWithoutBrowser
+		localVarReturnValue  *SelfServiceSettingsFlow
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.SubmitSelfServiceSettingsFlow")
