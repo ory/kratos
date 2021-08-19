@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tidwall/gjson"
-
 	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/herodot"
@@ -173,30 +171,10 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	if r.URL.Query().Get("reveal_credentials") == "oidc_token" {
-		for credType, credential := range i.Credentials {
-			if credType != CredentialsTypeOIDC {
-				continue
-			}
-			encryptedAccessToken := gjson.GetBytes(credential.Config, "providers.0.encrypted_access_token").String()
-			accessToken, err := h.r.Cipher().Decrypt(r.Context(), encryptedAccessToken)
-			if err != nil {
-				h.r.Writer().WriteError(w, r, errors.WithStack(err))
-				return
-			}
-			encryptedRefreshToken := gjson.GetBytes(credential.Config, "providers.0.encrypted_refresh_token").String()
-			refreshToken, err := h.r.Cipher().Decrypt(r.Context(), encryptedRefreshToken)
-			if err != nil {
-				h.r.Writer().WriteError(w, r, errors.WithStack(err))
-				return
-			}
-			i.IdentifierCredentials = append(i.IdentifierCredentials, IdentifierCredential{
-				Subject:      gjson.GetBytes(credential.Config, "providers.0.subject").String(),
-				Provider:     gjson.GetBytes(credential.Config, "providers.0.provider").String(),
-				AccessToken:  accessToken,
-				RefreshToken: refreshToken,
-			})
-		}
+	err = i.RevealCredential(r, h.r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
 	}
 
 	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
