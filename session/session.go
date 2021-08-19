@@ -102,34 +102,12 @@ func (s *Session) CompletedLoginFor(method identity.CredentialsType) {
 }
 
 func (s *Session) SetAuthenticatorAssuranceLevel() {
-	s.AuthenticatorAssuranceLevel = identity.NoAuthenticatorAssuranceLevel
-
-	var firstFactor bool
-	var secondFactor bool
-	for _, a := range s.AMR {
-		switch a.Method {
-		case identity.CredentialsTypeRecoveryLink:
-			fallthrough
-		case identity.CredentialsTypeOIDC:
-			fallthrough
-		case identity.CredentialsTypePassword:
-			firstFactor = true
-		case identity.CredentialsTypeTOTP:
-			secondFactor = true
-		case identity.CredentialsTypeLookup:
-			secondFactor = true
-		case identity.CredentialsTypeWebAuthn:
-			secondFactor = true
-		}
+	cts := make([]identity.CredentialsType, len(s.AMR))
+	for k := range s.AMR {
+		cts[k] = s.AMR[k].Method
 	}
 
-	if firstFactor && secondFactor {
-		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel2
-	} else if firstFactor {
-		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
-	}
-
-	// Using only the second factor is not enough for any type of assurance.
+	s.AuthenticatorAssuranceLevel = identity.DetermineAAL(cts)
 }
 
 func NewActiveSession(i *identity.Identity, c lifespanProvider, authenticatedAt time.Time, completedLoginFor identity.CredentialsType) (*Session, error) {
