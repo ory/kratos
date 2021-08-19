@@ -2105,21 +2105,6 @@
         ],
         "type": "object"
       },
-      "successfulSelfServiceSettingsWithoutBrowser": {
-        "description": "The Response for Settings Flows via API",
-        "properties": {
-          "flow": {
-            "$ref": "#/components/schemas/selfServiceSettingsFlow"
-          },
-          "identity": {
-            "$ref": "#/components/schemas/identity"
-          }
-        },
-        "required": [
-          "flow"
-        ],
-        "type": "object"
-      },
       "uiContainer": {
         "description": "Container represents a HTML Form. The container can work with both HTTP Form and JSON requests",
         "properties": {
@@ -3110,6 +3095,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "in": "header",
+            "name": "X-Session-Token",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -3188,6 +3181,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "in": "header",
+            "name": "X-Session-Token",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3245,6 +3246,14 @@
             "description": "Request a Specific AuthenticationMethod Assurance Level\n\nUse this parameter to upgrade an existing session's authenticator assurance level (AAL). This\nallows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password,\nthe AAL is 1. If you wish to \"upgrade\" the session's security by asking the user to perform TOTP / WebAuth/ ...\nyou would set this to \"aal2\".",
             "in": "query",
             "name": "aal",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The Session Token of the Identity performing the settings flow.",
+            "in": "header",
+            "name": "X-Session-Token",
             "schema": {
               "type": "string"
             }

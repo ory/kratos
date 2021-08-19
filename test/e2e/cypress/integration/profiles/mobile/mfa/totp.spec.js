@@ -24,29 +24,68 @@ context('Mobile Profile', () => {
         cy.visit(MOBILE_URL + '/Settings')
       })
 
-      it('should be able to set up TOTP', () => {
-        cy.get('p[data-testid="text-totp_secret_key-content"]').should('exist')
-        cy.get('img[data-testid="text-totp_qr"]').should('exist')
+      it('should be able to lifecycle through TOTP flows', () => {
+        cy.get('*[data-testid="field/totp_qr"]').should('exist')
+        cy.get('*[data-testid="field/totp_code"]').should('exist')
 
-        // Set up TOTP
+        // Set up TOTP with invalid key
+        cy.get('*[data-testid="field/totp_code"]').type('111111')
+        cy.get('*[data-testid="field/method/totp"]').click()
+        cy.get('*[data-testid="field/totp_code"]').should(
+          'contain.text',
+          'The provided authentication code is invalid, please try again.'
+        )
+
+        // Set up TOTP with valid key
         let secret
-        cy.get('p[data-testid="text-totp_secret_key-content"]').then(($e) => {
+        cy.get('*[data-testid="field/totp_secret_key/text"]').then(($e) => {
           secret = $e.text().trim()
         })
-        cy.get('input[name="totp_code"]').then(($e) => {
+        cy.get('*[data-testid="field/totp_code"]').then(($e) => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
-        cy.get('*[name="method"][value="totp"]').click()
-        cy.get('form .messages .message').should(
+        cy.get('*[data-testid="field/method/totp"]').click()
+
+        cy.get('*[data-testid="form-messages"]').should(
           'contain.text',
           'Your changes have been saved!'
         )
-        cy.get('p[data-testid="text-totp_secret_key-content"]').should(
+
+        // Form should look different now
+        cy.get('*[data-testid="field/totp_secret_key/text"]').should(
           'not.exist'
         )
-        cy.get('img[data-testid="text-totp_qr"]').should('not.exist')
-        cy.get('*[name="method"][value="totp"]').should('not.exist')
-        cy.get('*[name="totp_unlink"]').should('exist')
+        cy.get('*[data-testid="field/totp_code"]').should('not.exist')
+        cy.get('*[data-testid="field/totp_qr"]').should('not.exist')
+        cy.get('*[data-testid="field/totp_unlink/true"]').should('exist')
+
+        // Lets sign in
+        cy.visit(MOBILE_URL + '/Login?aal=aal2')
+
+        // First use a wrong code
+        cy.get('*[data-testid="field/totp_code"]').type('111111')
+        cy.get('*[data-testid="field/method/totp"]').click()
+        cy.get('*[data-testid="form-messages"]').should(
+          'contain.text',
+          'The provided authentication code is invalid, please try again.'
+        )
+
+        // Use the correct code
+        cy.get('*[data-testid="field/totp_code"]').then(($e) => {
+          cy.wrap($e).type(authenticator.generate(secret))
+        })
+        cy.get('*[data-testid="field/method/totp"]').click()
+
+        // We have AAL now
+        cy.get('[data-testid="session-content"]').should('contain', 'aal2')
+        cy.get('[data-testid="session-content"]').should('contain', 'totp')
+
+        // Go back to settings and unlink
+        cy.visit(MOBILE_URL + '/Settings')
+        cy.get('*[data-testid="field/totp_unlink/true"]').click()
+        cy.get('*[data-testid="field/totp_unlink/true"]').should('not.exist')
+        cy.get('*[data-testid="field/totp_qr"]').should('exist')
+        cy.get('*[data-testid="field/totp_code"]').should('exist')
       })
     })
   })
