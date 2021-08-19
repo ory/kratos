@@ -20,8 +20,10 @@ func NewTOTPImageQRNode(key *otp.Key) (*node.Node, error) {
 		return nil, err
 	}
 
-	return node.NewImageField(node.TOTPQR, src, node.TOTPGroup).
-		WithMetaLabel(text.NewInfoSelfServiceSettingsTOTPQRCode()), nil
+	return node.NewImageField(node.TOTPQR, src, node.TOTPGroup, node.WithImageAttributes(func(a *node.ImageAttributes) {
+		a.Height = 256
+		a.Width = 256
+	})).WithMetaLabel(text.NewInfoSelfServiceSettingsTOTPQRCode()), nil
 }
 
 func NewTOTPSourceURLNode(key *otp.Key) *node.Node {

@@ -48,6 +48,22 @@ func applyInputAttributes(opts []InputAttributesModifier, attributes *InputAttri
 	return attributes
 }
 
+type ImageAttributesModifier func(attributes *ImageAttributes)
+type ImageAttributesModifiers []ImageAttributesModifier
+
+func WithImageAttributes(f func(a *ImageAttributes)) func(a *ImageAttributes) {
+	return func(a *ImageAttributes) {
+		f(a)
+	}
+}
+
+func applyImageAttributes(opts ImageAttributesModifiers, attributes *ImageAttributes) *ImageAttributes {
+	for _, f := range opts {
+		f(attributes)
+	}
+	return attributes
+}
+
 func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...InputAttributesModifier) *Node {
 	return &Node{
 		Type:       Input,
@@ -66,11 +82,11 @@ func NewInputField(name string, value interface{}, group Group, inputType InputA
 	}
 }
 
-func NewImageField(id string, src string, group Group) *Node {
+func NewImageField(id string, src string, group Group, opts ...ImageAttributesModifier) *Node {
 	return &Node{
 		Type:       Image,
 		Group:      group,
-		Attributes: &ImageAttributes{Source: src, Identifier: id},
+		Attributes: applyImageAttributes(opts, &ImageAttributes{Source: src, Identifier: id}),
 		Meta:       &Meta{},
 	}
 }

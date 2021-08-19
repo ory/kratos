@@ -21,6 +21,8 @@ type UiNodeImageAttributes struct {
 	Id string `json:"id"`
 	// The image's source URL.  format: uri
 	Src string `json:"src"`
+	// Height of the image
+	Width *int64 `json:"width,omitempty"`
 }
 
 // NewUiNodeImageAttributes instantiates a new UiNodeImageAttributes object
@@ -90,6 +92,38 @@ func (o *UiNodeImageAttributes) SetSrc(v string) {
 	o.Src = v
 }
 
+// GetWidth returns the Width field value if set, zero value otherwise.
+func (o *UiNodeImageAttributes) GetWidth() int64 {
+	if o == nil || o.Width == nil {
+		var ret int64
+		return ret
+	}
+	return *o.Width
+}
+
+// GetWidthOk returns a tuple with the Width field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UiNodeImageAttributes) GetWidthOk() (*int64, bool) {
+	if o == nil || o.Width == nil {
+		return nil, false
+	}
+	return o.Width, true
+}
+
+// HasWidth returns a boolean if a field has been set.
+func (o *UiNodeImageAttributes) HasWidth() bool {
+	if o != nil && o.Width != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetWidth gets a reference to the given int64 and assigns it to the Width field.
+func (o *UiNodeImageAttributes) SetWidth(v int64) {
+	o.Width = &v
+}
+
 func (o UiNodeImageAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
@@ -97,6 +131,9 @@ func (o UiNodeImageAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["src"] = o.Src
+	}
+	if o.Width != nil {
+		toSerialize["width"] = o.Width
 	}
 	return json.Marshal(toSerialize)
 }
