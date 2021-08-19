@@ -177,10 +177,11 @@ func getStringSliceIndexOf(needle []string, haystack string) int {
 }
 
 type sortOptions struct {
-	orderByGroups   []string
-	schemaRef       string
-	keysInOrder     []string
-	keysInOrderPost func([]string) []string
+	orderByGroups     []string
+	schemaRef         string
+	keysInOrder       []string
+	keysInOrderAppend []string
+	keysInOrderPost   func([]string) []string
 }
 
 type SortOption func(*sortOptions)
@@ -203,6 +204,11 @@ func SortBySchema(schemaRef string) func(*sortOptions) {
 func SortUseOrder(keysInOrder []string) func(*sortOptions) {
 	return func(options *sortOptions) {
 		options.keysInOrder = keysInOrder
+	}
+}
+func SortUseOrderAppend(keysInOrder []string) func(*sortOptions) {
+	return func(options *sortOptions) {
+		options.keysInOrderAppend = keysInOrder
 	}
 }
 
@@ -231,12 +237,14 @@ func (n Nodes) SortBySchema(opts ...SortOption) error {
 		o.keysInOrder = o.keysInOrderPost(o.keysInOrder)
 	}
 
+	o.keysInOrder = append(o.keysInOrder, o.keysInOrderAppend...)
+
 	getKeyPosition := func(node *Node) int {
 		lastPrefix := len(o.keysInOrder)
 
 		// Method should always be the last element in the list
 		if node.Attributes.ID() == "method" {
-			return len(n) + 1
+			return len(n) + len(o.keysInOrder) + 1
 		}
 
 		for i, n := range o.keysInOrder {

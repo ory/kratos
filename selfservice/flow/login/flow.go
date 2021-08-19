@@ -96,7 +96,7 @@ type Flow struct {
 	// RequestedAAL stores if the flow was requested to update the authenticator assurance level.
 	//
 	// This value can be one of "aal1", "aal2", "aal3".
-	RequestedAAL identity.AuthenticatorAssuranceLevel `json:"requested_aal" db:"requested_aal"`
+	RequestedAAL identity.AuthenticatorAssuranceLevel `json:"requested_aal" faker:"len=4" db:"requested_aal"`
 }
 
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
