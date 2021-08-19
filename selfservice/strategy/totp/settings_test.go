@@ -339,6 +339,7 @@ func TestCompleteSettings(t *testing.T) {
 			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeTOTP, totp.InternalContextKeyURL)))
 
 			checkIdentity(t, id, key)
+			testhelpers.EnsureAAL(t, hc, publicTS, "aal2", string(identity.CredentialsTypeTOTP))
 		}
 
 		t.Run("type=api", func(t *testing.T) {

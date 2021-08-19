@@ -65,7 +65,7 @@ context('MFA Profile', () => {
       )
 
       // Try to log in with a recovery code now
-      cy.visit(APP_URL + '/auth/login?aal=aal2')
+      cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
       cy.location().should((loc) => {
         expect(loc.href).to.include('/auth/login')
       })
@@ -93,7 +93,7 @@ context('MFA Profile', () => {
       let authenticatedAt
       cy.session({
         expectAal: 'aal2',
-        expectMethods: ['password', 'lookup_secret']
+        expectMethods: ['password', 'lookup_secret', 'lookup_secret']
       }).then((session) => {
         authenticatedAt = session.authenticated_at
         expect(session.authenticator_assurance_level).to.equal('aal2')
@@ -121,7 +121,12 @@ context('MFA Profile', () => {
 
       cy.session({
         expectAal: 'aal2',
-        expectMethods: ['password', 'lookup_secret', 'lookup_secret']
+        expectMethods: [
+          'password',
+          'lookup_secret',
+          'lookup_secret',
+          'lookup_secret'
+        ]
       }).then((session) => {
         expect(session.authenticatedAt).to.not.equal(authenticatedAt)
       })

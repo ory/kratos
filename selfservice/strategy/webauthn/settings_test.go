@@ -328,6 +328,8 @@ func TestCompleteSettings(t *testing.T) {
 			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 			require.NoError(t, err)
 			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
+
+			testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeWebAuthn))
 		}
 
 		t.Run("type=browser", func(t *testing.T) {

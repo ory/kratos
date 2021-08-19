@@ -85,7 +85,13 @@ context('MFA Profile', () => {
           cy.get('*[name="method"][value="totp"]').click()
           cy.session({
             expectAal: 'aal2',
-            expectMethods: ['password', 'totp']
+            expectMethods: [
+              'password',
+              'totp',
+              'webauthn',
+              'lookup_secret',
+              'totp'
+            ]
           })
 
           // Use TOTP
@@ -93,7 +99,14 @@ context('MFA Profile', () => {
           cy.get('button[name="webauthn_login_trigger"]').click()
           cy.session({
             expectAal: 'aal2',
-            expectMethods: ['password', 'totp', 'webauthn']
+            expectMethods: [
+              'password',
+              'totp',
+              'webauthn',
+              'lookup_secret',
+              'totp',
+              'webauthn'
+            ]
           })
 
           // Use lookup
@@ -104,7 +117,15 @@ context('MFA Profile', () => {
           cy.get('*[name="method"][value="lookup_secret"]').click()
           cy.session({
             expectAal: 'aal2',
-            expectMethods: ['password', 'totp', 'webauthn', 'lookup_secret']
+            expectMethods: [
+              'password',
+              'totp',
+              'webauthn',
+              'lookup_secret',
+              'totp',
+              'webauthn',
+              'lookup_secret'
+            ]
           })
         })
       })

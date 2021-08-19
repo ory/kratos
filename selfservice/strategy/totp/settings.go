@@ -206,6 +206,11 @@ func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Re
 		return nil, err
 	}
 
+	// Since we added the method, it also means that we have authenticated it
+	if err := s.d.SessionManager().SessionAddAuthenticationMethod(r.Context(), ctxUpdate.Session.ID, s.ID()); err != nil {
+		return nil, err
+	}
+
 	return i, nil
 }
 
