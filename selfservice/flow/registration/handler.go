@@ -122,7 +122,7 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 	return nf, nil
 }
 
-// swagger:route GET /self-service/registration/api v0alpha1 initializeSelfServiceRegistrationFlowWithoutBrowser
+// swagger:route GET /self-service/registration/api v0alpha2 initializeSelfServiceRegistrationFlowWithoutBrowser
 //
 // Initialize Registration Flow for APIs, Services, Apps, ...
 //
@@ -157,7 +157,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, a)
 }
 
-// swagger:route GET /self-service/registration/browser v0alpha1 initializeSelfServiceRegistrationFlowForBrowsers
+// swagger:route GET /self-service/registration/browser v0alpha2 initializeSelfServiceRegistrationFlowForBrowsers
 //
 // Initialize Registration Flow for Browsers
 //
@@ -232,7 +232,7 @@ type getSelfServiceRegistrationFlow struct {
 	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/registration/flows v0alpha1 getSelfServiceRegistrationFlow
+// swagger:route GET /self-service/registration/flows v0alpha2 getSelfServiceRegistrationFlow
 //
 // Get Registration Flow
 //
@@ -317,7 +317,7 @@ type submitSelfServiceRegistrationFlow struct {
 // nolint:deadcode,unused
 type submitSelfServiceRegistrationFlowBody struct{}
 
-// swagger:route POST /self-service/registration v0alpha1 submitSelfServiceRegistrationFlow
+// swagger:route POST /self-service/registration v0alpha2 submitSelfServiceRegistrationFlow
 //
 // Submit a Registration Flow
 //

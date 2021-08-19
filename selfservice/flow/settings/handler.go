@@ -147,7 +147,7 @@ type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 	SessionToken string `json:"X-Session-Token"`
 }
 
-// swagger:route GET /self-service/settings/api v0alpha1 initializeSelfServiceSettingsFlowWithoutBrowser
+// swagger:route GET /self-service/settings/api v0alpha2 initializeSelfServiceSettingsFlowWithoutBrowser
 //
 // Initialize Settings Flow for APIs, Services, Apps, ...
 //
@@ -195,7 +195,7 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 	SessionCookie string `json:"Cookie"`
 }
 
-// swagger:route GET /self-service/settings/browser v0alpha1 initializeSelfServiceSettingsFlowForBrowsers
+// swagger:route GET /self-service/settings/browser v0alpha2 initializeSelfServiceSettingsFlowForBrowsers
 //
 // Initialize Settings Flow for Browsers
 //
@@ -269,7 +269,7 @@ type getSelfServiceSettingsFlow struct {
 	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/settings/flows v0alpha1 getSelfServiceSettingsFlow
+// swagger:route GET /self-service/settings/flows v0alpha2 getSelfServiceSettingsFlow
 //
 // Get Settings Flow
 //
@@ -363,7 +363,7 @@ type submitSelfServiceSettingsFlow struct {
 // nolint:deadcode,unused
 type submitSelfServiceSettingsFlowBody struct{}
 
-// swagger:route POST /self-service/settings v0alpha1 submitSelfServiceSettingsFlow
+// swagger:route POST /self-service/settings v0alpha2 submitSelfServiceSettingsFlow
 //
 // Complete Settings Flow
 //

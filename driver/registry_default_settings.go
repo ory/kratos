@@ -2,7 +2,6 @@ package driver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -67,7 +66,6 @@ func (m *RegistryDefault) SettingsFlowErrorHandler() *settings.ErrorHandler {
 func (m *RegistryDefault) SettingsStrategies(ctx context.Context) (profileStrategies settings.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(settings.Strategy); ok {
-			fmt.Printf("Strategy %s is %v\n\n", s.SettingsStrategyID(), m.Config(ctx).SelfServiceStrategy(s.SettingsStrategyID()).Enabled)
 			if m.Config(ctx).SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
 				profileStrategies = append(profileStrategies, s)
 			}

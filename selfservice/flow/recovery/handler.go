@@ -90,7 +90,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-// swagger:route GET /self-service/recovery/api v0alpha1 initializeSelfServiceRecoveryFlowWithoutBrowser
+// swagger:route GET /self-service/recovery/api v0alpha2 initializeSelfServiceRecoveryFlowWithoutBrowser
 //
 // Initialize Recovery Flow for APIs, Services, Apps, ...
 //
@@ -135,7 +135,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
-// swagger:route GET /self-service/recovery/browser v0alpha1 initializeSelfServiceRecoveryFlowForBrowsers
+// swagger:route GET /self-service/recovery/browser v0alpha2 initializeSelfServiceRecoveryFlowForBrowsers
 //
 // Initialize Recovery Flow for Browsers
 //
@@ -200,7 +200,7 @@ type getSelfServiceRecoveryFlow struct {
 	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/recovery/flows v0alpha1 getSelfServiceRecoveryFlow
+// swagger:route GET /self-service/recovery/flows v0alpha2 getSelfServiceRecoveryFlow
 //
 // Get Recovery Flow
 //
@@ -300,7 +300,7 @@ type submitSelfServiceRecoveryFlow struct {
 // nolint:deadcode,unused
 type submitSelfServiceRecoveryFlowBody struct{}
 
-// swagger:route POST /self-service/recovery v0alpha1 submitSelfServiceRecoveryFlow
+// swagger:route POST /self-service/recovery v0alpha2 submitSelfServiceRecoveryFlow
 //
 // Complete Recovery Flow
 //

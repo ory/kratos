@@ -203,13 +203,13 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).V0alpha1Api.InitializeSelfServiceSettingsFlowWithoutBrowser(context.Background()).Execute()
+			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, apiUser1).V0alpha2Api.InitializeSelfServiceSettingsFlowWithoutBrowser(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, apiIdentity1, pr, settings.RouteInitAPIFlow)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).V0alpha1Api.InitializeSelfServiceSettingsFlowForBrowsers(context.Background()).Execute()
+			pr, _, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).V0alpha2Api.InitializeSelfServiceSettingsFlowForBrowsers(context.Background()).Execute()
 			require.NoError(t, err)
 			run(t, browserIdentity1, pr, settings.RouteInitBrowserFlow)
 		})
@@ -222,7 +222,7 @@ func TestStrategyTraits(t *testing.T) {
 			rid := res.Request.URL.Query().Get("flow")
 			require.NotEmpty(t, rid)
 
-			pr, res, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+			pr, res, err := testhelpers.NewSDKCustomClient(publicTS, browserUser1).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 			require.NoError(t, err, "%s", rid)
 
 			run(t, browserIdentity1, pr, settings.RouteInitBrowserFlow)

@@ -125,7 +125,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
-			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
+			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
@@ -136,7 +136,7 @@ func TestHandler(t *testing.T) {
 			pr := newExpiredFlow()
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, _, err := testhelpers.NewSDKCustomClient(publicTS, primaryUser).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
+			_, _, err := testhelpers.NewSDKCustomClient(publicTS, primaryUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
 			require.Error(t, err)
 
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
@@ -197,7 +197,7 @@ func TestHandler(t *testing.T) {
 
 				testhelpers.NewSDKCustomClient(publicTS, primaryUser)
 
-				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha1Api.GetSelfServiceSettingsFlow(context.Background()).Id(rid).Execute()
+				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id(rid).Execute()
 				require.Error(t, err)
 				require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 				assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int(), "should return a 403 error because the identities from the cookies do not match")

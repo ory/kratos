@@ -19,7 +19,7 @@ func initFlow(email, password string) (string, *ory.SelfServiceSettingsFlow) {
 	// Create a temporary user
 	_, sessionToken := pkg.CreateIdentityWithSession(client, email, password)
 
-	flow, res, err := client.V0alpha1Api.InitializeSelfServiceSettingsFlowWithoutBrowserExecute(ory.V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest{}.
+	flow, res, err := client.V0alpha2Api.InitializeSelfServiceSettingsFlowWithoutBrowserExecute(ory.V0alpha2ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest{}.
 		XSessionToken(sessionToken))
 	pkg.SDKExitOnError(err, res)
 
@@ -30,11 +30,11 @@ func initFlow(email, password string) (string, *ory.SelfServiceSettingsFlow) {
 	return sessionToken, flow
 }
 
-func changePassword(email, password string) *ory.SuccessfulSelfServiceSettingsWithoutBrowser {
+func changePassword(email, password string) *ory.SelfServiceSettingsFlow {
 	sessionToken, flow := initFlow(email, password)
 
 	// Submit the form
-	result, res, err := client.V0alpha1Api.SubmitSelfServiceSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).SubmitSelfServiceSettingsFlowBody(
+	result, res, err := client.V0alpha2Api.SubmitSelfServiceSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).SubmitSelfServiceSettingsFlowBody(
 		ory.SubmitSelfServiceSettingsFlowWithPasswordMethodBodyAsSubmitSelfServiceSettingsFlowBody(&ory.SubmitSelfServiceSettingsFlowWithPasswordMethodBody{
 			Method:   "password",
 			Password: "not-" + password,
@@ -45,11 +45,11 @@ func changePassword(email, password string) *ory.SuccessfulSelfServiceSettingsWi
 	return result
 }
 
-func changeTraits(email, password string) *ory.SuccessfulSelfServiceSettingsWithoutBrowser {
+func changeTraits(email, password string) *ory.SelfServiceSettingsFlow {
 	sessionToken, flow := initFlow(email, password)
 
 	// Submit the form
-	result, res, err := client.V0alpha1Api.SubmitSelfServiceSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).SubmitSelfServiceSettingsFlowBody(
+	result, res, err := client.V0alpha2Api.SubmitSelfServiceSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).SubmitSelfServiceSettingsFlowBody(
 		ory.SubmitSelfServiceSettingsFlowWithProfileMethodBodyAsSubmitSelfServiceSettingsFlowBody(&ory.SubmitSelfServiceSettingsFlowWithProfileMethodBody{
 			Method: "profile",
 			Traits: map[string]interface{}{
@@ -60,7 +60,6 @@ func changeTraits(email, password string) *ory.SuccessfulSelfServiceSettingsWith
 	pkg.SDKExitOnError(err, res)
 
 	return result
-
 }
 
 func main() {

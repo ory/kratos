@@ -121,7 +121,7 @@ paths:
       - oryAccessToken: []
       summary: List Identities
       tags:
-      - v0alpha1
+      - v0alpha2
     post:
       description: |-
         This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
@@ -164,7 +164,7 @@ paths:
       - oryAccessToken: []
       summary: Create an Identity
       tags:
-      - v0alpha1
+      - v0alpha2
   /identities/{id}:
     delete:
       description: |-
@@ -203,7 +203,7 @@ paths:
       - oryAccessToken: []
       summary: Delete an Identity
       tags:
-      - v0alpha1
+      - v0alpha2
     get:
       description: Learn how identities work in [Ory Kratos' User And Identity Model
         Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -240,7 +240,7 @@ paths:
       - oryAccessToken: []
       summary: Get an Identity
       tags:
-      - v0alpha1
+      - v0alpha2
     put:
       description: |-
         This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
@@ -300,7 +300,7 @@ paths:
       - oryAccessToken: []
       summary: Update an Identity
       tags:
-      - v0alpha1
+      - v0alpha2
   /metrics/prometheus:
     get:
       description: |-
@@ -359,52 +359,6 @@ paths:
           description: jsonError
       summary: Create a Recovery Link
       tags:
-      - v0alpha1
-  /schemas:
-    get:
-      description: Get all Identity Schemas
-      operationId: listIdentitySchemas
-      parameters:
-      - description: |-
-          Items per Page
-
-          This is the number of items per page.
-        explode: true
-        in: query
-        name: per_page
-        required: false
-        schema:
-          default: 100
-          format: int64
-          maximum: 500
-          minimum: 1
-          type: integer
-        style: form
-      - description: Pagination Page
-        explode: true
-        in: query
-        name: page
-        required: false
-        schema:
-          default: 0
-          format: int64
-          minimum: 0
-          type: integer
-        style: form
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/identitySchemas'
-          description: identitySchemas
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/jsonError'
-          description: jsonError
-      tags:
       - v0alpha2
   /schemas/{id}:
     get:
@@ -439,7 +393,7 @@ paths:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/errors:
     get:
       description: |-
@@ -487,7 +441,7 @@ paths:
           description: jsonError
       summary: Get Self-Service Errors
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/login:
     post:
       description: |-
@@ -570,7 +524,7 @@ paths:
           description: jsonError
       summary: Submit a Login Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/login/api:
     get:
       description: |-
@@ -646,7 +600,7 @@ paths:
           description: jsonError
       summary: Initialize Login Flow for APIs, Services, Apps, ...
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/login/browser:
     get:
       description: |-
@@ -718,7 +672,7 @@ paths:
           description: jsonError
       summary: Initialize Login Flow for Browsers
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/login/flows:
     get:
       description: |-
@@ -799,7 +753,7 @@ paths:
           description: jsonError
       summary: Get Login Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/logout:
     get:
       description: |-
@@ -845,7 +799,7 @@ paths:
           description: jsonError
       summary: Complete Self-Service Logout
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/logout/api:
     delete:
       description: |-
@@ -883,7 +837,7 @@ paths:
           description: jsonError
       summary: Perform Logout for APIs, Services, Apps, ...
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/logout/browser:
     get:
       description: |-
@@ -932,7 +886,7 @@ paths:
           description: jsonError
       summary: Create a Logout URL for Browsers
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/recovery:
     post:
       description: |-
@@ -1013,7 +967,7 @@ paths:
           description: jsonError
       summary: Complete Recovery Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/recovery/api:
     get:
       description: |-
@@ -1053,7 +1007,7 @@ paths:
           description: jsonError
       summary: Initialize Recovery Flow for APIs, Services, Apps, ...
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/recovery/browser:
     get:
       description: |-
@@ -1092,7 +1046,7 @@ paths:
           description: jsonError
       summary: Initialize Recovery Flow for Browsers
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/recovery/flows:
     get:
       description: |-
@@ -1167,7 +1121,7 @@ paths:
           description: jsonError
       summary: Get Recovery Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/registration:
     post:
       description: |-
@@ -1237,7 +1191,7 @@ paths:
           description: jsonError
       summary: Submit a Registration Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/registration/api:
     get:
       description: |-
@@ -1277,7 +1231,7 @@ paths:
           description: jsonError
       summary: Initialize Registration Flow for APIs, Services, Apps, ...
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/registration/browser:
     get:
       description: |-
@@ -1318,7 +1272,7 @@ paths:
           description: jsonError
       summary: Initialize Registration Flow for Browsers
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/registration/flows:
     get:
       description: |-
@@ -1399,7 +1353,7 @@ paths:
           description: jsonError
       summary: Get Registration Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/settings:
     post:
       description: |-
@@ -1495,7 +1449,7 @@ paths:
       - sessionToken: []
       summary: Complete Settings Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/settings/api:
     get:
       description: |-
@@ -1542,7 +1496,7 @@ paths:
           description: jsonError
       summary: Initialize Settings Flow for APIs, Services, Apps, ...
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/settings/browser:
     get:
       description: |-
@@ -1594,7 +1548,7 @@ paths:
           description: jsonError
       summary: Initialize Settings Flow for Browsers
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/settings/flows:
     get:
       description: |-
@@ -1677,7 +1631,7 @@ paths:
           description: jsonError
       summary: Get Settings Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/verification:
     post:
       description: |-
@@ -1758,7 +1712,7 @@ paths:
           description: jsonError
       summary: Complete Verification Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/verification/api:
     get:
       description: |-
@@ -1795,7 +1749,7 @@ paths:
           description: jsonError
       summary: Initialize Verification Flow for APIs, Services, Apps, ...
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/verification/browser:
     get:
       description: |-
@@ -1826,7 +1780,7 @@ paths:
           description: jsonError
       summary: Initialize Verification Flow for Browser Clients
       tags:
-      - v0alpha1
+      - v0alpha2
   /self-service/verification/flows:
     get:
       description: |-
@@ -1900,7 +1854,7 @@ paths:
           description: jsonError
       summary: Get Verification Flow
       tags:
-      - v0alpha1
+      - v0alpha2
   /sessions/whoami:
     get:
       description: |-
@@ -1989,7 +1943,7 @@ paths:
           description: jsonError
       summary: Check Who the Current HTTP Session Belongs To
       tags:
-      - v0alpha1
+      - v0alpha2
   /version:
     get:
       description: |-
@@ -2711,8 +2665,6 @@ components:
           description: SchemaID is the ID of the JSON Schema to be used for validating
             the identity's traits.
           type: string
-        state:
-          $ref: '#/components/schemas/identityState'
         traits:
           description: |-
             Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -2967,23 +2919,6 @@ components:
       items:
         $ref: '#/components/schemas/identity'
       title: A list of identities.
-      type: array
-    identitySchema:
-      example:
-        schema: '{}'
-        id: id
-      properties:
-        id:
-          description: The ID of the Identity JSON Schema
-          type: string
-        schema:
-          description: The actual Identity JSON Schema
-          type: object
-      type: object
-    identitySchemas:
-      description: Raw identity Schema list
-      items:
-        $ref: '#/components/schemas/identitySchema'
       type: array
     identityState:
       description: The state can either be `active` or `inactive`.
