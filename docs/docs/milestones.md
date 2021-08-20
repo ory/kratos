@@ -289,6 +289,12 @@ Affects documentation.
 
 Blocks milestones or other issues or pulls.
 
+#### Issues
+
+- [ ] Ory Kratos 0.8 Release Prep
+      ([kratos#1663](https://github.com/ory/kratos/issues/1663)) -
+      [@hackerman](https://github.com/aeneasr)
+
 #### Pull Requests
 
 - [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
