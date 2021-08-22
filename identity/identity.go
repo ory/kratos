@@ -40,6 +40,9 @@ func (lt State) IsValid() error {
 	return errors.New("identity state is not valid")
 }
 
+// Identities represents an list of Ory Kratos identity
+type Identities []Identity
+
 // Identity represents an Ory Kratos identity
 //
 // An identity can be a real human, a service, an IoT device - everything that

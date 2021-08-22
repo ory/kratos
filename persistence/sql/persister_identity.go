@@ -247,8 +247,8 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	})
 }
 
-func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]identity.Identity, error) {
-	is := make([]identity.Identity, 0)
+func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) (identity.Identities, error) {
+	is := make(identity.Identities, 0)
 
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("nid = ?", corp.ContextualizeNID(ctx, p.nid)).
