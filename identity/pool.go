@@ -9,7 +9,7 @@ import (
 type (
 	Pool interface {
 		// ListIdentities lists all identities in the store given the page and itemsPerPage.
-		ListIdentities(ctx context.Context, page, itemsPerPage int) ([]Identity, error)
+		ListIdentities(ctx context.Context, page, itemsPerPage int) (Identities, error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)

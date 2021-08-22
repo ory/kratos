@@ -76,7 +76,7 @@ test:
 
 .PHONY: test-coverage
 test-coverage: .bin/go-acc .bin/goveralls
-		go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
+		VERSION=$$(cat contrib/quickstart/kratos/email-password/kratos.yml | grep version: | awk '{print $$2}') go-acc -o coverage.out ./... -- -v -failfast -timeout=20m -tags sqlite
 
 # Generates the SDK
 .PHONY: sdk
