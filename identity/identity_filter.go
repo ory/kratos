@@ -12,9 +12,11 @@ import (
 func (i Identities) Filter(values url.Values) (Identities, error) {
 	identities := Identities{}
 	for _, identity := range i {
-		fmt.Printf("Filter in 1st loop\n")
 		add := true
 		for field, contents := range values {
+			if field == "page" || field == "per_page" {
+				continue
+			}
 			fmt.Printf("Filter in 2nd loop\n")
 			raw, err := json.Marshal(identity)
 			if err != nil {
@@ -24,8 +26,6 @@ func (i Identities) Filter(values url.Values) (Identities, error) {
 			fmt.Printf("raw=%+v\n", string(raw))
 			field, innerField := extractFieldAndInnerFields(field)
 			res := gjson.GetBytes(raw, field)
-			fmt.Printf("res=%+v\n", res)
-			fmt.Printf("resType=%+v\n", res.Type)
 			switch res.Type {
 			case gjson.String:
 				fmt.Printf("check in string=\n")
@@ -38,15 +38,12 @@ func (i Identities) Filter(values url.Values) (Identities, error) {
 				if innerField != "" {
 					ra := res.Array()
 					for _, r := range ra {
-						fmt.Printf("r=%+v\n", r)
-						fmt.Printf("rc=%+v\n", r.Get(innerField).String())
 						if IsStringInSlice(contents, r.Get(innerField).String()) {
 							present = true
 							break
 						}
 					}
 					if len(ra) == 0 {
-						fmt.Printf("rc2=%+v\n", res.Get(innerField).String())
 						if IsStringInSlice(contents, res.Get(innerField).String()) {
 							present = true
 							break
