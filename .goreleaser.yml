@@ -43,6 +43,7 @@ builds:
       - amd64
     goos:
       - linux
+
   -
     id: kratos-sqlite-linux-libmusl
     flags:
@@ -58,6 +59,7 @@ builds:
       - amd64
     goos:
       - linux
+
   -
     id: kratos-sqlite-windows
     flags:
@@ -195,6 +197,7 @@ checksum:
 
 dockers:
   - dockerfile: .docker/Dockerfile-sqlite
+    use: buildx
     ids:
       - kratos-sqlite-linux-libmusl
     image_templates:
@@ -204,6 +207,7 @@ dockers:
       - "oryd/kratos:{{.Tag}}-sqlite"
       - "oryd/kratos:latest-sqlite"
   - dockerfile: .docker/Dockerfile
+    use: buildx
     ids:
       - kratos
     image_templates:
