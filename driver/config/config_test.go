@@ -144,7 +144,7 @@ func TestViperProvider(t *testing.T) {
 				config  string
 				enabled bool
 			}{
-				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","ignore_network_errors":true,"max_breaches":0}`},
+				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","haveibeenpwned_enabled":true,"ignore_network_errors":true,"max_breaches":0}`},
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
@@ -618,4 +618,37 @@ func TestViperProvider_ParseURIOrFail(t *testing.T) {
 			assert.Equal(t, tc.expected, *u)
 		})
 	}
+}
+
+func TestViperProvider_HaveIBeenPwned(t *testing.T) {
+	p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
+	t.Run("case=hipb: host", func(t *testing.T) {
+		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedHost, "foo.bar")
+		assert.Equal(t, "foo.bar", p.PasswordPolicyConfig().HaveIBeenPwnedHost)
+	})
+
+	t.Run("case=hibp: enabled", func(t *testing.T) {
+		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, true)
+		assert.Equal(t, true, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled)
+	})
+
+	t.Run("case=hibp: enabled", func(t *testing.T) {
+		p.MustSet(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false)
+		assert.Equal(t, false, p.PasswordPolicyConfig().HaveIBeenPwnedEnabled)
+	})
+
+	t.Run("case=hibp: max_breaches", func(t *testing.T) {
+		p.MustSet(config.ViperKeyPasswordMaxBreaches, 10)
+		assert.Equal(t, uint(10), p.PasswordPolicyConfig().MaxBreaches)
+	})
+
+	t.Run("case=hibp: ignore_network_errors", func(t *testing.T) {
+		p.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
+		assert.Equal(t, true, p.PasswordPolicyConfig().IgnoreNetworkErrors)
+	})
+
+	t.Run("case=hibp: ignore_network_errors", func(t *testing.T) {
+		p.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+		assert.Equal(t, false, p.PasswordPolicyConfig().IgnoreNetworkErrors)
+	})
 }
