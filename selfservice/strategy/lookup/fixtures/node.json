@@ -10,10 +10,10 @@
         "secrets": [
           {
             "id": 1050014,
-            "text": "Secret was used at 2021-08-17 13:32:38 +0200 CEST",
+            "text": "Secret was used at 2021-08-17 11:32:38 +0000 UTC",
             "type": "info",
             "context": {
-              "used_at": "2021-08-17T13:32:38+02:00"
+              "used_at": "2021-08-17T11:32:38Z"
             }
           },
           {
@@ -34,10 +34,10 @@
           },
           {
             "id": 1050014,
-            "text": "Secret was used at 2021-08-17 13:32:48 +0200 CEST",
+            "text": "Secret was used at 2021-08-17 11:32:48 +0000 UTC",
             "type": "info",
             "context": {
-              "used_at": "2021-08-17T13:32:48+02:00"
+              "used_at": "2021-08-17T11:32:48Z"
             }
           }
         ]
