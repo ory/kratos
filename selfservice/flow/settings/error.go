@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -34,6 +36,7 @@ type (
 
 		HandlerProvider
 		FlowPersistenceProvider
+		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
 	}
 
 	ErrorHandlerProvider interface{ SettingsFlowErrorHandler() *ErrorHandler }
@@ -147,7 +150,15 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := sortNodes(f.UI.Nodes, id.SchemaURL); err != nil {
+	// Lookup the schema from the loaded configuration. This local schema
+	// URL is needed for sorting the UI nodes, instead of the public URL.
+	schema, err := s.d.IdentityTraitsSchemas(r.Context()).GetByID(id.SchemaID)
+	if err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	if err := sortNodes(f.UI.Nodes, schema.RawURL); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
