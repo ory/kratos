@@ -271,7 +271,7 @@ system:
   attached to the profile.
 
 Ory Kratos implements both scenarios by using
-[Identity Schema](./identity-schema.mdx)
+[Identity Schemas](./identity-schema.mdx)
 
 ### Forget passport-js, oidc-client, ...
 
