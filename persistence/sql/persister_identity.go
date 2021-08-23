@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gobuffalo/pop/v5/associations"
+	"net/url"
 	"strings"
 	"time"
 
@@ -249,13 +251,50 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	})
 }
 
-func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) (identity.Identities, error) {
-	is := make(identity.Identities, 0)
+func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]identity.Identity, error) {
+	is := make([]identity.Identity, 0)
 
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("nid = ?", corp.ContextualizeNID(ctx, p.nid)).
 		EagerPreload("VerifiableAddresses", "RecoveryAddresses").
 		Paginate(page, perPage).Order("id DESC").
+		All(&is)); err != nil {
+		return nil, err
+	}
+
+	schemaCache := map[string]string{}
+
+	for k := range is {
+		i := &is[k]
+		if err := i.ValidateNID(); err != nil {
+			return nil, sqlcon.HandleError(err)
+		}
+
+		if u, ok := schemaCache[i.SchemaID]; ok {
+			i.SchemaURL = u
+		} else {
+			if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
+				return nil, err
+			}
+			schemaCache[i.SchemaID] = i.SchemaURL
+		}
+
+		is[k] = *i
+	}
+
+	return is, nil
+}
+
+func (p *Persister) ListIdentitiesFiltered(ctx context.Context, values url.Values, page, perPage int) ([]identity.Identity, error) {
+	is := make([]identity.Identity, 0)
+
+	/* #nosec G201 TableName is static */
+	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("identities.nid = ?", corp.ContextualizeNID(ctx, p.nid)).
+		LeftJoin("identity_verifiable_addresses verifiable_addresses", "verifiable_addresses.identity_id=identities.id").
+		LeftJoin("identity_recovery_addresses recovery_addresses", "recovery_addresses.identity_id=identities.id").
+		EagerPreload("VerifiableAddresses", "RecoveryAddresses").
+		Scope(p.buildWhereFilter(values)).
+		Paginate(page, perPage).Order("identities.id DESC").
 		All(&is)); err != nil {
 		return nil, err
 	}
@@ -473,4 +512,25 @@ func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Ident
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL(nil)).String()
 	return nil
+}
+
+func getTableName(field string) (string, error) {
+
+	as, err := associations.ForStruct(identity.Identity{}, field)
+	if err != nil {
+		return "", err
+	}
+	for _, a := range as {
+		a.Kind()
+	}
+	return "", nil
+}
+
+func (p *Persister) buildWhereFilter(values url.Values) pop.ScopeFunc {
+	return func(q *pop.Query) *pop.Query {
+		for field, value := range values {
+			q = q.Where(fmt.Sprintf("%s IN (?)", field), value)
+		}
+		return q
+	}
 }

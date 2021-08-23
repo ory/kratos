@@ -9,9 +9,9 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-func (i Identities) Filter(values url.Values) (Identities, error) {
-	identities := Identities{}
-	for _, identity := range i {
+func Filter(values url.Values) ([]Identity, error) {
+	var identities []Identity
+	for _, identity := range identities {
 		add := true
 		for field, contents := range values {
 			if field == "page" || field == "per_page" {
@@ -20,7 +20,7 @@ func (i Identities) Filter(values url.Values) (Identities, error) {
 			fmt.Printf("Filter in 2nd loop\n")
 			raw, err := json.Marshal(identity)
 			if err != nil {
-				return Identities{}, err
+				return []Identity{}, err
 			}
 
 			fmt.Printf("raw=%+v\n", string(raw))
