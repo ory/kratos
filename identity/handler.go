@@ -109,16 +109,12 @@ type adminListIdentities struct {
 //       500: jsonError
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, itemsPerPage)
+	is, err := h.r.IdentityPool().ListIdentitiesFiltered(r.Context(), r.URL.Query(), page, itemsPerPage)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
-	is, err = is.Filter(r.URL.Query())
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
+
 	total, err := h.r.IdentityPool().CountIdentities(r.Context())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)

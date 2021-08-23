@@ -21,9 +21,7 @@ import (
 )
 
 // An Identity's State
-//
 // The state can either be `active` or `inactive`.
-//
 // swagger:model identityState
 type State string
 
@@ -39,9 +37,6 @@ func (lt State) IsValid() error {
 	}
 	return errors.New("identity state is not valid")
 }
-
-// Identities represents an list of Ory Kratos identity
-type Identities []Identity
 
 // Identity represents an Ory Kratos identity
 //
@@ -256,7 +251,6 @@ func (i IdentityWithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
 		v.Config = nil
 		i.Credentials[k] = v
 	}
-
 	result, err := json.Marshal(localIdentity(i))
 	if err != nil {
 		return nil, err
