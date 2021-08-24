@@ -60,7 +60,7 @@ context('Mobile Profile', () => {
         cy.get('*[data-testid="field/totp_unlink/true"]').should('exist')
 
         // Lets sign in
-        cy.visit(MOBILE_URL + '/Login?aal=aal2')
+        cy.visit(MOBILE_URL + '/Login?aal=aal2&refresh=true')
 
         // First use a wrong code
         cy.get('*[data-testid="field/totp_code"]').type('111111')
