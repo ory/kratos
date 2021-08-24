@@ -77,7 +77,7 @@ context('Mobile Profile', () => {
           expect(actualCodes.join(', ')).to.eq(newCodes.join(', '))
         })
 
-        cy.visit(MOBILE_URL + '/Login?aal=aal2')
+        cy.visit(MOBILE_URL + '/Login?aal=aal2&refresh=true')
 
         // First use a wrong code
         cy.get('*[data-testid="field/lookup_secret"]').then(($e) => {

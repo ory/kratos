@@ -44,7 +44,7 @@ context('Mobile Profile', () => {
         cy.get('*[data-testid="field/lookup_secret_confirm/true"]').click()
 
         // Lets sign in with TOTP
-        cy.visit(MOBILE_URL + '/Login?aal=aal2')
+        cy.visit(MOBILE_URL + '/Login?aal=aal2&refresh=true')
         cy.get('*[data-testid="field/totp_code"]').then(($e) => {
           cy.wrap($e).type(authenticator.generate(totpSecret))
         })
