@@ -23,7 +23,7 @@ func (c *CredentialsConfig) ToNode() *node.Node {
 			messages[k] = *text.NewInfoSelfServiceSettingsLookupSecret(code.Code)
 			formatted[k] = code.Code
 		} else {
-			messages[k] = *text.NewInfoSelfServiceSettingsLookupSecretUsed(time.Time(code.UsedAt))
+			messages[k] = *text.NewInfoSelfServiceSettingsLookupSecretUsed(time.Time(code.UsedAt).UTC())
 			formatted[k] = "used"
 		}
 	}
