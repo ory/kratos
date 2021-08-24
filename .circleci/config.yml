@@ -92,6 +92,7 @@ jobs:
           - MYSQL_ROOT_PASSWORD=test
       - image: oryd/mailslurper:latest-smtps
     steps:
+      - browser-tools/install-browser-tools
       - checkout
 
       - restore_cache:
