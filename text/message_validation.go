@@ -17,6 +17,31 @@ const (
 	ErrorValidationIdentifierMissing
 )
 
+// Returns an error message struct with the provided reason used as is, but with the error ID
+// corresponding to the provided jsonschema error type (or a generic ID when no match).
+func NewSchemaValidationErrorGeneric(reason, schemaValidationType string) *Message {
+	var errorCode ID
+
+	switch schemaValidationType {
+	case "minLength":
+		fmt.Printf("\n\n---- VALIDATION MINLEN ERROR ----\n\n")
+		errorCode = ErrorValidationMinLength
+	case "format":
+		fmt.Printf("\n\n---- VALIDATION FORMAT ERROR ----\n\n")
+		errorCode = ErrorValidationInvalidFormat
+	default:
+		fmt.Printf("\n\n---- VALIDATION GENERIC ERROR ----\n\n")
+		errorCode = ErrorValidationGeneric
+	}
+
+	return &Message{
+		ID:      errorCode,
+		Text:    reason,
+		Type:    Error,
+		Context: nil,
+	}
+}
+
 func NewValidationErrorGeneric(reason string) *Message {
 	return &Message{
 		ID:      ErrorValidationGeneric,

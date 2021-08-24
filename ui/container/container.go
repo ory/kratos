@@ -178,7 +178,11 @@ func (c *Container) ParseError(group node.Group, err error) error {
 			var causes = e.Causes
 			if len(e.Causes) == 0 {
 				pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
-				c.AddMessage(group, text.NewValidationErrorGeneric(e.Message), pointer)
+				schemaValidationPointer, _ := jsonschemax.JSONPointerToDotNotation(e.SchemaPtr)
+				schemaValidationPath := strings.Split(schemaValidationPointer, ".")
+				schemaValidationType := schemaValidationPath[len(schemaValidationPath) - 1]
+
+				c.AddMessage(group, text.NewSchemaValidationErrorGeneric(e.Message, schemaValidationType), pointer)
 				return nil
 			}
 
