@@ -394,7 +394,7 @@ func TestHandler(t *testing.T) {
 	t.Run("case=should list identities with filter", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
-				res := get(t, ts, "/identities?traits.bar=baz&traits.foo=baz", http.StatusOK)
+				res := get(t, ts, `/identities?traits.bar=baz&traits.foo=baz`, http.StatusOK)
 				assert.Empty(t, res.Get("0.credentials").String(), "%s", res.Raw)
 				assert.Equal(t, 1, len(res.Array()), "%s", res.Raw)
 				assert.Equal(t, "baz", res.Array()[0].Get("traits.foo").String(), res.Raw)

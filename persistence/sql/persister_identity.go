@@ -291,7 +291,7 @@ func (p *Persister) ListIdentitiesFiltered(ctx context.Context, values url.Value
 		LeftJoin("identity_verifiable_addresses verifiable_addresses", "verifiable_addresses.identity_id=identities.id").
 		LeftJoin("identity_recovery_addresses recovery_addresses", "recovery_addresses.identity_id=identities.id").
 		EagerPreload("VerifiableAddresses", "RecoveryAddresses").
-		Scope(p.buildWhereFilter(values)).
+		Scope(p.buildScope(values)).
 		Paginate(page, perPage).Order("identities.id DESC").
 		All(&is)); err != nil {
 		return nil, err
@@ -524,11 +524,52 @@ func getTableName(field string) (string, error) {
 	return "", nil
 }
 
-func (p *Persister) buildWhereFilter(values url.Values) pop.ScopeFunc {
+func (p *Persister) getJsonSearchQuery(field string, values []string) pop.ScopeFunc {
+	return func (q *pop.Query) *pop.Query {
+		dsn := p.r.Config(context.Background()).DSN()
+		switch {
+		case strings.HasPrefix(dsn, "sqlite"):
+			field, innerField := extractFieldAndInnerFields(field)
+			for _, value := range values {
+				if innerField == "" {
+					q = q.Where(fmt.Sprintf(`json_extract(%s, '$') = "%v"`, field, value))
+				} else {
+					q = q.Where(fmt.Sprintf(`json_extract(%s, '$.%v') = "%v"`, field, innerField, value))
+				}
+			}
+			return q
+		case strings.HasPrefix(dsn, "postgres"):
+			field, innerField := extractFieldAndInnerFields(field)
+			for _, value := range values {
+				if innerField == "" {
+					q = q.Where(fmt.Sprintf(`%s @> '"%s"'`, field, value))
+				} else {
+					q = q.Where(fmt.Sprintf(`%s @> '{"%s":"%s"}'`, field, innerField, value))
+				}
+			}
+			return q
+		}
+		return q
+	}
+}
+
+func (p *Persister) buildScope(values url.Values) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
 		for field, value := range values {
+			if strings.HasPrefix(field, "traits") {
+				q = q.Scope(p.getJsonSearchQuery(field, value))
+				continue
+			}
 			q = q.Where(fmt.Sprintf("%s IN (?)", field), value)
 		}
 		return q
 	}
+}
+
+func extractFieldAndInnerFields(field string) (string, string) {
+	if !strings.Contains(field, ".") {
+		return field, ""
+	}
+	dotIndex := strings.Index(field, ".")
+	return field[:dotIndex], field[dotIndex+1:]
 }
