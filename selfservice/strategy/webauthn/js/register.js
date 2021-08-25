@@ -1,4 +1,3 @@
-// noinspection JSAnnotator
 if (!window.PublicKeyCredential) {
   alert('This browser does not support WebAuthn!');
 } else {
