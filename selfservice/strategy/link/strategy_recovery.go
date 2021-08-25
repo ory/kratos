@@ -357,38 +357,51 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.Request, req *recovery.Flow) error {
+func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.Request, f *recovery.Flow) error {
 	body, err := s.decodeRecovery(r)
 	if err != nil {
-		return s.HandleRecoveryError(w, r, req, body, err)
+		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
 	if len(body.Email) == 0 {
-		return s.HandleRecoveryError(w, r, req, body, schema.NewRequiredError("#/email", "email"))
+		return s.HandleRecoveryError(w, r, f, body, schema.NewRequiredError("#/email", "email"))
 	}
 
-	if err := flow.EnsureCSRF(s.d, r, req.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.CSRFToken); err != nil {
-		return s.HandleRecoveryError(w, r, req, body, err)
+	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.CSRFToken); err != nil {
+		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, req, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	address, err := s.d.IdentityPool().FindVerifiableAddressByValue(r.Context(), identity.VerifiableAddressTypeEmail,  body.Email)
+	if err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
+		return s.HandleRecoveryError(w, r, f, body, err)
+	}
+
+	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
-			return s.HandleRecoveryError(w, r, req, body, err)
+			return s.HandleRecoveryError(w, r, f, body, err)
 		}
 		// Continue execution
 	}
 
-	req.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	req.UI.GetNodes().Upsert(
+	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	f.UI.GetNodes().Upsert(
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
 		node.NewInputField("email", body.Email, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 	)
 
-	req.Active = sqlxx.NullString(s.RecoveryNodeGroup())
-	req.State = recovery.StateEmailSent
-	req.UI.Messages.Set(text.NewRecoveryEmailSent())
-	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), req); err != nil {
-		return s.HandleRecoveryError(w, r, req, body, err)
+	if address != nil && !address.Verified {
+		address.Status = identity.VerifiableAddressStatusSent
+
+		if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
+			return s.HandleRecoveryError(w, r, f, body, err)
+		}
+	}
+
+	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
+	f.State = recovery.StateEmailSent
+	f.UI.Messages.Set(text.NewRecoveryEmailSent())
+	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
+		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
 	return nil
