@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gobuffalo/pop/v5/associations"
 	"net/url"
 	"strings"
 	"time"
@@ -514,20 +513,8 @@ func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Ident
 	return nil
 }
 
-func getTableName(field string) (string, error) {
-
-	as, err := associations.ForStruct(identity.Identity{}, field)
-	if err != nil {
-		return "", err
-	}
-	for _, a := range as {
-		a.Kind()
-	}
-	return "", nil
-}
-
 func (p *Persister) getJsonSearchQuery(field string, values []string) pop.ScopeFunc {
-	return func (q *pop.Query) *pop.Query {
+	return func(q *pop.Query) *pop.Query {
 		dsn := p.r.Config(context.Background()).DSN()
 		switch {
 		case strings.HasPrefix(dsn, "sqlite"):
