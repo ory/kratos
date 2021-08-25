@@ -545,6 +545,9 @@ func (p *Persister) getJsonSearchQuery(field string, values []string) pop.ScopeF
 func (p *Persister) buildScope(values url.Values) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
 		for field, value := range values {
+			if IsStringInSlice([]string{"page","per_page"}, field) {
+				continue
+			}
 			if strings.HasPrefix(field, "traits") {
 				q = q.Scope(p.getJsonSearchQuery(field, value))
 				continue
@@ -562,3 +565,11 @@ func extractFieldAndInnerFields(field string) (string, string) {
 	dotIndex := strings.Index(field, ".")
 	return field[:dotIndex], field[dotIndex+1:]
 }
+
+func IsStringInSlice(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
