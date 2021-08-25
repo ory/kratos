@@ -73,8 +73,8 @@ Currently, three settings methods are supported:
 - `oidc` for un-/linking from social sign in providers such as Google or
   Facebook;
 - `profile` for updating an identity's traits (e.g. change the first name). The
-  updated traits must be valid against the Identity JSON Schema defined for its
-  [Identity Traits](../../concepts/identity-data-model.mdx).
+  updated traits must be valid against the Identity Schema defined for its
+  [Identity Traits](../../concepts/identity-schema.mdx).
 
 <Tabs
   defaultValue="oss"
@@ -513,7 +513,7 @@ $ curl -s -X GET \
 ```
 
 The form fields depend on the
-[Identity's Schema JSON](../../concepts/identity-data-model.mdx).
+[Identity Schema](../../concepts/identity-schema.mdx).
 
 ### Update Password
 
