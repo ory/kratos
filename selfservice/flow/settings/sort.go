@@ -29,8 +29,8 @@ func sortNodes(n node.Nodes, schemaRef string) error {
 			node.WebAuthnRegister,
 
 			// TOTP
-			node.TOTPSecretKey,
 			node.TOTPQR,
+			node.TOTPSecretKey,
 			node.TOTPUnlink,
 			node.TOTPCode,
 		}),

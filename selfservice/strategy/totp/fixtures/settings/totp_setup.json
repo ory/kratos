@@ -5,7 +5,7 @@
       "name": "csrf_token",
       "required": true,
       "type": "hidden",
-      "value": "OWRqeWw2YXg1bXNjODI0dzVkNXB6Yzg2ZGJmd295MW8="
+      "value": "aXZ1M3E2cmdkOG5namVsMzNob2kwcmlnMGo0Yjc5MGw="
     },
     "group": "default",
     "messages": [],
@@ -14,13 +14,31 @@
   },
   {
     "attributes": {
+      "height": 256,
+      "id": "totp_qr",
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAEAAAAAApiSv5AAAH6UlEQVR4nOyd244bOQxEM4v8/y9nn3pgaM0hi6TWCOqct7h1G6dAqcWLf//58wuM+efTC4DPggDMQQDmIABzEIA5CMAcBGAOAjAHAZiDAMxBAOYgAHMQgDkIwBwEYA4CMAcBmIMAzEEA5iAAcxCAOb+Vxl9fvUmiyONnvPP5OU/1eTReNl/E2T5bVzZP9P1l46gokd5YAHMQgDkIwBzpDPCg7qHZONmerj7P1qGeFdSzStQu+jxbz9b3/Q4sgDkIwBwEYE7rDPDQfa+t7v3dPbM7btS+2k49W0TzRKjfdwUsgDkIwBwEYM7oDNAlOwuc7dTxHtS9OBsvIvs7tnwZN8ACmIMAzEEA5nzkDFDdq6O9MXrvzt7bT9TnU799N77gJlgAcxCAOQjAnNEZYGvPyu7oq3fm1f6qD6HaTvUdqNw4I2ABzEEA5iAAc1pngO4eFo2Tve+fZHtuN+4/Gl9dX7Zedf1b3/c7sADmIABzEIA50hngU78uku2VXT961r4bXxA9j9qr8QybYAHMQQDmIABzvpR9ZvoerM4T9e/6BKqo9QrOdtnfq+ZHqOtVwAKYgwDMQQDmtM4AEereF32+FR8Qratbw2e7dpF6ZsjG7dyHYAHMQQDmIABzpDPAd6dhDlx3nGme/5afX41X6L6n36gHcIIFMAcBmIMAzFmpE7hVh6/aP1uXereexQRG7bJxTrr3IGrsIPcAUAYBmIMAzGn9XoCaa7e915/9q2z5FrLxzufbdQE2awphAcxBAOYgAHNW8gLUHLuofzZv9305W391vojpHp/VLbyZK4gFMAcBmIMAzPlf4wFUunUCtmsFRfNG/dSYva08h87/JRbAHARgDgIw58rvBnZr/ajtp/Oc6z3bR8/Pz8/3d/WOvhtf0fVhvIIFMAcBmIMAzLlaJ7D7Xlztr64nGv+hGvOX+Ryy/tV+0Zkn6k9MIMggAHMQgDktX8B352Gtm2mO2/a42/cXWzGB2zWKXsECmIMAzEEA5qzGAzxs5dln/aJ1dWsNde8n1PnP9uffpd4rTPIDsADmIABzEIA5V+oEqvH76h55Pu/unRnTdXdzJrvrVPv9wgIAAjAHAZhz1RfwsBXXfisGsLpO9X4h4tb7P74AkEEA5iAAc0Y1gqK95mY++0/zTfMFHtQ9upsH0I0LmNY2egULYA4CMAcBmLNyD/DQ3fu7d+bdWLzt+bK/Zzu/YSMO4AELYA4CMAcBmHM1JjDr131Pz553YwBVVB/D1Hex5Yt4BQtgDgIwBwGYM7oH+M9gw7301h66tb5snO4dfzZutp4JWABzEIA5CMCcUTxAxGb++rt+2Xv81j1Fto7q+Op6svVxDwBrIABzEIA5rd8MUuPfp3Hyqn+/etcf9c/28C3fRDaeuj7qA4AMAjAHAZjTugeI/n2ylSPXrbWToe6Z0zoG2Xjd+gPkBkIbBGAOAjDnSkxglWntnWldvuq6prmO1ff26ffKPQDIIABzEIA5ozqBXd/A2b87f7SO6Pk5Ttdvr9YP7OYSZvNm7StgAcxBAOYgAHNavxsY0a1bV93DquNWYwUzf3v3XmGaq3j7LPUKFsAcBGAOAjBntUbQw/Q9Va3V032P7t5rqDmK01pDXV9JBSyAOQjAHARgzigm8GF7z88+r/bvxvBN13Frns18gAcsgDkIwBwEYM7IF1DNk6/uhVvx/934gKydOk41NzH6PNvzq2een8ACmIMAzEEA5ozqA1TbqbV8uu/P5/Npbp1am+icv3ovMK0ryD0AtEEA5iAAc1Z/O7jaTo2rP8c526kxeNX1ZXRjH7fOFJP/uwcsgDkIwBwEYM5qXsBJNe4+69e9L4jmU2PqunkI5/PuGaM7XwUsgDkIwBwEYM5KTOC0Vk+35k803vb7djTftC5BN16he2/xDiyAOQjAHARgzqhO4NYef7bL5q2OO11f1G+6TnXeaP4N3wAWwBwEYA4CMOfK7wVU4+7P9mq7as2faRxBhLoHV8ffuoeogAUwBwGYgwDMacUDqO/BZ7/tO3A1h071+6tnCjXeIfo8azfZ+x+wAOYgAHMQgDkrvxnU9XtH/bNxtvL/z/bdnMdo3dV1dc9U2TorYAHMQQDmIABzRr6AaXy/6g8/mdYSUtur9QOi8VWfxWYewAkWwBwEYA4CMGdUI+jWe6yaU5jl0EXjqntxNH7171N9EKpvgphAkEEA5iAAc0Y1gr4Hae5tEeqePI3ty5jGGN46K3XneQULYA4CMAcBmLNSI6j7Hp6h7qnVcVU/fjbOtu+hW8OoAxbAHARgDgIwZ6VGUIZaJy/zAWzV8snOJFUfQJaz2KV6ZiIeANogAHMQgDlXcgMfurFwt+oQZP1V1LPK1vom/v8TLIA5CMAcBGDOyBfQjVOf5hZ2Y/uyz6vr7far5vl3cxmJCQQZBGAOAjDn6m8GZUR7+DRHcFpTN8p72Hr/ntZQ2tj7H7AA5iAAcxCAOR85A1Tz66f+/2g+9f4ie09X4xy6eQ1qPkIFLIA5CMAcBGDO6AwwfV9XY/Wy9iddX4W6t3Zr/05jLKuf/wQWwBwEYA4CMKd1Bpj6x9VYOvWsMI0n2Pb/q/kH03oIClgAcxCAOQjAnJUaQfD3ggUwBwGYgwDMQQDmIABzEIA5CMAcBGAOAjAHAZiDAMxBAOYgAHMQgDkIwBwEYA4CMAcBmIMAzEEA5iAAc/4NAAD//2bnVGe2kqtuAAAAAElFTkSuQmCC",
+      "width": 256
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050005,
+        "text": "Authenticator app QR code",
+        "type": "info"
+      }
+    },
+    "type": "img"
+  },
+  {
+    "attributes": {
       "id": "totp_secret_key",
       "text": {
         "context": {
-          "secret": "5CFWQKPNEMIRMAWWG2PJAJZ46BFI7QKV"
+          "secret": "Z5YLZXOY6TQPJEUHYX6O4JVAXFVZPQSD"
         },
         "id": 1050006,
-        "text": "5CFWQKPNEMIRMAWWG2PJAJZ46BFI7QKV",
+        "text": "Z5YLZXOY6TQPJEUHYX6O4JVAXFVZPQSD",
         "type": "info"
       }
     },
@@ -34,24 +52,6 @@
       }
     },
     "type": "text"
-  },
-  {
-    "attributes": {
-      "height": 256,
-      "id": "totp_qr",
-      "src": "data:image/png;base64,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",
-      "width": 256
-    },
-    "group": "totp",
-    "messages": [],
-    "meta": {
-      "label": {
-        "id": 1050005,
-        "text": "Authenticator app QR code",
-        "type": "info"
-      }
-    },
-    "type": "img"
   },
   {
     "attributes": {
