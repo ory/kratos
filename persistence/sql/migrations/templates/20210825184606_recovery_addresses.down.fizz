@@ -1,0 +1,1 @@
+change_column("identity_recovery_addresses", "value", "string", {"size": 400,"null": false})
