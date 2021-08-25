@@ -1,14 +1,7 @@
 // noinspection JSAnnotator
-return (function (e) {
-  if (e.value) {
-    return true
-  }
-
-  if (!window.PublicKeyCredential) {
-    alert('This browser does not support WebAuthn!');
-    return false;
-  }
-
+if (!window.PublicKeyCredential) {
+  alert('This browser does not support WebAuthn!');
+} else {
   function bufferDecode(value) {
     return Uint8Array.from(atob(value), c => c.charCodeAt(0));
   }
@@ -34,7 +27,7 @@ return (function (e) {
   }
 
   navigator.credentials.create(opt).then(function (credential) {
-    document.querySelector('input[name="webauthn_register"]').value = JSON.stringify({
+    document.querySelector('*[name="webauthn_register"]').value = JSON.stringify({
       id: credential.id,
       rawId: bufferEncode(credential.rawId),
       type: credential.type,
@@ -44,12 +37,8 @@ return (function (e) {
       },
     })
 
-    console.log('Submitting!')
-    e.closest('form').submit()
-    console.log('Done!')
+    document.querySelector('*[name="webauthn_register_trigger"]').closest('form').submit()
   }).catch((err) => {
     alert(err)
   })
-
-  return false
-})(this)
+}
