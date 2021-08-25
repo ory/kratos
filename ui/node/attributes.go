@@ -10,6 +10,7 @@ const (
 	InputAttributeTypeHidden        InputAttributeType = "hidden"
 	InputAttributeTypeEmail         InputAttributeType = "email"
 	InputAttributeTypeSubmit        InputAttributeType = "submit"
+	InputAttributeTypeButton        InputAttributeType = "button"
 	InputAttributeTypeDateTimeLocal InputAttributeType = "datetime-local"
 	InputAttributeTypeDate          InputAttributeType = "date"
 	InputAttributeTypeURI           InputAttributeType = "url"
