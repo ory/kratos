@@ -20,7 +20,7 @@ func NewProviderFacebook(
 	config *Configuration,
 	public *url.URL,
 ) *ProviderFacebook {
-	config.IssuerURL = "https://facebook.com"
+	config.IssuerURL = "https://www.facebook.com"
 	return &ProviderFacebook{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
