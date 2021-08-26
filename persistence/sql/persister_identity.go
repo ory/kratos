@@ -517,7 +517,7 @@ func (p *Persister) getJsonSearchQuery(field string, values []string) pop.ScopeF
 	return func(q *pop.Query) *pop.Query {
 		dsn := p.r.Config(context.Background()).DSN()
 		switch {
-		case strings.HasPrefix(dsn, "sqlite"):
+		case strings.HasPrefix(dsn, "sqlite"), strings.HasPrefix(dsn, "mysql"):
 			field, innerField := extractFieldAndInnerFields(field)
 			for _, value := range values {
 				if innerField == "" {
@@ -527,7 +527,7 @@ func (p *Persister) getJsonSearchQuery(field string, values []string) pop.ScopeF
 				}
 			}
 			return q
-		case strings.HasPrefix(dsn, "postgres"):
+		case strings.HasPrefix(dsn, "postgres"), strings.HasPrefix(dsn, "crdb"), strings.HasPrefix(dsn, "cockroach"):
 			field, innerField := extractFieldAndInnerFields(field)
 			for _, value := range values {
 				if innerField == "" {
@@ -573,3 +573,4 @@ func IsStringInSlice(slice []string, val string) bool {
 		}
 	}
 	return false
+}
