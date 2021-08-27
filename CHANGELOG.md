@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-08-18)](#2021-08-18)
+- [ (2021-08-27)](#2021-08-27)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -191,7 +191,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-18)
+# [](https://github.com/ory/kratos/compare/v0.7.1-alpha.1...v) (2021-08-27)
 
 
 ### Bug Fixes
@@ -199,6 +199,7 @@
 * Add new message when refresh parameter is true ([#1560](https://github.com/ory/kratos/issues/1560)) ([0525623](https://github.com/ory/kratos/commit/05256232bf85d68e068eece6c883f46a447ba5bd)), closes [#1117](https://github.com/ory/kratos/issues/1117)
 * Add session in spa registration if session cook is configured ([#1657](https://github.com/ory/kratos/issues/1657)) ([639a7dd](https://github.com/ory/kratos/commit/639a7dd52d43c57e9708ed3e7360c17d6efde6a5)), closes [#1604](https://github.com/ory/kratos/issues/1604)
 * **docs:** Ensure config reference is updated ([f6b3aa4](https://github.com/ory/kratos/commit/f6b3aa45b1f39ca5e9ee7ef4cd96de1970b2ed71)), closes [#1597](https://github.com/ory/kratos/issues/1597)
+* Facebook sign in regression ([#1689](https://github.com/ory/kratos/issues/1689)) ([85337bf](https://github.com/ory/kratos/commit/85337bf65af767d7296b14e8fd21bab5c64d23e2)), closes [#1687](https://github.com/ory/kratos/issues/1687) [#1686](https://github.com/ory/kratos/issues/1686)
 * Http context memory leak ([b21bd22](https://github.com/ory/kratos/commit/b21bd224059e8a42da9814237572a118297c5210)):
 
     Ory Kratos was using `gorilla/sessions` prior to version v1.2 which had a dependency on `gorilla/context`, a deprecated library with known memory management issues. Even though we used `gorilla/context`'s clean up middleware, it appears that `r.Context()` was not properly cleaned up, causing memory leaks.
@@ -212,6 +213,7 @@
     
     Closes https://github.com/ory-corp/cloud/issues/1292
 
+* Outdated label ([#1681](https://github.com/ory/kratos/issues/1681)) ([149101e](https://github.com/ory/kratos/commit/149101ed145dae2b75e5150013efc478f5fd0cc3))
 * Register argon2 CLI commands properly ([#1592](https://github.com/ory/kratos/issues/1592)) ([45c28d9](https://github.com/ory/kratos/commit/45c28d99064baf8051521a1078ac2b59bb3206ec))
 * Remove session cookie on logout ([#1587](https://github.com/ory/kratos/issues/1587)) ([cdb30bb](https://github.com/ory/kratos/commit/cdb30bb65ac932a17e4924b4efc8952113452513)), closes [#1584](https://github.com/ory/kratos/issues/1584):
 
@@ -222,6 +224,7 @@
 
     When a value for prompt is not provided, Discord defaults to `prompt="consent"`. This change makes it so that if the request is not forced, prompt is explicitly set to "none".
 
+* Static parameter for warning message in config.baseURL(...) ([#1673](https://github.com/ory/kratos/issues/1673)) ([db54a1b](https://github.com/ory/kratos/commit/db54a1bd0c93d7a5845ee09d0a16cbc3b8f26a4a)), closes [#1672](https://github.com/ory/kratos/issues/1672)
 * Update csrf token cookie name ([#1601](https://github.com/ory/kratos/issues/1601)) ([64c90bf](https://github.com/ory/kratos/commit/64c90bf5e5cec6545a81f88ad5fabb29e9e80850)):
 
     See https://github.com/ory-corp/cloud/issues/1252
@@ -231,6 +234,10 @@
 ### Documentation
 
 * Change model to schema ([#1639](https://github.com/ory/kratos/issues/1639)) ([09c403e](https://github.com/ory/kratos/commit/09c403e55482e91a5bfe9a253e514b7a90826709))
+* Fix func naming for Logout flow ([#1676](https://github.com/ory/kratos/issues/1676)) ([bbeb613](https://github.com/ory/kratos/commit/bbeb6132ba82e28057bc14bf35ea99b70f0c4118)):
+
+    rename createSelfServiceLogoutUrlForBrowsers  to createSelfServiceLogoutFlowUrlForBrowsers
+
 * Fix stub error example ([#1642](https://github.com/ory/kratos/issues/1642)) ([9bc2fd0](https://github.com/ory/kratos/commit/9bc2fd088ed9b3e7334713e63bae3c7bbcb922db)), closes [#1568](https://github.com/ory/kratos/issues/1568)
 * Fixes incorrect yaml identation ([#1641](https://github.com/ory/kratos/issues/1641)) ([6b58278](https://github.com/ory/kratos/commit/6b582784b49c1d103bbf7a6843cdf197fbd93931))
 * Identity traits are visible to user ([#1621](https://github.com/ory/kratos/issues/1621)) ([641eba6](https://github.com/ory/kratos/commit/641eba675bdc583661565a6378776bfad26067c6))
