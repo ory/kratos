@@ -185,6 +185,7 @@ func TestGetFlow(t *testing.T) {
 			require.NoError(t, err)
 		}))
 		conf.MustSet(config.ViperKeySelfServiceLoginUI, ts.URL)
+		conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 		t.Cleanup(ts.Close)
 		return ts
 	}
@@ -228,5 +229,29 @@ func TestGetFlow(t *testing.T) {
 		res, body := x.EasyGet(t, client, public.URL+login.RouteGetFlow+"?id="+f.ID.String())
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
 		assert.Equal(t, public.URL+login.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+	})
+
+	t.Run("case=expired with return_to", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupLoginUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+
+		// Expire the flow
+		f, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
+		oldReqUrl := f.RequestURL
+		require.NoError(t, err)
+		f.ExpiresAt = time.Now().Add(-time.Second)
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), f))
+
+		// submit the flow but it is expired
+		u := public.URL + login.RouteSubmitFlow + "?flow=" + f.ID.String()
+		res, err := client.PostForm(u, url.Values{"password_identifier": {"email@ory.sh"}, "csrf_token": {f.CSRFToken}, "password": {"password"}, "method": {"password"}})
+		resBody, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+
+		f, err = reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
+		require.NoError(t, err)
+		assert.Equal(t, f.RequestURL, oldReqUrl)
 	})
 }

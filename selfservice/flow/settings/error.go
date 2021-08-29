@@ -118,7 +118,7 @@ func (s *ErrorHandler) WriteFlowError(
 		}
 
 		// create new flow because the old one is not valid
-		a, err := s.d.SettingsHandler().NewFlow(w, r, id, f.Type)
+		a, err := s.d.SettingsHandler().FromOldFlow(w, r, id, *f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, group, f, id, err)
