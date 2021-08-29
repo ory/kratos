@@ -28,6 +28,24 @@ builds:
       - amd64
     goos:
       - darwin
+  -
+
+    id: kratos-sqlite-darwin-arm
+    flags:
+      - -tags
+      - sqlite
+    ldflags:
+      - -s -w -X github.com/ory/kratos/driver/config.Version={{.Tag}} -X github.com/ory/kratos/driver/config.Commit={{.FullCommit}} -X github.com/ory/kratos/driver/config.Date={{.Date}}
+      # - "-extldflags '-static'"
+    binary: kratos
+    env:
+      - CGO_ENABLED=1
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    goarch:
+      - arm64
+    goos:
+      - darwin
 
   -
     id: kratos-sqlite-linux
@@ -105,6 +123,7 @@ archives:
   - id: kratos-sqlite
     builds:
       - kratos-sqlite-windows
+      - kratos-sqlite-darwin-arm
       - kratos-sqlite-darwin
       - kratos-sqlite-linux
     replacements:
@@ -112,6 +131,7 @@ archives:
       386: 32bit
       amd64: 64bit
       arm: arm32
+      arm64: arm64
     format_overrides:
       -
         goos: windows
@@ -150,6 +170,7 @@ archives:
       386: 32bit
       amd64: 64bit
       arm: arm32
+      arm64: arm64
     format_overrides:
       - goos: windows
         format: zip
