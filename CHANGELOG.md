@@ -199,6 +199,7 @@
 
 ### Documentation
 
+* Add e2e quickstart ([2b749d3](https://github.com/ory/kratos/commit/2b749d39fcb0d320d193290966a558ee2c5734d1))
 * Browser redirects ([#1700](https://github.com/ory/kratos/issues/1700)) ([a44089a](https://github.com/ory/kratos/commit/a44089a506f5ea9daa406fcb862ad707f569c2bb))
 
 
