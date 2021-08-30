@@ -183,7 +183,7 @@ func TestManagerHTTP(t *testing.T) {
 			s, _ = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
-			res, err := c.Get(pts.URL + "/session/set/invalidç")
+			res, err := c.Get(pts.URL + "/session/set/invalid")
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
 		})
