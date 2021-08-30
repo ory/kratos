@@ -6,8 +6,8 @@ title: HTML Form Parser
 If you're using HTML Forms to sign users up or update profiles, Ory Kratos needs
 to assert the type of each field, as HTML Form Field Values are untyped.
 
-Ory Kratos uses the Identity Schema to assert form field types. There are a
-few tricks you should know when using this feature.
+Ory Kratos uses the Identity Schema to assert form field types. There are a few
+tricks you should know when using this feature.
 
 ## Nesting
 
