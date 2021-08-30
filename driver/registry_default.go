@@ -366,10 +366,10 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 func (m *RegistryDefault) Cipher() cipher.Cipher {
 	if m.crypter == nil {
 		switch m.c.CipherAlgorithm() {
-		case "chacha20":
-			m.crypter = cipher.NewCryptChaCha20(m)
-		default:
+		case "aes":
 			m.crypter = cipher.NewCryptAES(m)
+		default:
+			m.crypter = cipher.NewCryptChaCha20(m)
 		}
 	}
 	return m.crypter

@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
-	"github.com/ory/kratos/cipher"
-	"github.com/tidwall/gjson"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/kratos/corp"
 
@@ -313,21 +315,24 @@ func (i *Identity) getOIDCToken(r *http.Request, c cipher.Provider) error {
 		if credType != CredentialsTypeOIDC {
 			continue
 		}
+
 		encryptedAccessToken := gjson.GetBytes(credential.Config, "providers.0.encrypted_access_token").String()
 		accessToken, err := c.Cipher().Decrypt(r.Context(), encryptedAccessToken)
 		if err != nil {
 			return err
 		}
+
 		encryptedRefreshToken := gjson.GetBytes(credential.Config, "providers.0.encrypted_refresh_token").String()
 		refreshToken, err := c.Cipher().Decrypt(r.Context(), encryptedRefreshToken)
 		if err != nil {
 			return err
 		}
+
 		i.IdentifierCredentials = append(i.IdentifierCredentials, IdentifierCredential{
 			Subject:      gjson.GetBytes(credential.Config, "providers.0.subject").String(),
 			Provider:     gjson.GetBytes(credential.Config, "providers.0.provider").String(),
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
+			AccessToken:  string(accessToken),
+			RefreshToken: string(refreshToken),
 		})
 	}
 	return nil

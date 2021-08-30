@@ -168,8 +168,8 @@ func TestHandler(t *testing.T) {
 			accessTokenEncrypted := accessToken
 			refreshTokenEncrypted := refreshToken
 			if encrypt {
-				accessTokenEncrypted, _ = reg.Cipher().Encrypt(context.Background(), accessToken)
-				refreshTokenEncrypted, _ = reg.Cipher().Encrypt(context.Background(), refreshToken)
+				accessTokenEncrypted, _ = reg.Cipher().Encrypt(context.Background(), []byte(accessToken))
+				refreshTokenEncrypted, _ = reg.Cipher().Encrypt(context.Background(), []byte(refreshToken))
 			}
 			iId := x.NewUUID()
 			toJson := func(c oidc.CredentialsConfig) []byte {
@@ -270,7 +270,7 @@ func TestHandler(t *testing.T) {
 					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
 				})
 			}
-			e, _ := reg.Cipher().Encrypt(context.Background(), "foo_token")
+			e, _ := reg.Cipher().Encrypt(context.Background(), []byte("foo_token"))
 			id = createOidcIdentity("foo-failed-2.oidc@bar.com", e, "bar_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {

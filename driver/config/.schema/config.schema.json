@@ -310,11 +310,10 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
+          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
           "type": "string",
           "enum": [
             "github",
-            "github-app",
             "gitlab",
             "generic",
             "google",
@@ -1744,12 +1743,12 @@
       "properties": {
         "algorithm": {
           "title": "ciphering algorithm",
-          "description": "One of the values: aes, chacha20",
+          "description": "One of the values: aes, xchacha20-poly1305",
           "type": "string",
-          "default": "aes",
+          "default": "xchacha20-poly1305",
           "enum": [
             "aes",
-            "chacha20"
+            "xchacha20-poly1305"
           ]
         }
       }

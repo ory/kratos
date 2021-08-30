@@ -202,12 +202,12 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	cat, err := s.d.Cipher().Encrypt(r.Context(), token.AccessToken)
+	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	crt, err := s.d.Cipher().Encrypt(r.Context(), token.RefreshToken)
+	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
