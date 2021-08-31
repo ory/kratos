@@ -353,9 +353,9 @@ func TestManagerHTTP(t *testing.T) {
 						s.CompletedLoginFor(m)
 					}
 					require.NoError(t, s.Activate(i, conf, time.Now().UTC()))
-					err := reg.SessionManager().DoesSessionSatisfy(context.Background(), s, requested)
+					err := reg.SessionManager().DoesSessionSatisfy((&http.Request{}).WithContext(context.Background()), s, requested)
 					if expectedError != nil {
-						require.ErrorIs(t, err, expectedError)
+						require.ErrorAs(t, err, &expectedError)
 					} else {
 						require.NoError(t, err)
 					}
@@ -366,7 +366,7 @@ func TestManagerHTTP(t *testing.T) {
 				})
 
 				t.Run("rejected for aal1 if identity has aal2", func(t *testing.T) {
-					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, config.HighestAvailableAAL, idAAL2, session.ErrAALNotSatisfied)
+					run(t, []identity.CredentialsType{identity.CredentialsTypePassword}, config.HighestAvailableAAL, idAAL2, session.NewErrAALNotSatisfied(""))
 				})
 
 				t.Run("fulfilled for aal1 if identity has aal2 but config is aal1", func(t *testing.T) {
