@@ -4,7 +4,12 @@
   "expires_at": "2013-10-07T08:23:19Z",
   "authenticated_at": "2013-10-07T08:23:19Z",
   "authenticator_assurance_level": "aal1",
-  "authentication_methods": [],
+  "authentication_methods": [
+    {
+      "method": "v0.6_legacy_session",
+      "completed_at": "0001-01-01T00:00:00Z"
+    }
+  ],
   "issued_at": "2013-10-07T08:23:19Z",
   "identity": {
     "id": "5ff66179-c240-4703-b0d8-494592cefff5",

@@ -33,6 +33,11 @@ func TestDetermineAAL(t *testing.T) {
 			expected: AuthenticatorAssuranceLevel1,
 		},
 		{
+			d:        "legacy is aal1",
+			methods:  []CredentialsType{"v0.6_legacy_session"},
+			expected: AuthenticatorAssuranceLevel1,
+		},
+		{
 			d: "mix of password, oidc, recovery is still aal1",
 			methods: []CredentialsType{
 				CredentialsTypeRecoveryLink, CredentialsTypeOIDC, CredentialsTypePassword,
