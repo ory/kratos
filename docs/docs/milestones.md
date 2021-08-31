@@ -95,6 +95,8 @@ New feature or request.
       ([kratos#1643](https://github.com/ory/kratos/issues/1643))
 - [ ] Regenerate lookup secrets as part of login when last secret was used
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
+- [ ] Endpoint for fetching all schema IDs or all schemas
+      ([kratos#1699](https://github.com/ory/kratos/issues/1699))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
 
@@ -159,6 +161,9 @@ Something is not working.
 
 #### Issues
 
+- [ ] 0.7.3.alpha.1, docker, panic if SESSION_COOKIE_NAME is set in
+      docker-compose.yml
+      ([kratos#1695](https://github.com/ory/kratos/issues/1695))
 - [x] Submitting successful link verification again ends up with JSON response
       ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
       [@hackerman](https://github.com/aeneasr)

@@ -200,6 +200,12 @@ that your company deserves a spot here, reach out to
             <td>Zero</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/commitzero.svg" alt="Project Zero by Commit"></td>
             <td><a href="https://getzero.dev/">getzero.dev</a></td>
+        </tr>        
+        <tr>
+            <td>Adopter *</td>
+            <td>Padis</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/padis.svg" alt="Padis"></td>
+            <td><a href="https://padis.io/">padis.io</a></td>
         </tr>
         <tr>
             <td>Sponsor</td>
@@ -457,13 +463,21 @@ cd client; go test  -tags sqlite  .
 
 ##### End-to-End Tests
 
-We use [Cypress](https://www.cypress.io) to run our e2e tests. You can run all tests using:
+We use [Cypress](https://www.cypress.io) to run our e2e tests.
+
+The simplest way to develop e2e tests is:
+
+<pre type="repo/executable">
+./test/e2e/run.sh --dev sqlite
+</pre>
+
+You can run all tests (with databases) using:
 
 <pre type="make/command">
 make test-e2e
 </pre>
 
-If you intend developing e2e tests, run the following command for more details:
+For more details, run:
 
 <pre type="repo/executable">
 ./test/e2e/run.sh
