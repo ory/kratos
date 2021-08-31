@@ -185,7 +185,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r.Context(), s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -246,7 +246,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r.Context(), s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); errors.Is(err, session.ErrAALNotSatisfied) {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); errors.As(err, new(session.ErrAALNotSatisfied)) {
 		if x.IsJSONRequest(r) {
 			h.d.Writer().WriteError(w, r, err)
 		} else {
@@ -358,7 +358,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 		return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r.Context(), sess, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
 		return err
 	}
 
@@ -478,7 +478,7 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r.Context(), ss, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, ss, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, nil, err)
 		return
 	}
