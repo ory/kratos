@@ -2,8 +2,10 @@ package session
 
 import (
 	"context"
-	"github.com/ory/x/urlx"
 	"net/http"
+	"net/url"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/gofrs/uuid"
 
@@ -194,8 +196,8 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 
-		return errors.WithStack(NewErrAALNotSatisfied(urlx.AppendPaths(s.r.Config(r.Context()).
-			SelfPublicURL(r), "/self-service/login/browser").String()))
+		return errors.WithStack(NewErrAALNotSatisfied(
+			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config(r.Context()).SelfPublicURL(r), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String()))
 	}
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }
