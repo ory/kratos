@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"github.com/ory/x/urlx"
 	"net/http"
 
 	"github.com/gofrs/uuid"
@@ -170,7 +171,7 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 	return nil
 }
 
-func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, requestedAAL string) error {
+func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, requestedAAL string) error {
 	sess.SetAuthenticatorAssuranceLevel()
 	switch requestedAAL {
 	case string(identity.AuthenticatorAssuranceLevel1):
@@ -178,7 +179,7 @@ func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, req
 			return nil
 		}
 	case config.HighestAvailableAAL:
-		i, err := s.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, sess.IdentityID)
+		i, err := s.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID)
 		if err != nil {
 			return err
 		}
@@ -193,7 +194,8 @@ func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, req
 			return nil
 		}
 
-		return errors.WithStack(ErrAALNotSatisfied)
+		return errors.WithStack(NewErrAALNotSatisfied(urlx.AppendPaths(s.r.Config(r.Context()).
+			SelfPublicURL(r), "/self-service/login/browser").String()))
 	}
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }
