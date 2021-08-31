@@ -120,7 +120,7 @@ func (s *ErrorHandler) WriteFlowError(
 			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
 		}
 		return
-	} else if errors.Is(err, session.ErrAALNotSatisfied) {
+	} else if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, err)
 		} else {

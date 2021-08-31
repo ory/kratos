@@ -123,7 +123,7 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, true)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.EqualValues(t, session.ErrAALNotSatisfied.Reason(), gjson.GetBytes(body, "error.reason").String())
+				assert.EqualValues(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String())
 			})
 		})
 
@@ -162,7 +162,7 @@ func TestHandler(t *testing.T) {
 					}})
 				res, body := initSPAFlow(t, user1)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.EqualValues(t, session.ErrAALNotSatisfied.Reason(), gjson.GetBytes(body, "error.reason").String())
+				assert.EqualValues(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String())
 			})
 		})
 	})
@@ -261,7 +261,7 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, res.Body.Close())
 
 				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
-				assert.Equal(t, session.ErrAALNotSatisfied.Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
 			})
 		})
 	})
@@ -298,7 +298,7 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, aal2Identity, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.Equal(t, session.ErrAALNotSatisfied.Reason(), gjson.Get(actual, "error.reason").String(), actual)
+				assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.Get(actual, "error.reason").String(), actual)
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -315,7 +315,7 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, aal2Identity, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.Equal(t, session.ErrAALNotSatisfied.Reason(), gjson.Get(actual, "error.reason").String(), actual)
+				assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.Get(actual, "error.reason").String(), actual)
 			})
 		})
 

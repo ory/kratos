@@ -218,7 +218,7 @@ func TestHandleError(t *testing.T) {
 
 				settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 				settingsFlow.IdentityID = id.ID
-				flowError = errors.WithStack(session.ErrAALNotSatisfied)
+				flowError = errors.WithStack(session.NewErrAALNotSatisfied(""))
 				flowMethod = settings.StrategyProfile
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -228,7 +228,7 @@ func TestHandleError(t *testing.T) {
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				assert.Equal(t, session.ErrAALNotSatisfied.Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
 			})
 
 			t.Run("case=generic error", func(t *testing.T) {
@@ -309,7 +309,7 @@ func TestHandleError(t *testing.T) {
 
 			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			settingsFlow.IdentityID = id.ID
-			flowError = errors.WithStack(session.ErrAALNotSatisfied)
+			flowError = errors.WithStack(session.NewErrAALNotSatisfied(""))
 			flowMethod = settings.StrategyProfile
 
 			res, err := ts.Client().Get(ts.URL + "/error")
