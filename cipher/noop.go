@@ -3,6 +3,7 @@ package cipher
 import (
 	"context"
 	"encoding/hex"
+
 	"github.com/ory/kratos/driver/config"
 )
 

@@ -28,8 +28,8 @@ func TestCipher(t *testing.T) {
 		t.Run(fmt.Sprintf("cipher=%T", c), func(t *testing.T) {
 
 			t.Run("case=all_work", func(t *testing.T) {
-					cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
-					testAllWork(t, c, cfg)
+				cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
+				testAllWork(t, c, cfg)
 			})
 
 			t.Run("case=encryption_failed", func(t *testing.T) {
