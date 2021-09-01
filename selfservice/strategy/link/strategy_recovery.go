@@ -374,7 +374,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	address, err := s.d.IdentityPool().FindVerifiableAddressByValue(r.Context(), identity.VerifiableAddressTypeEmail,  body.Email)
+	address, err := s.d.IdentityPool().FindVerifiableAddressByValue(r.Context(), identity.VerifiableAddressTypeEmail, body.Email)
 	if err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
@@ -413,8 +413,9 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 func (s *Strategy) markRecoveryAddressVerified(w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity, recoveryAddress *identity.RecoveryAddress) error {
 	var address *identity.VerifiableAddress
 	for _, va := range id.VerifiableAddresses {
+		addr := va
 		if va.Value == recoveryAddress.Value {
-			address = &va
+			address = &addr
 			break
 		}
 	}
