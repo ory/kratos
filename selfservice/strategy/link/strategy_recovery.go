@@ -327,8 +327,11 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
-	if err := s.markRecoveryAddressVerified(w, r, f, recovered, token.RecoveryAddress); err != nil {
-		return s.HandleRecoveryError(w, r, f, body, err)
+	// mark address as verified only for a self-service flow
+	if token.FlowID.Valid {
+		if err := s.markRecoveryAddressVerified(w, r, f, recovered, token.RecoveryAddress); err != nil {
+			return s.HandleRecoveryError(w, r, f, body, err)
+		}
 	}
 
 	return s.recoveryIssueSession(w, r, f, recovered)
