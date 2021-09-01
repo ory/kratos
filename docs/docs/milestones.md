@@ -161,9 +161,6 @@ Something is not working.
 
 #### Issues
 
-- [ ] 0.7.3.alpha.1, docker, panic if SESSION_COOKIE_NAME is set in
-      docker-compose.yml
-      ([kratos#1695](https://github.com/ory/kratos/issues/1695))
 - [x] Submitting successful link verification again ends up with JSON response
       ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
       [@hackerman](https://github.com/aeneasr)
@@ -171,6 +168,9 @@ Something is not working.
       due to CSRF issue
       ([kratos#1547](https://github.com/ory/kratos/issues/1547)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] 0.7.3.alpha.1, docker, panic if SESSION_COOKIE_NAME is set in
+      docker-compose.yml
+      ([kratos#1695](https://github.com/ory/kratos/issues/1695))
 
 #### Pull Requests
 
