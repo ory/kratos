@@ -28,24 +28,8 @@ func TestCipher(t *testing.T) {
 		t.Run(fmt.Sprintf("cipher=%T", c), func(t *testing.T) {
 
 			t.Run("case=all_work", func(t *testing.T) {
-				cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
-
-				message := "my secret message!"
-
-				encryptedSecret, err := c.Encrypt(context.Background(), []byte(message))
-				require.NoError(t, err)
-
-				decryptedSecret, err := c.Decrypt(context.Background(), encryptedSecret)
-				require.NoError(t, err, "encrypted", encryptedSecret)
-				assert.Equal(t, message, string(decryptedSecret))
-
-				// data to encrypt return blank result
-				_, err = c.Encrypt(context.Background(), []byte(""))
-				require.NoError(t, err)
-
-				// empty encrypted data return blank
-				_, err = c.Decrypt(context.Background(), "")
-				require.NoError(t, err)
+					cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
+					testAllWork(t, c, cfg)
 			})
 
 			t.Run("case=encryption_failed", func(t *testing.T) {
@@ -79,16 +63,43 @@ func TestCipher(t *testing.T) {
 				_, err = c.Decrypt(context.Background(), hex.EncodeToString([]byte("bad-data")))
 				require.Error(t, err)
 
-				_, err = c.Decrypt(context.Background(), ("not-empty"))
+				_, err = c.Decrypt(context.Background(), "not-empty")
 				require.Error(t, err)
 
 				// unset secret
 				err = cfg.Set(config.ViperKeySecretsCipher, []string{})
 				require.NoError(t, err)
 
-				_, err = c.Decrypt(context.Background(), ("not-empty"))
+				_, err = c.Decrypt(context.Background(), "not-empty")
 				require.Error(t, err)
 			})
 		})
 	}
+	c := cipher.NewNoop(reg)
+	t.Run(fmt.Sprintf("cipher=%T", c), func(t *testing.T) {
+		cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
+		testAllWork(t, c, cfg)
+	})
+}
+
+func testAllWork(t *testing.T, c cipher.Cipher, cfg *config.Config) {
+	goodSecret := []string{"secret-thirty-two-character-long"}
+	cfg.MustSet(config.ViperKeySecretsCipher, goodSecret)
+
+	message := "my secret message!"
+
+	encryptedSecret, err := c.Encrypt(context.Background(), []byte(message))
+	require.NoError(t, err)
+
+	decryptedSecret, err := c.Decrypt(context.Background(), encryptedSecret)
+	require.NoError(t, err, "encrypted", encryptedSecret)
+	assert.Equal(t, message, string(decryptedSecret))
+
+	// data to encrypt return blank result
+	_, err = c.Encrypt(context.Background(), []byte(""))
+	require.NoError(t, err)
+
+	// empty encrypted data return blank
+	_, err = c.Decrypt(context.Background(), "")
+	require.NoError(t, err)
 }

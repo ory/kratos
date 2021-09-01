@@ -42,6 +42,9 @@ secrets:
   cipher:
     - secret-thirty-two-character-long
 
+ciphers:
+  algorithm: xchacha20-poly1305
+
 selfservice:
   default_browser_return_url: http://return-to-3-test.ory.sh/
   whitelisted_return_urls:

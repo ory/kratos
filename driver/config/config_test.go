@@ -143,12 +143,12 @@ func TestViperProvider(t *testing.T) {
 				[]byte("session-key-7f8a9b77-1"),
 				[]byte("session-key-7f8a9b77-2"),
 			}, p.SecretsSession())
-			var aesExpected [32]byte
+			var cipherExpected [32]byte
 			for k, v := range []byte("secret-thirty-two-character-long") {
-				aesExpected[k] = byte(v)
+				cipherExpected[k] = byte(v)
 			}
 			assert.Equal(t, [][32]byte{
-				aesExpected,
+				cipherExpected,
 			}, p.SecretsCipher())
 		})
 

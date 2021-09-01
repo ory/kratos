@@ -1649,9 +1649,6 @@
           "minItems": 1
         }
       },
-      "required": [
-        "cipher"
-      ],
       "additionalProperties": false
     },
     "hashers": {
@@ -1743,10 +1740,11 @@
       "properties": {
         "algorithm": {
           "title": "ciphering algorithm",
-          "description": "One of the values: aes, xchacha20-poly1305",
+          "description": "One of the values: noop, aes, xchacha20-poly1305",
           "type": "string",
-          "default": "xchacha20-poly1305",
+          "default": "noop",
           "enum": [
+            "noop",
             "aes",
             "xchacha20-poly1305"
           ]
@@ -1942,13 +1940,37 @@
           "courier"
         ]
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "ciphers" : {
+            "properties": {
+              "algorithm": {
+                "oneOf": [
+                  {
+                    "const": "aes"
+                  },
+                  {
+                    "const": "xchacha20-poly1305"
+                  }
+                ]
+              }
+            },
+            "required": ["algorithm"]
+          }
+        },
+        "required": ["ciphers"]
+      },
+      "then": {
+        "required": ["secrets"]
+      }
     }
   ],
   "required": [
     "identity",
     "dsn",
-    "selfservice",
-    "secrets"
+    "selfservice"
   ],
   "additionalProperties": false
 }

@@ -39,7 +39,7 @@ const (
 	DefaultBrowserReturnURL                                         = "default_browser_return_url"
 	DefaultSQLiteMemoryDSN                                          = dbal.SQLiteInMemory
 	DefaultPasswordHashingAlgorithm                                 = "argon2"
-	DefaultCipherAlgorithm                                          = "xchacha20-poly1305"
+	DefaultCipherAlgorithm                                          = "noop"
 	UnknownVersion                                                  = "unknown version"
 	ViperKeyDSN                                                     = "dsn"
 	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
@@ -920,6 +920,8 @@ func (p *Config) HasherPasswordHashingAlgorithm() string {
 func (p *Config) CipherAlgorithm() string {
 	configValue := p.p.StringF(ViperKeyCipherAlgorithm, DefaultCipherAlgorithm)
 	switch configValue {
+	case "noop":
+		return configValue
 	case "xchacha20-poly1305":
 		return configValue
 	case "aes":

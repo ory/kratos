@@ -60,6 +60,7 @@
       "guides/zero-trust-iap-proxy-identity-access-proxy",
       "guides/multi-tenancy-multitenant",
       "guides/secret-key-rotation",
+      "guides/reveal-credentials",
       "guides/high-availability-ha",
       "guides/docker",
       "guides/https-tls",

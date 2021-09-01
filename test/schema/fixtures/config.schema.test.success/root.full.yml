@@ -88,6 +88,9 @@ secrets:
   cipher:
     - secret-thirty-two-character-long
 
+ciphers:
+  algorithm: xchacha20-poly1305
+
 hashers:
   argon2:
     memory: 128MB
