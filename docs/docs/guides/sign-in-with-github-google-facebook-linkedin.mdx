@@ -196,7 +196,7 @@ local claims = {
       // enumeration attacks, especially if the value is used for
       // e.g. verification or as a password login identifier.
       //
-      // It is assumed that Slack requires a email to be verifed before accessable via Oauth (because they don't provide a email_verified field).
+      // It is assumed that Slack requires an email to be verified before accessible via OAuth (because they don't provide a email_verified field).
       email: claims.email
     },
   },
@@ -661,7 +661,7 @@ The pattern of this URL is:
 https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
 ```
 
-Facebook requires https the redirect URIs!
+Facebook requires HTTPS redirect URIs!
 
 :::note
 
@@ -690,7 +690,7 @@ local claims = std.extVar('claims');
       // enumeration attacks, especially if the value is used for
       // e.g. verification or as a password login identifier.
       //
-      // It is assumed that Facebook requires a email to be verifed before accessable via Oauth (because they don't provide an email_verified field).
+      // It is assumed that Facebook requires an email to be verified before accessible via OAuth (because they don't provide an email_verified field).
       //
       // The email might be empty if the user is not allowed to an email scope.
       [if "email" in claims then "email" else null]: claims.email,
