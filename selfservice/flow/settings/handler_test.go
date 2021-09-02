@@ -140,7 +140,6 @@ func TestHandler(t *testing.T) {
 
 		// Expire the flow
 		f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
-		oldReqUrl := f.RequestURL
 		require.NoError(t, err)
 		f.ExpiresAt = time.Now().Add(-time.Second)
 		require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(context.Background(), f))
@@ -154,7 +153,7 @@ func TestHandler(t *testing.T) {
 
 		f, err = reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
-		assert.Equal(t, f.RequestURL, oldReqUrl)
+		assert.Equal(t, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
 	})
 
 	t.Run("description=should fail to fetch request if identity changed", func(t *testing.T) {

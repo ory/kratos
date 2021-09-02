@@ -115,7 +115,6 @@ func TestGetFlow(t *testing.T) {
 
 		// Expire the flow
 		f, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
-		oldReqUrl := f.RequestURL
 		require.NoError(t, err)
 		f.ExpiresAt = time.Now().Add(-time.Second)
 		require.NoError(t, reg.VerificationFlowPersister().UpdateVerificationFlow(context.Background(), f))
@@ -129,6 +128,6 @@ func TestGetFlow(t *testing.T) {
 
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
-		assert.Equal(t, oldReqUrl, f.RequestURL)
+		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
 	})
 }

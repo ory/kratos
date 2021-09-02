@@ -48,4 +48,41 @@ context('Email Profile', () => {
       })
     })
   })
+  describe('Login Flow Success with return_to url after flow expires', () => {
+    before(() => {
+      cy.useConfigProfile('email')
+    })
+
+    const email = gen.email()
+    const password = gen.password()
+
+    before(() => {
+      cy.registerApi({ email, password, fields: { 'traits.website': website } })
+    })
+
+    beforeEach(() => {
+      cy.shortLoginLifespan()
+      cy.browserReturnUrlOry()
+      cy.clearCookies()
+      cy.visit(APP_URL + '/self-service/login/browser?return_to=https://www.ory.sh/')
+    })
+
+    it('should redirect to return_to after flow expires', () => {
+      cy.wait(105)
+      cy.get('input[name="password_identifier"]').type(email.toUpperCase())
+      cy.get('input[name="password"]').type(password)
+
+      cy.longLoginLifespan()
+      cy.get('button[type="submit"]').click()
+      cy.get('.messages .message').should('contain.text', 'The login flow expired')
+
+      // try again with long lifespan set
+      cy.get('input[name="password_identifier"]').type(email.toUpperCase())
+      cy.get('input[name="password"]').type(password)
+      cy.get('button[type="submit"]').click()
+
+      // check that redirection has happened
+      cy.url().should('eq', 'https://www.ory.sh/')
+    })
+  })
 })

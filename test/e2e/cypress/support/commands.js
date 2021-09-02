@@ -121,6 +121,19 @@ Cypress.Commands.add('enableLoginForVerifiedAddressOnly', () => {
   })
 })
 
+Cypress.Commands.add('shortLoginLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.login.lifespan = '100ms'
+    return config
+  })
+})
+Cypress.Commands.add('longLoginLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.login.lifespan = '1h'
+    return config
+  })
+})
+
 Cypress.Commands.add('shortRecoveryLifespan', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.lifespan = '1ms'
@@ -260,6 +273,27 @@ Cypress.Commands.add(
   }
 )
 
+Cypress.Commands.add('shortRegisterLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration.lifespan = '10ms'
+    return config
+  })
+})
+
+Cypress.Commands.add('longRegisterLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration.lifespan = '1h'
+    return config
+  })
+})
+
+
+Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.whitelisted_return_urls = ['https://www.ory.sh/']
+    return config
+  })
+})
 Cypress.Commands.add('loginOidc', ({ expectSession = true }) => {
   cy.visit(APP_URL + '/auth/login')
   cy.get('button[value="hydra"]').click()
