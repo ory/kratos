@@ -1,4 +1,4 @@
-import { APP_URL, gen, password, website } from '../../../../helpers'
+import { APP_URL, gen, website } from '../../../../helpers'
 
 context('Email Profile', () => {
   describe('Login Flow Success', () => {
@@ -64,7 +64,9 @@ context('Email Profile', () => {
       cy.shortLoginLifespan()
       cy.browserReturnUrlOry()
       cy.clearCookies()
-      cy.visit(APP_URL + '/self-service/login/browser?return_to=https://www.ory.sh/')
+      cy.visit(
+        APP_URL + '/self-service/login/browser?return_to=https://www.ory.sh/'
+      )
     })
 
     it('should redirect to return_to after flow expires', () => {
@@ -74,7 +76,10 @@ context('Email Profile', () => {
 
       cy.longLoginLifespan()
       cy.get('button[type="submit"]').click()
-      cy.get('.messages .message').should('contain.text', 'The login flow expired')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'The login flow expired'
+      )
 
       // try again with long lifespan set
       cy.get('input[name="password_identifier"]').type(email.toUpperCase())

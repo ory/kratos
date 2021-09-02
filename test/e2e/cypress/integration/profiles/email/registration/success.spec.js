@@ -42,7 +42,10 @@ context('Email Profile', () => {
     beforeEach(() => {
       cy.shortRegisterLifespan()
       cy.browserReturnUrlOry()
-      cy.visit(APP_URL + '/self-service/registration/browser?return_to=https://www.ory.sh/')
+      cy.visit(
+        APP_URL +
+          '/self-service/registration/browser?return_to=https://www.ory.sh/'
+      )
     })
 
     it('should redirect to return_to after flow expires', () => {
@@ -58,7 +61,10 @@ context('Email Profile', () => {
 
       cy.longRegisterLifespan()
       cy.get('button[type="submit"]').click()
-      cy.get('.messages .message').should('contain.text', 'The registration flow expired')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'The registration flow expired'
+      )
 
       // try again with long lifespan set
       cy.get('input[name="traits"]').should('not.exist')
@@ -70,5 +76,4 @@ context('Email Profile', () => {
       cy.url().should('eq', 'https://www.ory.sh/')
     })
   })
-
 })

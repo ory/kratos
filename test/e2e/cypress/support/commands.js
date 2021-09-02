@@ -287,7 +287,6 @@ Cypress.Commands.add('longRegisterLifespan', ({} = {}) => {
   })
 })
 
-
 Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.whitelisted_return_urls = ['https://www.ory.sh/']
