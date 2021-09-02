@@ -50,7 +50,7 @@ context('Email Profile', () => {
 
     it('should redirect to return_to after flow expires', () => {
       //wait for flow to expire
-      cy.wait(15)
+      cy.wait(105)
       const email = gen.email()
       const password = gen.password()
       const website = 'https://www.ory.sh/'

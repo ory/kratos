@@ -275,7 +275,7 @@ Cypress.Commands.add(
 
 Cypress.Commands.add('shortRegisterLifespan', ({} = {}) => {
   updateConfigFile((config) => {
-    config.selfservice.flows.registration.lifespan = '10ms'
+    config.selfservice.flows.registration.lifespan = '100ms'
     return config
   })
 })
