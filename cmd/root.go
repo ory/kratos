@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/ory/kratos/sql_runner"
 	"os"
 
 	"github.com/ory/kratos/driver/config"
@@ -34,6 +35,7 @@ func NewRootCmd() (cmd *cobra.Command) {
 	remote.RegisterCommandRecursive(cmd)
 	hashers.RegisterCommandRecursive(cmd)
 	courier.RegisterCommandRecursive(cmd)
+	sql_runner.RegisterCommandRecursive(cmd)
 
 	cmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
 
