@@ -18,8 +18,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install Dockle
-        run: |
+      - name: Setup (install curl & dockle, ...)
+        run: | 
+          sudo apt install libcurl4-openssl-dev libssl-dev 
           VERSION=$(
             curl -I "https://github.com/goodwithtech/dockle/releases/latest" | \
             grep 'Location' | \
@@ -28,9 +29,6 @@ jobs:
           wget https://github.com/goodwithtech/dockle/releases/download/v${VERSION}/dockle_${VERSION}_Linux-64bit.tar.gz
           tar zxvf dockle_${VERSION}_Linux-64bit.tar.gz
           mv dockle /usr/local/bin
-
-      - name: Create output dir
-        run: |
           mkdir sarif-results
 
       - name: Build an image from Dockerfile
