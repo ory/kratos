@@ -117,6 +117,7 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 	if err != nil {
 		return nil, err
 	}
+
 	nf.RequestURL = of.RequestURL
 	return nf, nil
 }

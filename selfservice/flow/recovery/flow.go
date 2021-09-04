@@ -116,6 +116,7 @@ func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Re
 	if err != nil {
 		return nil, err
 	}
+
 	nf.RequestURL = of.RequestURL
 	return nf, nil
 }
