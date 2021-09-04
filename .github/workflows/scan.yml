@@ -1,0 +1,54 @@
+name: 'Scan Container and Dockerfile'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '0 23 * * 0'
+
+jobs:
+  scan:
+    name: Scan Container and Dockerfile
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: 'oryd/kratos:${{ github.sha }}'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup (install curl & dockle, ...)
+        run: | 
+          sudo apt install libcurl4-openssl-dev libssl-dev 
+          VERSION=$(
+            curl -I "https://github.com/goodwithtech/dockle/releases/latest" | \
+            grep 'location:' | \
+            sed -E 's/.*v([0-9\.]+).*$/\1/'
+          )
+          wget https://github.com/goodwithtech/dockle/releases/download/v${VERSION}/dockle_${VERSION}_Linux-64bit.tar.gz
+          tar zxvf dockle_${VERSION}_Linux-64bit.tar.gz
+          mv dockle /usr/local/bin
+          mkdir sarif-results
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -f .docker/Dockerfile-build -t ${{ env.IMAGE }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.IMAGE }}'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'sarif-results/trivy-results.sarif'
+
+      - name: Run Dockle scanner
+        run: |
+          dockle -f sarif -o sarif-results/dockle-results.sarif ${{ env.IMAGE }}
+          
+      - name: Upload scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: 'sarif-results'
