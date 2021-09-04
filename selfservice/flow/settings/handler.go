@@ -133,6 +133,7 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, i *identit
 	if err != nil {
 		return nil, err
 	}
+
 	nf.RequestURL = of.RequestURL
 	return nf, nil
 }
