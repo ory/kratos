@@ -36,18 +36,30 @@ jobs:
         run: |
           docker build -f .docker/Dockerfile-build -t ${{ env.IMAGE }} .
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner (display)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.IMAGE }}'
+          format: 'table'
+          vuln-type: 'os,library'
+
+      - name: Run Trivy vulnerability scanner (sarif report)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: '${{ env.IMAGE }}'
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'sarif-results/trivy-results.sarif'
+          vuln-type: 'os,library'
 
-      - name: Run Dockle scanner
+      - name: Run Dockle scanner (display)
+        run: |
+          dockle ${{ env.IMAGE }}
+    
+      - name: Run Dockle scanner (sarif report)
         run: |
           dockle -f sarif -o sarif-results/dockle-results.sarif ${{ env.IMAGE }}
-          
+
       - name: Upload scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v1
         with:
