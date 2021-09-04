@@ -48,7 +48,7 @@ jobs:
         with:
           image-ref: '${{ env.IMAGE }}'
           format: 'template'
-          template: '@/contrib/sarif.tpl'
+          template: '@.github/trivy/sarif.tpl'
           output: 'sarif-results/trivy-results.sarif'
           vuln-type: 'os,library'
 
