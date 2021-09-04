@@ -22,7 +22,7 @@
     <a href="https://github.com/ory/kratos/blob/master/CODE_OF_CONDUCT.md" alt="Ory Code of Conduct"><img src="https://img.shields.io/badge/ory-code%20of%20conduct-green" /></a>
 </p>
 
-Ory Kratos is the first and only cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time!
+Ory Kratos is the first cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time!
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -463,13 +463,21 @@ cd client; go test  -tags sqlite  .
 
 ##### End-to-End Tests
 
-We use [Cypress](https://www.cypress.io) to run our e2e tests. You can run all tests using:
+We use [Cypress](https://www.cypress.io) to run our e2e tests.
+
+The simplest way to develop e2e tests is:
+
+<pre type="repo/executable">
+./test/e2e/run.sh --dev sqlite
+</pre>
+
+You can run all tests (with databases) using:
 
 <pre type="make/command">
 make test-e2e
 </pre>
 
-If you intend developing e2e tests, run the following command for more details:
+For more details, run:
 
 <pre type="repo/executable">
 ./test/e2e/run.sh
