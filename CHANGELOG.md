@@ -203,6 +203,7 @@
 ### Bug Fixes
 
 * Do not panic if cookiemanager returns a nil cookie ([6ea5678](https://github.com/ory/kratos/commit/6ea56785fa0354d8d9479a699304a4b933d6c294)), closes [#1695](https://github.com/ory/kratos/issues/1695)
+* Respect return_to in expired flows ([#1697](https://github.com/ory/kratos/issues/1697)) ([394a8de](https://github.com/ory/kratos/commit/394a8de9c0cdd33df91d56008eac12510ff14e07)), closes [#1251](https://github.com/ory/kratos/issues/1251)
 
 ### Documentation
 
