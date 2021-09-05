@@ -8,6 +8,9 @@ Name | Type | Description | Notes
 **Method** | **string** | Method  Should be set to profile when trying to update a profile. | 
 **Password** | **string** | Password is the updated password | 
 **Traits** | **map[string]interface{}** | Traits contains all of the identity&#39;s traits. | 
+**Flow** | Pointer to **string** | Flow ID is the flow&#39;s ID.  in: query | [optional] 
+**Link** | Pointer to **string** | Link this provider  Either this or &#x60;unlink&#x60; must be set.  type: string in: body | [optional] 
+**Unlink** | Pointer to **string** | Unlink this provider  Either this or &#x60;link&#x60; must be set.  type: string in: body | [optional] 
 
 ## Methods
 
@@ -112,6 +115,81 @@ and a boolean to check if the value has been set.
 
 SetTraits sets Traits field to given value.
 
+
+### GetFlow
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetFlow() string`
+
+GetFlow returns the Flow field if non-nil, zero value otherwise.
+
+### GetFlowOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetFlowOk() (*string, bool)`
+
+GetFlowOk returns a tuple with the Flow field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetFlow
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetFlow(v string)`
+
+SetFlow sets Flow field to given value.
+
+### HasFlow
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasFlow() bool`
+
+HasFlow returns a boolean if a field has been set.
+
+### GetLink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLink() string`
+
+GetLink returns the Link field if non-nil, zero value otherwise.
+
+### GetLinkOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetLinkOk() (*string, bool)`
+
+GetLinkOk returns a tuple with the Link field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetLink(v string)`
+
+SetLink sets Link field to given value.
+
+### HasLink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasLink() bool`
+
+HasLink returns a boolean if a field has been set.
+
+### GetUnlink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetUnlink() string`
+
+GetUnlink returns the Unlink field if non-nil, zero value otherwise.
+
+### GetUnlinkOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetUnlinkOk() (*string, bool)`
+
+GetUnlinkOk returns a tuple with the Unlink field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUnlink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetUnlink(v string)`
+
+SetUnlink sets Unlink field to given value.
+
+### HasUnlink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasUnlink() bool`
+
+HasUnlink returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

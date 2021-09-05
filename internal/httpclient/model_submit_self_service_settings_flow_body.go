@@ -18,8 +18,16 @@ import (
 
 // SubmitSelfServiceSettingsFlowBody - struct for SubmitSelfServiceSettingsFlowBody
 type SubmitSelfServiceSettingsFlowBody struct {
+	SubmitSelfServiceSettingsFlowWithOidcMethodBody     *SubmitSelfServiceSettingsFlowWithOidcMethodBody
 	SubmitSelfServiceSettingsFlowWithPasswordMethodBody *SubmitSelfServiceSettingsFlowWithPasswordMethodBody
 	SubmitSelfServiceSettingsFlowWithProfileMethodBody  *SubmitSelfServiceSettingsFlowWithProfileMethodBody
+}
+
+// SubmitSelfServiceSettingsFlowWithOidcMethodBodyAsSubmitSelfServiceSettingsFlowBody is a convenience function that returns SubmitSelfServiceSettingsFlowWithOidcMethodBody wrapped in SubmitSelfServiceSettingsFlowBody
+func SubmitSelfServiceSettingsFlowWithOidcMethodBodyAsSubmitSelfServiceSettingsFlowBody(v *SubmitSelfServiceSettingsFlowWithOidcMethodBody) SubmitSelfServiceSettingsFlowBody {
+	return SubmitSelfServiceSettingsFlowBody{
+		SubmitSelfServiceSettingsFlowWithOidcMethodBody: v,
+	}
 }
 
 // SubmitSelfServiceSettingsFlowWithPasswordMethodBodyAsSubmitSelfServiceSettingsFlowBody is a convenience function that returns SubmitSelfServiceSettingsFlowWithPasswordMethodBody wrapped in SubmitSelfServiceSettingsFlowBody
@@ -40,6 +48,19 @@ func SubmitSelfServiceSettingsFlowWithProfileMethodBodyAsSubmitSelfServiceSettin
 func (dst *SubmitSelfServiceSettingsFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
+	// try to unmarshal data into SubmitSelfServiceSettingsFlowWithOidcMethodBody
+	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceSettingsFlowWithOidcMethodBody)
+	if err == nil {
+		jsonSubmitSelfServiceSettingsFlowWithOidcMethodBody, _ := json.Marshal(dst.SubmitSelfServiceSettingsFlowWithOidcMethodBody)
+		if string(jsonSubmitSelfServiceSettingsFlowWithOidcMethodBody) == "{}" { // empty struct
+			dst.SubmitSelfServiceSettingsFlowWithOidcMethodBody = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.SubmitSelfServiceSettingsFlowWithOidcMethodBody = nil
+	}
+
 	// try to unmarshal data into SubmitSelfServiceSettingsFlowWithPasswordMethodBody
 	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceSettingsFlowWithPasswordMethodBody)
 	if err == nil {
@@ -68,6 +89,7 @@ func (dst *SubmitSelfServiceSettingsFlowBody) UnmarshalJSON(data []byte) error {
 
 	if match > 1 { // more than 1 match
 		// reset to nil
+		dst.SubmitSelfServiceSettingsFlowWithOidcMethodBody = nil
 		dst.SubmitSelfServiceSettingsFlowWithPasswordMethodBody = nil
 		dst.SubmitSelfServiceSettingsFlowWithProfileMethodBody = nil
 
@@ -81,6 +103,10 @@ func (dst *SubmitSelfServiceSettingsFlowBody) UnmarshalJSON(data []byte) error {
 
 // Marshal data from the first non-nil pointers in the struct to JSON
 func (src SubmitSelfServiceSettingsFlowBody) MarshalJSON() ([]byte, error) {
+	if src.SubmitSelfServiceSettingsFlowWithOidcMethodBody != nil {
+		return json.Marshal(&src.SubmitSelfServiceSettingsFlowWithOidcMethodBody)
+	}
+
 	if src.SubmitSelfServiceSettingsFlowWithPasswordMethodBody != nil {
 		return json.Marshal(&src.SubmitSelfServiceSettingsFlowWithPasswordMethodBody)
 	}
@@ -97,6 +123,10 @@ func (obj *SubmitSelfServiceSettingsFlowBody) GetActualInstance() interface{} {
 	if obj == nil {
 		return nil
 	}
+	if obj.SubmitSelfServiceSettingsFlowWithOidcMethodBody != nil {
+		return obj.SubmitSelfServiceSettingsFlowWithOidcMethodBody
+	}
+
 	if obj.SubmitSelfServiceSettingsFlowWithPasswordMethodBody != nil {
 		return obj.SubmitSelfServiceSettingsFlowWithPasswordMethodBody
 	}
