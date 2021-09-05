@@ -545,20 +545,20 @@ func (p *Persister) searchCredentialQuery(field string, values []string) pop.Sco
 	_, innerField = extractFieldAndInnerFields(field)
 	switch innerField {
 	case "type":
-		return func(q *pop.Query) *pop.Query {return q.Where("credential_types.name IN (?)", values)}
+		return func(q *pop.Query) *pop.Query { return q.Where("credential_types.name IN (?)", values) }
 	case "identifier":
-		return func(q *pop.Query) *pop.Query {return q.Where("credential_identifiers.identifier IN (?)", values)}
+		return func(q *pop.Query) *pop.Query { return q.Where("credential_identifiers.identifier IN (?)", values) }
 	default:
-		return func(q *pop.Query) *pop.Query {return q}
+		return func(q *pop.Query) *pop.Query { return q }
 	}
 }
 
 var quoteChar = map[string]uint8{
 	"cockroach": '"',
-	"mariadb": '`',
-	"mysql": '`',
-	"postgres": '"',
-	"sqlite3": '"',
+	"mariadb":   '`',
+	"mysql":     '`',
+	"postgres":  '"',
+	"sqlite3":   '"',
 }
 
 func (p *Persister) Quote(key string, c uint8) string {
@@ -580,7 +580,7 @@ func (p *Persister) Quote(key string, c uint8) string {
 func (p *Persister) buildScope(queryValues url.Values) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
 		for field, values := range queryValues {
-			if IsStringInSlice([]string{"page","per_page"}, field) {
+			if IsStringInSlice([]string{"page", "per_page"}, field) {
 				continue
 			}
 			if IsStringInSlice([]string{"with_credentials"}, field) {
@@ -605,7 +605,6 @@ func (p *Persister) buildScope(queryValues url.Values) pop.ScopeFunc {
 		return q
 	}
 }
-
 
 func extractFieldAndInnerFields(field string) (string, string) {
 	if !strings.Contains(field, ".") {
