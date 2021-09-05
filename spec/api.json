@@ -1279,6 +1279,11 @@
       },
       "selfServiceRecoveryFlowState": {
         "description": "The state represents the state of the recovery flow.\n\nchoose_method: ask the user to choose a method (e.g. recover account via email)\nsent_email: the email has been sent to the user\npassed_challenge: the request was successful and the recovery challenge was passed.",
+        "enum": [
+          "choose_method",
+          "sent_email",
+          "passed_challenge"
+        ],
         "title": "Recovery Flow State",
         "type": "string"
       },
@@ -1584,7 +1589,17 @@
         "type": "object"
       },
       "submitSelfServiceRecoveryFlowBody": {
-        "type": "object"
+        "discriminator": {
+          "mapping": {
+            "link": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+          },
+          "propertyName": "method"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+          }
+        ]
       },
       "submitSelfServiceRecoveryFlowWithLinkMethodBody": {
         "properties": {
