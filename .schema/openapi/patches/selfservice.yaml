@@ -20,6 +20,7 @@
   path: /components/schemas/submitSelfServiceRegistrationFlowBody/oneOf
   value:
     - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
 - op: add
   path: /components/schemas/submitSelfServiceRegistrationFlowBody/discriminator
   value:
@@ -51,28 +52,28 @@
 # end
 
 # All modifications for the recovery flow
-- op: remove
-  path: /components/schemas/submitSelfServiceRecoveryFlowBody/type
-- op: add
-  path: /components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody/properties/method/enum
-  value:
-    - link
-- op: add
-  path: /components/schemas/submitSelfServiceRecoveryFlowBody/oneOf
-  value:
-    - "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
-- op: add
-  path: /components/schemas/submitSelfServiceRecoveryFlowBody/discriminator
-  value:
-    propertyName: method
-    mapping:
-      link: "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
-- op: add
-  path: /components/schemas/selfServiceRecoveryFlowState/enum
-  value:
-    - choose_method
-    - sent_email
-    - passed_challenge
+# - op: remove
+#   path: /components/schemas/submitSelfServiceRecoveryFlowBody
+# - op: add
+#   path: /components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody/properties/method/enum
+#   value:
+#     - link
+# - op: add
+#   path: /components/schemas/submitSelfServiceRecoveryFlowBody/oneOf
+#   value:
+#     - "$ref": "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+# - op: add
+#   path: /components/schemas/submitSelfServiceRecoveryFlowBody/discriminator
+#   value:
+#     propertyName: method
+#     mapping:
+#       link: "#/components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody"
+# - op: add
+#   path: /components/schemas/selfServiceRecoveryFlowState/enum
+#   value:
+#     - choose_method
+#     - sent_email
+#     - passed_challenge
 # End
 
 # All modifications for the verification flow
