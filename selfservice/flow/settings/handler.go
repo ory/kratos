@@ -128,6 +128,16 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 	return f, nil
 }
 
+func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, i *identity.Identity, of Flow) (*Flow, error) {
+	nf, err := h.NewFlow(w, r, i, of.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	nf.RequestURL = of.RequestURL
+	return nf, nil
+}
+
 // swagger:parameters initializeSelfServiceSettingsFlowWithoutBrowser
 // nolint:deadcode,unused
 type initializeSelfServiceSettingsFlowWithoutBrowser struct {

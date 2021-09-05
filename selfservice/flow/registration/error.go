@@ -83,7 +83,7 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, f.Type)
+		a, err := s.d.RegistrationHandler().FromOldFlow(w, r, *f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, f, group, err)
