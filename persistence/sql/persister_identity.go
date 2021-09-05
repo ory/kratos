@@ -283,7 +283,7 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 }
 
 func (p *Persister) ListIdentitiesFiltered(ctx context.Context, values url.Values, page, perPage int) ([]identity.Identity, error) {
-	is := make([]identity.Identity, 0)
+	is := make([]identity.Identity, 0, perPage)
 
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("identities.nid = ?", corp.ContextualizeNID(ctx, p.nid)).
@@ -513,19 +513,19 @@ func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Ident
 
 func (p *Persister) getJsonSearchQuery(field string, values []string) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
-		dsn := p.r.Config(context.Background()).DSN()
-		switch {
-		case strings.HasPrefix(dsn, "sqlite"), strings.HasPrefix(dsn, "mysql"):
+		switch p.Connection(context.Background()).Dialect.Name() {
+		case "sqlite3", "mysql", "mariadb":
 			field, innerField := extractFieldAndInnerFields(field)
 			for _, value := range values {
 				if innerField == "" {
-					q = q.Where(fmt.Sprintf(`json_extract(%s, '$') = "%v"`, field, value))
+					q = q.Where(fmt.Sprintf(`json_extract(%s, '$') = ?`, field), value)
 				} else {
-					q = q.Where(fmt.Sprintf(`json_extract(%s, '$.%v') = "%v"`, field, innerField, value))
+					stmt := fmt.Sprintf(`json_extract(%s, '$.%s') = ?`, field, innerField)
+					q = q.Where(stmt, value)
 				}
 			}
 			return q
-		case strings.HasPrefix(dsn, "postgres"), strings.HasPrefix(dsn, "crdb"), strings.HasPrefix(dsn, "cockroach"):
+		case "postgres", "cockroach":
 			field, innerField := extractFieldAndInnerFields(field)
 			for _, value := range values {
 				if innerField == "" {
@@ -540,21 +540,72 @@ func (p *Persister) getJsonSearchQuery(field string, values []string) pop.ScopeF
 	}
 }
 
-func (p *Persister) buildScope(values url.Values) pop.ScopeFunc {
+func (p *Persister) searchCredentialQuery(field string, values []string) pop.ScopeFunc {
+	var innerField string
+	_, innerField = extractFieldAndInnerFields(field)
+	switch innerField {
+	case "type":
+		return func(q *pop.Query) *pop.Query {return q.Where("credential_types.name IN (?)", values)}
+	case "identifier":
+		return func(q *pop.Query) *pop.Query {return q.Where("credential_identifiers.identifier IN (?)", values)}
+	default:
+		return func(q *pop.Query) *pop.Query {return q}
+	}
+}
+
+var quoteChar = map[string]uint8{
+	"cockroach": '"',
+	"mariadb": '`',
+	"mysql": '`',
+	"postgres": '"',
+	"sqlite3": '"',
+}
+
+func (p *Persister) Quote(key string, c uint8) string {
+	if c == 0 {
+		c = '"'
+	}
+	parts := strings.Split(key, ".")
+
+	for i, part := range parts {
+		part = strings.Trim(part, `"`)
+		part = strings.Trim(part, "`")
+		part = strings.TrimSpace(part)
+
+		parts[i] = fmt.Sprintf(`%c%v%c`, c, part, c)
+	}
+
+	return strings.Join(parts, ".")
+}
+func (p *Persister) buildScope(queryValues url.Values) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
-		for field, value := range values {
+		for field, values := range queryValues {
 			if IsStringInSlice([]string{"page","per_page"}, field) {
 				continue
 			}
-			if strings.HasPrefix(field, "traits") {
-				q = q.Scope(p.getJsonSearchQuery(field, value))
+			if IsStringInSlice([]string{"with_credentials"}, field) {
+				q = q.LeftJoin("identity_credentials ic", "identities.id=ic.identity_id")
+				q = q.LeftJoin("identity_credential_types credential_types", "credential_types.id=ic.identity_credential_type_id")
+				q = q.LeftJoin("identity_credential_identifiers credential_identifiers", "credential_identifiers.identity_credential_id=ic.id")
+				//q = q.LeftJoin("identity_credentials credentials", "credentials.identity_id=identities.id")
 				continue
 			}
-			q = q.Where(fmt.Sprintf("%s IN (?)", field), value)
+			if strings.HasPrefix(field, "traits") {
+				q = q.Scope(p.getJsonSearchQuery(field, values))
+				continue
+			}
+			if strings.HasPrefix(field, "credentials") {
+				q = q.Scope(p.searchCredentialQuery(field, values))
+				continue
+			}
+			//q = q.Where("? = ?", field, values[0])
+			field = p.Quote(field, quoteChar[p.Connection(context.Background()).Dialect.Name()])
+			q = q.Where(fmt.Sprintf("%s IN (?)", field), values)
 		}
 		return q
 	}
 }
+
 
 func extractFieldAndInnerFields(field string) (string, string) {
 	if !strings.Contains(field, ".") {
