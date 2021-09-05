@@ -145,12 +145,12 @@ request, go through this checklist:
 1. Create a feature branch off of `master` so that changes do not get mixed up.
 1. [Rebase](http://git-scm.com/book/en/Git-Branching-Rebasing) your local
    changes against the `master` branch.
-1. Run the full project test suite with the `go test -tags sqlite ./...` (or
+1. Run the full project test suite with the `go test -tags sqlite,json1 ./...` (or
    equivalent) command and confirm that it passes.
 1. Run `make format` if a `Makefile` is available, `gofmt -s` if the project is
    written in Go, `npm run format` if the project is written for NodeJS.
 1. Ensure that each commit has a descriptive prefix. This ensures a uniform
-   commit history and helps structure the changelog.  
+   commit history and helps structure the changelog.
    Please refer to this
    [list of prefixes for Kratos](https://github.com/ory/kratos/blob/master/.github/semantic.yml)
    for an overview.
