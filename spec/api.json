@@ -1551,10 +1551,6 @@
           },
           "method": {
             "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
-            "enum": [
-              "password",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1659,10 +1655,6 @@
           },
           "method": {
             "description": "Method to use\n\nThis field must be set to `password` when using the password method.",
-            "enum": [
-              "password",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1696,6 +1688,9 @@
           },
           {
             "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
           }
         ]
       },
@@ -1732,11 +1727,6 @@
           },
           "method": {
             "description": "Method\n\nShould be set to password when trying to update a password.",
-            "enum": [
-              "password",
-              "profile",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1798,9 +1788,6 @@
           },
           "method": {
             "description": "Method supports `link` only right now.",
-            "enum": [
-              "link"
-            ],
             "type": "string"
           }
         },
