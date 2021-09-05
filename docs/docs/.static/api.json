@@ -1133,6 +1133,7 @@
             "type": "string"
           }
         },
+        "required": ["logout_url"],
         "type": "object"
       },
       "selfServiceRecoveryFlow": {
