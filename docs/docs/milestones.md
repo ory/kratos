@@ -97,6 +97,8 @@ New feature or request.
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
 - [ ] Endpoint for fetching all schema IDs or all schemas
       ([kratos#1699](https://github.com/ory/kratos/issues/1699))
+- [ ] Email Courier SMTP Header Configuration
+      ([kratos#1725](https://github.com/ory/kratos/issues/1725))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
 
