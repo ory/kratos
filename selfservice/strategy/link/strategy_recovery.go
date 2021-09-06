@@ -412,10 +412,10 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 
 func (s *Strategy) markRecoveryAddressVerified(w http.ResponseWriter, r *http.Request, f *recovery.Flow, id *identity.Identity, recoveryAddress *identity.RecoveryAddress) error {
 	var address *identity.VerifiableAddress
-	for _, va := range id.VerifiableAddresses {
-		addr := va
+	for idx := range id.VerifiableAddresses {
+		va := id.VerifiableAddresses[idx]
 		if va.Value == recoveryAddress.Value {
-			address = &addr
+			address = &va
 			break
 		}
 	}
