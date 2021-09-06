@@ -69,6 +69,7 @@ type selfServiceLogoutUrl struct {
 	// LogoutURL can be opened in a browser to
 	//
 	// format: uri
+	// required: true
 	LogoutURL string `json:"logout_url"`
 }
 

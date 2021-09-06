@@ -11,15 +11,15 @@
 # All modifications for the registration flow
 - op: remove
   path: /components/schemas/submitSelfServiceRegistrationFlowBody/type
-- op: add
-  path: /components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody/properties/method/enum
-  value:
-    - password
-    - oidc
+# - op: add
+#   path: /components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody/properties/method/enum
+#   value:
+#     - password
 - op: add
   path: /components/schemas/submitSelfServiceRegistrationFlowBody/oneOf
   value:
     - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
 - op: add
   path: /components/schemas/submitSelfServiceRegistrationFlowBody/discriminator
   value:
@@ -32,11 +32,10 @@
 # All modifications for the login flow
 - op: remove
   path: /components/schemas/submitSelfServiceLoginFlowBody/type
-- op: add
-  path: /components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody/properties/method/enum
-  value:
-    - password
-    - oidc
+# - op: add
+#   path: /components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody/properties/method/enum
+#   value:
+#     - password
 - op: add
   path: /components/schemas/submitSelfServiceLoginFlowBody/oneOf
   value:
@@ -53,10 +52,11 @@
 # All modifications for the recovery flow
 - op: remove
   path: /components/schemas/submitSelfServiceRecoveryFlowBody/type
-- op: add
-  path: /components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody/properties/method/enum
-  value:
-    - link
+# - op: add
+#   path: /components/schemas/submitSelfServiceRecoveryFlowWithLinkMethodBody/properties/method/enum
+#   value:
+#     - link
+#     - placeholder
 - op: add
   path: /components/schemas/submitSelfServiceRecoveryFlowBody/oneOf
   value:
@@ -78,10 +78,10 @@
 # All modifications for the verification flow
 - op: remove
   path: /components/schemas/submitSelfServiceVerificationFlowBody/type
-- op: add
-  path: /components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody/properties/method/enum
-  value:
-    - link
+# - op: replace
+#   path: /components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody/properties/method/enum
+#   value:
+#     - link
 - op: add
   path: /components/schemas/submitSelfServiceVerificationFlowBody/oneOf
   value:
@@ -100,22 +100,21 @@
     - passed_challenge
 # End
 
-
-
 # All modifications for the settings flow
 - op: remove
   path: /components/schemas/submitSelfServiceSettingsFlowBody/type
-- op: add
-  path: /components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody/properties/method/enum
-  value:
-    - password
-    - profile
-    - oidc
+# - op: add
+#   path: /components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody/properties/method/enum
+#   value:
+#     - password
+#     - profile
+#     - oidc
 - op: add
   path: /components/schemas/submitSelfServiceSettingsFlowBody/oneOf
   value:
     - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody"
     - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
 - op: add
   path: /components/schemas/submitSelfServiceSettingsFlowBody/discriminator
   value:
