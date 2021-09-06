@@ -89,7 +89,9 @@ func TestHandler(t *testing.T) {
 		return raw
 	}
 
-	getSchemasConfig := func() (schemasConfig []config.Schema) {
+	setSchemas := func(newSchemas schema.Schemas) {
+		schemas = newSchemas
+		var schemasConfig []config.Schema
 		for _, s := range schemas {
 			if s.ID != config.DefaultIdentityTraitsSchemaID {
 				schemasConfig = append(schemasConfig, config.Schema{
@@ -98,12 +100,12 @@ func TestHandler(t *testing.T) {
 				})
 			}
 		}
-		return schemasConfig
+		conf.MustSet(config.ViperKeyIdentitySchemas, schemasConfig)
 	}
 
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, getSchemaById(config.DefaultIdentityTraitsSchemaID).RawURL)
-	conf.MustSet(config.ViperKeyIdentitySchemas, getSchemasConfig())
+	setSchemas(schemas)
 
 	t.Run("case=get default schema", func(t *testing.T) {
 		server := getFromTSById(config.DefaultIdentityTraitsSchemaID, http.StatusOK)
@@ -137,7 +139,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=get all schemas", func(t *testing.T) {
-		schemas = schema.Schemas{
+		setSchemas(schema.Schemas{
 			{
 				ID:     "default",
 				URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
@@ -148,8 +150,7 @@ func TestHandler(t *testing.T) {
 				URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 				RawURL: "file://./stub/identity-2.schema.json",
 			},
-		}
-		conf.MustSet(config.ViperKeyIdentitySchemas, getSchemasConfig())
+		})
 
 		body := getFromTSPaginated(0, 2, http.StatusOK)
 
@@ -178,7 +179,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=get paginated schemas", func(t *testing.T) {
-		schemas = schema.Schemas{
+		setSchemas(schema.Schemas{
 			{
 				ID:     "default",
 				URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
@@ -189,8 +190,7 @@ func TestHandler(t *testing.T) {
 				URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 				RawURL: "file://./stub/identity-2.schema.json",
 			},
-		}
-		conf.MustSet(config.ViperKeyIdentitySchemas, getSchemasConfig())
+		})
 
 		body1, body2 := getFromTSPaginated(0, 1, http.StatusOK), getFromTSPaginated(1, 1, http.StatusOK)
 
@@ -214,7 +214,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=read schema", func(t *testing.T) {
-		schemas = schema.Schemas{
+		setSchemas(schema.Schemas{
 			{
 				ID:     "default",
 				URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
@@ -225,8 +225,7 @@ func TestHandler(t *testing.T) {
 				URL:    urlx.ParseOrPanic(fmt.Sprintf("%s/schemas/default", ts.URL)),
 				RawURL: fmt.Sprintf("%s/schemas/default", ts.URL),
 			},
-		}
-		conf.MustSet(config.ViperKeyIdentitySchemas, getSchemasConfig())
+		})
 
 		src, err := schema.ReadSchema(&schemas[0])
 		require.NoError(t, err)
