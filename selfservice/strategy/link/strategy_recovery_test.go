@@ -113,7 +113,8 @@ func TestAdminStrategy(t *testing.T) {
 	})
 
 	t.Run("description=should create a valid recovery link and set the expiry time and not be able to recover the account", func(t *testing.T) {
-		id := identity.Identity{Traits: identity.Traits(`{"email":"recover.expired@ory.sh"}`)}
+		recoveryEmail := "recover.expired@ory.sh"
+		id := identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"email":"%s"}`, recoveryEmail))}
 
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
@@ -134,7 +135,7 @@ func TestAdminStrategy(t *testing.T) {
 		// We end up here because the link is expired.
 		assert.Contains(t, res.Request.URL.Path, "/recover", rl.RecoveryLink)
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "recover.expired@ory.sh")
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
@@ -142,7 +143,8 @@ func TestAdminStrategy(t *testing.T) {
 	})
 
 	t.Run("description=should create a valid recovery link and set the expiry time as well and recover the account", func(t *testing.T) {
-		id := identity.Identity{Traits: identity.Traits(`{"email":"recoverme@ory.sh"}`)}
+		recoveryEmail := "recoverme@ory.sh"
+		id := identity.Identity{Traits: identity.Traits(fmt.Sprintf(`{"email":"%s"}`, recoveryEmail))}
 
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
@@ -166,7 +168,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.Len(t, f.UI.Messages, 1)
 		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", f.UI.Messages[0].Text)
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "recoverme@ory.sh")
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
@@ -185,70 +187,21 @@ func TestRecovery(t *testing.T) {
 
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 
-	var identityToRecover1 = &identity.Identity{
-		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"recoverme1@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
-		Traits:   identity.Traits(`{"email":"recoverme1@ory.sh"}`),
-		SchemaID: config.DefaultIdentityTraitsSchemaID,
+	var createIdentityToRecover = func(email string) {
+		var id = &identity.Identity{
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
+			Traits:   identity.Traits(fmt.Sprintf(`{"email":"%s"}`, email)),
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
+		}
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), id, identity.ManagerAllowWriteProtectedTraits))
+
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
+		assert.NoError(t, err)
+		assert.False(t, addr.Verified)
+		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
+		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	}
-	var recoveryEmail1 = gjson.GetBytes(identityToRecover1.Traits, "email").String()
-
-	var identityToRecover2 = &identity.Identity{
-		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"recoverme2@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
-		Traits:   identity.Traits(`{"email":"recoverme2@ory.sh"}`),
-		SchemaID: config.DefaultIdentityTraitsSchemaID,
-	}
-	var recoveryEmail2 = gjson.GetBytes(identityToRecover2.Traits, "email").String()
-
-	var identityToRecover3 = &identity.Identity{
-		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"recoverme3@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
-		Traits:   identity.Traits(`{"email":"recoverme3@ory.sh"}`),
-		SchemaID: config.DefaultIdentityTraitsSchemaID,
-	}
-	var recoveryEmail3 = gjson.GetBytes(identityToRecover3.Traits, "email").String()
-
-	var identityToRecover4 = &identity.Identity{
-		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"recoverme4@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
-		Traits:   identity.Traits(`{"email":"recoverme4@ory.sh"}`),
-		SchemaID: config.DefaultIdentityTraitsSchemaID,
-	}
-	var recoveryEmail4 = gjson.GetBytes(identityToRecover4.Traits, "email").String()
-
-	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToRecover1,
-		identity.ManagerAllowWriteProtectedTraits))
-	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToRecover2,
-		identity.ManagerAllowWriteProtectedTraits))
-	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToRecover3,
-		identity.ManagerAllowWriteProtectedTraits))
-	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToRecover4,
-		identity.ManagerAllowWriteProtectedTraits))
-
-	addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail1)
-	assert.NoError(t, err)
-	assert.False(t, addr.Verified)
-	assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
-	assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
-
-	addr, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail2)
-	assert.NoError(t, err)
-	assert.False(t, addr.Verified)
-	assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
-	assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
-
-	addr, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail3)
-	assert.NoError(t, err)
-	assert.False(t, addr.Verified)
-	assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
-	assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
-
-	addr, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail4)
-	assert.NoError(t, err)
-	assert.False(t, addr.Verified)
-	assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
-	assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 
 	var expect = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
 		if hc == nil {
@@ -411,27 +364,35 @@ func TestRecovery(t *testing.T) {
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
+			email := "recoverme1@ory.sh"
+			createIdentityToRecover(email)
 			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
-				v.Set("email", recoveryEmail1)
-			}), recoveryEmail1)
+				v.Set("email", email)
+			}), email)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
+			email := "recoverme2@ory.sh"
+			createIdentityToRecover(email)
 			check(t, expectSuccess(t, nil, true, true, func(v url.Values) {
-				v.Set("email", recoveryEmail2)
-			}), recoveryEmail2)
+				v.Set("email", email)
+			}), email)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
+			email := "recoverme3@ory.sh"
+			createIdentityToRecover(email)
 			check(t, expectSuccess(t, nil, true, false, func(v url.Values) {
-				v.Set("email", recoveryEmail3)
-			}), recoveryEmail3)
+				v.Set("email", email)
+			}), email)
 		})
 	})
 
 	t.Run("description=should recover an account and set the csrf cookies", func(t *testing.T) {
+		recoveryEmail := "recoverme1@ory.sh"
+
 		var check = func(t *testing.T, actual string) {
-			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail1, "Recover access to your account")
+			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
 			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
 			cl := testhelpers.NewClientWithCookies(t)
@@ -456,7 +417,7 @@ func TestRecovery(t *testing.T) {
 		}
 
 		var values = func(v url.Values) {
-			v.Set("email", recoveryEmail1)
+			v.Set("email", recoveryEmail)
 		}
 
 		check(t, expectSuccess(t, nil, false, false, values))
@@ -478,6 +439,8 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
+		recoveryEmail := "recoverme4@ory.sh"
+		createIdentityToRecover(recoveryEmail)
 		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
@@ -488,13 +451,13 @@ func TestRecovery(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 201)
 
-		res, err := c.PostForm(rs.Ui.Action, url.Values{"email": {recoveryEmail4}})
+		res, err := c.PostForm(rs.Ui.Action, url.Values{"email": {recoveryEmail}})
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail4)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
@@ -502,6 +465,8 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
+		recoveryEmail := "recoverme5@ory.sh"
+		createIdentityToRecover(recoveryEmail)
 		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
 			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
@@ -509,10 +474,10 @@ func TestRecovery(t *testing.T) {
 
 		c := testhelpers.NewClientWithCookies(t)
 		body := expectSuccess(t, c, false, false, func(v url.Values) {
-			v.Set("email", recoveryEmail4)
+			v.Set("email", recoveryEmail)
 		})
 
-		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail4, "Recover access to your account")
+		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
 		assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
 
 		recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
@@ -532,7 +497,7 @@ func TestRecovery(t *testing.T) {
 		require.Len(t, rs.Ui.Messages, 1)
 		assert.Contains(t, rs.Ui.Messages[0].Text, "The recovery flow expired")
 
-		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail4)
+		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
