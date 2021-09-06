@@ -38,6 +38,25 @@ func (s Schemas) GetByID(id string) (*Schema, error) {
 	return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to find JSON Schema ID: %s", id))
 }
 
+func (s Schemas) Total() int {
+	return len(s)
+}
+
+func (s Schemas) List(page, perPage int) Schemas {
+	if page < 0 {
+		page = 0
+	}
+	upper := (page + 1) * perPage
+	if upper > len(s) {
+		upper = len(s)
+	}
+	lower := page * perPage
+	if lower > upper {
+		lower = upper
+	}
+	return s[lower:upper]
+}
+
 var orderedKeyCacheMutex sync.RWMutex
 var orderedKeyCache map[string][]string
 

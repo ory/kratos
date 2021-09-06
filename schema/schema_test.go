@@ -70,6 +70,38 @@ func TestSchemas_GetByID(t *testing.T) {
 	})
 }
 
+func TestSchemas_List(t *testing.T) {
+	ss := Schemas{
+		Schema{
+			ID: "foo",
+		},
+		Schema{
+			ID: "bar",
+		},
+		Schema{
+			ID: "foobar",
+		},
+		Schema{
+			ID: config.DefaultIdentityTraitsSchemaID,
+		},
+	}
+
+	t.Run("case=get all schemas", func(t *testing.T) {
+		p0 := ss.List(0, 4)
+		assert.Equal(t, ss, p0)
+	})
+
+	t.Run("case=smaller pages", func(t *testing.T) {
+		p0, p1 := ss.List(0, 2), ss.List(1, 2)
+		assert.Equal(t, ss, append(p0, p1...))
+	})
+
+	t.Run("case=indexes out of range", func(t *testing.T) {
+		p0 := ss.List(-1, 10)
+		assert.Equal(t, ss, p0)
+	})
+}
+
 func TestGetKeysInOrder(t *testing.T) {
 	for i, tc := range []struct {
 		schemaRef string
