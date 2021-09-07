@@ -292,7 +292,7 @@ func (p *Persister) ListIdentitiesFiltered(ctx context.Context, values url.Value
 		LeftJoin("identity_verifiable_addresses verifiable_addresses", "verifiable_addresses.identity_id=identities.id").
 		LeftJoin("identity_recovery_addresses recovery_addresses", "recovery_addresses.identity_id=identities.id").
 		EagerPreload("VerifiableAddresses", "RecoveryAddresses").
-		Scope(p.buildScope(values)).
+		Scope(p.buildScope(ctx, values)).
 		Paginate(page, perPage).Order("identities.id DESC").
 		All(&is)); err != nil {
 		return nil, err
@@ -563,10 +563,14 @@ var quoteChar = map[string]uint8{
 	"sqlite3":   '"',
 }
 
-func (p *Persister) Quote(key string, c uint8) string {
-	if c == 0 {
-		c = '"'
+func (p *Persister) Quote(ctx context.Context, key string) string {
+	n := p.Connection(ctx).Dialect.Name()
+	c, ok := quoteChar[n]
+	if !ok {
+		// guess panic is OK here as the error is not fixable without a new release of Kratos
+		panic("DSN is of unknown dialect " + n)
 	}
+
 	parts := strings.Split(key, ".")
 
 	for i, part := range parts {
@@ -579,7 +583,7 @@ func (p *Persister) Quote(key string, c uint8) string {
 
 	return strings.Join(parts, ".")
 }
-func (p *Persister) buildScope(queryValues url.Values) pop.ScopeFunc {
+func (p *Persister) buildScope(ctx context.Context, queryValues url.Values) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
 		for field, values := range queryValues {
 			if IsStringInSlice([]string{"page", "per_page"}, field) {
@@ -601,7 +605,7 @@ func (p *Persister) buildScope(queryValues url.Values) pop.ScopeFunc {
 				continue
 			}
 			//q = q.Where("? = ?", field, values[0])
-			field = p.Quote(field, quoteChar[p.Connection(context.Background()).Dialect.Name()])
+			field = p.Quote(ctx, field)
 			q = q.Where(fmt.Sprintf("%s IN (?)", field), values)
 		}
 		return q
