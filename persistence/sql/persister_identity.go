@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/x/stringslice"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/ory/jsonschema/v3"
@@ -586,10 +588,10 @@ func (p *Persister) Quote(ctx context.Context, key string) string {
 func (p *Persister) buildScope(ctx context.Context, queryValues url.Values) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
 		for field, values := range queryValues {
-			if IsStringInSlice([]string{"page", "per_page"}, field) {
+			if stringslice.Has([]string{"page", "per_page"}, field) {
 				continue
 			}
-			if IsStringInSlice([]string{"with_credentials"}, field) {
+			if stringslice.Has([]string{"with_credentials"}, field) {
 				q = q.LeftJoin("identity_credentials ic", "identities.id=ic.identity_id")
 				q = q.LeftJoin("identity_credential_types credential_types", "credential_types.id=ic.identity_credential_type_id")
 				q = q.LeftJoin("identity_credential_identifiers credential_identifiers", "credential_identifiers.identity_credential_id=ic.id")
@@ -618,13 +620,4 @@ func extractFieldAndInnerFields(field string) (string, string) {
 	}
 	dotIndex := strings.Index(field, ".")
 	return field[:dotIndex], field[dotIndex+1:]
-}
-
-func IsStringInSlice(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
-	}
-	return false
 }
