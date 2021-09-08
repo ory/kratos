@@ -22,8 +22,9 @@ import (
 )
 
 var (
-	ErrHookAbortFlow   = errors.New("aborted login hook execution")
-	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
+	ErrHookAbortFlow      = errors.New("aborted login hook execution")
+	ErrAlreadyLoggedIn    = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
+	ErrAddressNotVerified = herodot.ErrBadRequest.WithReason("The email address is not verified yet.")
 )
 
 type (
@@ -78,7 +79,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := s.d.LoginHandler().NewLoginFlow(w, r, f.Type)
+		a, err := s.d.LoginHandler().FromOldFlow(w, r, *f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, f, group, err)

@@ -109,6 +109,16 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 	return f, nil
 }
 
+func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (*Flow, error) {
+	nf, err := h.NewLoginFlow(w, r, of.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	nf.RequestURL = of.RequestURL
+	return nf, nil
+}
+
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceLoginFlowForBrowsers initializeSelfServiceLoginFlowWithoutBrowser
 type initializeSelfServiceLoginFlowWithoutBrowser struct {
@@ -423,7 +433,6 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	var i *identity.Identity
-	var s identity.CredentialsType
 	for _, ss := range h.d.AllLoginStrategies() {
 		interim, err := ss.Login(w, r, f)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
@@ -436,7 +445,6 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		}
 
 		i = interim
-		s = ss.ID()
 		break
 	}
 
@@ -447,8 +455,12 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 
 	// TODO Handle n+1 authentication factor
 
-	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, s, f, i); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, f, i); err != nil {
+		if err == ErrAddressNotVerified {
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
+		} else {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		}
 		return
 	}
 }

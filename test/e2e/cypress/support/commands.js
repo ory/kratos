@@ -61,12 +61,7 @@ const updateConfigFile = (cb) => {
   cy.wait(100)
 }
 
-let previousProfile = ''
 Cypress.Commands.add('useConfigProfile', (profile) => {
-  if (profile === previousProfile) {
-    return
-  }
-
   cy.readFile(`test/e2e/kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
@@ -113,6 +108,28 @@ Cypress.Commands.add('longLinkLifespan', ({} = {}) => {
 Cypress.Commands.add('longRecoveryLifespan', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.recovery.lifespan = '1m'
+    return config
+  })
+})
+
+Cypress.Commands.add('enableLoginForVerifiedAddressOnly', () => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.login['after'] = {
+      password: { hooks: [{ hook: 'require_verified_address' }] }
+    }
+    return config
+  })
+})
+
+Cypress.Commands.add('shortLoginLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.login.lifespan = '100ms'
+    return config
+  })
+})
+Cypress.Commands.add('longLoginLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.login.lifespan = '1h'
     return config
   })
 })
@@ -256,6 +273,26 @@ Cypress.Commands.add(
   }
 )
 
+Cypress.Commands.add('shortRegisterLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration.lifespan = '100ms'
+    return config
+  })
+})
+
+Cypress.Commands.add('longRegisterLifespan', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration.lifespan = '1h'
+    return config
+  })
+})
+
+Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.whitelisted_return_urls = ['https://www.ory.sh/']
+    return config
+  })
+})
 Cypress.Commands.add('loginOidc', ({ expectSession = true }) => {
   cy.visit(APP_URL + '/auth/login')
   cy.get('button[value="hydra"]').click()

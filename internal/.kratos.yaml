@@ -134,6 +134,7 @@ selfservice:
           default_browser_return_url: https://self-service/login/password/return_to
           hooks:
             - hook: revoke_active_sessions
+            - hook: require_verified_address
             - hook: web_hook
               config:
                 url: https://test.kratos.ory.sh/after_login_password_hook

@@ -75,6 +75,7 @@ type RegistryDefault struct {
 	hookVerifier         *hook.Verifier
 	hookSessionIssuer    *hook.SessionIssuer
 	hookSessionDestroyer *hook.SessionDestroyer
+	hookAddressVerifier  *hook.AddressVerifier
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
@@ -478,7 +479,6 @@ func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) erro
 			if m.Tracer(ctx).IsLoaded() {
 				opts = []instrumentedsql.Opt{
 					instrumentedsql.WithTracer(opentracing.NewTracer(true)),
-					instrumentedsql.WithOmitArgs(),
 				}
 			}
 

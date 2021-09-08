@@ -72,6 +72,18 @@
         "hook"
       ]
     },
+    "selfServiceRequireVerifiedAddressHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "require_verified_address"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hook"
+      ]
+    },
     "webHookAuthBasicAuthProperties": {
       "properties": {
         "type": {
@@ -298,11 +310,12 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
           "type": "string",
           "enum": [
             "github",
             "gitlab",
+            "gitlab-app",
             "generic",
             "google",
             "microsoft",
@@ -452,7 +465,34 @@
         }
       }
     },
-    "selfServiceAfterLoginMethod": {
+    "selfServiceAfterPasswordLoginMethod": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceSessionRevokerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceRequireVerifiedAddressHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceWebHook"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "additionalItems": false
+        }
+      }
+    },
+    "selfServiceAfterOIDCLoginMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -535,10 +575,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterLoginMethod"
+          "$ref": "#/definitions/selfServiceAfterPasswordLoginMethod"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterLoginMethod"
+          "$ref": "#/definitions/selfServiceAfterOIDCLoginMethod"
         },
         "hooks": {
           "$ref": "#/definitions/selfServiceHooks"
