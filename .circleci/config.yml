@@ -194,6 +194,7 @@ workflows:
             - test
             - test-e2e
             - sdk/generate-openapi
+            - sdk/test
             - goreleaser/release
           filters:
             tags:
