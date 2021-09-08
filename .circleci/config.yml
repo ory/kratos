@@ -166,6 +166,8 @@ workflows:
             tags:
               only: /.*/
       - sdk/test:
+          specpath: spec/api.json
+          generate: make sdk
           filters:
             tags:
               only: /.*/
