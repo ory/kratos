@@ -718,6 +718,9 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithPasswordMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceLoginFlowWithOidcMethodBody"
           }
         ]
       },
