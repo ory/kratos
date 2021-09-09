@@ -111,6 +111,8 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Tag version in docker-compose before commit&tag push
+      ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
@@ -136,6 +138,15 @@ Blocks milestones or other issues or pulls.
 
 - [ ] Implement Hydra integration
       ([kratos#273](https://github.com/ory/kratos/issues/273))
+
+### [Ci](https://github.com/ory/kratos/labels/ci)
+
+Affects Continuous Integration (CI).
+
+#### Issues
+
+- [ ] Tag version in docker-compose before commit&tag push
+      ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
 ## [v0.10.0-alpha.1](https://github.com/ory/kratos/milestone/13)
 
