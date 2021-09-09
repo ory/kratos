@@ -3043,6 +3043,8 @@ components:
 
             format: uri
           type: string
+      required:
+      - logout_url
       type: object
     selfServiceRecoveryFlow:
       description: |-
@@ -3689,9 +3691,6 @@ components:
         method:
           description: Method should be set to "password" when logging in using the
             identifier and password strategy.
-          enum:
-          - password
-          - oidc
           type: string
         password:
           description: The user's password.
@@ -3744,8 +3743,6 @@ components:
           type: string
         method:
           description: Method supports `link` only right now.
-          enum:
-          - link
           type: string
       required:
       - email
@@ -3759,6 +3756,7 @@ components:
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody'
     submitSelfServiceRegistrationFlowWithOidcMethodBody:
       description: |-
         SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
@@ -3793,9 +3791,6 @@ components:
             Method to use
 
             This field must be set to `password` when using the password method.
-          enum:
-          - password
-          - oidc
           type: string
         password:
           description: Password to sign the user up with
@@ -3818,6 +3813,7 @@ components:
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithPasswordMethodBody'
       - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody'
     submitSelfServiceSettingsFlowWithOidcMethodBody:
       description: nolint:deadcode,unused
       properties:
@@ -3864,10 +3860,6 @@ components:
             Method
 
             Should be set to password when trying to update a password.
-          enum:
-          - password
-          - profile
-          - oidc
           type: string
         password:
           description: Password is the updated password
@@ -3924,8 +3916,6 @@ components:
           type: string
         method:
           description: Method supports `link` only right now.
-          enum:
-          - link
           type: string
       required:
       - email

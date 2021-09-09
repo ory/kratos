@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**LogoutUrl** | Pointer to **string** | LogoutURL can be opened in a browser to  format: uri | [optional] 
+**LogoutUrl** | **string** | LogoutURL can be opened in a browser to  format: uri | 
 
 ## Methods
 
 ### NewSelfServiceLogoutUrl
 
-`func NewSelfServiceLogoutUrl() *SelfServiceLogoutUrl`
+`func NewSelfServiceLogoutUrl(logoutUrl string, ) *SelfServiceLogoutUrl`
 
 NewSelfServiceLogoutUrl instantiates a new SelfServiceLogoutUrl object
 This constructor will assign default values to properties that have it defined,
@@ -44,11 +44,6 @@ and a boolean to check if the value has been set.
 
 SetLogoutUrl sets LogoutUrl field to given value.
 
-### HasLogoutUrl
-
-`func (o *SelfServiceLogoutUrl) HasLogoutUrl() bool`
-
-HasLogoutUrl returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

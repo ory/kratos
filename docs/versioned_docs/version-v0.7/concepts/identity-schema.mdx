@@ -171,21 +171,12 @@ switch (session.Identity.SchemaID) {
         // ...
 }
 ```
+
 :::warning
 
 Please keep in mind that the Identity Schema is not a place to store sensitive
 information that should not be visible to the end-user! Users can see traits and
 other data - except credentials - using the `sessions/whoami` endpoint. The
-Identity Schema is not the right place to store data that should be obfuscated
-from the user!
-
-:::
-
-:::warning
-
-Please keep in mind that the Identity Schema is not a place to store sensitive
-information that should not be visible to the end-user! Users can see traits and
-other data - except credentials - using the `/sessions/whoami` endpoint. The
 Identity Schema is not the right place to store data that should be obfuscated
 from the user!
 

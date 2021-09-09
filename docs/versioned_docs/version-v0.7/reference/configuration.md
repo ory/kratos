@@ -7,9 +7,6 @@ title: Configuration
 OPEN AN ISSUE IF YOU WOULD LIKE TO MAKE ADJUSTMENTS HERE AND MAINTAINERS WILL HELP YOU LOCATE THE RIGHT
 FILE -->
 
-If file `$HOME/.kratos.yaml` exists, it will be used as a configuration file
-which supports all configuration settings listed below.
-
 You can load the config file from another source using the
 `-c path/to/config.yaml` or `--config path/to/config.yaml` flag:
 `kratos --config path/to/config.yaml`.
@@ -18,11 +15,15 @@ Config files can be formatted as JSON, YAML and TOML. Some configuration values
 support reloading without server restart. All configuration values can be set
 using environment variables, as documented below.
 
+:::warning Disclaimer
+
 This reference configuration documents all keys, also deprecated ones! It is a
 reference for all possible configuration values.
 
 If you are looking for an example configuration, it is better to try out the
 quickstart.
+
+:::
 
 To find out more about edge cases like setting string array values through
 environmental variables head to the
@@ -185,7 +186,7 @@ selfservice:
                   name: ''
                   value: ''
                   in: header
-              body: ''
+              body: file:///path/to/body.jsonnet
 
       ## after ##
       #
@@ -269,7 +270,7 @@ selfservice:
                   name: ''
                   value: ''
                   in: header
-              body: ''
+              body: file:///path/to/body.jsonnet
 
         ## Redirect browsers to set URL per default ##
         #
@@ -346,7 +347,7 @@ selfservice:
                   name: ''
                   value: ''
                   in: header
-              body: ''
+              body: file:///path/to/body.jsonnet
 
       ## after ##
       #
@@ -430,7 +431,7 @@ selfservice:
                   name: ''
                   value: ''
                   in: header
-              body: ''
+              body: file:///path/to/body.jsonnet
 
         ## Redirect browsers to set URL per default ##
         #
@@ -507,7 +508,7 @@ selfservice:
                   name: ''
                   value: ''
                   in: header
-              body: ''
+              body: file:///path/to/body.jsonnet
 
         ## Redirect browsers to set URL per default ##
         #
@@ -600,7 +601,7 @@ selfservice:
                   name: ''
                   value: ''
                   in: header
-              body: ''
+              body: file:///path/to/body.jsonnet
 
         ## Redirect browsers to set URL per default ##
         #
@@ -733,7 +734,7 @@ selfservice:
                     name: ''
                     value: ''
                     in: header
-                body: ''
+                body: file:///path/to/body.jsonnet
 
           ## Redirect browsers to set URL per default ##
           #
@@ -773,7 +774,7 @@ selfservice:
                     name: ''
                     value: ''
                     in: header
-                body: ''
+                body: file:///path/to/body.jsonnet
 
           ## Redirect browsers to set URL per default ##
           #
@@ -810,7 +811,7 @@ selfservice:
                   name: ''
                   value: ''
                   in: header
-              body: ''
+              body: file:///path/to/body.jsonnet
 
         ## Redirect browsers to set URL per default ##
         #
@@ -851,6 +852,28 @@ selfservice:
     ## link ##
     #
     link:
+      ## Link Configuration ##
+      #
+      # Additional configuration for the link strategy.
+      #
+      config:
+        ## How long a link is valid for ##
+        #
+        # Default value: 1h
+        #
+        # Examples:
+        # - 1h
+        # - 1m
+        # - 1s
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_LINK_CONFIG_LIFESPAN=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_LINK_CONFIG_LIFESPAN=<value>
+        #
+        lifespan: 1h
+
       ## Enables Link Method ##
       #
       # Default value: true
@@ -871,6 +894,20 @@ selfservice:
       # Define how passwords are validated.
       #
       config:
+        ## Enable the HaveIBeenPwned API ##
+        #
+        # If set to false the password validation does not utilize the Have I Been Pwnd API.
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_ENABLED=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_ENABLED=<value>
+        #
+        haveibeenpwned_enabled: false
+
         ## Allow Password Breaches ##
         #
         # Defines how often a password may have been breached before it is rejected.
@@ -900,20 +937,6 @@ selfservice:
         #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
         #
         ignore_network_errors: false
-
-        ## Enable or Disable the HaveIBeenPwned API ##
-        #
-        # If set to false the password validation does not utilize the Have I Been Pwnd API.
-        #
-        # Default value: true
-        #
-        # Set this value using environment variables on
-        # - Linux/macOS:
-        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_ENABLED=<value>
-        # - Windows Command Line (CMD):
-        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_ENABLED=<value>
-        #
-        haveibeenpwned_enabled: true
 
         ## Custom haveibeenpwned host ##
         #
@@ -1149,6 +1172,57 @@ serve:
       #
       owner: ''
 
+    ## HTTPS ##
+    #
+    # Configure HTTP over TLS (HTTPS). All options can also be set using environment variables by replacing dots (`.`) with underscores (`_`) and uppercasing the key. For example, `some.prefix.tls.key.path` becomes `export SOME_PREFIX_TLS_KEY_PATH`. If all keys are left undefined, TLS will be disabled.
+    #
+    tls:
+      ## TLS Certificate (PEM) ##
+      #
+      cert:
+        ## base64 ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SERVE_PUBLIC_TLS_CERT_BASE64=<value>
+        # - Windows Command Line (CMD):
+        #    > set SERVE_PUBLIC_TLS_CERT_BASE64=<value>
+        #
+        base64: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXG5NSUlEWlRDQ0FrMmdBd0lCQWdJRVY1eE90REFOQmdr...
+
+        ## path ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SERVE_PUBLIC_TLS_CERT_PATH=<value>
+        # - Windows Command Line (CMD):
+        #    > set SERVE_PUBLIC_TLS_CERT_PATH=<value>
+        #
+        path: path/to/file.pem
+
+      ## Private Key (PEM) ##
+      #
+      key:
+        ## base64 ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SERVE_PUBLIC_TLS_KEY_BASE64=<value>
+        # - Windows Command Line (CMD):
+        #    > set SERVE_PUBLIC_TLS_KEY_BASE64=<value>
+        #
+        base64: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXG5NSUlEWlRDQ0FrMmdBd0lCQWdJRVY1eE90REFOQmdr...
+
+        ## path ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SERVE_PUBLIC_TLS_KEY_PATH=<value>
+        # - Windows Command Line (CMD):
+        #    > set SERVE_PUBLIC_TLS_KEY_PATH=<value>
+        #
+        path: path/to/file.pem
+
     ## cors ##
     #
     # Configures Cross Origin Resource Sharing for public endpoints.
@@ -1376,6 +1450,57 @@ serve:
       #
       owner: ''
 
+    ## HTTPS ##
+    #
+    # Configure HTTP over TLS (HTTPS). All options can also be set using environment variables by replacing dots (`.`) with underscores (`_`) and uppercasing the key. For example, `some.prefix.tls.key.path` becomes `export SOME_PREFIX_TLS_KEY_PATH`. If all keys are left undefined, TLS will be disabled.
+    #
+    tls:
+      ## TLS Certificate (PEM) ##
+      #
+      cert:
+        ## base64 ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SERVE_ADMIN_TLS_CERT_BASE64=<value>
+        # - Windows Command Line (CMD):
+        #    > set SERVE_ADMIN_TLS_CERT_BASE64=<value>
+        #
+        base64: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXG5NSUlEWlRDQ0FrMmdBd0lCQWdJRVY1eE90REFOQmdr...
+
+        ## path ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SERVE_ADMIN_TLS_CERT_PATH=<value>
+        # - Windows Command Line (CMD):
+        #    > set SERVE_ADMIN_TLS_CERT_PATH=<value>
+        #
+        path: path/to/file.pem
+
+      ## Private Key (PEM) ##
+      #
+      key:
+        ## base64 ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SERVE_ADMIN_TLS_KEY_BASE64=<value>
+        # - Windows Command Line (CMD):
+        #    > set SERVE_ADMIN_TLS_KEY_BASE64=<value>
+        #
+        base64: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXG5NSUlEWlRDQ0FrMmdBd0lCQWdJRVY1eE90REFOQmdr...
+
+        ## path ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SERVE_ADMIN_TLS_KEY_PATH=<value>
+        # - Windows Command Line (CMD):
+        #    > set SERVE_ADMIN_TLS_KEY_PATH=<value>
+        #
+        path: path/to/file.pem
+
     ## Admin Base URL ##
     #
     # The URL where the admin endpoint is exposed at.
@@ -1509,13 +1634,14 @@ tracing:
 
   ## provider ##
   #
-  # Set this to the tracing backend you wish to use. Supports Jaeger, Zipkin and DataDog. If omitted or empty, tracing will be disabled. Use environment variables to configure DataDog (see https://docs.datadoghq.com/tracing/setup/go/#configuration).
+  # Set this to the tracing backend you wish to use. Supports Jaeger, Zipkin, DataDog, elastic-apm and instana. If omitted or empty, tracing will be disabled. Use environment variables to configure DataDog (see https://docs.datadoghq.com/tracing/setup/go/#configuration).
   #
   # One of:
   # - jaeger
   # - zipkin
   # - datadog
   # - elastic-apm
+  # - instana
   #
   # Examples:
   # - jaeger
@@ -1766,6 +1892,56 @@ hashers:
   #
   algorithm: argon2
 
+## HTTP Cookie Configuration ##
+#
+# Configure the HTTP Cookies. Applies to both CSRF and session cookies.
+#
+cookies:
+  ## HTTP  Cookie Path ##
+  #
+  # Sets the session and CSRF cookie path. Use with care!
+  #
+  # Default value: /
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export COOKIES_PATH=<value>
+  # - Windows Command Line (CMD):
+  #    > set COOKIES_PATH=<value>
+  #
+  path: ''
+
+  ## HTTP Cookie Same Site Configuration ##
+  #
+  # Sets the session and CSRF cookie SameSite.
+  #
+  # Default value: Lax
+  #
+  # One of:
+  # - Strict
+  # - Lax
+  # - None
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export COOKIES_SAME_SITE=<value>
+  # - Windows Command Line (CMD):
+  #    > set COOKIES_SAME_SITE=<value>
+  #
+  same_site: Strict
+
+  ## HTTP Cookie Domain ##
+  #
+  # Sets the cookie domain for session and CSRF cookies. Useful when dealing with subdomains. Use with care!
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export COOKIES_DOMAIN=<value>
+  # - Windows Command Line (CMD):
+  #    > set COOKIES_DOMAIN=<value>
+  #
+  domain: ''
+
 ## session ##
 #
 session:
@@ -1802,9 +1978,7 @@ session:
 
     ## Session Cookie Path ##
     #
-    # Sets the session cookie path. Use with care!
-    #
-    # Default value: /
+    # Sets the session cookie path. Use with care! Overrides `cookies.path`.
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -1814,9 +1988,9 @@ session:
     #
     path: ''
 
-    ## Cookie Same Site Configuration ##
+    ## Session Cookie SameSite Configuration ##
     #
-    # Default value: Lax
+    # Sets the session cookie SameSite. Overrides `cookies.same_site`.
     #
     # One of:
     # - Strict
@@ -1833,7 +2007,7 @@ session:
 
     ## Session Cookie Domain ##
     #
-    # Sets the session cookie domain. Useful when dealing with subdomains. Use with care!
+    # Sets the session cookie domain. Useful when dealing with subdomains. Use with care! Overrides `cookies.domain`.
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -1899,6 +2073,8 @@ help: false
 
 ## sqa-opt-out ##
 #
+# This is a CLI flag and environment variable and can not be set using the config file.
+#
 # Default value: false
 #
 # Set this value using environment variables on
@@ -1910,6 +2086,8 @@ help: false
 sqa-opt-out: false
 
 ## watch-courier ##
+#
+# This is a CLI flag and environment variable and can not be set using the config file.
 #
 # Default value: false
 #
@@ -1923,7 +2101,7 @@ watch-courier: false
 
 ## Metrics port ##
 #
-# The port the courier's metrics endpoint listens on (0/disabled by default).
+# The port the courier's metrics endpoint listens on (0/disabled by default). This is a CLI flag and environment variable and can not be set using the config file.
 #
 # Minimum value: 0
 #
@@ -1941,6 +2119,8 @@ watch-courier: false
 expose-metrics-port: 4434
 
 ## config ##
+#
+# This is a CLI flag and environment variable and can not be set using the config file.
 #
 # Set this value using environment variables on
 # - Linux/macOS:

@@ -109,6 +109,16 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 	return f, nil
 }
 
+func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (*Flow, error) {
+	nf, err := h.NewLoginFlow(w, r, of.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	nf.RequestURL = of.RequestURL
+	return nf, nil
+}
+
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceLoginFlowForBrowsers initializeSelfServiceLoginFlowWithoutBrowser
 type initializeSelfServiceLoginFlowWithoutBrowser struct {
