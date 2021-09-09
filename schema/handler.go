@@ -101,19 +101,22 @@ func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 	}
 }
 
-// Raw JSON Schema list
+// Raw identity Schema list
 //
-// swagger:model JSONSchemas
-type JSONSchemas []identitySchema
+// swagger:model IdentitySchemas
+type IdentitySchemas []identitySchema
 
+// swagger:model identitySchema
 type identitySchema struct {
-	ID     string          `json:"id"`
+	// The ID of the Identity JSON Schema
+	ID string `json:"id"`
+	// The actual Identity JSON Schema
 	Schema json.RawMessage `json:"schema"`
 }
 
 // nolint:deadcode,unused
-// swagger:parameters getJsonSchemas
-type getJsonSchemas struct {
+// swagger:parameters listIdentitySchemas
+type listIdentitySchemas struct {
 	// Items per Page
 	//
 	// This is the number of items per page.
@@ -134,9 +137,9 @@ type getJsonSchemas struct {
 	Page int `json:"page"`
 }
 
-// swagger:route GET /schemas v0alpha1 getJsonSchemas
+// swagger:route GET /schemas v0alpha2 listIdentitySchemas
 //
-// Get all JSON Schemas
+// Get all Identity Schemas
 //
 //     Produces:
 //     - application/json
@@ -144,7 +147,7 @@ type getJsonSchemas struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: JSONSchemas
+//       200: IdentitySchemas
 //       500: jsonError
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
@@ -152,7 +155,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	schemas := h.r.IdentityTraitsSchemas(r.Context()).List(page, itemsPerPage)
 	total := h.r.IdentityTraitsSchemas(r.Context()).Total()
 
-	var ss JSONSchemas
+	var ss IdentitySchemas
 
 	for _, schema := range schemas {
 		s, err := h.r.IdentityTraitsSchemas(r.Context()).GetByID(schema.ID)

@@ -154,7 +154,7 @@ func TestHandler(t *testing.T) {
 
 		body := getFromTSPaginated(0, 2, http.StatusOK)
 
-		var result schema.JSONSchemas
+		var result schema.IdentitySchemas
 		require.NoError(t, json.Unmarshal(body, &result))
 
 		ids_orig := []string{}
@@ -194,7 +194,7 @@ func TestHandler(t *testing.T) {
 
 		body1, body2 := getFromTSPaginated(0, 1, http.StatusOK), getFromTSPaginated(1, 1, http.StatusOK)
 
-		var result1, result2 schema.JSONSchemas
+		var result1, result2 schema.IdentitySchemas
 		require.NoError(t, json.Unmarshal(body1, &result1))
 		require.NoError(t, json.Unmarshal(body2, &result2))
 
