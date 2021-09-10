@@ -188,7 +188,11 @@ type adminLogoutIdentity struct {
 //       401: jsonError
 //       500: jsonError
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
+	iID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error())).WithDebug("...something a bit useful")
+	}
+	if err := h.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), iID); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
