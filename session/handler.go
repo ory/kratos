@@ -185,6 +185,7 @@ type adminLogoutIdentity struct {
 //
 //     Responses:
 //       202: emptyResponse
+//       400: jsonError
 //       401: jsonError
 //       500: jsonError
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
