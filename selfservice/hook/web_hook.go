@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/google/go-jsonnet"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
@@ -23,7 +23,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/fetcher"
-	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 )
 
@@ -63,20 +62,20 @@ type (
 
 	webHookDependencies interface {
 		x.LoggingProvider
+		x.HttpClientProvider
 	}
 
 	templateContext struct {
-		Flow           flow.Flow             `json:"flow"`
-		RequestHeaders http.Header           `json:"request_headers"`
-		RequestMethod  string                `json:"request_method"`
-		RequestUrl     string                `json:"request_url"`
-		Identity       *identity.Identity    `json:"identity,omitempty"`
+		Flow           flow.Flow          `json:"flow"`
+		RequestHeaders http.Header        `json:"request_headers"`
+		RequestMethod  string             `json:"request_method"`
+		RequestUrl     string             `json:"request_url"`
+		Identity       *identity.Identity `json:"identity,omitempty"`
 	}
 
 	WebHook struct {
 		r webHookDependencies
 		c json.RawMessage
-		h *retryablehttp.Client
 	}
 
 	detailedMessage struct {
@@ -191,16 +190,16 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 	}
 
 	return &webHookConfig{
-		method:      rc.Method,
-		url:         rc.Url,
-		templateURI: rc.Body,
-		auth:        as,
+		method:       rc.Method,
+		url:          rc.Url,
+		templateURI:  rc.Body,
+		auth:         as,
 		canInterrupt: rc.Interrupt,
 	}, nil
 }
 
 func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
-	return &WebHook{r: r, c: c, h: httpx.NewResilientClient()}
+	return &WebHook{r: r, c: c}
 }
 
 func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
@@ -299,7 +298,7 @@ func (e *WebHook) execute(data *templateContext) error {
 		}
 	}
 
-	err = doHttpCall(e.h, conf.method, conf.url, conf.auth, conf.canInterrupt, body)
+	err = doHttpCall(e.r.HttpClient(), conf.method, conf.url, conf.auth, conf.canInterrupt, body)
 	if err != nil {
 		return errors.Wrap(err, "failed to call web hook")
 	}

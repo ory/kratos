@@ -3,6 +3,8 @@ package x
 import (
 	"context"
 
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/tracing"
 
 	"github.com/gorilla/sessions"
@@ -29,16 +31,40 @@ type TracingProvider interface {
 	Tracer(ctx context.Context) *tracing.Tracer
 }
 
-type SimpleLogger struct {
+type SimpleLoggerWithClient struct {
 	L *logrusx.Logger
+	C *retryablehttp.Client
 }
 
-func (s *SimpleLogger) Logger() *logrusx.Logger {
+func (s *SimpleLoggerWithClient) Logger() *logrusx.Logger {
 	return s.L
 }
 
-func (s *SimpleLogger) Audit() *logrusx.Logger {
+func (s *SimpleLoggerWithClient) Audit() *logrusx.Logger {
 	return s.L
 }
 
-var _ LoggingProvider = (*SimpleLogger)(nil)
+func (s *SimpleLoggerWithClient) HttpClient() *retryablehttp.Client {
+	return s.C
+}
+
+var _ LoggingProvider = (*SimpleLoggerWithClient)(nil)
+var _ HttpClientProvider = (*SimpleLoggerWithClient)(nil)
+
+type HttpClientProvider interface {
+	HttpClient() *retryablehttp.Client
+}
+
+type ResilientHttpClient struct {
+	client *retryablehttp.Client
+}
+
+func (r *ResilientHttpClient) HttpClient() *retryablehttp.Client {
+	return r.client
+}
+
+func NewResilientHttpClient(logger *logrusx.Logger) *ResilientHttpClient {
+	return &ResilientHttpClient{
+		client: httpx.NewResilientClient(httpx.ResilientClientWithLogger(logger)),
+	}
+}

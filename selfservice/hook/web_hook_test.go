@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/ory/x/httpx"
 	"github.com/sirupsen/logrus/hooks/test"
 
 	"github.com/ory/x/logrusx"
@@ -495,7 +496,7 @@ func TestWebHooks(t *testing.T) {
 								"auth": %s
 							}`, ts.URL+path, method, "./stub/test_body.jsonnet", auth.createAuthConfig()))
 
-							wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
+							wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)
 
 							err := tc.callWebHook(wh, req, f, s)
 							if method == "GARBAGE" {
@@ -538,7 +539,7 @@ func TestWebHooks(t *testing.T) {
 		}
 		f := &login.Flow{ID: x.NewUUID()}
 		conf := json.RawMessage("not valid json")
-		wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
+		wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
@@ -557,7 +558,7 @@ func TestWebHooks(t *testing.T) {
 					"method": "%s",
 					"body": "%s"
 				}`, ts.URL+path, "POST", "./stub/bad_template.jsonnet"))
-		wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
+		wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
 		assert.Error(t, err)
@@ -597,7 +598,7 @@ func TestWebHooks(t *testing.T) {
 					"method": "%s",
 					"body": "%s"
 				}`, ts.URL+path, "POST", "./stub/test_body.jsonnet"))
-			wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
+			wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)
 
 			err := wh.ExecuteLoginPreHook(nil, req, f)
 			if tc.mustSuccess {
