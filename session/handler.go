@@ -188,6 +188,7 @@ type adminLogoutIdentity struct {
 //       202: emptyResponse
 //       400: jsonError
 //       401: jsonError
+//       404: jsonError
 //       500: jsonError
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))

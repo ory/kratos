@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/corpx"
@@ -256,6 +257,23 @@ func TestSessionLogout(t *testing.T) {
 				logout(t, ts, "/sessions/identity/"+i.ID.String(), http.StatusAccepted)
 				_, err := reg.SessionPersister().GetSession(context.Background(), s.ID)
 				require.True(t, errors.Is(err, sqlcon.ErrNoRows))
+			})
+		}
+	})
+
+	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				logout(t, ts, "/sessions/identity/BADUUID", http.StatusBadRequest)
+			})
+		}
+	})
+
+	t.Run("case=should return 404 when calling with missing UUID", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				someID, _ := uuid.NewV4()
+				logout(t, ts, "/sessions/identity/"+someID.String(), http.StatusNotFound)
 			})
 		}
 	})
