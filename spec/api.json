@@ -4141,6 +4141,16 @@
           "202": {
             "$ref": "#/components/responses/emptyResponse"
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
           "401": {
             "content": {
               "application/json": {
@@ -4167,7 +4177,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Calling this endpoint irrecoverably and permanently Invalidates all sessions tha belongs to a given Identity.",
+        "summary": "Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to a given Identity.",
         "tags": [
           "v0alpha1"
         ]

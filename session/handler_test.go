@@ -8,10 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/x/sqlcon"
-	"github.com/pkg/errors"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"

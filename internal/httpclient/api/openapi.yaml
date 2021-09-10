@@ -1823,6 +1823,12 @@ paths:
         "202":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "401":
           content:
             application/json:
@@ -1838,7 +1844,7 @@ paths:
       security:
       - oryAccessToken: []
       summary: Calling this endpoint irrecoverably and permanently Invalidates all
-        sessions tha belongs to a given Identity.
+        sessions that belong to a given Identity.
       tags:
       - v0alpha1
   /sessions/whoami:

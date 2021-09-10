@@ -3,6 +3,7 @@ package session
 import (
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -191,7 +192,7 @@ type adminLogoutIdentity struct {
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error())).WithDebug("...something a bit useful")
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
 	}
 	if err := h.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), iID); err != nil {
 		h.r.Writer().WriteError(w, r, err)

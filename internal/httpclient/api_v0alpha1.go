@@ -109,7 +109,7 @@ type V0alpha1Api interface {
 	AdminListIdentitiesExecute(r V0alpha1ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error)
 
 	/*
-			 * AdminLogoutIdentity Calling this endpoint irrecoverably and permanently Invalidates all sessions tha belongs to a given Identity.
+			 * AdminLogoutIdentity Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to a given Identity.
 			 * This endpoint is useful for:
 
 		To forcefully logout Identity from all devices and sessions
@@ -1583,7 +1583,7 @@ func (r V0alpha1ApiApiAdminLogoutIdentityRequest) Execute() (*http.Response, err
 }
 
 /*
- * AdminLogoutIdentity Calling this endpoint irrecoverably and permanently Invalidates all sessions tha belongs to a given Identity.
+ * AdminLogoutIdentity Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to a given Identity.
  * This endpoint is useful for:
 
 To forcefully logout Identity from all devices and sessions
@@ -1675,6 +1675,16 @@ func (a *V0alpha1ApiService) AdminLogoutIdentityExecute(r V0alpha1ApiApiAdminLog
 		newErr := &GenericOpenAPIError{
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 401 {
 			var v JsonError
