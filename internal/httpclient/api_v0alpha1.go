@@ -94,7 +94,11 @@ type V0alpha1Api interface {
 
 	/*
 			 * AdminListIdentities List Identities
-			 * Lists all identities. Does not support search at the moment.
+			 * Lists all identities.
+
+		Filter can be done by adding URL parameters
+		Filter can be done by any field from identityList
+		To filter by credential this flag `with_credential` as to be set
 
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1414,10 +1418,12 @@ func (a *V0alpha1ApiService) AdminGetIdentityExecute(r V0alpha1ApiApiAdminGetIde
 }
 
 type V0alpha1ApiApiAdminListIdentitiesRequest struct {
-	ctx        context.Context
-	ApiService V0alpha1Api
-	perPage    *int64
-	page       *int64
+	ctx             context.Context
+	ApiService      V0alpha1Api
+	perPage         *int64
+	page            *int64
+	withCredentials *bool
+	credentials     *string
 }
 
 func (r V0alpha1ApiApiAdminListIdentitiesRequest) PerPage(perPage int64) V0alpha1ApiApiAdminListIdentitiesRequest {
@@ -1428,6 +1434,14 @@ func (r V0alpha1ApiApiAdminListIdentitiesRequest) Page(page int64) V0alpha1ApiAp
 	r.page = &page
 	return r
 }
+func (r V0alpha1ApiApiAdminListIdentitiesRequest) WithCredentials(withCredentials bool) V0alpha1ApiApiAdminListIdentitiesRequest {
+	r.withCredentials = &withCredentials
+	return r
+}
+func (r V0alpha1ApiApiAdminListIdentitiesRequest) Credentials(credentials string) V0alpha1ApiApiAdminListIdentitiesRequest {
+	r.credentials = &credentials
+	return r
+}
 
 func (r V0alpha1ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.Response, error) {
 	return r.ApiService.AdminListIdentitiesExecute(r)
@@ -1435,7 +1449,11 @@ func (r V0alpha1ApiApiAdminListIdentitiesRequest) Execute() ([]Identity, *http.R
 
 /*
  * AdminListIdentities List Identities
- * Lists all identities. Does not support search at the moment.
+ * Lists all identities.
+
+Filter can be done by adding URL parameters
+Filter can be done by any field from identityList
+To filter by credential this flag `with_credential` as to be set
 
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -1478,6 +1496,12 @@ func (a *V0alpha1ApiService) AdminListIdentitiesExecute(r V0alpha1ApiApiAdminLis
 	}
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	if r.withCredentials != nil {
+		localVarQueryParams.Add("with_credentials", parameterToString(*r.withCredentials, ""))
+	}
+	if r.credentials != nil {
+		localVarQueryParams.Add("credentials", parameterToString(*r.credentials, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

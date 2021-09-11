@@ -16,7 +16,7 @@ import (
 	"fmt"
 )
 
-// IdentityState The state can either be `active` or `inactive`.
+// IdentityState An Identity's State The state can either be `active` or `inactive`.
 type IdentityState string
 
 // List of identityState

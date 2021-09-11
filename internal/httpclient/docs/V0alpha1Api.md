@@ -311,7 +311,7 @@ Name | Type | Description  | Notes
 
 ## AdminListIdentities
 
-> []Identity AdminListIdentities(ctx).PerPage(perPage).Page(page).Execute()
+> []Identity AdminListIdentities(ctx).PerPage(perPage).Page(page).WithCredentials(withCredentials).Credentials(credentials).Execute()
 
 List Identities
 
@@ -332,10 +332,12 @@ import (
 func main() {
     perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 100)
     page := int64(789) // int64 | Pagination Page (optional) (default to 0)
+    withCredentials := true // bool | Filter by credentials  required: true if filter on credentials elements (optional)
+    credentials := "credentials_example" // string | Filter by credentials (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha1Api.AdminListIdentities(context.Background()).PerPage(perPage).Page(page).Execute()
+    resp, r, err := apiClient.V0alpha1Api.AdminListIdentities(context.Background()).PerPage(perPage).Page(page).WithCredentials(withCredentials).Credentials(credentials).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.AdminListIdentities``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -358,6 +360,8 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
  **page** | **int64** | Pagination Page | [default to 0]
+ **withCredentials** | **bool** | Filter by credentials  required: true if filter on credentials elements | 
+ **credentials** | **string** | Filter by credentials | 
 
 ### Return type
 

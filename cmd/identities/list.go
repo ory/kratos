@@ -43,7 +43,7 @@ func NewListCmd() *cobra.Command {
 				}
 				req = req.PerPage(perPage)
 			}
-
+			
 			identities, _, err := req.Execute()
 			if err != nil {
 				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not get the identities: %+v\n", err)
