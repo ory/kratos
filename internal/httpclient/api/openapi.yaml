@@ -97,7 +97,11 @@ paths:
   /identities:
     get:
       description: |-
-        Lists all identities. Does not support search at the moment.
+        Lists all identities.
+
+        Filter can be done by adding URL parameters
+        Filter can be done by any field from identityList
+        To filter by credential this flag `with_credential` as to be set
 
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
       operationId: adminListIdentities
@@ -127,6 +131,25 @@ paths:
           format: int64
           minimum: 0
           type: integer
+        style: form
+      - description: |-
+          Filter by credentials
+
+          required: true if filter on credentials elements
+        explode: true
+        in: query
+        name: with_credentials
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - description: Filter by credentials
+        explode: true
+        in: query
+        name: credentials
+        required: false
+        schema:
+          type: string
         style: form
       responses:
         "200":
@@ -2696,11 +2719,12 @@ components:
         $ref: '#/components/schemas/identitySchema'
       type: array
     identityState:
-      description: The state can either be `active` or `inactive`.
+      description: |-
+        An Identity's State
+        The state can either be `active` or `inactive`.
       enum:
       - active
       - inactive
-      title: An Identity's State
       type: string
     identityTraits:
       description: |-

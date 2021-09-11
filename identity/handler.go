@@ -94,13 +94,30 @@ type adminListIdentities struct {
 	// default: 0
 	// min: 0
 	Page int `json:"page"`
+
+	// Toggle for search in credential
+	//
+	// required: false
+	// in: query
+	// allowEmptyValue: true
+	WithCredentials bool `json:"with_credentials"`
+
+	// Filter by credentials
+	//
+	// required: false
+	// in: query
+	Credentials string `json:"credentials"`
 }
 
 // swagger:route GET /identities v0alpha2 adminListIdentities
 //
 // List Identities
 //
-// Lists all identities. Does not support search at the moment.
+// Lists all identities.
+//
+// Filter can be done by adding URL parameters
+// Filter can be done by any field from identityList
+// To filter by credential this flag `with_credential` as to be set
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
