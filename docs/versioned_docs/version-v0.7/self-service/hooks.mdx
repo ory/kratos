@@ -6,7 +6,8 @@ title: Hooks
 Hooks execute logic after a flow (login, registration, settings, ...):
 
 - _Before login:_ is executed when a login flow starts.
-- _After login:_ is executed after a login was successful.
+- _After login:_ is executed after a successful identification and
+  authentication of the user, but before the kratos session is created.
 - _Before registration:_ is executed when a registration flow starts.
 - _After registration:_ is executed when a registration was successful:
   - _Before persisting:_ runs before the identity is saved in the database.
@@ -106,16 +107,15 @@ responses with an HTTP code > 300.
 The configuration for a web-hook goes into the `hooks` property either on the
 flow before/after, or the method level and has the following structure:
 
-```.yaml
-  - hook: web_hook
-    config:
-      url: https://test.kratos.ory.sh/after_verification_hook
-      method: POST # GET, DELETE, etc
-      body: /link/to/my/jsonnet/file
-      auth:
-        type: <some-type>
-        config:
-          <type-specific-config>
+```yaml title="path/to/my/kratos.config.yml
+- hook: web_hook
+  config:
+    url: https://test.kratos.ory.sh/after_verification_hook
+    method: POST # GET, DELETE, etc
+    body: file:///path/of/my/jsonnet/file
+    auth:
+      type: <some-type>
+      config: <type-specific-config>
 ```
 
 The configuration section of a web-hook consists of
@@ -123,9 +123,10 @@ The configuration section of a web-hook consists of
 - `url` - the url, the web-hook should call (mandatory)
 - `method` - the HTTP method (GET, POST, ...), the web-hook should use
   (mandatory)
-- `body` - path to a jsonnet template, used by the web-hook to render the
-  payload to send (optional). This property is ignored for HTTP `method`s, which
-  do not support sending of HTTP body payloads.
+- `body` - URI of a jsonnet template, used by the web-hook to render the payload
+  to send (optional). Use a `file://path/to/body.jsonnet` URL for referring to
+  local files. This property is ignored for HTTP `method`s, which do not support
+  sending of HTTP body payloads.
 - `auth` - configuration of authentication and authorization mechanisms to be
   used by the web-hook
 
@@ -147,7 +148,7 @@ For `auth` following mechanisms are supported:
 
 For `api_key` the config looks as follows:
 
-```.yaml
+```yaml
 name: Some-Name
 value: The-Value-of-My-Key
 in: header # alternatively cookie
@@ -157,7 +158,7 @@ All properties are mandatory.
 
 For `basic_auth` the config looks as follows:
 
-```.yaml
+```yaml
 user: My-User
 password: My-Pass-Value
 ```
@@ -191,12 +192,13 @@ selfservice:
         password:
           hooks:
             - hook: revoke_active_sessions
+            - hook: require_verified_address
 ```
 
 #### `revoke_active_sessions`
 
 The `revoke_active_sessions` will delete all active sessions for that user on
-successful login:
+successful login. This hook is available for all supported methods:
 
 ```yaml title="path/to/my/kratos.config.yml"
 selfservice:
@@ -208,6 +210,29 @@ selfservice:
             - hook: revoke_active_sessions
               # can not be configured
 ```
+
+#### `require_verified_address`
+
+The `require_verified_address` will ensure, the user can login only if its email
+address is verified. This hook is available for the `password` method only:
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  flows:
+    login:
+      after:
+        password:
+          hooks:
+            - hook: require_verified_address
+              # can not be configured
+```
+
+Please be aware, that since `require_verified_address` hook is enforcing a
+verified address before the user can login, a typo in an email address done by
+the user either during the registration or as part of a self service flow (email
+change) will make the login for that user impossible. So you should think about
+measures to prevent such situations, like requiring two email addresses being
+configured by the user, thus having a backup if something goes wrong.
 
 ## Registration
 

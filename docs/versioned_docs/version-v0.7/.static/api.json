@@ -937,7 +937,7 @@
             "type": "string"
           },
           "details": {
-            "additionalProperties": true,
+            "additionalProperties": false,
             "description": "Further error details",
             "type": "object"
           },
@@ -1227,6 +1227,9 @@
             "type": "string"
           }
         },
+        "required": [
+          "logout_url"
+        ],
         "type": "object"
       },
       "selfServiceRecoveryFlow": {
@@ -1553,10 +1556,6 @@
           },
           "method": {
             "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
-            "enum": [
-              "password",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1614,9 +1613,6 @@
           },
           "method": {
             "description": "Method supports `link` only right now.",
-            "enum": [
-              "link"
-            ],
             "type": "string"
           }
         },
@@ -1637,6 +1633,9 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
           }
         ]
       },
@@ -1671,10 +1670,6 @@
           },
           "method": {
             "description": "Method to use\n\nThis field must be set to `password` when using the password method.",
-            "enum": [
-              "password",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1708,6 +1703,9 @@
           },
           {
             "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
           }
         ]
       },
@@ -1744,11 +1742,6 @@
           },
           "method": {
             "description": "Method\n\nShould be set to password when trying to update a password.",
-            "enum": [
-              "password",
-              "profile",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1810,9 +1803,6 @@
           },
           "method": {
             "description": "Method supports `link` only right now.",
-            "enum": [
-              "link"
-            ],
             "type": "string"
           }
         },
@@ -2129,9 +2119,9 @@
     },
     "securitySchemes": {
       "oryAccessToken": {
-        "description": "This security mechanism is only applicable when using the [Ory Platform](https://console.ory.sh) by\ncreating an [Ory Personal Access Token](https://www.ory.sh/docs/guides/create-personal-access-token).\nIf you are using the open source version, this security mechanism\nwill not work out of the box as you will need to add a security mechanism yourself.\n",
-        "scheme": "bearer",
-        "type": "http"
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
       }
     }
   },
@@ -2144,7 +2134,7 @@
       "name": "Apache 2.0"
     },
     "title": "Ory Kratos API",
-    "version": "v0.7.1-alpha.1"
+    "version": "v0.7.4-alpha.1"
   },
   "openapi": "3.0.3",
   "paths": {

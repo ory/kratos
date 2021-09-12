@@ -2984,6 +2984,9 @@
     },
     "selfServiceLogoutUrl": {
       "type": "object",
+      "required": [
+        "logout_url"
+      ],
       "properties": {
         "logout_url": {
           "description": "LogoutURL can be opened in a browser to\n\nformat: uri",

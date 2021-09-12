@@ -4,8 +4,11 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
 
 	kratos "github.com/ory/kratos-client-go"
 
@@ -129,6 +132,28 @@ func TestHandler(t *testing.T) {
 
 		require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
 		assert.Equal(t, int64(http.StatusGone), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
+	})
+
+	t.Run("case=expired with return_to", func(t *testing.T) {
+		client := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+		body := x.EasyGetBody(t, client, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+
+		// Expire the flow
+		f, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
+		require.NoError(t, err)
+		f.ExpiresAt = time.Now().Add(-time.Second)
+		require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(context.Background(), f))
+
+		// submit the flow but it is expired
+		u := publicTS.URL + settings.RouteSubmitFlow + "?flow=" + f.ID.String()
+		res, err := client.PostForm(u, url.Values{"method": {"password"}, "csrf_token": {"csrf"}, "password": {"password"}})
+		resBody, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+
+		f, err = reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
+		require.NoError(t, err)
+		assert.Equal(t, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
 	})
 
 	t.Run("description=should fail to fetch request if identity changed", func(t *testing.T) {

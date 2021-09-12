@@ -1226,6 +1226,9 @@
             "type": "string"
           }
         },
+        "required": [
+          "logout_url"
+        ],
         "type": "object"
       },
       "selfServiceRecoveryFlow": {
@@ -1552,10 +1555,6 @@
           },
           "method": {
             "description": "Method should be set to \"password\" when logging in using the identifier and password strategy.",
-            "enum": [
-              "password",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1613,9 +1612,6 @@
           },
           "method": {
             "description": "Method supports `link` only right now.",
-            "enum": [
-              "link"
-            ],
             "type": "string"
           }
         },
@@ -1636,6 +1632,9 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithPasswordMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceRegistrationFlowWithOidcMethodBody"
           }
         ]
       },
@@ -1670,10 +1669,6 @@
           },
           "method": {
             "description": "Method to use\n\nThis field must be set to `password` when using the password method.",
-            "enum": [
-              "password",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1707,6 +1702,9 @@
           },
           {
             "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithProfileMethodBody"
+          },
+          {
+            "$ref": "#/components/schemas/submitSelfServiceSettingsFlowWithOidcMethodBody"
           }
         ]
       },
@@ -1743,11 +1741,6 @@
           },
           "method": {
             "description": "Method\n\nShould be set to password when trying to update a password.",
-            "enum": [
-              "password",
-              "profile",
-              "oidc"
-            ],
             "type": "string"
           },
           "password": {
@@ -1809,9 +1802,6 @@
           },
           "method": {
             "description": "Method supports `link` only right now.",
-            "enum": [
-              "link"
-            ],
             "type": "string"
           }
         },
@@ -2143,7 +2133,7 @@
       "name": "Apache 2.0"
     },
     "title": "Ory Kratos API",
-    "version": ""
+    "version": "v0.7.4-alpha.1"
   },
   "openapi": "3.0.3",
   "paths": {

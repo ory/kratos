@@ -5,15 +5,15 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | The CSRF Token | [optional] 
-**Method** | **string** | Method to use  This field must be set to &#x60;password&#x60; when using the password method. | 
+**Method** | **string** | Method to use  This field must be set to &#x60;oidc&#x60; when using the oidc method. | 
 **Password** | **string** | Password to sign the user up with | 
-**Traits** | **map[string]interface{}** | The identity&#39;s traits | 
+**Traits** | **string** | The provider to register with | 
 
 ## Methods
 
 ### NewSubmitSelfServiceRegistrationFlowBody
 
-`func NewSubmitSelfServiceRegistrationFlowBody(method string, password string, traits map[string]interface{}, ) *SubmitSelfServiceRegistrationFlowBody`
+`func NewSubmitSelfServiceRegistrationFlowBody(method string, password string, traits string, ) *SubmitSelfServiceRegistrationFlowBody`
 
 NewSubmitSelfServiceRegistrationFlowBody instantiates a new SubmitSelfServiceRegistrationFlowBody object
 This constructor will assign default values to properties that have it defined,
@@ -95,20 +95,20 @@ SetPassword sets Password field to given value.
 
 ### GetTraits
 
-`func (o *SubmitSelfServiceRegistrationFlowBody) GetTraits() map[string]interface{}`
+`func (o *SubmitSelfServiceRegistrationFlowBody) GetTraits() string`
 
 GetTraits returns the Traits field if non-nil, zero value otherwise.
 
 ### GetTraitsOk
 
-`func (o *SubmitSelfServiceRegistrationFlowBody) GetTraitsOk() (*map[string]interface{}, bool)`
+`func (o *SubmitSelfServiceRegistrationFlowBody) GetTraitsOk() (*string, bool)`
 
 GetTraitsOk returns a tuple with the Traits field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTraits
 
-`func (o *SubmitSelfServiceRegistrationFlowBody) SetTraits(v map[string]interface{})`
+`func (o *SubmitSelfServiceRegistrationFlowBody) SetTraits(v string)`
 
 SetTraits sets Traits field to given value.
 

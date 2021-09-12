@@ -167,8 +167,8 @@ use for the labels:
 
 #### Node Order and Labels
 
-For all traits, the labels and orders are taken from the Identity Schema. A
-JSON Schema such as
+For all traits, the labels and orders are taken from the Identity Schema. A JSON
+Schema such as
 
 ```json
 {

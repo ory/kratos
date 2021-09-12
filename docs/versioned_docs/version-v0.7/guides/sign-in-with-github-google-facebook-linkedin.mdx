@@ -196,7 +196,7 @@ local claims = {
       // enumeration attacks, especially if the value is used for
       // e.g. verification or as a password login identifier.
       //
-      // It is assumed that Slack requires a email to be verifed before accessable via Oauth (because they don't provide a email_verified field).
+      // It is assumed that Slack requires an email to be verified before accessible via OAuth (because they don't provide a email_verified field).
       email: claims.email
     },
   },
@@ -236,8 +236,10 @@ Slack is now an option to log in via Kratos.
   allowfullscreen
 />
 
-To set up "Sign in with GitHub" you must create a
-[GitHub OAuth2 Client](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/).
+To set up "Sign in with GitHub" you must create either a
+[GitHub OAuth2 Client](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
+or
+[GitHub App Client](https://docs.github.com/en/developers/apps/building-github-apps/creating-a-github-app).
 
 Set the "Authorization callback URL" to:
 
@@ -265,6 +267,9 @@ at
 [GitHub's Scope Docs](https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/).
 Not all GitHub fields are supported however. Check the list of supported fields
 [in Kratos' source code](https://github.com/ory/kratos/blob/v0.2.1-alpha.1/selfservice/strategy/oidc/provider_github.go#L72-L98).
+
+Only for `Github Oauth2` as `GitHub App` does not have scope. See the
+[Differences between GitHub Apps and OAuth2](https://docs.github.com/en/developers/apps/getting-started-with-apps/differences-between-github-apps-and-oauth-apps)
 
 :::
 
@@ -294,7 +299,9 @@ local claims = {
 }
 ```
 
-Now, enable the GitHub provider in the Ory Kratos config located at
+For `GitHub App` use `github-app` and for `GitHub OAuth2` use `github`
+
+Now, enable the GitHub OAuth2 provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
@@ -312,6 +319,24 @@ selfservice:
             mapper_url: file:///etc/config/kratos/oidc.github.jsonnet
             scope:
               - user:email
+```
+
+Or enable the GitHub App provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: github # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: github-app
+            client_id: .... # Replace this with the OAuth2 Client ID provided by GitHub
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by GitHub
+            mapper_url: file:///etc/config/kratos/oidc.github.jsonnet
 ```
 
 Next, open the login endpoint of the SecureApp and you should see the GitHub
@@ -661,7 +686,7 @@ The pattern of this URL is:
 https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
 ```
 
-Facebook requires https the redirect URIs!
+Facebook requires HTTPS redirect URIs!
 
 :::note
 
@@ -690,7 +715,7 @@ local claims = std.extVar('claims');
       // enumeration attacks, especially if the value is used for
       // e.g. verification or as a password login identifier.
       //
-      // It is assumed that Facebook requires a email to be verifed before accessable via Oauth (because they don't provide an email_verified field).
+      // It is assumed that Facebook requires an email to be verified before accessible via OAuth (because they don't provide an email_verified field).
       //
       // The email might be empty if the user is not allowed to an email scope.
       [if "email" in claims then "email" else null]: claims.email,
