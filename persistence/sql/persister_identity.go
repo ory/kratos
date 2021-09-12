@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -515,9 +516,9 @@ func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Ident
 	return nil
 }
 
-func (p *Persister) getJsonSearchQuery(field string, values []string) pop.ScopeFunc {
+func (p *Persister) getJsonSearchQuery(ctx context.Context, field string, values []string) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
-		switch p.Connection(context.Background()).Dialect.Name() {
+		switch p.Connection(ctx).Dialect.Name() {
 		case "sqlite3", "mysql", "mariadb":
 			field, innerField := extractFieldAndInnerFields(field)
 			for _, value := range values {
@@ -591,6 +592,10 @@ func (p *Persister) buildScope(ctx context.Context, queryValues url.Values) pop.
 			if stringslice.Has([]string{"page", "per_page"}, field) {
 				continue
 			}
+			if ! p.validateFields(field) {
+				p.r.Logger().Warning(`field ignored. does not respect this patterns [a-zA-Z0-9\._]+`)
+				continue
+			}
 			if stringslice.Has([]string{"with_credentials"}, field) {
 				q = q.LeftJoin("identity_credentials ic", "identities.id=ic.identity_id")
 				q = q.LeftJoin("identity_credential_types credential_types", "credential_types.id=ic.identity_credential_type_id")
@@ -599,7 +604,7 @@ func (p *Persister) buildScope(ctx context.Context, queryValues url.Values) pop.
 				continue
 			}
 			if strings.HasPrefix(field, "traits") {
-				q = q.Scope(p.getJsonSearchQuery(field, values))
+				q = q.Scope(p.getJsonSearchQuery(ctx, field, values))
 				continue
 			}
 			if strings.HasPrefix(field, "credentials") {
@@ -620,4 +625,13 @@ func extractFieldAndInnerFields(field string) (string, string) {
 	}
 	dotIndex := strings.Index(field, ".")
 	return field[:dotIndex], field[dotIndex+1:]
+}
+
+func (p *Persister) validateFields(field string) bool {
+	res, err := regexp.MatchString(`[a-zA-Z0-9\._]+`, field)
+	if err != nil {
+		p.r.Logger().Errorf("validation field failed : %s",err.Error())
+		return false
+	}
+	return res
 }
