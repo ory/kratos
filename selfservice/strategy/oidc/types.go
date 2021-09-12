@@ -46,10 +46,10 @@ func NewCredentials(accessToken, refreshToken, provider, subject string) (*ident
 }
 
 type ProviderCredentialsConfig struct {
-	Subject               string `json:"subject"`
-	Provider              string `json:"provider"`
-	InitialAccessToken    string `json:"initial_access_token"`
-	InitialRefreshToken   string `json:"initial_refresh_token"`
+	Subject             string `json:"subject"`
+	Provider            string `json:"provider"`
+	InitialAccessToken  string `json:"initial_access_token"`
+	InitialRefreshToken string `json:"initial_refresh_token"`
 }
 
 type FlowMethod struct {
