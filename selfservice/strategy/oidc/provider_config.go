@@ -100,8 +100,6 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderGoogle(&p, public), nil
 			case addProviderName("github"):
 				return NewProviderGitHub(&p, public), nil
-			case addProviderName("github-app"):
-				return NewProviderGitHubApp(&p, public), nil
 			case addProviderName("gitlab"):
 				return NewProviderGitLab(&p, public), nil
 			case addProviderName("microsoft"):

@@ -11,7 +11,7 @@ The access token and refresh token from oidc provider. This assumes that you
 have oidc method configured.
 
 ```
-/identities/{id}/reveal_credentials
+/identities/{id}?reveal_credentials
 ```
 
 ```shell script
@@ -83,3 +83,14 @@ $ curl --request GET -sL \
   "updated_at": "2021-08-15T17:18:17.096187Z"
 }
 ```
+
+## Encryption
+
+By default Access Token and Refresh Token are plaintext recorded
+[Noop Cipher](setting-up-noop-cipher-parameters)
+
+For a tighter security aspect you could choose following cipher :
+
+- AES by following this [setup](setting-up-aes-cipher-parameters)
+- XChaCha20 Poly1305 by following this
+  [setup](setting-up-xchacha-cipher-parameters)

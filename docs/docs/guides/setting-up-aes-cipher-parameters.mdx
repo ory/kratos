@@ -1,0 +1,19 @@
+---
+id: setting-up-aes-cipher-parameters
+title: Setting up AES Cipher algorithm
+---
+
+Ory Kratos supports encryption and decryption only for oidc token for now. This
+section explain how to use and configure Kratos for using AES Cipher algorithm.
+
+The algorithm and secrets key must be set in the configuration. These
+[secrets key rotation](secret-key-rotation) must be set and be a string of 32
+characters long.
+
+```yaml title="path/to/kratos/config.yml
+secrets:
+  cipher:
+    - 32-LONG-SECRET-NOT-SECURE-AT-ALL
+ciphers:
+  algorithm: aes
+```

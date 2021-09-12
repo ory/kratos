@@ -7,5 +7,3 @@ services:
   kratos:
     image: oryd/kratos:latest-sqlite
 
-  kratos-selfservice-ui-node:
-    image: oryd/kratos-selfservice-ui-node:latest

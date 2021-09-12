@@ -186,10 +186,10 @@ func TestHandler(t *testing.T) {
 						Identifiers: []string{"bar:" + identifier},
 						Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
 							{
-								Subject:               "foo",
-								Provider:              "bar",
-								EncryptedAccessToken:  accessTokenEncrypted,
-								EncryptedRefreshToken: refreshTokenEncrypted,
+								Subject:             "foo",
+								Provider:            "bar",
+								InitialAccessToken:  accessTokenEncrypted,
+								InitialRefreshToken: refreshTokenEncrypted,
 							},
 						}}),
 					},

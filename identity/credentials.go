@@ -138,5 +138,3 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 
 	return true
 }
-
-//func Re

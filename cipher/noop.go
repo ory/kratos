@@ -21,12 +21,12 @@ func NewNoop(c NoopConfiguration) *Noop {
 	return &Noop{c: c}
 }
 
-// Encrypt returns a ChaCha encryption of plaintext
-func (c *Noop) Encrypt(ctx context.Context, message []byte) (string, error) {
+// Encrypt encode message to hex
+func (c *Noop) Encrypt(_ context.Context, message []byte) (string, error) {
 	return hex.EncodeToString(message), nil
 }
 
-// Decrypt decrypts data using 256 bit key
-func (c *Noop) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
+// Decrypt decode the hex message
+func (c *Noop) Decrypt(_ context.Context, ciphertext string) ([]byte, error) {
 	return hex.DecodeString(ciphertext)
 }

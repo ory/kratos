@@ -1963,7 +1963,12 @@
         "required": ["ciphers"]
       },
       "then": {
-        "required": ["secrets"]
+        "required": ["secrets"],
+        "properties": {
+          "secrets": {
+            "required": ["cipher"]
+          }
+        }
       }
     }
   ],

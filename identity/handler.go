@@ -141,6 +141,12 @@ type adminGetIdentity struct {
 	// required: true
 	// in: path
 	ID string `json:"id"`
+
+	// RevealCredentials parameters to add credentials in the response
+	//
+	// required: false
+	// in: query
+	RevealCredentials string `json:"reveal_credentials"`
 }
 
 // swagger:route GET /identities/{id} v0alpha1 adminGetIdentity
@@ -170,13 +176,13 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
-
-	err = i.RevealCredential(r, h.r)
-	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
+	if r.URL.Query().Get("reveal_credentials") == "oidc_token" {
+		err = i.GetOIDCToken(r.Context(), h.r)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
 	}
-
 	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
 }
 

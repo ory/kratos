@@ -28,10 +28,10 @@ func NewCredentials(accessToken, refreshToken, provider, subject string) (*ident
 	if err := json.NewEncoder(&b).Encode(CredentialsConfig{
 		Providers: []ProviderCredentialsConfig{
 			{
-				Subject:               subject,
-				Provider:              provider,
-				EncryptedAccessToken:  accessToken,
-				EncryptedRefreshToken: refreshToken,
+				Subject:             subject,
+				Provider:            provider,
+				InitialAccessToken:  accessToken,
+				InitialRefreshToken: refreshToken,
 			}},
 	}); err != nil {
 		return nil, errors.WithStack(x.PseudoPanic.
@@ -48,8 +48,8 @@ func NewCredentials(accessToken, refreshToken, provider, subject string) (*ident
 type ProviderCredentialsConfig struct {
 	Subject               string `json:"subject"`
 	Provider              string `json:"provider"`
-	EncryptedAccessToken  string `json:"encrypted_access_token"`
-	EncryptedRefreshToken string `json:"encrypted_refresh_token"`
+	InitialAccessToken    string `json:"initial_access_token"`
+	InitialRefreshToken   string `json:"initial_refresh_token"`
 }
 
 type FlowMethod struct {

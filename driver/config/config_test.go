@@ -325,18 +325,6 @@ func TestViperProvider(t *testing.T) {
 				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
 		})
 
-		t.Run("group=hashers", func(t *testing.T) {
-			c := p.HasherArgon2()
-			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
-				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
-		})
-
-		t.Run("group=crypt", func(t *testing.T) {
-			c := p.HasherArgon2()
-			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
-				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
-		})
-
 		t.Run("group=set_provider_by_json", func(t *testing.T) {
 			providerConfigJSON := `{"providers": [{"id":"github-test","provider":"github","client_id":"set_json_test","client_secret":"secret","mapper_url":"http://mapper-url","scope":["user:email"]}]}`
 			strategyConfigJSON := fmt.Sprintf(`{"enabled":true, "config": %s}`, providerConfigJSON)
