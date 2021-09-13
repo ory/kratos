@@ -478,7 +478,6 @@ func (m *RegistryDefault) Init(ctx context.Context, opts ...RegistryOption) erro
 			if m.Tracer(ctx).IsLoaded() {
 				opts = []instrumentedsql.Opt{
 					instrumentedsql.WithTracer(opentracing.NewTracer(true)),
-					instrumentedsql.WithOmitArgs(),
 				}
 			}
 

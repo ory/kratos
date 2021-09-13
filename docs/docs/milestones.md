@@ -95,6 +95,10 @@ New feature or request.
       ([kratos#1643](https://github.com/ory/kratos/issues/1643))
 - [ ] Regenerate lookup secrets as part of login when last secret was used
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
+- [ ] Endpoint for fetching all schema IDs or all schemas
+      ([kratos#1699](https://github.com/ory/kratos/issues/1699))
+- [ ] Email Courier SMTP Header Configuration
+      ([kratos#1725](https://github.com/ory/kratos/issues/1725))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
 
@@ -107,6 +111,8 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Tag version in docker-compose before commit&tag push
+      ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
@@ -132,6 +138,15 @@ Blocks milestones or other issues or pulls.
 
 - [ ] Implement Hydra integration
       ([kratos#273](https://github.com/ory/kratos/issues/273))
+
+### [Ci](https://github.com/ory/kratos/labels/ci)
+
+Affects Continuous Integration (CI).
+
+#### Issues
+
+- [x] Tag version in docker-compose before commit&tag push
+      ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
 ## [v0.10.0-alpha.1](https://github.com/ory/kratos/milestone/13)
 
@@ -166,6 +181,9 @@ Something is not working.
       due to CSRF issue
       ([kratos#1547](https://github.com/ory/kratos/issues/1547)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] 0.7.3.alpha.1, docker, panic if SESSION_COOKIE_NAME is set in
+      docker-compose.yml
+      ([kratos#1695](https://github.com/ory/kratos/issues/1695))
 
 #### Pull Requests
 
@@ -288,6 +306,12 @@ Affects documentation.
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
 
 Blocks milestones or other issues or pulls.
+
+#### Issues
+
+- [ ] Ory Kratos 0.8 Release Prep
+      ([kratos#1663](https://github.com/ory/kratos/issues/1663)) -
+      [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 

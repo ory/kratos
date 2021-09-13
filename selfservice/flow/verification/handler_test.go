@@ -2,7 +2,9 @@ package verification_test
 
 import (
 	"context"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -104,5 +106,28 @@ func TestGetFlow(t *testing.T) {
 		res, body := x.EasyGet(t, client, public.URL+verification.RouteGetFlow+"?id="+f.ID.String())
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
 		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+	})
+
+	t.Run("case=expired with return_to", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		_ = setupVerificationUI(t, client)
+		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
+
+		// Expire the flow
+		f, err := reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "id").String()))
+		require.NoError(t, err)
+		f.ExpiresAt = time.Now().Add(-time.Second)
+		require.NoError(t, reg.VerificationFlowPersister().UpdateVerificationFlow(context.Background(), f))
+
+		// submit the flow but it is expired
+		u := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+		res, err := client.PostForm(u, url.Values{"method": {"link"}, "csrf_token": {f.CSRFToken}, "email": {"email@ory.sh"}})
+		resBody, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+
+		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
+		require.NoError(t, err)
+		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
 	})
 }

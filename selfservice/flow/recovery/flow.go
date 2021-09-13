@@ -111,6 +111,16 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	return req, nil
 }
 
+func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of Flow) (*Flow, error) {
+	nf, err := NewFlow(conf, exp, csrf, r, strategies, of.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	nf.RequestURL = of.RequestURL
+	return nf, nil
+}
+
 func (f *Flow) GetType() flow.Type {
 	return f.Type
 }

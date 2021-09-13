@@ -1,10 +1,8 @@
-import { Configuration, PublicApi } from '@ory/kratos-client';
-const kratos = new PublicApi(new Configuration({ basePath: 'https://playground.projects.oryapis.com/api/kratos/public/' }));
-
-const flowId = '' // usually something like: req.query.flow
+import { Configuration, V0alpha1Api } from '@ory/kratos-client';
+const kratos = new V0alpha1Api(new Configuration({ basePath: 'https://playground.projects.oryapis.com/api/kratos/public/' }));
 
 const route = (req: Request, res: Response) => {
-  kratos.createSelfServiceLogoutUrlForBrowsers(req.cookies['ory_kratos_session']).then(({data}) => {
+  kratos.createSelfServiceLogoutFlowUrlForBrowsers(req.cookies['ory_kratos_session']).then(({data}) => {
     .then(({ data }) => {
       console.log(data.logout_url) // The logout URL
 

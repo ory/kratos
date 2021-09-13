@@ -52,8 +52,7 @@ verify signatures and encrypt things:
 
 ### Volumes
 
-If the file `$HOME/.kratos.yaml` exists, it will be used as the configuration
-file. The provided Kratos Docker images currently do not include a default
+The provided Kratos Docker images currently do not include a default
 configuration file, but make it easy to pass in your own configuration file(s)
 by either binding a local directory or by creating your own custom Docker Image
 and adding the configuration file(s) to the custom image.
@@ -84,6 +83,11 @@ below:
 FROM oryd/kratos:latest
 COPY contrib/quickstart/kratos/email-password/kratos.yml /home/ory
 ```
+
+**Note that in both cases**, you must supply the location of the configuration
+file using the `--config` flag when running the container.
+
+`$ docker run <theimage> --config /home/ory/kratos.yml`
 
 ### Examples
 

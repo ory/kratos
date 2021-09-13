@@ -18,7 +18,15 @@ import (
 
 // SubmitSelfServiceLoginFlowBody - struct for SubmitSelfServiceLoginFlowBody
 type SubmitSelfServiceLoginFlowBody struct {
+	SubmitSelfServiceLoginFlowWithOidcMethodBody     *SubmitSelfServiceLoginFlowWithOidcMethodBody
 	SubmitSelfServiceLoginFlowWithPasswordMethodBody *SubmitSelfServiceLoginFlowWithPasswordMethodBody
+}
+
+// SubmitSelfServiceLoginFlowWithOidcMethodBodyAsSubmitSelfServiceLoginFlowBody is a convenience function that returns SubmitSelfServiceLoginFlowWithOidcMethodBody wrapped in SubmitSelfServiceLoginFlowBody
+func SubmitSelfServiceLoginFlowWithOidcMethodBodyAsSubmitSelfServiceLoginFlowBody(v *SubmitSelfServiceLoginFlowWithOidcMethodBody) SubmitSelfServiceLoginFlowBody {
+	return SubmitSelfServiceLoginFlowBody{
+		SubmitSelfServiceLoginFlowWithOidcMethodBody: v,
+	}
 }
 
 // SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody is a convenience function that returns SubmitSelfServiceLoginFlowWithPasswordMethodBody wrapped in SubmitSelfServiceLoginFlowBody
@@ -32,6 +40,19 @@ func SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlo
 func (dst *SubmitSelfServiceLoginFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
+	// try to unmarshal data into SubmitSelfServiceLoginFlowWithOidcMethodBody
+	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceLoginFlowWithOidcMethodBody)
+	if err == nil {
+		jsonSubmitSelfServiceLoginFlowWithOidcMethodBody, _ := json.Marshal(dst.SubmitSelfServiceLoginFlowWithOidcMethodBody)
+		if string(jsonSubmitSelfServiceLoginFlowWithOidcMethodBody) == "{}" { // empty struct
+			dst.SubmitSelfServiceLoginFlowWithOidcMethodBody = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.SubmitSelfServiceLoginFlowWithOidcMethodBody = nil
+	}
+
 	// try to unmarshal data into SubmitSelfServiceLoginFlowWithPasswordMethodBody
 	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceLoginFlowWithPasswordMethodBody)
 	if err == nil {
@@ -47,6 +68,7 @@ func (dst *SubmitSelfServiceLoginFlowBody) UnmarshalJSON(data []byte) error {
 
 	if match > 1 { // more than 1 match
 		// reset to nil
+		dst.SubmitSelfServiceLoginFlowWithOidcMethodBody = nil
 		dst.SubmitSelfServiceLoginFlowWithPasswordMethodBody = nil
 
 		return fmt.Errorf("Data matches more than one schema in oneOf(SubmitSelfServiceLoginFlowBody)")
@@ -59,6 +81,10 @@ func (dst *SubmitSelfServiceLoginFlowBody) UnmarshalJSON(data []byte) error {
 
 // Marshal data from the first non-nil pointers in the struct to JSON
 func (src SubmitSelfServiceLoginFlowBody) MarshalJSON() ([]byte, error) {
+	if src.SubmitSelfServiceLoginFlowWithOidcMethodBody != nil {
+		return json.Marshal(&src.SubmitSelfServiceLoginFlowWithOidcMethodBody)
+	}
+
 	if src.SubmitSelfServiceLoginFlowWithPasswordMethodBody != nil {
 		return json.Marshal(&src.SubmitSelfServiceLoginFlowWithPasswordMethodBody)
 	}
@@ -71,6 +97,10 @@ func (obj *SubmitSelfServiceLoginFlowBody) GetActualInstance() interface{} {
 	if obj == nil {
 		return nil
 	}
+	if obj.SubmitSelfServiceLoginFlowWithOidcMethodBody != nil {
+		return obj.SubmitSelfServiceLoginFlowWithOidcMethodBody
+	}
+
 	if obj.SubmitSelfServiceLoginFlowWithPasswordMethodBody != nil {
 		return obj.SubmitSelfServiceLoginFlowWithPasswordMethodBody
 	}
