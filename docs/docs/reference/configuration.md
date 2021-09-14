@@ -2171,6 +2171,46 @@ courier:
     #
     from_name: Bob
 
+    ## SMTP Headers ##
+    #
+    # These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.
+    #
+    # Examples:
+    # - X-SES-SOURCE-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+    #   X-SES-FROM-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+    #   X-SES-RETURN-PATH-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+    #
+    headers:
+      ## X-SES-SOURCE-ARN ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export COURIER_SMTP_HEADERS_X-SES-SOURCE-ARN=<value>
+      # - Windows Command Line (CMD):
+      #    > set COURIER_SMTP_HEADERS_X-SES-SOURCE-ARN=<value>
+      #
+      X-SES-SOURCE-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+
+      ## X-SES-FROM-ARN ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export COURIER_SMTP_HEADERS_X-SES-FROM-ARN=<value>
+      # - Windows Command Line (CMD):
+      #    > set COURIER_SMTP_HEADERS_X-SES-FROM-ARN=<value>
+      #
+      X-SES-FROM-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+
+      ## X-SES-RETURN-PATH-ARN ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export COURIER_SMTP_HEADERS_X-SES-RETURN-PATH-ARN=<value>
+      # - Windows Command Line (CMD):
+      #    > set COURIER_SMTP_HEADERS_X-SES-RETURN-PATH-ARN=<value>
+      #
+      X-SES-RETURN-PATH-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+
     ## SMTP Sender Address ##
     #
     # The recipient of an email will see this as the sender address.
