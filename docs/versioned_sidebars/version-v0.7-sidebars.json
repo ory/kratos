@@ -22,14 +22,14 @@
       "label": "Start Building",
       "items": [
         {
-          "label": "Choose Your Technology",
-          "type": "link",
-          "href": "https://www.ory.sh/docs/start-building"
-        },
-        {
           "label": "Create Ory Cloud Project",
           "type": "link",
           "href": "https://www.ory.sh/docs/start-building/create-project"
+        },
+        {
+          "label": "Choose Your Technology",
+          "type": "link",
+          "href": "https://www.ory.sh/docs/start-building"
         },
         {
           "label": "Install the Ory CLI",
@@ -75,7 +75,7 @@
           "href": "https://www.ory.sh/docs/guides/proxy"
         },
         {
-          "label": "Bring your own UI",
+          "label": "Bring Your Own UI",
           "type": "link",
           "href": "https://www.ory.sh/docs/guides/bring-your-user-interface"
         },

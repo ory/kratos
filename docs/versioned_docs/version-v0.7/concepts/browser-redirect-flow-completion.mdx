@@ -56,7 +56,13 @@ want the user to end up at that page after login. To achieve that, you append
 Registration /Settings flow.
 
 Because Ory Kratos prevents Open Redirect Attacks, you need to whitelist the
-domain in your Ory Kratos config:
+domain in your Ory Kratos config when using the `?return_to=` query parameter.
+For other return urls specified inside the configuration it is not necessary to
+add the domain to the whitelist.
+
+Let's look at an example, here we are adding `myapp.com` to the whitelist, thus
+we can now specify a dynamic return url like so
+`?return_to=https://www.myapp.com/blog/write`.
 
 ```yaml file="path/to/my/kratos.config.yml"
 selfservice:

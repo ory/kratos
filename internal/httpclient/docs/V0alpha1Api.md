@@ -1714,7 +1714,7 @@ import (
 
 func main() {
     flow := "flow_example" // string | The Login Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/login?flow=abcde`).
-    submitSelfServiceLoginFlowBody := openapiclient.submitSelfServiceLoginFlowBody{SubmitSelfServiceLoginFlowWithPasswordMethodBody: openapiclient.NewSubmitSelfServiceLoginFlowWithPasswordMethodBody("Method_example", "Password_example", "PasswordIdentifier_example")} // SubmitSelfServiceLoginFlowBody |  (optional)
+    submitSelfServiceLoginFlowBody := openapiclient.submitSelfServiceLoginFlowBody{SubmitSelfServiceLoginFlowWithOidcMethodBody: openapiclient.NewSubmitSelfServiceLoginFlowWithOidcMethodBody("Method_example", "Traits_example")} // SubmitSelfServiceLoginFlowBody |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
