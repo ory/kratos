@@ -70,7 +70,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
-		public.Handle(m, RouteLogout, x.RedirectToAdminRoute(h.r))
+		public.DELETE(RouteLogout, x.RedirectToAdminRoute(h.r))
 	}
 }
 
@@ -173,7 +173,7 @@ type adminLogoutIdentity struct {
 
 // swagger:route DELETE /sessions/identity/{id} v0alpha1 adminLogoutIdentity
 //
-// Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to a given Identity.
+// Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to the given Identity.
 //
 // This endpoint is useful for:
 //
@@ -185,7 +185,7 @@ type adminLogoutIdentity struct {
 //       oryAccessToken:
 //
 //     Responses:
-//       202: emptyResponse
+//       204: emptyResponse
 //       400: jsonError
 //       401: jsonError
 //       404: jsonError
@@ -194,13 +194,14 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
 	}
 	if err := h.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), iID); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {
