@@ -254,7 +254,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 				s := &Session{Identity: i}
 				require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
 
-				logout(t, ts, "/sessions/identity/"+i.ID.String(), http.StatusAccepted)
+				logout(t, ts, "/sessions/identity/"+i.ID.String(), http.StatusNoContent)
 				_, err := reg.SessionPersister().GetSession(context.Background(), s.ID)
 				require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 			})
