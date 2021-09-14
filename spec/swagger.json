@@ -1703,7 +1703,7 @@
         "tags": [
           "v0alpha1"
         ],
-        "summary": "Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to a given Identity.",
+        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
         "operationId": "adminLogoutIdentity",
         "parameters": [
           {
@@ -1715,7 +1715,7 @@
           }
         ],
         "responses": {
-          "202": {
+          "204": {
             "$ref": "#/responses/emptyResponse"
           },
           "400": {
@@ -1725,6 +1725,12 @@
             }
           },
           "401": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "404": {
             "description": "jsonError",
             "schema": {
               "$ref": "#/definitions/jsonError"

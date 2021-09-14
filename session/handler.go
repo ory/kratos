@@ -173,7 +173,7 @@ type adminLogoutIdentity struct {
 
 // swagger:route DELETE /sessions/identity/{id} v0alpha1 adminLogoutIdentity
 //
-// Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to the given Identity.
+// Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 //
 // This endpoint is useful for:
 //

@@ -9,7 +9,7 @@ Method | HTTP request | Description
 [**AdminDeleteIdentity**](V0alpha1Api.md#AdminDeleteIdentity) | **Delete** /identities/{id} | Delete an Identity
 [**AdminGetIdentity**](V0alpha1Api.md#AdminGetIdentity) | **Get** /identities/{id} | Get an Identity
 [**AdminListIdentities**](V0alpha1Api.md#AdminListIdentities) | **Get** /identities | List Identities
-[**AdminLogoutIdentity**](V0alpha1Api.md#AdminLogoutIdentity) | **Delete** /sessions/identity/{id} | Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to a given Identity.
+[**AdminLogoutIdentity**](V0alpha1Api.md#AdminLogoutIdentity) | **Delete** /sessions/identity/{id} | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 [**AdminUpdateIdentity**](V0alpha1Api.md#AdminUpdateIdentity) | **Put** /identities/{id} | Update an Identity
 [**CreateSelfServiceLogoutFlowUrlForBrowsers**](V0alpha1Api.md#CreateSelfServiceLogoutFlowUrlForBrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
 [**GetJsonSchema**](V0alpha1Api.md#GetJsonSchema) | **Get** /schemas/{id} | 
@@ -382,7 +382,7 @@ Name | Type | Description  | Notes
 
 > AdminLogoutIdentity(ctx, id).Execute()
 
-Calling this endpoint irrecoverably and permanently Invalidates all sessions that belong to a given Identity.
+Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 
 
 
