@@ -68,7 +68,7 @@ type VerifiableAddress struct {
 	//
 	// example: 2014-01-01T23:28:56.782Z
 	// required: false
-	VerifiedAt sqlxx.NullTime `json:"verified_at,omitempty" faker:"-" db:"verified_at"`
+	VerifiedAt *sqlxx.NullTime `json:"verified_at,omitempty" faker:"-" db:"verified_at"`
 
 	// When this entry was created
 	//
