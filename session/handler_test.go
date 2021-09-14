@@ -220,7 +220,7 @@ func TestIsAuthenticated(t *testing.T) {
 	}
 }
 
-func TestSessionLogout(t *testing.T) {
+func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	// Start kratos server
