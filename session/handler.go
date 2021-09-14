@@ -70,8 +70,8 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
-		public.DELETE(RouteLogout, x.RedirectToAdminRoute(h.r))
 	}
+	public.DELETE(RouteLogout, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
