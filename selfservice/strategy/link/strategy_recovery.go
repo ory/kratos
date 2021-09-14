@@ -162,23 +162,14 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
-
-	if len(id.RecoveryAddresses) == 0 {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The identity does not have any recovery addresses set.")))
-		return
-	}
-
-	address := id.RecoveryAddresses[0]
-	token := NewRecoveryToken(&address, expiresIn)
+	token := NewRecoveryToken(id.ID, expiresIn)
 	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), token); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
 	s.d.Audit().
-		WithField("via", address.Via).
-		WithField("identity_id", address.IdentityID).
-		WithSensitiveField("email_address", address.Value).
+		WithField("identity_id", id.ID).
 		WithSensitiveField("recovery_link_token", token).
 		Info("A recovery link has been created.")
 
@@ -327,7 +318,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	return s.recoveryIssueSession(w, r, f, token.RecoveryAddress.IdentityID)
+	return s.recoveryIssueSession(w, r, f, token.IdentityID)
 }
 
 func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {

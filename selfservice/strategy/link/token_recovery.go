@@ -28,7 +28,7 @@ type RecoveryToken struct {
 	Token string `json:"-" db:"token"`
 
 	// RecoveryAddress links this token to a recovery address.
-	// required: true
+	// required: false
 	RecoveryAddress *identity.RecoveryAddress `json:"recovery_address" belongs_to:"identity_recovery_addresses" fk_id:"RecoveryAddressID"`
 
 	// ExpiresAt is the time (UTC) when the token expires.
@@ -44,10 +44,11 @@ type RecoveryToken struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 	// RecoveryAddressID is a helper struct field for gobuffalo.pop.
-	RecoveryAddressID uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
+	RecoveryAddressID uuid.NullUUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
-	FlowID uuid.NullUUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
-	NID    uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	FlowID     uuid.NullUUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
+	NID        uuid.UUID     `json:"-"  faker:"-" db:"nid"`
+	IdentityID uuid.UUID     `json:"identity_id"  faker:"-" db:"identity_id"`
 }
 
 func (RecoveryToken) TableName(ctx context.Context) string {
@@ -56,23 +57,34 @@ func (RecoveryToken) TableName(ctx context.Context) string {
 
 func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryToken {
 	now := time.Now().UTC()
+	var identityId = uuid.UUID{}
+	var recoveryAddressID = uuid.NullUUID{UUID: uuid.UUID{}, Valid: false}
+	if address != nil {
+		identityId = address.IdentityID
+		recoveryAddressID.UUID = address.ID
+		recoveryAddressID.Valid = true
+	}
 	return &RecoveryToken{
-		ID:              x.NewUUID(),
-		Token:           randx.MustString(32, randx.AlphaNum),
-		RecoveryAddress: address,
-		ExpiresAt:       now.Add(expiresIn),
-		IssuedAt:        now,
-		FlowID:          uuid.NullUUID{UUID: f.ID, Valid: true}}
+		ID:                x.NewUUID(),
+		Token:             randx.MustString(32, randx.AlphaNum),
+		RecoveryAddress:   address,
+		ExpiresAt:         now.Add(expiresIn),
+		IssuedAt:          now,
+		IdentityID:        identityId,
+		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true},
+		RecoveryAddressID: recoveryAddressID,
+	}
 }
 
-func NewRecoveryToken(address *identity.RecoveryAddress, expiresIn time.Duration) *RecoveryToken {
+func NewRecoveryToken(identityID uuid.UUID, expiresIn time.Duration) *RecoveryToken {
 	now := time.Now().UTC()
 	return &RecoveryToken{
-		ID:              x.NewUUID(),
-		Token:           randx.MustString(32, randx.AlphaNum),
-		RecoveryAddress: address,
-		ExpiresAt:       now.Add(expiresIn),
-		IssuedAt:        now,
+		ID:                x.NewUUID(),
+		Token:             randx.MustString(32, randx.AlphaNum),
+		ExpiresAt:         now.Add(expiresIn),
+		IssuedAt:          now,
+		IdentityID:        identityID,
+		RecoveryAddressID: uuid.NullUUID{UUID: uuid.UUID{}, Valid: false},
 	}
 }
 

@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/kratos/corp"
-	"github.com/ory/kratos/identity"
-
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/corp"
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/x/sqlcon"
 
@@ -75,11 +74,9 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.R
 		}
 
 		var ra identity.RecoveryAddress
-		if err := tx.Where("id = ? AND nid = ?", rt.RecoveryAddressID, nid).First(&ra); err != nil {
-			return sqlcon.HandleError(err)
+		if err := tx.Where("id = ? AND nid = ?", rt.RecoveryAddressID, nid).First(&ra); err == nil {
+			rt.RecoveryAddress = &ra
 		}
-
-		rt.RecoveryAddress = &ra
 
 		/* #nosec G201 TableName is static */
 		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", rt.TableName(ctx)), time.Now().UTC(), rt.ID, nid).Exec()

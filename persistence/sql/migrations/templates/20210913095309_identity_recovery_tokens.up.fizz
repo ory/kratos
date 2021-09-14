@@ -1,0 +1,2 @@
+add_column("identity_recovery_tokens", "identity_id", "uuid", {"size": 36})
+change_column("identity_recovery_tokens", "identity_recovery_address_id", "uuid", {"size": 36,"null": true})
