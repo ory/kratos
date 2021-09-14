@@ -7,9 +7,6 @@ title: Configuration
 OPEN AN ISSUE IF YOU WOULD LIKE TO MAKE ADJUSTMENTS HERE AND MAINTAINERS WILL HELP YOU LOCATE THE RIGHT
 FILE -->
 
-If file `$HOME/.kratos.yaml` exists, it will be used as a configuration file
-which supports all configuration settings listed below.
-
 You can load the config file from another source using the
 `-c path/to/config.yaml` or `--config path/to/config.yaml` flag:
 `kratos --config path/to/config.yaml`.
@@ -2206,6 +2203,46 @@ courier:
     #    > set COURIER_SMTP_FROM_NAME=<value>
     #
     from_name: Bob
+
+    ## SMTP Headers ##
+    #
+    # These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.
+    #
+    # Examples:
+    # - X-SES-SOURCE-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+    #   X-SES-FROM-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+    #   X-SES-RETURN-PATH-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+    #
+    headers:
+      ## X-SES-SOURCE-ARN ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export COURIER_SMTP_HEADERS_X-SES-SOURCE-ARN=<value>
+      # - Windows Command Line (CMD):
+      #    > set COURIER_SMTP_HEADERS_X-SES-SOURCE-ARN=<value>
+      #
+      X-SES-SOURCE-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+
+      ## X-SES-FROM-ARN ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export COURIER_SMTP_HEADERS_X-SES-FROM-ARN=<value>
+      # - Windows Command Line (CMD):
+      #    > set COURIER_SMTP_HEADERS_X-SES-FROM-ARN=<value>
+      #
+      X-SES-FROM-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+
+      ## X-SES-RETURN-PATH-ARN ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export COURIER_SMTP_HEADERS_X-SES-RETURN-PATH-ARN=<value>
+      # - Windows Command Line (CMD):
+      #    > set COURIER_SMTP_HEADERS_X-SES-RETURN-PATH-ARN=<value>
+      #
+      X-SES-RETURN-PATH-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
 
     ## SMTP Sender Address ##
     #
