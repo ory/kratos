@@ -94,12 +94,12 @@ curl -s --cookie $cookieJar --cookie-jar $cookieJar -H "Accept: application/json
 
 To logout, first get the generated Logout URL then point the Browser to it:
 ```shell
-
 # Get the Logout URL
 logoutUrl=$( \
   curl -s --cookie $cookieJar --cookie-jar $cookieJar -H "Accept: application/json" \
     https://playground.projects.oryapis.com/api/kratos/public/self-service/logout/browser | \
     jq -r ".logout_url" \
+)
 
 # Complete the logout
 curl -s --cookie $cookieJar --cookie-jar $cookieJar "$logoutUrl"
@@ -108,7 +108,6 @@ curl -s --cookie $cookieJar --cookie-jar $cookieJar "$logoutUrl"
 curl -s --cookie $cookieJar --cookie-jar $cookieJar -H "Accept: application/json" \
   https://playground.projects.oryapis.com/api/kratos/public/sessions/whoami | \
   jq -r ".id"
-)
 ```
 
 ## Self-Service Logout for API Clients
