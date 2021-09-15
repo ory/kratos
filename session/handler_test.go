@@ -222,59 +222,43 @@ func TestIsAuthenticated(t *testing.T) {
 
 func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	_, ts, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
-	// Start kratos server
-	publicTS, adminTS := testhelpers.NewKratosServerWithCSRF(t, reg)
-
-	mockServerURL := urlx.ParseOrPanic(publicTS.URL)
-
-	conf.MustSet(config.ViperKeyAdminBaseURL, adminTS.URL)
+	// set this intermediate because kratos needs some valid url for CRUDE operations
+	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
 	testhelpers.SetDefaultIdentitySchema(t, conf, "file://./stub/identity.schema.json")
-	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
-		"customer": "file://./stub/handler/customer.schema.json",
-		"employee": "file://./stub/handler/employee.schema.json",
-	})
-	conf.MustSet(config.ViperKeyPublicBaseURL, mockServerURL.String())
-
-	var deleteSessions = func(t *testing.T, base *httptest.Server, href string, expectCode int) {
-		req, err := http.NewRequest("DELETE", base.URL+href, nil)
-		require.NoError(t, err)
-
-		res, err := base.Client().Do(req)
-		require.NoError(t, err)
-
-		require.EqualValues(t, expectCode, res.StatusCode)
-	}
+	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
 
 	t.Run("case=should return 202 after invalidating all sessions", func(t *testing.T) {
-		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-			t.Run("endpoint="+name, func(t *testing.T) {
-				i := identity.NewIdentity("")
-				require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
-				s := &Session{Identity: i}
-				require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
+		client := testhelpers.NewClientWithCookies(t)
+		i := identity.NewIdentity("")
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+		s := &Session{Identity: i}
+		require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
 
-				deleteSessions(t, ts, "/identity/"+i.ID.String()+"/sessions", http.StatusNoContent)
-				_, err := reg.SessionPersister().GetSession(context.Background(), s.ID)
-				require.True(t, errors.Is(err, sqlcon.ErrNoRows))
-			})
-		}
+		req, _ := http.NewRequest("DELETE", ts.URL + "/identities/"+i.ID.String()+"/sessions", nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+		_, err = reg.SessionPersister().GetSession(context.Background(), s.ID)
+		require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 	})
 
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
-		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-			t.Run("endpoint="+name, func(t *testing.T) {
-				deleteSessions(t, ts, "/identity/BADUUID/sessions", http.StatusBadRequest)
-			})
-		}
+		client := testhelpers.NewClientWithCookies(t)
+		req, _ := http.NewRequest("DELETE", ts.URL + "/identities/BADUUID/sessions", nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
 
 	t.Run("case=should return 404 when calling with missing UUID", func(t *testing.T) {
-		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
-			t.Run("endpoint="+name, func(t *testing.T) {
-				someID, _ := uuid.NewV4()
-				deleteSessions(t, ts, "/identity/"+someID.String()+"/sessions", http.StatusNotFound)
-			})
-		}
+		client := testhelpers.NewClientWithCookies(t)
+		someID, _ := uuid.NewV4()
+		req, _ := http.NewRequest("DELETE", ts.URL + "/identities/"+someID.String()+"/sessions", nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 }
