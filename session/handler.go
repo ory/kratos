@@ -45,10 +45,10 @@ func NewHandler(
 }
 
 const (
-	RouteCollection = "/sessions"
-	RouteWhoami     = RouteCollection + "/whoami"
-	RouteIdentity   = RouteCollection + "/identity"
-	RouteLogout     = RouteIdentity + "/:id"
+	RouteCollection    = "/sessions"
+	RouteWhoami        = RouteCollection + "/whoami"
+	RouteIdentity      = "/identities"
+	RouteDeleteSession = RouteIdentity + "/:id/sessions"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -58,7 +58,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
 	}
 
-	admin.DELETE(RouteLogout, h.logout)
+	admin.DELETE(RouteDeleteSession, h.deleteIdentitySessions)
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -71,7 +71,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
 	}
-	public.DELETE(RouteLogout, x.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteDeleteSession, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
@@ -161,9 +161,9 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	h.r.Writer().Write(w, r, s)
 }
 
-// swagger:parameters adminLogoutIdentity
+// swagger:parameters adminDeleteIdentitySessions
 // nolint:deadcode,unused
-type adminLogoutIdentity struct {
+type adminDeleteIdentitySessions struct {
 	// ID is the identity's ID.
 	//
 	// required: true
@@ -171,7 +171,7 @@ type adminLogoutIdentity struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /sessions/identity/{id} v0alpha1 adminLogoutIdentity
+// swagger:route DELETE /identity/{id}/sessions v0alpha1 adminDeleteIdentitySessions
 //
 // Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 //
@@ -190,7 +190,7 @@ type adminLogoutIdentity struct {
 //       401: jsonError
 //       404: jsonError
 //       500: jsonError
-func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))

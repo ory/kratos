@@ -78,6 +78,22 @@ type V0alpha1Api interface {
 	AdminDeleteIdentityExecute(r V0alpha1ApiApiAdminDeleteIdentityRequest) (*http.Response, error)
 
 	/*
+			 * AdminDeleteIdentitySessions Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+			 * This endpoint is useful for:
+
+		To forcefully logout Identity from all devices and sessions
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @param id ID is the identity's ID.
+			 * @return V0alpha1ApiApiAdminDeleteIdentitySessionsRequest
+	*/
+	AdminDeleteIdentitySessions(ctx context.Context, id string) V0alpha1ApiApiAdminDeleteIdentitySessionsRequest
+
+	/*
+	 * AdminDeleteIdentitySessionsExecute executes the request
+	 */
+	AdminDeleteIdentitySessionsExecute(r V0alpha1ApiApiAdminDeleteIdentitySessionsRequest) (*http.Response, error)
+
+	/*
 	 * AdminGetIdentity Get an Identity
 	 * Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -107,22 +123,6 @@ type V0alpha1Api interface {
 	 * @return []Identity
 	 */
 	AdminListIdentitiesExecute(r V0alpha1ApiApiAdminListIdentitiesRequest) ([]Identity, *http.Response, error)
-
-	/*
-			 * AdminLogoutIdentity Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
-			 * This endpoint is useful for:
-
-		To forcefully logout Identity from all devices and sessions
-			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @param id ID is the identity's ID.
-			 * @return V0alpha1ApiApiAdminLogoutIdentityRequest
-	*/
-	AdminLogoutIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminLogoutIdentityRequest
-
-	/*
-	 * AdminLogoutIdentityExecute executes the request
-	 */
-	AdminLogoutIdentityExecute(r V0alpha1ApiApiAdminLogoutIdentityRequest) (*http.Response, error)
 
 	/*
 			 * AdminUpdateIdentity Update an Identity
@@ -1291,6 +1291,155 @@ func (a *V0alpha1ApiService) AdminDeleteIdentityExecute(r V0alpha1ApiApiAdminDel
 	return localVarHTTPResponse, nil
 }
 
+type V0alpha1ApiApiAdminDeleteIdentitySessionsRequest struct {
+	ctx        context.Context
+	ApiService V0alpha1Api
+	id         string
+}
+
+func (r V0alpha1ApiApiAdminDeleteIdentitySessionsRequest) Execute() (*http.Response, error) {
+	return r.ApiService.AdminDeleteIdentitySessionsExecute(r)
+}
+
+/*
+ * AdminDeleteIdentitySessions Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+ * This endpoint is useful for:
+
+To forcefully logout Identity from all devices and sessions
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param id ID is the identity's ID.
+ * @return V0alpha1ApiApiAdminDeleteIdentitySessionsRequest
+*/
+func (a *V0alpha1ApiService) AdminDeleteIdentitySessions(ctx context.Context, id string) V0alpha1ApiApiAdminDeleteIdentitySessionsRequest {
+	return V0alpha1ApiApiAdminDeleteIdentitySessionsRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *V0alpha1ApiService) AdminDeleteIdentitySessionsExecute(r V0alpha1ApiApiAdminDeleteIdentitySessionsRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodDelete
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminDeleteIdentitySessions")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/identity/{id}/sessions"
+	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["oryAccessToken"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["Authorization"] = key
+			}
+		}
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
+}
+
 type V0alpha1ApiApiAdminGetIdentityRequest struct {
 	ctx        context.Context
 	ApiService V0alpha1Api
@@ -1570,155 +1719,6 @@ func (a *V0alpha1ApiService) AdminListIdentitiesExecute(r V0alpha1ApiApiAdminLis
 	}
 
 	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
-type V0alpha1ApiApiAdminLogoutIdentityRequest struct {
-	ctx        context.Context
-	ApiService V0alpha1Api
-	id         string
-}
-
-func (r V0alpha1ApiApiAdminLogoutIdentityRequest) Execute() (*http.Response, error) {
-	return r.ApiService.AdminLogoutIdentityExecute(r)
-}
-
-/*
- * AdminLogoutIdentity Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
- * This endpoint is useful for:
-
-To forcefully logout Identity from all devices and sessions
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param id ID is the identity's ID.
- * @return V0alpha1ApiApiAdminLogoutIdentityRequest
-*/
-func (a *V0alpha1ApiService) AdminLogoutIdentity(ctx context.Context, id string) V0alpha1ApiApiAdminLogoutIdentityRequest {
-	return V0alpha1ApiApiAdminLogoutIdentityRequest{
-		ApiService: a,
-		ctx:        ctx,
-		id:         id,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *V0alpha1ApiService) AdminLogoutIdentityExecute(r V0alpha1ApiApiAdminLogoutIdentityRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha1ApiService.AdminLogoutIdentity")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/sessions/identity/{id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["oryAccessToken"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["Authorization"] = key
-			}
-		}
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 401 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 404 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
 }
 
 type V0alpha1ApiApiAdminUpdateIdentityRequest struct {

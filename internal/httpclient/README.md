@@ -90,9 +90,9 @@ Class | Method | HTTP request | Description
 *V0alpha1Api* | [**AdminCreateIdentity**](docs/V0alpha1Api.md#admincreateidentity) | **Post** /identities | Create an Identity
 *V0alpha1Api* | [**AdminCreateSelfServiceRecoveryLink**](docs/V0alpha1Api.md#admincreateselfservicerecoverylink) | **Post** /recovery/link | Create a Recovery Link
 *V0alpha1Api* | [**AdminDeleteIdentity**](docs/V0alpha1Api.md#admindeleteidentity) | **Delete** /identities/{id} | Delete an Identity
+*V0alpha1Api* | [**AdminDeleteIdentitySessions**](docs/V0alpha1Api.md#admindeleteidentitysessions) | **Delete** /identity/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 *V0alpha1Api* | [**AdminGetIdentity**](docs/V0alpha1Api.md#admingetidentity) | **Get** /identities/{id} | Get an Identity
 *V0alpha1Api* | [**AdminListIdentities**](docs/V0alpha1Api.md#adminlistidentities) | **Get** /identities | List Identities
-*V0alpha1Api* | [**AdminLogoutIdentity**](docs/V0alpha1Api.md#adminlogoutidentity) | **Delete** /sessions/identity/{id} | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 *V0alpha1Api* | [**AdminUpdateIdentity**](docs/V0alpha1Api.md#adminupdateidentity) | **Put** /identities/{id} | Update an Identity
 *V0alpha1Api* | [**CreateSelfServiceLogoutFlowUrlForBrowsers**](docs/V0alpha1Api.md#createselfservicelogoutflowurlforbrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
 *V0alpha1Api* | [**GetJsonSchema**](docs/V0alpha1Api.md#getjsonschema) | **Get** /schemas/{id} | 

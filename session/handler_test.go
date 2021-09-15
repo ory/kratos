@@ -236,7 +236,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 	})
 	conf.MustSet(config.ViperKeyPublicBaseURL, mockServerURL.String())
 
-	var logout = func(t *testing.T, base *httptest.Server, href string, expectCode int) {
+	var deleteSessions = func(t *testing.T, base *httptest.Server, href string, expectCode int) {
 		req, err := http.NewRequest("DELETE", base.URL+href, nil)
 		require.NoError(t, err)
 
@@ -254,7 +254,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 				s := &Session{Identity: i}
 				require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
 
-				logout(t, ts, "/sessions/identity/"+i.ID.String(), http.StatusNoContent)
+				deleteSessions(t, ts, "/identity/"+i.ID.String()+"/sessions", http.StatusNoContent)
 				_, err := reg.SessionPersister().GetSession(context.Background(), s.ID)
 				require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 			})
@@ -264,7 +264,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
-				logout(t, ts, "/sessions/identity/BADUUID", http.StatusBadRequest)
+				deleteSessions(t, ts, "/identity/BADUUID/sessions", http.StatusBadRequest)
 			})
 		}
 	})
@@ -273,7 +273,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				someID, _ := uuid.NewV4()
-				logout(t, ts, "/sessions/identity/"+someID.String(), http.StatusNotFound)
+				deleteSessions(t, ts, "/identity/"+someID.String()+"/sessions", http.StatusNotFound)
 			})
 		}
 	})
