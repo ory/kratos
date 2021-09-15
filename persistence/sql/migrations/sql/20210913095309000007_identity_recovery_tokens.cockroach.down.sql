@@ -1,1 +1,1 @@
-ALTER TABLE "identity_recovery_tokens" DROP CONSTRAINT "identity_recovery_tokens_identity_recovery_addresses_id_fk";
+ALTER TABLE "identity_recovery_tokens" RENAME COLUMN "identity_recovery_address_id" TO "_identity_recovery_address_id_tmp";

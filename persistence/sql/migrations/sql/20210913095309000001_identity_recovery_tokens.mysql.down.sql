@@ -1,1 +1,1 @@
-ALTER TABLE `identity_recovery_tokens` MODIFY `identity_recovery_address_id` char(36) NOT NULL;
+ALTER TABLE `identity_recovery_tokens` DROP FOREIGN KEY `identity_recovery_tokens_identity_id_fk_idx`;

@@ -1,1 +1,1 @@
-ALTER TABLE "identity_recovery_tokens" ALTER COLUMN "identity_recovery_address_id" SET NOT NULL;
+ALTER TABLE "identity_recovery_tokens" DROP COLUMN "_identity_recovery_address_id_tmp";

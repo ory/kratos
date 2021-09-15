@@ -1,1 +1,1 @@
-ALTER TABLE "identity_recovery_tokens" RENAME COLUMN "identity_recovery_address_id" TO "_identity_recovery_address_id_tmp";
+ALTER TABLE "identity_recovery_tokens" ADD COLUMN "identity_recovery_address_id" UUID;
