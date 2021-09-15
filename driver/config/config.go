@@ -852,10 +852,6 @@ func (p *Config) ParseURIOrFail(key string) *url.URL {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	if parsed.Scheme == "" {
-		p.l.WithField("reason", "expected scheme to be set").
-			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
-	}
 
 	if frag != "" {
 		parsed.Fragment = frag
