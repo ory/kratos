@@ -52,6 +52,65 @@ import SelfServiceLogoutSPAFlow from '@theme/SelfServiceLogoutSPAFlow'
 
 <SelfServiceLogoutSPAFlow />
 
+Before we start, we need to log in:
+```shell
+# Username/email and password for an existing account
+username="myuser@ory.sh"
+password="mysecret"
+
+# We use this cookie jar to initiate the login flow
+cookieJar=$(mktemp)
+
+# Initialize the flow
+flow=$( \
+  curl -s -H "Accept: application/json"  --cookie $cookieJar --cookie-jar $cookieJar \
+    'https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser' \
+)
+
+# Get the action URL
+actionUrl=$(echo $flow | jq -r '.ui.action')
+
+# Get the CSRF Token
+csrfToken=$( \
+  echo $flow | \
+    jq -r '.ui.nodes[] | select(.attributes.name=="csrf_token") | .attributes.value' \
+)
+
+# Complete the login
+session=$( \
+  curl -s --cookie $cookieJar --cookie-jar $cookieJar -X POST \
+    -H "Accept: application/json" -H "Content-Type: application/json" \
+    --data '{ "password_identifier": "'$username'", "password": "'$password'", "method": "password", "csrf_token": "'$csrfToken'" }' \
+    "$actionUrl" \
+)
+
+echo $session | jq
+
+# Check the current user id
+curl -s --cookie $cookieJar --cookie-jar $cookieJar -H "Accept: application/json" \
+  https://playground.projects.oryapis.com/api/kratos/public/sessions/whoami | \
+  jq -r ".id"
+```
+
+To logout, first get the generated Logout URL then point the Browser to it:
+```shell
+
+# Get the Logout URL
+logoutUrl=$( \
+  curl -s --cookie $cookieJar --cookie-jar $cookieJar -H "Accept: application/json" \
+    https://playground.projects.oryapis.com/api/kratos/public/self-service/logout/browser | \
+    jq -r ".logout_url" \
+
+# Complete the logout
+curl -s --cookie $cookieJar --cookie-jar $cookieJar "$logoutUrl"
+
+# Check the current user id again. It should be `null` after a succesful logout
+curl -s --cookie $cookieJar --cookie-jar $cookieJar -H "Accept: application/json" \
+  https://playground.projects.oryapis.com/api/kratos/public/sessions/whoami | \
+  jq -r ".id"
+)
+```
+
 ## Self-Service Logout for API Clients
 
 API clients (e.g. native mobile apps) use Ory Session Tokens. To revoke such a
