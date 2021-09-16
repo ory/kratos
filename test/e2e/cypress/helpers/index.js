@@ -13,7 +13,7 @@ const assertVerifiableAddress = ({ isVerified, email }) => ({ identity }) => {
   if (isVerified) {
     expect(address.verified_at).to.not.be.null
   } else {
-    expect(address.verified_at).to.be.null
+    expect(address).to.not.have.property('verified_at')
   }
 }
 
