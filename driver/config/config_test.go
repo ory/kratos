@@ -63,6 +63,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, []string{
 				"http://return-to-1-test.ory.sh/",
 				"http://return-to-2-test.ory.sh/",
+				"/return-to-relative-test/",
 			}, ds)
 
 			pWithFragments := config.MustNew(t, logrusx.New("", ""),
@@ -71,7 +72,7 @@ func TestViperProvider(t *testing.T) {
 					config.ViperKeySelfServiceLoginUI:        "http://test.kratos.ory.sh/#/login",
 					config.ViperKeySelfServiceSettingsURL:    "http://test.kratos.ory.sh/#/settings",
 					config.ViperKeySelfServiceRegistrationUI: "http://test.kratos.ory.sh/#/register",
-					config.ViperKeySelfServiceErrorUI:        "/error",
+					config.ViperKeySelfServiceErrorUI:        "http://test.kratos.ory.sh/#/error",
 				}),
 				configx.SkipValidation(),
 			)
@@ -79,7 +80,22 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/#/login", pWithFragments.SelfServiceFlowLoginUI().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/#/settings", pWithFragments.SelfServiceFlowSettingsUI().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/#/register", pWithFragments.SelfServiceFlowRegistrationUI().String())
-			assert.Equal(t, "/error", pWithFragments.SelfServiceFlowErrorURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/error", pWithFragments.SelfServiceFlowErrorURL().String())
+
+			pWithRelativeFragments := config.MustNew(t, logrusx.New("", ""),
+				configx.WithValues(map[string]interface{}{
+					config.ViperKeySelfServiceLoginUI:        "/login",
+					config.ViperKeySelfServiceSettingsURL:    "/settings",
+					config.ViperKeySelfServiceRegistrationUI: "/register",
+					config.ViperKeySelfServiceErrorUI:        "/error",
+				}),
+				configx.SkipValidation(),
+			)
+
+			assert.Equal(t, "/login", pWithRelativeFragments.SelfServiceFlowLoginUI().String())
+			assert.Equal(t, "/settings", pWithRelativeFragments.SelfServiceFlowSettingsUI().String())
+			assert.Equal(t, "/register", pWithRelativeFragments.SelfServiceFlowRegistrationUI().String())
+			assert.Equal(t, "/error", pWithRelativeFragments.SelfServiceFlowErrorURL().String())
 
 			for _, v := range []string{
 				"#/login",
