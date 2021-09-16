@@ -103,7 +103,7 @@ func (h *Handler) getByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 // Raw identity Schema list
 //
-// swagger:model IdentitySchemas
+// swagger:model identitySchemas
 type IdentitySchemas []identitySchema
 
 // swagger:model identitySchema
@@ -147,7 +147,7 @@ type listIdentitySchemas struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: IdentitySchemas
+//       200: identitySchemas
 //       500: jsonError
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
@@ -177,26 +177,14 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			return
 		}
 
-		var p json.RawMessage
-		err = json.Unmarshal(raw, &p)
-		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
-			return
-		}
-
 		ss = append(ss, identitySchema{
 			ID:     s.ID,
-			Schema: p,
+			Schema: raw,
 		})
 	}
 
 	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(r), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
-
-	w.Header().Add("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(ss); err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
-		return
-	}
+	h.r.Writer().Write(w, r, ss)
 }
 
 func ReadSchema(schema *Schema) (src io.ReadCloser, err error) {
