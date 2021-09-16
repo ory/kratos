@@ -65,7 +65,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	// We need to completely ignore the whoami/logout path so that we do not accidentally set
 	// some cookie.
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
-	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*")
+	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
