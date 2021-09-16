@@ -112,9 +112,10 @@ func waitToComeAlive(t *testing.T, publicUrl, adminUrl string) {
 			}
 		}
 		return nil
-	}),
+	},
 		retry.MaxDelay(time.Second),
-		retry.Attempts(60))
+		retry.Attempts(60)),
+	)
 }
 
 func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
