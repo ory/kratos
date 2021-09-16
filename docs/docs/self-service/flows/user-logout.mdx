@@ -53,6 +53,7 @@ import SelfServiceLogoutSPAFlow from '@theme/SelfServiceLogoutSPAFlow'
 <SelfServiceLogoutSPAFlow />
 
 Before we start, we need to log in:
+
 ```shell
 # Username/email and password for an existing account
 username="myuser@ory.sh"
@@ -93,6 +94,7 @@ curl -s --cookie $cookieJar --cookie-jar $cookieJar -H "Accept: application/json
 ```
 
 To logout, first get the generated Logout URL then point the Browser to it:
+
 ```shell
 # Get the Logout URL
 logoutUrl=$( \
