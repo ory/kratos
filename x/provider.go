@@ -3,11 +3,11 @@ package x
 import (
 	"context"
 
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/tracing"
 
 	"github.com/gorilla/sessions"
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/logrusx"
