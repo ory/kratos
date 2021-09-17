@@ -2,10 +2,11 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-09-16)](#2021-09-16)
+- [ (2021-09-17)](#2021-09-17)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
+    - [Tests](#tests)
 - [0.7.6-alpha.1 (2021-09-12)](#076-alpha1-2021-09-12)
     - [Code Generation](#code-generation)
 - [0.7.5-alpha.1 (2021-09-11)](#075-alpha1-2021-09-11)
@@ -15,7 +16,7 @@
     - [Code Generation](#code-generation-2)
     - [Documentation](#documentation-1)
     - [Features](#features-1)
-    - [Tests](#tests)
+    - [Tests](#tests-1)
 - [0.7.3-alpha.1 (2021-08-28)](#073-alpha1-2021-08-28)
     - [Bug Fixes](#bug-fixes-2)
     - [Code Generation](#code-generation-3)
@@ -25,7 +26,7 @@
     - [Bug Fixes](#bug-fixes-3)
     - [Code Generation](#code-generation-4)
     - [Documentation](#documentation-3)
-    - [Tests](#tests-1)
+    - [Tests](#tests-2)
 - [0.7.0-alpha.1 (2021-07-13)](#070-alpha1-2021-07-13)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes-4)
@@ -33,7 +34,7 @@
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-4)
     - [Features](#features-3)
-    - [Tests](#tests-2)
+    - [Tests](#tests-3)
     - [Unclassified](#unclassified)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
   - [Breaking Changes](#breaking-changes-1)
@@ -57,14 +58,14 @@
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-6)
     - [Features](#features-6)
-    - [Tests](#tests-3)
+    - [Tests](#tests-4)
     - [Unclassified](#unclassified-1)
 - [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
     - [Bug Fixes](#bug-fixes-8)
     - [Code Generation](#code-generation-11)
     - [Documentation](#documentation-7)
     - [Features](#features-7)
-    - [Tests](#tests-4)
+    - [Tests](#tests-5)
     - [Unclassified](#unclassified-2)
 - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
     - [Bug Fixes](#bug-fixes-9)
@@ -77,18 +78,18 @@
     - [Code Generation](#code-generation-13)
     - [Documentation](#documentation-9)
     - [Features](#features-9)
-    - [Tests](#tests-5)
+    - [Tests](#tests-6)
 - [0.5.2-alpha.1 (2020-10-22)](#052-alpha1-2020-10-22)
     - [Bug Fixes](#bug-fixes-11)
     - [Code Generation](#code-generation-14)
     - [Documentation](#documentation-10)
-    - [Tests](#tests-6)
+    - [Tests](#tests-7)
 - [0.5.1-alpha.1 (2020-10-20)](#051-alpha1-2020-10-20)
     - [Bug Fixes](#bug-fixes-12)
     - [Code Generation](#code-generation-15)
     - [Documentation](#documentation-11)
     - [Features](#features-10)
-    - [Tests](#tests-7)
+    - [Tests](#tests-8)
     - [Unclassified](#unclassified-3)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
   - [Breaking Changes](#breaking-changes-3)
@@ -97,7 +98,7 @@
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-12)
     - [Features](#features-11)
-    - [Tests](#tests-8)
+    - [Tests](#tests-9)
     - [Unclassified](#unclassified-4)
 - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
     - [Bug Fixes](#bug-fixes-14)
@@ -206,7 +207,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-09-16)
+# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-09-17)
 
 
 ### Bug Fixes
@@ -226,6 +227,10 @@
 ### Features
 
 * Add smtp headers config option ([#1747](https://github.com/ory/kratos/issues/1747)) ([7ffe0e9](https://github.com/ory/kratos/commit/7ffe0e9766e930615dbb6833e650b73a8975a544)), closes [#1725](https://github.com/ory/kratos/issues/1725)
+
+### Tests
+
+* Fix tests in cmd/serve ([#1755](https://github.com/ory/kratos/issues/1755)) ([b704d08](https://github.com/ory/kratos/commit/b704d08382a9059157c2a649872e88943d66a99f))
 
 
 # [0.7.6-alpha.1](https://github.com/ory/kratos/compare/v0.7.5-alpha.1...v0.7.6-alpha.1) (2021-09-12)
