@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -147,10 +148,19 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 			}).String()})); err != nil {
 		return err
 	}
+
 	address.Status = identity.VerifiableAddressStatusSent
+
+	// `Pop` doesn't update the `UpdatedAt` field if the existing `VerifiableAddress` `Status` is already set as `sent`.
+	// In this case, for example, we losing the last e-mail sent date and we don't have a chance to prevent frequent verification mail sending.
+	// Should be a more convenient way to prevent this scenario but we can use the UpdatedAt field on API client side for this case.
+	// So we need to refresh UpdatedAt manually.
+	address.UpdatedAt = time.Now().UTC()
+
 	if err := s.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address); err != nil {
 		return err
 	}
+
 	return nil
 }
 
