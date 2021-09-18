@@ -113,7 +113,7 @@ func waitToComeAlive(t *testing.T, publicUrl, adminUrl string) {
 		}
 		return nil
 	},
-		retry.MaxDelay(time.Second),
+		retry.MaxDelay(2*time.Second),
 		retry.Attempts(60)),
 	)
 }
