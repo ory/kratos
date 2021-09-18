@@ -1603,7 +1603,7 @@
         "tags": ["v0alpha1"]
       }
     },
-    "/identity/{id}/sessions": {
+    "/identities/{id}/sessions": {
       "delete": {
         "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
         "operationId": "adminDeleteIdentitySessions",
