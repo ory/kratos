@@ -1603,6 +1603,75 @@
         "tags": ["v0alpha1"]
       }
     },
+    "/identity/{id}/sessions": {
+      "delete": {
+        "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
+        "operationId": "adminDeleteIdentitySessions",
+        "parameters": [
+          {
+            "description": "ID is the identity's ID.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
+        "tags": ["v0alpha1"]
+      }
+    },
     "/metrics/prometheus": {
       "get": {
         "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4434\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",

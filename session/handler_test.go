@@ -236,7 +236,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 		s := &Session{Identity: i}
 		require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
 
-		req, _ := http.NewRequest("DELETE", ts.URL + "/identities/"+i.ID.String()+"/sessions", nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -247,7 +247,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
-		req, _ := http.NewRequest("DELETE", ts.URL + "/identities/BADUUID/sessions", nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/BADUUID/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -256,7 +256,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 	t.Run("case=should return 404 when calling with missing UUID", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		someID, _ := uuid.NewV4()
-		req, _ := http.NewRequest("DELETE", ts.URL + "/identities/"+someID.String()+"/sessions", nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+someID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNotFound, res.StatusCode)
