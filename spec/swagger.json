@@ -358,7 +358,7 @@
         }
       }
     },
-    "/identity/{id}/sessions": {
+    "/identities/{id}/sessions": {
       "delete": {
         "security": [
           {

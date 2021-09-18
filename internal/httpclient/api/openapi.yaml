@@ -301,7 +301,7 @@ paths:
       summary: Update an Identity
       tags:
       - v0alpha1
-  /identity/{id}/sessions:
+  /identities/{id}/sessions:
     delete:
       description: |-
         This endpoint is useful for:

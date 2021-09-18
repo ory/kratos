@@ -7,7 +7,7 @@ Method | HTTP request | Description
 [**AdminCreateIdentity**](V0alpha1Api.md#AdminCreateIdentity) | **Post** /identities | Create an Identity
 [**AdminCreateSelfServiceRecoveryLink**](V0alpha1Api.md#AdminCreateSelfServiceRecoveryLink) | **Post** /recovery/link | Create a Recovery Link
 [**AdminDeleteIdentity**](V0alpha1Api.md#AdminDeleteIdentity) | **Delete** /identities/{id} | Delete an Identity
-[**AdminDeleteIdentitySessions**](V0alpha1Api.md#AdminDeleteIdentitySessions) | **Delete** /identity/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+[**AdminDeleteIdentitySessions**](V0alpha1Api.md#AdminDeleteIdentitySessions) | **Delete** /identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 [**AdminGetIdentity**](V0alpha1Api.md#AdminGetIdentity) | **Get** /identities/{id} | Get an Identity
 [**AdminListIdentities**](V0alpha1Api.md#AdminListIdentities) | **Get** /identities | List Identities
 [**AdminUpdateIdentity**](V0alpha1Api.md#AdminUpdateIdentity) | **Put** /identities/{id} | Update an Identity
