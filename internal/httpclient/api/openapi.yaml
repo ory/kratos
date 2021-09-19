@@ -2475,14 +2475,19 @@ components:
     selfServiceLogoutUrl:
       example:
         logout_url: logout_url
+        logout_token: logout_token
       properties:
+        logout_token:
+          description: LogoutToken can be used to perform logout using AJAX.
+          type: string
         logout_url:
           description: |-
-            LogoutURL can be opened in a browser to
+            LogoutURL can be opened in a browser to sign the user out.
 
             format: uri
           type: string
       required:
+      - logout_token
       - logout_url
       type: object
     selfServiceRecoveryFlow:
