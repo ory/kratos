@@ -88,7 +88,8 @@ func TestLogout(t *testing.T) {
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
 		logoutUrl = gjson.GetBytes(body, "logout_url").String()
-		assert.Contains(t, logoutUrl, public.URL+"/self-service/logout?token=", "%s", body)
+		logoutToken := gjson.GetBytes(body, "logout_token").String()
+		assert.Contains(t, logoutUrl, public.URL+"/self-service/logout?token="+logoutToken, "%s", body)
 		return
 	}
 

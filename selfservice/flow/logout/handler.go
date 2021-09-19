@@ -66,11 +66,16 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 // swagger:model selfServiceLogoutUrl
 type selfServiceLogoutUrl struct {
-	// LogoutURL can be opened in a browser to
+	// LogoutURL can be opened in a browser to sign the user out.
 	//
 	// format: uri
 	// required: true
 	LogoutURL string `json:"logout_url"`
+
+	// LogoutToken can be used to perform logout using AJAX.
+	//
+	// required: true
+	LogoutToken string `json:"logout_token"`
 }
 
 // swagger:parameters createSelfServiceLogoutFlowUrlForBrowsers
@@ -118,6 +123,7 @@ func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r
 	}
 
 	h.d.Writer().Write(w, r, &selfServiceLogoutUrl{
+		LogoutToken: sess.LogoutToken,
 		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteSubmitFlow),
 			url.Values{"token": {sess.LogoutToken}}).String(),
 	})

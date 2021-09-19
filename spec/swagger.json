@@ -2226,11 +2226,16 @@
     "selfServiceLogoutUrl": {
       "type": "object",
       "required": [
-        "logout_url"
+        "logout_url",
+        "logout_token"
       ],
       "properties": {
+        "logout_token": {
+          "description": "LogoutToken can be used to perform logout using AJAX.",
+          "type": "string"
+        },
         "logout_url": {
-          "description": "LogoutURL can be opened in a browser to\n\nformat: uri",
+          "description": "LogoutURL can be opened in a browser to sign the user out.\n\nformat: uri",
           "type": "string"
         }
       }
