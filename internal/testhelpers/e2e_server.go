@@ -11,11 +11,11 @@ import (
 	"net/http"
 	"os"
 	"testing"
-	"time"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/x/tlsx"
 
-	"github.com/avast/retry-go/v3"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -85,37 +85,26 @@ func CheckE2EServerOnHTTP(t *testing.T, publicPort, adminPort int) (publicUrl, a
 }
 
 func waitToComeAlive(t *testing.T, publicUrl, adminUrl string) {
-	require.NoError(t, retry.Do(func() error {
-		/* #nosec G402: TLS InsecureSkipVerify set true. */
-		tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-		client := &http.Client{Transport: tr}
+	/* #nosec G402: TLS InsecureSkipVerify set true. */
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := httpx.NewResilientClient(httpx.ResilientClientWithClient(&http.Client{Transport: tr}))
 
-		for _, url := range []string{
-			publicUrl + "/health/ready",
-			adminUrl + "/health/ready",
-			publicUrl + "/health/alive",
-			adminUrl + "/health/alive",
-		} {
-			res, err := client.Get(url)
-			if err != nil {
-				return err
-			}
+	for _, url := range []string{
+		publicUrl + "/health/ready",
+		adminUrl + "/health/ready",
+		publicUrl + "/health/alive",
+		adminUrl + "/health/alive",
+	} {
+		res, err := client.Get(url)
+		require.NoError(t, err)
 
-			body := x.MustReadAll(res.Body)
-			if err := res.Body.Close(); err != nil {
-				return err
-			}
-			t.Logf("%s", body)
+		body := x.MustReadAll(res.Body)
+		err = res.Body.Close()
+		require.NoError(t, err)
+		t.Logf("%s", body)
 
-			if res.StatusCode != http.StatusOK {
-				return fmt.Errorf("expected status code 200 but got: %d", res.StatusCode)
-			}
-		}
-		return nil
-	},
-		retry.MaxDelay(5*time.Second),
-		retry.Attempts(60)),
-	)
+		require.Equal(t, http.StatusOK, res.StatusCode, "expected status code 200 but got: %d", res.StatusCode)
+	}
 }
 
 func CheckE2EServerOnHTTPS(t *testing.T, publicPort, adminPort int) (publicUrl, adminUrl string) {
