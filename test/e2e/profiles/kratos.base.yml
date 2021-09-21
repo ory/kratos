@@ -33,6 +33,9 @@ serve:
     base_url: http://localhost:4455/
     cors:
       enabled: true
+      allowed_origins:
+        - http://localhost:3000
+        - http://localhost:4457
       allowed_headers:
         - Authorization
         - Content-Type
