@@ -2143,10 +2143,19 @@ courier:
   smtp:
     ## SMTP connection string ##
     #
-    # This URI will be used to connect to the SMTP server. Use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates. Please keep in mind that any host other than localhost / 127.0.0.1 must use smtp over TLS (smtps) or the connection will not be possible.
+    # This URI will be used to connect to the SMTP server.
+    # Use the scheme smtps for implicit TLS sessions or smtp for explicit StartTLS/cleartext sessions.
+    # Please note that TLS is always enforced with certificate trust verification by default for security reasons on both schemes.
+    # With the smtp scheme you can use the query parameter (`?skip_starttls=true`) to allow cleartext sessions or (`?skip_starttls=false`) to enforce StartTLS (default behaviour).
+    # Additionally, use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates (default behaviour) on both implicit and explicit TLS sessions.
     #
     # Examples:
-    # - smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false
+    # - smtp://foo:bar@my-mailserver:1234/?skip_starttls=true (NOT RECOMMENDED: Cleartext smtp for devel and legacy infrastructure only)
+    # - smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate trust verification)
+    # - smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Explicit StartTLS without certificate trust verification)
+    # - smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust verification)
+    # - smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)
+    #
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -2154,7 +2163,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_CONNECTION_URI=<value>
     #
-    connection_uri: smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false
+    connection_uri: smtps://foo:bar@my-mailserver:1234/
 
     ## SMTP Sender Name ##
     #
