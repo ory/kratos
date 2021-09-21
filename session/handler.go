@@ -3,6 +3,7 @@ package session
 import (
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -44,7 +45,10 @@ func NewHandler(
 }
 
 const (
-	RouteWhoami = "/sessions/whoami"
+	RouteCollection    = "/sessions"
+	RouteWhoami        = RouteCollection + "/whoami"
+	RouteIdentity      = "/identities"
+	RouteDeleteSession = RouteIdentity + "/:id/sessions"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -53,17 +57,21 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 		// Redirect to public endpoint
 		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
 	}
+
+	admin.DELETE(RouteDeleteSession, h.deleteIdentitySessions)
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	// We need to completely ignore the whoami path so that we do not accidentally set
+	// We need to completely ignore the whoami/logout path so that we do not accidentally set
 	// some cookie.
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
+	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
 	}
+	public.DELETE(RouteDeleteSession, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
@@ -151,6 +159,49 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
 	h.r.Writer().Write(w, r, s)
+}
+
+// swagger:parameters adminDeleteIdentitySessions
+// nolint:deadcode,unused
+type adminDeleteIdentitySessions struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route DELETE /identities/{id}/sessions v0alpha1 adminDeleteIdentitySessions
+//
+// Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+//
+// This endpoint is useful for:
+//
+// - To forcefully logout Identity from all devices and sessions
+//
+//     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
+//
+//     Responses:
+//       204: emptyResponse
+//       400: jsonError
+//       401: jsonError
+//       404: jsonError
+//       500: jsonError
+func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	iID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+	if err := h.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), iID); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {

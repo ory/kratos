@@ -157,6 +157,12 @@ func (m *Courier) DispatchMessage(ctx context.Context, msg Message) error {
 
 		gm.SetHeader("To", msg.Recipient)
 		gm.SetHeader("Subject", msg.Subject)
+
+		headers := m.d.Config(ctx).CourierSMTPHeaders()
+		for k, v := range headers {
+			gm.SetHeader(k, v)
+		}
+
 		gm.SetBody("text/plain", msg.Body)
 
 		tmpl, err := NewEmailTemplateFromMessage(m.d.Config(ctx), msg)

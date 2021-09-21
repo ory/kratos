@@ -3,7 +3,6 @@
   "schema_id": "default",
   "schema_url": "https://www.ory.sh/schemas/default",
   "state": "active",
-  "state_changed_at": null,
   "traits": {
     "email": "d7b10@ory.sh"
   },

@@ -172,7 +172,7 @@ which you fully control.
 The endpoint responsible for the UI URL uses the `flow` URL Query Parameter
 (here `...?flow=36c3246f-8e40-4f45-8721-c246576a8bc3`) to call the flow
 information endpoint, for example:
-`https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser/flows?id=36c3246f-8e40-4f45-8721-c246576a8bc3`
+`https://playground.projects.oryapis.com/api/kratos/public/self-service/login/flows?id=36c3246f-8e40-4f45-8721-c246576a8bc3`
 
 :::note
 
@@ -186,7 +186,7 @@ validation errors. Let's take a look at an example using CURL:
 
 ```shell-session
 # A cookie jar for storing the CSRF tokens
-$ cookieJar=$(mktemp)`
+$ cookieJar=$(mktemp)
 $ flowId=$(curl -s -X GET \
     --cookie-jar $cookieJar --cookie $cookieJar \
     -H "Accept: application/json" \
@@ -196,7 +196,7 @@ $ flowId=$(curl -s -X GET \
 $ curl -s -X GET \
     --cookie-jar $cookieJar --cookie $cookieJar \
     -H "Accept: application/json" \
-    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=$flowId" | jq`
+    "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/flows?id=$flowId" | jq
 ```
 
 The response includes login methods, their fields, and additional information
