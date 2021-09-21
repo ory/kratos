@@ -367,6 +367,63 @@
         }
       }
     },
+    "/identities/{id}/sessions": {
+      "delete": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
+        "operationId": "adminDeleteIdentitySessions",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID is the identity's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "401": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "404": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
     "/metrics/prometheus": {
       "get": {
         "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4434\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
@@ -1729,7 +1786,7 @@
     },
     "/sessions/whoami": {
       "get": {
-        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nIf you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/protected-endpoint', async function (req, res) {\nconst session = await client.toSession(undefined, req.header('cookie'))\n\nconsole.log(session)\n})\n```\n\nWhen calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:\n\n```js\npseudo-code example\n...\nconst session = await client.toSession(\"the-session-token\")\n\nconsole.log(session)\n```\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor or change the configuration.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!\n\nThis endpoint authenticates users by checking\n\nif the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;\nif the `Authorization: bearer \u003cory-session-token\u003e` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.\n\nIf none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.",
+        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object in the body or 401 if the credentials are invalid or no credentials were sent.\nAdditionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.\n\nIf you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:\n\n```js\npseudo-code example\nrouter.get('/protected-endpoint', async function (req, res) {\nconst session = await client.toSession(undefined, req.header('cookie'))\n\nconsole.log(session)\n})\n```\n\nWhen calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:\n\n```js\npseudo-code example\n...\nconst session = await client.toSession(\"the-session-token\")\n\nconsole.log(session)\n```\n\nDepending on your configuration this endpoint might return a 422 status code if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor or change the configuration.\n\nThis endpoint is useful for:\n\nAJAX calls. Remember to send credentials and set up CORS correctly!\nReverse proxies and API Gateways\nServer-side calls - use the `X-Session-Token` header!\n\nThis endpoint authenticates users by checking\n\nif the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;\nif the `Authorization: bearer \u003cory-session-token\u003e` HTTP header was set with a valid Ory Kratos Session Token;\nif the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.\n\nIf none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.",
         "produces": [
           "application/json"
         ],
@@ -1769,7 +1826,7 @@
               "$ref": "#/definitions/jsonError"
             }
           },
-          "403": {
+          "422": {
             "description": "jsonError",
             "schema": {
               "$ref": "#/definitions/jsonError"
@@ -1827,271 +1884,9 @@
         }
       }
     },
-    "AuthenticateOKBody": {
-      "description": "AuthenticateOKBody authenticate o k body",
-      "type": "object",
-      "required": [
-        "IdentityToken",
-        "Status"
-      ],
-      "properties": {
-        "IdentityToken": {
-          "description": "An opaque token used to authenticate a user after a successful login",
-          "type": "string"
-        },
-        "Status": {
-          "description": "The status of the authentication",
-          "type": "string"
-        }
-      }
-    },
-    "ContainerChangeResponseItem": {
-      "description": "ContainerChangeResponseItem change item in response to ContainerChanges operation",
-      "type": "object",
-      "required": [
-        "Kind",
-        "Path"
-      ],
-      "properties": {
-        "Kind": {
-          "description": "Kind of change",
-          "type": "integer",
-          "format": "uint8"
-        },
-        "Path": {
-          "description": "Path to file that has changed",
-          "type": "string"
-        }
-      }
-    },
-    "ContainerCreateCreatedBody": {
-      "description": "ContainerCreateCreatedBody OK response to ContainerCreate operation",
-      "type": "object",
-      "required": [
-        "Id",
-        "Warnings"
-      ],
-      "properties": {
-        "Id": {
-          "description": "The ID of the created container",
-          "type": "string"
-        },
-        "Warnings": {
-          "description": "Warnings encountered when creating the container",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "ContainerTopOKBody": {
-      "description": "ContainerTopOKBody OK response to ContainerTop operation",
-      "type": "object",
-      "required": [
-        "Processes",
-        "Titles"
-      ],
-      "properties": {
-        "Processes": {
-          "description": "Each process running in the container, where each is process is an array of values corresponding to the titles",
-          "type": "array",
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "Titles": {
-          "description": "The ps column titles",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "ContainerUpdateOKBody": {
-      "description": "ContainerUpdateOKBody OK response to ContainerUpdate operation",
-      "type": "object",
-      "required": [
-        "Warnings"
-      ],
-      "properties": {
-        "Warnings": {
-          "description": "warnings",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "ContainerWaitOKBody": {
-      "description": "ContainerWaitOKBody OK response to ContainerWait operation",
-      "type": "object",
-      "required": [
-        "Error",
-        "StatusCode"
-      ],
-      "properties": {
-        "Error": {
-          "$ref": "#/definitions/ContainerWaitOKBodyError"
-        },
-        "StatusCode": {
-          "description": "Exit code of the container",
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
-    "ContainerWaitOKBodyError": {
-      "description": "ContainerWaitOKBodyError container waiting error, if any",
-      "type": "object",
-      "properties": {
-        "Message": {
-          "description": "Details of an error",
-          "type": "string"
-        }
-      }
-    },
-    "ErrorResponse": {
-      "type": "object",
-      "title": "ErrorResponse Represents an error.",
-      "required": [
-        "message"
-      ],
-      "properties": {
-        "message": {
-          "description": "The error message.",
-          "type": "string"
-        }
-      }
-    },
-    "GraphDriverData": {
-      "type": "object",
-      "title": "GraphDriverData Information about a container's graph driver.",
-      "required": [
-        "Data",
-        "Name"
-      ],
-      "properties": {
-        "Data": {
-          "description": "data",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "Name": {
-          "description": "name",
-          "type": "string"
-        }
-      }
-    },
     "ID": {
       "type": "integer",
       "format": "int64"
-    },
-    "IdResponse": {
-      "description": "IDResponse Response to an API call that returns just an Id",
-      "type": "object",
-      "required": [
-        "Id"
-      ],
-      "properties": {
-        "Id": {
-          "description": "The id of the newly created object.",
-          "type": "string"
-        }
-      }
-    },
-    "ImageDeleteResponseItem": {
-      "description": "ImageDeleteResponseItem image delete response item",
-      "type": "object",
-      "properties": {
-        "Deleted": {
-          "description": "The image ID of an image that was deleted",
-          "type": "string"
-        },
-        "Untagged": {
-          "description": "The image ID of an image that was untagged",
-          "type": "string"
-        }
-      }
-    },
-    "ImageSummary": {
-      "description": "ImageSummary image summary",
-      "type": "object",
-      "required": [
-        "Containers",
-        "Created",
-        "Id",
-        "Labels",
-        "ParentId",
-        "RepoDigests",
-        "RepoTags",
-        "SharedSize",
-        "Size",
-        "VirtualSize"
-      ],
-      "properties": {
-        "Containers": {
-          "description": "containers",
-          "type": "integer",
-          "format": "int64"
-        },
-        "Created": {
-          "description": "created",
-          "type": "integer",
-          "format": "int64"
-        },
-        "Id": {
-          "description": "Id",
-          "type": "string"
-        },
-        "Labels": {
-          "description": "labels",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "ParentId": {
-          "description": "parent Id",
-          "type": "string"
-        },
-        "RepoDigests": {
-          "description": "repo digests",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "RepoTags": {
-          "description": "repo tags",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "SharedSize": {
-          "description": "shared size",
-          "type": "integer",
-          "format": "int64"
-        },
-        "Size": {
-          "description": "size",
-          "type": "integer",
-          "format": "int64"
-        },
-        "VirtualSize": {
-          "description": "virtual size",
-          "type": "integer",
-          "format": "int64"
-        }
-      }
     },
     "JSONRawMessage": {
       "type": "object",
@@ -2104,460 +1899,6 @@
       "properties": {
         "label": {
           "$ref": "#/definitions/uiText"
-        }
-      }
-    },
-    "Plugin": {
-      "description": "Plugin A plugin for the Engine API",
-      "type": "object",
-      "required": [
-        "Config",
-        "Enabled",
-        "Name",
-        "Settings"
-      ],
-      "properties": {
-        "Config": {
-          "$ref": "#/definitions/PluginConfig"
-        },
-        "Enabled": {
-          "description": "True if the plugin is running. False if the plugin is not running, only installed.",
-          "type": "boolean"
-        },
-        "Id": {
-          "description": "Id",
-          "type": "string"
-        },
-        "Name": {
-          "description": "name",
-          "type": "string"
-        },
-        "PluginReference": {
-          "description": "plugin remote reference used to push/pull the plugin",
-          "type": "string"
-        },
-        "Settings": {
-          "$ref": "#/definitions/PluginSettings"
-        }
-      }
-    },
-    "PluginConfig": {
-      "type": "object",
-      "title": "PluginConfig The config of a plugin.",
-      "required": [
-        "Args",
-        "Description",
-        "Documentation",
-        "Entrypoint",
-        "Env",
-        "Interface",
-        "IpcHost",
-        "Linux",
-        "Mounts",
-        "Network",
-        "PidHost",
-        "PropagatedMount",
-        "WorkDir"
-      ],
-      "properties": {
-        "Args": {
-          "$ref": "#/definitions/PluginConfigArgs"
-        },
-        "Description": {
-          "description": "description",
-          "type": "string"
-        },
-        "DockerVersion": {
-          "description": "Docker Version used to create the plugin",
-          "type": "string"
-        },
-        "Documentation": {
-          "description": "documentation",
-          "type": "string"
-        },
-        "Entrypoint": {
-          "description": "entrypoint",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Env": {
-          "description": "env",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PluginEnv"
-          }
-        },
-        "Interface": {
-          "$ref": "#/definitions/PluginConfigInterface"
-        },
-        "IpcHost": {
-          "description": "ipc host",
-          "type": "boolean"
-        },
-        "Linux": {
-          "$ref": "#/definitions/PluginConfigLinux"
-        },
-        "Mounts": {
-          "description": "mounts",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PluginMount"
-          }
-        },
-        "Network": {
-          "$ref": "#/definitions/PluginConfigNetwork"
-        },
-        "PidHost": {
-          "description": "pid host",
-          "type": "boolean"
-        },
-        "PropagatedMount": {
-          "description": "propagated mount",
-          "type": "string"
-        },
-        "User": {
-          "$ref": "#/definitions/PluginConfigUser"
-        },
-        "WorkDir": {
-          "description": "work dir",
-          "type": "string"
-        },
-        "rootfs": {
-          "$ref": "#/definitions/PluginConfigRootfs"
-        }
-      }
-    },
-    "PluginConfigArgs": {
-      "description": "PluginConfigArgs plugin config args",
-      "type": "object",
-      "required": [
-        "Description",
-        "Name",
-        "Settable",
-        "Value"
-      ],
-      "properties": {
-        "Description": {
-          "description": "description",
-          "type": "string"
-        },
-        "Name": {
-          "description": "name",
-          "type": "string"
-        },
-        "Settable": {
-          "description": "settable",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Value": {
-          "description": "value",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PluginConfigInterface": {
-      "description": "PluginConfigInterface The interface between Docker and the plugin",
-      "type": "object",
-      "required": [
-        "Socket",
-        "Types"
-      ],
-      "properties": {
-        "Socket": {
-          "description": "socket",
-          "type": "string"
-        },
-        "Types": {
-          "description": "types",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PluginInterfaceType"
-          }
-        }
-      }
-    },
-    "PluginConfigLinux": {
-      "description": "PluginConfigLinux plugin config linux",
-      "type": "object",
-      "required": [
-        "AllowAllDevices",
-        "Capabilities",
-        "Devices"
-      ],
-      "properties": {
-        "AllowAllDevices": {
-          "description": "allow all devices",
-          "type": "boolean"
-        },
-        "Capabilities": {
-          "description": "capabilities",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Devices": {
-          "description": "devices",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PluginDevice"
-          }
-        }
-      }
-    },
-    "PluginConfigNetwork": {
-      "description": "PluginConfigNetwork plugin config network",
-      "type": "object",
-      "required": [
-        "Type"
-      ],
-      "properties": {
-        "Type": {
-          "description": "type",
-          "type": "string"
-        }
-      }
-    },
-    "PluginConfigRootfs": {
-      "description": "PluginConfigRootfs plugin config rootfs",
-      "type": "object",
-      "properties": {
-        "diff_ids": {
-          "description": "diff ids",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "type": {
-          "description": "type",
-          "type": "string"
-        }
-      }
-    },
-    "PluginConfigUser": {
-      "description": "PluginConfigUser plugin config user",
-      "type": "object",
-      "properties": {
-        "GID": {
-          "description": "g ID",
-          "type": "integer",
-          "format": "uint32"
-        },
-        "UID": {
-          "description": "UID",
-          "type": "integer",
-          "format": "uint32"
-        }
-      }
-    },
-    "PluginDevice": {
-      "description": "PluginDevice plugin device",
-      "type": "object",
-      "required": [
-        "Description",
-        "Name",
-        "Path",
-        "Settable"
-      ],
-      "properties": {
-        "Description": {
-          "description": "description",
-          "type": "string"
-        },
-        "Name": {
-          "description": "name",
-          "type": "string"
-        },
-        "Path": {
-          "description": "path",
-          "type": "string"
-        },
-        "Settable": {
-          "description": "settable",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PluginEnv": {
-      "description": "PluginEnv plugin env",
-      "type": "object",
-      "required": [
-        "Description",
-        "Name",
-        "Settable",
-        "Value"
-      ],
-      "properties": {
-        "Description": {
-          "description": "description",
-          "type": "string"
-        },
-        "Name": {
-          "description": "name",
-          "type": "string"
-        },
-        "Settable": {
-          "description": "settable",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Value": {
-          "description": "value",
-          "type": "string"
-        }
-      }
-    },
-    "PluginInterfaceType": {
-      "description": "PluginInterfaceType plugin interface type",
-      "type": "object",
-      "required": [
-        "Capability",
-        "Prefix",
-        "Version"
-      ],
-      "properties": {
-        "Capability": {
-          "description": "capability",
-          "type": "string"
-        },
-        "Prefix": {
-          "description": "prefix",
-          "type": "string"
-        },
-        "Version": {
-          "description": "version",
-          "type": "string"
-        }
-      }
-    },
-    "PluginMount": {
-      "description": "PluginMount plugin mount",
-      "type": "object",
-      "required": [
-        "Description",
-        "Destination",
-        "Name",
-        "Options",
-        "Settable",
-        "Source",
-        "Type"
-      ],
-      "properties": {
-        "Description": {
-          "description": "description",
-          "type": "string"
-        },
-        "Destination": {
-          "description": "destination",
-          "type": "string"
-        },
-        "Name": {
-          "description": "name",
-          "type": "string"
-        },
-        "Options": {
-          "description": "options",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Settable": {
-          "description": "settable",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Source": {
-          "description": "source",
-          "type": "string"
-        },
-        "Type": {
-          "description": "type",
-          "type": "string"
-        }
-      }
-    },
-    "PluginSettings": {
-      "type": "object",
-      "title": "PluginSettings Settings that can be modified by users.",
-      "required": [
-        "Args",
-        "Devices",
-        "Env",
-        "Mounts"
-      ],
-      "properties": {
-        "Args": {
-          "description": "args",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Devices": {
-          "description": "devices",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PluginDevice"
-          }
-        },
-        "Env": {
-          "description": "env",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Mounts": {
-          "description": "mounts",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PluginMount"
-          }
-        }
-      }
-    },
-    "Port": {
-      "description": "Port An open port on a container",
-      "type": "object",
-      "required": [
-        "PrivatePort",
-        "Type"
-      ],
-      "properties": {
-        "IP": {
-          "description": "IP",
-          "type": "string"
-        },
-        "PrivatePort": {
-          "description": "Port on the container",
-          "type": "integer",
-          "format": "uint16"
-        },
-        "PublicPort": {
-          "description": "Port exposed on the host",
-          "type": "integer",
-          "format": "uint16"
-        },
-        "Type": {
-          "description": "type",
-          "type": "string"
         }
       }
     },
@@ -2593,96 +1934,7 @@
     "RecoveryAddressType": {
       "type": "string"
     },
-    "ServiceUpdateResponse": {
-      "description": "ServiceUpdateResponse service update response",
-      "type": "object",
-      "properties": {
-        "Warnings": {
-          "description": "Optional warning messages",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "UUID": {"type": "string", "format": "uuid4"},
-    "Volume": {
-      "description": "Volume volume",
-      "type": "object",
-      "required": [
-        "Driver",
-        "Labels",
-        "Mountpoint",
-        "Name",
-        "Options",
-        "Scope"
-      ],
-      "properties": {
-        "CreatedAt": {
-          "description": "Date/Time the volume was created.",
-          "type": "string"
-        },
-        "Driver": {
-          "description": "Name of the volume driver used by the volume.",
-          "type": "string"
-        },
-        "Labels": {
-          "description": "User-defined key/value metadata.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "Mountpoint": {
-          "description": "Mount path of the volume on the host.",
-          "type": "string"
-        },
-        "Name": {
-          "description": "Name of the volume.",
-          "type": "string"
-        },
-        "Options": {
-          "description": "The driver specific options used when creating the volume.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "Scope": {
-          "description": "The level at which the volume exists. Either `global` for cluster-wide, or `local` for machine level.",
-          "type": "string"
-        },
-        "Status": {
-          "description": "Low-level details about the volume, provided by the volume driver.\nDetails are returned as a map with key/value pairs:\n`{\"key\":\"value\",\"key2\":\"value2\"}`.\n\nThe `Status` field is optional, and is omitted if the volume driver\ndoes not support this feature.",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "UsageData": {
-          "$ref": "#/definitions/VolumeUsageData"
-        }
-      }
-    },
-    "VolumeUsageData": {
-      "description": "VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
-      "type": "object",
-      "required": [
-        "RefCount",
-        "Size"
-      ],
-      "properties": {
-        "RefCount": {
-          "description": "The number of containers referencing this volume. This field\nis set to `-1` if the reference-count is not available.",
-          "type": "integer",
-          "format": "int64"
-        },
-        "Size": {
-          "description": "Amount of disk space used by the volume (in bytes). This information\nis only available for volumes created with the `\"local\"` volume\ndriver. For volumes created with other volume drivers, this field\nis set to `-1` (\"not available\")",
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
     "adminCreateIdentityBody": {
       "type": "object",
       "required": [
@@ -2720,6 +1972,54 @@
       "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials",
       "type": "string",
       "title": "Authenticator Assurance Level (AAL)"
+    },
+    "errorAuthenticatorAssuranceLevelNotSatisfied": {
+      "type": "object",
+      "title": "ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "description": "The status code",
+          "type": "integer",
+          "format": "int64",
+          "example": 404
+        },
+        "debug": {
+          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
+          "type": "string",
+          "example": "SQL field \"foo\" is not a bool."
+        },
+        "details": {
+          "description": "Further error details",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "message": {
+          "description": "Error message\n\nThe error's message.",
+          "type": "string",
+          "example": "The resource could not be found"
+        },
+        "reason": {
+          "description": "A human-readable reason for the error",
+          "type": "string",
+          "example": "User with ID 1234 does not exist."
+        },
+        "redirect_browser_to": {
+          "type": "string"
+        },
+        "request": {
+          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
+          "type": "string",
+          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
+        },
+        "status": {
+          "description": "The status description",
+          "type": "string",
+          "example": "Not Found"
+        }
+      }
     },
     "genericError": {
       "type": "object",
@@ -3026,9 +2326,17 @@
     },
     "selfServiceLogoutUrl": {
       "type": "object",
+      "required": [
+        "logout_url",
+        "logout_token"
+      ],
       "properties": {
+        "logout_token": {
+          "description": "LogoutToken can be used to perform logout using AJAX.",
+          "type": "string"
+        },
         "logout_url": {
-          "description": "LogoutURL can be opened in a browser to\n\nformat: uri",
+          "description": "LogoutURL can be opened in a browser to sign the user out.\n\nformat: uri",
           "type": "string"
         }
       }

@@ -90,6 +90,7 @@ Class | Method | HTTP request | Description
 *V0alpha2Api* | [**AdminCreateIdentity**](docs/V0alpha2Api.md#admincreateidentity) | **Post** /identities | Create an Identity
 *V0alpha2Api* | [**AdminCreateSelfServiceRecoveryLink**](docs/V0alpha2Api.md#admincreateselfservicerecoverylink) | **Post** /recovery/link | Create a Recovery Link
 *V0alpha2Api* | [**AdminDeleteIdentity**](docs/V0alpha2Api.md#admindeleteidentity) | **Delete** /identities/{id} | Delete an Identity
+*V0alpha2Api* | [**AdminDeleteIdentitySessions**](docs/V0alpha2Api.md#admindeleteidentitysessions) | **Delete** /identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 *V0alpha2Api* | [**AdminGetIdentity**](docs/V0alpha2Api.md#admingetidentity) | **Get** /identities/{id} | Get an Identity
 *V0alpha2Api* | [**AdminListIdentities**](docs/V0alpha2Api.md#adminlistidentities) | **Get** /identities | List Identities
 *V0alpha2Api* | [**AdminUpdateIdentity**](docs/V0alpha2Api.md#adminupdateidentity) | **Put** /identities/{id} | Update an Identity
@@ -126,45 +127,20 @@ Class | Method | HTTP request | Description
  - [AdminCreateIdentityBody](docs/AdminCreateIdentityBody.md)
  - [AdminCreateSelfServiceRecoveryLinkBody](docs/AdminCreateSelfServiceRecoveryLinkBody.md)
  - [AdminUpdateIdentityBody](docs/AdminUpdateIdentityBody.md)
- - [AuthenticateOKBody](docs/AuthenticateOKBody.md)
  - [AuthenticatorAssuranceLevel](docs/AuthenticatorAssuranceLevel.md)
- - [ContainerChangeResponseItem](docs/ContainerChangeResponseItem.md)
- - [ContainerCreateCreatedBody](docs/ContainerCreateCreatedBody.md)
- - [ContainerTopOKBody](docs/ContainerTopOKBody.md)
- - [ContainerUpdateOKBody](docs/ContainerUpdateOKBody.md)
- - [ContainerWaitOKBody](docs/ContainerWaitOKBody.md)
- - [ContainerWaitOKBodyError](docs/ContainerWaitOKBodyError.md)
- - [ErrorResponse](docs/ErrorResponse.md)
+ - [ErrorAuthenticatorAssuranceLevelNotSatisfied](docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md)
  - [GenericError](docs/GenericError.md)
- - [GraphDriverData](docs/GraphDriverData.md)
  - [HealthNotReadyStatus](docs/HealthNotReadyStatus.md)
  - [HealthStatus](docs/HealthStatus.md)
- - [IdResponse](docs/IdResponse.md)
  - [Identity](docs/Identity.md)
  - [IdentityCredentials](docs/IdentityCredentials.md)
  - [IdentityCredentialsType](docs/IdentityCredentialsType.md)
  - [IdentityState](docs/IdentityState.md)
- - [ImageDeleteResponseItem](docs/ImageDeleteResponseItem.md)
- - [ImageSummary](docs/ImageSummary.md)
  - [InlineResponse200](docs/InlineResponse200.md)
  - [InlineResponse2001](docs/InlineResponse2001.md)
  - [InlineResponse503](docs/InlineResponse503.md)
  - [JsonError](docs/JsonError.md)
  - [Meta](docs/Meta.md)
- - [Plugin](docs/Plugin.md)
- - [PluginConfig](docs/PluginConfig.md)
- - [PluginConfigArgs](docs/PluginConfigArgs.md)
- - [PluginConfigInterface](docs/PluginConfigInterface.md)
- - [PluginConfigLinux](docs/PluginConfigLinux.md)
- - [PluginConfigNetwork](docs/PluginConfigNetwork.md)
- - [PluginConfigRootfs](docs/PluginConfigRootfs.md)
- - [PluginConfigUser](docs/PluginConfigUser.md)
- - [PluginDevice](docs/PluginDevice.md)
- - [PluginEnv](docs/PluginEnv.md)
- - [PluginInterfaceType](docs/PluginInterfaceType.md)
- - [PluginMount](docs/PluginMount.md)
- - [PluginSettings](docs/PluginSettings.md)
- - [Port](docs/Port.md)
  - [RecoveryAddress](docs/RecoveryAddress.md)
  - [SelfServiceError](docs/SelfServiceError.md)
  - [SelfServiceLoginFlow](docs/SelfServiceLoginFlow.md)
@@ -177,7 +153,6 @@ Class | Method | HTTP request | Description
  - [SelfServiceSettingsFlowState](docs/SelfServiceSettingsFlowState.md)
  - [SelfServiceVerificationFlow](docs/SelfServiceVerificationFlow.md)
  - [SelfServiceVerificationFlowState](docs/SelfServiceVerificationFlowState.md)
- - [ServiceUpdateResponse](docs/ServiceUpdateResponse.md)
  - [Session](docs/Session.md)
  - [SessionAuthenticationMethod](docs/SessionAuthenticationMethod.md)
  - [SessionDevice](docs/SessionDevice.md)
@@ -215,8 +190,6 @@ Class | Method | HTTP request | Description
  - [UiText](docs/UiText.md)
  - [VerifiableIdentityAddress](docs/VerifiableIdentityAddress.md)
  - [Version](docs/Version.md)
- - [Volume](docs/Volume.md)
- - [VolumeUsageData](docs/VolumeUsageData.md)
 
 
 ## Documentation For Authorization
