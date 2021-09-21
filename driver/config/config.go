@@ -60,7 +60,7 @@ const (
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
-	ViperKeyCourierSMTPHeaders                                      = "courier.smtp.headers"
+	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                           = "secrets.cipher"
