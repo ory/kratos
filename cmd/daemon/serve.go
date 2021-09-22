@@ -79,11 +79,11 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	c := r.Config(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
-	n.Use(sqa(ctx, cmd, r))
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
+	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
@@ -138,11 +138,11 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	c := r.Config(ctx)
 	l := r.Logger()
 	n := negroni.New()
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
-	n.Use(sqa(ctx, cmd, r))
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
+	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterAdmin()
