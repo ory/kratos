@@ -102,6 +102,7 @@ Class | Method | HTTP request | Description
 *V0alpha2Api* | [**GetSelfServiceRegistrationFlow**](docs/V0alpha2Api.md#getselfserviceregistrationflow) | **Get** /self-service/registration/flows | Get Registration Flow
 *V0alpha2Api* | [**GetSelfServiceSettingsFlow**](docs/V0alpha2Api.md#getselfservicesettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
 *V0alpha2Api* | [**GetSelfServiceVerificationFlow**](docs/V0alpha2Api.md#getselfserviceverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
+*V0alpha2Api* | [**GetWebAuthnJavaScript**](docs/V0alpha2Api.md#getwebauthnjavascript) | **Get** /.well-known/ory/webauthn.js | Get WebAuthn JavaScript
 *V0alpha2Api* | [**InitializeSelfServiceLoginFlowForBrowsers**](docs/V0alpha2Api.md#initializeselfserviceloginflowforbrowsers) | **Get** /self-service/login/browser | Initialize Login Flow for Browsers
 *V0alpha2Api* | [**InitializeSelfServiceLoginFlowWithoutBrowser**](docs/V0alpha2Api.md#initializeselfserviceloginflowwithoutbrowser) | **Get** /self-service/login/api | Initialize Login Flow for APIs, Services, Apps, ...
 *V0alpha2Api* | [**InitializeSelfServiceRecoveryFlowForBrowsers**](docs/V0alpha2Api.md#initializeselfservicerecoveryflowforbrowsers) | **Get** /self-service/recovery/browser | Initialize Recovery Flow for Browsers

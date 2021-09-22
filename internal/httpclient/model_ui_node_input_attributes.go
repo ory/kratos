@@ -24,6 +24,8 @@ type UiNodeInputAttributes struct {
 	Name string `json:"name"`
 	// OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn.
 	Onclick *string `json:"onclick,omitempty"`
+	// OnLoad may contain javascript which should be executed on load. This is primarily used for WebAuthn. Using this value makes most sense when used on the server-side. For JavaScript apps running in the browser please load the WebAuthn JavaScript:  <script src=\"https://public-kratos.example.org/.well-known/ory/webauthn.js\" type=\"script\" async />
+	Onload *string `json:"onload,omitempty"`
 	// The input's pattern.
 	Pattern *string `json:"pattern,omitempty"`
 	// Mark this input field as required.
@@ -165,6 +167,38 @@ func (o *UiNodeInputAttributes) SetOnclick(v string) {
 	o.Onclick = &v
 }
 
+// GetOnload returns the Onload field value if set, zero value otherwise.
+func (o *UiNodeInputAttributes) GetOnload() string {
+	if o == nil || o.Onload == nil {
+		var ret string
+		return ret
+	}
+	return *o.Onload
+}
+
+// GetOnloadOk returns a tuple with the Onload field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UiNodeInputAttributes) GetOnloadOk() (*string, bool) {
+	if o == nil || o.Onload == nil {
+		return nil, false
+	}
+	return o.Onload, true
+}
+
+// HasOnload returns a boolean if a field has been set.
+func (o *UiNodeInputAttributes) HasOnload() bool {
+	if o != nil && o.Onload != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOnload gets a reference to the given string and assigns it to the Onload field.
+func (o *UiNodeInputAttributes) SetOnload(v string) {
+	o.Onload = &v
+}
+
 // GetPattern returns the Pattern field value if set, zero value otherwise.
 func (o *UiNodeInputAttributes) GetPattern() string {
 	if o == nil || o.Pattern == nil {
@@ -299,6 +333,9 @@ func (o UiNodeInputAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if o.Onclick != nil {
 		toSerialize["onclick"] = o.Onclick
+	}
+	if o.Onload != nil {
+		toSerialize["onload"] = o.Onload
 	}
 	if o.Pattern != nil {
 		toSerialize["pattern"] = o.Pattern

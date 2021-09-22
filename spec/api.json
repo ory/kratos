@@ -1486,6 +1486,10 @@
             "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
             "type": "string"
           },
+          "onload": {
+            "description": "OnLoad may contain javascript which should be executed on load. This is primarily\nused for WebAuthn. Using this value makes most sense when used on the server-side. For\nJavaScript apps running in the browser please load the WebAuthn JavaScript:\n\n\u003cscript src=\"https://public-kratos.example.org/.well-known/ory/webauthn.js\" type=\"script\" async /\u003e",
+            "type": "string"
+          },
           "pattern": {
             "description": "The input's pattern.",
             "type": "string"
@@ -1622,6 +1626,9 @@
           }
         },
         "type": "object"
+      },
+      "webAuthnJavaScript": {
+        "type": "string"
       }
     },
     "securitySchemes": {
@@ -1645,6 +1652,28 @@
   },
   "openapi": "3.0.3",
   "paths": {
+    "/.well-known/ory/webauthn.js": {
+      "get": {
+        "description": "This endpoint provides JavaScript which is needed in order to perform WebAuthn login and registration.\n\nIf you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you will need to load this file:\n\n```html\n\u003cscript src=\"https://public-kratos.example.org/.well-known/ory/webauthn.js\" type=\"script\" async /\u003e\n```\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "operationId": "getWebAuthnJavaScript",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/webAuthnJavaScript"
+                }
+              }
+            },
+            "description": "webAuthnJavaScript"
+          }
+        },
+        "summary": "Get WebAuthn JavaScript",
+        "tags": [
+          "v0alpha2"
+        ]
+      }
+    },
     "/health/alive": {
       "get": {
         "description": "This endpoint returns a HTTP 200 status code when Ory Kratos is accepting incoming\nHTTP requests. This status does currently not include checks whether the database connection is working.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",

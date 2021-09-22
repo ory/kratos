@@ -212,13 +212,13 @@ func TestManagerHTTP(t *testing.T) {
 			})
 
 			rp.GET("/session/set/invalid", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-				require.Error(t, reg.SessionManager().CreateAndIssueCookie(r.Context(), w, r, s))
+				require.Error(t, reg.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, s))
 				w.WriteHeader(http.StatusInternalServerError)
 			})
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s, _ = session.NewActiveSession(&i, conf, time.Now())
+			s, _ = session.NewActiveSession(&i, conf, time.Now(),identity.CredentialsTypePassword)
 
 			c := testhelpers.NewClientWithCookies(t)
 			res, err := c.Get(pts.URL + "/session/set/invalid")
