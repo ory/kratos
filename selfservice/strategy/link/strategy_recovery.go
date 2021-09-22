@@ -374,11 +374,6 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	address, err := s.d.IdentityPool().FindVerifiableAddressByValue(r.Context(), identity.VerifiableAddressTypeEmail, body.Email)
-	if err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
-		return s.HandleRecoveryError(w, r, f, body, err)
-	}
-
 	if err := s.d.LinkSender().SendRecoveryLink(r.Context(), r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
@@ -391,14 +386,6 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
 		node.NewInputField("email", body.Email, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 	)
-
-	if address != nil && !address.Verified {
-		address.Status = identity.VerifiableAddressStatusSent
-
-		if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
-			return s.HandleRecoveryError(w, r, f, body, err)
-		}
-	}
 
 	f.Active = sqlxx.NullString(s.RecoveryNodeGroup())
 	f.State = recovery.StateEmailSent

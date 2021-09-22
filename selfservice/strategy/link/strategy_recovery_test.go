@@ -329,7 +329,7 @@ func TestRecovery(t *testing.T) {
 			assert.NoError(t, err)
 			assert.False(t, addr.Verified)
 			assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
-			assert.Equal(t, identity.VerifiableAddressStatusSent, addr.Status)
+			assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 
 			assert.EqualValues(t, node.RecoveryLinkGroup, gjson.Get(recoverySubmissionResponse, "active").String(), "%s", recoverySubmissionResponse)
 			assert.EqualValues(t, recoveryEmail, gjson.Get(recoverySubmissionResponse, "ui.nodes.#(attributes.name==email).attributes.value").String(), "%s", recoverySubmissionResponse)
@@ -501,7 +501,7 @@ func TestRecovery(t *testing.T) {
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
 		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
-		assert.Equal(t, identity.VerifiableAddressStatusSent, addr.Status)
+		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
 }
 
