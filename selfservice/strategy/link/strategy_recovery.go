@@ -409,7 +409,8 @@ func (s *Strategy) markRecoveryAddressVerified(w http.ResponseWriter, r *http.Re
 
 	if address != nil && !address.Verified { // can it be that the address is nil?
 		address.Verified = true
-		address.VerifiedAt = sqlxx.NullTime(time.Now().UTC())
+		verifiedAt := sqlxx.NullTime(time.Now().UTC())
+		address.VerifiedAt = &verifiedAt
 		address.Status = identity.VerifiableAddressStatusCompleted
 		if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
 			return s.HandleRecoveryError(w, r, f, nil, err)

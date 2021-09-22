@@ -138,7 +138,7 @@ func TestAdminStrategy(t *testing.T) {
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
-		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
+		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
 
@@ -171,7 +171,7 @@ func TestAdminStrategy(t *testing.T) {
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
-		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
+		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
 }
@@ -199,7 +199,7 @@ func TestRecovery(t *testing.T) {
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, email)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
-		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
+		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	}
 
@@ -328,7 +328,7 @@ func TestRecovery(t *testing.T) {
 			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
 			assert.False(t, addr.Verified)
-			assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
+			assert.Nil(t, addr.VerifiedAt)
 			assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 
 			assert.EqualValues(t, node.RecoveryLinkGroup, gjson.Get(recoverySubmissionResponse, "active").String(), "%s", recoverySubmissionResponse)
@@ -460,7 +460,7 @@ func TestRecovery(t *testing.T) {
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
-		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
+		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
 
@@ -500,7 +500,7 @@ func TestRecovery(t *testing.T) {
 		addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 		assert.NoError(t, err)
 		assert.False(t, addr.Verified)
-		assert.Equal(t, sqlxx.NullTime{}, addr.VerifiedAt)
+		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
 	})
 }
