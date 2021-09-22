@@ -1,5 +1,7 @@
-add_column("identity_recovery_tokens", "identity_id", "uuid", {"size": 36})
-{{ if not .IsSQLite }}
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identity_recovery_tokens ADD COLUMN identity_id CHAR(36) NULL REFERENCES identities(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_column("identity_recovery_tokens", "identity_id", "uuid", {"size": 36})
   add_foreign_key("identity_recovery_tokens", "identity_id", {"identities": ["id"]}, {
       "name": "identity_recovery_tokens_identity_id_fk_idx",
       "on_delete": "CASCADE",

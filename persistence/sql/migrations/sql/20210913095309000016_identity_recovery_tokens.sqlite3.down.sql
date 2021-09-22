@@ -10,7 +10,6 @@ CREATE TABLE "_identity_recovery_tokens_tmp" (
 "expires_at" DATETIME NOT NULL DEFAULT '2000-01-01 00:00:00',
 "issued_at" DATETIME NOT NULL DEFAULT '2000-01-01 00:00:00',
 "nid" char(36),
-"identity_id" char(36) NOT NULL,
 FOREIGN KEY (identity_recovery_address_id) REFERENCES identity_recovery_addresses (id) ON UPDATE NO ACTION ON DELETE CASCADE,
 FOREIGN KEY (selfservice_recovery_flow_id) REFERENCES selfservice_recovery_flows (id) ON UPDATE NO ACTION ON DELETE CASCADE
 );
