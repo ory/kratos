@@ -144,6 +144,7 @@ func TestCompleteSettings(t *testing.T) {
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
 		assertx.EqualAsJSONExcept(t, json.RawMessage(settingsFixtureNoWebauthn), f.Ui.Nodes, []string{
 			"0.attributes.value",
+			"2.attributes.onload",
 			"2.attributes.onclick",
 		})
 

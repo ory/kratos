@@ -14,6 +14,29 @@ info:
 servers:
 - url: /
 paths:
+  /.well-known/ory/webauthn.js:
+    get:
+      description: |-
+        This endpoint provides JavaScript which is needed in order to perform WebAuthn login and registration.
+
+        If you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you will need to load this file:
+
+        ```html
+        <script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
+        ```
+
+        More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+      operationId: getWebAuthnJavaScript
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/webAuthnJavaScript'
+          description: webAuthnJavaScript
+      summary: Get WebAuthn JavaScript
+      tags:
+      - v0alpha2
   /health/alive:
     get:
       description: |-
@@ -4079,6 +4102,14 @@ components:
             OnClick may contain javascript which should be executed on click. This is primarily
             used for WebAuthn.
           type: string
+        onload:
+          description: |-
+            OnLoad may contain javascript which should be executed on load. This is primarily
+            used for WebAuthn. Using this value makes most sense when used on the server-side. For
+            JavaScript apps running in the browser please load the WebAuthn JavaScript:
+
+            <script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
+          type: string
         pattern:
           description: The input's pattern.
           type: string
@@ -4202,6 +4233,8 @@ components:
           description: Version is the service's version.
           type: string
       type: object
+    webAuthnJavaScript:
+      type: string
     inline_response_200:
       example:
         status: status

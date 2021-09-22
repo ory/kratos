@@ -29,10 +29,10 @@ func NewErrAALNotSatisfied(redirectTo string) *ErrAALNotSatisfied {
 	return &ErrAALNotSatisfied{
 		RedirectTo: redirectTo,
 		DefaultError: &herodot.DefaultError{
-			StatusField: http.StatusText(http.StatusUnprocessableEntity),
-			ErrorField:  "Session does not fulfill the requested AAL",
+			StatusField: http.StatusText(http.StatusForbidden),
+			ErrorField:  "Session does not fulfill the requested Authenticator Assurance Level",
 			ReasonField: "An active session was found but it does not fulfill the requested Authenticator Assurance Level. Please verify yourself with a second factor to resolve this issue.",
-			CodeField:   http.StatusUnprocessableEntity,
+			CodeField:   http.StatusForbidden,
 			DetailsField: map[string]interface{}{
 				"redirect_browser_to": redirectTo,
 			},

@@ -351,6 +351,28 @@ type V0alpha2Api interface {
 	GetSelfServiceVerificationFlowExecute(r V0alpha2ApiApiGetSelfServiceVerificationFlowRequest) (*SelfServiceVerificationFlow, *http.Response, error)
 
 	/*
+			 * GetWebAuthnJavaScript Get WebAuthn JavaScript
+			 * This endpoint provides JavaScript which is needed in order to perform WebAuthn login and registration.
+
+		If you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you will need to load this file:
+
+		```html
+		<script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
+		```
+
+		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return V0alpha2ApiApiGetWebAuthnJavaScriptRequest
+	*/
+	GetWebAuthnJavaScript(ctx context.Context) V0alpha2ApiApiGetWebAuthnJavaScriptRequest
+
+	/*
+	 * GetWebAuthnJavaScriptExecute executes the request
+	 * @return string
+	 */
+	GetWebAuthnJavaScriptExecute(r V0alpha2ApiApiGetWebAuthnJavaScriptRequest) (string, *http.Response, error)
+
+	/*
 			 * InitializeSelfServiceLoginFlowForBrowsers Initialize Login Flow for Browsers
 			 * This endpoint initializes a browser-based user login flow. This endpoint will set the appropriate
 		cookies and anti-CSRF measures required for browser-based flows.
@@ -3165,6 +3187,115 @@ func (a *V0alpha2ApiService) GetSelfServiceVerificationFlowExecute(r V0alpha2Api
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type V0alpha2ApiApiGetWebAuthnJavaScriptRequest struct {
+	ctx        context.Context
+	ApiService V0alpha2Api
+}
+
+func (r V0alpha2ApiApiGetWebAuthnJavaScriptRequest) Execute() (string, *http.Response, error) {
+	return r.ApiService.GetWebAuthnJavaScriptExecute(r)
+}
+
+/*
+ * GetWebAuthnJavaScript Get WebAuthn JavaScript
+ * This endpoint provides JavaScript which is needed in order to perform WebAuthn login and registration.
+
+If you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you will need to load this file:
+
+```html
+<script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
+```
+
+More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return V0alpha2ApiApiGetWebAuthnJavaScriptRequest
+*/
+func (a *V0alpha2ApiService) GetWebAuthnJavaScript(ctx context.Context) V0alpha2ApiApiGetWebAuthnJavaScriptRequest {
+	return V0alpha2ApiApiGetWebAuthnJavaScriptRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return string
+ */
+func (a *V0alpha2ApiService) GetWebAuthnJavaScriptExecute(r V0alpha2ApiApiGetWebAuthnJavaScriptRequest) (string, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  string
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.GetWebAuthnJavaScript")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/.well-known/ory/webauthn.js"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}

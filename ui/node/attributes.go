@@ -70,6 +70,13 @@ type InputAttributes struct {
 	// OnClick may contain javascript which should be executed on click. This is primarily
 	// used for WebAuthn.
 	OnClick string `json:"onclick,omitempty"`
+
+	// OnLoad may contain javascript which should be executed on load. This is primarily
+	// used for WebAuthn. Using this value makes most sense when used on the server-side. For
+	// JavaScript apps running in the browser please load the WebAuthn JavaScript:
+	//
+	// 	<script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
+	OnLoad string `json:"onload,omitempty"`
 }
 
 // ImageAttributes represents the attributes of an image node.

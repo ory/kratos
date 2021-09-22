@@ -138,8 +138,8 @@ func TestHandler(t *testing.T) {
 			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, false)
-				assert.Equal(t, http.StatusOK, res.StatusCode)
-				assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, gjson.GetBytes(body, "requested_aal").String())
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.EqualValues(t, "Session does not fulfill the requested Authenticator Assurance Level", gjson.GetBytes(body, "error.message").String(), "%s", body)
 			})
 		})
 
@@ -173,7 +173,7 @@ func TestHandler(t *testing.T) {
 			require.Error(t, err)
 
 			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
-			assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
+			assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
 		})
 
 		t.Run("description=fetching an expired flow returns 410", func(t *testing.T) {
@@ -214,22 +214,22 @@ func TestHandler(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				user2 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 
-				t.Logf("%+v", user1.Jar)
 				res, err := user1.Get(publicTS.URL + settings.RouteInitAPIFlow)
 				require.NoError(t, err)
 				defer res.Body.Close()
-				t.Logf("%+v", user1.Jar)
+
 				assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 				body := ioutilx.MustReadAll(res.Body)
 				id := gjson.GetBytes(body, "id")
 				require.NotEmpty(t, id)
 
-				res, err = user2.Get(publicTS.URL + settings.RouteGetFlow)
+				res, err = user2.Get(publicTS.URL + settings.RouteGetFlow + "?id="+id.String())
 				require.NoError(t, err)
 				defer res.Body.Close()
+
 				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
 				body = ioutilx.MustReadAll(res.Body)
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "Access privileges are missing", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "The request was made for another identity and has been blocked for security reasons", "%s", body)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {

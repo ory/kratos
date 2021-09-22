@@ -16,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/corpx"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/julienschmidt/httprouter"
@@ -88,7 +87,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 		t.Run("case=aal2-aal1", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
-			body := run(t, "aal2-aal1", http.StatusUnprocessableEntity)
+			body := run(t, "aal2-aal1", http.StatusForbidden)
 			assert.EqualValues(t, NewErrAALNotSatisfied("").Reason(), gjson.Get(body, "error.reason").String(), body)
 		})
 
@@ -372,7 +371,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 		i := identity.NewIdentity("")
 		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 		s := &Session{Identity: i}
-		require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
+		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 
 		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
 		res, err := client.Do(req)

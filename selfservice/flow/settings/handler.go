@@ -221,7 +221,7 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 // was set, the browser will be redirected to the login endpoint.
 //
 // If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
-// or a 403 forbidden error if no valid session was set.
+// or a 401 forbidden error if no valid session was set.
 //
 // Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
 // Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -237,6 +237,7 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //     Responses:
 //       200: selfServiceSettingsFlow
 //       302: emptyResponse
+//       401: jsonError
 //       403: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -306,8 +307,7 @@ type getSelfServiceSettingsFlow struct {
 // Get Settings Flow
 //
 // When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
-// or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
-// but instead 403 or 500 to improve data privacy.
+// or the Ory Kratos Session Token are set.
 //
 // Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
 // Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -325,6 +325,7 @@ type getSelfServiceSettingsFlow struct {
 //
 //     Responses:
 //       200: selfServiceSettingsFlow
+//       401: jsonError
 //       403: jsonError
 //       404: jsonError
 //       410: jsonError
@@ -346,12 +347,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	pr, err := h.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)
 	if err != nil {
-		return h.wrapErrorForbidden(err)
+		return err
 	}
 
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
-		return h.wrapErrorForbidden(err)
+		return err
 	}
 
 	if pr.IdentityID != sess.Identity.ID {
@@ -427,6 +428,7 @@ type submitSelfServiceSettingsFlowBody struct{}
 // Browser flows with HTTP Header `Accept: application/json` respond with
 //   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
 //   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 401 when the endpoint is called without a valid session cookie.
 //   - HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 //   - HTTP 400 on form validation errors.
 //

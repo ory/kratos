@@ -71,6 +71,7 @@ func TestCompleteLogin(t *testing.T) {
 		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithWebAuthn), f.Ui.Nodes, []string{
 			"0.attributes.value",
 			"1.attributes.onclick",
+			"1.attributes.onload",
 		})
 		ensureReplacement(t, "1", f.Ui, "allowCredentials")
 	})

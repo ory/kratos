@@ -18,12 +18,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 )
-
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-}
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
 	// AAL is configurable for webauth
