@@ -97,10 +97,14 @@ New feature or request.
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
 - [ ] Endpoint for fetching all schema IDs or all schemas
       ([kratos#1699](https://github.com/ory/kratos/issues/1699))
-- [ ] Email Courier SMTP Header Configuration
-      ([kratos#1725](https://github.com/ory/kratos/issues/1725))
+- [ ] Provide return_to value as part of flow entity
+      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
+- [ ] Expand password validation error messages to facilitate i18n
+      ([kratos#1071](https://github.com/ory/kratos/issues/1071))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
+- [x] Email Courier SMTP Header Configuration
+      ([kratos#1725](https://github.com/ory/kratos/issues/1725))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -111,6 +115,8 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Tag version in docker-compose before commit&tag push
+      ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
@@ -136,6 +142,15 @@ Blocks milestones or other issues or pulls.
 
 - [ ] Implement Hydra integration
       ([kratos#273](https://github.com/ory/kratos/issues/273))
+
+### [Ci](https://github.com/ory/kratos/labels/ci)
+
+Affects Continuous Integration (CI).
+
+#### Issues
+
+- [x] Tag version in docker-compose before commit&tag push
+      ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
 ## [v0.10.0-alpha.1](https://github.com/ory/kratos/milestone/13)
 
@@ -163,6 +178,8 @@ Something is not working.
 
 #### Issues
 
+- [ ] kratos identities import - include "state" property of identity
+      ([kratos#1767](https://github.com/ory/kratos/issues/1767))
 - [x] Submitting successful link verification again ends up with JSON response
       ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
       [@hackerman](https://github.com/aeneasr)
@@ -248,6 +265,9 @@ Something is not working.
 
 #### Issues
 
+- [ ] Add option to remove recovery codes
+      ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect
@@ -300,6 +320,9 @@ Blocks milestones or other issues or pulls.
 
 - [ ] Ory Kratos 0.8 Release Prep
       ([kratos#1663](https://github.com/ory/kratos/issues/1663)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Add option to remove recovery codes
+      ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
       [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests

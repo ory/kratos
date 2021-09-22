@@ -297,7 +297,7 @@ func TestVerification(t *testing.T) {
 			assert.EqualValues(t, verificationEmail, address.Value)
 			assert.True(t, address.Verified)
 			assert.EqualValues(t, identity.VerifiableAddressStatusCompleted, address.Status)
-			assert.True(t, time.Time(address.VerifiedAt).Add(time.Second*5).After(time.Now()))
+			assert.True(t, time.Time(*address.VerifiedAt).Add(time.Second*5).After(time.Now()))
 		}
 
 		var values = func(v url.Values) {

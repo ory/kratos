@@ -59,9 +59,11 @@ func TestVerifier(t *testing.T) {
 			actual, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "baz@ory.sh")
 			require.NoError(t, err)
 			assert.EqualValues(t, "baz@ory.sh", actual.Value)
+
+			verifiedAt := sqlxx.NullTime(time.Now())
 			actual.Status = identity.VerifiableAddressStatusCompleted
 			actual.Verified = true
-			actual.VerifiedAt = sqlxx.NullTime(time.Now())
+			actual.VerifiedAt = &verifiedAt
 			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(context.Background(), actual))
 
 			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID)

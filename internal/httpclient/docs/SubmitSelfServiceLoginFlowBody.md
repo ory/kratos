@@ -4,16 +4,17 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**CsrfToken** | Pointer to **string** | Sending the anti-csrf token is only required for browser login flows. | [optional] 
-**Method** | **string** | Method should be set to \&quot;password\&quot; when logging in using the identifier and password strategy. | 
+**CsrfToken** | Pointer to **string** | The CSRF Token | [optional] 
+**Method** | **string** | Method to use  This field must be set to &#x60;oidc&#x60; when using the oidc method. | 
 **Password** | **string** | The user&#39;s password. | 
 **PasswordIdentifier** | **string** | Identifier is the email or username of the user trying to log in. | 
+**Traits** | **string** | The provider to register with | 
 
 ## Methods
 
 ### NewSubmitSelfServiceLoginFlowBody
 
-`func NewSubmitSelfServiceLoginFlowBody(method string, password string, passwordIdentifier string, ) *SubmitSelfServiceLoginFlowBody`
+`func NewSubmitSelfServiceLoginFlowBody(method string, password string, passwordIdentifier string, traits string, ) *SubmitSelfServiceLoginFlowBody`
 
 NewSubmitSelfServiceLoginFlowBody instantiates a new SubmitSelfServiceLoginFlowBody object
 This constructor will assign default values to properties that have it defined,
@@ -111,6 +112,26 @@ and a boolean to check if the value has been set.
 `func (o *SubmitSelfServiceLoginFlowBody) SetPasswordIdentifier(v string)`
 
 SetPasswordIdentifier sets PasswordIdentifier field to given value.
+
+
+### GetTraits
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetTraits() string`
+
+GetTraits returns the Traits field if non-nil, zero value otherwise.
+
+### GetTraitsOk
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetTraitsOk() (*string, bool)`
+
+GetTraitsOk returns a tuple with the Traits field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetTraits
+
+`func (o *SubmitSelfServiceLoginFlowBody) SetTraits(v string)`
+
+SetTraits sets Traits field to given value.
 
 
 
