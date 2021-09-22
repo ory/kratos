@@ -44,6 +44,14 @@ else
   rn_ui_dir="${RN_UI_PATH}"
 fi
 
+if [ -z ${REACT_UI_PATH+x} ]; then
+  react_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/ory/react-nextjs-example"
+  git clone https://github.com/ory/react-nextjs-example.git "$react_ui_dir"
+  (cd "$react_ui_dir" && npm i)
+else
+  react_ui_dir="${REACT_UI_PATH}"
+fi
+
 (cd test/e2e/proxy; npm i)
 
 kratos=./test/e2e/.bin/kratos
@@ -78,8 +86,12 @@ run() {
   ! nc -zv localhost 4455
   ! nc -zv localhost 4456
   ! nc -zv localhost 4457
+  ! nc -zv localhost 4458
 
   (cd "$rn_ui_dir"; WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
+   > "${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &)
+
+  (cd "$react_ui_dir"; PORT=4458 NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run web -- --non-interactive \
    > "${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &)
 
   DSN=memory URLS_SELF_ISSUER=http://localhost:4444 \
@@ -154,6 +166,7 @@ run() {
     http-get://localhost:4456/health \
     http-get://localhost:4457/ \
     http-get://localhost:4437/mail
+    http-get://localhost:4458/ \
 
   if [[ $dev = "yes" ]]; then
     npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration"
