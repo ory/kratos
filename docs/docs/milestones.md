@@ -97,6 +97,10 @@ New feature or request.
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
 - [ ] Endpoint for fetching all schema IDs or all schemas
       ([kratos#1699](https://github.com/ory/kratos/issues/1699))
+- [ ] Provide return_to value as part of flow entity
+      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
+- [ ] Expand password validation error messages to facilitate i18n
+      ([kratos#1071](https://github.com/ory/kratos/issues/1071))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
 - [x] Email Courier SMTP Header Configuration
@@ -174,6 +178,8 @@ Something is not working.
 
 #### Issues
 
+- [ ] kratos identities import - include "state" property of identity
+      ([kratos#1767](https://github.com/ory/kratos/issues/1767))
 - [x] Submitting successful link verification again ends up with JSON response
       ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
       [@hackerman](https://github.com/aeneasr)
