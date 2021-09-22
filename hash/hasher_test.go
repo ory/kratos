@@ -91,6 +91,37 @@ func TestComparatorBcryptFailsWhenPasswordIsTooLong(t *testing.T) {
 	assert.Error(t, err, "password is too long")
 }
 
+func TestPbkdf2Hasher(t *testing.T) {
+	for k, pw := range [][]byte{
+		mkpw(t, 8),
+		mkpw(t, 16),
+		mkpw(t, 32),
+		mkpw(t, 64),
+		mkpw(t, 128),
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			_, reg := internal.NewFastRegistryWithMocks(t)
+			for kk, h := range []hash.Hasher{
+				hash.NewHasherPbkdf2(reg),
+			} {
+				t.Run(fmt.Sprintf("hasher=%T/password=%d", h, kk), func(t *testing.T) {
+					hs, err := h.Generate(context.Background(), pw)
+					require.NoError(t, err)
+					assert.NotEqual(t, pw, hs)
+
+					t.Logf("hash: %s", hs)
+					require.NoError(t, hash.ComparePbkdf2(context.Background(), pw, hs))
+
+					mod := make([]byte, len(pw))
+					copy(mod, pw)
+					mod[len(pw)-1] = ^pw[len(pw)-1]
+					require.Error(t, hash.ComparePbkdf2(context.Background(), mod, hs))
+				})
+			}
+		})
+	}
+}
+
 func TestComparatorBcryptSuccess(t *testing.T) {
 	for k, pw := range [][]byte{
 		mkpw(t, 8),
@@ -148,4 +179,12 @@ func TestCompare(t *testing.T) {
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$argon2id$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp4")))
 	assert.Nil(t, hash.CompareArgon2id(context.Background(), []byte("test"), []byte("$argon2id$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp4")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$argon2id$v=19$m=32,t=5,p=4$cm94YnRVOW5jZzFzcVE4bQ$fBxypOL0nP/zdPE71JtAV71i487LbX3fJI5PoTN6Lp5")))
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$pbkdf2_sha256$c=100000$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpI")))
+	assert.Nil(t, hash.ComparePbkdf2(context.Background(), []byte("test"), []byte("$pbkdf2_sha256$c=100000$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpI")))
+	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$pbkdf2_sha256$c=100000$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpp")))
+
+	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$pbkdf2_sha512$c=100000$bdHBpn7OWOivJMVJypy2UqR0UnaD5prQXRZevj/05YU$+wArTfv1a+bNGO1iZrmEdVjhA+lL11wF4/IxpgYfPwc")))
+	assert.Nil(t, hash.ComparePbkdf2(context.Background(), []byte("test"), []byte("$pbkdf2_sha512$c=100000$bdHBpn7OWOivJMVJypy2UqR0UnaD5prQXRZevj/05YU$+wArTfv1a+bNGO1iZrmEdVjhA+lL11wF4/IxpgYfPwc")))
+	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$pbkdf2_sha512$c=100000$bdHBpn7OWOivJMVJypy2UqR0UnaD5prQXRZevj/05YU$+wArTfv1a+bNGO1iZrmEdVjhA+lL11wF4/IxpgYfPww")))
 }
