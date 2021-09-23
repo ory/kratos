@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-09-17)](#2021-09-17)
+- [ (2021-09-22)](#2021-09-22)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -207,11 +207,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-09-17)
+# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-09-22)
 
 
 ### Bug Fixes
 
+* API client leaks stack trace with an error ([#1772](https://github.com/ory/kratos/issues/1772)) ([d3aff6d](https://github.com/ory/kratos/commit/d3aff6d3eb11942fbfd6f2de71f4399053075b62)), closes [#1771](https://github.com/ory/kratos/issues/1771)
+* Correct swagger path for /identities/:id/session endpoint ([#1756](https://github.com/ory/kratos/issues/1756)) ([d614f2a](https://github.com/ory/kratos/commit/d614f2a737eef90ad60a4bdedae248b74131ff35))
 * Omitempty for VerifiedAt and StateChangedAt ([#1736](https://github.com/ory/kratos/issues/1736)) ([bf2ec6e](https://github.com/ory/kratos/commit/bf2ec6e6ae8d656ea6dcac037dedd3603ad12915)):
 
     Closes https://github.com/ory/sdk/issues/95
@@ -227,6 +229,11 @@
 ### Features
 
 * Add smtp headers config option ([#1747](https://github.com/ory/kratos/issues/1747)) ([7ffe0e9](https://github.com/ory/kratos/commit/7ffe0e9766e930615dbb6833e650b73a8975a544)), closes [#1725](https://github.com/ory/kratos/issues/1725)
+* Implement endpoint for invalidating all sessions for a given identity ([#1740](https://github.com/ory/kratos/issues/1740)) ([dbd1689](https://github.com/ory/kratos/commit/dbd1689c11fd0a3d999ea09b553dd4a14a7a6972)), closes [#655](https://github.com/ory/kratos/issues/655):
+
+    This PR introduces endpoint to destroy all sessions for a given identity which effectively logouts user from all devices/sessions. This is useful when for some security concern we want to make sure there are no "old" sessions active or other "staff" related actions (such as force logout after password change etc.).
+
+* **logout:** Add logout token to browser response ([#1758](https://github.com/ory/kratos/issues/1758)) ([d3f1177](https://github.com/ory/kratos/commit/d3f1177a9a82dc2c4f930f15c6ec87c3ec5a1d53))
 
 ### Tests
 

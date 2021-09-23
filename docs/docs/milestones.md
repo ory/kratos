@@ -82,8 +82,6 @@ New feature or request.
       ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [ ] Allow account recovery for identities without email address
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
-- [ ] Field validation answer status code 422 instead of 400
-      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
       ([kratos#1589](https://github.com/ory/kratos/issues/1589))
 - [ ] Deprecate webhook loader without URI scheme
@@ -97,6 +95,12 @@ New feature or request.
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
 - [ ] Endpoint for fetching all schema IDs or all schemas
       ([kratos#1699](https://github.com/ory/kratos/issues/1699))
+- [ ] Provide return_to value as part of flow entity
+      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
+- [ ] Expand password validation error messages to facilitate i18n
+      ([kratos#1071](https://github.com/ory/kratos/issues/1071))
+- [x] Field validation answer status code 422 instead of 400
+      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
 - [x] Email Courier SMTP Header Configuration
@@ -125,7 +129,7 @@ A request for comments to discuss and share ideas.
       [@hackerman](https://github.com/aeneasr)
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
-- [ ] Field validation answer status code 422 instead of 400
+- [x] Field validation answer status code 422 instead of 400
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
@@ -174,6 +178,8 @@ Something is not working.
 
 #### Issues
 
+- [ ] kratos identities import - include "state" property of identity
+      ([kratos#1767](https://github.com/ory/kratos/issues/1767))
 - [x] Submitting successful link verification again ends up with JSON response
       ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
       [@hackerman](https://github.com/aeneasr)
