@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-cd "$( dirname "${BASH_SOURCE[0]}" )/../.."
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 make .bin/hydra
 make .bin/yq
@@ -52,25 +52,27 @@ else
   react_ui_dir="${REACT_UI_PATH}"
 fi
 
-(cd test/e2e/proxy; npm i)
+(
+  cd test/e2e/proxy
+  npm i
+)
 
 kratos=./test/e2e/.bin/kratos
 go build -tags sqlite -o $kratos .
 
 if [ -z ${CI+x} ]; then
   docker rm mailslurper hydra hydra-ui -f || true
-  docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
+  docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps >"${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
 fi
 
 dev=no
-for i in "$@"
-do
-case $i in
-    --dev)
+for i in "$@"; do
+  case $i in
+  --dev)
     dev=yes
     shift # past argument=value
     ;;
-esac
+  esac
 done
 
 run() {
@@ -88,17 +90,17 @@ run() {
   ! nc -zv localhost 4457
   ! nc -zv localhost 4458
 
-  (cd "$rn_ui_dir"; WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
-   > "${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &)
-
-  (cd "$react_ui_dir"; PORT=4458 NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run web -- --non-interactive \
-   > "${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &)
+  (
+    cd "$rn_ui_dir"
+    WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
+      >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
+  )
 
   DSN=memory URLS_SELF_ISSUER=http://localhost:4444 \
     LOG_LEVEL=trace \
     URLS_LOGIN=http://localhost:4446/login \
     URLS_CONSENT=http://localhost:4446/consent \
-    hydra serve all --dangerous-force-http > "${base}/test/e2e/hydra.e2e.log" 2>&1 &
+    hydra serve all --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
 
   npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive
 
@@ -134,19 +136,44 @@ run() {
     --callbacks http://localhost:4455/self-service/methods/oidc/callback/github
 
   if [ -z ${NODE_UI_PATH+x} ]; then
-    (cd "$node_ui_dir"; PORT=4456 SECURITY_MODE=cookie npm run serve \
-      > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
+    (
+      cd "$node_ui_dir"
+      PORT=4456 SECURITY_MODE=cookie npm run serve \
+        >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
+    )
   else
-    (cd "$node_ui_dir"; PORT=4456 SECURITY_MODE=cookie npm run start \
-     > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
+    (
+      cd "$node_ui_dir"
+      PORT=4456 SECURITY_MODE=cookie npm run start \
+        >"${base}/test/e2e/ui-node.e2e.log" 2>&1 &
+    )
   fi
 
-  (cd test/e2e/proxy; PORT=4455 npm run start \
-   > "${base}/test/e2e/proxy.e2e.log" 2>&1 &)
+  if [ -z ${REACT_UI_PATH+x} ]; then
+    (
+      cd "$react_ui_dir"
+      PORT=4458 NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run build && npm run start \
+        >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
+    )
+  else
+    (
+      cd "$react_ui_dir"
+      PORT=4458 NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run dev \
+        >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
+    )
+  fi
 
-  (cd test/e2e/hydra-login-consent; \
-    go build . && \
-    PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent > "${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &)
+  (
+    cd test/e2e/proxy
+    PORT=4455 npm run start \
+      >"${base}/test/e2e/proxy.e2e.log" 2>&1 &
+  )
+
+  (
+    cd test/e2e/hydra-login-consent
+    go build . &&
+      PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
+  )
 
   export DSN=${1}
   if [ "$DSN" != "memory" ]; then
@@ -154,10 +181,11 @@ run() {
   fi
 
   for profile in email mobile oidc recovery verification mfa spa; do
-    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
+    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" >test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
-  ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.e2e.log" 2>&1 &)
+
+  ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
   npm run wait-on -- -l -t 300000 http-get://localhost:4434/health/ready \
     http-get://localhost:4455/health \
@@ -165,10 +193,10 @@ run() {
     http-get://localhost:4446/ \
     http-get://localhost:4456/health \
     http-get://localhost:4457/ \
-    http-get://localhost:4437/mail
-    http-get://localhost:4458/ \
+    http-get://localhost:4437/mail \
+    http-get://localhost:4458/
 
-  if [[ $dev = "yes" ]]; then
+  if [[ $dev == "yes" ]]; then
     npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration"
   else
     if [ -z ${CYPRESS_RECORD_KEY+x} ]; then
@@ -180,7 +208,7 @@ run() {
 }
 
 usage() {
-    echo $"This script runs the e2e tests.
+  echo $"This script runs the e2e tests.
 
 To run the tests just pick a database name:
 
@@ -226,26 +254,27 @@ export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_
 export TEST_DATABASE_MEMORY="memory"
 
 case "$1" in
-        sqlite)
-          echo "Database set up at: $TEST_DATABASE_SQLITE"
-          db="${TEST_DATABASE_SQLITE}"
-          ;;
+sqlite)
+  echo "Database set up at: $TEST_DATABASE_SQLITE"
+  db="${TEST_DATABASE_SQLITE}"
+  ;;
 
-        mysql)
-          db="${TEST_DATABASE_MYSQL}"
-          ;;
+mysql)
+  db="${TEST_DATABASE_MYSQL}"
+  ;;
 
-        postgres)
-          db="${TEST_DATABASE_POSTGRESQL}"
-          ;;
+postgres)
+  db="${TEST_DATABASE_POSTGRESQL}"
+  ;;
 
-        cockroach)
-          db="${TEST_DATABASE_COCKROACHDB}"
-          ;;
+cockroach)
+  db="${TEST_DATABASE_COCKROACHDB}"
+  ;;
 
-        *)
-            usage
-            exit 1
+*)
+  usage
+  exit 1
+  ;;
 esac
 
 run "${db}"

@@ -16,6 +16,7 @@ const proxy = (base, prefix = null) => (req, res, next) => {
 
 app.use('/self-service/', proxy(process.env.KRATOS_PUBLIC_URL,'/self-service/'))
 app.use('/schemas/', proxy(process.env.KRATOS_PUBLIC_URL,'/schemas/'))
+app.use('/.well-known/', proxy(process.env.KRATOS_PUBLIC_URL,'/.well-known/'))
 
 app.use('/', proxy(process.env.KRATOS_UI_URL))
 
