@@ -23,4 +23,5 @@ const (
 	WebAuthnLoginTrigger        = "webauthn_login_trigger"
 	WebAuthnRegisterDisplayName = "webauthn_register_displayname"
 	WebAuthnRemove              = "webauthn_remove"
+	WebAuthnScript              = "webauthn_script"
 )

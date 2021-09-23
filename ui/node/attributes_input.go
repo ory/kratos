@@ -64,6 +64,22 @@ func applyImageAttributes(opts ImageAttributesModifiers, attributes *ImageAttrib
 	return attributes
 }
 
+type ScriptAttributesModifier func(attributes *ScriptAttributes)
+type ScriptAttributesModifiers []ScriptAttributesModifier
+
+func WithScriptAttributes(f func(a *ScriptAttributes)) func(a *ScriptAttributes) {
+	return func(a *ScriptAttributes) {
+		f(a)
+	}
+}
+
+func applyScriptAttributes(opts ScriptAttributesModifiers, attributes *ScriptAttributes) *ScriptAttributes {
+	for _, f := range opts {
+		f(attributes)
+	}
+	return attributes
+}
+
 func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...InputAttributesModifier) *Node {
 	return &Node{
 		Type:       Input,
@@ -106,6 +122,23 @@ func NewAnchorField(id string, href string, title *text.Message, group Group) *N
 		Group:      group,
 		Attributes: &AnchorAttributes{Title: title, HREF: href, Identifier: id},
 		Meta:       &Meta{},
+	}
+}
+
+func NewScriptField(name string, src string, group Group, integrity string, opts ...ScriptAttributesModifier) *Node {
+	return &Node{
+		Type:  Script,
+		Group: group,
+		Attributes: applyScriptAttributes(opts, &ScriptAttributes{
+			Identifier:     name,
+			Type:           "text/javascript",
+			Source:         src,
+			Async:          true,
+			ReferrerPolicy: "no-referrer",
+			CrossOrigin:    "anonymous",
+			Integrity:      integrity,
+		}),
+		Meta: &Meta{},
 	}
 }
 

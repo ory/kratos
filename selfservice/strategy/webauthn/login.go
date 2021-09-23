@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/duo-labs/webauthn/protocol"
 	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/tidwall/gjson"
@@ -76,6 +78,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 	}
 
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
+	sr.UI.Nodes.Upsert(NewWebAuthnScript(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), webAuthnRoute).String(), jsOnLoad))
 	sr.UI.SetNode(NewWebAuthnLoginTrigger(string(injectWebAuthnOptions)))
 	sr.UI.Nodes.Upsert(NewWebAuthnLoginInput())
 
