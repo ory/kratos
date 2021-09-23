@@ -25,6 +25,8 @@ func NewWithoutInit(ctx context.Context, opts ...configx.OptionModifier) Registr
 		l.WithError(err).Fatal("Unable to instantiate configuration.")
 	}
 
+
+
 	r, err := NewRegistryFromDSN(c, l)
 	if err != nil {
 		l.WithError(err).Fatal("Unable to instantiate service registry.")

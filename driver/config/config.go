@@ -6,6 +6,9 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/jsonschema/v3"
+	"github.com/ory/kratos/embedx"
+	"github.com/ory/x/watcherx"
 	"net"
 	"net/http"
 	"net/url"
@@ -173,8 +176,9 @@ type (
 	}
 	Schemas []Schema
 	Config  struct {
-		l *logrusx.Logger
-		p *configx.Provider
+		l              *logrusx.Logger
+		p              *configx.Provider
+		identitySchema *jsonschema.Schema
 	}
 
 	Provider interface {
@@ -242,15 +246,55 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
 		configx.WithContext(ctx),
+		configx.AttachWatcher(func(e watcherx.Event, err error) {
+			// TODO re-validate if identity schema changed
+		}),
 	}, opts...)
 
-	p, err := configx.New(ValidationSchema, opts...)
+	p, err := configx.New([]byte(embedx.ConfigSchema), opts...)
 	if err != nil {
 		return nil, err
 	}
 
 	l.UseConfig(p)
-	return &Config{l: l, p: p}, nil
+
+	c := &Config{l: l, p: p}
+
+	if err = c.validateIdentitySchemas(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
+	if p.identitySchema == nil {
+		c := jsonschema.NewCompiler()
+		err := embedx.AddSchemaResources(c, embedx.WithIdentityMetaSchema())
+		if err != nil {
+			return nil, err
+		}
+		p.identitySchema, err = c.Compile(embedx.IdentityMetaSchemaID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return p.identitySchema, nil
+}
+
+func (p *Config) validateIdentitySchemas() error {
+	for _, s := range p.IdentityTraitsSchemas() {
+		resource, err := jsonschema.LoadURL(s.URL)
+		j, err := p.getIdentitySchemaValidator()
+		if err != nil {
+			return err
+		}
+		if err = j.Validate(resource); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *Config) Source() *configx.Provider {
