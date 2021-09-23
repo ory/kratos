@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/x"
 	"net/http"
 	"net/url"
 
@@ -105,7 +106,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token) (
 		PreferredUsername: user.Name,
 		Picture:           user.Picture.Data.Url,
 		Email:             user.Email,
-		EmailVerified:     user.EmailVerified,
+		EmailVerified:     x.ConvertibleBoolean(user.EmailVerified),
 		Gender:            user.Gender,
 		Birthdate:         user.BirthDay,
 	}, nil

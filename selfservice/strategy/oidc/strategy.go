@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/ory/kratos/text"
@@ -57,6 +58,7 @@ type dependencies interface {
 
 	x.LoggingProvider
 	x.CookieProvider
+	x.CSRFProvider
 	x.CSRFTokenGeneratorProvider
 	x.WriterProvider
 
@@ -140,6 +142,39 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
 		r.GET(RouteCallback, wrappedHandleCallback)
 	}
+
+	// Apple can use the POST request methods when calling the callback
+	if handle, _, _ := r.Lookup("POST", RouteCallback); handle == nil {
+		// Hardcoded path to apple provider, I don't have a better way of doing it right now
+		// also this exempt disables csrf checks for both GET and POST requests. Unfortunately
+		// does not allow to defined a rule based on the request method, at least not yet.
+		s.d.CSRFHandler().ExemptPath(RouteBase + "/callback/apple")
+
+		// When handler is called using POST method, the cookies are not attached to the request
+		// by the broser. So here we just redirect the request to the same location rewriting the
+		// form fields to query params. This second GET request should have the cookies attached.
+		r.POST(RouteCallback, s.redirectToGET)
+	}
+}
+
+// Redirect POST request to GET rewriting form fields to query params.
+func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	publicUrl := s.d.Config(r.Context()).SelfPublicURL(r)
+	dest := *r.URL
+	dest.Host = publicUrl.Host
+	dest.Scheme = publicUrl.Scheme
+	if err := r.ParseForm(); err == nil {
+		q := dest.Query()
+		for key, values := range r.Form {
+			for _, value := range values {
+				q.Add(key, value)
+			}
+		}
+		dest.RawQuery = q.Encode()
+	}
+	dest.Path = filepath.Join(publicUrl.Path + dest.Path)
+
+	http.Redirect(w, r , dest.String(), http.StatusFound)
 }
 
 func NewStrategy(d dependencies) *Strategy {

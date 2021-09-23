@@ -1,0 +1,12 @@
+id: foo
+provider: apple
+client_id: foo
+team_id: foo
+private_key: foo
+auth_url: https://example.com
+token_url: https://example.com
+mapper_url: https://example.com
+scope:
+  - foo
+  - bar
+requested_claims: "#/definitions/OIDCClaims"

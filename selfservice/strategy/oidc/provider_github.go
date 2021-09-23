@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"github.com/ory/kratos/x"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -92,7 +93,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 			// If it is the primary email or it's the last email (no primary email set?), set the email.
 			if e.GetPrimary() || k == len(emails) {
 				claims.Email = e.GetEmail()
-				claims.EmailVerified = e.GetVerified()
+				claims.EmailVerified = x.ConvertibleBoolean(e.GetVerified())
 				break
 			}
 		}
