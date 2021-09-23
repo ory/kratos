@@ -34,6 +34,9 @@ type Attributes interface {
 
 	// swagger:ignore
 	GetValue() interface{}
+
+	// swagger:ignore
+	GetNodeType() Type
 }
 
 // InputAttributes represents the attributes of an input node
@@ -71,12 +74,11 @@ type InputAttributes struct {
 	// used for WebAuthn.
 	OnClick string `json:"onclick,omitempty"`
 
-	// OnLoad may contain javascript which should be executed on load. This is primarily
-	// used for WebAuthn. Using this value makes most sense when used on the server-side. For
-	// JavaScript apps running in the browser please load the WebAuthn JavaScript:
+	// NodeType represents this node's types. It is a mirror of `node.type` and
+	// is primarily used to allow compatibility with OpenAPI 3.0.
 	//
-	// 	<script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
-	OnLoad string `json:"onload,omitempty"`
+	// required: true
+	NodeType Type `json:"node_type"`
 }
 
 // ImageAttributes represents the attributes of an image node.
@@ -99,6 +101,12 @@ type ImageAttributes struct {
 
 	// Height of the image
 	Height int `json:"height,omitempty"`
+
+	// NodeType represents this node's types. It is a mirror of `node.type` and
+	// is primarily used to allow compatibility with OpenAPI 3.0.
+	//
+	// required: true
+	NodeType Type `json:"node_type"`
 }
 
 // AnchorAttributes represents the attributes of an anchor node.
@@ -120,6 +128,12 @@ type AnchorAttributes struct {
 	//
 	// required: true
 	Identifier string `json:"id"`
+
+	// NodeType represents this node's types. It is a mirror of `node.type` and
+	// is primarily used to allow compatibility with OpenAPI 3.0.
+	//
+	// required: true
+	NodeType Type `json:"node_type"`
 }
 
 // TextAttributes represents the attributes of a text node.
@@ -136,6 +150,53 @@ type TextAttributes struct {
 	//
 	// required: true
 	Identifier string `json:"id"`
+
+	// NodeType represents this node's types. It is a mirror of `node.type` and
+	// is primarily used to allow compatibility with OpenAPI 3.0.
+	//
+	// required: true
+	NodeType Type `json:"node_type"`
+}
+
+// ScriptAttributes represent script nodes which load javascript.
+//
+// swagger:model uiNodeScriptAttributes
+type ScriptAttributes struct {
+	// The script source
+	//
+	// required: true
+	Source string `json:"src"`
+
+	// The script async type
+	//
+	// required: true
+	Async bool `json:"async"`
+
+	// The script referrer policy
+	//
+	// required: true
+	ReferrerPolicy string `json:"referrerpolicy"`
+
+	// The script cross origin policy
+	//
+	// required: true
+	CrossOrigin string `json:"crossorigin"`
+
+	// The script MIME type
+	//
+	// required: true
+	Type string `json:"type"`
+
+	// A unique identifier
+	//
+	// required: true
+	Identifier string `json:"id"`
+
+	// NodeType represents this node's types. It is a mirror of `node.type` and
+	// is primarily used to allow compatibility with OpenAPI 3.0.
+	//
+	// required: true
+	NodeType Type `json:"node_type"`
 }
 
 var (
@@ -143,6 +204,7 @@ var (
 	_ Attributes = new(ImageAttributes)
 	_ Attributes = new(AnchorAttributes)
 	_ Attributes = new(TextAttributes)
+	_ Attributes = new(ScriptAttributes)
 )
 
 func (a *InputAttributes) ID() string {
@@ -158,6 +220,10 @@ func (a *AnchorAttributes) ID() string {
 }
 
 func (a *TextAttributes) ID() string {
+	return a.Identifier
+}
+
+func (a *ScriptAttributes) ID() string {
 	return a.Identifier
 }
 
@@ -177,6 +243,10 @@ func (a *TextAttributes) SetValue(value interface{}) {
 	a.Text, _ = value.(*text.Message)
 }
 
+func (a *ScriptAttributes) SetValue(value interface{}) {
+	a.Source, _ = value.(string)
+}
+
 func (a *InputAttributes) GetValue() interface{} {
 	return a.FieldValue
 }
@@ -193,6 +263,10 @@ func (a *TextAttributes) GetValue() interface{} {
 	return a.Text
 }
 
+func (a *ScriptAttributes) GetValue() interface{} {
+	return a.Source
+}
+
 func (a *InputAttributes) Reset() {
 	a.FieldValue = nil
 }
@@ -204,4 +278,27 @@ func (a *AnchorAttributes) Reset() {
 }
 
 func (a *TextAttributes) Reset() {
+}
+
+func (a *ScriptAttributes) Reset() {
+}
+
+func (a *InputAttributes) GetNodeType() Type {
+	return a.NodeType
+}
+
+func (a *ImageAttributes) GetNodeType() Type {
+	return a.NodeType
+}
+
+func (a *AnchorAttributes) GetNodeType() Type {
+	return a.NodeType
+}
+
+func (a *TextAttributes) GetNodeType() Type {
+	return a.NodeType
+}
+
+func (a *ScriptAttributes) GetNodeType() Type {
+	return a.NodeType
 }

@@ -41,6 +41,7 @@ const (
 	Input  Type = "input"
 	Image  Type = "img"
 	Anchor Type = "a"
+	Script Type = "script"
 )
 
 // swagger:model uiNodes
@@ -91,6 +92,8 @@ type Node struct {
 //
 // This might include a label and other information that can optionally
 // be used to render UIs.
+//
+// swagger:model uiNodeMeta
 type Meta struct {
 	// Label represents the node's label.
 	//
@@ -345,13 +348,25 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 	var attr Attributes
 	switch t := gjson.GetBytes(data, "type").String(); Type(t) {
 	case Text:
-		attr = new(TextAttributes)
+		attr = &TextAttributes{
+			NodeType: Text,
+		}
 	case Input:
-		attr = new(InputAttributes)
+		attr = &InputAttributes{
+			NodeType: Input,
+		}
 	case Anchor:
-		attr = new(AnchorAttributes)
+		attr = &AnchorAttributes{
+			NodeType: Anchor,
+		}
 	case Image:
-		attr = new(ImageAttributes)
+		attr = &ImageAttributes{
+			NodeType: Image,
+		}
+	case Script:
+		attr = &ScriptAttributes{
+			NodeType: Script,
+		}
 	default:
 		return fmt.Errorf("unexpected node type: %s", t)
 	}
@@ -374,15 +389,22 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 func (n *Node) MarshalJSON() ([]byte, error) {
 	var t Type
 	if n.Attributes != nil {
-		switch n.Attributes.(type) {
+		switch attr := n.Attributes.(type) {
 		case *TextAttributes:
 			t = Text
+			attr.NodeType = Text
 		case *InputAttributes:
 			t = Input
+			attr.NodeType = Input
 		case *AnchorAttributes:
 			t = Anchor
+			attr.NodeType = Anchor
 		case *ImageAttributes:
 			t = Image
+			attr.NodeType = Image
+		case *ScriptAttributes:
+			t = Script
+			attr.NodeType = Script
 		default:
 			return nil, errors.WithStack(fmt.Errorf("unknown node type: %T", n.Attributes))
 		}
