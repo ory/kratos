@@ -40,7 +40,7 @@ func (a *ProviderApple) newClientSecret() (string, error) {
 
 	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
-		return "", errors.Wrap(err.Error(), "Private key decoding failed")
+		return "", errors.Wrap(err, "Private key decoding failed")
 	}
 	privateKey, ok := parsedKey.(*ecdsa.PrivateKey)
 	if !ok {
