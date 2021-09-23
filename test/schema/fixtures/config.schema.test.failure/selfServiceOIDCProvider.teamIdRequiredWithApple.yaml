@@ -3,8 +3,6 @@ provider: apple
 client_id: foo
 private_key_id: foo
 private_key: foo
-auth_url: https://example.com
-token_url: https://example.com
 mapper_url: https://example.com
 scope:
   - foo
