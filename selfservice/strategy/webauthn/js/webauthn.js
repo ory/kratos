@@ -1,9 +1,16 @@
-if (
-  (window && window.__oryWebAuthnLogin && window.__oryWebAuthnRegistration) ||
-  (!window && __oryWebAuthnLogin && __oryWebAuthnRegistration)
-) {
-  // Already registered these functions, do nothing.
-} else {
+(function () {
+  if (!window) {
+    return
+  }
+
+  if (!window.PublicKeyCredential) {
+    alert('This browser does not support WebAuthn!');
+  }
+
+  if (window.__oryWebAuthnInitialized) {
+    return
+  }
+
   function __oryWebAuthnBufferDecode(value) {
     return Uint8Array.from(atob(value), function (c) {
       return c.charCodeAt(0)
@@ -83,8 +90,7 @@ if (
     })
   }
 
-  if (window) {
-    window.__oryWebAuthnLogin = __oryWebAuthnLogin
-    window.__oryWebAuthnRegistration = __oryWebAuthnRegistration
-  }
-}
+  window['__oryWebAuthnLogin'] = __oryWebAuthnLogin
+  window['__oryWebAuthnRegistration'] = __oryWebAuthnRegistration
+  window['__oryWebAuthnInitialized'] = true
+})()

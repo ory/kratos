@@ -182,6 +182,11 @@ type ScriptAttributes struct {
 	// required: true
 	CrossOrigin string `json:"crossorigin"`
 
+	// The script's integrity hash
+	//
+	// required: true
+	Integrity string `json:"integrity"`
+
 	// The script MIME type
 	//
 	// required: true
