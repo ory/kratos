@@ -132,6 +132,41 @@ func TestComparatorBcryptFail(t *testing.T) {
 	}
 }
 
+func TestPbkdf2Hasher(t *testing.T) {
+	for k, pw := range [][]byte{
+		mkpw(t, 8),
+		mkpw(t, 16),
+		mkpw(t, 32),
+		mkpw(t, 64),
+		mkpw(t, 128),
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			for kk, h := range []hash.Hasher{
+				&hash.Pbkdf2{
+					Algorithm:  "sha256",
+					Iterations: 100000,
+					SaltLength: 32,
+					KeyLength:  32,
+				},
+			} {
+				t.Run(fmt.Sprintf("hasher=%T/password=%d", h, kk), func(t *testing.T) {
+					hs, err := h.Generate(context.Background(), pw)
+					require.NoError(t, err)
+					assert.NotEqual(t, pw, hs)
+
+					t.Logf("hash: %s", hs)
+					require.NoError(t, hash.ComparePbkdf2(context.Background(), pw, hs))
+
+					mod := make([]byte, len(pw))
+					copy(mod, pw)
+					mod[len(pw)-1] = ^pw[len(pw)-1]
+					require.Error(t, hash.ComparePbkdf2(context.Background(), mod, hs))
+				})
+			}
+		})
+	}
+}
+
 func TestCompare(t *testing.T) {
 	assert.Nil(t, hash.Compare(context.Background(), []byte("test"), []byte("$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))
 	assert.Nil(t, hash.CompareBcrypt(context.Background(), []byte("test"), []byte("$2a$12$o6hx.Wog/wvFSkT/Bp/6DOxCtLRTDj7lm9on9suF/WaCGNVHbkfL6")))

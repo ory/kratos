@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -70,8 +71,8 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
-	if !s.d.Hasher().IsSameAlgorithm([]byte(p.Password)) {
-		if err := s.upgradePassword(r.Context(), i, []byte(p.Password)); err != nil {
+	if !s.d.Hasher().IsSameAlgorithm([]byte(o.HashedPassword)) {
+		if err := s.upgradePassword(r.Context(), i.ID, []byte(p.Password)); err != nil {
 			s.d.Logger().Errorf("Unable to upgrade password hashing algorithm: %s", err)
 		}
 	}
@@ -84,18 +85,24 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 	return i, nil
 }
 
-func (s *Strategy) upgradePassword(ctx context.Context, i *identity.Identity, password []byte) error {
+func (s *Strategy) upgradePassword(ctx context.Context, identifier uuid.UUID, password []byte) error {
 	hpw, err := s.d.Hasher().Generate(ctx, password)
 	if err != nil {
 		return err
 	}
 	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
+		return errors.Errorf("Unable to encode password options to JSON: %s", err)
 	}
+
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identifier)
+	if err != nil {
+		return err
+	}
+
 	c, ok := i.GetCredentials(s.ID())
 	if !ok {
-		return herodot.ErrInternalServerError.WithReason("Not found a credential.")
+		return errors.Errorf("Not found a credential.")
 	}
 
 	c.Config = co

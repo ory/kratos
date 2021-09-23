@@ -1,11 +1,18 @@
 package hash
 
 import (
+	"bytes"
+	"context"
+	"crypto/rand"
 	"crypto/sha1" // #nosec G505 - compatibility for imported passwords
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/base64"
+	"fmt"
 	"hash"
 
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -14,6 +21,29 @@ type Pbkdf2 struct {
 	Iterations uint32
 	SaltLength uint32
 	KeyLength  uint32
+}
+
+func (h *Pbkdf2) Generate(_ context.Context, password []byte) ([]byte, error) {
+	salt := make([]byte, h.SaltLength)
+	if _, err := rand.Read(salt); err != nil {
+		return nil, err
+	}
+
+	key := pbkdf2.Key(password, salt, int(h.Iterations), int(h.KeyLength), getPseudorandomFunctionForPbkdf2(h.Algorithm))
+
+	var b bytes.Buffer
+	if _, err := fmt.Fprintf(
+		&b,
+		"$pbkdf2_%s$c=%d$%s$%s",
+		h.Algorithm,
+		h.Iterations,
+		base64.RawStdEncoding.EncodeToString(salt),
+		base64.RawStdEncoding.EncodeToString(key),
+	); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return b.Bytes(), nil
 }
 
 func getPseudorandomFunctionForPbkdf2(alg string) func() hash.Hash {
@@ -31,4 +61,8 @@ func getPseudorandomFunctionForPbkdf2(alg string) func() hash.Hash {
 	default:
 		return sha256.New
 	}
+}
+
+func (h *Pbkdf2) IsSameAlgorithm(hash []byte) bool {
+	return IsArgon2idHash(hash)
 }
