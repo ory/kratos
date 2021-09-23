@@ -155,6 +155,17 @@ You should also configure how long a session is privileged. The user will only
 be able to update his/her password (or any other credential) for the specified
 amount of time after clicking on the recovery link.
 
+:::note
+
+If the email address used for recovery purposes is the same as the email used
+for verification purposes and the account has not yet been activated (see
+[Account Activation](../../verify-email-account-activation.mdx) - that is, if
+the email address is not yet verified, the verification status of the
+corresponding object in Kratos will be set to verified upon successful flow
+finalization.
+
+:::
+
 <Tabs
   defaultValue="oss"
   values={[
