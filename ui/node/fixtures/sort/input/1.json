@@ -1,0 +1,92 @@
+[
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "oidc",
+      "disabled": false
+    },
+    "messages": null
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "password_identifier",
+      "type": "text",
+      "value": "",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "oidc.provider",
+      "type": "submit",
+      "value": "google",
+      "disabled": false
+    },
+    "messages": null
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "oidc.provider",
+      "type": "submit",
+      "value": "github",
+      "disabled": false
+    },
+    "messages": null
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "password",
+      "disabled": false
+    },
+    "messages": null
+  },
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "value": "Sk3WySQDVpL5V9IuQelZTXcRVbBE1STI0HAJEcHOnM0/xPz5p1piBzuBMKZWxgYJc5TN8k8BTM9Hazrf/n76pg==",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "oidc.provider",
+      "type": "submit",
+      "value": "hydra",
+      "disabled": false
+    },
+    "messages": null
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "password",
+      "type": "password",
+      "required": true,
+      "disabled": false
+    },
+    "messages": null
+  }
+]
