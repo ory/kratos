@@ -21,6 +21,7 @@ type UiNodeAttributes struct {
 	UiNodeAnchorAttributes *UiNodeAnchorAttributes
 	UiNodeImageAttributes  *UiNodeImageAttributes
 	UiNodeInputAttributes  *UiNodeInputAttributes
+	UiNodeScriptAttributes *UiNodeScriptAttributes
 	UiNodeTextAttributes   *UiNodeTextAttributes
 }
 
@@ -42,6 +43,13 @@ func UiNodeImageAttributesAsUiNodeAttributes(v *UiNodeImageAttributes) UiNodeAtt
 func UiNodeInputAttributesAsUiNodeAttributes(v *UiNodeInputAttributes) UiNodeAttributes {
 	return UiNodeAttributes{
 		UiNodeInputAttributes: v,
+	}
+}
+
+// UiNodeScriptAttributesAsUiNodeAttributes is a convenience function that returns UiNodeScriptAttributes wrapped in UiNodeAttributes
+func UiNodeScriptAttributesAsUiNodeAttributes(v *UiNodeScriptAttributes) UiNodeAttributes {
+	return UiNodeAttributes{
+		UiNodeScriptAttributes: v,
 	}
 }
 
@@ -95,6 +103,19 @@ func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 		dst.UiNodeInputAttributes = nil
 	}
 
+	// try to unmarshal data into UiNodeScriptAttributes
+	err = newStrictDecoder(data).Decode(&dst.UiNodeScriptAttributes)
+	if err == nil {
+		jsonUiNodeScriptAttributes, _ := json.Marshal(dst.UiNodeScriptAttributes)
+		if string(jsonUiNodeScriptAttributes) == "{}" { // empty struct
+			dst.UiNodeScriptAttributes = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.UiNodeScriptAttributes = nil
+	}
+
 	// try to unmarshal data into UiNodeTextAttributes
 	err = newStrictDecoder(data).Decode(&dst.UiNodeTextAttributes)
 	if err == nil {
@@ -113,6 +134,7 @@ func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 		dst.UiNodeAnchorAttributes = nil
 		dst.UiNodeImageAttributes = nil
 		dst.UiNodeInputAttributes = nil
+		dst.UiNodeScriptAttributes = nil
 		dst.UiNodeTextAttributes = nil
 
 		return fmt.Errorf("Data matches more than one schema in oneOf(UiNodeAttributes)")
@@ -137,6 +159,10 @@ func (src UiNodeAttributes) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.UiNodeInputAttributes)
 	}
 
+	if src.UiNodeScriptAttributes != nil {
+		return json.Marshal(&src.UiNodeScriptAttributes)
+	}
+
 	if src.UiNodeTextAttributes != nil {
 		return json.Marshal(&src.UiNodeTextAttributes)
 	}
@@ -159,6 +185,10 @@ func (obj *UiNodeAttributes) GetActualInstance() interface{} {
 
 	if obj.UiNodeInputAttributes != nil {
 		return obj.UiNodeInputAttributes
+	}
+
+	if obj.UiNodeScriptAttributes != nil {
+		return obj.UiNodeScriptAttributes
 	}
 
 	if obj.UiNodeTextAttributes != nil {

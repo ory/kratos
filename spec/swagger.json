@@ -1387,7 +1387,7 @@
             "sessionToken": []
           }
         ],
-        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.\nImplies that the user needs to re-authenticate.\n\nBrowser flows without HTTP Header `Accept` or with `Accept: text/*` respond with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.\n\nBrowser flows with HTTP Header `Accept: application/json` respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.\nHTTP 400 on form validation errors.\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.\nImplies that the user needs to re-authenticate.\n\nBrowser flows without HTTP Header `Accept` or with `Accept: text/*` respond with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.\n\nBrowser flows with HTTP Header `Accept: application/json` respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 401 when the endpoint is called without a valid session cookie.\nHTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.\nHTTP 400 on form validation errors.\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1507,7 +1507,7 @@
     },
     "/self-service/settings/browser": {
       "get": {
-        "description": "This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid\nOry Kratos Session Cookie is included in the request, a login flow will be initialized.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session\nwas set, the browser will be redirected to the login endpoint.\n\nIf this endpoint is called via an AJAX request, the response contains the settings flow without any redirects\nor a 403 forbidden error if no valid session was set.\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid\nOry Kratos Session Cookie is included in the request, a login flow will be initialized.\n\nIf this endpoint is opened as a link in the browser, it will be redirected to\n`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid user session\nwas set, the browser will be redirected to the login endpoint.\n\nIf this endpoint is called via an AJAX request, the response contains the settings flow without any redirects\nor a 401 forbidden error if no valid session was set.\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.\n\nThis endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "schemes": [
           "http",
           "https"
@@ -1535,6 +1535,12 @@
           "302": {
             "$ref": "#/responses/emptyResponse"
           },
+          "401": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
           "403": {
             "description": "jsonError",
             "schema": {
@@ -1552,7 +1558,7 @@
     },
     "/self-service/settings/flows": {
       "get": {
-        "description": "When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie\nor the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes\nbut instead 403 or 500 to improve data privacy.\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor or change the configuration.\n\nYou can access this endpoint without credentials when using Ory Kratos' Admin API.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie\nor the Ory Kratos Session Token are set.\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor or change the configuration.\n\nYou can access this endpoint without credentials when using Ory Kratos' Admin API.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "produces": [
           "application/json"
         ],
@@ -1591,6 +1597,12 @@
             "description": "selfServiceSettingsFlow",
             "schema": {
               "$ref": "#/definitions/selfServiceSettingsFlow"
+            }
+          },
+          "401": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
             }
           },
           "403": {
@@ -1916,16 +1928,6 @@
     "JSONRawMessage": {
       "type": "object",
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
-    },
-    "Meta": {
-      "description": "This might include a label and other information that can optionally\nbe used to render UIs.",
-      "type": "object",
-      "title": "A Node's Meta Information",
-      "properties": {
-        "label": {
-          "$ref": "#/definitions/uiText"
-        }
-      }
     },
     "RecoveryAddress": {
       "type": "object",
@@ -3134,7 +3136,7 @@
           "$ref": "#/definitions/uiTexts"
         },
         "meta": {
-          "$ref": "#/definitions/Meta"
+          "$ref": "#/definitions/uiNodeMeta"
         },
         "type": {
           "$ref": "#/definitions/uiNodeType"
@@ -3147,7 +3149,8 @@
       "required": [
         "href",
         "title",
-        "id"
+        "id",
+        "node_type"
       ],
       "properties": {
         "href": {
@@ -3157,6 +3160,9 @@
         "id": {
           "description": "A unique identifier",
           "type": "string"
+        },
+        "node_type": {
+          "$ref": "#/definitions/uiNodeType"
         },
         "title": {
           "$ref": "#/definitions/uiText"
@@ -3175,7 +3181,8 @@
       "title": "ImageAttributes represents the attributes of an image node.",
       "required": [
         "src",
-        "id"
+        "id",
+        "node_type"
       ],
       "properties": {
         "height": {
@@ -3186,6 +3193,9 @@
         "id": {
           "description": "A unique identifier",
           "type": "string"
+        },
+        "node_type": {
+          "$ref": "#/definitions/uiNodeType"
         },
         "src": {
           "description": "The image's source URL.\n\nformat: uri",
@@ -3207,7 +3217,8 @@
       "required": [
         "name",
         "type",
-        "disabled"
+        "disabled",
+        "node_type"
       ],
       "properties": {
         "disabled": {
@@ -3221,12 +3232,11 @@
           "description": "The input's element name.",
           "type": "string"
         },
+        "node_type": {
+          "$ref": "#/definitions/uiNodeType"
+        },
         "onclick": {
           "description": "OnClick may contain javascript which should be executed on click. This is primarily\nused for WebAuthn.",
-          "type": "string"
-        },
-        "onload": {
-          "description": "OnLoad may contain javascript which should be executed on load. This is primarily\nused for WebAuthn. Using this value makes most sense when used on the server-side. For\nJavaScript apps running in the browser please load the WebAuthn JavaScript:\n\n\u003cscript src=\"https://public-kratos.example.org/.well-known/ory/webauthn.js\" type=\"script\" async /\u003e",
           "type": "string"
         },
         "pattern": {
@@ -3246,17 +3256,78 @@
         }
       }
     },
+    "uiNodeMeta": {
+      "description": "This might include a label and other information that can optionally\nbe used to render UIs.",
+      "type": "object",
+      "title": "A Node's Meta Information",
+      "properties": {
+        "label": {
+          "$ref": "#/definitions/uiText"
+        }
+      }
+    },
+    "uiNodeScriptAttributes": {
+      "type": "object",
+      "title": "ScriptAttributes represent script nodes which load javascript.",
+      "required": [
+        "src",
+        "async",
+        "referrerpolicy",
+        "crossorigin",
+        "integrity",
+        "type",
+        "id",
+        "node_type"
+      ],
+      "properties": {
+        "async": {
+          "description": "The script async type",
+          "type": "boolean"
+        },
+        "crossorigin": {
+          "description": "The script cross origin policy",
+          "type": "string"
+        },
+        "id": {
+          "description": "A unique identifier",
+          "type": "string"
+        },
+        "integrity": {
+          "description": "The script's integrity hash",
+          "type": "string"
+        },
+        "node_type": {
+          "$ref": "#/definitions/uiNodeType"
+        },
+        "referrerpolicy": {
+          "description": "The script referrer policy",
+          "type": "string"
+        },
+        "src": {
+          "description": "The script source",
+          "type": "string"
+        },
+        "type": {
+          "description": "The script MIME type",
+          "type": "string"
+        }
+      }
+    },
     "uiNodeTextAttributes": {
       "type": "object",
       "title": "TextAttributes represents the attributes of a text node.",
       "required": [
         "text",
-        "id"
+        "id",
+        "node_type"
       ],
       "properties": {
         "id": {
           "description": "A unique identifier",
           "type": "string"
+        },
+        "node_type": {
+          "$ref": "#/definitions/uiNodeType"
         },
         "text": {
           "$ref": "#/definitions/uiText"

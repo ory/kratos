@@ -20,7 +20,8 @@ type UiNodeImageAttributes struct {
 	// Height of the image
 	Height *int64 `json:"height,omitempty"`
 	// A unique identifier
-	Id string `json:"id"`
+	Id       string `json:"id"`
+	NodeType string `json:"node_type"`
 	// The image's source URL.  format: uri
 	Src string `json:"src"`
 	// Width of the image
@@ -31,9 +32,10 @@ type UiNodeImageAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeImageAttributes(id string, src string) *UiNodeImageAttributes {
+func NewUiNodeImageAttributes(id string, nodeType string, src string) *UiNodeImageAttributes {
 	this := UiNodeImageAttributes{}
 	this.Id = id
+	this.NodeType = nodeType
 	this.Src = src
 	return &this
 }
@@ -102,6 +104,30 @@ func (o *UiNodeImageAttributes) SetId(v string) {
 	o.Id = v
 }
 
+// GetNodeType returns the NodeType field value
+func (o *UiNodeImageAttributes) GetNodeType() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.NodeType
+}
+
+// GetNodeTypeOk returns a tuple with the NodeType field value
+// and a boolean to check if the value has been set.
+func (o *UiNodeImageAttributes) GetNodeTypeOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.NodeType, true
+}
+
+// SetNodeType sets field value
+func (o *UiNodeImageAttributes) SetNodeType(v string) {
+	o.NodeType = v
+}
+
 // GetSrc returns the Src field value
 func (o *UiNodeImageAttributes) GetSrc() string {
 	if o == nil {
@@ -165,6 +191,9 @@ func (o UiNodeImageAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["id"] = o.Id
+	}
+	if true {
+		toSerialize["node_type"] = o.NodeType
 	}
 	if true {
 		toSerialize["src"] = o.Src

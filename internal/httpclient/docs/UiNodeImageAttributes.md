@@ -6,6 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Height** | Pointer to **int64** | Height of the image | [optional] 
 **Id** | **string** | A unique identifier | 
+**NodeType** | **string** |  | 
 **Src** | **string** | The image&#39;s source URL.  format: uri | 
 **Width** | Pointer to **int64** | Width of the image | [optional] 
 
@@ -13,7 +14,7 @@ Name | Type | Description | Notes
 
 ### NewUiNodeImageAttributes
 
-`func NewUiNodeImageAttributes(id string, src string, ) *UiNodeImageAttributes`
+`func NewUiNodeImageAttributes(id string, nodeType string, src string, ) *UiNodeImageAttributes`
 
 NewUiNodeImageAttributes instantiates a new UiNodeImageAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -71,6 +72,26 @@ and a boolean to check if the value has been set.
 `func (o *UiNodeImageAttributes) SetId(v string)`
 
 SetId sets Id field to given value.
+
+
+### GetNodeType
+
+`func (o *UiNodeImageAttributes) GetNodeType() string`
+
+GetNodeType returns the NodeType field if non-nil, zero value otherwise.
+
+### GetNodeTypeOk
+
+`func (o *UiNodeImageAttributes) GetNodeTypeOk() (*string, bool)`
+
+GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetNodeType
+
+`func (o *UiNodeImageAttributes) SetNodeType(v string)`
+
+SetNodeType sets NodeType field to given value.
 
 
 ### GetSrc

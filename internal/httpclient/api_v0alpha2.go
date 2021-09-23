@@ -298,8 +298,7 @@ type V0alpha2Api interface {
 	/*
 			 * GetSelfServiceSettingsFlow Get Settings Flow
 			 * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
-		or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
-		but instead 403 or 500 to improve data privacy.
+		or the Ory Kratos Session Token are set.
 
 		Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
 		Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -544,7 +543,7 @@ type V0alpha2Api interface {
 		was set, the browser will be redirected to the login endpoint.
 
 		If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
-		or a 403 forbidden error if no valid session was set.
+		or a 401 forbidden error if no valid session was set.
 
 		Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
 		Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -804,6 +803,7 @@ type V0alpha2Api interface {
 		Browser flows with HTTP Header `Accept: application/json` respond with
 		HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
 		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+		HTTP 401 when the endpoint is called without a valid session cookie.
 		HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 		HTTP 400 on form validation errors.
 
@@ -2890,8 +2890,7 @@ func (r V0alpha2ApiApiGetSelfServiceSettingsFlowRequest) Execute() (*SelfService
 /*
  * GetSelfServiceSettingsFlow Get Settings Flow
  * When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
-or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
-but instead 403 or 500 to improve data privacy.
+or the Ory Kratos Session Token are set.
 
 Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
 Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -2984,6 +2983,16 @@ func (a *V0alpha2ApiService) GetSelfServiceSettingsFlowExecute(r V0alpha2ApiApiG
 		newErr := &GenericOpenAPIError{
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
 			var v JsonError
@@ -4165,7 +4174,7 @@ If this endpoint is opened as a link in the browser, it will be redirected to
 was set, the browser will be redirected to the login endpoint.
 
 If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
-or a 403 forbidden error if no valid session was set.
+or a 401 forbidden error if no valid session was set.
 
 Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
 Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -4251,6 +4260,16 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute
 		newErr := &GenericOpenAPIError{
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
 			var v JsonError
@@ -5454,6 +5473,7 @@ a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privi
 Browser flows with HTTP Header `Accept: application/json` respond with
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
 HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 401 when the endpoint is called without a valid session cookie.
 HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
 HTTP 400 on form validation errors.
 
