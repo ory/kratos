@@ -37,7 +37,7 @@ module.exports = {
     /\/$/,
     ''
   ),
-  SPA_URL: (Cypress.env('mobile_url') || 'http://localhost:3000').replace(
+  SPA_URL: (Cypress.env('react_url') || 'http://localhost:4458').replace(
     /\/$/,
     ''
   ),

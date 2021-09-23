@@ -30,6 +30,8 @@ selfservice:
 
 serve:
   public:
+    # We are using a proxy to make cypress not fail with different origins which is why we use this URL here.
+    # See ../proxy
     base_url: http://localhost:4455/
     cors:
       enabled: true
