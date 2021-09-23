@@ -5,13 +5,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | **string** | A unique identifier | 
+**NodeType** | **string** |  | 
 **Text** | [**UiText**](UiText.md) |  | 
 
 ## Methods
 
 ### NewUiNodeTextAttributes
 
-`func NewUiNodeTextAttributes(id string, text UiText, ) *UiNodeTextAttributes`
+`func NewUiNodeTextAttributes(id string, nodeType string, text UiText, ) *UiNodeTextAttributes`
 
 NewUiNodeTextAttributes instantiates a new UiNodeTextAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -44,6 +45,26 @@ and a boolean to check if the value has been set.
 `func (o *UiNodeTextAttributes) SetId(v string)`
 
 SetId sets Id field to given value.
+
+
+### GetNodeType
+
+`func (o *UiNodeTextAttributes) GetNodeType() string`
+
+GetNodeType returns the NodeType field if non-nil, zero value otherwise.
+
+### GetNodeTypeOk
+
+`func (o *UiNodeTextAttributes) GetNodeTypeOk() (*string, bool)`
+
+GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetNodeType
+
+`func (o *UiNodeTextAttributes) SetNodeType(v string)`
+
+SetNodeType sets NodeType field to given value.
 
 
 ### GetText

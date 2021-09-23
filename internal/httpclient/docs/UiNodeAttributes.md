@@ -7,25 +7,29 @@ Name | Type | Description | Notes
 **Disabled** | **bool** | Sets the input&#39;s disabled field to true or false. | 
 **Label** | Pointer to [**UiText**](UiText.md) |  | [optional] 
 **Name** | **string** | The input&#39;s element name. | 
+**NodeType** | **string** |  | 
 **Onclick** | Pointer to **string** | OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn. | [optional] 
-**Onload** | Pointer to **string** | OnLoad may contain javascript which should be executed on load. This is primarily used for WebAuthn. Using this value makes most sense when used on the server-side. For JavaScript apps running in the browser please load the WebAuthn JavaScript:  &lt;script src&#x3D;\&quot;https://public-kratos.example.org/.well-known/ory/webauthn.js\&quot; type&#x3D;\&quot;script\&quot; async /&gt; | [optional] 
 **Pattern** | Pointer to **string** | The input&#39;s pattern. | [optional] 
 **Required** | Pointer to **bool** | Mark this input field as required. | [optional] 
-**Type** | **string** |  | 
+**Type** | **string** | The script MIME type | 
 **Value** | Pointer to **interface{}** | The input&#39;s value. | [optional] 
 **Id** | **string** | A unique identifier | 
 **Text** | [**UiText**](UiText.md) |  | 
 **Height** | Pointer to **int64** | Height of the image | [optional] 
-**Src** | **string** | The image&#39;s source URL.  format: uri | 
+**Src** | **string** | The script source | 
 **Width** | Pointer to **int64** | Width of the image | [optional] 
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
 **Title** | [**UiText**](UiText.md) |  | 
+**Async** | **bool** | The script async type | 
+**Crossorigin** | **string** | The script cross origin policy | 
+**Integrity** | **string** | The script&#39;s integrity hash | 
+**Referrerpolicy** | **string** | The script referrer policy | 
 
 ## Methods
 
 ### NewUiNodeAttributes
 
-`func NewUiNodeAttributes(disabled bool, name string, type_ string, id string, text UiText, src string, href string, title UiText, ) *UiNodeAttributes`
+`func NewUiNodeAttributes(disabled bool, name string, nodeType string, type_ string, id string, text UiText, src string, href string, title UiText, async bool, crossorigin string, integrity string, referrerpolicy string, ) *UiNodeAttributes`
 
 NewUiNodeAttributes instantiates a new UiNodeAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -105,6 +109,26 @@ and a boolean to check if the value has been set.
 SetName sets Name field to given value.
 
 
+### GetNodeType
+
+`func (o *UiNodeAttributes) GetNodeType() string`
+
+GetNodeType returns the NodeType field if non-nil, zero value otherwise.
+
+### GetNodeTypeOk
+
+`func (o *UiNodeAttributes) GetNodeTypeOk() (*string, bool)`
+
+GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetNodeType
+
+`func (o *UiNodeAttributes) SetNodeType(v string)`
+
+SetNodeType sets NodeType field to given value.
+
+
 ### GetOnclick
 
 `func (o *UiNodeAttributes) GetOnclick() string`
@@ -129,31 +153,6 @@ SetOnclick sets Onclick field to given value.
 `func (o *UiNodeAttributes) HasOnclick() bool`
 
 HasOnclick returns a boolean if a field has been set.
-
-### GetOnload
-
-`func (o *UiNodeAttributes) GetOnload() string`
-
-GetOnload returns the Onload field if non-nil, zero value otherwise.
-
-### GetOnloadOk
-
-`func (o *UiNodeAttributes) GetOnloadOk() (*string, bool)`
-
-GetOnloadOk returns a tuple with the Onload field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetOnload
-
-`func (o *UiNodeAttributes) SetOnload(v string)`
-
-SetOnload sets Onload field to given value.
-
-### HasOnload
-
-`func (o *UiNodeAttributes) HasOnload() bool`
-
-HasOnload returns a boolean if a field has been set.
 
 ### GetPattern
 
@@ -408,6 +407,86 @@ and a boolean to check if the value has been set.
 `func (o *UiNodeAttributes) SetTitle(v UiText)`
 
 SetTitle sets Title field to given value.
+
+
+### GetAsync
+
+`func (o *UiNodeAttributes) GetAsync() bool`
+
+GetAsync returns the Async field if non-nil, zero value otherwise.
+
+### GetAsyncOk
+
+`func (o *UiNodeAttributes) GetAsyncOk() (*bool, bool)`
+
+GetAsyncOk returns a tuple with the Async field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAsync
+
+`func (o *UiNodeAttributes) SetAsync(v bool)`
+
+SetAsync sets Async field to given value.
+
+
+### GetCrossorigin
+
+`func (o *UiNodeAttributes) GetCrossorigin() string`
+
+GetCrossorigin returns the Crossorigin field if non-nil, zero value otherwise.
+
+### GetCrossoriginOk
+
+`func (o *UiNodeAttributes) GetCrossoriginOk() (*string, bool)`
+
+GetCrossoriginOk returns a tuple with the Crossorigin field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCrossorigin
+
+`func (o *UiNodeAttributes) SetCrossorigin(v string)`
+
+SetCrossorigin sets Crossorigin field to given value.
+
+
+### GetIntegrity
+
+`func (o *UiNodeAttributes) GetIntegrity() string`
+
+GetIntegrity returns the Integrity field if non-nil, zero value otherwise.
+
+### GetIntegrityOk
+
+`func (o *UiNodeAttributes) GetIntegrityOk() (*string, bool)`
+
+GetIntegrityOk returns a tuple with the Integrity field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetIntegrity
+
+`func (o *UiNodeAttributes) SetIntegrity(v string)`
+
+SetIntegrity sets Integrity field to given value.
+
+
+### GetReferrerpolicy
+
+`func (o *UiNodeAttributes) GetReferrerpolicy() string`
+
+GetReferrerpolicy returns the Referrerpolicy field if non-nil, zero value otherwise.
+
+### GetReferrerpolicyOk
+
+`func (o *UiNodeAttributes) GetReferrerpolicyOk() (*string, bool)`
+
+GetReferrerpolicyOk returns a tuple with the Referrerpolicy field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetReferrerpolicy
+
+`func (o *UiNodeAttributes) SetReferrerpolicy(v string)`
+
+SetReferrerpolicy sets Referrerpolicy field to given value.
 
 
 

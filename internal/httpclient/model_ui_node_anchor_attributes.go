@@ -20,18 +20,20 @@ type UiNodeAnchorAttributes struct {
 	// The link's href (destination) URL.  format: uri
 	Href string `json:"href"`
 	// A unique identifier
-	Id    string `json:"id"`
-	Title UiText `json:"title"`
+	Id       string `json:"id"`
+	NodeType string `json:"node_type"`
+	Title    UiText `json:"title"`
 }
 
 // NewUiNodeAnchorAttributes instantiates a new UiNodeAnchorAttributes object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeAnchorAttributes(href string, id string, title UiText) *UiNodeAnchorAttributes {
+func NewUiNodeAnchorAttributes(href string, id string, nodeType string, title UiText) *UiNodeAnchorAttributes {
 	this := UiNodeAnchorAttributes{}
 	this.Href = href
 	this.Id = id
+	this.NodeType = nodeType
 	this.Title = title
 	return &this
 }
@@ -92,6 +94,30 @@ func (o *UiNodeAnchorAttributes) SetId(v string) {
 	o.Id = v
 }
 
+// GetNodeType returns the NodeType field value
+func (o *UiNodeAnchorAttributes) GetNodeType() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.NodeType
+}
+
+// GetNodeTypeOk returns a tuple with the NodeType field value
+// and a boolean to check if the value has been set.
+func (o *UiNodeAnchorAttributes) GetNodeTypeOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.NodeType, true
+}
+
+// SetNodeType sets field value
+func (o *UiNodeAnchorAttributes) SetNodeType(v string) {
+	o.NodeType = v
+}
+
 // GetTitle returns the Title field value
 func (o *UiNodeAnchorAttributes) GetTitle() UiText {
 	if o == nil {
@@ -123,6 +149,9 @@ func (o UiNodeAnchorAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["id"] = o.Id
+	}
+	if true {
+		toSerialize["node_type"] = o.NodeType
 	}
 	if true {
 		toSerialize["title"] = o.Title

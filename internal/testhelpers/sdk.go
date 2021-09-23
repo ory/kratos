@@ -95,7 +95,7 @@ func NewSDKOIDCNode(name, provider string) *kratos.UiNode {
 			Type:  "submit",
 			Value: provider,
 		}),
-		Meta: kratos.Meta{
+		Meta: kratos.UiNodeMeta{
 			Label: &kratos.UiText{
 				Id:   int64(t.ID),
 				Text: t.Text,

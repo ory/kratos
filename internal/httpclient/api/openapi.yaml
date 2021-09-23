@@ -1449,6 +1449,7 @@ paths:
         Browser flows with HTTP Header `Accept: application/json` respond with
         HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
         HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+        HTTP 401 when the endpoint is called without a valid session cookie.
         HTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.
         HTTP 400 on form validation errors.
 
@@ -1592,7 +1593,7 @@ paths:
         was set, the browser will be redirected to the login endpoint.
 
         If this endpoint is called via an AJAX request, the response contains the settings flow without any redirects
-        or a 403 forbidden error if no valid session was set.
+        or a 401 forbidden error if no valid session was set.
 
         Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
         Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -1622,6 +1623,12 @@ paths:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "403":
           content:
             application/json:
@@ -1641,8 +1648,7 @@ paths:
     get:
       description: |-
         When accessing this endpoint through Ory Kratos' Public API you must ensure that either the Ory Kratos Session Cookie
-        or the Ory Kratos Session Token are set. The public endpoint does not return 404 status codes
-        but instead 403 or 500 to improve data privacy.
+        or the Ory Kratos Session Token are set.
 
         Depending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator
         Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
@@ -1698,6 +1704,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceSettingsFlow'
           description: selfServiceSettingsFlow
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "403":
           content:
             application/json:
@@ -2103,21 +2115,6 @@ components:
     JSONRawMessage:
       title: JSONRawMessage represents a json.RawMessage that works well with JSON,
         SQL, and Swagger.
-      type: object
-    Meta:
-      description: |-
-        This might include a label and other information that can optionally
-        be used to render UIs.
-      example:
-        label:
-          context: '{}'
-          id: 0
-          text: text
-          type: type
-      properties:
-        label:
-          $ref: '#/components/schemas/uiText'
-      title: A Node's Meta Information
       type: object
     RecoveryAddress:
       example:
@@ -4021,7 +4018,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         meta:
-          $ref: '#/components/schemas/Meta'
+          $ref: '#/components/schemas/uiNodeMeta'
         type:
           type: string
       required:
@@ -4043,20 +4040,32 @@ components:
         id:
           description: A unique identifier
           type: string
+        node_type:
+          type: string
         title:
           $ref: '#/components/schemas/uiText'
       required:
       - href
       - id
+      - node_type
       - title
       title: AnchorAttributes represents the attributes of an anchor node.
       type: object
     uiNodeAttributes:
+      discriminator:
+        mapping:
+          anchor: '#/components/schemas/uiNodeAnchorAttributes'
+          image: '#/components/schemas/uiNodeImageAttributes'
+          input: '#/components/schemas/uiNodeInputAttributes'
+          script: '#/components/schemas/uiNodeScriptAttributes'
+          text: '#/components/schemas/uiNodeTextAttributes'
+        propertyName: node_type
       oneOf:
       - $ref: '#/components/schemas/uiNodeInputAttributes'
       - $ref: '#/components/schemas/uiNodeTextAttributes'
       - $ref: '#/components/schemas/uiNodeImageAttributes'
       - $ref: '#/components/schemas/uiNodeAnchorAttributes'
+      - $ref: '#/components/schemas/uiNodeScriptAttributes'
       title: Attributes represents a list of attributes (e.g. `href="foo"` for links).
     uiNodeGroup:
       type: string
@@ -4068,6 +4077,8 @@ components:
           type: integer
         id:
           description: A unique identifier
+          type: string
+        node_type:
           type: string
         src:
           description: |-
@@ -4081,6 +4092,7 @@ components:
           type: integer
       required:
       - id
+      - node_type
       - src
       title: ImageAttributes represents the attributes of an image node.
       type: object
@@ -4097,18 +4109,12 @@ components:
         name:
           description: The input's element name.
           type: string
+        node_type:
+          type: string
         onclick:
           description: |-
             OnClick may contain javascript which should be executed on click. This is primarily
             used for WebAuthn.
-          type: string
-        onload:
-          description: |-
-            OnLoad may contain javascript which should be executed on load. This is primarily
-            used for WebAuthn. Using this value makes most sense when used on the server-side. For
-            JavaScript apps running in the browser please load the WebAuthn JavaScript:
-
-            <script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
           type: string
         pattern:
           description: The input's pattern.
@@ -4124,17 +4130,72 @@ components:
       required:
       - disabled
       - name
+      - node_type
       - type
+      type: object
+    uiNodeMeta:
+      description: |-
+        This might include a label and other information that can optionally
+        be used to render UIs.
+      example:
+        label:
+          context: '{}'
+          id: 0
+          text: text
+          type: type
+      properties:
+        label:
+          $ref: '#/components/schemas/uiText'
+      title: A Node's Meta Information
+      type: object
+    uiNodeScriptAttributes:
+      properties:
+        async:
+          description: The script async type
+          type: boolean
+        crossorigin:
+          description: The script cross origin policy
+          type: string
+        id:
+          description: A unique identifier
+          type: string
+        integrity:
+          description: The script's integrity hash
+          type: string
+        node_type:
+          type: string
+        referrerpolicy:
+          description: The script referrer policy
+          type: string
+        src:
+          description: The script source
+          type: string
+        type:
+          description: The script MIME type
+          type: string
+      required:
+      - async
+      - crossorigin
+      - id
+      - integrity
+      - node_type
+      - referrerpolicy
+      - src
+      - type
+      title: ScriptAttributes represent script nodes which load javascript.
       type: object
     uiNodeTextAttributes:
       properties:
         id:
           description: A unique identifier
           type: string
+        node_type:
+          type: string
         text:
           $ref: '#/components/schemas/uiText'
       required:
       - id
+      - node_type
       - text
       title: TextAttributes represents the attributes of a text node.
       type: object
