@@ -223,7 +223,7 @@ func TestHandler(t *testing.T) {
 				id := gjson.GetBytes(body, "id")
 				require.NotEmpty(t, id)
 
-				res, err = user2.Get(publicTS.URL + settings.RouteGetFlow + "?id="+id.String())
+				res, err = user2.Get(publicTS.URL + settings.RouteGetFlow + "?id=" + id.String())
 				require.NoError(t, err)
 				defer res.Body.Close()
 
