@@ -2,6 +2,7 @@ package password
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -9,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/decoderx"
+
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -17,7 +20,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
@@ -68,12 +70,38 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
+	if !s.d.Hasher().IsSameAlgorithm([]byte(p.Password)) {
+		if err := s.upgradePassword(r.Context(), i, []byte(p.Password)); err != nil {
+			s.d.Logger().Errorf("Unable to upgrade password hashing algorithm: %s", err)
+		}
+	}
+
 	f.Active = identity.CredentialsTypePassword
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
 	return i, nil
+}
+
+func (s *Strategy) upgradePassword(ctx context.Context, i *identity.Identity, password []byte) error {
+	hpw, err := s.d.Hasher().Generate(ctx, password)
+	if err != nil {
+		return err
+	}
+	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
+	if err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
+	}
+	c, ok := i.GetCredentials(s.ID())
+	if !ok {
+		return herodot.ErrInternalServerError.WithReason("Not found a credential.")
+	}
+
+	c.Config = co
+	i.SetCredentials(s.ID(), *c)
+
+	return s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i)
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {

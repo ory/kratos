@@ -1907,72 +1907,6 @@ hashers:
     #
     cost: 4
 
-  ## Configuration for the PBKDF2 hasher. ##
-  #
-  pbkdf2:
-    ## iterations ##
-    #
-    # Default value: 100000
-    #
-    # Minimum value: 1000
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export HASHERS_PBKDF2_ITERATIONS=<value>
-    # - Windows Command Line (CMD):
-    #    > set HASHERS_PBKDF2_ITERATIONS=<value>
-    #
-    iterations: 1000
-
-    ## salt_length ##
-    #
-    # Default value: 32
-    #
-    # Minimum value: 16
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export HASHERS_PBKDF2_SALT_LENGTH=<value>
-    # - Windows Command Line (CMD):
-    #    > set HASHERS_PBKDF2_SALT_LENGTH=<value>
-    #
-    salt_length: 16
-
-    ## key_length ##
-    #
-    # Default value: 32
-    #
-    # Minimum value: 16
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export HASHERS_PBKDF2_KEY_LENGTH=<value>
-    # - Windows Command Line (CMD):
-    #    > set HASHERS_PBKDF2_KEY_LENGTH=<value>
-    #
-    key_length: 16
-
-    ## Pseudorandom function for PBKDF2 ##
-    #
-    # One of the values: sha1, sha224, sha256, sha384, sha512
-    #
-    # Default value: sha256
-    #
-    # One of:
-    # - sha1
-    # - sha224
-    # - sha256
-    # - sha384
-    # - sha512
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export HASHERS_PBKDF2_ALGORITHM=<value>
-    # - Windows Command Line (CMD):
-    #    > set HASHERS_PBKDF2_ALGORITHM=<value>
-    #
-    algorithm: sha1
-
   ## Password hashing algorithm ##
   #
   # One of the values: argon2, bcrypt
@@ -1982,7 +1916,6 @@ hashers:
   # One of:
   # - argon2
   # - bcrypt
-  # - pbkdf2
   #
   # Set this value using environment variables on
   # - Linux/macOS:

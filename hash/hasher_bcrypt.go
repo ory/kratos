@@ -35,6 +35,9 @@ func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	return hash, nil
 }
 
+func (h *Bcrypt) IsSameAlgorithm(hash []byte) bool {
+	return IsBcryptHash(hash)
+}
 func validateBcryptPasswordLength(password []byte) error {
 	// Bcrypt truncates the password to the first 72 bytes, following the OpenBSD implementation,
 	// so if password is longer than 72 bytes, function returns an error

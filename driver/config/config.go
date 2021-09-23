@@ -132,10 +132,6 @@ const (
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyCipherAlgorithm                                         = "ciphers.algorithm"
-	ViperKeyHasherPbkdf2ConfigAlgorithm                             = "hashers.pbkdf2.algorithm"
-	ViperKeyHasherPbkdf2ConfigIterations                            = "hashers.pbkdf2.iterations"
-	ViperKeyHasherPbkdf2ConfigSaltLength                            = "hashers.pbkdf2.salt_length"
-	ViperKeyHasherPbkdf2ConfigKeyLength                             = "hashers.pbkdf2.key_length"
 	ViperKeyLinkLifespan                                            = "selfservice.methods.link.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
@@ -150,10 +146,6 @@ const (
 	Argon2DefaultDeviation                                          = 500 * time.Millisecond
 	Argon2DefaultDedicatedMemory                                    = 1 * bytesize.GB
 	BcryptDefaultCost                                        uint32 = 12
-	Pbkdf2DefaultAlgorithm                                          = "sha256"
-	Pbkdf2DefaultIterations                                  uint32 = 100000
-	Pbkdf2DefaultSaltLength                                  uint32 = 32
-	Pbkdf2DefaultKeyLength                                   uint32 = 32
 )
 
 // DefaultSessionCookieName returns the default cookie name for the kratos session.
@@ -172,12 +164,6 @@ type (
 	}
 	Bcrypt struct {
 		Cost uint32 `json:"cost"`
-	}
-	Pbkdf2 struct {
-		Algorithm  string `json:"algorithm"`
-		Iterations uint32 `json:"iterations"`
-		SaltLength uint32 `json:"salt_length"`
-		KeyLength  uint32 `json:"key_length"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -411,15 +397,6 @@ func (p *Config) HasherBcrypt() *Bcrypt {
 	}
 
 	return &Bcrypt{Cost: cost}
-}
-
-func (p *Config) HasherPbkdf2() *Pbkdf2 {
-	return &Pbkdf2{
-		Algorithm:  p.p.StringF(ViperKeyHasherPbkdf2ConfigAlgorithm, Pbkdf2DefaultAlgorithm),
-		Iterations: uint32(p.p.IntF(ViperKeyHasherPbkdf2ConfigIterations, int(Pbkdf2DefaultIterations))),
-		SaltLength: uint32(p.p.IntF(ViperKeyHasherPbkdf2ConfigSaltLength, int(Pbkdf2DefaultSaltLength))),
-		KeyLength:  uint32(p.p.IntF(ViperKeyHasherPbkdf2ConfigKeyLength, int(Pbkdf2DefaultKeyLength))),
-	}
 }
 
 func (p *Config) listenOn(key string) string {

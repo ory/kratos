@@ -381,12 +381,9 @@ func (m *RegistryDefault) Cipher() cipher.Cipher {
 
 func (m *RegistryDefault) Hasher() hash.Hasher {
 	if m.passwordHasher == nil {
-		switch m.c.HasherPasswordHashingAlgorithm() {
-		case "bcrypt":
+		if m.c.HasherPasswordHashingAlgorithm() == "bcrypt" {
 			m.passwordHasher = hash.NewHasherBcrypt(m)
-		case "pbkdf2":
-			m.passwordHasher = hash.NewHasherPbkdf2(m)
-		default:
+		} else {
 			m.passwordHasher = hash.NewHasherArgon2(m)
 		}
 	}

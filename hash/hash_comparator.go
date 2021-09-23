@@ -19,13 +19,14 @@ import (
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
 
 func Compare(ctx context.Context, password []byte, hash []byte) error {
-	if IsBcryptHash(hash) {
+	switch {
+	case IsBcryptHash(hash):
 		return CompareBcrypt(ctx, password, hash)
-	} else if IsPbkdf2Hash(hash) {
-		return ComparePbkdf2(ctx, password, hash)
-	} else if IsArgon2idHash(hash) {
+	case IsArgon2idHash(hash):
 		return CompareArgon2id(ctx, password, hash)
-	} else {
+	case IsPbkdf2Hash(hash):
+		return ComparePbkdf2(ctx, password, hash)
+	default:
 		return ErrUnknownHashAlgorithm
 	}
 }
@@ -134,13 +135,15 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 	return p, salt, hash, nil
 }
 
-func decodePbkdf2Hash(encodedHash string) (p *config.Pbkdf2, salt, hash []byte, err error) {
+// decodePbkdf2Hash decodes PBKDF2 encoded password hash.
+// format: $pbkdf2_<algorithm>$c=<iteration>$<salt>$<hash>
+func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 5 {
 		return nil, nil, nil, ErrInvalidHash
 	}
 
-	p = new(config.Pbkdf2)
+	p = new(Pbkdf2)
 	algParts := strings.SplitN(parts[1], "_", 2)
 	if len(algParts) != 2 {
 		return nil, nil, nil, ErrInvalidHash

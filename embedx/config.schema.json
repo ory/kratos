@@ -1772,8 +1772,7 @@
           "default": "bcrypt",
           "enum": [
             "argon2",
-            "bcrypt",
-            "pbkdf2"
+            "bcrypt"
           ]
         },
         "argon2": {
@@ -1841,41 +1840,6 @@
               "default": 12
             }
           }
-        },
-        "pbkdf2": {
-          "title": "Configuration for the PBKDF2 hasher.",
-          "type": "object",
-          "properties": {
-            "algorithm": {
-              "title": "Pseudorandom function for PBKDF2",
-              "description": "One of the values: sha1, sha224, sha256, sha384, sha512",
-              "type": "string",
-              "default": "sha256",
-              "enum": [
-                "sha1",
-                "sha224",
-                "sha256",
-                "sha384",
-                "sha512"
-              ]
-            },
-            "iterations": {
-              "type": "integer",
-              "minimum": 1000,
-              "default": 100000
-            },
-            "salt_length": {
-              "type": "integer",
-              "minimum": 16,
-              "default": 32
-            },
-            "key_length": {
-              "type": "integer",
-              "minimum": 16,
-              "default": 32
-            }
-          },
-          "additionalProperties": false
         }
       },
       "additionalProperties": false
