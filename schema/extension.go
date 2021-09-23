@@ -2,24 +2,20 @@ package schema
 
 import (
 	"bytes"
-	"embed"
 	"encoding/json"
-
-	"github.com/pkg/errors"
-
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/kratos/embedx"
+	"github.com/pkg/errors"
 )
 
-//go:embed .schema/extension/*.json
-var ExtensionSchemas embed.FS
+var ExtensionRunnerIdentityMetaSchema = ExtensionRunnerMetaSchema(embedx.IdentityExtension)
 
 const (
-	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = ".schema/extension/identity.schema.json"
-	extensionName                     string                    = "ory.sh/kratos"
+	extensionName string = "ory.sh/kratos"
 )
 
 type (
-	ExtensionRunnerMetaSchema string
+	ExtensionRunnerMetaSchema embedx.SchemaType
 	ExtensionConfig           struct {
 		Credentials struct {
 			Password struct {
@@ -57,13 +53,14 @@ type (
 
 func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...Extension) (*ExtensionRunner, error) {
 	var err error
-	schema, err := ExtensionSchemas.ReadFile(string(meta))
-	if err != nil {
+	r := new(ExtensionRunner)
+	c := jsonschema.NewCompiler()
+
+	if err = embedx.AddSchemaResources(c, embedx.SchemaType(meta)); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	r := new(ExtensionRunner)
-	r.meta, err = jsonschema.CompileString(string(meta), string(schema))
+	r.meta, err = c.Compile(embedx.SchemaType(meta).GetSchemaID().ToString())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

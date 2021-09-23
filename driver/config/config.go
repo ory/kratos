@@ -270,11 +270,11 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
 	if p.identitySchema == nil {
 		c := jsonschema.NewCompiler()
-		err := embedx.AddSchemaResources(c, embedx.WithIdentityMetaSchema())
+		err := embedx.AddSchemaResources(c, embedx.IdentityMeta)
 		if err != nil {
 			return nil, err
 		}
-		p.identitySchema, err = c.Compile(embedx.IdentityMetaSchemaID)
+		p.identitySchema, err = c.Compile(embedx.IdentityMetaSchemaID.ToString())
 		if err != nil {
 			return nil, err
 		}
