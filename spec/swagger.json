@@ -488,6 +488,57 @@
         }
       }
     },
+    "/schemas": {
+      "get": {
+        "description": "Get all Identity Schemas",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "operationId": "listIdentitySchemas",
+        "parameters": [
+          {
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 100,
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "description": "Pagination Page",
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "identitySchemas",
+            "schema": {
+              "$ref": "#/definitions/identitySchemas"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
     "/schemas/{id}": {
       "get": {
         "description": "Get a JSON Schema",
@@ -2093,6 +2144,26 @@
       "title": "A list of identities.",
       "items": {
         "$ref": "#/definitions/identity"
+      }
+    },
+    "identitySchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The ID of the Identity JSON Schema",
+          "type": "string"
+        },
+        "schema": {
+          "description": "The actual Identity JSON Schema",
+          "type": "object"
+        }
+      }
+    },
+    "identitySchemas": {
+      "description": "Raw identity Schema list",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/identitySchema"
       }
     },
     "identityState": {
