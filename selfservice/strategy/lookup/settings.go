@@ -51,6 +51,9 @@ type submitSelfServiceSettingsFlowWithLookupMethodBody struct {
 	// If set to true will save the regenerated lookup secrets
 	ConfirmLookup bool `json:"lookup_secret_confirm"`
 
+	// Disables this method if true.
+	DisableLookup bool `json:"lookup_secret_disable"`
+
 	// CSRFToken is the anti-CSRF token
 	CSRFToken string `json:"csrf_token"`
 
@@ -180,6 +183,7 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 	ctxUpdate.Flow.UI.Nodes.Upsert(creds.ToNode())
 	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewRegenerateLookupNode())
+	ctxUpdate.Flow.UI.Nodes.Upsert(NewDisableLookupNode())
 	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRevealed), true)
 	if err != nil {
 		return err

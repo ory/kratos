@@ -23,6 +23,7 @@ const (
 	InfoSelfServiceSettingsRegisterWebAuthnDisplayName
 	InfoSelfServiceSettingsLookupSecretUsed
 	InfoSelfServiceSettingsLookupSecretList
+	InfoSelfServiceSettingsDisableLookup
 )
 
 const (
@@ -95,6 +96,14 @@ func NewInfoSelfServiceSettingsRegenerateLookup() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsRegenerateLookup,
 		Text: "Generate new backup recovery codes",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceSettingsDisableLookup() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsDisableLookup,
+		Text: "Disable this method",
 		Type: Info,
 	}
 }
