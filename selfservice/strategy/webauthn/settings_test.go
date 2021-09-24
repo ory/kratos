@@ -128,11 +128,12 @@ func TestCompleteSettings(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
-		assertx.EqualAsJSONExcept(t, json.RawMessage(settingsFixtureHasWebAuthn), f.Ui.Nodes, []string{
+
+		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
 			"4.attributes.onclick",
+			"6.attributes.src",
 		})
-
 		ensureReplacement(t, "4", f.Ui, "Ory Corp")
 	})
 
@@ -142,12 +143,13 @@ func TestCompleteSettings(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
-		assertx.EqualAsJSONExcept(t, json.RawMessage(settingsFixtureNoWebauthn), f.Ui.Nodes, []string{
+
+		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
 			"2.attributes.onload",
 			"2.attributes.onclick",
+			"4.attributes.src",
 		})
-
 		ensureReplacement(t, "2", f.Ui, "Ory Corp")
 	})
 

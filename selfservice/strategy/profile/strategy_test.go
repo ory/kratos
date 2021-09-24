@@ -41,9 +41,6 @@ func init() {
 	corpx.RegisterFakes()
 }
 
-//go:embed fixtures/expected.json
-var fixtureExpected []byte
-
 func newIdentityWithPassword(email string) *identity.Identity {
 	return &identity.Identity{
 		ID: x.NewUUID(),
@@ -199,7 +196,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.EqualValues(t, payload.Identity.Traits.(map[string]interface{})["email"], gjson.Get(actual, "nodes.#(attributes.name==traits.email).attributes.value").String())
 			assert.NotEmpty(t, gjson.Get(actual, "nodes.#(attributes.name==csrf_token).attributes.value").String(), "csrf token missing")
 
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureExpected), payload.Ui, []string{"action", "nodes.0.attributes.value", "nodes.1.attributes.value"})
+			testhelpers.SnapshotTExcept(t, payload.Ui, []string{"action", "nodes.0.attributes.value", "nodes.1.attributes.value"})
 		}
 
 		t.Run("type=api", func(t *testing.T) {

@@ -1,0 +1,93 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "height": 256,
+      "id": "totp_qr",
+      "node_type": "img",
+      "width": 256
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050005,
+        "text": "Authenticator app QR code",
+        "type": "info"
+      }
+    },
+    "type": "img"
+  },
+  {
+    "attributes": {
+      "id": "totp_secret_key",
+      "node_type": "text",
+      "text": {
+        "context": {
+        },
+        "id": 1050006,
+        "type": "info"
+      }
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050006,
+        "text": "This is your authenticator app secret. Use it if you can not scan the QR code.",
+        "type": "info"
+      }
+    },
+    "type": "text"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "totp_code",
+      "node_type": "input",
+      "required": true,
+      "type": "text"
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070006,
+        "text": "Verify code",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "node_type": "input",
+      "type": "submit",
+      "value": "totp"
+    },
+    "group": "totp",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]

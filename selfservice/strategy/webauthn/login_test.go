@@ -26,12 +26,6 @@ import (
 	"github.com/ory/x/assertx"
 )
 
-//go:embed fixtures/login/with_webauthn.json
-var loginFixtureWithWebAuthn []byte
-
-//go:embed fixtures/login/without_webauthn.json
-var loginFixtureWithoutWebAuthn []byte
-
 //go:embed fixtures/login/success/identity.json
 var loginFixtureSuccessIdentity []byte
 
@@ -68,20 +62,21 @@ func TestCompleteLogin(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithWebAuthn), f.Ui.Nodes, []string{
+		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
 			"1.attributes.onclick",
 			"1.attributes.onload",
+			"3.attributes.src",
 		})
 		ensureReplacement(t, "1", f.Ui, "allowCredentials")
 	})
 
 	t.Run("case=webauthn payload is not set when identity has no webauthn", func(t *testing.T) {
 		id := createIdentityWithoutWebAuthn(t, reg)
-
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaBrowser(t, apiClient, publicTS, false, true, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithoutWebAuthn), f.Ui.Nodes, []string{
+
+		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
 		})
 	})

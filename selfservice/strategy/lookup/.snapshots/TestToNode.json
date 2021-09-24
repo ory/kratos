@@ -43,7 +43,8 @@
         ]
       }
     },
-    "id": "lookup_secret_codes"
+    "id": "lookup_secret_codes",
+    "node_type": "text"
   },
   "messages": [],
   "meta": {

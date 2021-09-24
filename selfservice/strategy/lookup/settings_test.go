@@ -33,15 +33,6 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
-//go:embed fixtures/settings/lookup_setup.json
-var fixtureSettingsSetup []byte
-
-//go:embed fixtures/settings/lookup_hidden.json
-var fixtureSettingsHidden []byte
-
-//go:embed fixtures/settings/lookup_shown.json
-var fixtureSettingsShown []byte
-
 func createIdentityWithoutLookup(t *testing.T, reg driver.Registry) *identity.Identity {
 	id, _ := createIdentity(t, reg)
 	delete(id.Credentials, identity.CredentialsTypeLookup)
@@ -136,24 +127,18 @@ func TestCompleteSettings(t *testing.T) {
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsHidden), f.Ui.Nodes, []string{
-				"0.attributes.value",
-			})
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
 
 		t.Run("case=browser", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, false, publicTS)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsHidden), f.Ui.Nodes, []string{
-				"0.attributes.value",
-			})
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
 
 		t.Run("case=api", func(t *testing.T) {
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsHidden), f.Ui.Nodes, []string{
-				"0.attributes.value",
-			})
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
 	})
 
@@ -163,24 +148,18 @@ func TestCompleteSettings(t *testing.T) {
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsSetup), f.Ui.Nodes, []string{
-				"0.attributes.value",
-			})
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
 
 		t.Run("case=browser", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, false, publicTS)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsSetup), f.Ui.Nodes, []string{
-				"0.attributes.value",
-			})
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
 
 		t.Run("case=api", func(t *testing.T) {
 			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsSetup), f.Ui.Nodes, []string{
-				"0.attributes.value",
-			})
+			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
 	})
 
@@ -193,9 +172,7 @@ func TestCompleteSettings(t *testing.T) {
 		}, id)
 
 		assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-		assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsShown), json.RawMessage(gjson.Get(body, "ui.nodes").Raw), []string{
-			"0.attributes.value",
-		}, "%s", body)
+		testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").Raw), []string{"0.attributes.value"})
 	})
 
 	t.Run("case=should fail if CSRF token is invalid", func(t *testing.T) {
@@ -332,18 +309,14 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			actual, res := doAPIFlow(t, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsShown), json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{
-				"0.attributes.value",
-			}, "%s", actual)
+			testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{"0.attributes.value"})
 			checkIdentity(t)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			actual, res := doBrowserFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsShown), json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{
-				"0.attributes.value",
-			}, "%s", actual)
+			testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{"0.attributes.value"})
 			checkIdentity(t)
 		})
 
@@ -351,9 +324,7 @@ func TestCompleteSettings(t *testing.T) {
 			actual, res := doBrowserFlow(t, false, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-			assertx.EqualAsJSONExcept(t, json.RawMessage(fixtureSettingsShown), json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{
-				"0.attributes.value",
-			}, "%s", actual)
+			testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(actual, "ui.nodes").Raw), []string{"0.attributes.value"})
 			checkIdentity(t)
 		})
 	})

@@ -3,9 +3,9 @@
     "attributes": {
       "disabled": false,
       "name": "csrf_token",
+      "node_type": "input",
       "required": true,
-      "type": "hidden",
-      "value": "YXA2OGtnOXZ3a3F3M3M3MGVtYXBraHJjeHEyMzB5aTU="
+      "type": "hidden"
     },
     "group": "default",
     "messages": [],
@@ -15,37 +15,30 @@
   {
     "attributes": {
       "disabled": false,
-      "name": "lookup_secret",
+      "name": "email",
+      "node_type": "input",
       "required": true,
-      "type": "text",
-      "value": ""
+      "type": "email"
     },
-    "group": "lookup_secret",
+    "group": "link",
     "messages": [],
-    "meta": {
-      "label": {
-        "context": {},
-        "id": 1010007,
-        "text": "Backup recovery code",
-        "type": "info"
-      }
-    },
+    "meta": {},
     "type": "input"
   },
   {
     "attributes": {
       "disabled": false,
       "name": "method",
+      "node_type": "input",
       "type": "submit",
-      "value": "lookup_secret"
+      "value": "link"
     },
-    "group": "lookup_secret",
+    "group": "link",
     "messages": [],
     "meta": {
       "label": {
-        "context": {},
-        "id": 1010010,
-        "text": "Use backup recovery code",
+        "id": 1070005,
+        "text": "Submit",
         "type": "info"
       }
     },

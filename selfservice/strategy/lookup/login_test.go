@@ -28,9 +28,6 @@ import (
 	"github.com/ory/x/assertx"
 )
 
-//go:embed fixtures/login/with.json
-var loginFixtureWithLookup []byte
-
 var lookupCodeGJSONQuery = "ui.nodes.#(attributes.name==" + identity.CredentialsTypeLookup.String() + ")"
 
 func TestCompleteLogin(t *testing.T) {
@@ -57,7 +54,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithLookup), f.Ui.Nodes, []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 	})
 
 	t.Run("case=lookup payload is not set when identity has no lookup", func(t *testing.T) {
