@@ -3,8 +3,9 @@ package oidc
 import (
 	"context"
 
-	"github.com/ory/kratos/x"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/kratos/x"
 )
 
 type Provider interface {

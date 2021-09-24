@@ -5,10 +5,11 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/form3tech-oss/jwt-go"
-	"github.com/pkg/errors"
 	"net/url"
 	"time"
+
+	"github.com/form3tech-oss/jwt-go"
+	"github.com/pkg/errors"
 
 	"golang.org/x/oauth2"
 )
