@@ -93,8 +93,6 @@ New feature or request.
       ([kratos#1643](https://github.com/ory/kratos/issues/1643))
 - [ ] Regenerate lookup secrets as part of login when last secret was used
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
-- [ ] Endpoint for fetching all schema IDs or all schemas
-      ([kratos#1699](https://github.com/ory/kratos/issues/1699))
 - [ ] Provide return_to value as part of flow entity
       ([kratos#1121](https://github.com/ory/kratos/issues/1121))
 - [ ] Expand password validation error messages to facilitate i18n
@@ -103,6 +101,8 @@ New feature or request.
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
+- [x] Endpoint for fetching all schema IDs or all schemas
+      ([kratos#1699](https://github.com/ory/kratos/issues/1699))
 - [x] Email Courier SMTP Header Configuration
       ([kratos#1725](https://github.com/ory/kratos/issues/1725))
 
