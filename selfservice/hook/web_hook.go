@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
-
-	"github.com/ory/x/fetcher"
-	"github.com/ory/x/logrusx"
+	"net/url"
 
 	"github.com/google/go-jsonnet"
+	"github.com/ory/x/fetcher"
+	"github.com/ory/x/logrusx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
@@ -64,6 +65,7 @@ type (
 		RequestHeaders http.Header        `json:"request_headers"`
 		RequestMethod  string             `json:"request_method"`
 		RequestUrl     string             `json:"request_url"`
+		RequestBody    url.Values         `json:"request_body"`
 		Identity       *identity.Identity `json:"identity"`
 	}
 
@@ -178,69 +180,111 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 }
 
 func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
+	body, err := extractRequestBody(req)
+	if err != nil {
+		return err
+	}
+
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
+		RequestBody:    body,
 		RequestUrl:     req.RequestURI,
 	})
 }
 
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow, session *session.Session) error {
+	body, err := extractRequestBody(req)
+	if err != nil {
+		return err
+	}
+
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 		Identity:       session.Identity,
 	})
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, identity *identity.Identity) error {
+	body, err := extractRequestBody(req)
+	if err != nil {
+		return err
+	}
+
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 		Identity:       identity,
 	})
 }
 
 func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
+	body, err := extractRequestBody(req)
+	if err != nil {
+		return err
+	}
+
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 		Identity:       session.Identity,
 	})
 }
 
 func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
+	body, err := extractRequestBody(req)
+	if err != nil {
+		return err
+	}
+
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 	})
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
+	body, err := extractRequestBody(req)
+	if err != nil {
+		return err
+	}
+
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 		Identity:       session.Identity,
 	})
 }
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, identity *identity.Identity) error {
+	body, err := extractRequestBody(req)
+	if err != nil {
+		return err
+	}
+
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 		Identity:       identity,
 	})
 }
@@ -270,6 +314,22 @@ func (e *WebHook) execute(data *templateContext) error {
 		return fmt.Errorf("failed to call web hook %w", err)
 	}
 	return nil
+}
+
+func extractRequestBody(req *http.Request) (url.Values, error) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read request body: %w", err)
+	}
+
+	queryParams, err := url.ParseQuery(string(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read form data from the body: %w", err)
+	}
+
+	delete(queryParams, "password")
+
+	return queryParams, nil
 }
 
 func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*bytes.Reader, error) {
