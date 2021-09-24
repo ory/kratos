@@ -3,7 +3,6 @@ package totp_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -79,9 +78,6 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, *otp
 	return i, key
 }
 
-//go:embed fixtures/login/with_totp.json
-var loginFixtureWithTOTP []byte
-
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
@@ -106,7 +102,9 @@ func TestCompleteLogin(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
-		assertx.EqualAsJSONExcept(t, json.RawMessage(loginFixtureWithTOTP), f.Ui.Nodes, []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
+			"0.attributes.value",
+		})
 	})
 
 	t.Run("case=totp payload is not set when identity has no totp", func(t *testing.T) {

@@ -3,9 +3,9 @@
     "attributes": {
       "disabled": false,
       "name": "csrf_token",
+      "node_type": "input",
       "required": true,
-      "type": "hidden",
-      "value": "ZDRtbGttNjRhMTNkOGIwZmo4aHQyNDQ1ODByODFvbnI="
+      "type": "hidden"
     },
     "group": "default",
     "messages": [],

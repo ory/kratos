@@ -3,9 +3,9 @@
     "attributes": {
       "disabled": false,
       "name": "csrf_token",
+      "node_type": "input",
       "required": true,
-      "type": "hidden",
-      "value": "dDVzdjQ5bWI3bWZrYnhta2dlczBmeDU4NHFzYWt2cW4="
+      "type": "hidden"
     },
     "group": "default",
     "messages": [],
@@ -15,7 +15,8 @@
   {
     "attributes": {
       "disabled": false,
-      "name": "lookup_secret_regenerate",
+      "name": "lookup_secret_reveal",
+      "node_type": "input",
       "type": "submit",
       "value": "true"
     },
@@ -23,8 +24,8 @@
     "messages": [],
     "meta": {
       "label": {
-        "id": 1050008,
-        "text": "Generate new backup recovery codes",
+        "id": 1050007,
+        "text": "Reveal backup recovery codes",
         "type": "info"
       }
     },

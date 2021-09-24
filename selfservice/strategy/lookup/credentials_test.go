@@ -1,25 +1,23 @@
-package lookup
+package lookup_test
 
 import (
 	_ "embed"
-	"encoding/json"
 	"testing"
 	"time"
 
-	"github.com/ory/x/assertx"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/strategy/lookup"
+
 	"github.com/ory/x/sqlxx"
 )
 
-//go:embed fixtures/node.json
-var fixtureNode []byte
-
 func TestToNode(t *testing.T) {
-	c := CredentialsConfig{RecoveryCodes: []RecoveryCode{
+	c := lookup.CredentialsConfig{RecoveryCodes: []lookup.RecoveryCode{
 		{Code: "foo", UsedAt: sqlxx.NullTime(time.Unix(1629199958, 0).UTC())},
 		{Code: "bar"},
 		{Code: "baz"},
 		{Code: "oof", UsedAt: sqlxx.NullTime(time.Unix(1629199968, 0).UTC())},
 	}}
 
-	assertx.EqualAsJSON(t, json.RawMessage(fixtureNode), c.ToNode())
+	testhelpers.SnapshotTExcept(t, c.ToNode(), []string{})
 }

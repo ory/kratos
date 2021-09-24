@@ -5,9 +5,9 @@
     "attributes": {
       "name": "csrf_token",
       "type": "hidden",
-      "value": "NWo1OXhqZDk0aDNnaW9yNjExcTUweHA3bWkzd21zdjI=",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -121,7 +121,8 @@
           ]
         }
       },
-      "id": "lookup_secret_codes"
+      "id": "lookup_secret_codes",
+      "node_type": "text"
     },
     "messages": [],
     "meta": {
@@ -139,13 +140,33 @@
       "name": "lookup_secret_regenerate",
       "type": "submit",
       "value": "true",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {
       "label": {
         "id": 1050008,
         "text": "Generate new backup recovery codes",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "lookup_secret",
+    "attributes": {
+      "name": "lookup_secret_disable",
+      "type": "submit",
+      "value": "true",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050016,
+        "text": "Disable this method",
         "type": "info"
       }
     }

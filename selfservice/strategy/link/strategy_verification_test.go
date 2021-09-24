@@ -90,14 +90,14 @@ func TestVerification(t *testing.T) {
 		body := expectSuccess(t, nil, false, false, func(v url.Values) {
 			v.Set("email", "test@ory.sh")
 		})
-		assertx.EqualAsJSONExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), json.RawMessage(verificationSubmitFixture), []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), []string{"0.attributes.value"})
 	})
 
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(verificationInitFixture), rs.Ui.Nodes, []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})

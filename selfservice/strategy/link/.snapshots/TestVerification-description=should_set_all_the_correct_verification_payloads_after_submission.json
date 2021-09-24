@@ -5,9 +5,9 @@
     "attributes": {
       "name": "csrf_token",
       "type": "hidden",
-      "value": "6WV6E5HEM1RThDMQ0oXg2U9cymYBMCbbIXR1PkYBlQEpmMoVy8avpXR/rdC+aHOJCfjnwWi0jS5VFVKqVbkcaw==",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -20,7 +20,8 @@
       "type": "email",
       "value": "test@ory.sh",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -32,7 +33,8 @@
       "name": "method",
       "type": "submit",
       "value": "link",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {

@@ -1,14 +1,13 @@
 {
-  "action": "http://127.0.0.1:59016/self-service/settings?flow=39541a0a-753c-41bd-8f59-cc2ac1b02ed4",
   "method": "POST",
   "nodes": [
     {
       "attributes": {
         "disabled": false,
         "name": "csrf_token",
+        "node_type": "input",
         "required": true,
-        "type": "hidden",
-        "value": "MGJxbTV5b291N3JnbTNkdTV4ZHlpazYwOGtvb3hzejQ="
+        "type": "hidden"
       },
       "group": "default",
       "messages": [],
@@ -19,8 +18,8 @@
       "attributes": {
         "disabled": false,
         "name": "traits.email",
-        "type": "text",
-        "value": "john-browser@doe.com"
+        "node_type": "input",
+        "type": "text"
       },
       "group": "profile",
       "messages": [],
@@ -31,6 +30,7 @@
       "attributes": {
         "disabled": false,
         "name": "traits.stringy",
+        "node_type": "input",
         "type": "text",
         "value": "foobar"
       },
@@ -43,6 +43,7 @@
       "attributes": {
         "disabled": false,
         "name": "traits.numby",
+        "node_type": "input",
         "type": "number",
         "value": 2.5
       },
@@ -55,6 +56,7 @@
       "attributes": {
         "disabled": false,
         "name": "traits.booly",
+        "node_type": "input",
         "type": "checkbox",
         "value": false
       },
@@ -67,6 +69,7 @@
       "attributes": {
         "disabled": false,
         "name": "traits.should_big_number",
+        "node_type": "input",
         "type": "number",
         "value": 2048
       },
@@ -79,6 +82,7 @@
       "attributes": {
         "disabled": false,
         "name": "traits.should_long_string",
+        "node_type": "input",
         "type": "text",
         "value": "asdfasdfasdfasdfasfdasdfasdfasdf"
       },
@@ -91,6 +95,7 @@
       "attributes": {
         "disabled": false,
         "name": "method",
+        "node_type": "input",
         "type": "submit",
         "value": "profile"
       },
@@ -109,6 +114,7 @@
       "attributes": {
         "disabled": false,
         "name": "password",
+        "node_type": "input",
         "required": true,
         "type": "password"
       },
@@ -127,6 +133,7 @@
       "attributes": {
         "disabled": false,
         "name": "method",
+        "node_type": "input",
         "type": "submit",
         "value": "password"
       },

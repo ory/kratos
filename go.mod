@@ -3,6 +3,12 @@ module github.com/ory/kratos
 go 1.16
 
 replace (
+	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
+	github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.20210608105745-bb07a373cc0e
+	github.com/luna-duclos/instrumentedsql => github.com/ory/instrumentedsql v1.2.0
+	github.com/luna-duclos/instrumentedsql/opentracing => github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c
+	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
+	github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
 	github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.20210608105745-bb07a373cc0e
 	github.com/luna-duclos/instrumentedsql => github.com/ory/instrumentedsql v1.2.0
 	github.com/luna-duclos/instrumentedsql/opentracing => github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c
@@ -18,9 +24,8 @@ replace (
 	github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.20210608105745-bb07a373cc0e
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 	github.com/ory/x => github.com/ory/x v0.0.276
-	github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
-	github.com/luna-duclos/instrumentedsql => github.com/ory/instrumentedsql v1.2.0
-	github.com/luna-duclos/instrumentedsql/opentracing => github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c
+	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
+	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 )
 
 require (
@@ -30,6 +35,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/avast/retry-go/v3 v3.1.1
+	github.com/bradleyjkemp/cupaloy/v2 v2.3.0
 	github.com/bwmarrin/discordgo v0.23.0
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible

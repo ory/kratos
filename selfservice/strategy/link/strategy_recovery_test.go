@@ -55,12 +55,6 @@ func init() {
 	corpx.RegisterFakes()
 }
 
-//go:embed fixtures/recovery_init.json
-var recoveryInitFixture []byte
-
-//go:embed fixtures/recovery_submit.json
-var recoverySubmitFixture []byte
-
 func TestAdminStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
@@ -230,14 +224,14 @@ func TestRecovery(t *testing.T) {
 		body := expectSuccess(t, nil, false, false, func(v url.Values) {
 			v.Set("email", "test@ory.sh")
 		})
-		assertx.EqualAsJSONExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), json.RawMessage(recoverySubmitFixture), []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), []string{"0.attributes.value"})
 	})
 
 	t.Run("description=should set all the correct recovery payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(recoveryInitFixture), rs.Ui.Nodes, []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+recovery.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})

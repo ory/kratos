@@ -37,12 +37,6 @@ import (
 	_ "embed"
 )
 
-//go:embed fixtures/settings/totp_setup.json
-var settingsFixtureSetupTOTP []byte
-
-//go:embed fixtures/settings/totp_unlink.json
-var settingsFixtureUnlinkTOTP []byte
-
 func TestCompleteSettings(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": false})
@@ -68,7 +62,9 @@ func TestCompleteSettings(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
-		assertx.EqualAsJSONExcept(t, json.RawMessage(settingsFixtureUnlinkTOTP), f.Ui.Nodes, []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
+			"0.attributes.value",
+		})
 	})
 
 	t.Run("case=device setup is available when identity has no totp yet", func(t *testing.T) {
@@ -78,7 +74,7 @@ func TestCompleteSettings(t *testing.T) {
 
 		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
-		assertx.EqualAsJSONExcept(t, json.RawMessage(settingsFixtureSetupTOTP), f.Ui.Nodes, []string{
+		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
 			"1.attributes.src",
 			"2.attributes.text.context.secret",
