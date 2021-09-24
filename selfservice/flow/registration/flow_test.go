@@ -3,11 +3,13 @@ package registration_test
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/ory/x/jsonx"
-	"github.com/tidwall/gjson"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/jsonx"
 
 	"github.com/ory/kratos/internal"
 
