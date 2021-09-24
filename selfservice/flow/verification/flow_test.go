@@ -3,6 +3,8 @@ package verification_test
 import (
 	"context"
 	"fmt"
+	"github.com/ory/x/jsonx"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"net/url"
 	"testing"
@@ -106,5 +108,10 @@ func TestNewPostHookFlow(t *testing.T) {
 			"after_verification_return_to": {expectedReturnTo},
 		}, expectedReturnTo)
 	})
+}
 
+func TestFlowEncodeJSON(t *testing.T) {
+	assert.EqualValues(t, "", gjson.Get(jsonx.TestMarshalJSONString(t, &verification.Flow{RequestURL: "https://foo.bar?foo=bar"}), "return_to").String())
+	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &verification.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
+	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, verification.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 }

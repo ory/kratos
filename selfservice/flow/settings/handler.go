@@ -147,6 +147,7 @@ type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
 	// in: header
+	// required: true
 	SessionToken string `json:"X-Session-Token"`
 }
 
@@ -202,10 +203,10 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceSettingsFlowForBrowsers
 type initializeSelfServiceSettingsFlowForBrowsers struct {
-	// The Session Cookie of the Identity performing the settings flow.
+	// The URL to return the browser to after the flow was completed.
 	//
-	// in: header
-	SessionCookie string `json:"Cookie"`
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // swagger:route GET /self-service/settings/browser v0alpha2 initializeSelfServiceSettingsFlowForBrowsers

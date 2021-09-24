@@ -205,6 +205,11 @@ type submitSelfServiceLogoutFlow struct {
 	//
 	// in: query
 	Token string `json:"token"`
+
+	// The URL to return to after the logout was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // swagger:route GET /self-service/logout v0alpha2 submitSelfServiceLogoutFlow

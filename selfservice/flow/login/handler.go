@@ -184,7 +184,7 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 }
 
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceLoginFlowForBrowsers initializeSelfServiceLoginFlowWithoutBrowser
+// swagger:parameters initializeSelfServiceLoginFlowWithoutBrowser
 type initializeSelfServiceLoginFlowWithoutBrowser struct {
 	// Refresh a login session
 	//
@@ -208,6 +208,7 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
 	// in: header
+	// in: required
 	SessionToken string `json:"X-Session-Token"`
 }
 
@@ -247,6 +248,34 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	}
 
 	h.d.Writer().Write(w, r, f)
+}
+
+// nolint:deadcode,unused
+// swagger:parameters initializeSelfServiceLoginFlowForBrowsers
+type initializeSelfServiceLoginFlowForBrowsers struct {
+	// Refresh a login session
+	//
+	// If set to true, this will refresh an existing login session by
+	// asking the user to sign in again. This will reset the
+	// authenticated_at time of the session.
+	//
+	// in: query
+	Refresh bool `json:"refresh"`
+
+	// Request a Specific AuthenticationMethod Assurance Level
+	//
+	// Use this parameter to upgrade an existing session's authenticator assurance level (AAL). This
+	// allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password,
+	// the AAL is 1. If you wish to "upgrade" the session's security by asking the user to perform TOTP / WebAuth/ ...
+	// you would set this to "aal2".
+	//
+	// in: query
+	RequestAAL identity.AuthenticatorAssuranceLevel `json:"aal"`
+
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
 // swagger:route GET /self-service/login/browser v0alpha2 initializeSelfServiceLoginFlowForBrowsers

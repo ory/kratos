@@ -157,6 +157,15 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, a)
 }
 
+// nolint:deadcode,unused
+// swagger:parameters initializeSelfServiceRegistrationFlowForBrowsers
+type initializeSelfServiceRegistrationFlowForBrowsers struct {
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
+}
+
 // swagger:route GET /self-service/registration/browser v0alpha2 initializeSelfServiceRegistrationFlowForBrowsers
 //
 // Initialize Registration Flow for Browsers

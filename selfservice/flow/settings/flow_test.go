@@ -3,6 +3,8 @@ package settings_test
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/ory/x/jsonx"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"testing"
 	"time"
@@ -139,4 +141,10 @@ func TestEnsureInternalContext(t *testing.T) {
 	f := new(settings.Flow)
 	f.EnsureInternalContext()
 	assert.Equal(t, "{}", string(f.InternalContext))
+}
+
+func TestFlowEncodeJSON(t *testing.T) {
+	assert.EqualValues(t, "", gjson.Get(jsonx.TestMarshalJSONString(t, &settings.Flow{RequestURL: "https://foo.bar?foo=bar"}), "return_to").String())
+	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
+	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, settings.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 }
