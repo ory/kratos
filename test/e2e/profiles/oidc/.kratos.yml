@@ -39,7 +39,7 @@ selfservice:
 
     logout:
       after:
-        default_browser_return_url: http://localhost:4455/auth/login
+        default_browser_return_url: http://localhost:4455/login
 
     registration:
       after:

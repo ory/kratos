@@ -3,15 +3,14 @@
     "baseUrl": "../../../node_modules",
     "target": "es5",
     "lib": [
-      "es5",
-      "dom",
-      "es2015.promise"
+      "es2015",
+      "dom"
     ],
     "types": ["cypress"],
     "esModuleInterop": true,
-    "typeRoots": [
-      "./support/index.d.tsx"
-    ]
   },
-  "include": ["**/*.ts"],
+  "include": [
+    "**/*.ts",
+    "support/index.ts",
+  ],
 }

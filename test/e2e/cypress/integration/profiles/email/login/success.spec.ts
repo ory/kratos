@@ -1,6 +1,7 @@
 import { APP_URL, gen, website } from '../../../../helpers'
+import {routes} from "../../../../helpers/express";
 
-context('Email Profile', () => {
+describe('Email Profile', () => {
   describe('Login Flow Success', () => {
     before(() => {
       cy.useConfigProfile('email')
@@ -15,7 +16,7 @@ context('Email Profile', () => {
 
     beforeEach(() => {
       cy.clearCookies()
-      cy.visit(APP_URL + '/auth/login')
+      cy.visit(routes.login)
     })
 
     it('should sign up and be logged in', () => {

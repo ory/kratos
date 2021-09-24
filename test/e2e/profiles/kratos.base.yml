@@ -16,9 +16,9 @@ selfservice:
         lifespan: 1h
   flows:
     login:
-      ui_url: http://localhost:4455/auth/login
+      ui_url: http://localhost:4455/login
     registration:
-      ui_url: http://localhost:4455/auth/registration
+      ui_url: http://localhost:4455/registration
     error:
       ui_url: http://localhost:4455/error
     verification:
