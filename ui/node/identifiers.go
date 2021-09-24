@@ -10,6 +10,7 @@ const (
 const (
 	LookupReveal     = "lookup_secret_reveal"
 	LookupRegenerate = "lookup_secret_regenerate"
+	LookupDisable    = "lookup_secret_disable"
 	LookupCodes      = "lookup_secret_codes"
 	LookupConfirm    = "lookup_secret_confirm"
 	LookupCodeEnter  = "lookup_secret"
