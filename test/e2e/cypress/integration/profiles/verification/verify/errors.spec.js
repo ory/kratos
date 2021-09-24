@@ -63,7 +63,7 @@ context('Verification Profile', () => {
 
           cy.visit(link.href + '-not') // add random stuff to the confirm challenge
           cy.log(link.href)
-          cy.session().then(
+          cy.getSession().then(
             assertVerifiableAddress({
               isVerified: false,
               email: identity.email

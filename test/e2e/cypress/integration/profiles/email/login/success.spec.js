@@ -23,7 +23,7 @@ context('Email Profile', () => {
       cy.get('input[name="password"]').type(password)
       cy.get('button[type="submit"]').click()
 
-      cy.session().should((session) => {
+      cy.getSession().should((session) => {
         const { identity } = session
         expect(identity.id).to.not.be.empty
         expect(identity.schema_id).to.equal('default')
@@ -38,7 +38,7 @@ context('Email Profile', () => {
       cy.get('input[name="password"]').type(password)
       cy.get('button[type="submit"]').click()
 
-      cy.session().should((session) => {
+      cy.getSession().should((session) => {
         const { identity } = session
         expect(identity.id).to.not.be.empty
         expect(identity.schema_id).to.equal('default')

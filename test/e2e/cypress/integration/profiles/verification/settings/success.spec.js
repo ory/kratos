@@ -31,7 +31,7 @@ context('Verification Profile', () => {
           'Your changes have been saved!'
         )
         cy.get('input[name="traits.email"]').should('contain.value', email)
-        cy.session().then(assertVerifiableAddress({ isVerified: false, email }))
+        cy.getSession().then(assertVerifiableAddress({ isVerified: false, email }))
 
         cy.verifyEmail({ expect: { email } })
 

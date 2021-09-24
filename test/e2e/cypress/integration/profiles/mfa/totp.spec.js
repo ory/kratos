@@ -36,7 +36,7 @@ context('MFA Profile', () => {
       cy.location().should((loc) => {
         expect(loc.href).to.include('/settings')
       })
-      cy.session({
+      cy.getSession({
         expectAal: 'aal2',
         expectMethods: ['password', 'totp']
       })
@@ -64,7 +64,7 @@ context('MFA Profile', () => {
       cy.location().should((loc) => {
         expect(loc.href).to.not.include('/auth/login')
       })
-      cy.session({
+      cy.getSession({
         expectAal: 'aal2',
         expectMethods: ['password', 'totp']
       })
@@ -115,7 +115,7 @@ context('MFA Profile', () => {
         cy.wrap($e).type(authenticator.generate(secret))
       })
       cy.get('*[name="method"][value="totp"]').click()
-      cy.session({
+      cy.getSession({
         expectAal: 'aal2',
         expectMethods: ['password', 'totp', 'totp']
       })
@@ -170,7 +170,7 @@ context('MFA Profile', () => {
       })
       cy.get('*[name="method"][value="totp"]').click()
 
-      cy.session({
+      cy.getSession({
         expectAal: 'aal2',
         expectMethods: ['password', 'totp', 'totp', 'totp', 'totp']
       })

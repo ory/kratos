@@ -91,7 +91,7 @@ context('MFA Profile', () => {
       cy.get('*[name="method"][value="lookup_secret"]').click()
 
       let authenticatedAt
-      cy.session({
+      cy.getSession({
         expectAal: 'aal2',
         expectMethods: ['password', 'lookup_secret', 'lookup_secret']
       }).then((session) => {
@@ -119,7 +119,7 @@ context('MFA Profile', () => {
       })
       cy.get('*[name="method"][value="lookup_secret"]').click()
 
-      cy.session({
+      cy.getSession({
         expectAal: 'aal2',
         expectMethods: [
           'password',

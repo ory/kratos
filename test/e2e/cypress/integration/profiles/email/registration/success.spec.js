@@ -23,7 +23,7 @@ context('Email Profile', () => {
       cy.get('pre').should('contain.text', email)
       cy.get('.greeting').should('contain.text', 'Welcome back')
 
-      cy.session().should((session) => {
+      cy.getSession().should((session) => {
         const { identity } = session
         expect(identity.id).to.not.be.empty
         expect(identity.verifiable_addresses).to.be.undefined

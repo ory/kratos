@@ -22,7 +22,7 @@ context('Verification Profile', () => {
       it('is able to verify the email address after sign up', () => {
         cy.register({ email, password })
         cy.login({ email, password })
-        cy.session().then(assertVerifiableAddress({ isVerified: false, email }))
+        cy.getSession().then(assertVerifiableAddress({ isVerified: false, email }))
 
         cy.verifyEmail({ expect: { email } })
       })

@@ -58,7 +58,7 @@ context('MFA Profile', () => {
             cy.location().should((loc) => {
               expect(loc.href).to.include('/auth/login')
             })
-            cy.session({
+            cy.getSession({
               expectAal: 'aal2',
               expectMethods: ['password', 'webauthn']
             })
@@ -85,7 +85,7 @@ context('MFA Profile', () => {
                 expect(loc.href).to.include('/auth/login')
               })
 
-              cy.session({
+              cy.getSession({
                 expectAal: 'aal2',
                 expectMethods: ['password', 'webauthn']
               })
@@ -192,7 +192,7 @@ context('MFA Profile', () => {
             expect(loc.href).to.not.include('/auth/login')
           })
 
-          cy.session({
+          cy.getSession({
             expectAal: 'aal2',
             expectMethods: ['password', 'webauthn', 'webauthn']
           })
