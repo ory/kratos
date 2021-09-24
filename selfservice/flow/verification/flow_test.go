@@ -3,12 +3,14 @@ package verification_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/x/jsonx"
-	"github.com/tidwall/gjson"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/jsonx"
 
 	"github.com/spf13/cobra"
 
