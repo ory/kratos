@@ -3,8 +3,9 @@ package oidc
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/x"
 	"net/url"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"

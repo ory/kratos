@@ -174,7 +174,7 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 	}
 	dest.Path = filepath.Join(publicUrl.Path + dest.Path)
 
-	http.Redirect(w, r , dest.String(), http.StatusFound)
+	http.Redirect(w, r, dest.String(), http.StatusFound)
 }
 
 func NewStrategy(d dependencies) *Strategy {
