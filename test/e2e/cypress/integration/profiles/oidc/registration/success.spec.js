@@ -76,7 +76,7 @@ context('OIDC Profile', () => {
 
       cy.get('button[value="hydra"]').click()
 
-      cy.session().should((session) => {
+      cy.getSession().should((session) => {
         shouldSession(email)(session)
         expect(session.identity.traits.consent).to.equal(true)
       })
@@ -86,7 +86,7 @@ context('OIDC Profile', () => {
       const email = gen.email()
 
       cy.registerOidc({ email, website })
-      cy.session().should(shouldSession(email))
+      cy.getSession().should(shouldSession(email))
     })
     it('should be able to convert a sign up flow to a sign in flow', () => {
       const email = gen.email()
@@ -97,7 +97,7 @@ context('OIDC Profile', () => {
       cy.visit(APP_URL + '/auth/registration')
       cy.get('button[value="hydra"]').click()
 
-      cy.session().should(shouldSession(email))
+      cy.getSession().should(shouldSession(email))
     })
 
     it('should be able to convert a sign in flow to a sign up flow', () => {
@@ -128,7 +128,7 @@ context('OIDC Profile', () => {
         .type(website)
       cy.get('button[value="hydra"]').click()
 
-      cy.session().should(shouldSession(email))
+      cy.getSession().should(shouldSession(email))
     })
   })
 })

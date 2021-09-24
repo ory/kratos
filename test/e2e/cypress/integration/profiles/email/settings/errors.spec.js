@@ -78,7 +78,7 @@ context('Email Profile', () => {
         cy.clearCookies()
         cy.login({ email, password })
 
-        cy.session().should((session) => {
+        cy.getSession().should((session) => {
           const { identity } = session
           expect(identity.traits.email).to.equal(email)
         })
@@ -91,7 +91,7 @@ context('Email Profile', () => {
 
         cy.visit(APP_URL + '/')
 
-        cy.session().should((session) => {
+        cy.getSession().should((session) => {
           const { identity } = session
           expect(identity.traits.email).to.equal(email)
         })
@@ -109,7 +109,7 @@ context('Email Profile', () => {
           .type('http://github.com/aeneasr')
         cy.get('button[value="profile"]').click()
 
-        cy.session().should((session) => {
+        cy.getSession().should((session) => {
           const { identity } = session
           expect(identity.traits.email).to.equal(email) // this is NOT up(email)
           expect(identity.traits.website).to.equal('http://github.com/aeneasr') // this is NOT up(email)

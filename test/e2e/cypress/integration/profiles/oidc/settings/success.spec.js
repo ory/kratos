@@ -83,7 +83,7 @@ context('OIDC Profile', () => {
 
         cy.visit(APP_URL + '/auth/login')
         cy.get('button[value="google"]').click()
-        cy.session()
+        cy.getSession()
       })
 
       it('should link google after re-auth', () => {

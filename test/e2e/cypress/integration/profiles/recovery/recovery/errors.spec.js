@@ -103,7 +103,7 @@ context('Recovery Profile', () => {
           const link = parseHtml(mail.body).querySelector('a')
 
           cy.visit(link.href) // add random stuff to the confirm challenge
-          cy.session()
+          cy.getSession()
           cy.logout()
 
           cy.visit(link.href)

@@ -32,7 +32,7 @@ context('Recovery Profile', () => {
         )
         cy.get('input[name="traits.email"]').should('contain.value', email)
 
-        cy.session().should(assertRecoveryAddress({ email }))
+        cy.getSession().should(assertRecoveryAddress({ email }))
       })
 
       xit('should not show an immediate error when a recovery address already exists', () => {

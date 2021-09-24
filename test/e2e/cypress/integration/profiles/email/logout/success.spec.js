@@ -16,7 +16,7 @@ context('Email Profile', () => {
 
     it('should sign out and be able to sign in again', () => {
       cy.visit(APP_URL + '/')
-      cy.session()
+      cy.getSession()
       cy.get('a[href*="logout"]').click()
       cy.noSession()
       cy.url().should('include', '/auth/login')

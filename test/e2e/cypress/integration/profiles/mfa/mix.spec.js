@@ -83,7 +83,7 @@ context('MFA Profile', () => {
             cy.wrap($e).type(authenticator.generate(secret))
           })
           cy.get('*[name="method"][value="totp"]').click()
-          cy.session({
+          cy.getSession({
             expectAal: 'aal2',
             expectMethods: [
               'password',
@@ -97,7 +97,7 @@ context('MFA Profile', () => {
           // Use TOTP
           cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
           cy.get('button[name="webauthn_login_trigger"]').click()
-          cy.session({
+          cy.getSession({
             expectAal: 'aal2',
             expectMethods: [
               'password',
@@ -115,7 +115,7 @@ context('MFA Profile', () => {
             cy.wrap($e).type(codes[1])
           })
           cy.get('*[name="method"][value="lookup_secret"]').click()
-          cy.session({
+          cy.getSession({
             expectAal: 'aal2',
             expectMethods: [
               'password',

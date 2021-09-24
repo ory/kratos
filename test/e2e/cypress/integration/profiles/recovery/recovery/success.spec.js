@@ -21,7 +21,7 @@ context('Recovery Profile', () => {
 
       it('should contain the recovery address in the session', () => {
         cy.login(identity)
-        cy.session().should(assertRecoveryAddress(identity))
+        cy.getSession().should(assertRecoveryAddress(identity))
       })
 
       it('should perform a recovery flow', () => {
@@ -41,7 +41,7 @@ context('Recovery Profile', () => {
 
         cy.recoverEmail({ expect: identity })
 
-        cy.session()
+        cy.getSession()
         cy.location('pathname').should('eq', '/settings')
 
         const newPassword = gen.password()

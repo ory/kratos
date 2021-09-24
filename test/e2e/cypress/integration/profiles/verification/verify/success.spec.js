@@ -59,7 +59,7 @@ context('Verification Profile', () => {
           expect(message.toAddresses[0].trim()).to.equal(email)
         })
 
-        cy.session().then(
+        cy.getSession().then(
           assertVerifiableAddress({ isVerified: false, email: identity.email })
         )
       })
@@ -92,7 +92,7 @@ context('Verification Profile', () => {
         cy.performEmailVerification({ expect: { email: identity.email } })
 
         // expect current session to still not have a verified email address
-        cy.session().should(
+        cy.getSession().should(
           assertVerifiableAddress({ email: identity2.email, isVerified: false })
         )
 

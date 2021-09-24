@@ -1,4 +1,4 @@
-const { APP_URL } = require('../../../../helpers')
+import { APP_URL } from '../../../../helpers'
 
 context('Email Profile', () => {
   describe('Self-Service Error UI', () => {
