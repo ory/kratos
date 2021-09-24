@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-09-22)](#2021-09-22)
+- [ (2021-09-24)](#2021-09-24)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -207,11 +207,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-09-22)
+# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-09-24)
 
 
 ### Bug Fixes
 
+* Add middleware earlier [#1775](https://github.com/ory/kratos/issues/1775) ([#1776](https://github.com/ory/kratos/issues/1776)) ([b9d253e](https://github.com/ory/kratos/commit/b9d253ef05ff7cd616111a817d03a17e39f8f4a8))
 * API client leaks stack trace with an error ([#1772](https://github.com/ory/kratos/issues/1772)) ([d3aff6d](https://github.com/ory/kratos/commit/d3aff6d3eb11942fbfd6f2de71f4399053075b62)), closes [#1771](https://github.com/ory/kratos/issues/1771)
 * Correct swagger path for /identities/:id/session endpoint ([#1756](https://github.com/ory/kratos/issues/1756)) ([d614f2a](https://github.com/ory/kratos/commit/d614f2a737eef90ad60a4bdedae248b74131ff35))
 * Omitempty for VerifiedAt and StateChangedAt ([#1736](https://github.com/ory/kratos/issues/1736)) ([bf2ec6e](https://github.com/ory/kratos/commit/bf2ec6e6ae8d656ea6dcac037dedd3603ad12915)):
@@ -225,15 +226,18 @@
 
 * Add a commandline example for the logout ([#1753](https://github.com/ory/kratos/issues/1753)) ([81ba264](https://github.com/ory/kratos/commit/81ba2647a66fca99b7ed2e56a67deec75ac06b89))
 * Fix the flow links used for rendering ([#1752](https://github.com/ory/kratos/issues/1752)) ([131d2c2](https://github.com/ory/kratos/commit/131d2c284d4191ee979077937ea3b48fce772f3c))
+* Update quickstart curl examples ([#1778](https://github.com/ory/kratos/issues/1778)) ([6c677c4](https://github.com/ory/kratos/commit/6c677c49df8fa8d48e7c0bbf91bbd18874f4c514))
 
 ### Features
 
 * Add smtp headers config option ([#1747](https://github.com/ory/kratos/issues/1747)) ([7ffe0e9](https://github.com/ory/kratos/commit/7ffe0e9766e930615dbb6833e650b73a8975a544)), closes [#1725](https://github.com/ory/kratos/issues/1725)
+* Endpoint to list all identity schemas ([#1703](https://github.com/ory/kratos/issues/1703)) ([aa23d5d](https://github.com/ory/kratos/commit/aa23d5d5af28d8a7789b4a0c7e97197c7758ad98)), closes [#1699](https://github.com/ory/kratos/issues/1699)
 * Implement endpoint for invalidating all sessions for a given identity ([#1740](https://github.com/ory/kratos/issues/1740)) ([dbd1689](https://github.com/ory/kratos/commit/dbd1689c11fd0a3d999ea09b553dd4a14a7a6972)), closes [#655](https://github.com/ory/kratos/issues/655):
 
     This PR introduces endpoint to destroy all sessions for a given identity which effectively logouts user from all devices/sessions. This is useful when for some security concern we want to make sure there are no "old" sessions active or other "staff" related actions (such as force logout after password change etc.).
 
 * **logout:** Add logout token to browser response ([#1758](https://github.com/ory/kratos/issues/1758)) ([d3f1177](https://github.com/ory/kratos/commit/d3f1177a9a82dc2c4f930f15c6ec87c3ec5a1d53))
+* Mark recovery email address verified ([#1665](https://github.com/ory/kratos/issues/1665)) ([e3efc5d](https://github.com/ory/kratos/commit/e3efc5d0673106115a236e38b5d76d6672d64d20)), closes [#1662](https://github.com/ory/kratos/issues/1662)
 
 ### Tests
 
