@@ -188,10 +188,10 @@ run() {
   ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
   npm run wait-on -- -l -t 300000 http-get://localhost:4434/health/ready \
-    http-get://localhost:4455/health \
+    http-get://localhost:4455/health/alive \
     http-get://localhost:4445/health/ready \
     http-get://localhost:4446/ \
-    http-get://localhost:4456/health \
+    http-get://localhost:4456/health/alive \
     http-get://localhost:4457/ \
     http-get://localhost:4437/mail \
     http-get://localhost:4458/
