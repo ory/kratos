@@ -135,6 +135,15 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
+// nolint:deadcode,unused
+// swagger:parameters initializeSelfServiceRecoveryFlowForBrowsers
+type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
+}
+
 // swagger:route GET /self-service/recovery/browser v0alpha2 initializeSelfServiceRecoveryFlowForBrowsers
 //
 // Initialize Recovery Flow for Browsers

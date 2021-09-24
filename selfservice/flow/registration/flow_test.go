@@ -3,6 +3,8 @@ package registration_test
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/ory/x/jsonx"
+	"github.com/tidwall/gjson"
 	"net/http"
 	"testing"
 	"time"
@@ -100,4 +102,10 @@ func TestGetRequestURL(t *testing.T) {
 	expectedURL := "http://foo/bar/baz"
 	f := &registration.Flow{RequestURL: expectedURL}
 	assert.Equal(t, expectedURL, f.GetRequestURL())
+}
+
+func TestFlowEncodeJSON(t *testing.T) {
+	assert.EqualValues(t, "", gjson.Get(jsonx.TestMarshalJSONString(t, &registration.Flow{RequestURL: "https://foo.bar?foo=bar"}), "return_to").String())
+	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &registration.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
+	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, registration.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 }

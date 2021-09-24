@@ -2,6 +2,7 @@ package settings
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -63,6 +64,9 @@ type Flow struct {
 	//
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
+
+	// ReturnTo contains the requested return_to URL.
+	ReturnTo string `json:"return_to,omitempty" db:"-"`
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
@@ -163,4 +167,12 @@ func (f *Flow) EnsureInternalContext() {
 	if !gjson.ParseBytes(f.InternalContext).IsObject() {
 		f.InternalContext = []byte("{}")
 	}
+}
+
+func (f Flow) MarshalJSON() ([]byte, error) {
+	type local Flow
+	if u, err := url.Parse(f.RequestURL); err == nil {
+		f.ReturnTo = u.Query().Get("return_to")
+	}
+	return json.Marshal(local(f))
 }
