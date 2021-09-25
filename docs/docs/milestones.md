@@ -93,8 +93,6 @@ New feature or request.
       ([kratos#1643](https://github.com/ory/kratos/issues/1643))
 - [ ] Regenerate lookup secrets as part of login when last secret was used
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
-- [ ] Provide return_to value as part of flow entity
-      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
 - [ ] Expand password validation error messages to facilitate i18n
       ([kratos#1071](https://github.com/ory/kratos/issues/1071))
 - [x] Field validation answer status code 422 instead of 400
@@ -115,6 +113,8 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] doc page for ui error messages
+      ([kratos#1784](https://github.com/ory/kratos/issues/1784))
 - [x] Tag version in docker-compose before commit&tag push
       ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
@@ -282,6 +282,8 @@ New feature or request.
 - [ ] Add `return_to` to self-service SDK methods including logout
       ([kratos#1605](https://github.com/ory/kratos/issues/1605)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Provide return_to value as part of flow entity
+      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
