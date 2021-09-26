@@ -666,7 +666,6 @@ func TestCountActiveCredentials(t *testing.T) {
 }
 
 func TestDisabledEndpoint(t *testing.T) {
-
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), false)
 
