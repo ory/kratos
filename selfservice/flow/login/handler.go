@@ -561,11 +561,12 @@ continueLogin:
 	}
 
 	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, f, i, sess); err != nil {
-		if err == ErrAddressNotVerified {
+		if errors.Is(err, ErrAddressNotVerified) {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
-		} else {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
 		}
+
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 		return
 	}
 }

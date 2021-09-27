@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow/registration"
+
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/assertx"
@@ -22,7 +24,6 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
 
@@ -37,8 +38,8 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool) *kratos.SelfServiceRegistrationFlow {
-	req, err := http.NewRequest("GET", ts.URL+registration.RouteInitBrowserFlow, nil)
+func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool, opts ...InitFlowWithOption) *kratos.SelfServiceRegistrationFlow {
+	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, registration.RouteInitBrowserFlow, false, opts...), nil)
 	require.NoError(t, err)
 
 	if isSPA {
@@ -58,7 +59,6 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 	rs, _, err := NewSDKCustomClient(ts, client).V0alpha2Api.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
-
 	return rs
 }
 

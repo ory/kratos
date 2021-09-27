@@ -243,6 +243,29 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
+		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
+			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
+			t.Cleanup(func() {
+				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+			})
+
+			hc := testhelpers.NewClientWithCookies(t)
+			payload := testhelpers.InitializeRegistrationFlowViaBrowser(t, hc, publicTS, false, testhelpers.InitFlowWithReturnTo("https://not-allowed"))
+
+			values := testhelpers.SDKFormFieldsToURLValues(payload.Ui.Nodes)
+			values.Set("traits.username", x.NewUUID().String()+"@something")
+			values.Set("password", x.NewUUID().String())
+			values.Set("traits.foobar", "bar")
+
+			b, res := testhelpers.RegistrationMakeRequest(t, false, false, payload, hc, testhelpers.EncodeFormAsJSON(t, false, values))
+			assert.EqualValues(t, http.StatusOK, res.StatusCode, assertx.PrettifyJSONPayload(t, b))
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+			assert.EqualValues(t, text.ErrorValidationGeneric, gjson.Get(b, "ui.messages.0.id").Num, assertx.PrettifyJSONPayload(t, b))
+			assert.EqualValues(t, "Requested return_to URL \"https://not-allowed\" is not whitelisted.", gjson.Get(b, "ui.messages.0.text").String(), assertx.PrettifyJSONPayload(t, b))
+			assert.Empty(t, res.Header.Get("Set-Cookie"), "%+v", res.Header)
+			t.Logf("%+v", res.Header)
+		})
+
 		var expectValidationError = func(t *testing.T, isAPI, isSPA bool, values func(url.Values)) string {
 			return testhelpers.SubmitRegistrationForm(t, isAPI, nil, publicTS, values,
 				isSPA,
@@ -250,7 +273,7 @@ func TestRegistration(t *testing.T) {
 				testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+registration.RouteSubmitFlow, conf.SelfServiceFlowRegistrationUI().String()))
 		}
 
-		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
+		t.Run("case=should fail because the return_to url is not allowed", func(t *testing.T) {
 			var check = func(t *testing.T, actual string) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)

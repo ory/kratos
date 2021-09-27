@@ -129,8 +129,24 @@ func SecureContentNegotiationRedirection(
 			return err
 		}
 
-		http.Redirect(w, r, ret.String(), http.StatusFound)
+		http.Redirect(w, r, ret.String(), http.StatusSeeOther)
 	}
 
 	return nil
+}
+
+func ContentNegotiationRedirection(
+	w http.ResponseWriter, r *http.Request, out interface{}, writer herodot.Writer, returnTo string,
+) {
+	switch httputil.NegotiateContentType(r, []string{
+		"text/html",
+		"application/json",
+	}, "text/html") {
+	case "application/json":
+		writer.Write(w, r, out)
+	case "text/html":
+		fallthrough
+	default:
+		http.Redirect(w, r, returnTo, http.StatusSeeOther)
+	}
 }

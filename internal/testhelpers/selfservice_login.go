@@ -49,7 +49,8 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 }
 
 type initFlowOptions struct {
-	aal identity.AuthenticatorAssuranceLevel
+	aal      identity.AuthenticatorAssuranceLevel
+	returnTo string
 }
 
 func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
@@ -71,6 +72,10 @@ func getURLFromInitOptions(ts *httptest.Server, path string, forced bool, opts .
 		q.Set("aal", string(o.aal))
 	}
 
+	if o.returnTo != "" {
+		q.Set("return_to", string(o.returnTo))
+	}
+
 	u := urlx.ParseOrPanic(ts.URL + path)
 	u.RawQuery = q.Encode()
 	return u.String()
@@ -81,6 +86,11 @@ type InitFlowWithOption func(*initFlowOptions)
 func InitFlowWithAAL(aal identity.AuthenticatorAssuranceLevel) InitFlowWithOption {
 	return func(o *initFlowOptions) {
 		o.aal = aal
+	}
+}
+func InitFlowWithReturnTo(returnTo string) InitFlowWithOption {
+	return func(o *initFlowOptions) {
+		o.returnTo = returnTo
 	}
 }
 

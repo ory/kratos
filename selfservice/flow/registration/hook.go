@@ -65,6 +65,7 @@ type (
 		identity.ManagementProvider
 		identity.ValidationProvider
 		session.PersistenceProvider
+		session.ManagementProvider
 		HooksProvider
 		x.LoggingProvider
 		x.WriterProvider
@@ -124,6 +125,18 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
+	// Verify the redirect URL before we do any other processing.
+	c := e.d.Config(r.Context())
+	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(a.RequestURL),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r)),
+		x.SecureRedirectOverrideDefaultReturnTo(c.SelfServiceFlowRegistrationReturnTo(ct.String())),
+	)
+	if err != nil {
+		return err
+	}
+
 	e.d.Audit().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
@@ -175,8 +188,8 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
-		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowRegistrationReturnTo(ct.String())))
+	x.ContentNegotiationRedirection(w, r, s.Declassify(), e.d.Writer(), returnTo.String())
+	return nil
 }
 
 func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
