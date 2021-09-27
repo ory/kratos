@@ -101,9 +101,23 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		WithField("flow_method", settingsType).
 		Debug("Running PostSettingsPrePersistHooks.")
 
-	config := new(postSettingsHookOptions)
+	// Verify the redirect URL before we do any other processing.
+	c := e.d.Config(r.Context())
+	returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(ctxUpdate.Flow.RequestURL),
+		x.SecureRedirectAllowURLs(c.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r)),
+		x.SecureRedirectOverrideDefaultReturnTo(
+			e.d.Config(r.Context()).SelfServiceFlowSettingsReturnTo(settingsType,
+				ctxUpdate.Flow.AppendTo(e.d.Config(r.Context()).SelfServiceFlowSettingsUI()))),
+	)
+	if err != nil {
+		return err
+	}
+
+	hookOptions := new(postSettingsHookOptions)
 	for _, f := range opts {
-		f(config)
+		f(hookOptions)
 	}
 
 	for k, executor := range e.d.PostSettingsPrePersistHooks(r.Context(), settingsType) {
@@ -150,8 +164,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 
 	ctxUpdate.UpdateIdentity(i)
 	ctxUpdate.Flow.State = StateSuccess
-	if config.cb != nil {
-		if err := config.cb(ctxUpdate); err != nil {
+	if hookOptions.cb != nil {
+		if err := hookOptions.cb(ctxUpdate); err != nil {
 			return err
 		}
 	}
@@ -209,8 +223,6 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.GetIdentityToUpdate().CopyWithoutCredentials(), ctxUpdate.Flow.RequestURL, e.d.Writer(), e.d.Config(r.Context()),
-		x.SecureRedirectOverrideDefaultReturnTo(
-			e.d.Config(r.Context()).SelfServiceFlowSettingsReturnTo(settingsType,
-				ctxUpdate.Flow.AppendTo(e.d.Config(r.Context()).SelfServiceFlowSettingsUI()))))
+	x.ContentNegotiationRedirection(w, r, ctxUpdate.GetIdentityToUpdate().CopyWithoutCredentials(), e.d.Writer(), returnTo.String())
+	return nil
 }

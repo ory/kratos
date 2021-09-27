@@ -34,12 +34,6 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
-//go:embed fixtures/verification_init.json
-var verificationInitFixture []byte
-
-//go:embed fixtures/verification_submit.json
-var verificationSubmitFixture []byte
-
 func TestVerification(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
