@@ -141,5 +141,5 @@ func EnsureAAL(t *testing.T, c *http.Client, ts *httptest.Server, aal string, me
 	for _, method := range methods {
 		assert.EqualValues(t, method, gjson.GetBytes(sess, "authentication_methods.#(method=="+method+").method").String())
 	}
-	assert.Len(t, gjson.GetBytes(sess, "authentication_methods").Array(), 2)
+	assert.Len(t, gjson.GetBytes(sess, "authentication_methods").Array(), 1+len(methods))
 }

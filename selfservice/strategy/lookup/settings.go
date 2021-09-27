@@ -91,7 +91,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 		return ctxUpdate, s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
-	if p.RegenerateLookup || p.RevealLookup || p.ConfirmLookup {
+	if p.RegenerateLookup || p.RevealLookup || p.ConfirmLookup || p.DisableLookup {
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
 		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
@@ -126,7 +126,7 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody,
 ) error {
-	if p.ConfirmLookup || p.RevealLookup || p.RegenerateLookup {
+	if p.ConfirmLookup || p.RevealLookup || p.RegenerateLookup || p.DisableLookup {
 		if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 			return err
 		}
@@ -149,6 +149,8 @@ func (s *Strategy) continueSettingsFlow(
 			return err
 		}
 		return flow.ErrStrategyAsksToReturnToUI
+	} else if p.DisableLookup {
+		return s.continueSettingsFlowDisable(w, r, ctxUpdate, p)
 	} else if p.RegenerateLookup {
 		if err := s.continueSettingsFlowRegenerate(w, r, ctxUpdate, p); err != nil {
 			return err
@@ -158,6 +160,18 @@ func (s *Strategy) continueSettingsFlow(
 	}
 
 	return errors.New("ended up in unexpected state")
+}
+
+func (s *Strategy) continueSettingsFlowDisable(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
+	if err != nil {
+		return err
+	}
+
+	i.DeleteCredentialsType(s.ID())
+
+	ctxUpdate.UpdateIdentity(i)
+	return nil
 }
 
 func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithLookupMethodBody) error {
@@ -182,8 +196,8 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 
 	ctxUpdate.Flow.UI.Nodes.Upsert(creds.ToNode())
 	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
+	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupDisable)
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewRegenerateLookupNode())
-	ctxUpdate.Flow.UI.Nodes.Upsert(NewDisableLookupNode())
 	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRevealed), true)
 	if err != nil {
 		return err
@@ -205,6 +219,7 @@ func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http
 	ctxUpdate.Flow.UI.Nodes.Upsert((&CredentialsConfig{RecoveryCodes: codes}).ToNode())
 	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupRegenerate)
 	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
+	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupDisable)
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewConfirmLookupNode())
 
 	var err error
@@ -289,6 +304,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	if hasLookup {
 		f.UI.Nodes.Upsert(NewRevealLookupNode())
+		f.UI.Nodes.Upsert(NewDisableLookupNode())
 	} else {
 		f.UI.Nodes.Upsert(NewRegenerateLookupNode())
 	}
