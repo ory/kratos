@@ -82,8 +82,6 @@ New feature or request.
       ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [ ] Allow account recovery for identities without email address
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
-- [ ] Field validation answer status code 422 instead of 400
-      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
       ([kratos#1589](https://github.com/ory/kratos/issues/1589))
 - [ ] Deprecate webhook loader without URI scheme
@@ -95,14 +93,14 @@ New feature or request.
       ([kratos#1643](https://github.com/ory/kratos/issues/1643))
 - [ ] Regenerate lookup secrets as part of login when last secret was used
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
-- [ ] Endpoint for fetching all schema IDs or all schemas
-      ([kratos#1699](https://github.com/ory/kratos/issues/1699))
-- [ ] Provide return_to value as part of flow entity
-      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
 - [ ] Expand password validation error messages to facilitate i18n
       ([kratos#1071](https://github.com/ory/kratos/issues/1071))
+- [x] Field validation answer status code 422 instead of 400
+      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
+- [x] Endpoint for fetching all schema IDs or all schemas
+      ([kratos#1699](https://github.com/ory/kratos/issues/1699))
 - [x] Email Courier SMTP Header Configuration
       ([kratos#1725](https://github.com/ory/kratos/issues/1725))
 
@@ -115,6 +113,8 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] doc page for ui error messages
+      ([kratos#1784](https://github.com/ory/kratos/issues/1784))
 - [x] Tag version in docker-compose before commit&tag push
       ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
@@ -129,7 +129,7 @@ A request for comments to discuss and share ideas.
       [@hackerman](https://github.com/aeneasr)
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
-- [ ] Field validation answer status code 422 instead of 400
+- [x] Field validation answer status code 422 instead of 400
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
@@ -282,6 +282,8 @@ New feature or request.
 - [ ] Add `return_to` to self-service SDK methods including logout
       ([kratos#1605](https://github.com/ory/kratos/issues/1605)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Provide return_to value as part of flow entity
+      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
