@@ -43,21 +43,32 @@ func TestNewFlow(t *testing.T) {
 	conf, _ := internal.NewFastRegistryWithMocks(t)
 
 	t.Run("type=aal", func(t *testing.T) {
-		r := login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "aal=aal2&refresh=true"}, Host: "ory.sh"}, flow.TypeBrowser)
+		r, err := login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "aal=aal2&refresh=true"}, Host: "ory.sh"}, flow.TypeBrowser)
+		require.NoError(t, err)
 		assert.True(t, r.Refresh)
 		assert.Equal(t, identity.AuthenticatorAssuranceLevel2, r.RequestedAAL)
 
-		r = login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "refresh=true"}, Host: "ory.sh"}, flow.TypeBrowser)
+		r, err = login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "refresh=true"}, Host: "ory.sh"}, flow.TypeBrowser)
+		require.NoError(t, err)
 		assert.True(t, r.Refresh)
 		assert.Equal(t, identity.AuthenticatorAssuranceLevel1, r.RequestedAAL)
 	})
 
+	t.Run("type=return_to", func(t *testing.T) {
+		_, err := login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, flow.TypeBrowser)
+		require.Error(t, err)
+
+		_, err = login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(nil), "/self-service/login/browser").String()}, Host: "ory.sh"}, flow.TypeBrowser)
+		require.NoError(t, err)
+	})
+
 	t.Run("type=browser", func(t *testing.T) {
 		t.Run("case=regular flow creation without a session", func(t *testing.T) {
-			r := login.NewFlow(conf, 0, "csrf", &http.Request{
+			r, err := login.NewFlow(conf, 0, "csrf", &http.Request{
 				URL:  urlx.ParseOrPanic("/"),
 				Host: "ory.sh", TLS: &tls.ConnectionState{},
 			}, flow.TypeBrowser)
+			require.NoError(t, err)
 			assert.EqualValues(t, r.IssuedAt, r.ExpiresAt)
 			assert.Equal(t, flow.TypeBrowser, r.Type)
 			assert.False(t, r.Refresh)
@@ -65,18 +76,20 @@ func TestNewFlow(t *testing.T) {
 		})
 
 		t.Run("case=regular flow creation", func(t *testing.T) {
-			r := login.NewFlow(conf, 0, "csrf", &http.Request{
+			r, err := login.NewFlow(conf, 0, "csrf", &http.Request{
 				URL:  urlx.ParseOrPanic("https://ory.sh/"),
 				Host: "ory.sh"}, flow.TypeBrowser)
+			require.NoError(t, err)
 			assert.Equal(t, "https://ory.sh/", r.RequestURL)
 		})
 	})
 
 	t.Run("type=api", func(t *testing.T) {
 		t.Run("case=flow with refresh", func(t *testing.T) {
-			r := login.NewFlow(conf, 0, "csrf", &http.Request{
+			r, err := login.NewFlow(conf, 0, "csrf", &http.Request{
 				URL:  urlx.ParseOrPanic("/?refresh=true"),
 				Host: "ory.sh"}, flow.TypeAPI)
+			require.NoError(t, err)
 			assert.Equal(t, r.IssuedAt, r.ExpiresAt)
 			assert.Equal(t, flow.TypeAPI, r.Type)
 			assert.True(t, r.Refresh)
@@ -84,9 +97,10 @@ func TestNewFlow(t *testing.T) {
 		})
 
 		t.Run("case=flow without refresh", func(t *testing.T) {
-			r := login.NewFlow(conf, 0, "csrf", &http.Request{
+			r, err := login.NewFlow(conf, 0, "csrf", &http.Request{
 				URL:  urlx.ParseOrPanic("/"),
 				Host: "ory.sh"}, flow.TypeAPI)
+			require.NoError(t, err)
 			assert.Equal(t, r.IssuedAt, r.ExpiresAt)
 			assert.Equal(t, flow.TypeAPI, r.Type)
 			assert.False(t, r.Refresh)

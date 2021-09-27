@@ -3,6 +3,7 @@ package recovery_test
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -22,7 +23,8 @@ import (
 )
 
 func TestFlow(t *testing.T) {
-	conf := internal.NewConfigurationWithDefaults(t)
+	conf, _ := internal.NewFastRegistryWithMocks(t)
+
 	must := func(r *recovery.Flow, err error) *recovery.Flow {
 		require.NoError(t, err)
 		return r
@@ -49,6 +51,14 @@ func TestFlow(t *testing.T) {
 
 	assert.EqualValues(t, recovery.StateChooseMethod,
 		must(recovery.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser)).State)
+
+	t.Run("type=return_to", func(t *testing.T) {
+		_, err := recovery.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, nil, flow.TypeBrowser)
+		require.Error(t, err)
+
+		_, err = recovery.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(nil), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
+		require.NoError(t, err)
+	})
 }
 
 func TestGetType(t *testing.T) {

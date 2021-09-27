@@ -36,7 +36,9 @@ func TestRegistrationExecutor(t *testing.T) {
 				router := httprouter.New()
 				handleErr := testhelpers.SelfServiceHookRegistrationErrorHandler
 				router.GET("/registration/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft))) {
+					f, err := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
+					require.NoError(t, err)
+					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, f)) {
 						_, _ = w.Write([]byte("ok"))
 					}
 				})
@@ -45,7 +47,8 @@ func TestRegistrationExecutor(t *testing.T) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookFakeIdentity(t)
 					}
-					a := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
+					a, err := registration.NewFlow(conf, time.Minute, x.FakeCSRFToken, r, ft)
+					require.NoError(t, err)
 					a.RequestURL = x.RequestURL(r).String()
 					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), a, i))
 				})
@@ -95,19 +98,6 @@ func TestRegistrationExecutor(t *testing.T) {
 					require.Error(t, err)
 				})
 
-				t.Run("case=prevent return_to value because domain not whitelisted", func(t *testing.T) {
-					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					i := testhelpers.SelfServiceHookFakeIdentity(t)
-
-					res, body := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
-					assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
-					assert.Contains(t, body, "malformed or contained invalid")
-
-					actual, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
-					require.NoError(t, err)
-					assert.Equal(t, actual.Traits, i.Traits)
-				})
-
 				t.Run("case=use return_to value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
@@ -128,6 +118,7 @@ func TestRegistrationExecutor(t *testing.T) {
 
 				t.Run("case=use nested config value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+					conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/kratos"})
 					testhelpers.SelfServiceHookRegistrationSetDefaultRedirectTo(t, conf, "https://www.ory.sh/not-kratos")
 					testhelpers.SelfServiceHookRegistrationSetDefaultRedirectToStrategy(t, conf, strategy, "https://www.ory.sh/kratos")
 

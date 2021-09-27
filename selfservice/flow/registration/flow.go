@@ -80,14 +80,27 @@ type Flow struct {
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
+
+	// Pre-validate the return to URL which is contained in the HTTP request.
+	requestURL := x.RequestURL(r).String()
+	_, err := x.SecureRedirectTo(r,
+		conf.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(requestURL),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Flow{
 		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
-		RequestURL: x.RequestURL(r).String(),
+		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
@@ -95,7 +108,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		CSRFToken:       csrf,
 		Type:            ft,
 		InternalContext: []byte("{}"),
-	}
+	}, nil
 }
 
 func (f Flow) TableName(ctx context.Context) string {
