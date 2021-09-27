@@ -288,26 +288,6 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
-		identifier, pwd := x.NewUUID().String(), x.NewUUID().String()
-		createIdentity(identifier, pwd)
-
-		hc := testhelpers.NewClientWithCookies(t)
-		payload := testhelpers.InitializeLoginFlowViaBrowser(t, hc, publicTS, false, false, testhelpers.InitFlowWithReturnTo("https://not-allowed"))
-
-		values := testhelpers.SDKFormFieldsToURLValues(payload.Ui.Nodes)
-		values.Set("password", pwd)
-		values.Set("password_identifier", identifier)
-		values.Set("traits.foobar", "bar")
-
-		b, res := testhelpers.LoginMakeRequest(t, false, false, payload, hc, testhelpers.EncodeFormAsJSON(t, false, values))
-		assert.EqualValues(t, http.StatusOK, res.StatusCode, assertx.PrettifyJSONPayload(t, b))
-		assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-		assert.EqualValues(t, text.ErrorValidationGeneric, gjson.Get(b, "ui.messages.0.id").Num, assertx.PrettifyJSONPayload(t, b))
-		assert.EqualValues(t, "Requested return_to URL \"https://not-allowed\" is not whitelisted.", gjson.Get(b, "ui.messages.0.text").String(), assertx.PrettifyJSONPayload(t, b))
-		assert.Empty(t, res.Header.Get("Set-Cookie"))
-	})
-
 	var expectValidationError = func(t *testing.T, isAPI, forced, isSPA bool, values func(url.Values)) string {
 		return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
 			isSPA, forced,

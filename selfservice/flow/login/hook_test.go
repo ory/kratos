@@ -39,13 +39,16 @@ func TestLoginExecutor(t *testing.T) {
 				router := httprouter.New()
 
 				router.GET("/login/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().PreLoginHook(w, r, login.NewFlow(conf, time.Minute, "", r, ft))) {
+					f, err := login.NewFlow(conf, time.Minute, "", r, ft)
+					require.NoError(t, err)
+					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().PreLoginHook(w, r, f)) {
 						_, _ = w.Write([]byte("ok"))
 					}
 				})
 
 				router.GET("/login/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					a := login.NewFlow(conf, time.Minute, "", r, ft)
+					a, err := login.NewFlow(conf, time.Minute, "", r, ft)
+					require.NoError(t, err)
 					a.Active = identity.CredentialsType(strategy)
 					a.RequestURL = x.RequestURL(r).String()
 					sess := session.NewInactiveSession()
@@ -92,13 +95,6 @@ func TestLoginExecutor(t *testing.T) {
 					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Equal(t, "", body)
-				})
-
-				t.Run("case=prevent return_to value because domain not whitelisted", func(t *testing.T) {
-					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser, nil), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
-					assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
 				})
 
 				t.Run("case=use return_to value", func(t *testing.T) {

@@ -62,9 +62,11 @@ func TestHandler(t *testing.T) {
 	otherUser := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 
 	newExpiredFlow := func() *settings.Flow {
-		return settings.NewFlow(conf, -time.Minute,
+		f, err := settings.NewFlow(conf, -time.Minute,
 			&http.Request{URL: urlx.ParseOrPanic(publicTS.URL + login.RouteInitBrowserFlow)},
 			primaryIdentity, flow.TypeBrowser)
+		require.NoError(t, err)
+		return f
 	}
 
 	assertion := func(t *testing.T, body []byte, isApi bool) {
@@ -188,6 +190,7 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=expired with return_to", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
 			client := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 			body := x.EasyGetBody(t, client, publicTS.URL+settings.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
 

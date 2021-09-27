@@ -48,7 +48,8 @@ func TestSettingsExecutor(t *testing.T) {
 					i := testhelpers.SelfServiceHookCreateFakeIdentity(t, reg)
 					sess, _ := session.NewActiveSession(i, conf, time.Now().UTC(), identity.CredentialsTypePassword)
 
-					a := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
+					a, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
+					require.NoError(t, err)
 					a.RequestURL = x.RequestURL(r).String()
 					require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(r.Context(), a))
 					_ = handleErr(t, w, r, reg.SettingsHookExecutor().
@@ -96,13 +97,6 @@ func TestSettingsExecutor(t *testing.T) {
 					res, body := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Equal(t, "", body)
-				})
-
-				t.Run("case=prevent return_to value because domain not whitelisted", func(t *testing.T) {
-					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-
-					res, _ := makeRequestPost(t, newServer(t, flow.TypeBrowser), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
-					assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
 				})
 
 				t.Run("case=use return_to value", func(t *testing.T) {

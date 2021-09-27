@@ -103,9 +103,22 @@ type Flow struct {
 	RequestedAAL identity.AuthenticatorAssuranceLevel `json:"requested_aal" faker:"len=4" db:"requested_aal"`
 }
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
+	requestURL := x.RequestURL(r).String()
+
+	// Pre-validate the return to URL which is contained in the HTTP request.
+	_, err := x.SecureRedirectTo(r,
+		conf.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(requestURL),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Flow{
 		ID:        id,
 		ExpiresAt: now.Add(exp),
@@ -114,7 +127,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
-		RequestURL: x.RequestURL(r).String(),
+		RequestURL: requestURL,
 		CSRFToken:  csrf,
 		Type:       flowType,
 		Refresh:    r.URL.Query().Get("refresh") == "true",
@@ -122,7 +135,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			r.URL.Query().Get("aal"),
 			string(identity.AuthenticatorAssuranceLevel1)))),
 		InternalContext: []byte("{}"),
-	}
+	}, nil
 }
 
 func (f *Flow) GetType() flow.Type {

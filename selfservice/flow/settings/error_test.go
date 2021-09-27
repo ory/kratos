@@ -75,7 +75,9 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *settings.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f := settings.NewFlow(conf, ttl, req, &id, ft)
+		f, err := settings.NewFlow(conf, ttl, req, &id, ft)
+		require.NoError(t, err)
+
 		for _, s := range reg.SettingsStrategies(context.Background()) {
 			require.NoError(t, s.PopulateSettingsMethod(req, &id, f))
 		}
@@ -323,6 +325,7 @@ func TestHandleError(t *testing.T) {
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(nil), "/error").String()})
 			t.Cleanup(reset)
 
 			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}

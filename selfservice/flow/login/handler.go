@@ -86,7 +86,10 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
 	conf := h.d.Config(r.Context())
-	f := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
+	f, err := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
+	if err != nil {
+		return nil, err
+	}
 
 	if f.RequestedAAL == "" {
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel1

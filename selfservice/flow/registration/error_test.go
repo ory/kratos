@@ -63,7 +63,8 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *registration.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f := registration.NewFlow(conf, ttl, "csrf_token", req, ft)
+		f, err := registration.NewFlow(conf, ttl, "csrf_token", req, ft)
+		require.NoError(t, err)
 		for _, s := range reg.RegistrationStrategies(context.Background()) {
 			require.NoError(t, s.PopulateRegistrationMethod(req, f))
 		}
