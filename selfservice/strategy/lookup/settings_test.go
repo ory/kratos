@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/sqlcon"
+
 	"github.com/gofrs/uuid"
 
 	kratos "github.com/ory/kratos-client-go"
@@ -121,7 +123,7 @@ func TestCompleteSettings(t *testing.T) {
 		return testhelpers.SettingsMakeRequest(t, false, spa, f, browserClient, testhelpers.EncodeFormAsJSON(t, spa, values))
 	}
 
-	t.Run("case=hide recovery codes behind reveal button", func(t *testing.T) {
+	t.Run("case=hide recovery codes behind reveal button and show disable button", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
 		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
 
@@ -199,7 +201,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
-	t.Run("type=can not reveal or regenerate without privileged session", func(t *testing.T) {
+	t.Run("type=can not reveal or regenerate or remove without privileged session", func(t *testing.T) {
 		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
 			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
@@ -227,6 +229,12 @@ func TestCompleteSettings(t *testing.T) {
 				d: "regenerate",
 				v: func(v url.Values) {
 					v.Set(node.LookupRegenerate, "true")
+				},
+			},
+			{
+				d: "disable",
+				v: func(v url.Values) {
+					v.Set(node.LookupDisable, "true")
 				},
 			},
 		} {
@@ -351,11 +359,13 @@ func TestCompleteSettings(t *testing.T) {
 			t.Run("credentials="+tc.d, func(t *testing.T) {
 				var payload = func(v url.Values) {
 					v.Del(node.LookupReveal)
+					v.Del(node.LookupDisable)
 					v.Set(node.LookupRegenerate, "true")
 				}
 
 				var payloadConfirm = func(v url.Values) {
 					v.Del(node.LookupRegenerate)
+					v.Del(node.LookupDisable)
 					v.Del(node.LookupReveal)
 					v.Set(node.LookupConfirm, "true")
 				}
@@ -414,6 +424,91 @@ func TestCompleteSettings(t *testing.T) {
 					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
 					checkIdentity(t, id, f)
 					testhelpers.EnsureAAL(t, browserClient, publicTS, "aal2", string(identity.CredentialsTypeLookup))
+				}
+
+				t.Run("type=browser", func(t *testing.T) {
+					runBrowser(t, false)
+				})
+
+				t.Run("type=spa", func(t *testing.T) {
+					runBrowser(t, true)
+				})
+			})
+		}
+	})
+
+	t.Run("type=remove lookup codes", func(t *testing.T) {
+		for _, tc := range []struct {
+			d string
+			c func(t *testing.T) *identity.Identity
+		}{
+			{
+				d: "with",
+				c: func(t *testing.T) *identity.Identity {
+					i, _ := createIdentity(t, reg)
+					return i
+				},
+			},
+			{
+				d: "without",
+				c: func(t *testing.T) *identity.Identity {
+					return createIdentityWithoutLookup(t, reg)
+				},
+			},
+		} {
+			t.Run("credentials="+tc.d, func(t *testing.T) {
+				var payloadConfirm = func(v url.Values) {
+					v.Del(node.LookupRegenerate)
+					v.Del(node.LookupReveal)
+					v.Set(node.LookupDisable, "true")
+				}
+
+				checkIdentity := func(t *testing.T, id *identity.Identity, f *kratos.SelfServiceSettingsFlow) {
+					_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeLookup, id.ID.String())
+					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+
+					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+					require.NoError(t, err)
+					assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)))
+				}
+
+				t.Run("type=api", func(t *testing.T) {
+					id, _ := createIdentity(t, reg)
+					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, id)
+					f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
+					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+
+					payloadConfirm(values)
+					actual, res := testhelpers.SettingsMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+
+					assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+
+					checkIdentity(t, id, f)
+					testhelpers.EnsureAAL(t, apiClient, publicTS, "aal1")
+				})
+
+				runBrowser := func(t *testing.T, spa bool) {
+					id, _ := createIdentity(t, reg)
+
+					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, id)
+					f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
+					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+
+					payloadConfirm(values)
+					actual, res := testhelpers.SettingsMakeRequest(t, false, spa, f, browserClient, testhelpers.EncodeFormAsJSON(t, spa, values))
+					assert.Equal(t, http.StatusOK, res.StatusCode)
+
+					if spa {
+						assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
+					} else {
+						assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+					}
+
+					assert.EqualValues(t, settings.StateSuccess, json.RawMessage(gjson.Get(actual, "state").String()))
+					checkIdentity(t, id, f)
+					testhelpers.EnsureAAL(t, browserClient, publicTS, "aal1")
 				}
 
 				t.Run("type=browser", func(t *testing.T) {

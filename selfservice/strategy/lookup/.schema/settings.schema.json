@@ -9,6 +9,9 @@
     "method": {
       "type": "string"
     },
+    "lookup_secret_disable": {
+      "type": "boolean"
+    },
     "lookup_secret_reveal": {
       "type": "boolean"
     },
