@@ -151,7 +151,7 @@ func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err err
 	}
 	p.Algorithm = algParts[1]
 
-	iter, err := strconv.Atoi(parts[2])
+	iter, err := strconv.ParseUint(parts[2], 10, 32)
 	if err != nil {
 		return nil, nil, nil, err
 	}
