@@ -70,8 +70,12 @@ func TestSMTP(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, uuid.Nil, id)
 
-	// The third email contains a sender name
+	// The third email contains a sender name and custom headers
 	conf.MustSet(config.ViperKeyCourierSMTPFromName, "Bob")
+	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header1", "foo")
+	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header2", "bar")
+	customerHeaders := conf.CourierSMTPHeaders()
+	require.Len(t, customerHeaders, 2)
 	id, err = c.QueueEmail(ctx, templates.NewTestStub(conf, &templates.TestStubModel{
 		To:      "test-recipient-3@example.org",
 		Subject: "test-subject-3",
@@ -122,6 +126,8 @@ func TestSMTP(t *testing.T) {
 		assert.Contains(t, string(body), "test-stub@ory.sh")
 	}
 
-	// Assertion for the third email with sender name
+	// Assertion for the third email with sender name and headers
 	assert.Contains(t, string(body), "Bob")
+	assert.Contains(t, string(body), `"test-stub-header1":["foo"]`)
+	assert.Contains(t, string(body), `"test-stub-header2":["bar"]`)
 }

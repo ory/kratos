@@ -310,11 +310,12 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
           "type": "string",
           "enum": [
             "github",
             "gitlab",
+            "gitlab-app",
             "generic",
             "google",
             "microsoft",
@@ -1096,6 +1097,18 @@
               "type": "string",
               "examples": [
                 "Bob"
+              ]
+            },
+            "headers": {
+              "title": "SMTP Headers",
+              "description": "These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.",
+              "type": "object",
+              "examples": [
+                {
+                  "X-SES-SOURCE-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
+                  "X-SES-FROM-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
+                  "X-SES-RETURN-PATH-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com"
+                }
               ]
             }
           },

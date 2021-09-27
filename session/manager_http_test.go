@@ -166,6 +166,28 @@ func TestManagerHTTP(t *testing.T) {
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
 
+		t.Run("case=no panic on invalid cookie name", func(t *testing.T) {
+			conf.MustSet(config.ViperKeySessionLifespan, "1m")
+			conf.MustSet(config.ViperKeySessionName, "$%˜\"")
+			t.Cleanup(func() {
+				conf.MustSet(config.ViperKeySessionName, "")
+			})
+
+			rp.GET("/session/set/invalid", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+				require.Error(t, reg.SessionManager().CreateAndIssueCookie(r.Context(), w, r, s))
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+
+			i := identity.Identity{Traits: []byte("{}")}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+			s, _ = session.NewActiveSession(&i, conf, time.Now())
+
+			c := testhelpers.NewClientWithCookies(t)
+			res, err := c.Get(pts.URL + "/session/set/invalid")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
+		})
+
 		t.Run("case=valid and uses x-session-cookie", func(t *testing.T) {
 			conf.MustSet(config.ViperKeySessionLifespan, "1m")
 

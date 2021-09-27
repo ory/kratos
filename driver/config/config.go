@@ -46,6 +46,7 @@ const (
 	ViperKeyCourierTemplatesPath                                    = "courier.template_override_path"
 	ViperKeyCourierSMTPFrom                                         = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                                     = "courier.smtp.from_name"
+	ViperKeyCourierSMTPHeaders                                      = "courier.smtp.headers"
 	ViperKeySecretsDefault                                          = "secrets.default"
 	ViperKeySecretsCookie                                           = "secrets.cookie"
 	ViperKeySecretsCipher                                           = "secrets.cipher"
@@ -732,6 +733,10 @@ func (p *Config) CourierSMTPFromName() string {
 
 func (p *Config) CourierTemplatesRoot() string {
 	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
+}
+
+func (p *Config) CourierSMTPHeaders() map[string]string {
+	return p.p.StringMap(ViperKeyCourierSMTPHeaders)
 }
 
 func splitUrlAndFragment(s string) (string, string) {
