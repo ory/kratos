@@ -38,16 +38,19 @@ func TestViperProvider(t *testing.T) {
 			configx.WithConfigFiles("../../internal/.kratos.yaml"))
 
 		t.Run("group=urls", func(t *testing.T) {
-			assert.Equal(t, "http://test.kratos.ory.sh/login", p.SelfServiceFlowLoginUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SelfServiceFlowSettingsUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/register", p.SelfServiceFlowRegistrationUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/error", p.SelfServiceFlowErrorURL().String())
+			c := config.MustNew(t, logrusx.New("", ""),
+				configx.WithConfigFiles("../../internal/.kratos.yaml"),
+				configx.SkipValidation())
+			assert.Equal(t, "http://test.kratos.ory.sh/login", c.SelfServiceFlowLoginUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/settings", c.SelfServiceFlowSettingsUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/register", c.SelfServiceFlowRegistrationUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/error", c.SelfServiceFlowErrorURL().String())
 
-			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL().String())
-			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL(nil).String())
+			assert.Equal(t, "http://admin.kratos.ory.sh", c.SelfAdminURL().String())
+			assert.Equal(t, "http://public.kratos.ory.sh", c.SelfPublicURL(nil).String())
 
 			var ds []string
-			for _, v := range p.SelfServiceBrowserWhitelistedReturnToDomains() {
+			for _, v := range c.SelfServiceBrowserWhitelistedReturnToDomains() {
 				ds = append(ds, v.String())
 			}
 

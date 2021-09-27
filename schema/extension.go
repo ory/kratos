@@ -3,9 +3,11 @@ package schema
 import (
 	"bytes"
 	"encoding/json"
+
+	"github.com/pkg/errors"
+
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/embedx"
-	"github.com/pkg/errors"
 )
 
 var ExtensionRunnerIdentityMetaSchema = ExtensionRunnerMetaSchema(embedx.IdentityExtension)

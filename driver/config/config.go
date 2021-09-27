@@ -6,8 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/jsonschema/v3"
-	"github.com/ory/kratos/embedx"
 	"github.com/ory/x/watcherx"
 	"net"
 	"net/http"
@@ -17,6 +15,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/jsonschema/v3"
+	"github.com/ory/kratos/embedx"
 
 	"github.com/ory/x/tlsx"
 
@@ -232,13 +233,35 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
+type options struct {
+	skipSchemaValidation bool
+	configXOptions       []configx.OptionModifier
+}
+
+type Options func(*options)
+
+func SkipSchemaValidation(skipValidation bool) Options {
+	return func(o *options) {
+		o.skipSchemaValidation = skipValidation
+	}
+}
+
+func WithConfigXOptions(opts ...configx.OptionModifier) Options {
+	return func(o *options) {
+		o.configXOptions = append(o.configXOptions, opts...)
+	}
+}
+
 func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 	p, err := New(context.TODO(), l, opts...)
 	require.NoError(t, err)
 	return p
 }
 
+
 func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
+	var c *Config
+
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "client_secret"),
@@ -246,8 +269,14 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
 		configx.WithContext(ctx),
-		configx.AttachWatcher(func(e watcherx.Event, err error) {
-			// TODO re-validate if identity schema changed
+		configx.AttachWatcher(func(event watcherx.Event, err error) {
+			if c == nil {
+				panic(errors.New("config did not"))
+			}
+			if err := c.validateIdentitySchemas(); err != nil {
+				l.WithField("event", fmt.Sprintf("%#v", err)).
+					Errorf("The changed identity schema configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting the process.")
+			}
 		}),
 	}, opts...)
 
@@ -258,10 +287,12 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 
 	l.UseConfig(p)
 
-	c := &Config{l: l, p: p}
+	c = &Config{l: l, p: p}
 
-	if err = c.validateIdentitySchemas(); err != nil {
-		return nil, err
+	if !p.SkipValidation() {
+		if err := c.validateIdentitySchemas(); err != nil {
+			return nil, err
+		}
 	}
 
 	return c, nil
@@ -286,6 +317,9 @@ func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
 func (p *Config) validateIdentitySchemas() error {
 	for _, s := range p.IdentityTraitsSchemas() {
 		resource, err := jsonschema.LoadURL(s.URL)
+		if err != nil {
+			return err
+		}
 		j, err := p.getIdentitySchemaValidator()
 		if err != nil {
 			return err

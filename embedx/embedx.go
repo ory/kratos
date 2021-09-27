@@ -2,11 +2,12 @@ package embedx
 
 import (
 	"bytes"
-	"github.com/tidwall/gjson"
 	"io"
-)
 
-import _ "embed"
+	"github.com/tidwall/gjson"
+
+	_ "embed"
+)
 
 //go:embed config.schema.json
 var ConfigSchema string

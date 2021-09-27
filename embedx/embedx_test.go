@@ -1,9 +1,11 @@
 package embedx
 
 import (
-	"github.com/ory/jsonschema/v3"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/jsonschema/v3"
 )
 
 func TestAddSchemaResources(t *testing.T) {
