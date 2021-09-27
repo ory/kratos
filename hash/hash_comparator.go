@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -136,7 +137,7 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 }
 
 // decodePbkdf2Hash decodes PBKDF2 encoded password hash.
-// format: $pbkdf2_<algorithm>$c=<iteration>$<salt>$<hash>
+// format: $pbkdf2_<algorithm>$<iteration>$<salt>$<hash>
 func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 5 {
@@ -150,10 +151,11 @@ func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err err
 	}
 	p.Algorithm = algParts[1]
 
-	_, err = fmt.Sscanf(parts[2], "c=%d", &p.Iterations)
+	iter, err := strconv.Atoi(parts[2])
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	p.Iterations = uint32(iter)
 
 	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[3])
 	if err != nil {
