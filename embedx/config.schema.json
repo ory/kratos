@@ -1840,6 +1840,25 @@
               "default": 12
             }
           }
+        },
+        "pbkdf2": {
+          "title": "Hashing Algorithm Configuration",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "upgrade_to"
+          ],
+          "properties": {
+            "upgrade_to": {
+              "title": "Password hashing algorithm what PBKDF2 upgrades to",
+              "description": "One of the values: argon2, bcrypt",
+              "type": "string",
+              "enum": [
+                "argon2",
+                "bcrypt"
+              ]
+            }
+          }
         }
       },
       "additionalProperties": false

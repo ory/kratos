@@ -89,8 +89,9 @@ type RegistryDefault struct {
 	sessionHandler *session.Handler
 	sessionManager session.Manager
 
-	passwordHasher    hash.Hasher
-	passwordValidator password2.Validator
+	passwordHasher       hash.Hasher
+	passwordHashUpgrader *hash.Upgrader
+	passwordValidator    password2.Validator
 
 	crypter cipher.Cipher
 
@@ -388,6 +389,13 @@ func (m *RegistryDefault) Hasher() hash.Hasher {
 		}
 	}
 	return m.passwordHasher
+}
+
+func (m *RegistryDefault) HashUpgrader() *hash.Upgrader {
+	if m.passwordHashUpgrader == nil {
+		m.passwordHashUpgrader = hash.NewHashUpgrader(m)
+	}
+	return m.passwordHashUpgrader
 }
 
 func (m *RegistryDefault) PasswordValidator() password2.Validator {

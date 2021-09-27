@@ -740,9 +740,12 @@ func TestCompleteLogin(t *testing.T) {
 		require.NoError(t, err)
 		var o password.CredentialsConfig
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
-		assert.True(t, reg.Hasher().IsSameAlgorithm([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+		assert.False(t, reg.HashUpgrader().DoesNeedToUpgrade(context.Background(), []byte(o.HashedPassword)), "%s", o.HashedPassword)
+		assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)
 
 		// retry after upgraded
+		body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+			false, true, http.StatusOK, redirTS.URL)
 		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 	})
 }

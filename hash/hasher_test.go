@@ -192,3 +192,46 @@ func TestCompare(t *testing.T) {
 	assert.Nil(t, hash.ComparePbkdf2(context.Background(), []byte("test"), []byte("$pbkdf2_sha512$c=100000$bdHBpn7OWOivJMVJypy2UqR0UnaD5prQXRZevj/05YU$+wArTfv1a+bNGO1iZrmEdVjhA+lL11wF4/IxpgYfPwc")))
 	assert.Error(t, hash.Compare(context.Background(), []byte("test"), []byte("$pbkdf2_sha512$c=100000$bdHBpn7OWOivJMVJypy2UqR0UnaD5prQXRZevj/05YU$+wArTfv1a+bNGO1iZrmEdVjhA+lL11wF4/IxpgYfPww")))
 }
+
+func TestUpgrade(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	upgrader := reg.HashUpgrader()
+
+	for k, tc := range []struct {
+		h                   hash.Hasher
+		expectNeedToUpgrade bool
+		isNewAlgorithm      func(hash []byte) bool
+	}{
+		{
+			h:                   hash.NewHasherBcrypt(reg),
+			expectNeedToUpgrade: false,
+		},
+		{
+			h:                   hash.NewHasherArgon2(reg),
+			expectNeedToUpgrade: false,
+		},
+		{
+			h: &hash.Pbkdf2{
+				Algorithm:  "sha256",
+				Iterations: 100000,
+				SaltLength: 32,
+				KeyLength:  32,
+			},
+			expectNeedToUpgrade: true,
+			isNewAlgorithm:      hash.IsBcryptHash,
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			pw := mkpw(t, 16)
+			h, err := tc.h.Generate(context.Background(), pw)
+
+			assert.Equal(t, tc.expectNeedToUpgrade, upgrader.DoesNeedToUpgrade(context.Background(), h))
+			newHash, err := upgrader.Upgrade(context.Background(), h, pw)
+			if !tc.expectNeedToUpgrade {
+				assert.Error(t, err)
+				return
+			}
+			assert.True(t, tc.isNewAlgorithm(newHash), "new hash: %s", newHash)
+		})
+	}
+}

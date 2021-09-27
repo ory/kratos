@@ -62,7 +62,3 @@ func getPseudorandomFunctionForPbkdf2(alg string) func() hash.Hash {
 		return sha256.New
 	}
 }
-
-func (h *Pbkdf2) IsSameAlgorithm(hash []byte) bool {
-	return IsArgon2idHash(hash)
-}

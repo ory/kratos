@@ -1907,6 +1907,25 @@ hashers:
     #
     cost: 4
 
+  ## Hashing Algorithm Configuration ##
+  #
+  pbkdf2:
+    ## Password hashing algorithm what PBKDF2 upgrades to ##
+    #
+    # One of the values: argon2, bcrypt
+    #
+    # One of:
+    # - argon2
+    # - bcrypt
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export HASHERS_PBKDF2_UPGRADE_TO=<value>
+    # - Windows Command Line (CMD):
+    #    > set HASHERS_PBKDF2_UPGRADE_TO=<value>
+    #
+    upgrade_to: argon2
+
   ## Password hashing algorithm ##
   #
   # One of the values: argon2, bcrypt
