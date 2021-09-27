@@ -1843,6 +1843,7 @@
         },
         "pbkdf2": {
           "title": "Hashing Algorithm Configuration",
+          "description": "Kratos has NOT ability to import user credentials currently. Wait to resolve [this issue](https://github.com/ory/kratos/issues/605)",
           "type": "object",
           "additionalProperties": false,
           "required": [

@@ -1909,6 +1909,8 @@ hashers:
 
   ## Hashing Algorithm Configuration ##
   #
+  # Kratos has NOT ability to import user credentials currently. Wait to resolve [this issue](https://github.com/ory/kratos/issues/605)
+  #
   pbkdf2:
     ## Password hashing algorithm what PBKDF2 upgrades to ##
     #
