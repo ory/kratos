@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
@@ -44,12 +45,12 @@ func (lt State) IsValid() error {
 	return errors.New("identity state is not valid")
 }
 
-type IdentifierCredential struct {
-	Subject      string `json:"subject"`
-	Provider     string `json:"provider"`
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
+//type IdentifierCredential struct {
+//	Subject      string `json:"subject"`
+//	Provider     string `json:"provider"`
+//	AccessToken  string `json:"access_token"`
+//	RefreshToken string `json:"refresh_token"`
+//}
 
 // Identity represents an Ory Kratos identity
 //
@@ -71,8 +72,8 @@ type Identity struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
-	// IdentifierCredentials contains the access and refresh token for oidc identifier
-	IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
+	//// IdentifierCredentials contains the access and refresh token for oidc identifier
+	//IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
 
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
@@ -307,6 +308,12 @@ func (i *Identity) GetOIDCToken(ctx context.Context, c cipher.Provider) error {
 			continue
 		}
 
+		encryptedIDToken := gjson.GetBytes(credential.Config, "providers.0.initial_id_token").String()
+		idToken, err := c.Cipher().Decrypt(ctx, encryptedIDToken)
+		if err != nil {
+			return err
+		}
+
 		encryptedAccessToken := gjson.GetBytes(credential.Config, "providers.0.initial_access_token").String()
 		accessToken, err := c.Cipher().Decrypt(ctx, encryptedAccessToken)
 		if err != nil {
@@ -318,13 +325,17 @@ func (i *Identity) GetOIDCToken(ctx context.Context, c cipher.Provider) error {
 		if err != nil {
 			return err
 		}
-
-		i.IdentifierCredentials = append(i.IdentifierCredentials, IdentifierCredential{
-			Subject:      gjson.GetBytes(credential.Config, "providers.0.subject").String(),
-			Provider:     gjson.GetBytes(credential.Config, "providers.0.provider").String(),
-			AccessToken:  string(accessToken),
-			RefreshToken: string(refreshToken),
-		})
+		fmt.Println("encryptedAccessToken=" + encryptedAccessToken)
+		credential.IDToken = string(idToken)
+		credential.AccessToken = string(accessToken)
+		credential.RefreshToken = string(refreshToken)
+		i.Credentials[credType] = credential
+		//i.IdentifierCredentials = append(i.IdentifierCredentials, IdentifierCredential{
+		//	Subject:      gjson.GetBytes(credential.Config, "providers.0.subject").String(),
+		//	Provider:     gjson.GetBytes(credential.Config, "providers.0.provider").String(),
+		//	AccessToken:  string(accessToken),
+		//	RefreshToken: string(refreshToken),
+		//})
 	}
 	return nil
 }

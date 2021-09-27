@@ -352,6 +352,14 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
+	raw, ok := token.Extra("id_token").(string)
+	var it string
+	if ok {
+		it, err = s.d.Cipher().Encrypt(r.Context(), []byte(raw))
+		if err != nil {
+			return s.handleSettingsError(w, r, ctxUpdate, p, err)
+		}
+	}
 	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
@@ -366,7 +374,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
-		if creds, err = NewCredentials(cat, crt, provider.Config().ID, claims.Subject); err != nil {
+		if creds, err = NewCredentials(it, cat, crt, provider.Config().ID, claims.Subject); err != nil {
 			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	} else if err != nil {

@@ -23,13 +23,14 @@ type CredentialsConfig struct {
 	Providers []ProviderCredentialsConfig `json:"providers"`
 }
 
-func NewCredentials(accessToken, refreshToken, provider, subject string) (*identity.Credentials, error) {
+func NewCredentials(idToken, accessToken, refreshToken, provider, subject string) (*identity.Credentials, error) {
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(CredentialsConfig{
 		Providers: []ProviderCredentialsConfig{
 			{
 				Subject:             subject,
 				Provider:            provider,
+				InitialIDToken:      idToken,
 				InitialAccessToken:  accessToken,
 				InitialRefreshToken: refreshToken,
 			}},
@@ -48,6 +49,7 @@ func NewCredentials(accessToken, refreshToken, provider, subject string) (*ident
 type ProviderCredentialsConfig struct {
 	Subject             string `json:"subject"`
 	Provider            string `json:"provider"`
+	InitialIDToken      string `json:"initial_id_token"`
 	InitialAccessToken  string `json:"initial_access_token"`
 	InitialRefreshToken string `json:"initial_refresh_token"`
 }

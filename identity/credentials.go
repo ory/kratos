@@ -40,6 +40,10 @@ type Credentials struct {
 	// Identifiers represents a list of unique identifiers this credential type matches.
 	Identifiers []string `json:"identifiers" db:"-"`
 
+	IDToken      string `json:"id_token,omitempty" db:"-"`
+	AccessToken  string `json:"access_token,omitempty" db:"-"`
+	RefreshToken string `json:"refresh_token,omitempty" db:"-"`
+
 	// Config contains the concrete credential payload. This might contain the bcrypt-hashed password, the email
 	// for passwordless authentication or access_token and refresh tokens from OpenID Connect flows.
 	Config sqlxx.JSONRawMessage `json:"config,omitempty" db:"config"`
