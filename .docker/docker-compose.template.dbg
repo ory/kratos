@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  ${SERVICE_NAME}:
+    build:
+      dockerfile: ./.docker/Dockerfile-debug
+    ports:
+      - ${REMOTE_DEBUGGING_PORT}:40000
+    security_opt:
+      - apparmor=unconfined
+    cap_add:
+      - SYS_PTRACE
+    volumes:
+      - type: bind
+        source: ${SERVICE_ROOT}
+        target: /dockerdev
+        read_only: false
