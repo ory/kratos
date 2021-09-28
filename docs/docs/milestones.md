@@ -268,6 +268,9 @@ Something is not working.
 - [ ] Add option to remove recovery codes
       ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Hide SQLite migration message
+      ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect
