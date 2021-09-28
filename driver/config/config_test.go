@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -35,22 +36,19 @@ import (
 func TestViperProvider(t *testing.T) {
 	t.Run("suite=loaders", func(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""),
-			configx.WithConfigFiles("../../internal/.kratos.yaml"))
+			configx.WithConfigFiles("stub/.kratos.yaml"))
 
 		t.Run("group=urls", func(t *testing.T) {
-			c := config.MustNew(t, logrusx.New("", ""),
-				configx.WithConfigFiles("../../internal/.kratos.yaml"),
-				configx.SkipValidation())
-			assert.Equal(t, "http://test.kratos.ory.sh/login", c.SelfServiceFlowLoginUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/settings", c.SelfServiceFlowSettingsUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/register", c.SelfServiceFlowRegistrationUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/error", c.SelfServiceFlowErrorURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/login", p.SelfServiceFlowLoginUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SelfServiceFlowSettingsUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/register", p.SelfServiceFlowRegistrationUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/error", p.SelfServiceFlowErrorURL().String())
 
-			assert.Equal(t, "http://admin.kratos.ory.sh", c.SelfAdminURL().String())
-			assert.Equal(t, "http://public.kratos.ory.sh", c.SelfPublicURL(nil).String())
+			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL().String())
+			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL(nil).String())
 
 			var ds []string
-			for _, v := range c.SelfServiceBrowserWhitelistedReturnToDomains() {
+			for _, v := range p.SelfServiceBrowserWhitelistedReturnToDomains() {
 				ds = append(ds, v.String())
 			}
 
@@ -117,9 +115,13 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=identity", func(t *testing.T) {
-			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", p.DefaultIdentityTraitsSchemaURL().String())
+			c := config.MustNew(t, logrusx.New("", ""),
+				configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"),
+				configx.SkipValidation())
 
-			ss := p.IdentityTraitsSchemas()
+			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", c.DefaultIdentityTraitsSchemaURL().String())
+
+			ss := c.IdentityTraitsSchemas()
 			assert.Equal(t, 2, len(ss))
 
 			assert.Contains(t, ss, config.Schema{
@@ -842,6 +844,26 @@ func TestLoadingTLSConfig(t *testing.T) {
 		p.MustSet(config.ViperKeyAdminTLSCertPath, certPath)
 		assert.Nil(t, p.GetTSLCertificatesForAdmin())
 		assert.Equal(t, "TLS has not been configured for admin, skipping", hook.LastEntry().Message)
+	})
+
+}
+
+func TestIdentitySchemaValidation(t *testing.T) {
+
+	t.Run("case=skip invalid schema validation", func(t *testing.T) {
+		ctx := context.Background()
+		_, err := config.New(ctx, logrusx.New("", ""),
+			configx.WithConfigFiles("stub/.kratos.invalid.identities.yaml"),
+			configx.SkipValidation())
+		assert.NoError(t, err)
+	})
+
+	t.Run("case=invalid schema should throw error", func(t *testing.T) {
+		ctx := context.Background()
+		_, err := config.New(ctx, logrusx.New("", ""),
+			configx.WithConfigFiles("stub/.kratos.invalid.identities.yaml"))
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "minimum 1 properties allowed, but found 0")
 	})
 
 }

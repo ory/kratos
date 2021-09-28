@@ -233,24 +233,6 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-type options struct {
-	skipSchemaValidation bool
-	configXOptions       []configx.OptionModifier
-}
-
-type Options func(*options)
-
-func SkipSchemaValidation(skipValidation bool) Options {
-	return func(o *options) {
-		o.skipSchemaValidation = skipValidation
-	}
-}
-
-func WithConfigXOptions(opts ...configx.OptionModifier) Options {
-	return func(o *options) {
-		o.configXOptions = append(o.configXOptions, opts...)
-	}
-}
 
 func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 	p, err := New(context.TODO(), l, opts...)
@@ -271,7 +253,7 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 		configx.WithContext(ctx),
 		configx.AttachWatcher(func(event watcherx.Event, err error) {
 			if c == nil {
-				panic(errors.New("config did not"))
+				panic(errors.New("the config provider did not initialise correctly in time"))
 			}
 			if err := c.validateIdentitySchemas(); err != nil {
 				l.WithField("event", fmt.Sprintf("%#v", err)).
