@@ -129,9 +129,10 @@ set host to `localhost` and port to the value, you've used for
 ## As a standalone Docker container
 
 If you just would like to start Kratos in a container in debug mode, you can
-just use the `Dockerfile-debug` file instead of the regular `Dockerfile`. In
-your IDE the debug configuration has to reference that file. In addition, you'll
-have to expose the Delve service port 40000 under the port 8000, as well as the
-actual port of the service, you'll like to access from your host, configure the
-bind mounts and set the run options to
+just use the `Dockerfile-debug` file instead of the regular `Dockerfile`. Make
+however sure your build context in the root directory of Kratos and not the
+`.docker` directory. In your IDE the debug configuration has to reference that
+file. In addition, you'll have to expose the Delve service port 40000 under the
+port 8000, as well as the actual port of the service, you'll like to access from
+your host, configure the bind mounts and set the run options to
 `--security-opt="apparmor=unconfined" --cap-add=SYS_PTRACE`.
