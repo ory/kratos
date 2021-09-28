@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/watcherx"
 	"net"
 	"net/http"
 	"net/url"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/watcherx"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/embedx"
@@ -233,13 +234,11 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-
 func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 	p, err := New(context.TODO(), l, opts...)
 	require.NoError(t, err)
 	return p
 }
-
 
 func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 	var c *Config
