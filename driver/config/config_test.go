@@ -5,13 +5,19 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
+
+	"github.com/ghodss/yaml"
+
+	"github.com/ory/x/watcherx"
 
 	"github.com/ory/kratos/x"
 
@@ -866,4 +872,115 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		assert.Contains(t, err.Error(), "minimum 1 properties allowed, but found 0")
 	})
 
+	t.Run("case=validate schema is validated on file change", func(t *testing.T) {
+		files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
+
+		type identity struct {
+			DefaultSchemaUrl string   `json:"default_schema_url"`
+			Schemas          []string `json:"schemas"`
+		}
+
+		type configFile struct {
+			identityFileName string
+			SelfService      map[string]string            `json:"selfservice"`
+			Courier          map[string]map[string]string `json:"courier"`
+			DSN              string                       `json:"dsn"`
+			Identity         *identity                    `json:"identity"`
+		}
+
+		setup := func(t *testing.T, file string) *configFile {
+			identityTest, err := ioutil.ReadFile(file)
+			assert.NoError(t, err)
+			return &configFile{
+				identityFileName: file,
+				SelfService: map[string]string{
+					"default_browser_return_url": "https://some-return-url",
+				},
+				Courier: map[string]map[string]string{
+					"smtp": {
+						"connection_uri": "smtp://foo@bar",
+					},
+				},
+				DSN: "memory",
+				Identity: &identity{
+					DefaultSchemaUrl: "base64://" + base64.StdEncoding.EncodeToString(identityTest),
+					Schemas:          []string{},
+				},
+			}
+		}
+
+		marshalAndWrite := func(t *testing.T, tmpFile *os.File, identity *configFile, c *chan bool) {
+			j, err := yaml.Marshal(identity)
+			assert.NoError(t, err)
+
+			_, err = tmpFile.Seek(0, 0)
+			require.NoError(t, err)
+			require.NoError(t, tmpFile.Truncate(0))
+			_, err = io.WriteString(tmpFile, string(j))
+			assert.NoError(t, err)
+			assert.NoError(t, tmpFile.Sync())
+			if c != nil {
+				<-*c
+				time.Sleep(time.Millisecond)
+			}
+		}
+
+		testWatch := func(t *testing.T, i *configFile, invalidIdentity *configFile) {
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+
+			c := make(chan bool, 1)
+			tdir := os.TempDir() + "/" + strconv.Itoa(time.Now().Nanosecond())
+			assert.NoError(t,
+				os.MkdirAll(tdir, // DO NOT CHANGE THIS: https://github.com/fsnotify/fsnotify/issues/340
+					os.ModePerm))
+			tmpConfig, err := ioutil.TempFile(tdir, "config-*.yaml")
+			assert.NoError(t, err)
+
+			marshalAndWrite(t, tmpConfig, i, nil)
+
+			l := logrusx.New("kratos-"+tmpConfig.Name(), "test")
+			hook := test.NewLocal(l.Logger)
+
+			_, err = config.New(ctx, l,
+				configx.WithConfigFiles(tmpConfig.Name()),
+				configx.AttachWatcher(func(event watcherx.Event, err error) {
+					c <- true
+				}))
+			assert.NoError(t, err)
+
+			// clean the hooks since it will throw an event on first boot
+			hook.Reset()
+
+			// Change the identity config to an invalid file
+			i.Identity.DefaultSchemaUrl = invalidIdentity.Identity.DefaultSchemaUrl
+
+			marshalAndWrite(t, tmpConfig, i, &c)
+
+			lastHook, err := hook.LastEntry().String()
+			assert.NoError(t, err)
+
+			assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
+
+			t.Cleanup(func() {
+				assert.NoError(t, tmpConfig.Close())
+				_ = os.Remove(tmpConfig.Name())
+			})
+		}
+
+		var identities []*configFile
+
+		for _, f := range files {
+			identities = append(identities, setup(t, f))
+		}
+
+		invalidIdentity := setup(t, "stub/.identity.invalid.json")
+
+		for _, i := range identities {
+			t.Run("test=identity file "+i.identityFileName, func(t *testing.T) {
+				testWatch(t, i, invalidIdentity)
+			})
+		}
+
+	})
 }
