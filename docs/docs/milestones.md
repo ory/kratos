@@ -271,6 +271,9 @@ Something is not working.
 - [ ] Hide SQLite migration message
       ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] return_to_query_param not honored on OIDC login
+      ([kratos#1773](https://github.com/ory/kratos/issues/1773)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect
