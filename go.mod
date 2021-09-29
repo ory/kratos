@@ -11,7 +11,7 @@ replace (
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 	github.com/ory/kratos-client-go => ./internal/httpclient
-	github.com/ory/x => github.com/ory/x v0.0.285
+	github.com/ory/x => github.com/ory/x v0.0.288
 	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 )
@@ -77,7 +77,7 @@ require (
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.5
-	github.com/ory/x v0.0.285
+	github.com/ory/x v0.0.288
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/philhofer/fwd v1.1.1 // indirect
