@@ -18,10 +18,9 @@ import (
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/selfservice/strategy/password"
 
-	"github.com/ory/x/ioutilx"
-
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/stretchr/testify/assert"
@@ -716,7 +715,7 @@ func TestCompleteLogin(t *testing.T) {
 				{
 					ID:         x.NewUUID(),
 					Value:      identifier,
-					Verified:   false,
+					Verified:   true,
 					CreatedAt:  time.Now(),
 					IdentityID: iId,
 				},
