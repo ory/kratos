@@ -1907,9 +1907,19 @@ hashers:
     #
     cost: 4
 
-  ## Hashing Algorithm Configuration ##
+  ## Hashing Algorithm Compatibility Configuration ##
   #
-  # Kratos has NOT ability to import user credentials currently. Wait to resolve [this issue](https://github.com/ory/kratos/issues/605)
+  # Verify and upgrade another hashing algorithm from imported password hashed by PBKDF2.
+  # Store following encoding format:
+  #
+  # `$pbkdf2_<algorithm>$<iteration>$<salt>$<hash>`
+  #
+  # example: `$pbkdf2_sha256$100000$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpI`
+  #
+  # This format is very similar to [Django](https://docs.djangoproject.com/en/3.2/topics/auth/passwords/#how-django-stores-passwords).
+  #
+  # Kratos has NOT ability to import user credentials yet.
+  # Wait to resolve [this issue](https://github.com/ory/kratos/issues/605)
   #
   pbkdf2:
     ## Password hashing algorithm what PBKDF2 upgrades to ##

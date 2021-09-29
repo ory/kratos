@@ -1842,8 +1842,8 @@
           }
         },
         "pbkdf2": {
-          "title": "Hashing Algorithm Configuration",
-          "description": "Kratos has NOT ability to import user credentials currently. Wait to resolve [this issue](https://github.com/ory/kratos/issues/605)",
+          "title": "Hashing Algorithm Compatibility Configuration",
+          "description": "Verify and upgrade another hashing algorithm from imported password hashed by PBKDF2.\nStore following encoding format:\n\n`$pbkdf2_<algorithm>$<iteration>$<salt>$<hash>`\n\nexample: `$pbkdf2_sha256$100000$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpI`\n\nThis format is very similar to [Django](https://docs.djangoproject.com/en/3.2/topics/auth/passwords/#how-django-stores-passwords).\n\nKratos has NOT ability to import user credentials yet.\nWait to resolve [this issue](https://github.com/ory/kratos/issues/605)",
           "type": "object",
           "additionalProperties": false,
           "required": [
