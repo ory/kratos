@@ -1098,6 +1098,18 @@
               "examples": [
                 "Bob"
               ]
+            },
+            "headers": {
+              "title": "SMTP Headers",
+              "description": "These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.",
+              "type": "object",
+              "examples": [
+                {
+                  "X-SES-SOURCE-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
+                  "X-SES-FROM-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
+                  "X-SES-RETURN-PATH-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com"
+                }
+              ]
             }
           },
           "required": [

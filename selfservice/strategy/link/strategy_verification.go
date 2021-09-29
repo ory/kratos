@@ -238,7 +238,8 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 
 	address := token.VerifiableAddress
 	address.Verified = true
-	address.VerifiedAt = sqlxx.NullTime(time.Now().UTC())
+	verifiedAt := sqlxx.NullTime(time.Now().UTC())
+	address.VerifiedAt = &verifiedAt
 	address.Status = identity.VerifiableAddressStatusCompleted
 	if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
 		return s.handleVerificationError(w, r, f, body, err)

@@ -266,6 +266,26 @@
         "title": "A list of identities.",
         "type": "array"
       },
+      "identitySchema": {
+        "properties": {
+          "id": {
+            "description": "The ID of the Identity JSON Schema",
+            "type": "string"
+          },
+          "schema": {
+            "description": "The actual Identity JSON Schema",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "identitySchemas": {
+        "description": "Raw identity Schema list",
+        "items": {
+          "$ref": "#/components/schemas/identitySchema"
+        },
+        "type": "array"
+      },
       "identityState": {
         "description": "The state can either be `active` or `inactive`.",
         "enum": ["active", "inactive"],
@@ -391,12 +411,16 @@
       },
       "selfServiceLogoutUrl": {
         "properties": {
+          "logout_token": {
+            "description": "LogoutToken can be used to perform logout using AJAX.",
+            "type": "string"
+          },
           "logout_url": {
-            "description": "LogoutURL can be opened in a browser to\n\nformat: uri",
+            "description": "LogoutURL can be opened in a browser to sign the user out.\n\nformat: uri",
             "type": "string"
           }
         },
-        "required": ["logout_url"],
+        "required": ["logout_url", "logout_token"],
         "type": "object"
       },
       "selfServiceRecoveryFlow": {
@@ -1205,7 +1229,7 @@
       "name": "Apache 2.0"
     },
     "title": "Ory Kratos API",
-    "version": "v0.7.6-alpha.1"
+    "version": ""
   },
   "openapi": "3.0.3",
   "paths": {
@@ -1603,6 +1627,75 @@
         "tags": ["v0alpha1"]
       }
     },
+    "/identities/{id}/sessions": {
+      "delete": {
+        "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
+        "operationId": "adminDeleteIdentitySessions",
+        "parameters": [
+          {
+            "description": "ID is the identity's ID.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
+        "tags": ["v0alpha1"]
+      }
+    },
     "/metrics/prometheus": {
       "get": {
         "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4434\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
@@ -1674,6 +1767,60 @@
         },
         "summary": "Create a Recovery Link",
         "tags": ["v0alpha1"]
+      }
+    },
+    "/schemas": {
+      "get": {
+        "description": "Get all Identity Schemas",
+        "operationId": "listIdentitySchemas",
+        "parameters": [
+          {
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "default": 100,
+              "format": "int64",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Pagination Page",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/identitySchemas"
+                }
+              }
+            },
+            "description": "identitySchemas"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "tags": ["v0alpha2"]
       }
     },
     "/schemas/{id}": {

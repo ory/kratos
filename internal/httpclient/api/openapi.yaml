@@ -301,6 +301,56 @@ paths:
       summary: Update an Identity
       tags:
       - v0alpha1
+  /identities/{id}/sessions:
+    delete:
+      description: |-
+        This endpoint is useful for:
+
+        To forcefully logout Identity from all devices and sessions
+      operationId: adminDeleteIdentitySessions
+      parameters:
+      - description: ID is the identity's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: Calling this endpoint irrecoverably and permanently deletes and invalidates
+        all sessions that belong to the given Identity.
+      tags:
+      - v0alpha1
   /metrics/prometheus:
     get:
       description: |-
@@ -2425,14 +2475,19 @@ components:
     selfServiceLogoutUrl:
       example:
         logout_url: logout_url
+        logout_token: logout_token
       properties:
+        logout_token:
+          description: LogoutToken can be used to perform logout using AJAX.
+          type: string
         logout_url:
           description: |-
-            LogoutURL can be opened in a browser to
+            LogoutURL can be opened in a browser to sign the user out.
 
             format: uri
           type: string
       required:
+      - logout_token
       - logout_url
       type: object
     selfServiceRecoveryFlow:

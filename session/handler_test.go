@@ -1,13 +1,19 @@
 package session_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -212,4 +218,47 @@ func TestIsAuthenticated(t *testing.T) {
 			assert.EqualValues(t, tc.code, res.StatusCode)
 		})
 	}
+}
+
+func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	_, ts, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
+
+	// set this intermediate because kratos needs some valid url for CRUDE operations
+	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
+	testhelpers.SetDefaultIdentitySchema(t, conf, "file://./stub/identity.schema.json")
+	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+
+	t.Run("case=should return 202 after invalidating all sessions", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		i := identity.NewIdentity("")
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+		s := &Session{Identity: i}
+		require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), s))
+
+		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+		_, err = reg.SessionPersister().GetSession(context.Background(), s.ID)
+		require.True(t, errors.Is(err, sqlcon.ErrNoRows))
+	})
+
+	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/BADUUID/sessions", nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, res.StatusCode)
+	})
+
+	t.Run("case=should return 404 when calling with missing UUID", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		someID, _ := uuid.NewV4()
+		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+someID.String()+"/sessions", nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNotFound, res.StatusCode)
+	})
 }

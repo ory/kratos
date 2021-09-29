@@ -119,9 +119,9 @@ with Oauth2 and OpenID.
 
 Ory's focus is on simplicity, user experience, and above all, using the right
 tools and technologies for the target application. Feedback from Ory's user
-community as well as the open source development efforts involved in Ory Hydra-
-OAuth2 and OpenID Connect server [Ory Hydra](https://github.com/ory/hydra), show
-that implementing OAuth2 or OpenID Connect is often frustrating and too complex.
+community as well as the open source development efforts in creating the OAuth2
+and OpenID Connect server [Ory Hydra](https://github.com/ory/hydra), show that
+implementing OAuth2 or OpenID Connect is often frustrating and too complex.
 These technologies are not one size fits all, and not designed for every
 implementation scenario.
 
