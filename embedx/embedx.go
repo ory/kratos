@@ -34,6 +34,12 @@ type Schema struct {
 }
 
 var (
+	identityExt = &Schema{
+		id:           gjson.Get(IdentityExtensionSchema, "$id").Str,
+		data:         IdentityExtensionSchema,
+		dependencies: nil,
+	}
+
 	schemas = map[SchemaType]*Schema{
 		Config: {
 			id:           gjson.Get(ConfigSchema, "$id").Str,
@@ -44,18 +50,10 @@ var (
 			id:   gjson.Get(IdentityMetaSchema, "$id").Str,
 			data: IdentityMetaSchema,
 			dependencies: []*Schema{
-				{
-					id:           gjson.Get(IdentityExtensionSchema, "$id").Str,
-					data:         IdentityExtensionSchema,
-					dependencies: nil,
-				},
+				identityExt,
 			},
 		},
-		IdentityExtension: {
-			id:           gjson.Get(IdentityExtensionSchema, "$id").Str,
-			data:         IdentityExtensionSchema,
-			dependencies: nil,
-		},
+		IdentityExtension: identityExt,
 	}
 )
 
@@ -70,7 +68,7 @@ func (s SchemaType) GetSchemaID() string {
 	return schemas[s].id
 }
 
-// AddSchemaResources adds the logging schema to the compiler.
+// AddSchemaResources adds the specified schemas including their dependencies to the compiler.
 // The interface is specified instead of `jsonschema.Compiler` to allow the use of any jsonschema library fork or version.
 func AddSchemaResources(c interface {
 	AddResource(url string, r io.Reader) error

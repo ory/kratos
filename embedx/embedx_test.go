@@ -43,6 +43,7 @@ func TestAddSchemaResources(t *testing.T) {
 		assert.NoError(t, err)
 
 		_, err = c.Compile(Config.GetSchemaID())
+		assert.NoError(t, err)
 	})
 
 	t.Run("case=dynamic multiple schema resourcces", func(t *testing.T) {
