@@ -28,11 +28,11 @@ const (
 	IdentityExtension
 )
 
-var (
+/*var (
 	ConfigSchemaID            SchemaID
 	IdentityMetaSchemaID      SchemaID
 	IdentityExtensionSchemaID SchemaID
-)
+)*/
 
 type Schema struct {
 	id           string
@@ -77,8 +77,8 @@ func (s SchemaType) GetSchemaID() string {
 	return schemas[s].id
 }
 
-func (s *SchemaID) ToString() string {
-	return string(*s)
+func (s SchemaID) ToString() string {
+	return string(s)
 }
 
 // AddSchemaResources adds the logging schema to the compiler.

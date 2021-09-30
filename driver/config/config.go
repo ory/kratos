@@ -286,7 +286,7 @@ func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
 		if err != nil {
 			return nil, err
 		}
-		p.identitySchema, err = c.Compile(embedx.IdentityMetaSchemaID.ToString())
+		p.identitySchema, err = c.Compile(embedx.IdentityMeta.GetSchemaID())
 		if err != nil {
 			return nil, err
 		}

@@ -62,7 +62,7 @@ func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...Extension) (*
 		return nil, errors.WithStack(err)
 	}
 
-	r.meta, err = c.Compile(embedx.SchemaType(meta).GetSchemaID().ToString())
+	r.meta, err = c.Compile(embedx.SchemaType(meta).GetSchemaID())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

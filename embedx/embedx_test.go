@@ -14,20 +14,16 @@ func TestAddSchemaResources(t *testing.T) {
 		c := jsonschema.NewCompiler()
 		assert.NoError(t, AddSchemaResources(c, Config, IdentityMeta, IdentityExtension))
 
-		assert.EqualValues(t, ConfigSchemaID.ToString(), Config.GetSchemaID())
-		assert.EqualValues(t, IdentityMetaSchemaID, IdentityMeta.GetSchemaID())
-		assert.EqualValues(t, IdentityExtensionSchemaID, IdentityExtension.GetSchemaID())
-
-		assert.EqualValues(t, ConfigSchemaID.ToString(), "https://github.com/ory/kratos/embedx/config.schema.json")
-		assert.EqualValues(t, IdentityMetaSchemaID.ToString(), "ory://identity-meta")
-		assert.EqualValues(t, IdentityExtensionSchemaID.ToString(), "ory://identity-extension")
+		assert.EqualValues(t, "https://github.com/ory/kratos/embedx/config.schema.json", Config.GetSchemaID())
+		assert.EqualValues(t, "ory://identity-meta", IdentityMeta.GetSchemaID())
+		assert.EqualValues(t, "ory://identity-extension", IdentityExtension.GetSchemaID())
 	})
 
 	t.Run("case=add config schema resources", func(t *testing.T) {
 		c := jsonschema.NewCompiler()
 		assert.NoError(t, AddSchemaResources(c, Config))
 
-		_, err := c.Compile(ConfigSchemaID.ToString())
+		_, err := c.Compile(Config.GetSchemaID())
 		assert.NoError(t, err)
 	})
 
@@ -35,7 +31,7 @@ func TestAddSchemaResources(t *testing.T) {
 		c := jsonschema.NewCompiler()
 		assert.NoError(t, AddSchemaResources(c, IdentityMeta))
 
-		_, err := c.Compile(IdentityMetaSchemaID.ToString())
+		_, err := c.Compile(IdentityMeta.GetSchemaID())
 		assert.NoError(t, err)
 	})
 
@@ -43,10 +39,10 @@ func TestAddSchemaResources(t *testing.T) {
 		c := jsonschema.NewCompiler()
 		assert.NoError(t, AddSchemaResources(c, Config, IdentityMeta))
 
-		_, err := c.Compile(IdentityMetaSchemaID.ToString())
+		_, err := c.Compile(IdentityMeta.GetSchemaID())
 		assert.NoError(t, err)
 
-		_, err = c.Compile(ConfigSchemaID.ToString())
+		_, err = c.Compile(Config.GetSchemaID())
 	})
 
 	t.Run("case=dynamic multiple schema resourcces", func(t *testing.T) {
