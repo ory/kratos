@@ -1,4 +1,7 @@
-# Debugging Kratos in Docker
+---
+id: debug-docker-delve-ory-kratos
+title: Debugging Ory Kratos in Docker with Delve
+---
 
 Very often, there is a need to debug Kratos being deployed as a Docker image. To
 support this, Kratos ships with a couple of files:

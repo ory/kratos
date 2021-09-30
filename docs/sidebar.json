@@ -108,7 +108,8 @@
   {
     "Debug & Help": [
       "debug/csrf",
-      "debug/performance-out-of-memory-password-hashing-argon2"
+      "debug/performance-out-of-memory-password-hashing-argon2",
+      "debug/debugging_in_docker"
     ]
   },
   {
