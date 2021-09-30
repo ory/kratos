@@ -20,19 +20,12 @@ var IdentityMetaSchema string
 var IdentityExtensionSchema string
 
 type SchemaType int
-type SchemaID string
 
 const (
 	Config SchemaType = iota
 	IdentityMeta
 	IdentityExtension
 )
-
-/*var (
-	ConfigSchemaID            SchemaID
-	IdentityMetaSchemaID      SchemaID
-	IdentityExtensionSchemaID SchemaID
-)*/
 
 type Schema struct {
 	id           string
@@ -75,10 +68,6 @@ func getSchema(schema SchemaType) (*Schema, error) {
 
 func (s SchemaType) GetSchemaID() string {
 	return schemas[s].id
-}
-
-func (s SchemaID) ToString() string {
-	return string(s)
 }
 
 // AddSchemaResources adds the logging schema to the compiler.
