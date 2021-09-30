@@ -296,12 +296,13 @@ func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
 }
 
 func (p *Config) validateIdentitySchemas() error {
+	j, err := p.getIdentitySchemaValidator()
+	if err != nil {
+		return err
+	}
+
 	for _, s := range p.IdentityTraitsSchemas() {
 		resource, err := jsonschema.LoadURL(s.URL)
-		if err != nil {
-			return err
-		}
-		j, err := p.getIdentitySchemaValidator()
 		if err != nil {
 			return err
 		}

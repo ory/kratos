@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"testing"
 	"time"
 
@@ -889,7 +888,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		}
 
 		setup := func(t *testing.T, file string) *configFile {
-			identityTest, err := ioutil.ReadFile(file)
+			identityTest, err := os.ReadFile(file)
 			assert.NoError(t, err)
 			return &configFile{
 				identityFileName: file,
@@ -930,11 +929,11 @@ func TestIdentitySchemaValidation(t *testing.T) {
 			t.Cleanup(cancel)
 
 			c := make(chan bool, 1)
-			tdir := os.TempDir() + "/" + strconv.Itoa(time.Now().Nanosecond())
+			tdir := t.TempDir() // os.TempDir() + "/" + strconv.Itoa(time.Now().Nanosecond())
 			assert.NoError(t,
 				os.MkdirAll(tdir, // DO NOT CHANGE THIS: https://github.com/fsnotify/fsnotify/issues/340
 					os.ModePerm))
-			tmpConfig, err := ioutil.TempFile(tdir, "config-*.yaml")
+			tmpConfig, err := os.Create(filepath.Join(tdir, "config.yaml"))
 			assert.NoError(t, err)
 
 			marshalAndWrite(t, tmpConfig, i, nil)
@@ -962,10 +961,6 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 			assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
 
-			t.Cleanup(func() {
-				assert.NoError(t, tmpConfig.Close())
-				_ = os.Remove(tmpConfig.Name())
-			})
 		}
 
 		var identities []*configFile
