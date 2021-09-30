@@ -14,9 +14,9 @@ func TestAddSchemaResources(t *testing.T) {
 		c := jsonschema.NewCompiler()
 		assert.NoError(t, AddSchemaResources(c, Config, IdentityMeta, IdentityExtension))
 
-		assert.EqualValues(t, ConfigSchemaID.ToString(), Config.GetSchemaID().ToString())
-		assert.EqualValues(t, IdentityMetaSchemaID, IdentityMeta.GetSchemaID().ToString())
-		assert.EqualValues(t, IdentityExtensionSchemaID, IdentityExtension.GetSchemaID().ToString())
+		assert.EqualValues(t, ConfigSchemaID.ToString(), Config.GetSchemaID())
+		assert.EqualValues(t, IdentityMetaSchemaID, IdentityMeta.GetSchemaID())
+		assert.EqualValues(t, IdentityExtensionSchemaID, IdentityExtension.GetSchemaID())
 
 		assert.EqualValues(t, ConfigSchemaID.ToString(), "https://github.com/ory/kratos/embedx/config.schema.json")
 		assert.EqualValues(t, IdentityMetaSchemaID.ToString(), "ory://identity-meta")
@@ -54,13 +54,20 @@ func TestAddSchemaResources(t *testing.T) {
 
 		assert.NoError(t, AddSchemaResources(c, Config, IdentityExtension, IdentityMeta))
 
-		_, err := c.Compile(Config.GetSchemaID().ToString())
+		_, err := c.Compile(Config.GetSchemaID())
 		assert.NoError(t, err)
 
-		_, err = c.Compile(IdentityExtension.GetSchemaID().ToString())
+		_, err = c.Compile(IdentityExtension.GetSchemaID())
 		assert.NoError(t, err)
 
-		_, err = c.Compile(IdentityMeta.GetSchemaID().ToString())
+		_, err = c.Compile(IdentityMeta.GetSchemaID())
 		assert.NoError(t, err)
+	})
+
+	t.Run("case=specifying an incorrect schema type must throw an error", func(t *testing.T) {
+		c := jsonschema.NewCompiler()
+		err := AddSchemaResources(c, 4, 10)
+		assert.Errorf(t, err, "an error must be thrown on an invalid schema type")
+		assert.EqualError(t, err, "the specified schema type (4) is not supported")
 	})
 }

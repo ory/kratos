@@ -2,6 +2,7 @@ package embedx
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/tidwall/gjson"
@@ -39,68 +40,41 @@ type Schema struct {
 	dependencies []*Schema
 }
 
-type options struct {
-	schemas []*Schema
-}
-
-func (o *options) assemble(schemas ...SchemaType) {
-	for _, schema := range schemas {
-		parent, dependencies := schema.GetEmbeds()
-		sc, parentId := addSchema(parent, dependencies...)
-		schema.initSchemaID(parentId)
-		o.schemas = append(o.schemas, sc)
-	}
-}
-
-func addSchema(parentData string, dependencies ...string) (*Schema, SchemaID) {
-	id := gjson.Get(parentData, "$id").Str
-	parent := &Schema{
-		id:   id,
-		data: parentData,
-	}
-
-	for _, d := range dependencies {
-		parent.dependencies = append(parent.dependencies, &Schema{
-			id:           gjson.Get(d, "$id").Str,
-			data:         d,
+var (
+	schemas = map[SchemaType]*Schema{
+		Config: {
+			id:           gjson.Get(ConfigSchema, "$id").Str,
+			data:         ConfigSchema,
 			dependencies: nil,
-		})
+		},
+		IdentityMeta: {
+			id:   gjson.Get(IdentityMetaSchema, "$id").Str,
+			data: IdentityMetaSchema,
+			dependencies: []*Schema{
+				{
+					id:           gjson.Get(IdentityExtensionSchema, "$id").Str,
+					data:         IdentityExtensionSchema,
+					dependencies: nil,
+				},
+			},
+		},
+		IdentityExtension: {
+			id:           gjson.Get(IdentityExtensionSchema, "$id").Str,
+			data:         IdentityExtensionSchema,
+			dependencies: nil,
+		},
 	}
+)
 
-	return parent, SchemaID(id)
-}
-
-func (s SchemaType) getSchemaDetails() (*SchemaID, string, []string) {
-	switch s {
-	case Config:
-		return &ConfigSchemaID, ConfigSchema, nil
-	case IdentityMeta:
-		return &IdentityMetaSchemaID, IdentityMetaSchema, []string{IdentityExtensionSchema}
-	case IdentityExtension:
-		return &IdentityExtensionSchemaID, IdentityExtensionSchema, nil
+func getSchema(schema SchemaType) (*Schema, error) {
+	if val, ok := schemas[schema]; ok {
+		return val, nil
 	}
-	return nil, "", nil
+	return nil, fmt.Errorf("the specified schema type (%d) is not supported", int(schema))
 }
 
-func (s SchemaType) initSchemaID(schemaId SchemaID) {
-	switch s {
-	case Config:
-		ConfigSchemaID = schemaId
-	case IdentityMeta:
-		IdentityMetaSchemaID = schemaId
-	case IdentityExtension:
-		IdentityExtensionSchemaID = schemaId
-	}
-}
-
-func (s SchemaType) GetSchemaID() *SchemaID {
-	id, _, _ := s.getSchemaDetails()
-	return id
-}
-
-func (s SchemaType) GetEmbeds() (string, []string) {
-	_, schemaEmbed, schemaDependencies := s.getSchemaDetails()
-	return schemaEmbed, schemaDependencies
+func (s SchemaType) GetSchemaID() string {
+	return schemas[s].id
 }
 
 func (s *SchemaID) ToString() string {
@@ -113,10 +87,17 @@ func AddSchemaResources(c interface {
 	AddResource(url string, r io.Reader) error
 }, opts ...SchemaType) error {
 
-	opt := &options{}
-	opt.assemble(opts...)
+	var sc []*Schema
 
-	if err := addSchemaResources(c, opt.schemas); err != nil {
+	for _, o := range opts {
+		s, err := getSchema(o)
+		if err != nil {
+			return err
+		}
+		sc = append(sc, s)
+	}
+
+	if err := addSchemaResources(c, sc); err != nil {
 		return err
 	}
 
