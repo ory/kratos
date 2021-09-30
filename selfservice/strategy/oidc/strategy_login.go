@@ -10,6 +10,7 @@ import (
 
 	"github.com/ory/kratos/session"
 
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -113,7 +114,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	sess.CompletedLoginFor(s.ID())
 	for _, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, a, i, sess); err != nil {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, a, i, sess); err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 			return nil, nil

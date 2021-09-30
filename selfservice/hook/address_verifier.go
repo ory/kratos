@@ -5,6 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
@@ -20,7 +22,7 @@ func NewAddressVerifier() *AddressVerifier {
 	return &AddressVerifier{}
 }
 
-func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Request, f *login.Flow, s *session.Session) error {
+func (e *AddressVerifier) ExecuteLoginPostHook(_ http.ResponseWriter, _ *http.Request, _ node.Group, f *login.Flow, s *session.Session) error {
 	// if the login happens using the password method, there must be at least one verified address
 	if f.Active != identity.CredentialsTypePassword {
 		return nil

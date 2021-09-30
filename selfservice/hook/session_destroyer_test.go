@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ory/kratos/corpx"
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gobuffalo/httptest"
@@ -52,6 +53,7 @@ func TestSessionDestroyer(t *testing.T) {
 		require.NoError(t, h.ExecuteLoginPostHook(
 			httptest.NewRecorder(),
 			new(http.Request),
+			node.DefaultGroup,
 			nil,
 			&session.Session{Identity: &i},
 		))

@@ -12,6 +12,8 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
@@ -21,7 +23,7 @@ type (
 	}
 
 	PostHookExecutor interface {
-		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
+		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, g node.Group, a *Flow, s *session.Session) error
 	}
 
 	HooksProvider interface {
@@ -35,6 +37,7 @@ type (
 		config.Provider
 		session.ManagementProvider
 		session.PersistenceProvider
+		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
 
@@ -66,7 +69,30 @@ func (e *HookExecutor) requiresAAL2(r *http.Request, s *session.Session) (*sessi
 	return aalErr, errors.As(err, &aalErr)
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity, s *session.Session) error {
+func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, g node.Group, f *Flow, i *identity.Identity, flowError error) error {
+	if f != nil {
+		if i != nil {
+			cont, err := container.NewFromStruct("", g, i.Traits, "traits")
+			if err != nil {
+				e.d.Logger().WithField("error", err).Warn("could not update flow UI")
+				return err
+			}
+
+			for _, n := range cont.Nodes {
+				// we only set the value and not the whole field because we want to keep types from the initial form generation
+				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
+			}
+		}
+
+		if f.Type == flow.TypeBrowser {
+			f.UI.SetCSRF(e.d.GenerateCSRFToken(r))
+		}
+	}
+
+	return flowError
+}
+
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, g node.Group, a *Flow, i *identity.Identity, s *session.Session) error {
 	if err := s.Activate(i, e.d.Config(r.Context()), time.Now().UTC()); err != nil {
 		return err
 	}
@@ -91,7 +117,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 		WithField("flow_method", a.Active).
 		Debug("Running ExecuteLoginPostHook.")
 	for k, executor := range e.d.PostLoginHooks(r.Context(), a.Active) {
-		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
+		if err := executor.ExecuteLoginPostHook(w, r, g, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
 				e.d.Logger().
 					WithRequest(r).
@@ -103,7 +129,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 					Debug("A ExecuteLoginPostHook hook aborted early.")
 				return nil
 			}
-			return err
+			return e.handleLoginError(w, r, g, a, i, err)
 		}
 
 		e.d.Logger().

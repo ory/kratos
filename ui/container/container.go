@@ -87,6 +87,17 @@ func NewFromJSON(action string, group node.Group, raw json.RawMessage, prefix st
 	return c
 }
 
+//NewFromStruct creates a UI Container based on serialized contents of the provided struct.
+func NewFromStruct(action string, group node.Group, v interface{}, prefix string) (*Container, error) {
+	c := New(action)
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	c.UpdateNodeValuesFromJSON(data, prefix, group)
+	return c, nil
+}
+
 // NewFromJSONSchema creates a new Container and populates the fields
 // using the provided JSON Schema.
 func NewFromJSONSchema(action string, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {

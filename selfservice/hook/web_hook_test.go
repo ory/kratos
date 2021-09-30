@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/httpx"
 	"github.com/sirupsen/logrus/hooks/test"
 
@@ -361,7 +362,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Login Hook",
 			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecuteLoginPostHook(nil, req, f.(*login.Flow), s)
+				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
 				return bodyWithFlowAndIdentity(req, f, s)

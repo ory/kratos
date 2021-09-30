@@ -274,7 +274,7 @@ func (e *ValidationListError) Add(v *ValidationError) {
 }
 
 func (e ValidationListError) HasErrors() bool {
-	return len(e.Validations) == 0
+	return len(e.Validations) != 0
 }
 
 func (e *ValidationListError) WithError(instancePtr, message string, details text.Messages) {

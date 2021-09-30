@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/kratos/schema"
@@ -43,6 +44,7 @@ type (
 		HooksProvider
 		FlowPersistenceProvider
 
+		x.CSRFTokenGeneratorProvider
 		x.LoggingProvider
 		x.WriterProvider
 	}
@@ -94,6 +96,37 @@ func WithCallback(cb func(ctxUpdate *UpdateContext) error) func(o *postSettingsH
 	}
 }
 
+func (e *HookExecutor) handleSettingsError(_ http.ResponseWriter, r *http.Request, settingsType string, f *Flow, i *identity.Identity, flowError error) error {
+	if f != nil {
+		if i != nil {
+			var group node.Group
+			switch settingsType {
+			case "password":
+				group = node.PasswordGroup
+			case "oidc":
+				group = node.OpenIDConnectGroup
+			}
+
+			cont, err := container.NewFromStruct("", group, i.Traits, "traits")
+			if err != nil {
+				e.d.Logger().WithField("error", err).Warn("could not update flow UI")
+				return err
+			}
+
+			for _, n := range cont.Nodes {
+				// we only set the value and not the whole field because we want to keep types from the initial form generation
+				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
+			}
+		}
+
+		if f.Type == flow.TypeBrowser {
+			f.UI.SetCSRF(e.d.GenerateCSRFToken(r))
+		}
+	}
+
+	return flowError
+}
+
 func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, settingsType string, ctxUpdate *UpdateContext, i *identity.Identity, opts ...PostSettingsHookOption) error {
 	e.d.Logger().
 		WithRequest(r).
@@ -135,7 +168,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 					Debug("A ExecuteSettingsPrePersistHook hook aborted early.")
 				return nil
 			}
-			return err
+			return e.handleSettingsError(w, r, settingsType, ctxUpdate.Flow, i, err)
 		}
 
 		e.d.Logger().WithRequest(r).WithFields(logFields).Debug("ExecuteSettingsPrePersistHook completed successfully.")
@@ -195,7 +228,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 					Debug("A ExecuteSettingsPostPersistHook hook aborted early.")
 				return nil
 			}
-			return err
+			return e.handleSettingsError(w, r, settingsType, ctxUpdate.Flow, i, err)
 		}
 
 		e.d.Logger().WithRequest(r).

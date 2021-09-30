@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -175,7 +177,7 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 			Type   string
 			Config json.RawMessage
 		}
-		Interrupt bool
+		CanInterrupt bool
 	}
 
 	var rc rawWebHookConfig
@@ -194,7 +196,7 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 		url:          rc.Url,
 		templateURI:  rc.Body,
 		auth:         as,
-		canInterrupt: rc.Interrupt,
+		canInterrupt: rc.CanInterrupt,
 	}, nil
 }
 
@@ -211,7 +213,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 	})
 }
 
-func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow, session *session.Session) error {
+func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, _ node.Group, flow *login.Flow, session *session.Session) error {
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
@@ -396,7 +398,7 @@ func parseResponse(resp *http.Response) (err error) {
 		validationErr.Add(schema.NewHookValidationError(msg.InstancePtr, msg.Message, messages))
 	}
 
-	if validationErr.HasErrors() {
+	if !validationErr.HasErrors() {
 		return errors.New("error while parsing hook response: got no validation errors")
 	}
 

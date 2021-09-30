@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -46,6 +48,14 @@ func TestLoginExecutor(t *testing.T) {
 					}
 				})
 
+				var group node.Group
+				switch strategy {
+				case identity.CredentialsTypePassword.String():
+					group = node.PasswordGroup
+				case identity.CredentialsTypeOIDC.String():
+					group = node.OpenIDConnectGroup
+				}
+
 				router.GET("/login/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					a, err := login.NewFlow(conf, time.Minute, "", r, ft)
 					require.NoError(t, err)
@@ -58,7 +68,7 @@ func TestLoginExecutor(t *testing.T) {
 					}
 
 					testhelpers.SelfServiceHookLoginErrorHandler(t, w, r,
-						reg.LoginHookExecutor().PostLoginHook(w, r, a, useIdentity, sess))
+						reg.LoginHookExecutor().PostLoginHook(w, r, group, a, useIdentity, sess))
 				})
 
 				ts := httptest.NewServer(router)
