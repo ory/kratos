@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 
 	"github.com/google/go-jsonnet"
+	"github.com/ory/x/decoderx"
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/logrusx"
 	"github.com/pkg/errors"
@@ -65,7 +64,7 @@ type (
 		RequestHeaders http.Header        `json:"request_headers"`
 		RequestMethod  string             `json:"request_method"`
 		RequestUrl     string             `json:"request_url"`
-		RequestBody    url.Values         `json:"request_body"`
+		RequestBody    map[string]string  `json:"request_body"`
 		Identity       *identity.Identity `json:"identity"`
 	}
 
@@ -180,22 +179,16 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 }
 
 func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
-	body, err := extractRequestBody(req)
-	if err != nil {
-		return err
-	}
-
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
-		RequestBody:    body,
 		RequestUrl:     req.RequestURI,
 	})
 }
 
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow, session *session.Session) error {
-	body, err := extractRequestBody(req)
+	body, err := extractRequestBody(req, loginSchema)
 	if err != nil {
 		return err
 	}
@@ -211,39 +204,27 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, identity *identity.Identity) error {
-	body, err := extractRequestBody(req)
-	if err != nil {
-		return err
-	}
-
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
-		RequestBody:    body,
 		Identity:       identity,
 	})
 }
 
 func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
-	body, err := extractRequestBody(req)
-	if err != nil {
-		return err
-	}
-
 	return e.execute(&templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
-		RequestBody:    body,
 		Identity:       session.Identity,
 	})
 }
 
 func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
-	body, err := extractRequestBody(req)
+	body, err := extractRequestBody(req, registrationSchema)
 	if err != nil {
 		return err
 	}
@@ -258,7 +239,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
-	body, err := extractRequestBody(req)
+	body, err := extractRequestBody(req, registrationSchema)
 	if err != nil {
 		return err
 	}
@@ -274,7 +255,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 }
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, identity *identity.Identity) error {
-	body, err := extractRequestBody(req)
+	body, err := extractRequestBody(req, settingsSchema)
 	if err != nil {
 		return err
 	}
@@ -316,20 +297,24 @@ func (e *WebHook) execute(data *templateContext) error {
 	return nil
 }
 
-func extractRequestBody(req *http.Request) (url.Values, error) {
-	body, err := ioutil.ReadAll(req.Body)
+func extractRequestBody(req *http.Request, rawSchema []byte) (map[string]string, error) {
+	var values map[string]string
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(rawSchema)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read request body: %w", err)
+		return nil, errors.WithStack(err)
 	}
 
-	queryParams, err := url.ParseQuery(string(body))
+	err = decoderx.NewHTTP().Decode(req, &values, compiler,
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat(),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read form data from the body: %w", err)
+		return nil, fmt.Errorf("failed to decode request body: %w", err)
 	}
 
-	delete(queryParams, "password")
+	delete(values, "password")
 
-	return queryParams, nil
+	return values, nil
 }
 
 func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*bytes.Reader, error) {
