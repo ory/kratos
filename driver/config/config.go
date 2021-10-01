@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/jsonschemax"
 	"net"
 	"net/http"
 	"net/url"
@@ -255,7 +256,16 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 				panic(errors.New("the config provider did not initialise correctly in time"))
 			}
 			if err := c.validateIdentitySchemas(); err != nil {
-				l.WithField("event", fmt.Sprintf("%#v", err)).
+				var buf bytes.Buffer
+				_, _ = fmt.Fprintln(&buf, "")
+				conf, innerErr := event.MarshalJSON()
+				if innerErr != nil {
+					_, _ = fmt.Fprintf(&buf, "Unable to unmarshal configuration: %+v", innerErr)
+				}
+
+				jsonschemax.FormatValidationErrorForCLI(&buf, conf, err)
+
+				l.WithError(err).
 					Errorf("The changed identity schema configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting the process.")
 			}
 		}),
