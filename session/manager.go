@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"github.com/ory/kratos/text"
 	"net/http"
 
 	"github.com/gofrs/uuid"
@@ -13,7 +14,7 @@ import (
 
 var (
 	// ErrNoActiveSessionFound is returned when no active cookie session could be found in the request.
-	ErrNoActiveSessionFound = herodot.ErrUnauthorized.WithError("request does not have a valid authentication session").WithReason("No active session was found in this request.")
+	ErrNoActiveSessionFound = herodot.ErrUnauthorized.WithID(text.ErrNoActiveSession).WithError("request does not have a valid authentication session").WithReason("No active session was found in this request.")
 )
 
 // ErrAALNotSatisfied is returned when an active session was found but the requested AAL is not satisfied.
@@ -29,6 +30,7 @@ func NewErrAALNotSatisfied(redirectTo string) *ErrAALNotSatisfied {
 	return &ErrAALNotSatisfied{
 		RedirectTo: redirectTo,
 		DefaultError: &herodot.DefaultError{
+			IDField:          text.ErrIDHigherAALRequired,
 			StatusField: http.StatusText(http.StatusForbidden),
 			ErrorField:  "Session does not fulfill the requested Authenticator Assurance Level",
 			ReasonField: "An active session was found but it does not fulfill the requested Authenticator Assurance Level. Please verify yourself with a second factor to resolve this issue.",

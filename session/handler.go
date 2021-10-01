@@ -121,7 +121,7 @@ type toSession struct {
 //  // console.log(session)
 //	```
 //
-// Depending on your configuration this endpoint might return a 422 status code if the session has a lower Authenticator
+// Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 // Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 // credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 // to sign in with the second factor or change the configuration.
@@ -140,6 +140,11 @@ type toSession struct {
 //
 // If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
 //
+// As explained above, this request may fail due to several reasons. The `error.id` can be one of:
+//
+// - `no_active_session`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
+// - `aal_needs_upgrade`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
+//
 //     Produces:
 //     - application/json
 //
@@ -148,7 +153,7 @@ type toSession struct {
 //     Responses:
 //       200: session
 //       401: jsonError
-//       422: jsonError
+//       403: jsonError
 //       500: jsonError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
