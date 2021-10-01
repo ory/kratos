@@ -161,7 +161,7 @@ func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *htt
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }

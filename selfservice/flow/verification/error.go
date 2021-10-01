@@ -3,7 +3,6 @@ package verification
 import (
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -11,7 +10,6 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
@@ -43,23 +41,7 @@ type (
 	ErrorHandler struct {
 		d errorHandlerDependencies
 	}
-
-	FlowExpiredError struct {
-		*herodot.DefaultError
-		ago time.Duration
-	}
 )
-
-func NewFlowExpiredError(at time.Time) *FlowExpiredError {
-	ago := time.Since(at)
-	return &FlowExpiredError{
-		ago: ago,
-		DefaultError: herodot.ErrBadRequest.
-			WithError("verification flow expired").
-			WithReasonf(`The verification flow has expired. Please restart the flow.`).
-			WithReasonf("The verification flow expired %.2f minutes ago, please try again.", ago.Minutes()),
-	}
-}
 
 func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 	return &ErrorHandler{d: d}
@@ -83,7 +65,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if e := new(FlowExpiredError); errors.As(err, &e) {
+	if e := new(flow.ExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
 		a, err := FromOldFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(),
 			s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), f)
@@ -93,7 +75,7 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.ago))
+		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.Ago))
 		if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return

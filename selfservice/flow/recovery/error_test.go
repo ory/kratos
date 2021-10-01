@@ -126,7 +126,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
-				flowError = recovery.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(anHourAgo)
 				methodName = recovery.StrategyRecoveryLinkName
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -194,7 +194,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser}
-			flowError = recovery.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(anHourAgo)
 			methodName = node.RecoveryLinkGroup
 
 			lf, _ := expectRecoveryUI(t)
