@@ -1,11 +1,10 @@
 import {Session} from "@ory/kratos-client";
-import {gen} from "../helpers";
 
 export interface MailMessage {
   fromAddress: string
   toAddresses: Array<string>
-  body:string
-  subject:string
+  body: string
+  subject: string
 }
 
 declare global {
@@ -26,16 +25,35 @@ declare global {
        * @param opts
        */
       getSession(opts?:
-        {
-          expectAal: 'aal2' |'aal1',
-          expectMethods: Array<'password' | 'webauthn'>,
-        }
+                   {
+                     expectAal: 'aal2' | 'aal1',
+                     expectMethods: Array<'password' | 'webauthn'>,
+                   }
       ): Chainable<Session>
 
       /**
        * Expect that the browser has no valid Ory Kratos Cookie Session.
        */
       noSession(): Chainable<Response<any>>
+
+      /**
+       * Log a user in
+       *
+       * @param opts
+       */
+      login(opts: { email: string, password: string, expectSession?: boolean, cookieUrl?: string }): Chainable<Response<Session | undefined>>
+
+      /**
+       * Sign up a user
+       *
+       * @param opts
+       */
+      register(opts: {
+        email: string,
+        password: string,
+        query?: { [key: string]: string },
+        fields?: { [key: string]: any }
+      }): Chainable<Response<void>>
 
       /**
        * Set the "privileged session lifespan" to a large value.
@@ -49,7 +67,7 @@ declare global {
        */
       getMail(opts?: { removeMail: boolean }): Chainable<MailMessage>
 
-      performEmailVerification(opts?: {expect?: {email?: string, redirectTo?: string}}): Chainable<void>
+      performEmailVerification(opts?: { expect?: { email?: string, redirectTo?: string } }): Chainable<void>
 
       /**
        * Sets the Ory Kratos configuration profile.
@@ -65,7 +83,7 @@ declare global {
        *
        * @param opts
        */
-      registerApi(opts?: {email:string, password:string, fields: { [key: string]: string  }}): Chainable<Session>
+      registerApi(opts?: { email: string, password: string, fields: { [key: string]: string } }): Chainable<Session>
 
       /**
        * Changes the config so that the login flow lifespan is very short.
@@ -80,6 +98,7 @@ declare global {
        * Changes the config so that the login flow lifespan is very long.
        *
        * Useful when testing expiry of login flows.
+       *
        * @see shortLoginLifespan()
        */
       longLoginLifespan(): Chainable<void>
@@ -88,6 +107,43 @@ declare global {
        * Change the config so that `https://www.ory.sh/` is a allowed return to URL.
        */
       browserReturnUrlOry(): Chainable<void>
+
+      /**
+       * Changes the config so that the registration flow lifespan is very short.
+       *
+       * Useful when testing expiry of registration flows.
+       *
+       * @see longRegisterLifespan()
+       */
+      shortRegisterLifespan(): Chainable<void>
+
+      /**
+       * Changes the config so that the registration flow lifespan is very long.
+       *
+       * Useful when testing expiry of registration flows.
+       *
+       * @see shortRegisterLifespan()
+       */
+      longRegisterLifespan(): Chainable<void>
+
+      /**
+       * Changes the config so that the settings privileged lifespan is very long.
+       *
+       * Useful when testing privileged settings flows.
+       *
+       * @see longPrivilegedSessionTime()
+       */
+      shortPrivilegedSessionTime(): Chainable<void>
+
+      /**
+       * Re-authenticates a user.
+       *
+       * @param opts
+       */
+      reauth(opts: {
+        expect: { email },
+        type: { email?: string, password?: string }
+      }): Chainable<void>
     }
   }
 }
