@@ -287,8 +287,8 @@ Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
   })
 })
 
-Cypress.Commands.add('loginOidc', ({expectSession = true}) => {
-  cy.visit(APP_URL + '/auth/login')
+Cypress.Commands.add('loginOidc', ({expectSession = true, url=APP_URL + '/login'}) => {
+  cy.visit(url)
   cy.get('button[value="hydra"]').click()
   if (expectSession) {
     cy.getSession()
@@ -297,7 +297,7 @@ Cypress.Commands.add('loginOidc', ({expectSession = true}) => {
   }
 })
 
-Cypress.Commands.add('login', ({email, password, expectSession = true}) => {
+Cypress.Commands.add('login', ({email, password, expectSession = true, cookieUrl = APP_URL}) => {
   if (expectSession) {
     console.log('Singing in user: ', {email, password})
   } else {
@@ -305,7 +305,7 @@ Cypress.Commands.add('login', ({email, password, expectSession = true}) => {
   }
 
   // see https://github.com/cypress-io/cypress/issues/408
-  cy.visit(APP_URL)
+  cy.visit(cookieUrl)
   cy.clearCookies()
 
   cy.longPrivilegedSessionTime()
@@ -369,7 +369,7 @@ Cypress.Commands.add(
      expect: {email},
      type: {email: temail, password: tpassword} = {email: undefined, password: undefined}
    }) => {
-    cy.url().should('include', '/auth/login')
+    cy.url().should('include', '/login')
     cy.get('input[name="password_identifier"]').should('have.value', email)
     if (temail) {
       cy.get('input[name="password_identifier"]').clear().type(temail)
@@ -406,7 +406,7 @@ Cypress.Commands.add('deleteMail', ({atLeast = 0} = {}) => {
 })
 
 Cypress.Commands.add(
-  'session',
+  'getSession',
   ({expectAal = 'aal1', expectMethods = []} = {}) =>
     cy.request('GET', `${KRATOS_PUBLIC}/sessions/whoami`).then((response) => {
       expect(response.body.id).to.not.be.empty
