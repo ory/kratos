@@ -2,8 +2,9 @@ package session
 
 import (
 	"context"
-	"github.com/ory/kratos/text"
 	"net/http"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/gofrs/uuid"
 
@@ -30,7 +31,7 @@ func NewErrAALNotSatisfied(redirectTo string) *ErrAALNotSatisfied {
 	return &ErrAALNotSatisfied{
 		RedirectTo: redirectTo,
 		DefaultError: &herodot.DefaultError{
-			IDField:          text.ErrIDHigherAALRequired,
+			IDField:     text.ErrIDHigherAALRequired,
 			StatusField: http.StatusText(http.StatusForbidden),
 			ErrorField:  "Session does not fulfill the requested Authenticator Assurance Level",
 			ReasonField: "An active session was found but it does not fulfill the requested Authenticator Assurance Level. Please verify yourself with a second factor to resolve this issue.",
