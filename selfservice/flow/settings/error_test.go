@@ -145,7 +145,7 @@ func TestHandleError(t *testing.T) {
 				c := testhelpers.NewHTTPClientWithSessionToken(t, reg, s)
 
 				settingsFlow = newFlow(t, time.Minute, tc.t)
-				flowError = settings.NewFlowExpiredError(expiredAnHourAgo)
+				flowError = flow.NewFlowExpiredError(expiredAnHourAgo)
 				flowMethod = settings.StrategyProfile
 
 				res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -268,7 +268,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}
-			flowError = settings.NewFlowExpiredError(expiredAnHourAgo)
+			flowError = flow.NewFlowExpiredError(expiredAnHourAgo)
 			flowMethod = settings.StrategyProfile
 
 			lf, _ := expectSettingsUI(t)

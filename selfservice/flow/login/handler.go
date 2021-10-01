@@ -230,6 +230,12 @@ type initializeSelfServiceLoginFlowWithoutBrowser struct {
 // Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
 // you vulnerable to a variety of CSRF attacks, including CSRF login attacks.
 //
+// In the case of an error, the `error.id` of the JSON response body can be one of:
+//
+// - `has_session_already`: The user is already signed in.
+// - `aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+//
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -293,7 +299,12 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 // exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
 // `?refresh=true` was set.
 //
-// If this endpoint is called via an AJAX request, the response contains the login flow without a redirect.
+// If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+// case of an error, the `error.id` of the JSON response body can be one of:
+//
+// - `has_session_already`: The user is already signed in.
+// - `aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
@@ -307,6 +318,7 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 //     Responses:
 //       200: selfServiceLoginFlow
 //       302: emptyResponse
+//       400: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
@@ -373,6 +385,12 @@ type getSelfServiceLoginFlow struct {
 //	})
 //	```
 //
+// This request may fail due to several reasons. The `error.id` can be one of:
+//
+// - `has_session_already`: The user is already signed in.
+// - `self_service_flow_expired`: The flow is expired and you should request a new one.
+// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+//
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Produces:
@@ -403,12 +421,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 
 	if ar.ExpiresAt.Before(time.Now()) {
 		if ar.Type == flow.TypeBrowser {
-			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 				WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
 				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitBrowserFlow).String())))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
 			WithReason("The login flow has expired. Call the login flow init API endpoint to initialize a new login flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteInitAPIFlow).String())))
 		return

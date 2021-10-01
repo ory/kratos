@@ -126,7 +126,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				registrationFlow = newFlow(t, time.Minute, tc.t)
-				flowError = registration.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(anHourAgo)
 				group = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -194,7 +194,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			registrationFlow = &registration.Flow{Type: flow.TypeBrowser}
-			flowError = registration.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(anHourAgo)
 			group = node.PasswordGroup
 
 			lf, _ := expectRegistrationUI(t)

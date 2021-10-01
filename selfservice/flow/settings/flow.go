@@ -173,7 +173,7 @@ func (f *Flow) AppendTo(src *url.URL) *url.URL {
 
 func (f *Flow) Valid(s *session.Session) error {
 	if f.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 
 	if f.IdentityID != s.Identity.ID {
