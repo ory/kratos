@@ -17,5 +17,6 @@
   "projectId": "bc48bg",
   "video": true,
   "videoCompression": false,
-  "screenshotOnRunFailure": true
+  "screenshotOnRunFailure": true,
+  "ignoreTestFiles": "snapshots.js"
 }
