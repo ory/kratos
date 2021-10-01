@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/stringsx"
@@ -569,6 +571,12 @@ continueLogin:
 		} else if err != nil {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
 			return
+		}
+
+		// What can happen is that we re-authenticate as another user. In this case, we need to use a completely fresh
+		// session!
+		if sess.IdentityID != uuid.Nil && sess.IdentityID != interim.ID {
+			sess = session.NewInactiveSession()
 		}
 
 		sess.CompletedLoginFor(ss.ID())
