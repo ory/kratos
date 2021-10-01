@@ -1,6 +1,7 @@
 package x
 
 import (
+	"github.com/ory/kratos/text"
 	"net/http"
 	"net/url"
 	"strings"
@@ -97,6 +98,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 	if !found {
 		return nil, errors.WithStack(herodot.ErrBadRequest.
+			WithID(text.ErrIDRedirectURLNotAllowed).
 			WithReasonf("Requested return_to URL \"%s\" is not whitelisted.", returnTo).
 			WithDebugf("Whitelisted domains are: %v", o.whitelist))
 	}
