@@ -10,6 +10,8 @@ selfservice:
   default_browser_return_url: http://localhost:4455/
   whitelisted_return_urls:
     - http://localhost:4455
+    - http://localhost:4458
+    - https://www.ory.sh/
   methods:
     link:
       config:
