@@ -156,7 +156,7 @@ func (f Flow) WhereID(ctx context.Context, alias string) string {
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }

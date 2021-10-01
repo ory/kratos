@@ -125,7 +125,7 @@ func (f Flow) GetNID() uuid.UUID {
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }

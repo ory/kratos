@@ -172,6 +172,11 @@ type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 // credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 // to sign in with the second factor or change the configuration.
 //
+// In the case of an error, the `error.id` of the JSON response body can be one of:
+//
+// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `no_active_session`: No Ory Session was found - sign in a user first.
+//
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -232,6 +237,12 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 // credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 // to sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.
 //
+// If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+// case of an error, the `error.id` of the JSON response body can be one of:
+//
+// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `no_active_session`: No Ory Session was found - sign in a user first.
+//
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -243,6 +254,7 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //       302: emptyResponse
 //       401: jsonError
 //       403: jsonError
+//       400: jsonError
 //       500: jsonError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
@@ -319,6 +331,12 @@ type getSelfServiceSettingsFlow struct {
 // to sign in with the second factor or change the configuration.
 //
 // You can access this endpoint without credentials when using Ory Kratos' Admin API.
+//
+// If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+// case of an error, the `error.id` of the JSON response body can be one of:
+//
+// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `no_active_session`: No Ory Session was found - sign in a user first.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -440,6 +458,15 @@ type submitSelfServiceSettingsFlowBody struct{}
 // Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 // credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 // to sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.
+//
+// If this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the
+// case of an error, the `error.id` of the JSON response body can be one of:
+//
+// - `needs_privileged_session`: The identity requested to change something that needs a privileged session. Redirect
+//		the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
+//		or initiate a refresh login flow otherwise.
+// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `no_active_session`: No Ory Session was found - sign in a user first.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
