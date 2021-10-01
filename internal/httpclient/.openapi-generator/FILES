@@ -23,8 +23,10 @@ docs/InlineResponse2001.md
 docs/InlineResponse503.md
 docs/JsonError.md
 docs/MetadataApi.md
+docs/NeedsPrivilegedSessionError.md
 docs/RecoveryAddress.md
 docs/SelfServiceError.md
+docs/SelfServiceFlowExpiredError.md
 docs/SelfServiceLoginFlow.md
 docs/SelfServiceLogoutUrl.md
 docs/SelfServiceRecoveryFlow.md
@@ -94,8 +96,10 @@ model_inline_response_200.go
 model_inline_response_200_1.go
 model_inline_response_503.go
 model_json_error.go
+model_needs_privileged_session_error.go
 model_recovery_address.go
 model_self_service_error.go
+model_self_service_flow_expired_error.go
 model_self_service_login_flow.go
 model_self_service_logout_url.go
 model_self_service_recovery_flow.go

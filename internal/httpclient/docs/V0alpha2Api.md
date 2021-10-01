@@ -1126,7 +1126,7 @@ No authorization required
 
 ## InitializeSelfServiceLoginFlowForBrowsers
 
-> SelfServiceLoginFlow InitializeSelfServiceLoginFlowForBrowsers(ctx).Refresh(refresh).Aal(aal).XSessionToken(xSessionToken).Execute()
+> SelfServiceLoginFlow InitializeSelfServiceLoginFlowForBrowsers(ctx).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Execute()
 
 Initialize Login Flow for Browsers
 
@@ -1147,11 +1147,11 @@ import (
 func main() {
     refresh := true // bool | Refresh a login session  If set to true, this will refresh an existing login session by asking the user to sign in again. This will reset the authenticated_at time of the session. (optional)
     aal := "aal_example" // string | Request a Specific AuthenticationMethod Assurance Level  Use this parameter to upgrade an existing session's authenticator assurance level (AAL). This allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password, the AAL is 1. If you wish to \"upgrade\" the session's security by asking the user to perform TOTP / WebAuth/ ... you would set this to \"aal2\". (optional)
-    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
+    returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers(context.Background()).Refresh(refresh).Aal(aal).XSessionToken(xSessionToken).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers(context.Background()).Refresh(refresh).Aal(aal).ReturnTo(returnTo).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceLoginFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1174,7 +1174,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **refresh** | **bool** | Refresh a login session  If set to true, this will refresh an existing login session by asking the user to sign in again. This will reset the authenticated_at time of the session. | 
  **aal** | **string** | Request a Specific AuthenticationMethod Assurance Level  Use this parameter to upgrade an existing session&#39;s authenticator assurance level (AAL). This allows you to ask for multi-factor authentication. When an identity sign in using e.g. username+password, the AAL is 1. If you wish to \&quot;upgrade\&quot; the session&#39;s security by asking the user to perform TOTP / WebAuth/ ... you would set this to \&quot;aal2\&quot;. | 
- **xSessionToken** | **string** | The Session Token of the Identity performing the settings flow. | 
+ **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
 
 ### Return type
 
@@ -1266,7 +1266,7 @@ No authorization required
 
 ## InitializeSelfServiceRecoveryFlowForBrowsers
 
-> SelfServiceRecoveryFlow InitializeSelfServiceRecoveryFlowForBrowsers(ctx).Execute()
+> SelfServiceRecoveryFlow InitializeSelfServiceRecoveryFlowForBrowsers(ctx).ReturnTo(returnTo).Execute()
 
 Initialize Recovery Flow for Browsers
 
@@ -1285,10 +1285,11 @@ import (
 )
 
 func main() {
+    returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceRecoveryFlowForBrowsers(context.Background()).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceRecoveryFlowForBrowsers(context.Background()).ReturnTo(returnTo).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceRecoveryFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1300,12 +1301,16 @@ func main() {
 
 ### Path Parameters
 
-This endpoint does not need any parameter.
+
 
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiInitializeSelfServiceRecoveryFlowForBrowsersRequest struct via the builder pattern
 
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
 
 ### Return type
 
@@ -1388,7 +1393,7 @@ No authorization required
 
 ## InitializeSelfServiceRegistrationFlowForBrowsers
 
-> SelfServiceRegistrationFlow InitializeSelfServiceRegistrationFlowForBrowsers(ctx).Execute()
+> SelfServiceRegistrationFlow InitializeSelfServiceRegistrationFlowForBrowsers(ctx).ReturnTo(returnTo).Execute()
 
 Initialize Registration Flow for Browsers
 
@@ -1407,10 +1412,11 @@ import (
 )
 
 func main() {
+    returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers(context.Background()).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers(context.Background()).ReturnTo(returnTo).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceRegistrationFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1422,12 +1428,16 @@ func main() {
 
 ### Path Parameters
 
-This endpoint does not need any parameter.
+
 
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiInitializeSelfServiceRegistrationFlowForBrowsersRequest struct via the builder pattern
 
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
 
 ### Return type
 
@@ -1510,7 +1520,7 @@ No authorization required
 
 ## InitializeSelfServiceSettingsFlowForBrowsers
 
-> SelfServiceSettingsFlow InitializeSelfServiceSettingsFlowForBrowsers(ctx).Cookie(cookie).Execute()
+> SelfServiceSettingsFlow InitializeSelfServiceSettingsFlowForBrowsers(ctx).ReturnTo(returnTo).Execute()
 
 Initialize Settings Flow for Browsers
 
@@ -1529,11 +1539,11 @@ import (
 )
 
 func main() {
-    cookie := "cookie_example" // string | The Session Cookie of the Identity performing the settings flow. (optional)
+    returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceSettingsFlowForBrowsers(context.Background()).Cookie(cookie).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceSettingsFlowForBrowsers(context.Background()).ReturnTo(returnTo).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceSettingsFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1554,7 +1564,7 @@ Other parameters are passed through a pointer to a apiInitializeSelfServiceSetti
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **cookie** | **string** | The Session Cookie of the Identity performing the settings flow. | 
+ **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
 
 ### Return type
 
@@ -1595,7 +1605,7 @@ import (
 )
 
 func main() {
-    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow. (optional)
+    xSessionToken := "xSessionToken_example" // string | The Session Token of the Identity performing the settings flow.
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -1642,7 +1652,7 @@ No authorization required
 
 ## InitializeSelfServiceVerificationFlowForBrowsers
 
-> SelfServiceVerificationFlow InitializeSelfServiceVerificationFlowForBrowsers(ctx).Execute()
+> SelfServiceVerificationFlow InitializeSelfServiceVerificationFlowForBrowsers(ctx).ReturnTo(returnTo).Execute()
 
 Initialize Verification Flow for Browser Clients
 
@@ -1661,10 +1671,11 @@ import (
 )
 
 func main() {
+    returnTo := "returnTo_example" // string | The URL to return the browser to after the flow was completed. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceVerificationFlowForBrowsers(context.Background()).Execute()
+    resp, r, err := apiClient.V0alpha2Api.InitializeSelfServiceVerificationFlowForBrowsers(context.Background()).ReturnTo(returnTo).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.InitializeSelfServiceVerificationFlowForBrowsers``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1676,12 +1687,16 @@ func main() {
 
 ### Path Parameters
 
-This endpoint does not need any parameter.
+
 
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiInitializeSelfServiceVerificationFlowForBrowsersRequest struct via the builder pattern
 
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **returnTo** | **string** | The URL to return the browser to after the flow was completed. | 
 
 ### Return type
 
@@ -1834,7 +1849,7 @@ No authorization required
 
 ## SubmitSelfServiceLogoutFlow
 
-> SubmitSelfServiceLogoutFlow(ctx).Token(token).Execute()
+> SubmitSelfServiceLogoutFlow(ctx).Token(token).ReturnTo(returnTo).Execute()
 
 Complete Self-Service Logout
 
@@ -1854,10 +1869,11 @@ import (
 
 func main() {
     token := "token_example" // string | A Valid Logout Token  If you do not have a logout token because you only have a session cookie, call `/self-service/logout/urls` to generate a URL for this endpoint. (optional)
+    returnTo := "returnTo_example" // string | The URL to return to after the logout was completed. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.SubmitSelfServiceLogoutFlow(context.Background()).Token(token).Execute()
+    resp, r, err := apiClient.V0alpha2Api.SubmitSelfServiceLogoutFlow(context.Background()).Token(token).ReturnTo(returnTo).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.SubmitSelfServiceLogoutFlow``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -1877,6 +1893,7 @@ Other parameters are passed through a pointer to a apiSubmitSelfServiceLogoutFlo
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **token** | **string** | A Valid Logout Token  If you do not have a logout token because you only have a session cookie, call &#x60;/self-service/logout/urls&#x60; to generate a URL for this endpoint. | 
+ **returnTo** | **string** | The URL to return to after the logout was completed. | 
 
 ### Return type
 

@@ -774,9 +774,9 @@
           },
           {
             "type": "string",
-            "description": "The Session Token of the Identity performing the settings flow.",
-            "name": "X-Session-Token",
-            "in": "header"
+            "description": "The URL to return the browser to after the flow was completed.",
+            "name": "return_to",
+            "in": "query"
           }
         ],
         "responses": {
@@ -882,6 +882,12 @@
             "type": "string",
             "description": "A Valid Logout Token\n\nIf you do not have a logout token because you only have a session cookie,\ncall `/self-service/logout/urls` to generate a URL for this endpoint.",
             "name": "token",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The URL to return to after the logout was completed.",
+            "name": "return_to",
             "in": "query"
           }
         ],
@@ -1105,6 +1111,14 @@
         ],
         "summary": "Initialize Recovery Flow for Browsers",
         "operationId": "initializeSelfServiceRecoveryFlowForBrowsers",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The URL to return the browser to after the flow was completed.",
+            "name": "return_to",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "selfServiceRecoveryFlow",
@@ -1297,6 +1311,14 @@
         ],
         "summary": "Initialize Registration Flow for Browsers",
         "operationId": "initializeSelfServiceRegistrationFlowForBrowsers",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The URL to return the browser to after the flow was completed.",
+            "name": "return_to",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "selfServiceRegistrationFlow",
@@ -1480,7 +1502,8 @@
             "type": "string",
             "description": "The Session Token of the Identity performing the settings flow.",
             "name": "X-Session-Token",
-            "in": "header"
+            "in": "header",
+            "required": true
           }
         ],
         "responses": {
@@ -1520,9 +1543,9 @@
         "parameters": [
           {
             "type": "string",
-            "description": "The Session Cookie of the Identity performing the settings flow.",
-            "name": "Cookie",
-            "in": "header"
+            "description": "The URL to return the browser to after the flow was completed.",
+            "name": "return_to",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1744,6 +1767,14 @@
         ],
         "summary": "Initialize Verification Flow for Browser Clients",
         "operationId": "initializeSelfServiceVerificationFlowForBrowsers",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The URL to return the browser to after the flow was completed.",
+            "name": "return_to",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "selfServiceVerificationFlow",
@@ -2023,6 +2054,10 @@
           "type": "object",
           "additionalProperties": true
         },
+        "id": {
+          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
+          "type": "string"
+        },
         "message": {
           "description": "Error message\n\nThe error's message.",
           "type": "string",
@@ -2069,6 +2104,10 @@
           "description": "Further error details",
           "type": "object",
           "additionalProperties": true
+        },
+        "id": {
+          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
+          "type": "string"
         },
         "message": {
           "description": "Error message\n\nThe error's message.",
@@ -2254,6 +2293,55 @@
       "description": "Raw JSON Schema",
       "type": "object"
     },
+    "needsPrivilegedSessionError": {
+      "type": "object",
+      "title": "Is sent when a privileged session is required to perform the settings update.",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "description": "The status code",
+          "type": "integer",
+          "format": "int64",
+          "example": 404
+        },
+        "debug": {
+          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
+          "type": "string",
+          "example": "SQL field \"foo\" is not a bool."
+        },
+        "details": {
+          "description": "Further error details",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "id": {
+          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
+          "type": "string"
+        },
+        "message": {
+          "description": "Error message\n\nThe error's message.",
+          "type": "string",
+          "example": "The resource could not be found"
+        },
+        "reason": {
+          "description": "A human-readable reason for the error",
+          "type": "string",
+          "example": "User with ID 1234 does not exist."
+        },
+        "request": {
+          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
+          "type": "string",
+          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
+        },
+        "status": {
+          "description": "The status description",
+          "type": "string",
+          "example": "Not Found"
+        }
+      }
+    },
     "nullJsonRawMessage": {
       "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
       "type": "object"
@@ -2285,6 +2373,58 @@
           "description": "UpdatedAt is a helper struct field for gobuffalo.pop.",
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "selfServiceFlowExpiredError": {
+      "description": "Is sent when a flow is expired",
+      "type": "object",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "description": "The status code",
+          "type": "integer",
+          "format": "int64",
+          "example": 404
+        },
+        "debug": {
+          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
+          "type": "string",
+          "example": "SQL field \"foo\" is not a bool."
+        },
+        "details": {
+          "description": "Further error details",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "id": {
+          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
+          "type": "string"
+        },
+        "message": {
+          "description": "Error message\n\nThe error's message.",
+          "type": "string",
+          "example": "The resource could not be found"
+        },
+        "reason": {
+          "description": "A human-readable reason for the error",
+          "type": "string",
+          "example": "User with ID 1234 does not exist."
+        },
+        "request": {
+          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
+          "type": "string",
+          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
+        },
+        "status": {
+          "description": "The status description",
+          "type": "string",
+          "example": "Not Found"
+        },
+        "use_flow_id": {
+          "$ref": "#/definitions/UUID"
         }
       }
     },
@@ -2337,6 +2477,10 @@
         },
         "requested_aal": {
           "$ref": "#/definitions/authenticatorAssuranceLevel"
+        },
+        "return_to": {
+          "description": "ReturnTo contains the requested return_to URL.",
+          "type": "string"
         },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -2402,6 +2546,10 @@
           "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
         },
+        "return_to": {
+          "description": "ReturnTo contains the requested return_to URL.",
+          "type": "string"
+        },
         "state": {
           "$ref": "#/definitions/selfServiceRecoveryFlowState"
         },
@@ -2465,6 +2613,10 @@
           "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
         },
+        "return_to": {
+          "description": "ReturnTo contains the requested return_to URL.",
+          "type": "string"
+        },
         "type": {
           "$ref": "#/definitions/selfServiceFlowType"
         },
@@ -2509,6 +2661,10 @@
         },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+          "type": "string"
+        },
+        "return_to": {
+          "description": "ReturnTo contains the requested return_to URL.",
           "type": "string"
         },
         "state": {
@@ -2557,6 +2713,10 @@
         },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+          "type": "string"
+        },
+        "return_to": {
+          "description": "ReturnTo contains the requested return_to URL.",
           "type": "string"
         },
         "state": {
@@ -2893,6 +3053,10 @@
         },
         "lookup_secret_confirm": {
           "description": "If set to true will save the regenerated lookup secrets",
+          "type": "boolean"
+        },
+        "lookup_secret_disable": {
+          "description": "Disables this method if true.",
           "type": "boolean"
         },
         "lookup_secret_regenerate": {

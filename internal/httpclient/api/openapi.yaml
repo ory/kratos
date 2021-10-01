@@ -719,14 +719,14 @@ paths:
         schema:
           type: string
         style: form
-      - description: The Session Token of the Identity performing the settings flow.
-        explode: false
-        in: header
-        name: X-Session-Token
+      - description: The URL to return the browser to after the flow was completed.
+        explode: true
+        in: query
+        name: return_to
         required: false
         schema:
           type: string
-        style: simple
+        style: form
       responses:
         "200":
           content:
@@ -853,6 +853,14 @@ paths:
         explode: true
         in: query
         name: token
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: The URL to return to after the logout was completed.
+        explode: true
+        in: query
+        name: return_to
         required: false
         schema:
           type: string
@@ -1095,6 +1103,15 @@ paths:
 
         More information can be found at [Ory Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
       operationId: initializeSelfServiceRecoveryFlowForBrowsers
+      parameters:
+      - description: The URL to return the browser to after the flow was completed.
+        explode: true
+        in: query
+        name: return_to
+        required: false
+        schema:
+          type: string
+        style: form
       responses:
         "200":
           content:
@@ -1327,6 +1344,15 @@ paths:
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: initializeSelfServiceRegistrationFlowForBrowsers
+      parameters:
+      - description: The URL to return the browser to after the flow was completed.
+        explode: true
+        in: query
+        name: return_to
+        required: false
+        schema:
+          type: string
+        style: form
       responses:
         "200":
           content:
@@ -1555,7 +1581,7 @@ paths:
         explode: false
         in: header
         name: X-Session-Token
-        required: false
+        required: true
         schema:
           type: string
         style: simple
@@ -1605,14 +1631,14 @@ paths:
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: initializeSelfServiceSettingsFlowForBrowsers
       parameters:
-      - description: The Session Cookie of the Identity performing the settings flow.
-        explode: false
-        in: header
-        name: Cookie
+      - description: The URL to return the browser to after the flow was completed.
+        explode: true
+        in: query
+        name: return_to
         required: false
         schema:
           type: string
-        style: simple
+        style: form
       responses:
         "200":
           content:
@@ -1867,6 +1893,15 @@ paths:
 
         More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
       operationId: initializeSelfServiceVerificationFlowForBrowsers
+      parameters:
+      - description: The URL to return the browser to after the flow was completed.
+        explode: true
+        in: query
+        name: return_to
+        required: false
+        schema:
+          type: string
+        style: form
       responses:
         "200":
           content:
@@ -2216,6 +2251,12 @@ components:
           additionalProperties: true
           description: Further error details
           type: object
+        id:
+          description: |-
+            The error ID
+
+            Useful when trying to identify various errors in application logic.
+          type: string
         message:
           description: |-
             Error message
@@ -2265,6 +2306,12 @@ components:
           additionalProperties: false
           description: Further error details
           type: object
+        id:
+          description: |-
+            The error ID
+
+            Useful when trying to identify various errors in application logic.
+          type: string
         message:
           description: |-
             Error message
@@ -2491,6 +2538,59 @@ components:
     jsonSchema:
       description: Raw JSON Schema
       type: object
+    needsPrivilegedSessionError:
+      properties:
+        code:
+          description: The status code
+          example: 404
+          format: int64
+          type: integer
+        debug:
+          description: |-
+            Debug information
+
+            This field is often not exposed to protect against leaking
+            sensitive information.
+          example: SQL field "foo" is not a bool.
+          type: string
+        details:
+          additionalProperties: true
+          description: Further error details
+          type: object
+        id:
+          description: |-
+            The error ID
+
+            Useful when trying to identify various errors in application logic.
+          type: string
+        message:
+          description: |-
+            Error message
+
+            The error's message.
+          example: The resource could not be found
+          type: string
+        reason:
+          description: A human-readable reason for the error
+          example: User with ID 1234 does not exist.
+          type: string
+        request:
+          description: |-
+            The request ID
+
+            The request ID is often exposed internally in order to trace
+            errors across service architectures. This is often a UUID.
+          example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
+          type: string
+        status:
+          description: The status description
+          example: Not Found
+          type: string
+      required:
+      - message
+      title: Is sent when a privileged session is required to perform the settings
+        update.
+      type: object
     nullJsonRawMessage:
       description: NullJSONRawMessage represents a json.RawMessage that works well
         with JSON, SQL, and Swagger and is NULLable-
@@ -2521,6 +2621,61 @@ components:
           type: string
       required:
       - id
+      type: object
+    selfServiceFlowExpiredError:
+      description: Is sent when a flow is expired
+      properties:
+        code:
+          description: The status code
+          example: 404
+          format: int64
+          type: integer
+        debug:
+          description: |-
+            Debug information
+
+            This field is often not exposed to protect against leaking
+            sensitive information.
+          example: SQL field "foo" is not a bool.
+          type: string
+        details:
+          additionalProperties: true
+          description: Further error details
+          type: object
+        id:
+          description: |-
+            The error ID
+
+            Useful when trying to identify various errors in application logic.
+          type: string
+        message:
+          description: |-
+            Error message
+
+            The error's message.
+          example: The resource could not be found
+          type: string
+        reason:
+          description: A human-readable reason for the error
+          example: User with ID 1234 does not exist.
+          type: string
+        request:
+          description: |-
+            The request ID
+
+            The request ID is often exposed internally in order to trace
+            errors across service architectures. This is often a UUID.
+          example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
+          type: string
+        status:
+          description: The status description
+          example: Not Found
+          type: string
+        use_flow_id:
+          format: uuid4
+          type: string
+      required:
+      - message
       type: object
     selfServiceFlowType:
       description: The flow type can either be `api` or `browser`.
@@ -2584,6 +2739,7 @@ components:
         updated_at: 2000-01-23T04:56:07.000+00:00
         forced: true
         created_at: 2000-01-23T04:56:07.000+00:00
+        return_to: return_to
         id: id
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
@@ -2618,6 +2774,9 @@ components:
           type: string
         requested_aal:
           $ref: '#/components/schemas/authenticatorAssuranceLevel'
+        return_to:
+          description: ReturnTo contains the requested return_to URL.
+          type: string
         type:
           description: The flow type can either be `api` or `browser`.
           title: Type is the flow type.
@@ -2710,6 +2869,7 @@ components:
             text: text
             type: type
         active: active
+        return_to: return_to
         id: id
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
@@ -2737,6 +2897,9 @@ components:
           description: |-
             RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
+          type: string
+        return_to:
+          description: ReturnTo contains the requested return_to URL.
           type: string
         state:
           $ref: '#/components/schemas/selfServiceRecoveryFlowState'
@@ -2839,6 +3002,7 @@ components:
             id: 0
             text: text
             type: type
+        return_to: return_to
         id: id
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
@@ -2863,6 +3027,9 @@ components:
           description: |-
             RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
+          type: string
+        return_to:
+          description: ReturnTo contains the requested return_to URL.
           type: string
         type:
           description: The flow type can either be `api` or `browser`.
@@ -2977,6 +3144,7 @@ components:
           schema_url: schema_url
           id: id
         active: active
+        return_to: return_to
         id: id
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
@@ -3006,6 +3174,9 @@ components:
           description: |-
             RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
+          type: string
+        return_to:
+          description: ReturnTo contains the requested return_to URL.
           type: string
         state:
           $ref: '#/components/schemas/selfServiceSettingsFlowState'
@@ -3092,6 +3263,7 @@ components:
             text: text
             type: type
         active: active
+        return_to: return_to
         id: id
         type: type
         issued_at: 2000-01-23T04:56:07.000+00:00
@@ -3119,6 +3291,9 @@ components:
           description: |-
             RequestURL is the initial URL that was requested from Ory Kratos. It can be used
             to forward information contained in the URL's path or query for example.
+          type: string
+        return_to:
+          description: ReturnTo contains the requested return_to URL.
           type: string
         state:
           $ref: '#/components/schemas/selfServiceVerificationFlowState'
@@ -3536,6 +3711,9 @@ components:
           type: string
         lookup_secret_confirm:
           description: If set to true will save the regenerated lookup secrets
+          type: boolean
+        lookup_secret_disable:
+          description: Disables this method if true.
           type: boolean
         lookup_secret_regenerate:
           description: If set to true will regenerate the lookup secrets
