@@ -10,61 +10,58 @@ import (
 
 func TestAddSchemaResources(t *testing.T) {
 
-	t.Run("case=validate schema resources are loading schema id correctly", func(t *testing.T) {
-		c := jsonschema.NewCompiler()
-		assert.NoError(t, AddSchemaResources(c, Config, IdentityMeta, IdentityExtension))
+	for _, tc := range []struct {
+		description       string
+		dependencies      []SchemaType
+		extraDependencies []SchemaType
+		mustFail          bool
+		failMessage       string
+	}{
+		{
+			description:       "config schema",
+			dependencies:      []SchemaType{Config},
+			extraDependencies: nil,
+		},
+		{
+			description:       "identity schema with dependencies",
+			dependencies:      []SchemaType{IdentityMeta},
+			extraDependencies: []SchemaType{IdentityExtension},
+		},
+		{
+			description:       "multiple schemas",
+			dependencies:      []SchemaType{Config, IdentityMeta, IdentityExtension},
+			extraDependencies: nil,
+		},
+		{
+			description:       "verify dependencies are also loaded",
+			dependencies:      []SchemaType{IdentityMeta},
+			extraDependencies: []SchemaType{IdentityExtension},
+		},
+		{
+			description:  "must fail on unsupported schema types",
+			dependencies: []SchemaType{4, 10},
+			mustFail:     true,
+			failMessage:  "the specified schema type (4) is not supported",
+		},
+	} {
+		t.Run("case="+tc.description, func(t *testing.T) {
+			c := jsonschema.NewCompiler()
+			err := AddSchemaResources(c, tc.dependencies...)
 
-		assert.EqualValues(t, "https://github.com/ory/kratos/embedx/config.schema.json", Config.GetSchemaID())
-		assert.EqualValues(t, "ory://identity-meta", IdentityMeta.GetSchemaID())
-		assert.EqualValues(t, "ory://identity-extension", IdentityExtension.GetSchemaID())
-	})
+			if tc.mustFail {
+				assert.Errorf(t, err, "an error must be thrown on `%s`", tc.description)
+				assert.EqualError(t, err, tc.failMessage)
+			} else {
+				assert.NoError(t, err)
+			}
 
-	t.Run("case=add config schema resources", func(t *testing.T) {
-		c := jsonschema.NewCompiler()
-		assert.NoError(t, AddSchemaResources(c, Config))
+			if !tc.mustFail {
+				for _, s := range append(tc.dependencies, tc.extraDependencies...) {
+					_, err := c.Compile(s.GetSchemaID())
+					assert.NoError(t, err)
+				}
+			}
 
-		_, err := c.Compile(Config.GetSchemaID())
-		assert.NoError(t, err)
-	})
-
-	t.Run("case=add identity schema resources", func(t *testing.T) {
-		c := jsonschema.NewCompiler()
-		assert.NoError(t, AddSchemaResources(c, IdentityMeta))
-
-		_, err := c.Compile(IdentityMeta.GetSchemaID())
-		assert.NoError(t, err)
-	})
-
-	t.Run("case=add multiple schema resources", func(t *testing.T) {
-		c := jsonschema.NewCompiler()
-		assert.NoError(t, AddSchemaResources(c, Config, IdentityMeta))
-
-		_, err := c.Compile(IdentityMeta.GetSchemaID())
-		assert.NoError(t, err)
-
-		_, err = c.Compile(Config.GetSchemaID())
-		assert.NoError(t, err)
-	})
-
-	t.Run("case=dynamic multiple schema resourcces", func(t *testing.T) {
-		c := jsonschema.NewCompiler()
-
-		assert.NoError(t, AddSchemaResources(c, Config, IdentityExtension, IdentityMeta))
-
-		_, err := c.Compile(Config.GetSchemaID())
-		assert.NoError(t, err)
-
-		_, err = c.Compile(IdentityExtension.GetSchemaID())
-		assert.NoError(t, err)
-
-		_, err = c.Compile(IdentityMeta.GetSchemaID())
-		assert.NoError(t, err)
-	})
-
-	t.Run("case=specifying an incorrect schema type must throw an error", func(t *testing.T) {
-		c := jsonschema.NewCompiler()
-		err := AddSchemaResources(c, 4, 10)
-		assert.Errorf(t, err, "an error must be thrown on an invalid schema type")
-		assert.EqualError(t, err, "the specified schema type (4) is not supported")
-	})
+		})
+	}
 }
