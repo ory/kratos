@@ -1,9 +1,10 @@
 package registration
 
 import (
-	"github.com/ory/kratos/text"
 	"net/http"
 	"time"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/nosurf"
 

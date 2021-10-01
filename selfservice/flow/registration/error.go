@@ -43,7 +43,6 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 	return &ErrorHandler{d: d}
 }
 
-
 func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r *http.Request, f *Flow, err error) (*flow.ExpiredError, error) {
 	e := new(flow.ExpiredError)
 	if !errors.As(err, &e) {

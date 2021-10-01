@@ -1,8 +1,9 @@
 package flow
 
 import (
-	"github.com/ory/kratos/x"
 	"time"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"

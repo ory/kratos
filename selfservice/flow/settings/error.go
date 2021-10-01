@@ -81,8 +81,7 @@ func (s *ErrorHandler) reauthenticate(
 		login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
 }
 
-
-func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r *http.Request, f *Flow,	id *identity.Identity, err error) (*flow.ExpiredError, error) {
+func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r *http.Request, f *Flow, id *identity.Identity, err error) (*flow.ExpiredError, error) {
 	e := new(flow.ExpiredError)
 	if !errors.As(err, &e) {
 		return nil, nil
@@ -141,7 +140,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, id,err); inner != nil {
+	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, id, err); inner != nil {
 		s.forward(w, r, f, err)
 		return
 	} else if expired != nil {
@@ -153,7 +152,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 			s.d.Writer().WriteError(w, r, expired)
 		} else {
-			http.Redirect(w, r,expired.GetFlow().AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
+			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
 		}
 		return
 	}
