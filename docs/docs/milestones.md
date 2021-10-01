@@ -180,6 +180,8 @@ Something is not working.
 
 - [ ] kratos identities import - include "state" property of identity
       ([kratos#1767](https://github.com/ory/kratos/issues/1767))
+- [ ] Panic on recovery for deactivated user
+      ([kratos#1794](https://github.com/ory/kratos/issues/1794))
 - [x] Submitting successful link verification again ends up with JSON response
       ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
       [@hackerman](https://github.com/aeneasr)
