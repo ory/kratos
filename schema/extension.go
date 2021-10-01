@@ -15,7 +15,7 @@ const (
 )
 
 type (
-	ExtensionConfig           struct {
+	ExtensionConfig struct {
 		Credentials struct {
 			Password struct {
 				Identifier bool `json:"identifier"`
