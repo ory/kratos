@@ -48,7 +48,7 @@ func TestExtensionRunner(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				c := jsonschema.NewCompiler()
-				runner, err := NewExtensionRunner(ExtensionRunnerIdentityMetaSchema)
+				runner, err := NewExtensionRunner()
 				require.NoError(t, err)
 
 				r := new(extensionStub)
@@ -66,7 +66,7 @@ func TestExtensionRunner(t *testing.T) {
 
 	t.Run("method=applies meta schema", func(t *testing.T) {
 		c := jsonschema.NewCompiler()
-		runner, err := NewExtensionRunner(ExtensionRunnerIdentityMetaSchema)
+		runner, err := NewExtensionRunner()
 		require.NoError(t, err)
 
 		runner.Register(c)

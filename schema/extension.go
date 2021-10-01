@@ -10,14 +10,11 @@ import (
 	"github.com/ory/kratos/embedx"
 )
 
-var ExtensionRunnerIdentityMetaSchema = ExtensionRunnerMetaSchema(embedx.IdentityExtension)
-
 const (
 	extensionName string = "ory.sh/kratos"
 )
 
 type (
-	ExtensionRunnerMetaSchema embedx.SchemaType
 	ExtensionConfig           struct {
 		Credentials struct {
 			Password struct {
@@ -53,16 +50,16 @@ type (
 	}
 )
 
-func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...Extension) (*ExtensionRunner, error) {
+func NewExtensionRunner(runners ...Extension) (*ExtensionRunner, error) {
 	var err error
 	r := new(ExtensionRunner)
 	c := jsonschema.NewCompiler()
 
-	if err = embedx.AddSchemaResources(c, embedx.SchemaType(meta)); err != nil {
+	if err = embedx.AddSchemaResources(c, embedx.IdentityExtension); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	r.meta, err = c.Compile(embedx.SchemaType(meta).GetSchemaID())
+	r.meta, err = c.Compile(embedx.IdentityExtension.GetSchemaID())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
