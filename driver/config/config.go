@@ -256,15 +256,7 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 				panic(errors.New("the config provider did not initialise correctly in time"))
 			}
 			if err := c.validateIdentitySchemas(); err != nil {
-				var buf bytes.Buffer
-				_, _ = fmt.Fprintln(&buf, "")
-				conf, innerErr := event.MarshalJSON()
-				if innerErr != nil {
-					_, _ = fmt.Fprintf(&buf, "Unable to unmarshal configuration: %+v", innerErr)
-				}
-
-				jsonschemax.FormatValidationErrorForCLI(&buf, conf, err)
-
+				c.formatJsonErrors(err)
 				l.WithError(err).
 					Errorf("The changed identity schema configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting the process.")
 			}
@@ -282,6 +274,7 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 
 	if !p.SkipValidation() {
 		if err := c.validateIdentitySchemas(); err != nil {
+			c.formatJsonErrors(err)
 			return nil, err
 		}
 	}
@@ -321,6 +314,17 @@ func (p *Config) validateIdentitySchemas() error {
 		}
 	}
 	return nil
+}
+
+func (p *Config) formatJsonErrors(err error) {
+	var buf bytes.Buffer
+	_, _ = fmt.Fprintln(&buf, "")
+	conf, innerErr := p.p.Koanf.Copy().Marshal(kjson.Parser())
+	if innerErr != nil {
+		_, _ = fmt.Fprintf(&buf, "Unable to unmarshal configuration: %+v", innerErr)
+	}
+
+	jsonschemax.FormatValidationErrorForCLI(&buf, conf, err)
 }
 
 func (p *Config) Source() *configx.Provider {
