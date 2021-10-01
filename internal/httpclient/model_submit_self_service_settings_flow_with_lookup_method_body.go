@@ -21,6 +21,8 @@ type SubmitSelfServiceSettingsFlowWithLookupMethodBody struct {
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// If set to true will save the regenerated lookup secrets
 	LookupSecretConfirm *bool `json:"lookup_secret_confirm,omitempty"`
+	// Disables this method if true.
+	LookupSecretDisable *bool `json:"lookup_secret_disable,omitempty"`
 	// If set to true will regenerate the lookup secrets
 	LookupSecretRegenerate *bool `json:"lookup_secret_regenerate,omitempty"`
 	// If set to true will reveal the lookup secrets
@@ -109,6 +111,38 @@ func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) HasLookupSecretConfi
 // SetLookupSecretConfirm gets a reference to the given bool and assigns it to the LookupSecretConfirm field.
 func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) SetLookupSecretConfirm(v bool) {
 	o.LookupSecretConfirm = &v
+}
+
+// GetLookupSecretDisable returns the LookupSecretDisable field value if set, zero value otherwise.
+func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) GetLookupSecretDisable() bool {
+	if o == nil || o.LookupSecretDisable == nil {
+		var ret bool
+		return ret
+	}
+	return *o.LookupSecretDisable
+}
+
+// GetLookupSecretDisableOk returns a tuple with the LookupSecretDisable field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) GetLookupSecretDisableOk() (*bool, bool) {
+	if o == nil || o.LookupSecretDisable == nil {
+		return nil, false
+	}
+	return o.LookupSecretDisable, true
+}
+
+// HasLookupSecretDisable returns a boolean if a field has been set.
+func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) HasLookupSecretDisable() bool {
+	if o != nil && o.LookupSecretDisable != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetLookupSecretDisable gets a reference to the given bool and assigns it to the LookupSecretDisable field.
+func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) SetLookupSecretDisable(v bool) {
+	o.LookupSecretDisable = &v
 }
 
 // GetLookupSecretRegenerate returns the LookupSecretRegenerate field value if set, zero value otherwise.
@@ -206,6 +240,9 @@ func (o SubmitSelfServiceSettingsFlowWithLookupMethodBody) MarshalJSON() ([]byte
 	}
 	if o.LookupSecretConfirm != nil {
 		toSerialize["lookup_secret_confirm"] = o.LookupSecretConfirm
+	}
+	if o.LookupSecretDisable != nil {
+		toSerialize["lookup_secret_disable"] = o.LookupSecretDisable
 	}
 	if o.LookupSecretRegenerate != nil {
 		toSerialize["lookup_secret_regenerate"] = o.LookupSecretRegenerate

@@ -3322,11 +3322,11 @@ func (a *V0alpha2ApiService) GetWebAuthnJavaScriptExecute(r V0alpha2ApiApiGetWeb
 }
 
 type V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest struct {
-	ctx           context.Context
-	ApiService    V0alpha2Api
-	refresh       *bool
-	aal           *string
-	xSessionToken *string
+	ctx        context.Context
+	ApiService V0alpha2Api
+	refresh    *bool
+	aal        *string
+	returnTo   *string
 }
 
 func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Refresh(refresh bool) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
@@ -3337,8 +3337,8 @@ func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) Aal(aal 
 	r.aal = &aal
 	return r
 }
-func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
-	r.xSessionToken = &xSessionToken
+func (r V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceLoginFlowForBrowsersRequest {
+	r.returnTo = &returnTo
 	return r
 }
 
@@ -3402,6 +3402,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 	if r.aal != nil {
 		localVarQueryParams.Add("aal", parameterToString(*r.aal, ""))
 	}
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -3418,9 +3421,6 @@ func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	if r.xSessionToken != nil {
-		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -3629,6 +3629,12 @@ func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowWithoutBrowserExecute
 type V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
+	returnTo   *string
+}
+
+func (r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest {
+	r.returnTo = &returnTo
+	return r
 }
 
 func (r V0alpha2ApiApiInitializeSelfServiceRecoveryFlowForBrowsersRequest) Execute() (*SelfServiceRecoveryFlow, *http.Response, error) {
@@ -3682,6 +3688,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceRecoveryFlowForBrowsersExecute
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -3891,6 +3900,12 @@ func (a *V0alpha2ApiService) InitializeSelfServiceRecoveryFlowWithoutBrowserExec
 type V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
+	returnTo   *string
+}
+
+func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest {
+	r.returnTo = &returnTo
+	return r
 }
 
 func (r V0alpha2ApiApiInitializeSelfServiceRegistrationFlowForBrowsersRequest) Execute() (*SelfServiceRegistrationFlow, *http.Response, error) {
@@ -3952,6 +3967,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceRegistrationFlowForBrowsersExe
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -4151,11 +4169,11 @@ func (a *V0alpha2ApiService) InitializeSelfServiceRegistrationFlowWithoutBrowser
 type V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
-	cookie     *string
+	returnTo   *string
 }
 
-func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) Cookie(cookie string) V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest {
-	r.cookie = &cookie
+func (r V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceSettingsFlowForBrowsersRequest {
+	r.returnTo = &returnTo
 	return r
 }
 
@@ -4219,6 +4237,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -4235,9 +4256,6 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	if r.cookie != nil {
-		localVarHeaderParams["Cookie"] = parameterToString(*r.cookie, "")
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
@@ -4373,6 +4391,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExec
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
+	if r.xSessionToken == nil {
+		return localVarReturnValue, nil, reportError("xSessionToken is required and must be specified")
+	}
 
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -4391,9 +4412,7 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExec
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	if r.xSessionToken != nil {
-		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
-	}
+	localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -4453,6 +4472,12 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExec
 type V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
+	returnTo   *string
+}
+
+func (r V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) ReturnTo(returnTo string) V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest {
+	r.returnTo = &returnTo
+	return r
 }
 
 func (r V0alpha2ApiApiInitializeSelfServiceVerificationFlowForBrowsersRequest) Execute() (*SelfServiceVerificationFlow, *http.Response, error) {
@@ -4504,6 +4529,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceVerificationFlowForBrowsersExe
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -4869,10 +4897,15 @@ type V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest struct {
 	ctx        context.Context
 	ApiService V0alpha2Api
 	token      *string
+	returnTo   *string
 }
 
 func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) Token(token string) V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest {
 	r.token = &token
+	return r
+}
+func (r V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest) ReturnTo(returnTo string) V0alpha2ApiApiSubmitSelfServiceLogoutFlowRequest {
+	r.returnTo = &returnTo
 	return r
 }
 
@@ -4930,6 +4963,9 @@ func (a *V0alpha2ApiService) SubmitSelfServiceLogoutFlowExecute(r V0alpha2ApiApi
 
 	if r.token != nil {
 		localVarQueryParams.Add("token", parameterToString(*r.token, ""))
+	}
+	if r.returnTo != nil {
+		localVarQueryParams.Add("return_to", parameterToString(*r.returnTo, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

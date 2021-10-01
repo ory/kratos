@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Code** | Pointer to **int64** | The status code | [optional] 
 **Debug** | Pointer to **string** | Debug information  This field is often not exposed to protect against leaking sensitive information. | [optional] 
 **Details** | Pointer to **map[string]map[string]interface{}** | Further error details | [optional] 
+**Id** | Pointer to **string** | The error ID  Useful when trying to identify various errors in application logic. | [optional] 
 **Message** | **string** | Error message  The error&#39;s message. | 
 **Reason** | Pointer to **string** | A human-readable reason for the error | [optional] 
 **RedirectBrowserTo** | Pointer to **string** |  | [optional] 
@@ -106,6 +107,31 @@ SetDetails sets Details field to given value.
 `func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) HasDetails() bool`
 
 HasDetails returns a boolean if a field has been set.
+
+### GetId
+
+`func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) GetId() string`
+
+GetId returns the Id field if non-nil, zero value otherwise.
+
+### GetIdOk
+
+`func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) GetIdOk() (*string, bool)`
+
+GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetId
+
+`func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) SetId(v string)`
+
+SetId sets Id field to given value.
+
+### HasId
+
+`func (o *ErrorAuthenticatorAssuranceLevelNotSatisfied) HasId() bool`
+
+HasId returns a boolean if a field has been set.
 
 ### GetMessage
 

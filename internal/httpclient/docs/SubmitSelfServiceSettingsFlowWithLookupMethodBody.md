@@ -6,6 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | CSRFToken is the anti-CSRF token | [optional] 
 **LookupSecretConfirm** | Pointer to **bool** | If set to true will save the regenerated lookup secrets | [optional] 
+**LookupSecretDisable** | Pointer to **bool** | Disables this method if true. | [optional] 
 **LookupSecretRegenerate** | Pointer to **bool** | If set to true will regenerate the lookup secrets | [optional] 
 **LookupSecretReveal** | Pointer to **bool** | If set to true will reveal the lookup secrets | [optional] 
 **Method** | **string** | Method  Should be set to \&quot;lookup\&quot; when trying to add, update, or remove a lookup pairing. | 
@@ -78,6 +79,31 @@ SetLookupSecretConfirm sets LookupSecretConfirm field to given value.
 `func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) HasLookupSecretConfirm() bool`
 
 HasLookupSecretConfirm returns a boolean if a field has been set.
+
+### GetLookupSecretDisable
+
+`func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) GetLookupSecretDisable() bool`
+
+GetLookupSecretDisable returns the LookupSecretDisable field if non-nil, zero value otherwise.
+
+### GetLookupSecretDisableOk
+
+`func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) GetLookupSecretDisableOk() (*bool, bool)`
+
+GetLookupSecretDisableOk returns a tuple with the LookupSecretDisable field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLookupSecretDisable
+
+`func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) SetLookupSecretDisable(v bool)`
+
+SetLookupSecretDisable sets LookupSecretDisable field to given value.
+
+### HasLookupSecretDisable
+
+`func (o *SubmitSelfServiceSettingsFlowWithLookupMethodBody) HasLookupSecretDisable() bool`
+
+HasLookupSecretDisable returns a boolean if a field has been set.
 
 ### GetLookupSecretRegenerate
 
