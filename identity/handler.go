@@ -5,17 +5,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/herodot"
-
 	"github.com/julienschmidt/httprouter"
+	"github.com/ory/herodot"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
-
-	"github.com/ory/x/jsonx"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 const RouteCollection = "/identities"
@@ -186,6 +184,11 @@ type AdminCreateIdentityBody struct {
 	//
 	// required: true
 	Traits json.RawMessage `json:"traits"`
+
+	// State is the identity's state.
+	//
+	// required: false
+	State State `json:"state"`
 }
 
 // swagger:route POST /identities v0alpha1 adminCreateIdentity
@@ -221,7 +224,14 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	}
 
 	stateChangedAt := sqlxx.NullTime(time.Now())
-	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: StateActive, StateChangedAt: &stateChangedAt}
+	state := StateActive
+	if cr.State != "" {
+		if err := cr.State.IsValid(); err != nil {
+			h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+		}
+		state = cr.State
+	}
+	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: state, StateChangedAt: &stateChangedAt}
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

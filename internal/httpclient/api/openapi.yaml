@@ -410,6 +410,52 @@ paths:
       summary: Create a Recovery Link
       tags:
       - v0alpha1
+  /schemas:
+    get:
+      description: Get all Identity Schemas
+      operationId: listIdentitySchemas
+      parameters:
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 100
+          format: int64
+          maximum: 500
+          minimum: 1
+          type: integer
+        style: form
+      - description: Pagination Page
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          format: int64
+          minimum: 0
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/identitySchemas'
+          description: identitySchemas
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      tags:
+      - v0alpha2
   /schemas/{id}:
     get:
       description: Get a JSON Schema
@@ -2057,6 +2103,8 @@ components:
           description: SchemaID is the ID of the JSON Schema to be used for validating
             the identity's traits.
           type: string
+        state:
+          $ref: '#/components/schemas/identityState'
         traits:
           description: |-
             Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -2291,6 +2339,23 @@ components:
       items:
         $ref: '#/components/schemas/identity'
       title: A list of identities.
+      type: array
+    identitySchema:
+      example:
+        schema: '{}'
+        id: id
+      properties:
+        id:
+          description: The ID of the Identity JSON Schema
+          type: string
+        schema:
+          description: The actual Identity JSON Schema
+          type: object
+      type: object
+    identitySchemas:
+      description: Raw identity Schema list
+      items:
+        $ref: '#/components/schemas/identitySchema'
       type: array
     identityState:
       description: The state can either be `active` or `inactive`.
