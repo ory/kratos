@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
@@ -227,7 +228,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	state := StateActive
 	if cr.State != "" {
 		if err := cr.State.IsValid(); err != nil {
-			h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+			return
 		}
 		state = cr.State
 	}
@@ -326,7 +328,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	if ur.State != "" && identity.State != ur.State {
 		if err := ur.State.IsValid(); err != nil {
-			h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+			return
 		}
 
 		stateChangedAt := sqlxx.NullTime(time.Now())
