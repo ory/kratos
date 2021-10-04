@@ -2,8 +2,9 @@ package internal
 
 import (
 	"context"
-	"github.com/spf13/cobra"
 	"testing"
+
+	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/corp"
 

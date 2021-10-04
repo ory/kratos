@@ -3,11 +3,12 @@ package verification_test
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cobra"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/verification"

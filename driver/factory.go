@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/driver/config"
