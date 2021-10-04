@@ -3,6 +3,7 @@ package verification_test
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/cobra"
 	"net/http"
 	"net/url"
 	"testing"
@@ -25,7 +26,7 @@ import (
 )
 
 func TestFlow(t *testing.T) {
-	conf, err := config.New(context.Background(), logrusx.New("", ""), configx.SkipValidation())
+	conf, err := config.New(context.Background(), logrusx.New("", ""), &cobra.Command{}, configx.SkipValidation())
 	require.NoError(t, err)
 
 	must := func(r *verification.Flow, err error) *verification.Flow {

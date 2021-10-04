@@ -6,6 +6,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/cobra"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -183,6 +185,7 @@ type (
 		l              *logrusx.Logger
 		p              *configx.Provider
 		identitySchema *jsonschema.Schema
+		cmd            *cobra.Command
 	}
 
 	Provider interface {
@@ -236,13 +239,13 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
-	p, err := New(context.TODO(), l, opts...)
+func MustNew(t *testing.T, l *logrusx.Logger, cmd *cobra.Command, opts ...configx.OptionModifier) *Config {
+	p, err := New(context.TODO(), l, cmd, opts...)
 	require.NoError(t, err)
 	return p
 }
 
-func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, cmd *cobra.Command, opts ...configx.OptionModifier) (*Config, error) {
 	var c *Config
 
 	opts = append([]configx.OptionModifier{
@@ -257,7 +260,6 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 				panic(errors.New("the config provider did not initialise correctly in time"))
 			}
 			if err := c.validateIdentitySchemas(); err != nil {
-				c.formatJsonErrors(err)
 				l.WithError(err).
 					Errorf("The changed identity schema configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting the process.")
 			}
@@ -271,11 +273,10 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 
 	l.UseConfig(p)
 
-	c = &Config{l: l, p: p}
+	c = &Config{l: l, p: p, cmd: cmd}
 
 	if !p.SkipValidation() {
 		if err := c.validateIdentitySchemas(); err != nil {
-			c.formatJsonErrors(err)
 			return nil, err
 		}
 	}
@@ -310,22 +311,25 @@ func (p *Config) validateIdentitySchemas() error {
 		if err != nil {
 			return err
 		}
-		if err = j.Validate(resource); err != nil {
+		defer resource.Close()
+
+		schema, err := io.ReadAll(resource)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err = j.Validate(bytes.NewBuffer(schema)); err != nil {
+			p.formatJsonErrors(schema, err)
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *Config) formatJsonErrors(err error) {
-	var buf bytes.Buffer
-	_, _ = fmt.Fprintln(&buf, "")
-	conf, innerErr := p.p.Koanf.Copy().Marshal(kjson.Parser())
-	if innerErr != nil {
-		_, _ = fmt.Fprintf(&buf, "Unable to unmarshal configuration: %+v", innerErr)
-	}
+func (p *Config) formatJsonErrors(schema []byte, err error) {
+	_, _ = fmt.Fprintln(p.cmd.ErrOrStderr(), "")
 
-	jsonschemax.FormatValidationErrorForCLI(&buf, conf, err)
+	jsonschemax.FormatValidationErrorForCLI(p.cmd.ErrOrStderr(), schema, err)
 }
 
 func (p *Config) Source() *configx.Provider {
