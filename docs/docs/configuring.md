@@ -23,7 +23,7 @@ described in the following section.
 
 Environmental variables take precedence over config file values. Nested paths
 get mapped to config values by putting an underscore `_` between every level,
-e.g. `selfservice.flows.settings.ui_url` becomes
+e.g. `selfservice.flows.settings.ui.url` becomes
 `SELFSERVICE_FLOWS_SETTINGS_UI_URL=<value>`.
 
 Please note that there are some caveats when using env vars
