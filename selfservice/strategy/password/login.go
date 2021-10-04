@@ -72,7 +72,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 	}
 
 	if !s.d.Hasher().IsSameAlgorithm([]byte(o.HashedPassword)) {
-		if err := s.upgradePassword(r.Context(), i.ID, []byte(p.Password)); err != nil {
+		if err := s.migratePasswordHash(r.Context(), i.ID, []byte(p.Password)); err != nil {
 			s.d.Logger().Errorf("Unable to upgrade password hashing algorithm: %s", err)
 		}
 	}
@@ -85,7 +85,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 	return i, nil
 }
 
-func (s *Strategy) upgradePassword(ctx context.Context, identifier uuid.UUID, password []byte) error {
+func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID, password []byte) error {
 	hpw, err := s.d.Hasher().Generate(ctx, password)
 	if err != nil {
 		return err
