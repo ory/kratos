@@ -1767,7 +1767,7 @@
       "properties": {
         "algorithm": {
           "title": "Password hashing algorithm",
-          "description": "One of the values: argon2, bcrypt",
+          "description": "One of the values: argon2, bcrypt.\nIf database stores a password hashed by another algorithm, the password will be migrated to this algorithm when user logins using password flow.",
           "type": "string",
           "default": "bcrypt",
           "enum": [
