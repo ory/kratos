@@ -1907,37 +1907,6 @@ hashers:
     #
     cost: 4
 
-  ## Hashing Algorithm Compatibility Configuration ##
-  #
-  # Verify and upgrade another hashing algorithm from imported password hashed by PBKDF2.
-  # Store following encoding format:
-  #
-  # `$pbkdf2_<algorithm>$<iteration>$<salt>$<hash>`
-  #
-  # example: `$pbkdf2_sha256$100000$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpI`
-  #
-  # This format is very similar to [Django](https://docs.djangoproject.com/en/3.2/topics/auth/passwords/#how-django-stores-passwords).
-  #
-  # Kratos has NOT ability to import user credentials yet.
-  # Wait to resolve [this issue](https://github.com/ory/kratos/issues/605)
-  #
-  pbkdf2:
-    ## Password hashing algorithm what PBKDF2 upgrades to ##
-    #
-    # One of the values: argon2, bcrypt
-    #
-    # One of:
-    # - argon2
-    # - bcrypt
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export HASHERS_PBKDF2_UPGRADE_TO=<value>
-    # - Windows Command Line (CMD):
-    #    > set HASHERS_PBKDF2_UPGRADE_TO=<value>
-    #
-    upgrade_to: argon2
-
   ## Password hashing algorithm ##
   #
   # One of the values: argon2, bcrypt

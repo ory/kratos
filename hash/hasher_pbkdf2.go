@@ -46,6 +46,10 @@ func (h *Pbkdf2) Generate(_ context.Context, password []byte) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func (h *Pbkdf2) IsSameAlgorithm(hash []byte) bool {
+	return IsPbkdf2Hash(hash)
+}
+
 func getPseudorandomFunctionForPbkdf2(alg string) func() hash.Hash {
 	switch alg {
 	case "sha1":

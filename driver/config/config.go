@@ -132,7 +132,6 @@ const (
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyCipherAlgorithm                                         = "ciphers.algorithm"
-	ViperKeyHasherPbkdf2UpgradeTo                                   = "hashers.pbkdf2.upgrade_to"
 	ViperKeyLinkLifespan                                            = "selfservice.methods.link.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
@@ -165,9 +164,6 @@ type (
 	}
 	Bcrypt struct {
 		Cost uint32 `json:"cost"`
-	}
-	HashUpgrader struct {
-		UpgradeTo string `json:"upgrade_to"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -401,12 +397,6 @@ func (p *Config) HasherBcrypt() *Bcrypt {
 	}
 
 	return &Bcrypt{Cost: cost}
-}
-
-func (p *Config) HasherPbkdf2() *HashUpgrader {
-	return &HashUpgrader{
-		UpgradeTo: p.p.String(ViperKeyHasherPbkdf2UpgradeTo),
-	}
 }
 
 func (p *Config) listenOn(key string) string {
