@@ -53,7 +53,7 @@ Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
 
 Cypress.Commands.add('longPrivilegedSessionTime', ({} = {}) => {
   updateConfigFile((config) => {
-    config.selfservice.flows.settings.privileged_session_max_age = '1m'
+    config.selfservice.flows.settings.privileged_session_max_age = '5m'
     return config
   })
 })
@@ -66,6 +66,18 @@ Cypress.Commands.add('longVerificationLifespan', ({} = {}) => {
 Cypress.Commands.add('shortVerificationLifespan', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.verification.lifespan = '1ms'
+    return config
+  })
+})
+Cypress.Commands.add('sessionRequiresNo2fa', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.session.whoami.required_aal = 'aal1'
+    return config
+  })
+})
+Cypress.Commands.add('sessionRequires2fa', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.session.whoami.required_aal = 'highest_available'
     return config
   })
 })
@@ -575,6 +587,13 @@ Cypress.Commands.add('waitForPrivilegedSessionToExpire', () => {
   })
 })
 
+Cypress.Commands.add('getLookupSecrets', () =>
+  cy.get('[data-testid="node/text/lookup_secret_codes/text"] code').then(($e) => $e.map((_, e) => e.innerText.trim()).toArray())
+)
+Cypress.Commands.add('expectSettingsSaved', () =>
+  cy.get('[data-testid="ui/message/1050001"]').should('contain.text', 'Your changes have been saved')
+)
+
 Cypress.Commands.add('getMail', ({removeMail = true} = {}) => {
   let tries = 0
   const req = () =>
@@ -598,4 +617,13 @@ Cypress.Commands.add('getMail', ({removeMail = true} = {}) => {
     })
 
   return req()
+})
+
+Cypress.Commands.add('clearAllCookies',() => {
+  cy.clearCookies({domain: null})
+})
+
+Cypress.Commands.add('submitPasswordForm',() => {
+  cy.get('[name="method"][value="password"]').click()
+  cy.get('[name="method"][value="password"]:disabled').should('not.exist')
 })

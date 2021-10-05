@@ -27,7 +27,7 @@ declare global {
       getSession(opts?:
                    {
                      expectAal: 'aal2' | 'aal1',
-                     expectMethods: Array<'password' | 'webauthn'>,
+                     expectMethods: Array<'password' | 'webauthn' | 'lookup_secret'>,
                    }
       ): Chainable<Session>
 
@@ -144,6 +144,31 @@ declare global {
         expect: { email },
         type: { email?: string, password?: string }
       }): Chainable<void>
+
+      /**
+       * Do not require 2fa for /session/whoami
+       */
+      sessionRequiresNo2fa(): Chainable<void>
+
+      /**
+       * Require 2fa for /session/whoami if available
+       */
+      sessionRequires2fa(): Chainable<void>
+
+      /**
+       * Gets the lookup codes from the settings page
+       */
+      getLookupSecrets(): Chainable<Array<string>>
+
+      /**
+       * Expect the settings to be saved.
+       */
+      expectSettingsSaved(): Chainable<void>
+
+      clearCookies(options?: Partial<Loggable & Timeoutable & { domain: null | string }>): Chainable<null>
+      clearAllCookies(): Chainable<null>
+
+      submitPasswordForm(): Chainable<null>
     }
   }
 }
