@@ -10,9 +10,10 @@ const (
 	ErrIDAddressNotVerified          = "no_verified_address"
 	ErrIDSessionHasAALAlready        = "session_fulfills_aal"
 	ErrIDSessionRequiredForHigherAAL = "aal_needs_session"
-	ErrIDHigherAALRequired = "aal_needs_upgrade"
-	ErrNoActiveSession = "no_active_session"
-	ErrIDRedirectURLNotAllowed = "`forbidden_return_to`"
+	ErrIDHigherAALRequired           = "aal_needs_upgrade"
+	ErrNoActiveSession               = "no_active_session"
+	ErrIDRedirectURLNotAllowed       = "forbidden_return_to"
+	ErrIDInitiatedBySomeoneElse      = "intended_for_someone_else"
 
 	ErrIDCSRF = "csrf_violation"
 )
