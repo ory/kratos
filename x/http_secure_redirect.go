@@ -1,10 +1,11 @@
 package x
 
 import (
-	"github.com/ory/kratos/text"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/golang/gddo/httputil"
 	"github.com/pkg/errors"
