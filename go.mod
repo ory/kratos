@@ -3,17 +3,17 @@ module github.com/ory/kratos
 go 1.16
 
 replace (
-	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
+	github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.20210608105745-bb07a373cc0e
+	github.com/luna-duclos/instrumentedsql => github.com/ory/instrumentedsql v1.2.0
+	github.com/luna-duclos/instrumentedsql/opentracing => github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c
+	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
+	github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 	github.com/ory/kratos-client-go => ./internal/httpclient
-	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
-	github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.20210608105745-bb07a373cc0e
-	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 	github.com/ory/x => github.com/ory/x v0.0.272
-	github.com/oleiade/reflections => github.com/oleiade/reflections v1.0.1
-	github.com/luna-duclos/instrumentedsql => github.com/ory/instrumentedsql v1.2.0
-	github.com/luna-duclos/instrumentedsql/opentracing => github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c
+	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
+	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 )
 
 require (
@@ -31,7 +31,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/fatih/color v1.9.0
-	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.0
@@ -41,6 +40,7 @@ require (
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/pop/v5 v5.3.3
 	github.com/gofrs/uuid v3.2.0+incompatible
+	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.5.0
 	github.com/google/go-github/v27 v27.0.1

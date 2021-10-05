@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/form3tech-oss/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gofrs/uuid"
 
 	gooidc "github.com/coreos/go-oidc"
