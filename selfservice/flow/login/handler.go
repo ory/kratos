@@ -307,6 +307,7 @@ type initializeSelfServiceLoginFlowForBrowsers struct {
 // - `has_session_already`: The user is already signed in.
 // - `aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
 // - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
@@ -391,7 +392,6 @@ type getSelfServiceLoginFlow struct {
 //
 // - `has_session_already`: The user is already signed in.
 // - `self_service_flow_expired`: The flow is expired and you should request a new one.
-// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -488,6 +488,13 @@ type submitSelfServiceLoginFlowBody struct{}
 //   - HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
 //   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
+//
+// If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
+// case of an error, the `error.id` of the JSON response body can be one of:
+//
+// - `has_session_already`: The user is already signed in.
+// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //

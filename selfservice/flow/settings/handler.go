@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/ui/node"
@@ -242,6 +244,7 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 //
 // - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 // - `no_active_session`: No Ory Session was found - sign in a user first.
+// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
@@ -337,6 +340,8 @@ type getSelfServiceSettingsFlow struct {
 //
 // - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 // - `no_active_session`: No Ory Session was found - sign in a user first.
+// - `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+//		identity logged in instead.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -378,7 +383,7 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if pr.IdentityID != sess.Identity.ID {
-		return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
+		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 	}
 
 	if err := h.d.SessionManager().DoesSessionSatisfy(r, sess, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
@@ -467,6 +472,9 @@ type submitSelfServiceSettingsFlowBody struct{}
 //		or initiate a refresh login flow otherwise.
 // - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 // - `no_active_session`: No Ory Session was found - sign in a user first.
+// - `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+//		identity logged in instead.
+// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
