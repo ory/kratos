@@ -144,8 +144,8 @@ func NewScriptField(name string, src string, group Group, integrity string, opts
 
 func NewInputFieldFromSchema(name string, group Group, p jsonschemax.Path, opts ...InputAttributesModifier) *Node {
 	attr := &InputAttributes{
-		Name: name,
-		Type: toFormType(p.Name, p.Type),
+		Name:     name,
+		Type:     toFormType(p.Name, p.Type),
 		Required: p.Required,
 	}
 
@@ -178,6 +178,10 @@ func NewInputFieldFromSchema(name string, group Group, p jsonschemax.Path, opts 
 	var meta Meta
 	if len(p.Title) > 0 {
 		meta.Label = text.NewInfoNodeLabelGenerated(p.Title)
+	}
+
+	if attr.Type == InputAttributeTypeCheckbox {
+		attr.InitialValue = false
 	}
 
 	return &Node{
