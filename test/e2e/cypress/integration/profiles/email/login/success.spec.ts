@@ -27,7 +27,7 @@ describe('Basic email profile with succeeding login flows', () => {
       it('should sign in and be logged in', () => {
         cy.get('input[name="password_identifier"]').type(email)
         cy.get('input[name="password"]').type(password)
-        cy.get('button[type="submit"]').click()
+         cy.submitPasswordForm()
 
         cy.getSession().should((session) => {
           const {identity} = session
@@ -42,7 +42,7 @@ describe('Basic email profile with succeeding login flows', () => {
       it('should sign in with case insensitive identifier', () => {
         cy.get('input[name="password_identifier"]').type(email.toUpperCase())
         cy.get('input[name="password"]').type(password)
-        cy.get('button[type="submit"]').click()
+         cy.submitPasswordForm()
 
         cy.getSession().should((session) => {
           const {identity} = session
@@ -62,7 +62,7 @@ describe('Basic email profile with succeeding login flows', () => {
 
         cy.get('input[name="password_identifier"]').type(email.toUpperCase())
         cy.get('input[name="password"]').type(password)
-        cy.get('button[type="submit"]').click()
+         cy.submitPasswordForm()
 
         cy.url().should('eq', 'https://www.ory.sh/')
       })
@@ -85,7 +85,7 @@ describe('Basic email profile with succeeding login flows', () => {
       cy.get('input[name="password"]').type(password)
 
       cy.longLoginLifespan()
-      cy.get('button[type="submit"]').click()
+       cy.submitPasswordForm()
       cy.get('.messages .message').should(
         'contain.text',
         'The login flow expired'
@@ -94,7 +94,7 @@ describe('Basic email profile with succeeding login flows', () => {
       // try again with long lifespan set
       cy.get('input[name="password_identifier"]').type(email.toUpperCase())
       cy.get('input[name="password"]').type(password)
-      cy.get('button[type="submit"]').click()
+       cy.submitPasswordForm()
 
       // check that redirection has happened
       cy.url().should('eq', 'https://www.ory.sh/')
