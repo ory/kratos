@@ -170,6 +170,23 @@ func (s *Strategy) continueSettingsFlowDisable(w http.ResponseWriter, r *http.Re
 
 	i.DeleteCredentialsType(s.ID())
 
+	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupCodes)
+	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
+	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupDisable)
+	ctxUpdate.Flow.UI.Nodes.Upsert(NewRegenerateLookupNode())
+	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRevealed), false)
+	if err != nil {
+		return err
+	}
+	ctxUpdate.Flow.InternalContext, err = sjson.SetRawBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyRegenerated), []byte("{}"))
+	if err != nil {
+		return err
+	}
+
+	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), ctxUpdate.Flow); err != nil {
+		return err
+	}
+
 	ctxUpdate.UpdateIdentity(i)
 	return nil
 }
@@ -196,7 +213,7 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 
 	ctxUpdate.Flow.UI.Nodes.Upsert(creds.ToNode())
 	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
-	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupDisable)
+	ctxUpdate.Flow.UI.Nodes.Upsert(NewDisableLookupNode())
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewRegenerateLookupNode())
 	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRevealed), true)
 	if err != nil {
