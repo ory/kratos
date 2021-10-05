@@ -24,7 +24,6 @@ describe('Basic email profile with failing login flows', () => {
       })
 
       it('fails when CSRF cookies are missing', () => {
-        cy.clearCookies()
         cy.get('input[name="password_identifier"]').type('i-do-not-exist')
         cy.get('input[name="password"]').type('invalid-password')
 
@@ -32,11 +31,17 @@ describe('Basic email profile with failing login flows', () => {
         cy.location().should((location) => {
           initial = location.search
         })
-        cy.get('button[type="submit"]').click()
+
+        cy.clearAllCookies()
+        cy.submitPasswordForm()
 
         // We end up at a new flow
-        cy.location('search').should('not.eq', initial)
         if (app === 'express') {
+          cy.location().should((location) => {
+            expect(initial).to.not.be.empty
+            expect(location.search).to.not.eq(initial)
+          })
+
           cy.location('pathname').should('include', '/error')
           cy.get('code').should('contain.text', 'csrf_token')
         } else {
@@ -63,8 +68,8 @@ describe('Basic email profile with failing login flows', () => {
         })
 
         it('should show an error when the identifier is missing', () => {
-          cy.get('button[type="submit"]').click()
-          cy.get('*[data-testid="ui.node.message.4000001"]').should(
+          cy.submitPasswordForm()
+          cy.get('*[data-testid="ui/message/4000001"]').should(
             'contain.text',
             'length must be >= 1, but got 0'
           )
@@ -76,9 +81,8 @@ describe('Basic email profile with failing login flows', () => {
             .type(identity)
             .should('have.value', identity)
 
-          cy.get('button[type="submit"]').click()
-
-          cy.get('*[data-testid^="ui.node.message."]').invoke('text').then((text) => {
+          cy.submitPasswordForm()
+          cy.get('*[data-testid^="ui/message/"]').invoke('text').then((text) => {
             expect(text).to.be.oneOf(['length must be >= 1, but got 0', 'Property password is missing.'])
           })
         })
@@ -87,8 +91,8 @@ describe('Basic email profile with failing login flows', () => {
           cy.get('input[name="password_identifier"]').type('i-do-not-exist')
           cy.get('input[name="password"]').type('invalid-password')
 
-          cy.get('button[type="submit"]').click()
-          cy.get('*[data-testid="ui.node.message.4000006"]').should(
+          cy.submitPasswordForm()
+          cy.get('*[data-testid="ui/message/4000006"]').should(
             'contain.text',
             'credentials are invalid'
           )
