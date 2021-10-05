@@ -56,12 +56,6 @@ type InputAttributes struct {
 	// The input's value.
 	FieldValue interface{} `json:"value,omitempty" faker:"string"`
 
-	// The input's initial value. This is primarily used for fields
-	// which are e.g. checkboxes or buttons (active/inactive).
-	// If this field is set on a button, it implies that
-	// clicking the button should trigger the "value" to be set.
-	InitialValue interface{} `json:"initial_value,omitempty" faker:"string"`
-
 	// Mark this input field as required.
 	Required bool `json:"required,omitempty"`
 
