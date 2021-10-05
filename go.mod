@@ -25,7 +25,6 @@ replace (
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.7-0.20210414154423-1157a4212dcb
 	github.com/ory/x => github.com/ory/x v0.0.276
 	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
-	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 )
 
 require (
@@ -35,7 +34,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/avast/retry-go/v3 v3.1.1
-	github.com/bradleyjkemp/cupaloy/v2 v2.3.0
+	github.com/bradleyjkemp/cupaloy/v2 v2.6.0
 	github.com/bwmarrin/discordgo v0.23.0
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
@@ -82,6 +81,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/ory/go-acc v0.2.6
