@@ -24,6 +24,14 @@
           "type": "string",
           "format": "uri",
           "minLength": 10
+        },
+        "tos": {
+          "title": "Accept Terms of Service",
+          "type": "boolean"
+        },
+        "age": {
+          "title": "Age",
+          "type": "number"
         }
       },
       "required": [
