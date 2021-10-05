@@ -27,27 +27,7 @@ describe('Basic email profile with failing login flows', () => {
         cy.get('input[name="password_identifier"]').type('i-do-not-exist')
         cy.get('input[name="password"]').type('invalid-password')
 
-        let initial
-        cy.location().should((location) => {
-          initial = location.search
-        })
-
-        cy.clearAllCookies()
-        cy.submitPasswordForm()
-
-        // We end up at a new flow
-        if (app === 'express') {
-          cy.location().should((location) => {
-            expect(initial).to.not.be.empty
-            expect(location.search).to.not.eq(initial)
-          })
-
-          cy.location('pathname').should('include', '/error')
-          cy.get('code').should('contain.text', 'csrf_token')
-        } else {
-          cy.location('pathname').should('include', '/login')
-          cy.get('.Toastify').should('contain.text', 'A security violation was detected, please fill out the form again.')
-        }
+        cy.shouldHaveCsrfError({app})
       })
 
       it('fails when a disallowed return_to url is requested', () => {

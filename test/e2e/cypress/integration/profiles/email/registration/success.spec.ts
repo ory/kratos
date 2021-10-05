@@ -26,13 +26,16 @@ context('Registration success with email profile', () => {
         const email = gen.email()
         const password = gen.password()
         const website = 'https://www.ory.sh/'
+        const age = 30
 
         cy.get('input[name="traits"]').should('not.exist')
         cy.get('input[name="traits.email"]').type(email)
-        cy.get('input[name="traits.website').type(website)
         cy.get('input[name="password"]').type(password)
+        cy.get('input[name="traits.website').type(website)
+        cy.get('input[name="traits.age"]').type(`${age}`)
+        cy.get('[type="checkbox"][name="traits.tos"]').click({force: true})
 
-        cy.get('button[type="submit"]').click()
+        cy.submitPasswordForm()
         cy.get('pre').should('contain.text', email)
 
         cy.getSession().should((session) => {
@@ -43,6 +46,33 @@ context('Registration success with email profile', () => {
           expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
+          expect(identity.traits.age).to.equal(age)
+          expect(identity.traits.tos).to.equal(true)
+        })
+      })
+
+      it('should sign up with advanced form field values be logged in', () => {
+        const email = gen.email()
+        const password = gen.password()
+
+        cy.get('input[name="traits"]').should('not.exist')
+        cy.get('input[name="traits.email"]').type(email)
+        cy.get('input[name="password"]').type(password)
+        cy.get('input[name="website"]').type('')
+
+        cy.submitPasswordForm()
+        cy.get('pre').should('contain.text', email)
+
+        cy.getSession().should((session) => {
+          const {identity} = session
+          expect(identity.id).to.not.be.empty
+          expect(identity.verifiable_addresses).to.be.undefined
+          expect(identity.schema_id).to.equal('default')
+          expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+          expect(identity.traits.website).to.equal('')
+          expect(identity.traits.email).to.equal(email)
+          expect(identity.traits.age).to.equal(0)
+          expect(identity.traits.tos).to.equal(false)
         })
       })
 
@@ -60,14 +90,13 @@ context('Registration success with email profile', () => {
         cy.get('input[name="traits.email"]').type(email)
         cy.get('input[name="traits.website').type(website)
         cy.get('input[name="password"]').type(password)
-
-        cy.get('button[type="submit"]').click()
+        cy.submitPasswordForm()
         cy.url().should('eq', 'https://www.ory.sh/')
       })
     })
   })
 
-  describe('redirect for express app',() => {
+  describe('redirect for express app', () => {
     it('should redirect to return_to after flow expires', () => {
       // Wait for flow to expire
       cy.useConfigProfile('email')
@@ -88,19 +117,19 @@ context('Registration success with email profile', () => {
       cy.get('input[name="password"]').type(password)
 
       cy.longRegisterLifespan()
-      cy.get('button[type="submit"]').click()
+      cy.submitPasswordForm()
 
-        cy.get('*[data-testid^="ui/message/"]').should(
-          'contain.text',
-          'The registration flow expired'
-        )
+      cy.get('*[data-testid^="ui/message/"]').should(
+        'contain.text',
+        'The registration flow expired'
+      )
 
       // Try again with long lifespan set
       cy.get('input[name="traits"]').should('not.exist')
       cy.get('input[name="traits.email"]').type(email)
       cy.get('input[name="traits.website').type(website)
       cy.get('input[name="password"]').type(password)
-      cy.get('button[type="submit"]').click()
+      cy.submitPasswordForm()
 
       cy.url().should('eq', 'https://www.ory.sh/')
     })

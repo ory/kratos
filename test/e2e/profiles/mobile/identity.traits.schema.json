@@ -31,7 +31,8 @@
         },
         "age": {
           "title": "Age",
-          "type": "number"
+          "type": "number",
+          "maximum": 300
         }
       },
       "required": [
