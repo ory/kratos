@@ -27,6 +27,12 @@
   path: /components/schemas/uiNodeInputAttributes/properties/value/nullable
   value: true
 
+- op: remove
+  path: /components/schemas/uiNodeInputAttributes/properties/initial_value/type
+- op: add
+  path: /components/schemas/uiNodeInputAttributes/properties/initial_value/nullable
+  value: true
+
 - op: replace
   path: /components/schemas/selfServiceError/properties/error
   value:
