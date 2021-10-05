@@ -180,10 +180,6 @@ func NewInputFieldFromSchema(name string, group Group, p jsonschemax.Path, opts 
 		meta.Label = text.NewInfoNodeLabelGenerated(p.Title)
 	}
 
-	if attr.Type == InputAttributeTypeCheckbox {
-		attr.InitialValue = false
-	}
-
 	return &Node{
 		Type:       Input,
 		Attributes: applyInputAttributes(opts, attr),

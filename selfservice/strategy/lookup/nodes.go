@@ -6,31 +6,22 @@ import (
 )
 
 func NewRevealLookupNode() *node.Node {
-	return node.NewInputField(node.LookupReveal, "true", node.LookupGroup, node.InputAttributeTypeSubmit,
-		node.WithInputAttributes(func(a *node.InputAttributes) {
-			a.InitialValue = "false"
-		})).
+	return node.NewInputField(node.LookupReveal, "true", node.LookupGroup, node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsRevealLookup())
 }
 
 func NewRegenerateLookupNode() *node.Node {
 	return node.NewInputField(
-		node.LookupRegenerate, "true", node.LookupGroup, node.InputAttributeTypeSubmit, node.WithInputAttributes(func(a *node.InputAttributes) {
-			a.InitialValue = "false"
-		})).
+		node.LookupRegenerate, "true", node.LookupGroup, node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsRegenerateLookup())
 }
 
 func NewDisableLookupNode() *node.Node {
-	return node.NewInputField(node.LookupDisable, "true", node.LookupGroup, node.InputAttributeTypeSubmit, node.WithInputAttributes(func(a *node.InputAttributes) {
-		a.InitialValue = "false"
-	})).
+	return node.NewInputField(node.LookupDisable, "true", node.LookupGroup, node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsDisableLookup())
 }
 
 func NewConfirmLookupNode() *node.Node {
-	return node.NewInputField(node.LookupConfirm, "true", node.LookupGroup, node.InputAttributeTypeSubmit, node.WithInputAttributes(func(a *node.InputAttributes) {
-		a.InitialValue = "false"
-	})).
+	return node.NewInputField(node.LookupConfirm, "true", node.LookupGroup, node.InputAttributeTypeSubmit).
 		WithMetaLabel(text.NewInfoSelfServiceSettingsLookupConfirm())
 }
