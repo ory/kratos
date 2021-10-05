@@ -90,7 +90,7 @@ context('Registration success with email profile', () => {
       cy.longRegisterLifespan()
       cy.get('button[type="submit"]').click()
 
-        cy.get('*[data-testid^="ui.node.message."]').should(
+        cy.get('*[data-testid^="ui/message/"]').should(
           'contain.text',
           'The registration flow expired'
         )
