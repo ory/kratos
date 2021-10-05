@@ -29,6 +29,8 @@ type NeedsPrivilegedSessionError struct {
 	Message string `json:"message"`
 	// A human-readable reason for the error
 	Reason *string `json:"reason,omitempty"`
+	// Points to where to redirect the user to next.
+	RedirectBrowserTo string `json:"redirect_browser_to"`
 	// The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID.
 	Request *string `json:"request,omitempty"`
 	// The status description
@@ -39,9 +41,10 @@ type NeedsPrivilegedSessionError struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewNeedsPrivilegedSessionError(message string) *NeedsPrivilegedSessionError {
+func NewNeedsPrivilegedSessionError(message string, redirectBrowserTo string) *NeedsPrivilegedSessionError {
 	this := NeedsPrivilegedSessionError{}
 	this.Message = message
+	this.RedirectBrowserTo = redirectBrowserTo
 	return &this
 }
 
@@ -237,6 +240,30 @@ func (o *NeedsPrivilegedSessionError) SetReason(v string) {
 	o.Reason = &v
 }
 
+// GetRedirectBrowserTo returns the RedirectBrowserTo field value
+func (o *NeedsPrivilegedSessionError) GetRedirectBrowserTo() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.RedirectBrowserTo
+}
+
+// GetRedirectBrowserToOk returns a tuple with the RedirectBrowserTo field value
+// and a boolean to check if the value has been set.
+func (o *NeedsPrivilegedSessionError) GetRedirectBrowserToOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.RedirectBrowserTo, true
+}
+
+// SetRedirectBrowserTo sets field value
+func (o *NeedsPrivilegedSessionError) SetRedirectBrowserTo(v string) {
+	o.RedirectBrowserTo = v
+}
+
 // GetRequest returns the Request field value if set, zero value otherwise.
 func (o *NeedsPrivilegedSessionError) GetRequest() string {
 	if o == nil || o.Request == nil {
@@ -320,6 +347,9 @@ func (o NeedsPrivilegedSessionError) MarshalJSON() ([]byte, error) {
 	}
 	if o.Reason != nil {
 		toSerialize["reason"] = o.Reason
+	}
+	if true {
+		toSerialize["redirect_browser_to"] = o.RedirectBrowserTo
 	}
 	if o.Request != nil {
 		toSerialize["request"] = o.Request
