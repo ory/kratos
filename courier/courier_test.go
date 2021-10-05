@@ -56,7 +56,7 @@ func TestNewSMTP(t *testing.T) {
 	assert.Equal(t, smtp.Dialer.SSL, true, "Implicit TLS should be enabled")
 
 	//Should allow cleartext => dialer.StartTLSPolicy = gomail.OpportunisticStartTLS and dialer.SSL = false
-	smtp = setupConfig("smtp://foo:bar@my-server:1234/?skip_starttls=true")
+	smtp = setupConfig("smtp://foo:bar@my-server:1234/?disable_starttls=true")
 	assert.Equal(t, smtp.Dialer.StartTLSPolicy, gomail.OpportunisticStartTLS, "StartTLS is enforced")
 	assert.Equal(t, smtp.Dialer.SSL, false, "Implicit TLS should not be enabled")
 }

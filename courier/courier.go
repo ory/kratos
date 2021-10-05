@@ -59,7 +59,7 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 	switch uri.Scheme {
 	case "smtp":
 		// Enforcing StartTLS by default for security best practices (config review, etc.)
-		skipStartTLS, _ := strconv.ParseBool(uri.Query().Get("skip_starttls"))
+		skipStartTLS, _ := strconv.ParseBool(uri.Query().Get("disable_starttls"))
 		if !skipStartTLS {
 			// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
 			dialer.TLSConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, ServerName: uri.Hostname()}
