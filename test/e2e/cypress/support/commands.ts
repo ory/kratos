@@ -627,3 +627,31 @@ Cypress.Commands.add('submitPasswordForm',() => {
   cy.get('[name="method"][value="password"]').click()
   cy.get('[name="method"][value="password"]:disabled').should('not.exist')
 })
+
+Cypress.Commands.add('shouldHaveCsrfError',({app}: {app: 'express' | 'react', }) => {
+  let initial
+  let pathname
+  cy.location().should((location) => {
+    initial = location.search
+    pathname = location.pathname
+  })
+
+  cy.clearAllCookies()
+  cy.submitPasswordForm()
+
+  // We end up at a new flow
+  if (app === 'express') {
+    cy.location().should((location) => {
+      expect(initial).to.not.be.empty
+      expect(location.search).to.not.eq(initial)
+    })
+
+    cy.location('pathname').should('include', '/error')
+    cy.get('code').should('contain.text', 'csrf_token')
+  } else {
+    cy.location('pathname').should((got) => {
+      expect(got).to.eql(pathname)
+    })
+    cy.get('.Toastify').should('contain.text', 'A security violation was detected, please fill out the form again.')
+  }
+})

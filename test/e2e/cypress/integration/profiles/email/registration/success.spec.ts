@@ -58,7 +58,8 @@ context('Registration success with email profile', () => {
         cy.get('input[name="traits"]').should('not.exist')
         cy.get('input[name="traits.email"]').type(email)
         cy.get('input[name="password"]').type(password)
-        cy.get('input[name="website"]').type('')
+        const website = 'https://www.ory.sh/'
+        cy.get('input[name="traits.website"]').type(website)
 
         cy.submitPasswordForm()
         cy.get('pre').should('contain.text', email)
@@ -69,9 +70,9 @@ context('Registration success with email profile', () => {
           expect(identity.verifiable_addresses).to.be.undefined
           expect(identity.schema_id).to.equal('default')
           expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
-          expect(identity.traits.website).to.equal('')
+          expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
-          expect(identity.traits.age).to.equal(0)
+          expect(identity.traits.age).to.be.undefined
           expect(identity.traits.tos).to.equal(false)
         })
       })

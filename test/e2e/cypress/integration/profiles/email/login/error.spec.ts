@@ -49,9 +49,13 @@ describe('Basic email profile with failing login flows', () => {
 
         it('should show an error when the identifier is missing', () => {
           cy.submitPasswordForm()
-          cy.get('*[data-testid="ui/message/4000001"]').should(
+          cy.get('*[data-testid="ui/message/4000002"]').should(
             'contain.text',
-            'length must be >= 1, but got 0'
+            'Property password_identifier is missing'
+          )
+          cy.get('*[data-testid="ui/message/4000002"]').should(
+            'contain.text',
+            'Property password is missing'
           )
         })
 

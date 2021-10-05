@@ -78,7 +78,7 @@ context('MFA Profile', () => {
             'Your changes have been saved!'
           )
 
-          cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
+          cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
           cy.get('input[name="totp_code"]').then(($e) => {
             cy.wrap($e).type(authenticator.generate(secret))
           })
@@ -95,7 +95,7 @@ context('MFA Profile', () => {
           })
 
           // Use TOTP
-          cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
+          cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
           cy.get('button[name="webauthn_login_trigger"]').click()
           cy.getSession({
             expectAal: 'aal2',
@@ -110,7 +110,7 @@ context('MFA Profile', () => {
           })
 
           // Use lookup
-          cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
+          cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
           cy.get('input[name="lookup_secret"]').then(($e) => {
             cy.wrap($e).type(codes[1])
           })

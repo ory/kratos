@@ -43,7 +43,7 @@ context('MFA Profile', () => {
 
       cy.get('.logout a').click()
       cy.location().should((loc) => {
-        expect(loc.href).to.include('/auth/login')
+        expect(loc.href).to.include('/login')
       })
       cy.get('input[name="password_identifier"]').type(email)
       cy.get('input[name="password"]').type(password)
@@ -51,7 +51,7 @@ context('MFA Profile', () => {
 
       // MFA is now requested
       cy.location().should((loc) => {
-        expect(loc.href).to.include('/auth/login')
+        expect(loc.href).to.include('/login')
       })
       cy.get('form .messages .message').should(
         'contain.text',
@@ -62,7 +62,7 @@ context('MFA Profile', () => {
       })
       cy.get('*[name="method"][value="totp"]').click()
       cy.location().should((loc) => {
-        expect(loc.href).to.not.include('/auth/login')
+        expect(loc.href).to.not.include('/login')
       })
       cy.getSession({
         expectAal: 'aal2',
@@ -97,9 +97,9 @@ context('MFA Profile', () => {
       cy.get('*[name="totp_unlink"]').should('exist')
 
       // Let's try to do 2FA
-      cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
+      cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
       cy.location().should((loc) => {
-        expect(loc.href).to.include('/auth/login')
+        expect(loc.href).to.include('/login')
       })
       cy.get('*[name="method"][value="password"]').should('not.exist')
 
@@ -133,9 +133,9 @@ context('MFA Profile', () => {
       cy.get('*[name="totp_unlink"]').should('not.exist')
 
       // 2FA should be gone
-      cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
+      cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
       cy.location().should((loc) => {
-        expect(loc.href).to.include('/auth/login')
+        expect(loc.href).to.include('/login')
       })
       cy.get('*[name="method"][value="totp"]').should('not.exist')
 
@@ -151,9 +151,9 @@ context('MFA Profile', () => {
       cy.get('*[name="method"][value="totp"]').click()
 
       // Old secret no longer works in login
-      cy.visit(APP_URL + '/auth/login?aal=aal2&refresh=true')
+      cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
       cy.location().should((loc) => {
-        expect(loc.href).to.include('/auth/login')
+        expect(loc.href).to.include('/login')
       })
       cy.get('input[name="totp_code"]').then(($e) => {
         cy.wrap($e).type(authenticator.generate(secret))
@@ -177,9 +177,9 @@ context('MFA Profile', () => {
     })
 
     it('should not show totp as an option if not configured', () => {
-      cy.visit(APP_URL + '/auth/login?aal=aal2')
+      cy.visit(APP_URL + '/login?aal=aal2')
       cy.location().should((loc) => {
-        expect(loc.href).to.include('/auth/login')
+        expect(loc.href).to.include('/login')
       })
 
       cy.get('*[name="method"][value="totp"]').should('not.exist')

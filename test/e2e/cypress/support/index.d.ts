@@ -166,9 +166,23 @@ declare global {
       expectSettingsSaved(): Chainable<void>
 
       clearCookies(options?: Partial<Loggable & Timeoutable & { domain: null | string }>): Chainable<null>
+
+      /**
+       * A workaround for cypress not being able to clear cookies properly
+       */
       clearAllCookies(): Chainable<null>
 
+      /**
+       * Submits a password form by clicking the button with method=password
+       */
       submitPasswordForm(): Chainable<null>
+
+      /**
+       * Expect a CSRF error to occur
+       *
+       * @param opts
+       */
+      shouldHaveCsrfError(opts: {app: string }) : Chainable<void>
     }
   }
 }
