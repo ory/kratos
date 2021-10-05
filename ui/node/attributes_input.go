@@ -146,6 +146,7 @@ func NewInputFieldFromSchema(name string, group Group, p jsonschemax.Path, opts 
 	attr := &InputAttributes{
 		Name: name,
 		Type: toFormType(p.Name, p.Type),
+		Required: p.Required,
 	}
 
 	// If format is set, we can make a more distinct decision:
