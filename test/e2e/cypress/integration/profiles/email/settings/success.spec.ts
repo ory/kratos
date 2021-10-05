@@ -1,11 +1,23 @@
-import { APP_URL, gen, website } from '../../../../helpers'
+import {APP_URL, gen, website} from '../../../../helpers'
+import {routes as express} from "../../../../helpers/express";
+import {routes as react} from "../../../../helpers/react";
 
-context('Email Profile', () => {
-  describe('Settings Flow Success', () => {
-    before(() => {
-      cy.useConfigProfile('email')
-    })
-
+context('Settings success with email profile', () => {
+  [
+    {
+      route: express.settings,
+      base: express.base,
+      app: 'express', profile: 'email',
+      login: express.login
+    },
+    {
+      route: react.settings,
+      base: react.base,
+      app: 'react', profile: 'spa',
+      login: react.login
+    }
+  ].forEach(({route, profile, app, base, login}) => {
+    describe(`for app ${app}`, () => {
     let email = gen.email()
     let password = gen.password()
 
@@ -13,21 +25,22 @@ context('Email Profile', () => {
     const down = (value) => value.replace(/not-/, '')
 
     before(() => {
-      cy.register({ email, password, fields: { 'traits.website': website } })
+      cy.useConfigProfile(profile)
+      cy.registerApi({email, password, fields: {'traits.website': website}})
     })
 
     beforeEach(() => {
       cy.clearCookies()
-      cy.login({ email, password })
-      cy.visit(APP_URL + '/settings')
+      cy.login({email, password, cookieUrl: base})
+      cy.visit(route)
     })
 
     it('shows all settings forms', () => {
-      cy.get('p').should('contain.text', 'Profile')
+      cy.get('h3').should('contain.text', 'Profile')
       cy.get('input[name="traits.email"]').should('contain.value', email)
       cy.get('input[name="traits.website"]').should('contain.value', website)
 
-      cy.get('p').should('contain.text', 'Password')
+      cy.get('h3').should('contain.text', 'Password')
       cy.get('input[name="password"]').should('be.empty')
     })
 
@@ -36,36 +49,32 @@ context('Email Profile', () => {
         // Once input weak password to test which error message is cleared after updating successfully
         cy.get('input[name="password"]').clear().type('123')
         cy.get('button[value="password"]').click()
-        cy.get('.container').should(
-          'not.contain.text',
-          'Your changes have been saved!'
-        )
-        cy.get('.container').should(
-          'contain.text',
-          'The password can not be used'
+        cy.get('[data-testid="ui/message/1050001"]').should(
+          'not.exist')
+        cy.get('[data-testid="ui/message/4000005"]').should(
+          'exist'
         )
         cy.get('input[name="password"]').should('be.empty')
 
         password = up(password)
         cy.get('input[name="password"]').clear().type(password)
         cy.get('button[value="password"]').click()
-        cy.get('.container').should(
-          'contain.text',
-          'Your changes have been saved!'
-        )
-        cy.get('.container').should(
-          'not.contain.text',
-          'The password can not be used'
+        cy.expectSettingsSaved()
+        cy.get('[data-testid="ui/message/4000005"]').should(
+          'not.exist'
         )
         cy.get('input[name="password"]').should('be.empty')
       })
 
       it('is unable to log in with the old password', () => {
+        cy.visit(base)
         cy.clearCookies()
+        cy.visit(login)
         cy.login({
           email: email,
           password: down(password),
-          expectSession: false
+          expectSession: false,
+          cookieUrl: base
         })
       })
 
@@ -75,13 +84,10 @@ context('Email Profile', () => {
         cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
         cy.get('button[value="password"]').click()
 
-        cy.reauth({ expect: { email }, type: { password: down(password) } })
+        cy.reauth({expect: {email}, type: {password: down(password)}})
 
         cy.url().should('include', '/settings')
-        cy.get('.container').should(
-          'contain.text',
-          'Your changes have been saved!'
-        )
+        cy.expectSettingsSaved()
         cy.get('input[name="password"]').should('be.empty')
       })
     })
@@ -92,10 +98,7 @@ context('Email Profile', () => {
           .clear()
           .type('https://github.com/ory')
         cy.get('button[value="profile"]').click()
-        cy.get('.container').should(
-          'contain.text',
-          'Your changes have been saved!'
-        )
+        cy.expectSettingsSaved()
         cy.get('input[name="traits.website"]').should(
           'contain.value',
           'https://github.com/ory'
@@ -106,17 +109,15 @@ context('Email Profile', () => {
         email = up(email)
         cy.get('input[name="traits.email"]').clear().type(email)
         cy.get('button[value="profile"]').click()
-        cy.get('.container').should(
-          'contain.text',
-          'Your changes have been saved!'
-        )
+        cy.expectSettingsSaved()
         cy.get('input[name="traits.email"]').should('contain.value', email)
       })
 
       it('is unable to log in with the old email', () => {
+        cy.visit(base)
         cy.clearCookies()
-        cy.visit(APP_URL + '/auth/login')
-        cy.login({ email: down(email), password, expectSession: false })
+        cy.visit(login)
+        cy.login({email: down(email), password, expectSession: false, cookieUrl: base})
       })
 
       it('modifies a protected trait with unprivileged session', () => {
@@ -125,15 +126,13 @@ context('Email Profile', () => {
         cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
         cy.get('button[value="profile"]').click()
 
-        cy.reauth({ expect: { email: down(email) }, type: { password } })
+        cy.reauth({expect: {email: down(email)}, type: {password}})
 
         cy.url().should('include', '/settings')
-        cy.get('.container').should(
-          'contain.text',
-          'Your changes have been saved!'
-        )
+        cy.expectSettingsSaved()
         cy.get('input[name="traits.email"]').should('contain.value', email)
       })
     })
+  })
   })
 })
