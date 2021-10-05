@@ -32,8 +32,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/fatih/color v1.9.0
-	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
-	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.20.0
@@ -43,6 +41,7 @@ require (
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/pop/v5 v5.3.3
 	github.com/gofrs/uuid v3.2.0+incompatible
+	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/mock v1.6.0
