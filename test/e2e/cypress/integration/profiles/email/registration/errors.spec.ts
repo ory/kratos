@@ -34,25 +34,7 @@ describe('Registration failures with email profile', () => {
           .type('123456')
           .should('have.value', '123456')
 
-        let initial
-        cy.location().should((location) => {
-          initial = location.search
-        })
-
-        cy.clearAllCookies()
-        cy.submitPasswordForm()
-
-        // We end up at a new flow
-        cy.location().should((location) => {
-          expect(location.search).to.not.eq(initial)
-        })
-        if (app === 'express') {
-          cy.location('pathname').should('include', '/error')
-          cy.get('code').should('contain.text', 'csrf_token')
-        } else {
-          cy.location('pathname').should('include', '/registration')
-          cy.get('.Toastify').should('contain.text', 'A security violation was detected, please fill out the form again.')
-        }
+        cy.shouldHaveCsrfError({app})
       })
 
       it('fails when a disallowed return_to url is requested', () => {
@@ -133,13 +115,36 @@ describe('Registration failures with email profile', () => {
         it('should show an error when the website is too short', () => {
           cy.get('input[name="traits.website"]').type('http://s')
 
-          // fixme https://github.com/ory/kratos/issues/368
-          cy.get('input[name="password"]').type(password)
-
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message"]').should(
             'contain.text',
             'length must be >= 10'
+          )
+        })
+
+        it('should show an error when required params are missing', () => {
+          cy.submitPasswordForm()
+          cy.get('*[data-testid^="ui/message"]').should(
+            'contain.text',
+            'Property website is missing.'
+          )
+          cy.get('*[data-testid^="ui/message"]').should(
+            'contain.text',
+            'Property email is missing.'
+          )
+          cy.get('*[data-testid^="ui/message"]').should(
+            'contain.text',
+            'Property password is missing.'
+          )
+        })
+
+        it('should show an error when the age is too high', () => {
+          cy.get('input[name="traits.age"]').type('600')
+
+          cy.submitPasswordForm()
+          cy.get('*[data-testid^="ui/message"]').should(
+            'contain.text',
+            'must be <= 300 but found 600'
           )
         })
       })
