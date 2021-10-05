@@ -26,8 +26,6 @@ describe('Registration failures with email profile', () => {
       const password = gen.password()
 
       it('fails when CSRF cookies are missing', () => {
-        cy.clearCookies()
-
         cy.get('input[name="traits.website"]').type('https://www.ory.sh')
         cy.get('input[name="traits.email"]')
           .type(identity)
@@ -40,10 +38,14 @@ describe('Registration failures with email profile', () => {
         cy.location().should((location) => {
           initial = location.search
         })
-        cy.get('button[type="submit"]').click()
+
+        cy.clearAllCookies()
+        cy.submitPasswordForm()
 
         // We end up at a new flow
-        cy.location('search').should('not.eq', initial)
+        cy.location().should((location) => {
+          expect(location.search).to.not.eq(initial)
+        })
         if (app === 'express') {
           cy.location('pathname').should('include', '/error')
           cy.get('code').should('contain.text', 'csrf_token')
@@ -74,8 +76,8 @@ describe('Registration failures with email profile', () => {
             .type('123456')
             .should('have.value', '123456')
 
-          cy.get('button[type="submit"]').click()
-          cy.get('*[data-testid^="ui.node.message"]').should('contain.text', 'data breaches')
+          cy.submitPasswordForm()
+          cy.get('*[data-testid^="ui/message"]').should('contain.text', 'data breaches')
         })
 
         it('should show an error when the password is too similar', () => {
@@ -83,17 +85,16 @@ describe('Registration failures with email profile', () => {
           cy.get('input[name="traits.email"]').type(identity)
           cy.get('input[name="password"]').type(identity)
 
-          cy.get('button[type="submit"]').click()
-          cy.get('*[data-testid^="ui.node.message"]').should('contain.text', 'too similar')
+          cy.submitPasswordForm()
+          cy.get('*[data-testid^="ui/message"]').should('contain.text', 'too similar')
         })
 
         it('should show an error when the password is empty', () => {
           cy.get('input[name="traits.website"]').type('https://www.ory.sh')
           cy.get('input[name="traits.email"]').type(identity)
 
-          cy.get('button[type="submit"]').click()
-
-          cy.get('*[data-testid^="ui.node.message."]').invoke('text').then((text) => {
+          cy.submitPasswordForm()
+          cy.get('*[data-testid^="ui/message/"]').invoke('text').then((text) => {
             expect(text).to.be.oneOf(['length must be >= 1, but got 0', 'Property password is missing.'])
           })
         })
@@ -102,8 +103,8 @@ describe('Registration failures with email profile', () => {
           cy.get('input[name="traits.website"]').type('https://www.ory.sh')
           cy.get('input[name="password"]').type(password)
 
-          cy.get('button[type="submit"]').click()
-          cy.get('*[data-testid^="ui.node.message."]').invoke('text').then((text) => {
+          cy.submitPasswordForm()
+          cy.get('*[data-testid^="ui/message/"]').invoke('text').then((text) => {
             expect(text).to.be.oneOf(['"" is not valid "email"length must be >= 3, but got 0', 'Property email is missing.'])
           })
         })
@@ -112,13 +113,13 @@ describe('Registration failures with email profile', () => {
           cy.get('input[name="traits.website"]').type('https://www.ory.sh')
           cy.get('input[name="password"]').type('not-an-email')
 
-          cy.get('button[type="submit"]').click()
-          cy.get('*[data-testid="ui.node.message.4000001"], *[data-testid="ui.node.message.4000002"]').should('exist')
+          cy.submitPasswordForm()
+          cy.get('*[data-testid="ui/message/4000001"], *[data-testid="ui/message/4000002"]').should('exist')
         })
 
         it('should show a missing indicator if no fields are set', () => {
-          cy.get('button[type="submit"]').click()
-          cy.get('*[data-testid="ui.node.message.4000001"], *[data-testid="ui.node.message.4000002"]').should('exist')
+          cy.submitPasswordForm()
+          cy.get('*[data-testid="ui/message/4000001"], *[data-testid="ui/message/4000002"]').should('exist')
         })
 
         it('should show an error when the website is not a valid URI', () => {
@@ -135,8 +136,8 @@ describe('Registration failures with email profile', () => {
           // fixme https://github.com/ory/kratos/issues/368
           cy.get('input[name="password"]').type(password)
 
-          cy.get('button[type="submit"]').click()
-          cy.get('*[data-testid^="ui.node.message"]').should(
+          cy.submitPasswordForm()
+          cy.get('*[data-testid^="ui/message"]').should(
             'contain.text',
             'length must be >= 10'
           )
