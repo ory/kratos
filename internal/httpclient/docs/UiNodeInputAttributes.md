@@ -5,6 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Disabled** | **bool** | Sets the input&#39;s disabled field to true or false. | 
+**InitialValue** | Pointer to **interface{}** | The input&#39;s initial value. | [optional] 
 **Label** | Pointer to [**UiText**](UiText.md) |  | [optional] 
 **Name** | **string** | The input&#39;s element name. | 
 **NodeType** | **string** |  | 
@@ -53,6 +54,41 @@ and a boolean to check if the value has been set.
 SetDisabled sets Disabled field to given value.
 
 
+### GetInitialValue
+
+`func (o *UiNodeInputAttributes) GetInitialValue() interface{}`
+
+GetInitialValue returns the InitialValue field if non-nil, zero value otherwise.
+
+### GetInitialValueOk
+
+`func (o *UiNodeInputAttributes) GetInitialValueOk() (*interface{}, bool)`
+
+GetInitialValueOk returns a tuple with the InitialValue field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetInitialValue
+
+`func (o *UiNodeInputAttributes) SetInitialValue(v interface{})`
+
+SetInitialValue sets InitialValue field to given value.
+
+### HasInitialValue
+
+`func (o *UiNodeInputAttributes) HasInitialValue() bool`
+
+HasInitialValue returns a boolean if a field has been set.
+
+### SetInitialValueNil
+
+`func (o *UiNodeInputAttributes) SetInitialValueNil(b bool)`
+
+ SetInitialValueNil sets the value for InitialValue to be an explicit nil
+
+### UnsetInitialValue
+`func (o *UiNodeInputAttributes) UnsetInitialValue()`
+
+UnsetInitialValue ensures that no value is present for InitialValue, not even an explicit nil
 ### GetLabel
 
 `func (o *UiNodeInputAttributes) GetLabel() UiText`

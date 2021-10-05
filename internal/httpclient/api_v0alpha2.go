@@ -221,6 +221,11 @@ type V0alpha2Api interface {
 		})
 		```
 
+		This request may fail due to several reasons. The `error.id` can be one of:
+
+		`has_session_already`: The user is already signed in.
+		`self_service_flow_expired`: The flow is expired and you should request a new one.
+
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiGetSelfServiceLoginFlowRequest
@@ -283,6 +288,11 @@ type V0alpha2Api interface {
 		})
 		```
 
+		This request may fail due to several reasons. The `error.id` can be one of:
+
+		`has_session_already`: The user is already signed in.
+		`self_service_flow_expired`: The flow is expired and you should request a new one.
+
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest
@@ -306,6 +316,14 @@ type V0alpha2Api interface {
 		to sign in with the second factor or change the configuration.
 
 		You can access this endpoint without credentials when using Ory Kratos' Admin API.
+
+		If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+		case of an error, the `error.id` of the JSON response body can be one of:
+
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+		`no_active_session`: No Ory Session was found - sign in a user first.
+		`intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+		identity logged in instead.
 
 		More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -381,7 +399,13 @@ type V0alpha2Api interface {
 		exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
 		`?refresh=true` was set.
 
-		If this endpoint is called via an AJAX request, the response contains the login flow without a redirect.
+		If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+		case of an error, the `error.id` of the JSON response body can be one of:
+
+		`has_session_already`: The user is already signed in.
+		`aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
@@ -409,6 +433,12 @@ type V0alpha2Api interface {
 		You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 		Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
 		you vulnerable to a variety of CSRF attacks, including CSRF login attacks.
+
+		In the case of an error, the `error.id` of the JSON response body can be one of:
+
+		`has_session_already`: The user is already signed in.
+		`aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -489,6 +519,13 @@ type V0alpha2Api interface {
 		`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 		exists already, the browser will be redirected to `urls.default_redirect_url`.
 
+		If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+		case of an error, the `error.id` of the JSON response body can be one of:
+
+		`has_session_already`: The user is already signed in.
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
 		If this endpoint is called via an AJAX request, the response contains the registration flow without a redirect.
 
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
@@ -517,6 +554,11 @@ type V0alpha2Api interface {
 		You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 		Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
 		you vulnerable to a variety of CSRF attacks.
+
+		In the case of an error, the `error.id` of the JSON response body can be one of:
+
+		`has_session_already`: The user is already signed in.
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -550,6 +592,13 @@ type V0alpha2Api interface {
 		credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 		to sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.
 
+		If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+		case of an error, the `error.id` of the JSON response body can be one of:
+
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+		`no_active_session`: No Ory Session was found - sign in a user first.
+		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 		More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -579,6 +628,11 @@ type V0alpha2Api interface {
 		Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 		credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 		to sign in with the second factor or change the configuration.
+
+		In the case of an error, the `error.id` of the JSON response body can be one of:
+
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+		`no_active_session`: No Ory Session was found - sign in a user first.
 
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -663,6 +717,13 @@ type V0alpha2Api interface {
 		HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
 		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
+
+		If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
+		case of an error, the `error.id` of the JSON response body can be one of:
+
+		`has_session_already`: The user is already signed in.
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -770,6 +831,13 @@ type V0alpha2Api interface {
 		HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 		HTTP 400 on form validation errors.
 
+		If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
+		case of an error, the `error.id` of the JSON response body can be one of:
+
+		`has_session_already`: The user is already signed in.
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest
@@ -811,6 +879,18 @@ type V0alpha2Api interface {
 		Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 		credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 		to sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.
+
+		If this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the
+		case of an error, the `error.id` of the JSON response body can be one of:
+
+		`needs_privileged_session`: The identity requested to change something that needs a privileged session. Redirect
+		the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
+		or initiate a refresh login flow otherwise.
+		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+		`no_active_session`: No Ory Session was found - sign in a user first.
+		`intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+		identity logged in instead.
+		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
 		More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -880,7 +960,7 @@ type V0alpha2Api interface {
 		console.log(session)
 		```
 
-		Depending on your configuration this endpoint might return a 422 status code if the session has a lower Authenticator
+		Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 		Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 		credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 		to sign in with the second factor or change the configuration.
@@ -898,6 +978,11 @@ type V0alpha2Api interface {
 		if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 
 		If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+
+		As explained above, this request may fail due to several reasons. The `error.id` can be one of:
+
+		`no_active_session`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
+		`aal_needs_upgrade`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiToSessionRequest
 	*/
@@ -2386,6 +2471,11 @@ res.render('login', flow)
 })
 ```
 
+This request may fail due to several reasons. The `error.id` can be one of:
+
+`has_session_already`: The user is already signed in.
+`self_service_flow_expired`: The flow is expired and you should request a new one.
+
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiGetSelfServiceLoginFlowRequest
@@ -2726,6 +2816,11 @@ res.render('registration', flow)
 })
 ```
 
+This request may fail due to several reasons. The `error.id` can be one of:
+
+`has_session_already`: The user is already signed in.
+`self_service_flow_expired`: The flow is expired and you should request a new one.
+
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiGetSelfServiceRegistrationFlowRequest
@@ -2898,6 +2993,14 @@ credentials (which would result in AAL2) but the session has only AAL1. If this 
 to sign in with the second factor or change the configuration.
 
 You can access this endpoint without credentials when using Ory Kratos' Admin API.
+
+If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+case of an error, the `error.id` of the JSON response body can be one of:
+
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+`no_active_session`: No Ory Session was found - sign in a user first.
+`intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+identity logged in instead.
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -3356,7 +3459,13 @@ If this endpoint is opened as a link in the browser, it will be redirected to
 exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
 `?refresh=true` was set.
 
-If this endpoint is called via an AJAX request, the response contains the login flow without a redirect.
+If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+case of an error, the `error.id` of the JSON response body can be one of:
+
+`has_session_already`: The user is already signed in.
+`aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
@@ -3444,6 +3553,16 @@ func (a *V0alpha2ApiService) InitializeSelfServiceLoginFlowForBrowsersExecute(r 
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
@@ -3505,6 +3624,12 @@ To fetch an existing login flow call `/self-service/login/flows?flow=<flow_id>`.
 You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
 you vulnerable to a variety of CSRF attacks, including CSRF login attacks.
+
+In the case of an error, the `error.id` of the JSON response body can be one of:
+
+`has_session_already`: The user is already signed in.
+`aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -3927,6 +4052,13 @@ If this endpoint is opened as a link in the browser, it will be redirected to
 `selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
 exists already, the browser will be redirected to `urls.default_redirect_url`.
 
+If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+case of an error, the `error.id` of the JSON response body can be one of:
+
+`has_session_already`: The user is already signed in.
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
 If this endpoint is called via an AJAX request, the response contains the registration flow without a redirect.
 
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
@@ -4054,6 +4186,11 @@ To fetch an existing registration flow call `/self-service/registration/flows?fl
 You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
 Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
 you vulnerable to a variety of CSRF attacks.
+
+In the case of an error, the `error.id` of the JSON response body can be one of:
+
+`has_session_already`: The user is already signed in.
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -4199,6 +4336,13 @@ Assurance Level (AAL) than is possible for the identity. This can happen if the 
 credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 to sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.
 
+If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+case of an error, the `error.id` of the JSON response body can be one of:
+
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+`no_active_session`: No Ory Session was found - sign in a user first.
+`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -4279,6 +4423,16 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowForBrowsersExecute
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
 		if localVarHTTPResponse.StatusCode == 401 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
@@ -4353,6 +4507,11 @@ Depending on your configuration this endpoint might return a 403 error if the se
 Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 to sign in with the second factor or change the configuration.
+
+In the case of an error, the `error.id` of the JSON response body can be one of:
+
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+`no_active_session`: No Ory Session was found - sign in a user first.
 
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -4774,6 +4933,13 @@ Browser flows with an accept header of `application/json` will not redirect but 
 HTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;
 HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
+
+If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
+case of an error, the `error.id` of the JSON response body can be one of:
+
+`has_session_already`: The user is already signed in.
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -5348,6 +5514,13 @@ HTTP 200 and a application/json body with the signed in identity and a `Set-Cook
 HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
+If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
+case of an error, the `error.id` of the JSON response body can be one of:
+
+`has_session_already`: The user is already signed in.
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiSubmitSelfServiceRegistrationFlowRequest
@@ -5517,6 +5690,18 @@ Depending on your configuration this endpoint might return a 403 error if the se
 Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 to sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.
+
+If this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the
+case of an error, the `error.id` of the JSON response body can be one of:
+
+`needs_privileged_session`: The identity requested to change something that needs a privileged session. Redirect
+the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
+or initiate a refresh login flow otherwise.
+`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+`no_active_session`: No Ory Session was found - sign in a user first.
+`intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+identity logged in instead.
+`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -5863,7 +6048,7 @@ const session = await client.toSession("the-session-token")
 console.log(session)
 ```
 
-Depending on your configuration this endpoint might return a 422 status code if the session has a lower Authenticator
+Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
 Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
 credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
 to sign in with the second factor or change the configuration.
@@ -5881,6 +6066,11 @@ if the `Authorization: bearer <ory-session-token>` HTTP header was set with a va
 if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 
 If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+
+As explained above, this request may fail due to several reasons. The `error.id` can be one of:
+
+`no_active_session`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
+`aal_needs_upgrade`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiToSessionRequest
 */
@@ -5971,7 +6161,7 @@ func (a *V0alpha2ApiService) ToSessionExecute(r V0alpha2ApiApiToSessionRequest) 
 			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
-		if localVarHTTPResponse.StatusCode == 422 {
+		if localVarHTTPResponse.StatusCode == 403 {
 			var v JsonError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {

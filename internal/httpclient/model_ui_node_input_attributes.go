@@ -18,8 +18,10 @@ import (
 // UiNodeInputAttributes InputAttributes represents the attributes of an input node
 type UiNodeInputAttributes struct {
 	// Sets the input's disabled field to true or false.
-	Disabled bool    `json:"disabled"`
-	Label    *UiText `json:"label,omitempty"`
+	Disabled bool `json:"disabled"`
+	// The input's initial value.
+	InitialValue interface{} `json:"initial_value,omitempty"`
+	Label        *UiText     `json:"label,omitempty"`
 	// The input's element name.
 	Name     string `json:"name"`
 	NodeType string `json:"node_type"`
@@ -77,6 +79,39 @@ func (o *UiNodeInputAttributes) GetDisabledOk() (*bool, bool) {
 // SetDisabled sets field value
 func (o *UiNodeInputAttributes) SetDisabled(v bool) {
 	o.Disabled = v
+}
+
+// GetInitialValue returns the InitialValue field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *UiNodeInputAttributes) GetInitialValue() interface{} {
+	if o == nil {
+		var ret interface{}
+		return ret
+	}
+	return o.InitialValue
+}
+
+// GetInitialValueOk returns a tuple with the InitialValue field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *UiNodeInputAttributes) GetInitialValueOk() (*interface{}, bool) {
+	if o == nil || o.InitialValue == nil {
+		return nil, false
+	}
+	return &o.InitialValue, true
+}
+
+// HasInitialValue returns a boolean if a field has been set.
+func (o *UiNodeInputAttributes) HasInitialValue() bool {
+	if o != nil && o.InitialValue != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetInitialValue gets a reference to the given interface{} and assigns it to the InitialValue field.
+func (o *UiNodeInputAttributes) SetInitialValue(v interface{}) {
+	o.InitialValue = v
 }
 
 // GetLabel returns the Label field value if set, zero value otherwise.
@@ -316,6 +351,9 @@ func (o UiNodeInputAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
 		toSerialize["disabled"] = o.Disabled
+	}
+	if o.InitialValue != nil {
+		toSerialize["initial_value"] = o.InitialValue
 	}
 	if o.Label != nil {
 		toSerialize["label"] = o.Label

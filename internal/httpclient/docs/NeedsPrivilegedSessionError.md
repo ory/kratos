@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **Id** | Pointer to **string** | The error ID  Useful when trying to identify various errors in application logic. | [optional] 
 **Message** | **string** | Error message  The error&#39;s message. | 
 **Reason** | Pointer to **string** | A human-readable reason for the error | [optional] 
+**RedirectBrowserTo** | **string** | Points to where to redirect the user to next. | 
 **Request** | Pointer to **string** | The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID. | [optional] 
 **Status** | Pointer to **string** | The status description | [optional] 
 
@@ -17,7 +18,7 @@ Name | Type | Description | Notes
 
 ### NewNeedsPrivilegedSessionError
 
-`func NewNeedsPrivilegedSessionError(message string, ) *NeedsPrivilegedSessionError`
+`func NewNeedsPrivilegedSessionError(message string, redirectBrowserTo string, ) *NeedsPrivilegedSessionError`
 
 NewNeedsPrivilegedSessionError instantiates a new NeedsPrivilegedSessionError object
 This constructor will assign default values to properties that have it defined,
@@ -176,6 +177,26 @@ SetReason sets Reason field to given value.
 `func (o *NeedsPrivilegedSessionError) HasReason() bool`
 
 HasReason returns a boolean if a field has been set.
+
+### GetRedirectBrowserTo
+
+`func (o *NeedsPrivilegedSessionError) GetRedirectBrowserTo() string`
+
+GetRedirectBrowserTo returns the RedirectBrowserTo field if non-nil, zero value otherwise.
+
+### GetRedirectBrowserToOk
+
+`func (o *NeedsPrivilegedSessionError) GetRedirectBrowserToOk() (*string, bool)`
+
+GetRedirectBrowserToOk returns a tuple with the RedirectBrowserTo field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRedirectBrowserTo
+
+`func (o *NeedsPrivilegedSessionError) SetRedirectBrowserTo(v string)`
+
+SetRedirectBrowserTo sets RedirectBrowserTo field to given value.
+
 
 ### GetRequest
 

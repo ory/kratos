@@ -31,6 +31,8 @@ type SelfServiceFlowExpiredError struct {
 	Reason *string `json:"reason,omitempty"`
 	// The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID.
 	Request *string `json:"request,omitempty"`
+	// A Duration represents the elapsed time between two instants as an int64 nanosecond count. The representation limits the largest representable duration to approximately 290 years.
+	Since *int64 `json:"since,omitempty"`
 	// The status description
 	Status    *string `json:"status,omitempty"`
 	UseFlowId *string `json:"use_flow_id,omitempty"`
@@ -270,6 +272,38 @@ func (o *SelfServiceFlowExpiredError) SetRequest(v string) {
 	o.Request = &v
 }
 
+// GetSince returns the Since field value if set, zero value otherwise.
+func (o *SelfServiceFlowExpiredError) GetSince() int64 {
+	if o == nil || o.Since == nil {
+		var ret int64
+		return ret
+	}
+	return *o.Since
+}
+
+// GetSinceOk returns a tuple with the Since field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceFlowExpiredError) GetSinceOk() (*int64, bool) {
+	if o == nil || o.Since == nil {
+		return nil, false
+	}
+	return o.Since, true
+}
+
+// HasSince returns a boolean if a field has been set.
+func (o *SelfServiceFlowExpiredError) HasSince() bool {
+	if o != nil && o.Since != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetSince gets a reference to the given int64 and assigns it to the Since field.
+func (o *SelfServiceFlowExpiredError) SetSince(v int64) {
+	o.Since = &v
+}
+
 // GetStatus returns the Status field value if set, zero value otherwise.
 func (o *SelfServiceFlowExpiredError) GetStatus() string {
 	if o == nil || o.Status == nil {
@@ -356,6 +390,9 @@ func (o SelfServiceFlowExpiredError) MarshalJSON() ([]byte, error) {
 	}
 	if o.Request != nil {
 		toSerialize["request"] = o.Request
+	}
+	if o.Since != nil {
+		toSerialize["since"] = o.Since
 	}
 	if o.Status != nil {
 		toSerialize["status"] = o.Status

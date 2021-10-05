@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **Message** | **string** | Error message  The error&#39;s message. | 
 **Reason** | Pointer to **string** | A human-readable reason for the error | [optional] 
 **Request** | Pointer to **string** | The request ID  The request ID is often exposed internally in order to trace errors across service architectures. This is often a UUID. | [optional] 
+**Since** | Pointer to **int64** | A Duration represents the elapsed time between two instants as an int64 nanosecond count. The representation limits the largest representable duration to approximately 290 years. | [optional] 
 **Status** | Pointer to **string** | The status description | [optional] 
 **UseFlowId** | Pointer to **string** |  | [optional] 
 
@@ -202,6 +203,31 @@ SetRequest sets Request field to given value.
 `func (o *SelfServiceFlowExpiredError) HasRequest() bool`
 
 HasRequest returns a boolean if a field has been set.
+
+### GetSince
+
+`func (o *SelfServiceFlowExpiredError) GetSince() int64`
+
+GetSince returns the Since field if non-nil, zero value otherwise.
+
+### GetSinceOk
+
+`func (o *SelfServiceFlowExpiredError) GetSinceOk() (*int64, bool)`
+
+GetSinceOk returns a tuple with the Since field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetSince
+
+`func (o *SelfServiceFlowExpiredError) SetSince(v int64)`
+
+SetSince sets Since field to given value.
+
+### HasSince
+
+`func (o *SelfServiceFlowExpiredError) HasSince() bool`
+
+HasSince returns a boolean if a field has been set.
 
 ### GetStatus
 

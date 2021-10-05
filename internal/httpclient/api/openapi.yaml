@@ -541,6 +541,13 @@ paths:
         HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
         HTTP 400 on form validation errors.
 
+        If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
+        case of an error, the `error.id` of the JSON response body can be one of:
+
+        `has_session_already`: The user is already signed in.
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: submitSelfServiceLoginFlow
       parameters:
@@ -611,6 +618,12 @@ paths:
         You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
         Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
         you vulnerable to a variety of CSRF attacks, including CSRF login attacks.
+
+        In the case of an error, the `error.id` of the JSON response body can be one of:
+
+        `has_session_already`: The user is already signed in.
+        `aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -685,7 +698,13 @@ paths:
         exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
         `?refresh=true` was set.
 
-        If this endpoint is called via an AJAX request, the response contains the login flow without a redirect.
+        If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+        case of an error, the `error.id` of the JSON response body can be one of:
+
+        `has_session_already`: The user is already signed in.
+        `aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
@@ -737,6 +756,12 @@ paths:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "500":
           content:
             application/json:
@@ -765,6 +790,11 @@ paths:
         res.render('login', flow)
         })
         ```
+
+        This request may fail due to several reasons. The `error.id` can be one of:
+
+        `has_session_already`: The user is already signed in.
+        `self_service_flow_expired`: The flow is expired and you should request a new one.
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: getSelfServiceLoginFlow
@@ -1233,6 +1263,13 @@ paths:
         HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
         HTTP 400 on form validation errors.
 
+        If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
+        case of an error, the `error.id` of the JSON response body can be one of:
+
+        `has_session_already`: The user is already signed in.
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: submitSelfServiceRegistrationFlow
       parameters:
@@ -1296,6 +1333,11 @@ paths:
         Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
         you vulnerable to a variety of CSRF attacks.
 
+        In the case of an error, the `error.id` of the JSON response body can be one of:
+
+        `has_session_already`: The user is already signed in.
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -1337,6 +1379,13 @@ paths:
         If this endpoint is opened as a link in the browser, it will be redirected to
         `selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
         exists already, the browser will be redirected to `urls.default_redirect_url`.
+
+        If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+        case of an error, the `error.id` of the JSON response body can be one of:
+
+        `has_session_already`: The user is already signed in.
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
         If this endpoint is called via an AJAX request, the response contains the registration flow without a redirect.
 
@@ -1391,6 +1440,11 @@ paths:
         res.render('registration', flow)
         })
         ```
+
+        This request may fail due to several reasons. The `error.id` can be one of:
+
+        `has_session_already`: The user is already signed in.
+        `self_service_flow_expired`: The flow is expired and you should request a new one.
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: getSelfServiceRegistrationFlow
@@ -1484,6 +1538,18 @@ paths:
         credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
         to sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.
 
+        If this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the
+        case of an error, the `error.id` of the JSON response body can be one of:
+
+        `needs_privileged_session`: The identity requested to change something that needs a privileged session. Redirect
+        the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
+        or initiate a refresh login flow otherwise.
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `no_active_session`: No Ory Session was found - sign in a user first.
+        `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+        identity logged in instead.
+        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: submitSelfServiceSettingsFlow
       parameters:
@@ -1572,6 +1638,11 @@ paths:
         credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
         to sign in with the second factor or change the configuration.
 
+        In the case of an error, the `error.id` of the JSON response body can be one of:
+
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `no_active_session`: No Ory Session was found - sign in a user first.
+
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -1626,6 +1697,13 @@ paths:
         credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
         to sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.
 
+        If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+        case of an error, the `error.id` of the JSON response body can be one of:
+
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `no_active_session`: No Ory Session was found - sign in a user first.
+        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -1649,6 +1727,12 @@ paths:
         "302":
           description: Empty responses are sent when, for example, resources are deleted.
             The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
         "401":
           content:
             application/json:
@@ -1682,6 +1766,14 @@ paths:
         to sign in with the second factor or change the configuration.
 
         You can access this endpoint without credentials when using Ory Kratos' Admin API.
+
+        If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
+        case of an error, the `error.id` of the JSON response body can be one of:
+
+        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `no_active_session`: No Ory Session was found - sign in a user first.
+        `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+        identity logged in instead.
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: getSelfServiceSettingsFlow
@@ -2023,7 +2115,7 @@ paths:
         console.log(session)
         ```
 
-        Depending on your configuration this endpoint might return a 422 status code if the session has a lower Authenticator
+        Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
         Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
         credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
         to sign in with the second factor or change the configuration.
@@ -2041,6 +2133,11 @@ paths:
         if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 
         If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+
+        As explained above, this request may fail due to several reasons. The `error.id` can be one of:
+
+        `no_active_session`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
+        `aal_needs_upgrade`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
       operationId: toSession
       parameters:
       - description: Set the Session Token when calling from non-browser clients.
@@ -2080,7 +2177,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
-        "422":
+        "403":
           content:
             application/json:
               schema:
@@ -2144,6 +2241,13 @@ components:
       - state
       - traits
       type: object
+    Duration:
+      description: |-
+        A Duration represents the elapsed time between two instants
+        as an int64 nanosecond count. The representation limits the
+        largest representable duration to approximately 290 years.
+      format: int64
+      type: integer
     ID:
       format: int64
       type: integer
@@ -2574,6 +2678,9 @@ components:
           description: A human-readable reason for the error
           example: User with ID 1234 does not exist.
           type: string
+        redirect_browser_to:
+          description: Points to where to redirect the user to next.
+          type: string
         request:
           description: |-
             The request ID
@@ -2588,6 +2695,7 @@ components:
           type: string
       required:
       - message
+      - redirect_browser_to
       title: Is sent when a privileged session is required to perform the settings
         update.
       type: object
@@ -2667,6 +2775,13 @@ components:
             errors across service architectures. This is often a UUID.
           example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
           type: string
+        since:
+          description: |-
+            A Duration represents the elapsed time between two instants
+            as an int64 nanosecond count. The representation limits the
+            largest representable duration to approximately 290 years.
+          format: int64
+          type: integer
         status:
           description: The status description
           example: Not Found
@@ -4282,6 +4397,9 @@ components:
         disabled:
           description: Sets the input's disabled field to true or false.
           type: boolean
+        initial_value:
+          description: The input's initial value.
+          nullable: true
         label:
           $ref: '#/components/schemas/uiText'
         name:
