@@ -1,12 +1,27 @@
 import { APP_URL, gen, website } from '../../../helpers'
 import { authenticator } from 'otplib'
+import {routes as react} from "../../../helpers/react";
+import {routes as express} from "../../../helpers/express";
 
-context('MFA Profile', () => {
-  describe('Test MFA combinations', () => {
-    before(() => {
-      cy.useConfigProfile('mfa')
-    })
-
+context('2FA with various methods', () => {
+  [
+    {
+      login: react.login,
+      settings: react.settings,
+      base: react.base,
+      app: 'react', profile: 'spa'
+    },
+    {
+      login: express.login,
+      settings: express.settings,
+      base: express.base,
+      app: 'express', profile: 'mfa'
+    }
+  ].forEach(({settings, login, profile, app, base}) => {
+    describe(`for app ${app}`, () => {
+      before(() => {
+        cy.useConfigProfile(profile)
+      })
     let email = gen.email()
     let password = gen.password()
 
@@ -15,7 +30,7 @@ context('MFA Profile', () => {
       email = gen.email()
       password = gen.password()
       cy.registerApi({ email, password, fields: { 'traits.website': website } })
-      cy.login({ email, password })
+      cy.login({ email, password, cookieUrl: base })
       cy.longPrivilegedSessionTime()
       cy.task('sendCRI', {
         query: 'WebAuthn.disable',
@@ -24,7 +39,7 @@ context('MFA Profile', () => {
     })
 
     it('should set up an use all mfa combinations', () => {
-      cy.visit(APP_URL + '/settings')
+      cy.visit(settings)
       cy.task('sendCRI', {
         query: 'WebAuthn.enable',
         opts: {}
@@ -43,46 +58,37 @@ context('MFA Profile', () => {
         }).then(() => {
           // Set up TOTP
           let secret
-          cy.get('p[data-testid="text-totp_secret_key-content"]').then(($e) => {
+          cy.get('[data-testid="node/text/totp_secret_key/text"]').then(($e) => {
             secret = $e.text().trim()
           })
-          cy.get('input[name="totp_code"]').then(($e) => {
+          cy.get('[name="totp_code"]').then(($e) => {
             cy.wrap($e).type(authenticator.generate(secret))
           })
-          cy.get('*[name="method"][value="totp"]').click()
-          cy.get('form .messages .message').should(
-            'contain.text',
-            'Your changes have been saved!'
-          )
+          cy.get('[name="method"][value="totp"]').click()
+          cy.expectSettingsSaved()
 
           // Set up lookup secrets
-          cy.get('button[name="lookup_secret_regenerate"]').click()
+          cy.get('[name="lookup_secret_regenerate"]').click()
           let codes
-          cy.get('p[data-testid="text-lookup_secret_codes-content"]').then(
-            ($e) => {
-              codes = $e.text().trim().split(', ')
+          cy.getLookupSecrets().then(
+            (c) => {
+              codes = c
             }
           )
-          cy.get('button[name="lookup_secret_confirm"]').click()
-          cy.get('form .messages .message').should(
-            'contain.text',
-            'Your changes have been saved!'
-          )
+          cy.get('[name="lookup_secret_confirm"]').click()
+          cy.expectSettingsSaved()
 
           // Set up WebAuthn
-          cy.get('*[name="webauthn_register_displayname"]').type('my-key')
+          cy.get('[name="webauthn_register_displayname"]').type('my-key')
           // We need a workaround here. So first we click, then we submit
-          cy.get('*[name="webauthn_register_trigger"]').click()
-          cy.get('form .messages .message').should(
-            'contain.text',
-            'Your changes have been saved!'
-          )
+          cy.clickWebAuthButton('register')
+          cy.expectSettingsSaved()
 
-          cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
-          cy.get('input[name="totp_code"]').then(($e) => {
+          cy.visit(login + '?aal=aal2&refresh=true')
+          cy.get('[name="totp_code"]').then(($e) => {
             cy.wrap($e).type(authenticator.generate(secret))
           })
-          cy.get('*[name="method"][value="totp"]').click()
+          cy.get('[name="method"][value="totp"]').click()
           cy.getSession({
             expectAal: 'aal2',
             expectMethods: [
@@ -95,8 +101,8 @@ context('MFA Profile', () => {
           })
 
           // Use TOTP
-          cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
-          cy.get('button[name="webauthn_login_trigger"]').click()
+          cy.visit(login + '?aal=aal2&refresh=true')
+          cy.clickWebAuthButton('login')
           cy.getSession({
             expectAal: 'aal2',
             expectMethods: [
@@ -110,11 +116,11 @@ context('MFA Profile', () => {
           })
 
           // Use lookup
-          cy.visit(APP_URL + '/login?aal=aal2&refresh=true')
-          cy.get('input[name="lookup_secret"]').then(($e) => {
+          cy.visit(login + '?aal=aal2&refresh=true')
+          cy.get('[name="lookup_secret"]').then(($e) => {
             cy.wrap($e).type(codes[1])
           })
-          cy.get('*[name="method"][value="lookup_secret"]').click()
+          cy.get('[name="method"][value="lookup_secret"]').click()
           cy.getSession({
             expectAal: 'aal2',
             expectMethods: [
@@ -130,5 +136,6 @@ context('MFA Profile', () => {
         })
       })
     })
+  })
   })
 })

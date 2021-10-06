@@ -27,7 +27,7 @@ declare global {
       getSession(opts?:
                    {
                      expectAal: 'aal2' | 'aal1',
-                     expectMethods: Array<'password' | 'webauthn' | 'lookup_secret'>,
+                     expectMethods: Array<'password' | 'webauthn' | 'lookup_secret' | 'totp'>,
                    }
       ): Chainable<Session>
 
@@ -156,6 +156,16 @@ declare global {
       sessionRequires2fa(): Chainable<void>
 
       /**
+       * Like sessionRequires2fa but sets this also for settings
+       */
+      requireStrictAal(): Chainable<void>
+
+      /**
+       * Like sessionRequiresNo2fa but sets this also for settings
+       */
+      useLaxAal(): Chainable<void>
+
+      /**
        * Gets the lookup codes from the settings page
        */
       getLookupSecrets(): Chainable<Array<string>>
@@ -178,11 +188,35 @@ declare global {
       submitPasswordForm(): Chainable<null>
 
       /**
+       * Submits a profile form by clicking the button with method=profile
+       */
+      submitProfileForm(): Chainable<null>
+
+      /**
        * Expect a CSRF error to occur
        *
        * @param opts
        */
-      shouldHaveCsrfError(opts: {app: string }) : Chainable<void>
+      shouldHaveCsrfError(opts: { app: string }): Chainable<void>
+
+      /**
+       * Expects the app to error if a return_to is used which isn't allowed.
+       *
+       * @param init
+       * @param opts
+       */
+      shouldErrorOnDisallowedReturnTo(init: string, opts: { app: string }): Chainable<void>
+
+      /**
+       * Expect that the second factor login screen is shown
+       */
+      shouldShow2FAScreen(): Chainable<void>
+
+      /** Click a webauthn button
+       *
+       * @param type
+       */
+      clickWebAuthButton (type: 'login' | 'register') : Chainable<void>
     }
   }
 }

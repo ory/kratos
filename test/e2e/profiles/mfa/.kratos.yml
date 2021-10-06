@@ -1,6 +1,7 @@
 selfservice:
   flows:
     settings:
+      ui_url: http://localhost:4455/settings
       privileged_session_max_age: 5m
       required_aal: aal1
 
@@ -9,10 +10,20 @@ selfservice:
         default_browser_return_url: http://localhost:4455/login
 
     registration:
+      ui_url: http://localhost:4455/registration
       after:
         password:
           hooks:
             - hook: session
+
+    login:
+      ui_url: http://localhost:4455/login
+    error:
+      ui_url: http://localhost:4455/error
+    verification:
+      ui_url: http://localhost:4455/verify
+    recovery:
+      ui_url: http://localhost:4455/recovery
 
   methods:
     totp:

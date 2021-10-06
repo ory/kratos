@@ -31,14 +31,7 @@ describe('Basic email profile with failing login flows', () => {
       })
 
       it('fails when a disallowed return_to url is requested', () => {
-        cy.visit(route + '?return_to=https://not-allowed', {failOnStatusCode: false})
-        if (app === 'react') {
-          cy.location('pathname').should('include', '/login')
-          cy.get('.Toastify').should('contain.text', 'The return_to address is not allowed.')
-        } else {
-          cy.location('pathname').should('contain', 'error')
-          cy.get('code').should('contain.text', 'Requested return_to URL \\"https://not-allowed\\" is not whitelisted.')
-        }
+        cy.shouldErrorOnDisallowedReturnTo(route + '?return_to=https://not-allowed', {app})
       })
 
       describe('shows validation errors when invalid signup data is used', () => {

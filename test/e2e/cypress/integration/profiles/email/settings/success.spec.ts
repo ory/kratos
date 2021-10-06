@@ -93,16 +93,37 @@ context('Settings success with email profile', () => {
     })
 
     describe('profile', () => {
-      it('modifies an unprotected trait', () => {
+      it('modifies an unprotected traits', () => {
         cy.get('input[name="traits.website"]')
           .clear()
           .type('https://github.com/ory')
-        cy.get('button[value="profile"]').click()
+        cy.get('input[name="traits.age"]')
+          .clear()
+          .type('30')
+        cy.get('input[type="checkbox"][name="traits.tos"]')
+          .click({force: true})
+        cy.submitProfileForm()
         cy.expectSettingsSaved()
+
         cy.get('input[name="traits.website"]').should(
           'contain.value',
           'https://github.com/ory'
         )
+        cy.get('input[type="checkbox"][name="traits.tos"]')
+          .should('be.checked')
+          .click({force: true})
+        cy.get('input[name="traits.age"]')
+          .should('have.value','30')
+          .clear()
+          .type('90')
+
+        cy.submitProfileForm()
+        cy.expectSettingsSaved()
+
+        cy.get('input[type="checkbox"][name="traits.tos"]')
+          .should('not.be.checked')
+        cy.get('input[name="traits.age"]')
+          .should('have.value','90')
       })
 
       it('modifies a protected trait with privileged session', () => {

@@ -2,18 +2,28 @@ selfservice:
   flows:
     settings:
       privileged_session_max_age: 5m
+      ui_url: http://localhost:4458/settings
       required_aal: aal1
 
     logout:
       after:
-        default_browser_return_url: http://localhost:4455/login
+        default_browser_return_url: http://localhost:4458/login
 
     registration:
+      ui_url: http://localhost:4458/registration
       after:
         password:
           hooks:
             -
               hook: session
+    login:
+      ui_url: http://localhost:4458/login
+    error:
+      ui_url: http://localhost:4458/error
+    verification:
+      ui_url: http://localhost:4458/verify
+    recovery:
+      ui_url: http://localhost:4458/recovery
 
   methods:
     totp:
@@ -27,7 +37,7 @@ selfservice:
       config:
         rp:
           id: localhost
-          origin: http://localhost:4455
+          origin: http://localhost:4458
           display_name: Ory
 
 identity:

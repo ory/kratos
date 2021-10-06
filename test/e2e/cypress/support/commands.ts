@@ -299,7 +299,7 @@ Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
   })
 })
 
-Cypress.Commands.add('loginOidc', ({expectSession = true, url=APP_URL + '/login'}) => {
+Cypress.Commands.add('loginOidc', ({expectSession = true, url = APP_URL + '/login'}) => {
   cy.visit(url)
   cy.get('button[value="hydra"]').click()
   if (expectSession) {
@@ -619,16 +619,47 @@ Cypress.Commands.add('getMail', ({removeMail = true} = {}) => {
   return req()
 })
 
-Cypress.Commands.add('clearAllCookies',() => {
+Cypress.Commands.add('clearAllCookies', () => {
   cy.clearCookies({domain: null})
 })
 
-Cypress.Commands.add('submitPasswordForm',() => {
+Cypress.Commands.add('submitPasswordForm', () => {
   cy.get('[name="method"][value="password"]').click()
   cy.get('[name="method"][value="password"]:disabled').should('not.exist')
 })
 
-Cypress.Commands.add('shouldHaveCsrfError',({app}: {app: 'express' | 'react', }) => {
+Cypress.Commands.add('submitProfileForm', () => {
+  cy.get('[name="method"][value="profile"]').click()
+  cy.get('[name="method"][value="profile"]:disabled').should('not.exist')
+})
+
+Cypress.Commands.add('clickWebAuthButton', (type: string) => {
+  cy.get('*[data-testid="node/script/webauthn_script"]').should('exist')
+  cy.wait(500) // Wait for script to load
+  cy.get('*[name="webauthn_'+type+'_trigger"]').click()
+  cy.wait(500) // Wait webauth to pass
+})
+
+Cypress.Commands.add('shouldShow2FAScreen', () => {
+  cy.get('h2').should('contain.text','Two-Factor Authentication')
+  cy.get('[data-testid="ui/message/1010004"]').should(
+    'contain.text',
+    'Please complete the second authentication challenge.'
+  )
+})
+
+Cypress.Commands.add('shouldErrorOnDisallowedReturnTo', (init: string, {app}: { app: 'express' | 'react', }) => {
+  cy.visit(init, {failOnStatusCode: false})
+  if (app === 'react') {
+    cy.location('pathname').should('include', '/settings')
+    cy.get('.Toastify').should('contain.text', 'The return_to address is not allowed.')
+  } else {
+    cy.location('pathname').should('contain', 'error')
+    cy.get('code').should('contain.text', 'Requested return_to URL \\"https://not-allowed\\" is not whitelisted.')
+  }
+})
+
+Cypress.Commands.add('shouldHaveCsrfError', ({app}: { app: 'express' | 'react', }) => {
   let initial
   let pathname
   cy.location().should((location) => {
@@ -636,7 +667,11 @@ Cypress.Commands.add('shouldHaveCsrfError',({app}: {app: 'express' | 'react', })
     pathname = location.pathname
   })
 
-  cy.clearAllCookies()
+  cy.getCookies().should((cookies) => {
+    const csrf = cookies.find(({name}) => name.indexOf('csrf') > -1)
+    expect(csrf).to.not.be.undefined
+    cy.clearCookie(csrf.name)
+  })
   cy.submitPasswordForm()
 
   // We end up at a new flow
