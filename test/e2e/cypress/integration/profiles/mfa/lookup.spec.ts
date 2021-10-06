@@ -2,7 +2,7 @@ import {gen, website} from '../../../helpers'
 import {routes as express} from "../../../helpers/express";
 import {routes as react} from "../../../helpers/react";
 
-context('Registration success with email profile', () => {
+context('2FA lookup secrets', () => {
   [
     {
       login: react.login,
@@ -54,16 +54,18 @@ context('Registration success with email profile', () => {
         })
         cy.expectSettingsSaved()
 
+        cy.clearCookies()
+        cy.login({email: email, password: password, cookieUrl: base})
+
         cy.visit(login + '?aal=aal2')
+        cy.get('h2').should(
+          'contain.text',
+          'Two-Factor Authentication'
+        )
         cy.get('*[name="method"][value="totp"]').should('not.exist')
         cy.get('*[name="method"][value="lookup_secret"]').should('not.exist')
         cy.get('*[name="method"][value="password"]').should('not.exist')
-
-        cy.clearCookies()
-        cy.login({email: email, password: password, cookieUrl: base})
       })
-
-      return
 
       it('should go through several lookup secret lifecycles', () => {
         cy.visit(settings)

@@ -16,19 +16,6 @@ selfservice:
     link:
       config:
         lifespan: 1h
-  flows:
-    login:
-      ui_url: http://localhost:4455/login
-    registration:
-      ui_url: http://localhost:4455/registration
-    error:
-      ui_url: http://localhost:4455/error
-    verification:
-      ui_url: http://localhost:4455/verify
-    recovery:
-      ui_url: http://localhost:4455/recovery
-    settings:
-      ui_url: http://localhost:4455/settings
 
 serve:
   public:

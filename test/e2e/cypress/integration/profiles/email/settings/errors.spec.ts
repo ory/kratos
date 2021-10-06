@@ -43,39 +43,13 @@ context('Settings failures with email profile', () => {
 
       describe('global errors', () => {
         it('fails when CSRF is incorrect', () => {
-          let initial
-          cy.location().should((location) => {
-            initial = location.search
-          })
-
-          cy.getCookies().should((cookies) => {
-            const csrf = cookies.find(({name}) => name.indexOf('csrf') > -1)
-            expect(csrf).to.not.be.undefined
-            cy.clearCookie(csrf.name)
-          })
-
-          cy.get('button[name="method"][value="profile"]').click()
-
-          // We end up at a new flow
-          cy.location('search').should('not.eq', initial)
-          if (app === 'express') {
-            cy.location('pathname').should('include', '/error')
-            cy.get('code').should('contain.text', 'csrf_token')
-          } else {
-            cy.location('pathname').should('include', '/settings')
-            cy.get('.Toastify').should('contain.text', 'A security violation was detected, please fill out the form again.')
-          }
+          cy.get('input[name="password"]')
+            .type('123456')
+          cy.shouldHaveCsrfError({app})
         })
 
         it('fails when a disallowed return_to url is requested', () => {
-          cy.visit(route + '?return_to=https://not-allowed', {failOnStatusCode: false})
-          if (app === 'react') {
-            cy.location('pathname').should('include', '/settings')
-            cy.get('.Toastify').should('contain.text', 'The return_to address is not allowed.')
-          } else {
-            cy.location('pathname').should('contain', 'error')
-            cy.get('code').should('contain.text', 'Requested return_to URL \\"https://not-allowed\\" is not whitelisted.')
-          }
+          cy.shouldErrorOnDisallowedReturnTo(route + '?return_to=https://not-allowed', {app})
         })
       })
 
