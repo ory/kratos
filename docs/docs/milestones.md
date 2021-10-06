@@ -95,6 +95,8 @@ New feature or request.
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
 - [ ] Expand password validation error messages to facilitate i18n
       ([kratos#1071](https://github.com/ory/kratos/issues/1071))
+- [ ] User deactivation does not deactivate user sessions
+      ([kratos#1811](https://github.com/ory/kratos/issues/1811))
 - [x] Field validation answer status code 422 instead of 400
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
@@ -302,7 +304,8 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
+- [ ] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
+      better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
 
@@ -337,6 +340,7 @@ Blocks milestones or other issues or pulls.
 
 #### Pull Requests
 
-- [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
+- [ ] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
+      better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
