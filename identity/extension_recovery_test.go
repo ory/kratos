@@ -141,7 +141,7 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			id := &Identity{ID: iid, RecoveryAddresses: tc.existing}
 			c := jsonschema.NewCompiler()
-			runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema)
+			runner, err := schema.NewExtensionRunner()
 			require.NoError(t, err)
 
 			e := NewSchemaExtensionRecovery(id)
