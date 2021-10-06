@@ -971,7 +971,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 			panic("the test could not complete as the context timed out before the identity schema loader timed out")
 		case e := <-err:
 			assert.Error(t, e)
-			assert.Contains(t, e.Error(), "dial tcp: lookup test.kratos.ory.sh: no such host")
+			assert.Contains(t, e.Error(), "no such host")
 		}
 
 	})
