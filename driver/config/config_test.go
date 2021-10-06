@@ -896,7 +896,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		}
 	}
 
-	marshalAndWrite := func(t *testing.T, tmpFile *os.File, identity *configFile, c *chan bool) {
+	marshalAndWrite := func(t *testing.T, ctx context.Context, tmpFile *os.File, identity *configFile) {
 		j, err := yaml.Marshal(identity)
 		assert.NoError(t, err)
 
@@ -906,16 +906,9 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		_, err = io.WriteString(tmpFile, string(j))
 		assert.NoError(t, err)
 		assert.NoError(t, tmpFile.Sync())
-		if c != nil {
-			<-*c
-			time.Sleep(time.Millisecond)
-		}
 	}
 
-	testWatch := func(t *testing.T, cmd *cobra.Command, i *configFile) (*config.Config, *test.Hook, *os.File, *configFile, chan bool) {
-		ctx, cancel := context.WithCancel(context.Background())
-		t.Cleanup(cancel)
-
+	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, i *configFile) (*config.Config, *test.Hook, *os.File, *configFile, chan bool) {
 		c := make(chan bool, 1)
 		tdir := t.TempDir() // os.TempDir() + "/" + strconv.Itoa(time.Now().Nanosecond())
 		assert.NoError(t,
@@ -924,7 +917,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		tmpConfig, err := os.Create(filepath.Join(tdir, "config.yaml"))
 		assert.NoError(t, err)
 
-		marshalAndWrite(t, tmpConfig, i, nil)
+		marshalAndWrite(t, ctx, tmpConfig, i)
 
 		l := logrusx.New("kratos-"+tmpConfig.Name(), "test")
 		hook := test.NewLocal(l.Logger)
@@ -940,7 +933,6 @@ func TestIdentitySchemaValidation(t *testing.T) {
 		hook.Reset()
 
 		return conf, hook, tmpConfig, i, c
-
 	}
 
 	t.Run("case=skip invalid schema validation", func(t *testing.T) {
@@ -964,10 +956,24 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	})
 
 	t.Run("case=must fail on loading unreachable schemas", func(t *testing.T) {
-		_, err := config.New(context.Background(), logrusx.New("", ""), &cobra.Command{},
-			configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"))
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "dial tcp: lookup test.kratos.ory.sh: no such host")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		t.Cleanup(cancel)
+
+		err := make(chan error, 1)
+		go func(err chan error) {
+			_, e := config.New(ctx, logrusx.New("", ""), &cobra.Command{},
+				configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"))
+			err <- e
+		}(err)
+
+		select {
+		case <-ctx.Done():
+			panic("the test could not complete as the context timed out before the identity schema loader timed out")
+		case e := <-err:
+			assert.Error(t, e)
+			assert.Contains(t, e.Error(), "dial tcp: lookup test.kratos.ory.sh: no such host")
+		}
+
 	})
 
 	t.Run("case=validate schema is validated on file change", func(t *testing.T) {
@@ -981,16 +987,29 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 		for _, i := range identities {
 			t.Run("test=identity file "+i.identityFileName, func(t *testing.T) {
-				_, hook, tmpConfig, i, c := testWatch(t, &cobra.Command{}, i)
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+
+				_, hook, tmpConfig, i, c := testWatch(t, ctx, &cobra.Command{}, i)
 				// Change the identity config to an invalid file
 				i.Identity.DefaultSchemaUrl = invalidIdentity.Identity.DefaultSchemaUrl
 
-				marshalAndWrite(t, tmpConfig, i, &c)
+				t.Cleanup(func() {
+					cancel()
+					tmpConfig.Close()
+				})
 
-				lastHook, err := hook.LastEntry().String()
-				assert.NoError(t, err)
 
-				assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
+				go marshalAndWrite(t, ctx, tmpConfig, i)
+
+				select {
+				case <-ctx.Done():
+					panic("the test could not complete as the context timed out before the file watcher updated")
+				case <-c:
+					lastHook, err := hook.LastEntry().String()
+					assert.NoError(t, err)
+
+					assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
+				}
 			})
 		}
 
