@@ -69,7 +69,7 @@ require (
 	github.com/hashicorp/consul/api v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.6.8
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/imdario/mergo v0.3.11
+	github.com/imdario/mergo v0.3.12
 	github.com/inhies/go-bytesize v0.0.0-20201103132853-d0aed0d254f8
 	github.com/jandelgado/gcov2lcov v1.0.5 // indirect
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
@@ -82,18 +82,17 @@ require (
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
-	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
-	github.com/ory/herodot v0.9.10
+	github.com/ory/herodot v0.9.12
 	github.com/ory/jsonschema/v3 v3.0.4
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.5
-	github.com/ory/x v0.0.288
+	github.com/ory/x v0.0.291
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/philhofer/fwd v1.1.1 // indirect
