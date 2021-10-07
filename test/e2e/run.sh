@@ -13,6 +13,7 @@ export KRATOS_PUBLIC_URL=http://localhost:4433/
 export KRATOS_BROWSER_URL=http://localhost:4433/
 export KRATOS_ADMIN_URL=http://localhost:4434/
 export KRATOS_UI_URL=http://localhost:4456/
+export KRATOS_UI_REACT_URL=http://localhost:4458/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
@@ -54,6 +55,8 @@ else
 fi
 
 (
+  rm test/e2e/proxy.json || true
+  echo '"express"' > test/e2e/proxy.json
   cd test/e2e/proxy
   npm i
 )
