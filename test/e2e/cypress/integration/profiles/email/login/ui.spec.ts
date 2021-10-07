@@ -1,14 +1,20 @@
-import {routes as express} from "../../../../helpers/express";
-import {routes as react} from "../../../../helpers/react";
+import { routes as express } from '../../../../helpers/express'
+import { routes as react } from '../../../../helpers/react'
+import { appPrefix } from '../../../../helpers'
 
 context('UI tests using the email profile', () => {
-  [{
-    route: express.login,
-    app: 'express'as'express', profile: 'email'
-  }, {
-    route: react.login,
-    app: 'react'as'react', profile: 'spa'
-  }].forEach(({route, profile, app}) => {
+  ;[
+    {
+      route: express.login,
+      app: 'express' as 'express',
+      profile: 'email'
+    },
+    {
+      route: react.login,
+      app: 'react' as 'react',
+      profile: 'spa'
+    }
+  ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
@@ -17,11 +23,10 @@ context('UI tests using the email profile', () => {
 
       beforeEach(() => {
         cy.visit(route)
-        cy.ensureCorrectApp(app)
       })
 
       it('should use the json schema titles', () => {
-        cy.get('input[name="password_identifier"]')
+        cy.get(`${appPrefix(app)}input[name="password_identifier"]`)
           .parent()
           .should('contain.text', 'ID')
         cy.get('input[name="password"]')

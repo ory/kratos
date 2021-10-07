@@ -2,8 +2,8 @@ export const email = () => Math.random().toString(36) + '@ory.sh'
 
 export const password = () => Math.random().toString(36)
 
-export const assertVerifiableAddress = ({isVerified, email}) => (session) => {
-  const {identity} = session
+export const assertVerifiableAddress = ({ isVerified, email }) => (session) => {
+  const { identity } = session
   expect(identity).to.have.property('verifiable_addresses')
   expect(identity.verifiable_addresses).to.have.length(1)
 
@@ -19,7 +19,7 @@ export const assertVerifiableAddress = ({isVerified, email}) => (session) => {
   }
 }
 
-export const assertRecoveryAddress = ({email}) => ({identity}) => {
+export const assertRecoveryAddress = ({ email }) => ({ identity }) => {
   expect(identity).to.have.property('recovery_addresses')
   expect(identity.recovery_addresses).to.have.length(1)
 
@@ -28,41 +28,46 @@ export const assertRecoveryAddress = ({email}) => ({identity}) => {
   expect(address.value).to.equal(email)
 }
 
-export const parseHtml = (html) => new DOMParser().parseFromString(html, 'text/html')
+export const parseHtml = (html) =>
+  new DOMParser().parseFromString(html, 'text/html')
 
-export const APP_URL = (Cypress.env('app_url') || 'http://localhost:4455').replace(
-  /\/$/,
-  ''
-)
+export const APP_URL = (
+  Cypress.env('app_url') || 'http://localhost:4455'
+).replace(/\/$/, '')
 
-export const MOBILE_URL = (Cypress.env('mobile_url') || 'http://localhost:4457').replace(
-  /\/$/,
-  ''
+export const MOBILE_URL = (
+  Cypress.env('mobile_url') || 'http://localhost:4457'
+).replace(/\/$/, '')
+export const SPA_URL = (
+  Cypress.env('react_url') || 'http://localhost:4455'
+).replace(/\/$/, '')
+export const KRATOS_ADMIN = (
+  Cypress.env('kratos_admin') || 'http://localhost:4434'
 )
-export const SPA_URL = (Cypress.env('react_url') || 'http://localhost:4455').replace(
-  /\/$/,
-  ''
-)
-export const KRATOS_ADMIN = (Cypress.env('kratos_admin') || 'http://localhost:4434')
   .replace()
   .replace(/\/$/, '')
 
-export const KRATOS_PUBLIC = (Cypress.env('kratos_public') || 'http://localhost:4433')
+export const KRATOS_PUBLIC = (
+  Cypress.env('kratos_public') || 'http://localhost:4433'
+)
   .replace()
   .replace(/\/$/, '')
 
-export const MAIL_API = (Cypress.env('mail_url') || 'http://localhost:4437').replace(
-  /\/$/,
-  ''
-)
+export const MAIL_API = (
+  Cypress.env('mail_url') || 'http://localhost:4437'
+).replace(/\/$/, '')
 
 export const website = 'https://www.ory.sh/'
 
 export const gen = {
   email,
   password,
-  identity: () => ({email: email(), password: password()}),
-  identityWithWebsite: () => ({email: email(), password: password(),fields:{'traits.website': 'https://www.ory.sh'}})
+  identity: () => ({ email: email(), password: password() }),
+  identityWithWebsite: () => ({
+    email: email(),
+    password: password(),
+    fields: { 'traits.website': 'https://www.ory.sh' }
+  })
 }
 
 // Format is
@@ -75,3 +80,4 @@ export const pollInterval = 250 // how long to wait before retry
 export const verifyLifespan = 5000 + 1000
 export const privilegedLifespan = 5000 + 1000
 
+export const appPrefix = (app) => `[data-testid="app-${app}"] `

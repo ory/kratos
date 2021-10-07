@@ -18,7 +18,7 @@ module.exports = (on) => {
 
   on('task', {
     httpRequest(params) {
-      return got(params).then(({body})=>body)
+      return got(params).then(({ body }) => body)
     },
     // Reset chrome remote interface for clean state
     async resetCRI() {

@@ -1,4 +1,4 @@
-import {SPA_URL} from "./index";
+import { SPA_URL } from './index'
 
 export const routes = {
   base: SPA_URL,
@@ -6,5 +6,5 @@ export const routes = {
   registration: SPA_URL + '/registration',
   settings: SPA_URL + '/settings',
   recovery: SPA_URL + '/recovery',
-  verification: SPA_URL + '/verification',
+  verification: SPA_URL + '/verification'
 }

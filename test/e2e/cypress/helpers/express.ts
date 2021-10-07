@@ -1,4 +1,4 @@
-import {APP_URL, SPA_URL} from "./index";
+import { APP_URL, SPA_URL } from './index'
 
 export const routes = {
   base: APP_URL,
@@ -6,5 +6,5 @@ export const routes = {
   registration: APP_URL + '/registration',
   settings: APP_URL + '/settings',
   recovery: APP_URL + '/recovery',
-  verification: APP_URL + '/verification',
+  verification: APP_URL + '/verification'
 }

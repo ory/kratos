@@ -1,18 +1,20 @@
-import {APP_URL, gen} from '../../../../helpers'
-import {routes as express} from "../../../../helpers/express";
-import {routes as react} from "../../../../helpers/react";
+import { APP_URL, appPrefix, gen } from '../../../../helpers'
+import { routes as express } from '../../../../helpers/express'
+import { routes as react } from '../../../../helpers/react'
 
 context('Registration success with email profile', () => {
-  [
+  ;[
     {
       route: express.registration,
-      app: 'express'as'express', profile: 'email'
+      app: 'express' as 'express',
+      profile: 'email'
     },
     {
       route: react.registration,
-      app: 'react'as'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     }
-  ].forEach(({route, profile, app}) => {
+  ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
@@ -21,7 +23,6 @@ context('Registration success with email profile', () => {
 
       beforeEach(() => {
         cy.visit(route)
-        cy.ensureCorrectApp(app)
       })
 
       it('should sign up and be logged in', () => {
@@ -30,18 +31,18 @@ context('Registration success with email profile', () => {
         const website = 'https://www.ory.sh/'
         const age = 30
 
-        cy.get('input[name="traits"]').should('not.exist')
+        cy.get(appPrefix(app) + 'input[name="traits"]').should('not.exist')
         cy.get('input[name="traits.email"]').type(email)
         cy.get('input[name="password"]').type(password)
         cy.get('input[name="traits.website').type(website)
         cy.get('input[name="traits.age"]').type(`${age}`)
-        cy.get('[type="checkbox"][name="traits.tos"]').click({force: true})
+        cy.get('[type="checkbox"][name="traits.tos"]').click({ force: true })
 
         cy.submitPasswordForm()
         cy.get('pre').should('contain.text', email)
 
         cy.getSession().should((session) => {
-          const {identity} = session
+          const { identity } = session
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.schema_id).to.equal('default')
@@ -67,7 +68,7 @@ context('Registration success with email profile', () => {
         cy.get('pre').should('contain.text', email)
 
         cy.getSession().should((session) => {
-          const {identity} = session
+          const { identity } = session
           expect(identity.id).to.not.be.empty
           expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.schema_id).to.equal('default')
@@ -75,15 +76,13 @@ context('Registration success with email profile', () => {
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
           expect(identity.traits.age).to.be.undefined
-          expect(identity.traits.tos).to.be.oneOf([false,undefined])
+          expect(identity.traits.tos).to.be.oneOf([false, undefined])
         })
       })
 
       it('should sign up and be redirected', () => {
         cy.browserReturnUrlOry()
-        cy.visit(
-          route + '?return_to=https://www.ory.sh/'
-        )
+        cy.visit(route + '?return_to=https://www.ory.sh/')
 
         const email = gen.email()
         const password = gen.password()
@@ -106,9 +105,7 @@ context('Registration success with email profile', () => {
       cy.shortRegisterLifespan()
       cy.browserReturnUrlOry()
       cy.proxy('express')
-      cy.visit(
-        express.registration + '?return_to=https://www.ory.sh/'
-      )
+      cy.visit(express.registration + '?return_to=https://www.ory.sh/')
       cy.ensureCorrectApp('express')
       cy.wait(105)
 

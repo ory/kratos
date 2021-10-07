@@ -1,25 +1,28 @@
-import {gen, website} from '../../../helpers'
-import {routes as express} from "../../../helpers/express";
-import {routes as react} from "../../../helpers/react";
+import { appPrefix, gen, website } from '../../../helpers'
+import { routes as express } from '../../../helpers/express'
+import { routes as react } from '../../../helpers/react'
 
 context('2FA lookup secrets', () => {
-  [
+  ;[
     {
       login: react.login,
       settings: react.settings,
       base: react.base,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     },
     {
       login: express.login,
       settings: express.settings,
       base: express.base,
-      app: 'express', profile: 'mfa'
+      app: 'express' as 'express',
+      profile: 'mfa'
     }
-  ].forEach(({settings, login, profile, app, base}) => {
+  ].forEach(({ settings, login, profile, app, base }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       let email = gen.email()
@@ -27,11 +30,15 @@ context('2FA lookup secrets', () => {
 
       beforeEach(() => {
         cy.visit(base)
-        cy.clearCookies()
+        cy.clearAllCookies()
         email = gen.email()
         password = gen.password()
-        cy.registerApi({email, password, fields: {'traits.website': website}})
-        cy.login({email, password, cookieUrl: base})
+        cy.registerApi({
+          email,
+          password,
+          fields: { 'traits.website': website }
+        })
+        cy.login({ email, password, cookieUrl: base })
 
         cy.longPrivilegedSessionTime()
         cy.sessionRequiresNo2fa()
@@ -41,7 +48,9 @@ context('2FA lookup secrets', () => {
         cy.sessionRequires2fa()
         cy.longPrivilegedSessionTime()
         cy.visit(settings)
-        cy.get('button[name="lookup_secret_regenerate"]').click()
+        cy.get(
+          appPrefix(app) + 'button[name="lookup_secret_regenerate"]'
+        ).click()
         cy.get('button[name="lookup_secret_confirm"]').click()
         cy.expectSettingsSaved()
         cy.visit(settings)
@@ -49,19 +58,16 @@ context('2FA lookup secrets', () => {
         cy.shortPrivilegedSessionTime()
         cy.get('button[name="lookup_secret_disable"]').click()
         cy.reauth({
-          expect: {email},
-          type: {email: email, password: password}
+          expect: { email },
+          type: { email: email, password: password }
         })
         cy.expectSettingsSaved()
 
-        cy.clearCookies()
-        cy.login({email: email, password: password, cookieUrl: base})
+        cy.clearAllCookies()
+        cy.login({ email: email, password: password, cookieUrl: base })
 
         cy.visit(login + '?aal=aal2')
-        cy.get('h2').should(
-          'contain.text',
-          'Two-Factor Authentication'
-        )
+        cy.get('h2').should('contain.text', 'Two-Factor Authentication')
         cy.get('*[name="method"][value="totp"]').should('not.exist')
         cy.get('*[name="method"][value="lookup_secret"]').should('not.exist')
         cy.get('*[name="method"][value="password"]').should('not.exist')
@@ -108,10 +114,7 @@ context('2FA lookup secrets', () => {
 
         cy.getSession({
           expectAal: 'aal2',
-          expectMethods: [
-            'password',
-            'lookup_secret',
-          ]
+          expectMethods: ['password', 'lookup_secret']
         })
 
         // Try to log in with a recovery code now
@@ -203,9 +206,8 @@ context('2FA lookup secrets', () => {
         cy.get('*[name=lookup_secret_confirm]').click()
         cy.get('*[name="lookup_secret_reveal"]').click()
         cy.getLookupSecrets().should((c) => {
-            expect(c).to.eql(regenCodes)
-          }
-        )
+          expect(c).to.eql(regenCodes)
+        })
 
         // Log in and see if we can use the old / new keys
         cy.visit(login + '?aal=aal2&refresh=true')
@@ -229,11 +231,10 @@ context('2FA lookup secrets', () => {
         cy.visit(settings)
         cy.get('button[name="lookup_secret_reveal"]').click()
         cy.getLookupSecrets().should((c) => {
-            let newCodes = regenCodes
-            newCodes[0] = 'Used'
-            expect(c).to.eql(newCodes)
-          }
-        )
+          let newCodes = regenCodes
+          newCodes[0] = 'Used'
+          expect(c).to.eql(newCodes)
+        })
       })
 
       it('should end up at login screen if trying to reveal without privileged session', () => {
@@ -241,8 +242,8 @@ context('2FA lookup secrets', () => {
         cy.visit(settings)
         cy.get('button[name="lookup_secret_regenerate"]').click()
         cy.reauth({
-          expect: {email},
-          type: {email: email, password: password}
+          expect: { email },
+          type: { email: email, password: password }
         })
 
         let codes
@@ -253,15 +254,15 @@ context('2FA lookup secrets', () => {
         cy.shortPrivilegedSessionTime()
         cy.get('button[name="lookup_secret_confirm"]').click()
         cy.reauth({
-          expect: {email},
-          type: {email: email, password: password}
+          expect: { email },
+          type: { email: email, password: password }
         })
 
         cy.shortPrivilegedSessionTime()
         cy.get('button[name="lookup_secret_reveal"]').click()
         cy.reauth({
-          expect: {email},
-          type: {email: email, password: password}
+          expect: { email },
+          type: { email: email, password: password }
         })
       })
 
@@ -270,10 +271,7 @@ context('2FA lookup secrets', () => {
         cy.get('*[name="method"][value="totp"]').should('not.exist')
         cy.get('*[name="method"][value="lookup_secret"]').should('not.exist')
         cy.get('*[name="method"][value="password"]').should('not.exist')
-        cy.get('h2').should(
-          'contain.text',
-          'Two-Factor Authentication'
-        )
+        cy.get('h2').should('contain.text', 'Two-Factor Authentication')
       })
     })
   })

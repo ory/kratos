@@ -1,18 +1,20 @@
-import {gen} from '../../../../helpers'
-import {routes as express} from "../../../../helpers/express";
-import {routes as react} from "../../../../helpers/react";
+import { appPrefix, gen } from '../../../../helpers'
+import { routes as express } from '../../../../helpers/express'
+import { routes as react } from '../../../../helpers/react'
 
 context('Settings errors with email profile', () => {
-  [
+  ;[
     {
       base: express.base,
-      app: 'express', profile: 'email'
+      app: 'express' as 'express',
+      profile: 'email'
     },
     {
       base: react.base,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     }
-  ].forEach(({ profile, app, base}) => {
+  ].forEach(({ profile, app, base }) => {
     describe(`for app ${app}`, () => {
       const identity = gen.identity()
 
@@ -20,18 +22,19 @@ context('Settings errors with email profile', () => {
         cy.useConfigProfile(profile)
         cy.registerApi({
           ...identity,
-          fields: {'traits.website': 'https://www.ory.sh/'}
+          fields: { 'traits.website': 'https://www.ory.sh/' }
         })
+        cy.proxy(app)
       })
 
       beforeEach(() => {
-        cy.login({...identity, cookieUrl: base})
+        cy.login({ ...identity, cookieUrl: base })
         cy.visit(base)
       })
 
       describe('use ui elements', () => {
         it('should use the json schema titles', () => {
-          cy.get('a[href*="settings"]').click()
+          cy.get(appPrefix(app) + 'a[href*="settings"]').click()
           cy.get('input[name="traits.email"]')
             .parent()
             .should('contain.text', 'Your E-Mail')

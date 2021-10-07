@@ -1,26 +1,29 @@
-import {APP_URL, gen, website} from '../../../helpers'
-import {authenticator} from 'otplib'
-import {routes as react} from "../../../helpers/react";
-import {routes as express} from "../../../helpers/express";
+import { APP_URL, gen, website } from '../../../helpers'
+import { authenticator } from 'otplib'
+import { routes as react } from '../../../helpers/react'
+import { routes as express } from '../../../helpers/express'
 
 context('2FA lookup secrets', () => {
-  [
+  ;[
     {
       login: react.login,
       settings: react.settings,
       base: react.base,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     },
     {
       login: express.login,
       settings: express.settings,
       base: express.base,
-      app: 'express', profile: 'mfa'
+      app: 'express' as 'express',
+      profile: 'mfa'
     }
-  ].forEach(({settings, login, profile, app, base}) => {
+  ].forEach(({ settings, login, profile, app, base }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       let email = gen.email()
@@ -30,8 +33,12 @@ context('2FA lookup secrets', () => {
         cy.clearAllCookies()
         email = gen.email()
         password = gen.password()
-        cy.registerApi({email, password, fields: {'traits.website': website}})
-        cy.login({email, password, cookieUrl: base})
+        cy.registerApi({
+          email,
+          password,
+          fields: { 'traits.website': website }
+        })
+        cy.login({ email, password, cookieUrl: base })
         cy.longPrivilegedSessionTime()
 
         cy.useLaxAal()
@@ -198,7 +205,7 @@ context('2FA lookup secrets', () => {
           expect(loc.search).to.not.include('aal')
           expect(loc.search).to.not.include('refresh')
         })
-        cy.get('h2').should('contain.text','Sign In')
+        cy.get('h2').should('contain.text', 'Sign In')
         cy.noSession()
       })
 

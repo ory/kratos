@@ -1,44 +1,50 @@
-import {gen} from '../../../../helpers'
-import {routes as express} from "../../../../helpers/express";
-import {routes as react} from "../../../../helpers/react";
+import { appPrefix, gen } from '../../../../helpers'
+import { routes as express } from '../../../../helpers/express'
+import { routes as react } from '../../../../helpers/react'
 
 describe('Basic email profile with failing login flows', () => {
-  [
+  ;[
     {
       route: express.login,
-      app: 'express' as 'express', profile: 'email'
+      app: 'express' as 'express',
+      profile: 'email'
     },
     {
       route: react.login,
-      app: 'react' as 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     }
-  ].forEach(({route, profile, app}) => {
+  ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
         cy.proxy(app)
-      });
+      })
 
       beforeEach(() => {
-        cy.clearCookies()
+        cy.clearAllCookies()
         cy.visit(route)
-        cy.ensureCorrectApp(app)
       })
 
       it('fails when CSRF cookies are missing', () => {
-        cy.get('input[name="password_identifier"]').type('i-do-not-exist')
+        cy.get(`${appPrefix(app)}input[name="password_identifier"]`).type(
+          'i-do-not-exist'
+        )
         cy.get('input[name="password"]').type('invalid-password')
 
-        cy.shouldHaveCsrfError({app})
+        cy.shouldHaveCsrfError({ app })
       })
 
       it('fails when a disallowed return_to url is requested', () => {
-        cy.shouldErrorOnDisallowedReturnTo(route + '?return_to=https://not-allowed', {app})
+        cy.shouldErrorOnDisallowedReturnTo(
+          route + '?return_to=https://not-allowed',
+          { app }
+        )
       })
 
       describe('shows validation errors when invalid signup data is used', () => {
         beforeEach(() => {
-          cy.clearCookies()
+          cy.clearAllCookies()
           cy.visit(route)
         })
 
@@ -61,9 +67,14 @@ describe('Basic email profile with failing login flows', () => {
             .should('have.value', identity)
 
           cy.submitPasswordForm()
-          cy.get('*[data-testid^="ui/message/"]').invoke('text').then((text) => {
-            expect(text).to.be.oneOf(['length must be >= 1, but got 0', 'Property password is missing.'])
-          })
+          cy.get('*[data-testid^="ui/message/"]')
+            .invoke('text')
+            .then((text) => {
+              expect(text).to.be.oneOf([
+                'length must be >= 1, but got 0',
+                'Property password is missing.'
+              ])
+            })
         })
 
         it('should show fail to sign in', () => {

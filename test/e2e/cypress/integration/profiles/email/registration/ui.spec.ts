@@ -1,14 +1,20 @@
-import {routes as express} from "../../../../helpers/express";
-import {routes as react} from "../../../../helpers/react";
+import { routes as express } from '../../../../helpers/express'
+import { routes as react } from '../../../../helpers/react'
+import { appPrefix } from '../../../../helpers'
 
 describe('Registration UI for email flows', () => {
-  [{
-    route: express.registration,
-    app: 'express' as 'express', profile: 'email'
-  }, {
-    route: react.registration,
-    app: 'react' as 'react', profile: 'spa'
-  }].forEach(({route, profile, app}) => {
+  ;[
+    {
+      route: express.registration,
+      app: 'express' as 'express',
+      profile: 'email'
+    },
+    {
+      route: react.registration,
+      app: 'react' as 'react',
+      profile: 'spa'
+    }
+  ].forEach(({ route, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
@@ -17,12 +23,11 @@ describe('Registration UI for email flows', () => {
 
       beforeEach(() => {
         cy.visit(route)
-        cy.ensureCorrectApp(app)
       })
 
       describe('use ui elements', () => {
         it('should use the json schema titles', () => {
-          cy.get('input[name="traits.email"]')
+          cy.get(appPrefix(app) + 'input[name="traits.email"]')
             .parent()
             .should('contain.text', 'Your E-Mail')
           cy.get('input[name="traits.website"]')

@@ -1,25 +1,28 @@
-import {gen, website} from '../../../helpers'
-import {routes as react} from "../../../helpers/react";
-import {routes as express} from "../../../helpers/express";
+import { appPrefix, gen, website } from '../../../helpers'
+import { routes as react } from '../../../helpers/react'
+import { routes as express } from '../../../helpers/express'
 
 context('2FA WebAuthn', () => {
-  [
+  ;[
     {
       login: react.login,
       settings: react.settings,
       base: react.base,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     },
     {
       login: express.login,
       settings: express.settings,
       base: express.base,
-      app: 'express', profile: 'mfa'
+      app: 'express' as 'express',
+      profile: 'mfa'
     }
-  ].forEach(({settings, login, profile, app, base}) => {
+  ].forEach(({ settings, login, profile, app, base }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       let email = gen.email()
@@ -31,8 +34,12 @@ context('2FA WebAuthn', () => {
 
         email = gen.email()
         password = gen.password()
-        cy.registerApi({email, password, fields: {'traits.website': website}})
-        cy.login({email, password, cookieUrl: base})
+        cy.registerApi({
+          email,
+          password,
+          fields: { 'traits.website': website }
+        })
+        cy.login({ email, password, cookieUrl: base })
 
         cy.longPrivilegedSessionTime()
         cy.task('sendCRI', {
@@ -61,7 +68,9 @@ context('2FA WebAuthn', () => {
               }
             }
           }).then((addResult) => {
-            cy.get('*[name="webauthn_register_displayname"]').type('key1')
+            cy.get(
+              appPrefix(app) + '*[name="webauthn_register_displayname"]'
+            ).type('key1')
 
             cy.clickWebAuthButton('register')
 
