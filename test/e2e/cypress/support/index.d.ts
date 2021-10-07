@@ -56,6 +56,15 @@ declare global {
       }): Chainable<Response<void>>
 
       /**
+       * Updates a user's settings using an API flow
+       *
+       * @param opts
+       */
+      settingsApi(opts: {
+        fields?: { [key: string]: any }
+      }): Chainable<Response<void>>
+
+      /**
        * Set the "privileged session lifespan" to a large value.
        */
       longPrivilegedSessionTime(): Chainable<void>
@@ -283,8 +292,10 @@ declare global {
 
       /**
        * Deletes all mail in the mail mock server.
+       *
+       * @param opts
        */
-      deleteMail(): Chainable<void>
+      deleteMail(opts?: { atLeast?: number }): Chainable<void>
 
       /**
        * Changes the config so that the link lifespan is very long.
@@ -312,6 +323,13 @@ declare global {
       recoverEmailButExpired(opts?: { expect: { email: string } }): Chainable<void>
 
       /**
+       * Expect a verification email which is expired.
+       *
+       * @param opts
+       */
+      verifyEmailButExpired(opts?: { expect: { password: string, email: string } }): Chainable<string>
+
+      /**
        * Disables verification
        */
       disableVerification(): Chainable<void>
@@ -336,12 +354,43 @@ declare global {
        *
        * @param opts
        */
-      recoverEmail(opts: {expect: {email: string},shouldVisit?:boolean}): Chainable<string>
+      recoverEmail(opts: { expect: { email: string }, shouldVisit?: boolean }): Chainable<string>
+
+      /**
+       * Expect a verification email which is valid.
+       *
+       * @param opts
+       */
+      verifyEmail(opts: { expect: { email: string, password: string, redirectTo?: string }, shouldVisit?: boolean }): Chainable<string>
 
       /**
        * Configures a hook which only allows verified email addresses to sign in.
        */
       enableLoginForVerifiedAddressOnly(): Chainable<void>
+
+      /**
+       * Sign a user in via the API and return the session.
+       *
+       * @param opts
+       */
+      loginApi(opts: { email: string, password: string }): Chainable<{ session: Session }>
+
+      /**
+       * Same as loginApi but uses dark magic to avoid cookie issues.
+       *
+       * @param opts
+       */
+      loginApiWithoutCookies(opts: { email: string, password: string }): Chainable<{ session: Session }>
+
+      /**
+       * Ensure correct app is used
+       */
+      ensureCorrectApp(app: 'react' | 'express'): Chainable<void>
+
+      /**
+       * Which app to proxy
+       */
+      proxy(app: 'react' | 'express'): Chainable<void>
     }
   }
 }
