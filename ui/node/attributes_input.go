@@ -116,9 +116,9 @@ func NewTextField(id string, text *text.Message, group Group) *Node {
 	}
 }
 
-func NewAnchorField(id string, href string, title *text.Message, group Group) *Node {
+func NewAnchorField(id string, href string, group Group, title *text.Message) *Node {
 	return &Node{
-		Type:       Text,
+		Type:       Anchor,
 		Group:      group,
 		Attributes: &AnchorAttributes{Title: title, HREF: href, Identifier: id},
 		Meta:       &Meta{},
