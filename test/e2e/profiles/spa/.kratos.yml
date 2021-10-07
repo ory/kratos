@@ -2,15 +2,15 @@ selfservice:
   flows:
     settings:
       privileged_session_max_age: 5m
-      ui_url: http://localhost:4458/settings
+      ui_url: http://localhost:4455/settings
       required_aal: aal1
 
     logout:
       after:
-        default_browser_return_url: http://localhost:4458/login
+        default_browser_return_url: http://localhost:4455/login
 
     registration:
-      ui_url: http://localhost:4458/registration
+      ui_url: http://localhost:4455/registration
       after:
         password:
           hooks:
@@ -21,17 +21,17 @@ selfservice:
             -
               hook: session
     login:
-      ui_url: http://localhost:4458/login
+      ui_url: http://localhost:4455/login
     error:
-      ui_url: http://localhost:4458/error
+      ui_url: http://localhost:4455/error
     verification:
       enabled: true
       lifespan: 5m
-      ui_url: http://localhost:4458/verify
+      ui_url: http://localhost:4455/verify
     recovery:
       enabled: true
       lifespan: 5m
-      ui_url: http://localhost:4458/recovery
+      ui_url: http://localhost:4455/recovery
 
   methods:
     oidc:
@@ -77,7 +77,7 @@ selfservice:
       config:
         rp:
           id: localhost
-          origin: http://localhost:4458
+          origin: http://localhost:4455
           display_name: Ory
 
 identity:
