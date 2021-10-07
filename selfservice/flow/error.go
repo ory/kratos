@@ -81,12 +81,12 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 	return &BrowserLocationChangeRequiredError{
 		RedirectBrowserTo: redirectTo,
 		DefaultError: &herodot.DefaultError{
-			IDField: text.ErrIDSelfServiceBrowserLocationChangeRequiredError,
-			CodeField:    http.StatusUnprocessableEntity,
-			StatusField:  http.StatusText(http.StatusUnprocessableEntity),
-			ReasonField:  fmt.Sprintf("In order to complete this flow please redirect the browser to: %s", redirectTo),
-			DebugField:   "",
-			ErrorField:   "browser location change required",
+			IDField:     text.ErrIDSelfServiceBrowserLocationChangeRequiredError,
+			CodeField:   http.StatusUnprocessableEntity,
+			StatusField: http.StatusText(http.StatusUnprocessableEntity),
+			ReasonField: fmt.Sprintf("In order to complete this flow please redirect the browser to: %s", redirectTo),
+			DebugField:  "",
+			ErrorField:  "browser location change required",
 		},
 	}
 }

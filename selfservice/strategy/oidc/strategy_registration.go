@@ -3,10 +3,12 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/decoderx"
-	"github.com/tidwall/sjson"
 	"net/http"
 	"time"
+
+	"github.com/tidwall/sjson"
+
+	"github.com/ory/x/decoderx"
 
 	"golang.org/x/oauth2"
 
@@ -85,7 +87,7 @@ func (s *Strategy) decodeRegistration(p *SubmitSelfServiceRegistrationFlowWithOi
 		decoderx.HTTPDecoderUseQueryAndBody(),
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return  errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -138,9 +140,9 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
 	if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w,r,flow.NewBrowserLocationChangeRequiredError(codeURL))
+		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
-		http.Redirect(w, r,codeURL , http.StatusSeeOther)
+		http.Redirect(w, r, codeURL, http.StatusSeeOther)
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
