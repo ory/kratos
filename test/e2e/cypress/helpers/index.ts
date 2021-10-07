@@ -2,7 +2,8 @@ export const email = () => Math.random().toString(36) + '@ory.sh'
 
 export const password = () => Math.random().toString(36)
 
-export const assertVerifiableAddress = ({isVerified, email}) => ({identity}) => {
+export const assertVerifiableAddress = ({isVerified, email}) => (session) => {
+  const {identity} = session
   expect(identity).to.have.property('verifiable_addresses')
   expect(identity.verifiable_addresses).to.have.length(1)
 
@@ -38,7 +39,7 @@ export const MOBILE_URL = (Cypress.env('mobile_url') || 'http://localhost:4457')
   /\/$/,
   ''
 )
-export const SPA_URL = (Cypress.env('react_url') || 'http://localhost:4458').replace(
+export const SPA_URL = (Cypress.env('react_url') || 'http://localhost:4455').replace(
   /\/$/,
   ''
 )
