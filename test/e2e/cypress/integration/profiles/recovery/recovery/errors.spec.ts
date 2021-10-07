@@ -1,31 +1,43 @@
-import { APP_URL, gen, parseHtml } from '../../../../helpers'
+import {gen, parseHtml} from '../../../../helpers'
+import {routes as react} from "../../../../helpers/react";
+import {routes as express} from "../../../../helpers/express";
 
-context('Recovery Profile', () => {
-  describe('Recovery', () => {
-    before(() => {
-      cy.useConfigProfile('recovery')
-    })
+const fields = {'traits.website': 'https://www.ory.sh'}
 
-    describe('error flow', () => {
-      let identity
-
+context('Account Recovery Errors', () => {
+  [
+    {
+      recovery: react.recovery,
+      app: 'react', profile: 'spa'
+    },
+    {
+      recovery: express.recovery,
+      app: 'express', profile: 'recovery'
+    }
+  ].forEach(({recovery, profile, app,}) => {
+    describe(`for app ${app}`, () => {
       before(() => {
         cy.deleteMail()
+        cy.useConfigProfile(profile)
       })
 
       beforeEach(() => {
+        cy.deleteMail()
         cy.longRecoveryLifespan()
         cy.longLinkLifespan()
-        cy.visit(APP_URL + '/recovery')
+        cy.disableVerification()
+        cy.enableRecovery()
       })
 
       it('should receive a stub email when recovering a non-existent account', () => {
+        cy.visit(recovery)
+
         const email = gen.email()
         cy.get('input[name="email"]').type(email)
         cy.get('button[value="link"]').click()
 
         cy.location('pathname').should('eq', '/recovery')
-        cy.get('.messages .message.info').should(
+        cy.get('[data-testid="ui/message/1060002"]').should(
           'have.text',
           'An email containing a recovery link has been sent to the email address you provided.'
         )
@@ -43,28 +55,26 @@ context('Recovery Profile', () => {
       })
 
       it('should cause form errors', () => {
+        cy.visit(recovery)
+
         cy.get('button[value="link"]').click()
-        cy.get('.messages .message').should(
+        cy.get('[data-testid="ui/message/4000002"]').should(
           'contain.text',
-          '"" is not valid "email"'
+          'Property email is missing.'
         )
-        cy.get('button[type="submit"][name="method"][value="link"]').should(
+        cy.get('[name="method"][value="link"]').should(
           'exist'
         )
       })
 
       it('is unable to recover the email address if the code is expired', () => {
         cy.shortLinkLifespan()
-        identity = gen.identity()
-        cy.register(identity)
-        cy.visit(APP_URL + '/recovery')
+        const identity = gen.identity()
+        cy.registerApi({...identity, fields})
+        cy.recoverApi({email: identity.email})
+        cy.recoverEmailButExpired({expect: {email: identity.email}})
 
-        cy.get('input[name="email"]').type(identity.email)
-        cy.get('button[value="link"]').click()
-
-        cy.recoverEmailButExpired({ expect: { email: identity.email } })
-
-        cy.get('.messages .message.error').should(
+        cy.get('[data-testid="ui/message/4060005"]').should(
           'contain.text',
           'The recovery flow expired'
         )
@@ -73,17 +83,15 @@ context('Recovery Profile', () => {
       })
 
       it('is unable to recover the account if the code is incorrect', () => {
-        identity = gen.identity()
-        cy.register(identity)
-        cy.visit(APP_URL + '/recovery')
-
-        cy.get('input[name="email"]').type(identity.email)
-        cy.get('button[value="link"]').click()
+        const identity = gen.identity()
+        cy.registerApi({...identity, fields})
+        cy.recoverApi({email: identity.email})
 
         cy.getMail().then((mail) => {
+          console.log(mail)
           const link = parseHtml(mail.body).querySelector('a')
           cy.visit(link.href + '-not') // add random stuff to the confirm challenge
-          cy.get('.messages .message.error').should(
+          cy.get('[data-testid="ui/message/4060004"]').should(
             'have.text',
             'The recovery token is invalid or has already been used. Please retry the flow.'
           )
@@ -92,12 +100,9 @@ context('Recovery Profile', () => {
       })
 
       it('is unable to recover the account using the token twice', () => {
-        identity = gen.identity()
-        cy.register(identity)
-        cy.visit(APP_URL + '/recovery')
-
-        cy.get('input[name="email"]').type(identity.email)
-        cy.get('button[value="link"]').click()
+        const identity = gen.identity()
+        cy.registerApi({...identity, fields})
+        cy.recoverApi({email: identity.email})
 
         cy.getMail().then((mail) => {
           const link = parseHtml(mail.body).querySelector('a')
@@ -107,7 +112,7 @@ context('Recovery Profile', () => {
           cy.logout()
 
           cy.visit(link.href)
-          cy.get('.messages .message.error').should(
+          cy.get('[data-testid="ui/message/4060004"]').should(
             'have.text',
             'The recovery token is invalid or has already been used. Please retry the flow.'
           )
