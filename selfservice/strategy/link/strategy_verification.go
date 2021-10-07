@@ -273,7 +273,7 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A verification flow is being retried because a validation error occurred.")
 
 	f, err := verification.NewFlow(s.d.Config(r.Context()),
-		s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), ft)
+		s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.VerificationStrategies(r.Context()), ft)
 	if err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
@@ -302,8 +302,12 @@ func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http
 		return s.handleVerificationError(w, r, f, nil, err)
 	}
 
-	if err := f.UI.ParseError(node.VerificationLinkGroup, verErr); err != nil {
-		return err
+	if expired := new(flow.ExpiredError); errors.As(verErr, &expired) {
+		return s.retryVerificationFlowWithMessage(w, r, ft, text.NewErrorValidationVerificationFlowExpired(expired.Ago))
+	} else {
+		if err := f.UI.ParseError(node.RecoveryLinkGroup, verErr); err != nil {
+			return err
+		}
 	}
 
 	if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
