@@ -69,8 +69,8 @@ context('Account Recovery Errors', () => {
 
       it('is unable to recover the email address if the code is expired', () => {
         cy.shortLinkLifespan()
-        const identity = gen.identity()
-        cy.registerApi({...identity, fields})
+        const identity = gen.identityWithWebsite()
+        cy.registerApi(identity)
         cy.recoverApi({email: identity.email})
         cy.recoverEmailButExpired({expect: {email: identity.email}})
 
@@ -83,8 +83,8 @@ context('Account Recovery Errors', () => {
       })
 
       it('is unable to recover the account if the code is incorrect', () => {
-        const identity = gen.identity()
-        cy.registerApi({...identity, fields})
+        const identity = gen.identityWithWebsite()
+        cy.registerApi(identity)
         cy.recoverApi({email: identity.email})
 
         cy.getMail().then((mail) => {
@@ -100,16 +100,20 @@ context('Account Recovery Errors', () => {
       })
 
       it('is unable to recover the account using the token twice', () => {
-        const identity = gen.identity()
-        cy.registerApi({...identity, fields})
+        const identity = gen.identityWithWebsite()
+        cy.registerApi(identity)
         cy.recoverApi({email: identity.email})
 
         cy.getMail().then((mail) => {
           const link = parseHtml(mail.body).querySelector('a')
 
-          cy.visit(link.href) // add random stuff to the confirm challenge
-          cy.getSession()
-          cy.logout()
+          // Workaround for cypress cy.visit limitation.
+          cy.request(link.href).should(response => {
+            // add random stuff to the confirm challenge
+            expect(response.status).to.eq(200)
+          })
+
+          cy.clearAllCookies()
 
           cy.visit(link.href)
           cy.get('[data-testid="ui/message/4060004"]').should(

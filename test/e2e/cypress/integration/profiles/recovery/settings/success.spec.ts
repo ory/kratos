@@ -5,16 +5,16 @@ import {routes as express} from "../../../../helpers/express";
 context('Account Recovery Success', () => {
   [
     {
-      recovery: react.recovery,
+      settings: react.settings,
       base: react.base,
       app: 'react', profile: 'spa'
     },
     {
-      recovery: express.recovery,
+      settings: express.settings,
       base: express.base,
       app: 'express', profile: 'recovery'
     }
-  ].forEach(({recovery, profile, base, app}) => {
+  ].forEach(({settings, profile, base, app}) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.deleteMail()
@@ -32,30 +32,22 @@ context('Account Recovery Success', () => {
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
-      })
-
-      it('should contain the recovery address in the session', () => {
-        cy.visit(recovery)
         cy.login({...identity, cookieUrl: base})
-        cy.getSession().should(assertRecoveryAddress(identity))
       })
 
-      it('should perform a recovery flow', () => {
-        cy.recoverApi({email: identity.email})
-
-        cy.recoverEmail({expect: identity})
-
-        cy.getSession()
-        cy.location('pathname').should('eq', '/settings')
-
-        const newPassword = gen.password()
-        cy.get('input[name="password"]').clear().type(newPassword)
-        cy.get('button[value="password"]').click()
+      it('should update the recovery address when updating the email', () => {
+        cy.visit(settings)
+        const email = gen.email()
+        cy.get('input[name="traits.email"]').clear().type(email)
+        cy.get('button[value="profile"]').click()
         cy.expectSettingsSaved()
-        cy.get('input[name="password"]').should('be.empty')
+        cy.get('input[name="traits.email"]').should('contain.value', email)
 
-        cy.logout()
-        cy.login({email: identity.email, password: newPassword, cookieUrl: base})
+        cy.getSession().should(assertRecoveryAddress({email}))
+      })
+
+      xit('should not show an immediate error when a recovery address already exists', () => {
+        // account enumeration prevention, needs to be implemented.
       })
     })
   })
