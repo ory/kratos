@@ -3,8 +3,9 @@ package text
 // This file contains error IDs for all system errors / JSON errors
 
 const (
-	ErrIDNeedsPrivilegedSession = "needs_privileged_session"
-	ErrIDSelfServiceFlowExpired = "self_service_flow_expired"
+	ErrIDNeedsPrivilegedSession                        = "needs_privileged_session"
+	ErrIDSelfServiceFlowExpired                        = "self_service_flow_expired"
+	ErrIDSelfServiceBrowserLocationChangeRequiredError = "browser_location_change_required"
 
 	ErrIDAlreadyLoggedIn             = "has_session_already"
 	ErrIDAddressNotVerified          = "no_verified_address"
