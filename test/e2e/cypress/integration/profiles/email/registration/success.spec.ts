@@ -43,7 +43,7 @@ context('Registration success with email profile', () => {
         cy.getSession().should((session) => {
           const {identity} = session
           expect(identity.id).to.not.be.empty
-          expect(identity.verifiable_addresses).to.be.undefined
+          expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.schema_id).to.equal('default')
           expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
           expect(identity.traits.website).to.equal(website)
@@ -69,13 +69,13 @@ context('Registration success with email profile', () => {
         cy.getSession().should((session) => {
           const {identity} = session
           expect(identity.id).to.not.be.empty
-          expect(identity.verifiable_addresses).to.be.undefined
+          expect(identity.verifiable_addresses).to.have.length(1)
           expect(identity.schema_id).to.equal('default')
           expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
           expect(identity.traits.website).to.equal(website)
           expect(identity.traits.email).to.equal(email)
           expect(identity.traits.age).to.be.undefined
-          expect(identity.traits.tos).to.equal(false)
+          expect(identity.traits.tos).to.be.oneOf([false,undefined])
         })
       })
 
@@ -105,9 +105,11 @@ context('Registration success with email profile', () => {
       cy.useConfigProfile('email')
       cy.shortRegisterLifespan()
       cy.browserReturnUrlOry()
+      cy.proxy('express')
       cy.visit(
         express.registration + '?return_to=https://www.ory.sh/'
       )
+      cy.ensureCorrectApp('express')
       cy.wait(105)
 
       const email = gen.email()
