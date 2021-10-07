@@ -194,28 +194,28 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 			return s.retryVerificationFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
 		}
 
-		return s.handleVerificationError(w, r, nil, body, err)
+		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	var f *verification.Flow
 	if !token.FlowID.Valid {
 		f, err = verification.NewFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(r.Context()), flow.TypeBrowser)
 		if err != nil {
-			return s.handleVerificationError(w, r, nil, body, err)
+			return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 		}
 
 		if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
-			return s.handleVerificationError(w, r, nil, body, err)
+			return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 		}
 	} else {
 		f, err = s.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), token.FlowID.UUID)
 		if err != nil {
-			return s.handleVerificationError(w, r, nil, body, err)
+			return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 		}
 	}
 
 	if err := token.Valid(); err != nil {
-		return s.handleVerificationError(w, r, f, body, err)
+		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	f.UI.Messages.Clear()
@@ -224,16 +224,16 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	f.SetCSRFToken(flow.GetCSRFToken(s.d, w, r, f.Type))
 	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
 	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
-		return s.handleVerificationError(w, r, f, body, err)
+		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	i, err := s.d.IdentityPool().GetIdentity(r.Context(), token.VerifiableAddress.IdentityID)
 	if err != nil {
-		return s.handleVerificationError(w, r, f, body, err)
+		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	if err := s.d.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
-		return s.handleVerificationError(w, r, f, body, err)
+		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	address := token.VerifiableAddress
@@ -242,7 +242,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	address.VerifiedAt = &verifiedAt
 	address.Status = identity.VerifiableAddressStatusCompleted
 	if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(r.Context(), address); err != nil {
-		return s.handleVerificationError(w, r, f, body, err)
+		return s.retryVerificationFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	defaultRedirectURL := s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()))
@@ -279,6 +279,33 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 	}
 
 	f.UI.Messages.Add(message)
+	if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
+		return s.handleVerificationError(w, r, f, nil, err)
+	}
+
+	if ft == flow.TypeBrowser {
+		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
+			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
+	}
+
+	return errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) retryVerificationFlowWithError(w http.ResponseWriter, r *http.Request, ft flow.Type, verErr error) error {
+	s.d.Logger().WithRequest(r).WithError(verErr).Debug("A verification flow is being retried because an error occurred.")
+
+	f, err := verification.NewFlow(s.d.Config(r.Context()),
+		s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), s.d.CSRFHandler().RegenerateToken(w, r), r, s.d.VerificationStrategies(r.Context()), ft)
+	if err != nil {
+		return s.handleVerificationError(w, r, f, nil, err)
+	}
+
+	if err := f.UI.ParseError(node.VerificationLinkGroup, verErr); err != nil {
+		return err
+	}
+
 	if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), f); err != nil {
 		return s.handleVerificationError(w, r, f, nil, err)
 	}

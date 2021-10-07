@@ -264,26 +264,26 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		Valid: true,
 	}
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
-		return s.HandleRecoveryError(w, r, f, nil, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	sess, _ := session.NewActiveSession(id, s.d.Config(r.Context()), time.Now().UTC(), identity.CredentialsTypeRecoveryLink)
 	if err := s.d.SessionManager().UpsertAndIssueCookie(r.Context(), w, r, sess); err != nil {
-		return s.HandleRecoveryError(w, r, f, nil, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	sf, err := s.d.SettingsHandler().NewFlow(w, r, sess.Identity, flow.TypeBrowser)
 	if err != nil {
-		return s.HandleRecoveryError(w, r, f, nil, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
-		return s.HandleRecoveryError(w, r, f, nil, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	sf.UI.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge())))
 	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), sf); err != nil {
-		return s.HandleRecoveryError(w, r, f, nil, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	http.Redirect(w, r, sf.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
@@ -297,7 +297,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 			return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed())
 		}
 
-		return s.HandleRecoveryError(w, r, nil, body, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	var f *recovery.Flow
@@ -305,21 +305,21 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 		f, err = recovery.NewFlow(s.d.Config(r.Context()), time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r),
 			r, s.d.RecoveryStrategies(r.Context()), flow.TypeBrowser)
 		if err != nil {
-			return s.HandleRecoveryError(w, r, nil, body, err)
+			return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 		}
 
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), f); err != nil {
-			return s.HandleRecoveryError(w, r, nil, body, err)
+			return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 		}
 	} else {
 		f, err = s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), token.FlowID.UUID)
 		if err != nil {
-			return s.HandleRecoveryError(w, r, nil, body, err)
+			return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 		}
 	}
 
 	if err := token.Valid(); err != nil {
-		return s.HandleRecoveryError(w, r, f, body, err)
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
 	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.RecoveryAddress.IdentityID)
@@ -346,6 +346,32 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 	}
 
 	req.UI.Messages.Add(message)
+	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
+		return err
+	}
+
+	if ft == flow.TypeBrowser {
+		http.Redirect(w, r, req.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
+			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusSeeOther)
+	}
+
+	return errors.WithStack(flow.ErrCompletedByStrategy)
+}
+
+func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Request, ft flow.Type, recErr error) error {
+	s.d.Logger().WithRequest(r).WithError( recErr).Debug("A recovery flow is being retried because a validation error occurred.")
+
+	req, err := recovery.NewFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.CSRFHandler().RegenerateToken(w,r), r, s.d.RecoveryStrategies(r.Context()), ft)
+	if err != nil {
+		return err
+	}
+
+	if err := req.UI.ParseError(node.RecoveryLinkGroup,recErr); err != nil {
+		return err
+	}
+
 	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
 		return err
 	}
