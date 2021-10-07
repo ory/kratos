@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+const got = require('got')
 const CRI = require('chrome-remote-interface')
 let criPort = 0,
   criClient = null
@@ -16,6 +17,9 @@ module.exports = (on) => {
   })
 
   on('task', {
+    httpRequest(params) {
+      return got(params).then(({body})=>body)
+    },
     // Reset chrome remote interface for clean state
     async resetCRI() {
       if (criClient) {
