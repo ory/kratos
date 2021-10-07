@@ -250,7 +250,7 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	verificationRequestURL, err := urlx.Parse(f.GetRequestURL())
 	if err != nil {
 		s.d.Logger().Debugf("error parsing verification requestURL: %s\n", err)
-		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusFound)
+		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusSeeOther)
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 	verificationRequest := http.Request{URL: verificationRequestURL}
@@ -261,11 +261,11 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 	)
 	if err != nil {
 		s.d.Logger().Debugf("error parsing redirectTo from verification: %s\n", err)
-		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusFound)
+		http.Redirect(w, r, defaultRedirectURL.String(), http.StatusSeeOther)
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	http.Redirect(w, r, returnTo.String(), http.StatusFound)
+	http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
@@ -284,10 +284,10 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 	}
 
 	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
-			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusFound)
+			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)

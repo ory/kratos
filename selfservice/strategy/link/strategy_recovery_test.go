@@ -405,7 +405,7 @@ func TestRecovery(t *testing.T) {
 			res, err := cl.Get(recoveryLink)
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
-			assert.Equal(t, http.StatusFound, res.StatusCode)
+			assert.Equal(t, http.StatusSeeOther, res.StatusCode)
 			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 2)
 			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
 			assert.Contains(t, cookies, x.CSRFTokenName)

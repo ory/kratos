@@ -377,7 +377,7 @@ func TestVerification(t *testing.T) {
 
 		res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}, "token": {token.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusFound, res.StatusCode)
+		assert.Equal(t, http.StatusSeeOther, res.StatusCode)
 		redirectURL, err := res.Location()
 		require.NoError(t, err)
 		assert.Equal(t, returnToURL, redirectURL.String())
