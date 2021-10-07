@@ -6,21 +6,23 @@ describe('Basic email profile with failing login flows', () => {
   [
     {
       route: express.login,
-      app: 'express', profile: 'email'
+      app: 'express' as 'express', profile: 'email'
     },
     {
       route: react.login,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react', profile: 'spa'
     }
   ].forEach(({route, profile, app}) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       });
 
       beforeEach(() => {
         cy.clearCookies()
         cy.visit(route)
+        cy.ensureCorrectApp(app)
       })
 
       it('fails when CSRF cookies are missing', () => {
