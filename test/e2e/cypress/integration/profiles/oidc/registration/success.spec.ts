@@ -1,4 +1,4 @@
-import {APP_URL, gen, website} from '../../../../helpers'
+import {APP_URL, appPrefix, gen, website} from '../../../../helpers'
 import {routes as react} from "../../../../helpers/react";
 import {routes as express} from "../../../../helpers/express";
 
@@ -7,17 +7,18 @@ context('Social Sign Up Successes', () => {
     {
       login: react.login,
       registration: react.registration,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react', profile: 'spa'
     },
     {
       login: express.login,
       registration: express.registration,
-      app: 'express', profile: 'oidc'
+      app: 'express' as 'express', profile: 'oidc'
     }
   ].forEach(({registration, login, profile, app}) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       beforeEach(() => {
@@ -40,7 +41,7 @@ context('Social Sign Up Successes', () => {
         cy.registerOidc({email, expectSession: false, route: registration})
 
         cy.get('#registration-password').should('not.exist')
-        cy.get('[name="traits.email"]').should('have.value', email)
+        cy.get(appPrefix(app)+'[name="traits.email"]').should('have.value', email)
         cy.get('[data-testid="ui/message/4000002"]').should(
           'contain.text',
           'Property website is missing'
@@ -90,7 +91,7 @@ context('Social Sign Up Successes', () => {
         const email = gen.email()
 
         cy.registerOidc({email, website, route: registration})
-        cy.get('[data-testid=logout]').click()
+        cy.logout()
         cy.noSession()
         cy.visit(registration)
         cy.triggerOidc()
@@ -129,6 +130,13 @@ context('Social Sign Up Successes', () => {
         cy.triggerOidc()
 
         cy.getSession().should(shouldSession(email))
+      })
+
+      it('should be able to sign up with redirects', () => {
+        const email = gen.email()
+        cy.registerOidc({email, website, route: registration + '?return_to=https://www.ory.sh/'})
+        cy.location('href').should('eq','https://www.ory.sh/')
+        cy.logout()
       })
     })
   })
