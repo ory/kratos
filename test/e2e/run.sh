@@ -57,9 +57,6 @@ fi
   npm i
 )
 
-kratos=./test/e2e/.bin/kratos
-go build -tags sqlite -o $kratos .
-
 if [ -z ${CI+x} ]; then
   docker rm mailslurper hydra hydra-ui -f || true
   docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps >"${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
@@ -176,16 +173,13 @@ run() {
   )
 
   export DSN=${1}
-  if [ "$DSN" != "memory" ]; then
-    $kratos migrate sql -e --yes
-  fi
 
   for profile in email mobile oidc recovery verification mfa spa; do
     yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" >test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
 
-  ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
+  (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
   npm run wait-on -- -l -t 300000 http-get://localhost:4434/health/ready \
     http-get://localhost:4455/health/alive \
