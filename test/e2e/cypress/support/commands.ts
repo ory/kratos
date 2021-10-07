@@ -270,7 +270,7 @@ Cypress.Commands.add(
         const form = body.ui
         return cy.request({
           method: form.method,
-          body: mergeFields(form, {email,            method: 'link'}),
+          body: mergeFields(form, {email, method: 'link'}),
           url: form.action
         })
       })
@@ -552,17 +552,16 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
-      if (redirectTo) {
-        cy.request({url: link.href, followRedirect: false}).should(
-          (response) => {
-            expect(response.status).to.eq(302)
+      cy.request({url: link.href, followRedirect: false}).should(
+        (response) => {
+          expect(response.status).to.eq(303)
+          if (redirectTo) {
             expect(response.redirectedToUrl).to.eq(redirectTo)
+          } else {
+            expect(response.redirectedToUrl).to.not.contain('verification')
           }
-        )
-      } else {
-        cy.visit(link.href)
-        cy.location('pathname').should('not.contain', 'verify')
-      }
+        }
+      )
     })
 )
 
@@ -591,7 +590,7 @@ Cypress.Commands.add(
     })
 )
 
-Cypress.Commands.add('recoverEmail', ({expect: {email}}) =>
+Cypress.Commands.add('recoverEmail', ({expect: {email}, shouldVisit = true}) =>
   cy.getMail().then((message) => {
     expect(message.subject.trim()).to.equal('Recover access to your account')
     expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
@@ -602,7 +601,10 @@ Cypress.Commands.add('recoverEmail', ({expect: {email}}) =>
     expect(link).to.not.be.null
     expect(link.href).to.contain(APP_URL)
 
-    cy.visit(link.href)
+    if (shouldVisit) {
+      cy.visit(link.href)
+    }
+    return link.href
   })
 )
 

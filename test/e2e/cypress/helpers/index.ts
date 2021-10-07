@@ -60,7 +60,8 @@ export const website = 'https://www.ory.sh/'
 export const gen = {
   email,
   password,
-  identity: () => ({email: email(), password: password()})
+  identity: () => ({email: email(), password: password()}),
+  identityWithWebsite: () => ({email: email(), password: password(),fields:{'traits.website': 'https://www.ory.sh'}})
 }
 
 // Format is

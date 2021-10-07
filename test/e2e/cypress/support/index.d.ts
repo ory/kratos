@@ -336,7 +336,12 @@ declare global {
        *
        * @param opts
        */
-      recoverEmail(opts: {expect: {email: string}}): Chainable<void>
+      recoverEmail(opts: {expect: {email: string},shouldVisit?:boolean}): Chainable<string>
+
+      /**
+       * Configures a hook which only allows verified email addresses to sign in.
+       */
+      enableLoginForVerifiedAddressOnly(): Chainable<void>
     }
   }
 }
