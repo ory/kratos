@@ -6,20 +6,22 @@ context('Registration success with email profile', () => {
   [
     {
       route: express.registration,
-      app: 'express', profile: 'email'
+      app: 'express'as'express', profile: 'email'
     },
     {
       route: react.registration,
-      app: 'react', profile: 'spa'
+      app: 'react'as'react', profile: 'spa'
     }
   ].forEach(({route, profile, app}) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       beforeEach(() => {
         cy.visit(route)
+        cy.ensureCorrectApp(app)
       })
 
       it('should sign up and be logged in', () => {

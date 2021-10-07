@@ -4,18 +4,20 @@ import {routes as react} from "../../../../helpers/react";
 describe('Registration UI for email flows', () => {
   [{
     route: express.registration,
-    app: 'express', profile: 'email'
+    app: 'express' as 'express', profile: 'email'
   }, {
     route: react.registration,
-    app: 'react', profile: 'spa'
+    app: 'react' as 'react', profile: 'spa'
   }].forEach(({route, profile, app}) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       beforeEach(() => {
         cy.visit(route)
+        cy.ensureCorrectApp(app)
       })
 
       describe('use ui elements', () => {

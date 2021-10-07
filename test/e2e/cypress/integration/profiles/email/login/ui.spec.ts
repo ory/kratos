@@ -4,18 +4,20 @@ import {routes as react} from "../../../../helpers/react";
 context('UI tests using the email profile', () => {
   [{
     route: express.login,
-    app: 'express', profile: 'email'
+    app: 'express'as'express', profile: 'email'
   }, {
     route: react.login,
-    app: 'react', profile: 'spa'
+    app: 'react'as'react', profile: 'spa'
   }].forEach(({route, profile, app}) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       beforeEach(() => {
         cy.visit(route)
+        cy.ensureCorrectApp(app)
       })
 
       it('should use the json schema titles', () => {
