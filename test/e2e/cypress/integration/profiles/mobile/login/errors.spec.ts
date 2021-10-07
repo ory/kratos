@@ -18,12 +18,12 @@ context('Mobile Profile', () => {
 
         cy.get('*[data-testid="field/password_identifier"]').should(
           'contain.text',
-          'length must be >= 1, but got 0'
+          'Property password_identifier is missing.'
         )
 
         cy.get('*[data-testid="field/password"]').should(
           'not.contain.text',
-          'length must be >= 1, but got 0'
+          'Property password is missing.'
         )
       })
 
