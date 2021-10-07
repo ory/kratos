@@ -9,7 +9,6 @@ describe('Basic email profile with succeeding login flows', () => {
   before(() => {
     cy.registerApi({ email, password, fields: { 'traits.website': website } })
   })
-
   ;[
     {
       route: express.login,
