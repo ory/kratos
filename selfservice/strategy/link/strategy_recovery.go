@@ -286,7 +286,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
 
-	http.Redirect(w, r, sf.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+	http.Redirect(w, r, sf.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
@@ -351,10 +351,10 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 	}
 
 	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, req.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
+		http.Redirect(w, r, req.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
-			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusFound)
+			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
