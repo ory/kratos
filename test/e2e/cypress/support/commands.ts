@@ -587,8 +587,6 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
-      console.log(link.href)
-      cy.wait(10000)
       cy.visit(link.href)
     })
 )
