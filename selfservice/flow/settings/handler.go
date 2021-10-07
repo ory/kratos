@@ -475,6 +475,8 @@ type submitSelfServiceSettingsFlowBody struct{}
 // - `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
 //		identity logged in instead.
 // - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+// - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+//		Most likely used in Social Sign In flows.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -496,6 +498,7 @@ type submitSelfServiceSettingsFlowBody struct{}
 //       400: selfServiceSettingsFlow
 //       401: jsonError
 //       403: jsonError
+//       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
 func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid, err := GetFlowID(r)

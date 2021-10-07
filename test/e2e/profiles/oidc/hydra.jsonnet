@@ -7,7 +7,7 @@ else
     identity: {
       traits: {
         email: claims.sub,
-        [if "website" in claims then "website" else null]: claims.website,
+        [if "website" in claims then "website" else null]: claims.website
       },
     },
   }
