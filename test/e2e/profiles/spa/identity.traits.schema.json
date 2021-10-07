@@ -17,6 +17,12 @@
               "password": {
                 "identifier": true
               }
+            },
+            "verification": {
+              "via": "email"
+            },
+            "recovery": {
+              "via": "email"
             }
           }
         },
@@ -32,6 +38,14 @@
         "age": {
           "title": "Age",
           "type": "number"
+        },
+        "consent": {
+          "title": "Consent",
+          "type": "boolean"
+        },
+        "newsletter": {
+          "title": "Newsletter",
+          "type": "boolean"
         }
       },
       "required": [

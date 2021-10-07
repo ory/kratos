@@ -495,6 +495,8 @@ type submitSelfServiceLoginFlowBody struct{}
 // - `has_session_already`: The user is already signed in.
 // - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 // - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+// - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+//		Most likely used in Social Sign In flows.
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -514,6 +516,7 @@ type submitSelfServiceLoginFlowBody struct{}
 //       200: successfulSelfServiceLoginWithoutBrowser
 //       302: emptyResponse
 //       400: selfServiceLoginFlow
+//       422: selfServiceBrowserLocationChangeRequiredError
 //       500: jsonError
 func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid, err := flow.GetFlowID(r)

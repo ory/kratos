@@ -3,6 +3,7 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/decoderx"
 	"net/http"
 	"time"
 
@@ -68,6 +69,24 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	Method string `json:"method"`
 }
 
+func (s *Strategy) decodeLogin(p *SubmitSelfServiceLoginFlowWithOidcMethodBody, r *http.Request) error {
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(loginSchema)
+	if err != nil {
+		return  errors.WithStack(err)
+	}
+
+	if err := s.dec.Decode(r, &p, compiler,
+		decoderx.HTTPKeepRequestBody(true),
+		decoderx.HTTPDecoderUseQueryAndBody(),
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+		return  errors.WithStack(err)
+	}
+
+	return nil
+}
+
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
@@ -125,11 +144,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, err
 	}
 
-	if err := r.ParseForm(); err != nil {
+	var p SubmitSelfServiceLoginFlowWithOidcMethodBody
+	if err := s.decodeLogin(&p, r); err != nil {
 		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 
-	var pid = r.Form.Get("provider") // this can come from both url query and post body
+	var pid = p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
@@ -162,7 +182,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
 			FlowID: f.ID.String(),
-			Form:   r.PostForm,
+			Traits: json.RawMessage("{}"),
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
@@ -173,6 +193,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
-	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
+	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	if x.IsJSONRequest(r) {
+		s.d.Writer().WriteError(w,r,flow.NewBrowserLocationChangeRequiredError(codeURL))
+	} else {
+		http.Redirect(w, r,codeURL , http.StatusSeeOther)
+	}
+
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 }

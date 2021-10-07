@@ -1,6 +1,8 @@
 package flow
 
 import (
+	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/ory/kratos/x"
@@ -22,7 +24,7 @@ var (
 //
 // swagger:model selfServiceFlowExpiredError
 type ExpiredError struct {
-	*herodot.DefaultError
+	DefaultError *herodot.DefaultError `json:"error"`
 
 	// Since when the flow has expired
 	Ago time.Duration `json:"since"`
@@ -43,6 +45,14 @@ func (e *ExpiredError) GetFlow() Flow {
 	return e.flow
 }
 
+func (e *ExpiredError) EnhanceJSONError() interface{} {
+	return e
+}
+
+func (e *ExpiredError) Error() string {
+	return e.DefaultError.Error()
+}
+
 func NewFlowExpiredError(at time.Time) *ExpiredError {
 	ago := time.Since(at)
 	return &ExpiredError{
@@ -51,4 +61,36 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 			WithError("self-service flow expired").
 			WithReasonf("The self-service flow expired %.2f minutes ago, initialize a new one.", ago.Minutes()),
 	}
+}
+
+// Is sent when a flow requires a browser to change its location.
+//
+// swagger:model selfServiceBrowserLocationChangeRequiredError
+type BrowserLocationChangeRequiredError struct {
+	DefaultError *herodot.DefaultError `json:"error"`
+
+	// Since when the flow has expired
+	RedirectBrowserTo string `json:"redirect_browser_to"`
+}
+
+func (e *BrowserLocationChangeRequiredError) EnhanceJSONError() interface{} {
+	return e
+}
+
+func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationChangeRequiredError {
+	return &BrowserLocationChangeRequiredError{
+		RedirectBrowserTo: redirectTo,
+		DefaultError: &herodot.DefaultError{
+			IDField: text.ErrIDSelfServiceBrowserLocationChangeRequiredError,
+			CodeField:    http.StatusUnprocessableEntity,
+			StatusField:  http.StatusText(http.StatusUnprocessableEntity),
+			ReasonField:  fmt.Sprintf("In order to complete this flow please redirect the browser to: %s", redirectTo),
+			DebugField:   "",
+			ErrorField:   "browser location change required",
+		},
+	}
+}
+
+func (e *BrowserLocationChangeRequiredError) Error() string {
+	return e.DefaultError.Error()
 }

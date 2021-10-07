@@ -111,9 +111,9 @@ type Strategy struct {
 }
 
 type authCodeContainer struct {
-	FlowID string     `json:"flow_id"`
-	State  string     `json:"state"`
-	Form   url.Values `json:"form"`
+	FlowID string          `json:"flow_id"`
+	State  string          `json:"state"`
+	Traits json.RawMessage `json:"traits"`
 }
 
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -281,7 +281,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 		if _, ok := req.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
 		} else if !isForced(req) {
-			http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusSeeOther)
 			return true
 		}
 	}

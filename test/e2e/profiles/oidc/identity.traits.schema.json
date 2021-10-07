@@ -28,7 +28,7 @@
         },
         "consent": {
           "title": "Consent",
-          "const": true
+          "type": "boolean"
         },
         "newsletter": {
           "title": "Newsletter",

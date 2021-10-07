@@ -16,16 +16,56 @@ selfservice:
           hooks:
             -
               hook: session
+        oidc:
+          hooks:
+            -
+              hook: session
     login:
       ui_url: http://localhost:4458/login
     error:
       ui_url: http://localhost:4458/error
     verification:
+      enabled: true
+      lifespan: 5m
       ui_url: http://localhost:4458/verify
     recovery:
+      enabled: true
+      lifespan: 5m
       ui_url: http://localhost:4458/recovery
 
   methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          -
+            id: hydra
+            label: Ory
+            provider: generic
+            client_id: kratos-client
+            client_secret: kratos-secret
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          -
+            id: google
+            provider: generic
+            client_id: google-client
+            client_secret: kratos-secret
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          -
+            id: github
+            provider: generic
+            client_id: github-client
+            client_secret: kratos-secret
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
     totp:
       enabled: true
       config:
@@ -41,7 +81,7 @@ selfservice:
           display_name: Ory
 
 identity:
-  default_schema_url: file://test/e2e/profiles/email/identity.traits.schema.json
+  default_schema_url: file://test/e2e/profiles/spa/identity.traits.schema.json
 
 session:
   whoami:
