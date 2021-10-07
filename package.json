@@ -20,6 +20,7 @@
     "chrome-remote-interface": "^0.31.0",
     "cypress": "^8.4.1",
     "dayjs": "^1.10.4",
+    "got": "^11.8.2",
     "ory-prettier-styles": "1.1.1",
     "otplib": "^12.0.1",
     "prettier": "2.2.1",
