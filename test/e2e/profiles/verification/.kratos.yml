@@ -11,7 +11,7 @@ selfservice:
       privileged_session_max_age: 1m
 
     verification:
-      ui_url: http://localhost:4455/verify
+      ui_url: http://localhost:4455/verification
       enabled: true
       lifespan: 5m
       after:
