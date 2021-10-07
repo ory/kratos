@@ -146,6 +146,42 @@ Cypress.Commands.add('useLaxAal', ({} = {}) => {
   })
 })
 
+Cypress.Commands.add('disableVerification', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.verification.enabled = false
+    return config
+  })
+})
+
+Cypress.Commands.add('enableVerification', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.verification.enabled = true
+    return config
+  })
+})
+
+Cypress.Commands.add('enableRecovery', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.recovery.enabled = true
+    return config
+  })
+})
+
+Cypress.Commands.add('disableRecovery', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.recovery.enabled = false
+    return config
+  })
+})
+
+Cypress.Commands.add('useLaxAal', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.settings.required_aal = 'aal1'
+    config.session.whoami.required_aal = 'aal1'
+    return config
+  })
+})
+
 Cypress.Commands.add(
   'register',
   ({
@@ -224,6 +260,26 @@ Cypress.Commands.add(
 )
 
 Cypress.Commands.add(
+  'recoverApi',
+  ({email}) =>
+    cy
+      .request({
+        url: APP_URL + '/self-service/recovery/api'
+      })
+      .then(({body}) => {
+        const form = body.ui
+        return cy.request({
+          method: form.method,
+          body: mergeFields(form, {email,            method: 'link'}),
+          url: form.action
+        })
+      })
+      .then(({body}) => {
+        expect(body.state).to.contain('sent_email')
+      })
+)
+
+Cypress.Commands.add(
   'registerOidc',
   ({
      email,
@@ -233,11 +289,12 @@ Cypress.Commands.add(
      rememberConsent = true,
      acceptLogin = true,
      acceptConsent = true,
-     expectSession = true
+     expectSession = true,
+     route = APP_URL + '/registration'
    }) => {
-    cy.visit(APP_URL + '/auth/registration')
+    cy.visit(route)
 
-    cy.get('button[value="hydra"]').click()
+    cy.triggerOidc()
 
     cy.get('#username').type(email)
     if (rememberLogin) {
@@ -301,7 +358,7 @@ Cypress.Commands.add('browserReturnUrlOry', ({} = {}) => {
 
 Cypress.Commands.add('loginOidc', ({expectSession = true, url = APP_URL + '/login'}) => {
   cy.visit(url)
-  cy.get('button[value="hydra"]').click()
+  cy.triggerOidc('hydra')
   if (expectSession) {
     cy.getSession()
   } else {
@@ -371,7 +428,11 @@ Cypress.Commands.add('loginMobile', ({email, password}) => {
 })
 
 Cypress.Commands.add('logout', () => {
-  cy.get('.logout a').click()
+  cy.getCookies().should((cookies) => {
+    const c = cookies.find(({name}) => name.indexOf('ory_kratos_session') > -1)
+    expect(c).to.not.be.undefined
+    cy.clearCookie(c.name)
+  })
   cy.noSession()
 })
 
@@ -516,8 +577,9 @@ Cypress.Commands.add(
 // Uses the verification email but waits so that it expires
 Cypress.Commands.add(
   'recoverEmailButExpired',
-  ({expect: {email} = {email: undefined}} = {}) =>
+  ({expect: {email}}) =>
     cy.getMail().then((message) => {
+      console.log(message)
       expect(message.subject.trim()).to.equal('Recover access to your account')
       expect(message.toAddresses[0].trim()).to.equal(email)
 
@@ -525,11 +587,13 @@ Cypress.Commands.add(
       expect(link).to.not.be.null
       expect(link.href).to.contain(APP_URL)
 
+      console.log(link.href)
+      cy.wait(10000)
       cy.visit(link.href)
     })
 )
 
-Cypress.Commands.add('recoverEmail', ({expect: {email} = {email: undefined}} = {}) =>
+Cypress.Commands.add('recoverEmail', ({expect: {email}}) =>
   cy.getMail().then((message) => {
     expect(message.subject.trim()).to.equal('Recover access to your account')
     expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
@@ -636,22 +700,22 @@ Cypress.Commands.add('submitProfileForm', () => {
 Cypress.Commands.add('clickWebAuthButton', (type: string) => {
   cy.get('*[data-testid="node/script/webauthn_script"]').should('exist')
   cy.wait(500) // Wait for script to load
-  cy.get('*[name="webauthn_'+type+'_trigger"]').click()
+  cy.get('*[name="webauthn_' + type + '_trigger"]').click()
   cy.wait(500) // Wait webauth to pass
 })
 
 Cypress.Commands.add('shouldShow2FAScreen', () => {
-  cy.get('h2').should('contain.text','Two-Factor Authentication')
+  cy.get('h2').should('contain.text', 'Two-Factor Authentication')
   cy.get('[data-testid="ui/message/1010004"]').should(
     'contain.text',
     'Please complete the second authentication challenge.'
   )
 })
 
-Cypress.Commands.add('shouldErrorOnDisallowedReturnTo', (init: string, {app}: { app: 'express' | 'react', }) => {
+Cypress.Commands.add('shouldErrorOnDisallowedReturnTo', (init: string, {app}: { app: 'express' | 'react' }) => {
   cy.visit(init, {failOnStatusCode: false})
   if (app === 'react') {
-    cy.location('pathname').should('include', '/settings')
+    cy.location('href').should('include', init.split('?')[0])
     cy.get('.Toastify').should('contain.text', 'The return_to address is not allowed.')
   } else {
     cy.location('pathname').should('contain', 'error')
@@ -689,4 +753,9 @@ Cypress.Commands.add('shouldHaveCsrfError', ({app}: { app: 'express' | 'react', 
     })
     cy.get('.Toastify').should('contain.text', 'A security violation was detected, please fill out the form again.')
   }
+})
+
+
+Cypress.Commands.add('triggerOidc', (provider: string = 'hydra') => {
+  cy.get('[name="provider"][value="' + provider + '"]').click()
 })

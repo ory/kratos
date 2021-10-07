@@ -86,6 +86,13 @@ declare global {
       registerApi(opts?: { email: string, password: string, fields: { [key: string]: string } }): Chainable<Session>
 
       /**
+       * Submits a recovery flow via the API
+       *
+       * @param opts
+       */
+      recoverApi(opts: { email: string }): Chainable<void>
+
+      /**
        * Changes the config so that the login flow lifespan is very short.
        *
        *
@@ -216,7 +223,120 @@ declare global {
        *
        * @param type
        */
-      clickWebAuthButton (type: 'login' | 'register') : Chainable<void>
+      clickWebAuthButton(type: 'login' | 'register'): Chainable<void>
+
+      /**
+       * Sign up a user using Social Sign In
+       *
+       * @param opts
+       */
+      registerOidc
+      (opts: {
+        email?: string,
+        website?: string,
+        scopes?: Array<string>,
+        rememberLogin?: boolean,
+        rememberConsent?: boolean,
+        acceptLogin?: boolean,
+        acceptConsent?: boolean,
+        expectSession?: boolean,
+        route?: string
+      }): Chainable<void>
+
+      /**
+       * Sign in a user using Social Sign In
+       *
+       * @param opts
+       */
+      loginOidc(opts: { expectSession?: boolean, url?: string }): Chainable<void>
+
+      /**
+       * Triggers a Social Sign In flow for the given provider
+       *
+       * @param provider
+       */
+      triggerOidc(provider?: string): Chainable<void>
+
+
+      /**
+       * Changes the config so that the recovery privileged lifespan is very long.
+       *
+       * Useful when testing privileged recovery flows.
+       *
+       * @see shortPrivilegedRecoveryTime()
+       */
+      longRecoveryLifespan(): Chainable<void>
+
+      /**
+       * Changes the config so that the verification privileged lifespan is very long.
+       *
+       * Useful when testing privileged verification flows.
+       *
+       * @see shortPrivilegedVerificationTime()
+       */
+      longVerificationLifespan(): Chainable<void>
+
+      /**
+       * Log a user out
+       */
+      logout(): Chainable<void>
+
+      /**
+       * Deletes all mail in the mail mock server.
+       */
+      deleteMail(): Chainable<void>
+
+      /**
+       * Changes the config so that the link lifespan is very long.
+       *
+       * Useful when testing recovery/verification flows.
+       *
+       * @see shortLinkLifespan()
+       */
+      longLinkLifespan(): Chainable<void>
+
+      /**
+       * Changes the config so that the link lifespan is very short.
+       *
+       * Useful when testing recovery/verification flows.
+       *
+       * @see longLinkLifespan()
+       */
+      shortLinkLifespan(): Chainable<void>
+
+      /**
+       * Expect a recovery email which is expired.
+       *
+       * @param opts
+       */
+      recoverEmailButExpired(opts?: { expect: { email: string } }): Chainable<void>
+
+      /**
+       * Disables verification
+       */
+      disableVerification(): Chainable<void>
+
+      /**
+       * Enables verification
+       */
+      enableVerification(): Chainable<void>
+
+      /**
+       * Enables recovery
+       */
+      enableRecovery(): Chainable<void>
+
+      /**
+       * Disabled recovery
+       */
+      disableRecovery(): Chainable<void>
+
+      /**
+       * Expect a recovery email which is valid.
+       *
+       * @param opts
+       */
+      recoverEmail(opts: {expect: {email: string}}): Chainable<void>
     }
   }
 }
