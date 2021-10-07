@@ -4,9 +4,10 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"github.com/tidwall/sjson"
 	"net/http"
 	"time"
+
+	"github.com/tidwall/sjson"
 
 	"golang.org/x/oauth2"
 
@@ -43,7 +44,6 @@ func (s *Strategy) SettingsStrategyID() string {
 	return s.ID().String()
 }
 
-
 func (s *Strategy) decoderSettings(p *submitSelfServiceSettingsFlowWithOidcMethodBody, r *http.Request) error {
 	raw, err := sjson.SetBytes(settingsSchema,
 		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
@@ -62,7 +62,7 @@ func (s *Strategy) decoderSettings(p *submitSelfServiceSettingsFlowWithOidcMetho
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return  errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -226,7 +226,7 @@ func (p *submitSelfServiceSettingsFlowWithOidcMethodBody) SetFlowID(rid uuid.UUI
 
 func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
 	var p submitSelfServiceSettingsFlowWithOidcMethodBody
-	if err := s.decoderSettings(&p,r); err != nil {
+	if err := s.decoderSettings(&p, r); err != nil {
 		return nil, err
 	}
 
@@ -353,9 +353,9 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 
 	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
 	if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w,r,flow.NewBrowserLocationChangeRequiredError(codeURL))
+		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
-		http.Redirect(w, r,codeURL , http.StatusSeeOther)
+		http.Redirect(w, r, codeURL, http.StatusSeeOther)
 	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)

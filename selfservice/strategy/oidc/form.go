@@ -3,7 +3,9 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/imdario/mergo"
+
 	"github.com/ory/kratos/identity"
 )
 

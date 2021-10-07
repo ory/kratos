@@ -3,11 +3,12 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/decoderx"
 	"net/http"
 	"time"
 
 	"golang.org/x/oauth2"
+
+	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/session"
 
@@ -72,7 +73,7 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 func (s *Strategy) decodeLogin(p *SubmitSelfServiceLoginFlowWithOidcMethodBody, r *http.Request) error {
 	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(loginSchema)
 	if err != nil {
-		return  errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
 	if err := s.dec.Decode(r, &p, compiler,
@@ -81,7 +82,7 @@ func (s *Strategy) decodeLogin(p *SubmitSelfServiceLoginFlowWithOidcMethodBody, 
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return  errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -195,9 +196,9 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
 	if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w,r,flow.NewBrowserLocationChangeRequiredError(codeURL))
+		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
-		http.Redirect(w, r,codeURL , http.StatusSeeOther)
+		http.Redirect(w, r, codeURL, http.StatusSeeOther)
 	}
 
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
