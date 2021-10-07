@@ -5,21 +5,38 @@ import {
   parseHtml,
   verifyHrefPattern
 } from '../../../../helpers'
+import { routes as react } from '../../../../helpers/react'
+import { routes as express } from '../../../../helpers/express'
 
-context('Verification Profile', () => {
-  describe('Verify', () => {
-    before(() => {
-      cy.useConfigProfile('verification')
-    })
+context('Account Verification Error', () => {
+  ;[
+    {
+      verification: react.verification,
+      base: react.base,
+      app: 'react' as 'react',
+      profile: 'verification'
+    },
+    {
+      verification: express.verification,
+      base: express.base,
+      app: 'express' as 'express',
+      profile: 'verification'
+    }
+  ].forEach(({ profile, verification, app, base }) => {
+    describe(`for app ${app}`, () => {
+      before(() => {
+        cy.deleteMail()
+        cy.useConfigProfile(profile)
+        cy.proxy(app)
+      })
 
-    describe('error flow', () => {
       let identity
       before(() => {
         cy.deleteMail()
       })
 
       beforeEach(() => {
-        cy.clearCookies({ domain: null })
+        cy.clearAllCookies()
         cy.longVerificationLifespan()
         cy.longLinkLifespan()
 
@@ -27,19 +44,19 @@ context('Verification Profile', () => {
         cy.register(identity)
         cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
-        cy.clearCookies({ domain: null })
+        cy.clearAllCookies()
         cy.login(identity)
-        cy.visit(APP_URL + '/verify')
+        cy.visit(verification)
       })
 
       it('is unable to verify the email address if the code is expired', () => {
         cy.shortLinkLifespan()
 
-        cy.visit(APP_URL + '/verify')
+        cy.visit(APP_URL + '/verification')
         cy.get('input[name="email"]').type(identity.email)
         cy.get('button[value="link"]').click()
 
-        cy.get('.messages .message').should(
+        cy.get('[data-testid="ui/message/1070001"]').should(
           'contain.text',
           'An email containing a verification'
         )
@@ -51,7 +68,7 @@ context('Verification Profile', () => {
         cy.get('input[name="email"]').type(identity.email)
         cy.get('button[value="link"]').click()
 
-        cy.get('.messages .message').should(
+        cy.get('[data-testid="ui/message/1070001"]').should(
           'contain.text',
           'An email containing a verification'
         )

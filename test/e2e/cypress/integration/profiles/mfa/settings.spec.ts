@@ -1,40 +1,47 @@
-import {gen, website} from '../../../helpers'
-import {routes as express} from "../../../helpers/express";
-import {routes as react} from "../../../helpers/react";
+import { appPrefix, gen, website } from '../../../helpers'
+import { routes as express } from '../../../helpers/express'
+import { routes as react } from '../../../helpers/react'
 
 context('2FA UI settings tests', () => {
-  [
+  ;[
     {
       settings: react.settings,
       base: react.base,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     },
     {
       settings: express.settings,
       base: express.base,
-      app: 'express', profile: 'mfa'
+      app: 'express' as 'express',
+      profile: 'mfa'
     }
-  ].forEach(({settings, profile, base, app}) => {
+  ].forEach(({ settings, profile, base, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       const email = gen.email()
       const password = gen.password()
 
       before(() => {
-        cy.registerApi({email, password, fields: {'traits.website': website}})
+        cy.registerApi({
+          email,
+          password,
+          fields: { 'traits.website': website }
+        })
       })
 
       beforeEach(() => {
-        cy.clearCookies()
-        cy.login({email, password, cookieUrl: base})
+        cy.clearAllCookies()
+        cy.login({ email, password, cookieUrl: base })
         cy.visit(settings)
       })
 
       it('shows all settings forms', () => {
-        cy.get('h3').should('contain.text', 'Profile Settings')
+        cy.get(appPrefix(app) + 'h3').should('contain.text', 'Profile Settings')
         cy.get('h3').should('contain.text', 'Change Password')
         cy.get('h3').should('contain.text', 'Manage 2FA Backup Recovery Codes')
         cy.get('h3').should('contain.text', 'Manage 2FA TOTP Authenticator App')

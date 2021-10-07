@@ -21,7 +21,6 @@ app.use('/.well-known/', proxy(process.env.KRATOS_PUBLIC_URL, '/.well-known/'))
 
 app.use('/', (req, res, next) => {
   const pc = fs.readFileSync(require.resolve('../proxy.json'))
-  console.log(pc,JSON.parse(pc.toString()) )
   if (JSON.parse(pc.toString()) === 'react') {
     proxy(process.env.KRATOS_UI_REACT_URL)(req, res, next)
   } else {

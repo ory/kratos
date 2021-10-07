@@ -1,24 +1,27 @@
-import {assertRecoveryAddress, gen} from '../../../../helpers'
-import {routes as react} from "../../../../helpers/react";
-import {routes as express} from "../../../../helpers/express";
+import { appPrefix, assertRecoveryAddress, gen } from '../../../../helpers'
+import { routes as react } from '../../../../helpers/react'
+import { routes as express } from '../../../../helpers/express'
 
 context('Account Recovery Success', () => {
-  [
+  ;[
     {
       settings: react.settings,
       base: react.base,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     },
     {
       settings: express.settings,
       base: express.base,
-      app: 'express', profile: 'recovery'
+      app: 'express' as 'express',
+      profile: 'recovery'
     }
-  ].forEach(({settings, profile, base, app}) => {
+  ].forEach(({ settings, profile, base, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.deleteMail()
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       let identity
@@ -32,18 +35,20 @@ context('Account Recovery Success', () => {
 
         identity = gen.identityWithWebsite()
         cy.registerApi(identity)
-        cy.login({...identity, cookieUrl: base})
+        cy.login({ ...identity, cookieUrl: base })
       })
 
       it('should update the recovery address when updating the email', () => {
         cy.visit(settings)
         const email = gen.email()
-        cy.get('input[name="traits.email"]').clear().type(email)
+        cy.get(appPrefix(app) + 'input[name="traits.email"]')
+          .clear()
+          .type(email)
         cy.get('button[value="profile"]').click()
         cy.expectSettingsSaved()
         cy.get('input[name="traits.email"]').should('contain.value', email)
 
-        cy.getSession().should(assertRecoveryAddress({email}))
+        cy.getSession().should(assertRecoveryAddress({ email }))
       })
 
       xit('should not show an immediate error when a recovery address already exists', () => {

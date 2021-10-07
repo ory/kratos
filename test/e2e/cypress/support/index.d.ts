@@ -1,4 +1,4 @@
-import {Session} from "@ory/kratos-client";
+import { Session } from '@ory/kratos-client'
 
 export interface MailMessage {
   fromAddress: string
@@ -15,21 +15,17 @@ declare global {
        *
        * @param options
        */
-      deleteMail(options: {
-        atLeast?: boolean,
-      }): Chainable<void>
+      deleteMail(options: { atLeast?: boolean }): Chainable<void>
 
       /**
        * Fetch the browser's Ory Session.
        *
        * @param opts
        */
-      getSession(opts?:
-                   {
-                     expectAal: 'aal2' | 'aal1',
-                     expectMethods: Array<'password' | 'webauthn' | 'lookup_secret' | 'totp'>,
-                   }
-      ): Chainable<Session>
+      getSession(opts?: {
+        expectAal: 'aal2' | 'aal1'
+        expectMethods: Array<'password' | 'webauthn' | 'lookup_secret' | 'totp'>
+      }): Chainable<Session>
 
       /**
        * Expect that the browser has no valid Ory Kratos Cookie Session.
@@ -41,7 +37,12 @@ declare global {
        *
        * @param opts
        */
-      login(opts: { email: string, password: string, expectSession?: boolean, cookieUrl?: string }): Chainable<Response<Session | undefined>>
+      login(opts: {
+        email: string
+        password: string
+        expectSession?: boolean
+        cookieUrl?: string
+      }): Chainable<Response<Session | undefined>>
 
       /**
        * Sign up a user
@@ -49,9 +50,9 @@ declare global {
        * @param opts
        */
       register(opts: {
-        email: string,
-        password: string,
-        query?: { [key: string]: string },
+        email: string
+        password: string
+        query?: { [key: string]: string }
         fields?: { [key: string]: any }
       }): Chainable<Response<void>>
 
@@ -76,7 +77,9 @@ declare global {
        */
       getMail(opts?: { removeMail: boolean }): Chainable<MailMessage>
 
-      performEmailVerification(opts?: { expect?: { email?: string, redirectTo?: string } }): Chainable<void>
+      performEmailVerification(opts?: {
+        expect?: { email?: string; redirectTo?: string }
+      }): Chainable<void>
 
       /**
        * Sets the Ory Kratos configuration profile.
@@ -92,7 +95,11 @@ declare global {
        *
        * @param opts
        */
-      registerApi(opts?: { email: string, password: string, fields: { [key: string]: string } }): Chainable<Session>
+      registerApi(opts?: {
+        email: string
+        password: string
+        fields: { [key: string]: string }
+      }): Chainable<Session>
 
       /**
        * Submits a recovery flow via the API
@@ -157,8 +164,8 @@ declare global {
        * @param opts
        */
       reauth(opts: {
-        expect: { email },
-        type: { email?: string, password?: string }
+        expect: { email }
+        type: { email?: string; password?: string }
       }): Chainable<void>
 
       /**
@@ -191,7 +198,9 @@ declare global {
        */
       expectSettingsSaved(): Chainable<void>
 
-      clearCookies(options?: Partial<Loggable & Timeoutable & { domain: null | string }>): Chainable<null>
+      clearCookies(
+        options?: Partial<Loggable & Timeoutable & { domain: null | string }>
+      ): Chainable<null>
 
       /**
        * A workaround for cypress not being able to clear cookies properly
@@ -221,7 +230,10 @@ declare global {
        * @param init
        * @param opts
        */
-      shouldErrorOnDisallowedReturnTo(init: string, opts: { app: string }): Chainable<void>
+      shouldErrorOnDisallowedReturnTo(
+        init: string,
+        opts: { app: string }
+      ): Chainable<void>
 
       /**
        * Expect that the second factor login screen is shown
@@ -239,16 +251,15 @@ declare global {
        *
        * @param opts
        */
-      registerOidc
-      (opts: {
-        email?: string,
-        website?: string,
-        scopes?: Array<string>,
-        rememberLogin?: boolean,
-        rememberConsent?: boolean,
-        acceptLogin?: boolean,
-        acceptConsent?: boolean,
-        expectSession?: boolean,
+      registerOidc(opts: {
+        email?: string
+        website?: string
+        scopes?: Array<string>
+        rememberLogin?: boolean
+        rememberConsent?: boolean
+        acceptLogin?: boolean
+        acceptConsent?: boolean
+        expectSession?: boolean
         route?: string
       }): Chainable<void>
 
@@ -257,7 +268,10 @@ declare global {
        *
        * @param opts
        */
-      loginOidc(opts: { expectSession?: boolean, url?: string }): Chainable<void>
+      loginOidc(opts: {
+        expectSession?: boolean
+        url?: string
+      }): Chainable<void>
 
       /**
        * Triggers a Social Sign In flow for the given provider
@@ -265,7 +279,6 @@ declare global {
        * @param provider
        */
       triggerOidc(provider?: string): Chainable<void>
-
 
       /**
        * Changes the config so that the recovery privileged lifespan is very long.
@@ -320,14 +333,18 @@ declare global {
        *
        * @param opts
        */
-      recoverEmailButExpired(opts?: { expect: { email: string } }): Chainable<void>
+      recoverEmailButExpired(opts?: {
+        expect: { email: string }
+      }): Chainable<void>
 
       /**
        * Expect a verification email which is expired.
        *
        * @param opts
        */
-      verifyEmailButExpired(opts?: { expect: { password: string, email: string } }): Chainable<string>
+      verifyEmailButExpired(opts?: {
+        expect: { password?: string; email: string }
+      }): Chainable<string>
 
       /**
        * Disables verification
@@ -354,14 +371,20 @@ declare global {
        *
        * @param opts
        */
-      recoverEmail(opts: { expect: { email: string }, shouldVisit?: boolean }): Chainable<string>
+      recoverEmail(opts: {
+        expect: { email: string }
+        shouldVisit?: boolean
+      }): Chainable<string>
 
       /**
        * Expect a verification email which is valid.
        *
        * @param opts
        */
-      verifyEmail(opts: { expect: { email: string, password: string, redirectTo?: string }, shouldVisit?: boolean }): Chainable<string>
+      verifyEmail(opts: {
+        expect: { email: string; password?: string; redirectTo?: string }
+        shouldVisit?: boolean
+      }): Chainable<string>
 
       /**
        * Configures a hook which only allows verified email addresses to sign in.
@@ -373,19 +396,20 @@ declare global {
        *
        * @param opts
        */
-      loginApi(opts: { email: string, password: string }): Chainable<{ session: Session }>
+      loginApi(opts: {
+        email: string
+        password: string
+      }): Chainable<{ session: Session }>
 
       /**
        * Same as loginApi but uses dark magic to avoid cookie issues.
        *
        * @param opts
        */
-      loginApiWithoutCookies(opts: { email: string, password: string }): Chainable<{ session: Session }>
-
-      /**
-       * Ensure correct app is used
-       */
-      ensureCorrectApp(app: 'react' | 'express'): Chainable<void>
+      loginApiWithoutCookies(opts: {
+        email: string
+        password: string
+      }): Chainable<{ session: Session }>
 
       /**
        * Which app to proxy

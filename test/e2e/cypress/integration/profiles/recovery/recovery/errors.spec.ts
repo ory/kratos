@@ -1,24 +1,25 @@
-import {gen, parseHtml} from '../../../../helpers'
-import {routes as react} from "../../../../helpers/react";
-import {routes as express} from "../../../../helpers/express";
-
-const fields = {'traits.website': 'https://www.ory.sh'}
+import { appPrefix, gen, parseHtml } from '../../../../helpers'
+import { routes as react } from '../../../../helpers/react'
+import { routes as express } from '../../../../helpers/express'
 
 context('Account Recovery Errors', () => {
-  [
+  ;[
     {
       recovery: react.recovery,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     },
     {
       recovery: express.recovery,
-      app: 'express', profile: 'recovery'
+      app: 'express' as 'express',
+      profile: 'recovery'
     }
-  ].forEach(({recovery, profile, app,}) => {
+  ].forEach(({ recovery, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.deleteMail()
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       beforeEach(() => {
@@ -33,7 +34,7 @@ context('Account Recovery Errors', () => {
         cy.visit(recovery)
 
         const email = gen.email()
-        cy.get('input[name="email"]').type(email)
+        cy.get(appPrefix(app) + 'input[name="email"]').type(email)
         cy.get('button[value="link"]').click()
 
         cy.location('pathname').should('eq', '/recovery')
@@ -62,17 +63,15 @@ context('Account Recovery Errors', () => {
           'contain.text',
           'Property email is missing.'
         )
-        cy.get('[name="method"][value="link"]').should(
-          'exist'
-        )
+        cy.get('[name="method"][value="link"]').should('exist')
       })
 
       it('is unable to recover the email address if the code is expired', () => {
         cy.shortLinkLifespan()
         const identity = gen.identityWithWebsite()
         cy.registerApi(identity)
-        cy.recoverApi({email: identity.email})
-        cy.recoverEmailButExpired({expect: {email: identity.email}})
+        cy.recoverApi({ email: identity.email })
+        cy.recoverEmailButExpired({ expect: { email: identity.email } })
 
         cy.get('[data-testid="ui/message/4060005"]').should(
           'contain.text',
@@ -85,7 +84,7 @@ context('Account Recovery Errors', () => {
       it('is unable to recover the account if the code is incorrect', () => {
         const identity = gen.identityWithWebsite()
         cy.registerApi(identity)
-        cy.recoverApi({email: identity.email})
+        cy.recoverApi({ email: identity.email })
 
         cy.getMail().then((mail) => {
           console.log(mail)
@@ -102,13 +101,13 @@ context('Account Recovery Errors', () => {
       it('is unable to recover the account using the token twice', () => {
         const identity = gen.identityWithWebsite()
         cy.registerApi(identity)
-        cy.recoverApi({email: identity.email})
+        cy.recoverApi({ email: identity.email })
 
         cy.getMail().then((mail) => {
           const link = parseHtml(mail.body).querySelector('a')
 
           // Workaround for cypress cy.visit limitation.
-          cy.request(link.href).should(response => {
+          cy.request(link.href).should((response) => {
             // add random stuff to the confirm challenge
             expect(response.status).to.eq(200)
           })

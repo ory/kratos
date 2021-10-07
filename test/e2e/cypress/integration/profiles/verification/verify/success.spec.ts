@@ -1,17 +1,28 @@
 import { APP_URL, assertVerifiableAddress, gen } from '../../../../helpers'
+import { routes as react } from '../../../../helpers/react'
+import { routes as express } from '../../../../helpers/express'
 
-context('Verification Profile', () => {
-  describe('Verify', () => {
-    before(() => {
-      cy.useConfigProfile('verification')
-    })
-
-    describe('successful flow', () => {
-      let identity
-
+context('Account Verification Settings Success', () => {
+  ;[
+    {
+      verification: react.verification,
+      app: 'react' as 'react',
+      profile: 'verification'
+    },
+    {
+      verification: express.verification,
+      app: 'express' as 'express',
+      profile: 'verification'
+    }
+  ].forEach(({ profile, verification, app }) => {
+    describe(`for app ${app}`, () => {
       before(() => {
         cy.deleteMail()
+        cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
+
+      let identity
 
       beforeEach(() => {
         identity = gen.identity()
@@ -19,25 +30,21 @@ context('Verification Profile', () => {
         cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
         cy.login(identity)
-        cy.visit(APP_URL + '/verify')
+        cy.visit(verification)
       })
 
       it('should request verification and receive an email and verify it', () => {
         cy.get('input[name="email"]').type(identity.email)
         cy.get('button[value="link"]').click()
 
-        cy.get('.messages .message').should(
+        cy.get('[data-testid="ui/message/1070001"]').should(
           'contain.text',
           'An email containing a verification'
         )
 
-        cy.get('button[type="submit"][name="method"][value="link"]').should(
-          'exist'
-        )
+        cy.get('[name="method"][value="link"]').should('exist')
 
         cy.verifyEmail({ expect: { email: identity.email } })
-
-        cy.location('pathname').should('eq', '/')
       })
 
       it('should request verification for an email that does not exist yet', () => {
@@ -45,7 +52,7 @@ context('Verification Profile', () => {
         cy.get('input[name="email"]').type(email)
         cy.get('button[value="link"]').click()
 
-        cy.get('.messages .message').should(
+        cy.get('[data-testid="ui/message/1070001"]').should(
           'contain.text',
           'An email containing a verification'
         )
@@ -70,10 +77,7 @@ context('Verification Profile', () => {
 
         cy.verifyEmail({ expect: { email: identity.email } })
 
-        cy.location('pathname').should('eq', '/')
-
         // identity is verified
-
         cy.logout()
 
         // registered with other email address
@@ -83,7 +87,7 @@ context('Verification Profile', () => {
 
         cy.login(identity2)
 
-        cy.visit(APP_URL + '/verify')
+        cy.visit(APP_URL + '/verification')
 
         // request verification link for identity
         cy.get('input[name="email"]').type(identity.email)
@@ -95,12 +99,10 @@ context('Verification Profile', () => {
         cy.getSession().should(
           assertVerifiableAddress({ email: identity2.email, isVerified: false })
         )
-
-        cy.location('pathname').should('eq', '/')
       })
 
       it('should redirect to return_to after completing verification', () => {
-        cy.clearCookies()
+        cy.clearAllCookies()
         // registered with other email address
         const identity2 = gen.identity()
         cy.register(identity2)
@@ -113,7 +115,7 @@ context('Verification Profile', () => {
         })
         // request verification link for identity
         cy.get('input[name="email"]').type(identity2.email)
-        cy.get('button[type="submit"]').click()
+        cy.get('[name="method"][value="link"]').click()
         cy.verifyEmail({
           expect: {
             email: identity2.email,

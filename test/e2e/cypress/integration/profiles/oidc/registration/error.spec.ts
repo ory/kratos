@@ -1,21 +1,24 @@
-import {gen, website} from '../../../../helpers'
-import {routes as react} from "../../../../helpers/react";
-import {routes as express} from "../../../../helpers/express";
+import { appPrefix, gen, website } from '../../../../helpers'
+import { routes as react } from '../../../../helpers/react'
+import { routes as express } from '../../../../helpers/express'
 
 context('Social Sign Up Errors', () => {
-  [
+  ;[
     {
       registration: react.registration,
-      app: 'react', profile: 'spa'
+      app: 'react' as 'react',
+      profile: 'spa'
     },
     {
       registration: express.registration,
-      app: 'express', profile: 'oidc'
+      app: 'express' as 'express',
+      profile: 'oidc'
     }
-  ].forEach(({registration, profile, app}) => {
+  ].forEach(({ registration, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
+        cy.proxy(app)
       })
 
       beforeEach(() => {
@@ -27,7 +30,7 @@ context('Social Sign Up Errors', () => {
         cy.triggerOidc()
         cy.get('#reject').click()
         cy.location('pathname').should('equal', '/registration')
-        cy.get('[data-testid="ui/message/4000001"]').should(
+        cy.get(appPrefix(app) + '[data-testid="ui/message/4000001"]').should(
           'contain.text',
           'login rejected request'
         )
@@ -56,8 +59,11 @@ context('Social Sign Up Errors', () => {
         cy.get('#website').type(website)
         cy.get('#accept').click()
         cy.location('pathname').should('equal', '/registration')
-        cy.get('[data-testid="ui/message/4000001"]').should('contain.text', 'no id_token')
+        cy.get('[data-testid="ui/message/4000001"]').should(
+          'contain.text',
+          'no id_token'
+        )
       })
     })
   })
-  })
+})
