@@ -14,11 +14,11 @@
     "text-run": "exit 0"
   },
   "devDependencies": {
-    "@ory/kratos-client": "^0.0.0-next.8d3b018594f7",
+    "@ory/kratos-client": "0.0.0-next.8d3b018594f7",
     "@types/node": "^16.9.6",
     "@types/yamljs": "^0.2.31",
     "chrome-remote-interface": "^0.31.0",
-    "cypress": "^8.4.1",
+    "cypress": "^8.5.0",
     "dayjs": "^1.10.4",
     "got": "^11.8.2",
     "ory-prettier-styles": "1.1.1",
