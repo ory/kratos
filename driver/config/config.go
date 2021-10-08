@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -14,6 +15,17 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/spf13/cobra"
+
+	"github.com/ory/x/jsonschemax"
+
+	"github.com/ory/x/watcherx"
+
+	"github.com/ory/jsonschema/v3"
+	"github.com/ory/kratos/embedx"
+
+	"github.com/ory/x/tlsx"
 
 	"github.com/google/uuid"
 
@@ -173,8 +185,10 @@ type (
 	}
 	Schemas []Schema
 	Config  struct {
-		l *logrusx.Logger
-		p *configx.Provider
+		l              *logrusx.Logger
+		p              *configx.Provider
+		identitySchema *jsonschema.Schema
+		cmd            *cobra.Command
 	}
 
 	Provider interface {
@@ -228,13 +242,15 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
-	p, err := New(context.TODO(), l, opts...)
+func MustNew(t *testing.T, l *logrusx.Logger, cmd *cobra.Command, opts ...configx.OptionModifier) *Config {
+	p, err := New(context.TODO(), l, cmd, opts...)
 	require.NoError(t, err)
 	return p
 }
 
-func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, cmd *cobra.Command, opts ...configx.OptionModifier) (*Config, error) {
+	var c *Config
+
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
 		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "secrets.cipher", "client_secret"),
@@ -242,15 +258,81 @@ func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier)
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
 		configx.WithContext(ctx),
+		configx.AttachWatcher(func(event watcherx.Event, err error) {
+			if c == nil {
+				panic(errors.New("the config provider did not initialise correctly in time"))
+			}
+			if err := c.validateIdentitySchemas(); err != nil {
+				l.WithError(err).
+					Errorf("The changed identity schema configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting the process.")
+			}
+		}),
 	}, opts...)
 
-	p, err := configx.New(ValidationSchema, opts...)
+	p, err := configx.New([]byte(embedx.ConfigSchema), opts...)
 	if err != nil {
 		return nil, err
 	}
 
 	l.UseConfig(p)
-	return &Config{l: l, p: p}, nil
+
+	c = &Config{l: l, p: p, cmd: cmd}
+
+	if !p.SkipValidation() {
+		if err := c.validateIdentitySchemas(); err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
+}
+
+func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
+	if p.identitySchema == nil {
+		c := jsonschema.NewCompiler()
+		err := embedx.AddSchemaResources(c, embedx.IdentityMeta)
+		if err != nil {
+			return nil, err
+		}
+		p.identitySchema, err = c.Compile(embedx.IdentityMeta.GetSchemaID())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return p.identitySchema, nil
+}
+
+func (p *Config) validateIdentitySchemas() error {
+	j, err := p.getIdentitySchemaValidator()
+	if err != nil {
+		return err
+	}
+
+	for _, s := range p.IdentityTraitsSchemas() {
+		resource, err := jsonschema.LoadURL(s.URL)
+		if err != nil {
+			return err
+		}
+		defer resource.Close()
+
+		schema, err := io.ReadAll(resource)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err = j.Validate(bytes.NewBuffer(schema)); err != nil {
+			p.formatJsonErrors(schema, err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Config) formatJsonErrors(schema []byte, err error) {
+	_, _ = fmt.Fprintln(p.cmd.ErrOrStderr(), "")
+
+	jsonschemax.FormatValidationErrorForCLI(p.cmd.ErrOrStderr(), schema, err)
 }
 
 func (p *Config) Source() *configx.Provider {

@@ -251,7 +251,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		return
 	}
 
-	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: StateActive, StateChangedAt: sqlxx.NullTime(time.Now())}
+	stateChangedAt := sqlxx.NullTime(time.Now())
+	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: StateActive, StateChangedAt: &stateChangedAt}
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -349,8 +350,10 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
 		}
 
+		stateChangedAt := sqlxx.NullTime(time.Now())
+
 		identity.State = ur.State
-		identity.StateChangedAt = sqlxx.NullTime(time.Now())
+		identity.StateChangedAt = &stateChangedAt
 	}
 
 	identity.Traits = []byte(ur.Traits)

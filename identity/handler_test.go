@@ -225,10 +225,11 @@ func TestHandler(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					res := send(t, ts, "POST", "/identities", http.StatusCreated, json.RawMessage(`{"traits": {"bar":"baz"}}`))
+					stateChangedAt := sqlxx.NullTime(res.Get("state_changed_at").Time())
 
 					i.Traits = []byte(res.Get("traits").Raw)
 					i.ID = x.ParseUUID(res.Get("id").String())
-					i.StateChangedAt = sqlxx.NullTime(res.Get("state_changed_at").Time())
+					i.StateChangedAt = &stateChangedAt
 					assert.NotEmpty(t, res.Get("id").String())
 
 					assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)

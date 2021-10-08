@@ -94,7 +94,7 @@ type Identity struct {
 	State State `json:"state" faker:"-" db:"state"`
 
 	// StateChangedAt contains the last time when the identity's state changed.
-	StateChangedAt sqlxx.NullTime `json:"state_changed_at" faker:"-" db:"state_changed_at"`
+	StateChangedAt *sqlxx.NullTime `json:"state_changed_at,omitempty" faker:"-" db:"state_changed_at"`
 
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 	// in a self-service manner. The input will always be validated against the JSON Schema defined
@@ -225,6 +225,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		traitsSchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
+	stateChangedAt := sqlxx.NullTime(time.Now())
 	return &Identity{
 		ID:                  x.NewUUID(),
 		Credentials:         map[CredentialsType]Credentials{},
@@ -232,7 +233,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		SchemaID:            traitsSchemaID,
 		VerifiableAddresses: []VerifiableAddress{},
 		State:               StateActive,
-		StateChangedAt:      sqlxx.NullTime(time.Now()),
+		StateChangedAt:      &stateChangedAt,
 		l:                   new(sync.RWMutex),
 	}
 }

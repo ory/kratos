@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/verification"
 
@@ -25,7 +27,7 @@ import (
 )
 
 func TestFlow(t *testing.T) {
-	conf, err := config.New(context.Background(), logrusx.New("", ""), configx.SkipValidation())
+	conf, err := config.New(context.Background(), logrusx.New("", ""), &cobra.Command{}, configx.SkipValidation())
 	require.NoError(t, err)
 
 	must := func(r *verification.Flow, err error) *verification.Flow {

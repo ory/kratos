@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
@@ -33,6 +35,7 @@ func init() {
 
 func NewConfigurationWithDefaults(t *testing.T) *config.Config {
 	c := config.MustNew(t, logrusx.New("", ""),
+		&cobra.Command{},
 		configx.WithValues(map[string]interface{}{
 			"log.level":                                      "trace",
 			config.ViperKeyDSN:                               dbal.SQLiteInMemory,

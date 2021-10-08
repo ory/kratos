@@ -129,7 +129,7 @@ format: .bin/goimports docs/node_modules node_modules
 		cd docs; npm run format
 		npm run format
 
-# Runs tests in short mode, without database adapters
+# Build local docker image
 .PHONY: docker
 docker:
 		docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .

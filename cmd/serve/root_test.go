@@ -15,7 +15,7 @@ import (
 )
 
 func TestServe(t *testing.T) {
-	_, _ = testhelpers.StartE2EServer(t, "../../contrib/quickstart/kratos/email-password/kratos.yml", nil)
+	_, _ = testhelpers.StartE2EServer(t, "./stub/kratos.yml", nil)
 }
 
 func TestServeTLSBase64(t *testing.T) {
@@ -33,7 +33,7 @@ func TestServeTLSBase64(t *testing.T) {
 	certBase64 := base64.StdEncoding.EncodeToString(certRaw)
 	keyBase64 := base64.StdEncoding.EncodeToString(keyRaw)
 	publicPort, adminPort := testhelpers.StartE2EServerOnly(t,
-		"../../contrib/quickstart/kratos/email-password/kratos.yml",
+		"./stub/kratos.yml",
 		true,
 		testhelpers.ConfigOptions{
 			"serve.public.tls.key.base64":  keyBase64,
@@ -52,7 +52,7 @@ func TestServeTLSPaths(t *testing.T) {
 	testhelpers.GenerateTLSCertificateFilesForTests(t, certPath, keyPath)
 
 	publicPort, adminPort := testhelpers.StartE2EServerOnly(t,
-		"../../contrib/quickstart/kratos/email-password/kratos.yml",
+		"./stub/kratos.yml",
 		true,
 		testhelpers.ConfigOptions{
 			"serve.public.tls.key.path":  keyPath,

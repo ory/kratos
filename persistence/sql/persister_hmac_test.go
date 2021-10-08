@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/x/tracing"
 
 	"github.com/ory/x/configx"
@@ -55,7 +57,7 @@ func (l *logRegistryOnly) Tracer(ctx context.Context) *tracing.Tracer {
 var _ persisterDependencies = &logRegistryOnly{}
 
 func TestPersisterHMAC(t *testing.T) {
-	conf := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
+	conf := config.MustNew(t, logrusx.New("", ""), &cobra.Command{}, configx.SkipValidation())
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"foobarbaz"})
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
