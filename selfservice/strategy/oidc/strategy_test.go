@@ -292,7 +292,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid", "offline"}
 
 		expectTokens := func(t *testing.T, body []byte) {
-			i, err := reg.PrivilegedIdentityPool().GetIdentity(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body,"identity.id").String()))
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body,"identity.id").String()))
 			require.NoError(t, err)
 			c := i.Credentials[identity.CredentialsTypeOIDC].Config
 			assertx.EqualAsJSON(t, json.RawMessage(`{"baz":"bar"}`), json.RawMessage(c))
