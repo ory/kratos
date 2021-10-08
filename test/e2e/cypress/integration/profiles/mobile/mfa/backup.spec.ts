@@ -67,6 +67,9 @@ context('Mobile Profile', () => {
 
         let newCodes
         cy.get('*[data-testid="field/lookup_secret_regenerate/true"]').click()
+        cy.get(
+          '*[data-testid="field/lookup_secret_regenerate/true"]:disabled'
+        ).should('not.exist')
         cy.get('*[data-testid="field/lookup_secret_codes/text"]').then(($e) => {
           newCodes = $e.text().trim().split(', ')
         })
@@ -80,15 +83,16 @@ context('Mobile Profile', () => {
         cy.visit(MOBILE_URL + '/Login?aal=aal2&refresh=true')
 
         // First use a wrong code
-        cy.get('*[data-testid="field/lookup_secret"]').then(($e) => {
-          cy.wrap($e).type(codes[0])
+        cy.get('[data-testid=lookup_secret]').then(($e) => {
+          console.log(codes)
+          cy.wrap($e).type('1234')
         })
         cy.get('*[data-testid="field/method/lookup_secret"]').click()
         cy.get('*[data-testid="form-messages"]').should(
           'contain.text',
           'The backup recovery code is not valid.'
         )
-        cy.get('*[data-testid="field/lookup_secret"]').then(($e) => {
+        cy.get('[data-testid=lookup_secret]').then(($e) => {
           cy.wrap($e).type(newCodes[0])
         })
         cy.get('*[data-testid="field/method/lookup_secret"]').click()

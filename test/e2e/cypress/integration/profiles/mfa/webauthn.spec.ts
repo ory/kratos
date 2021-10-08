@@ -3,20 +3,23 @@ import { routes as react } from '../../../helpers/react'
 import { routes as express } from '../../../helpers/express'
 
 context('2FA WebAuthn', () => {
+  before(() => {
+    cy.task('resetCRI')
+  })
   ;[
-    {
-      login: react.login,
-      settings: react.settings,
-      base: react.base,
-      app: 'react' as 'react',
-      profile: 'spa'
-    },
     {
       login: express.login,
       settings: express.settings,
       base: express.base,
       app: 'express' as 'express',
       profile: 'mfa'
+    },
+    {
+      login: react.login,
+      settings: react.settings,
+      base: react.base,
+      app: 'react' as 'react',
+      profile: 'spa'
     }
   ].forEach(({ settings, login, profile, app, base }) => {
     describe(`for app ${app}`, () => {
@@ -29,7 +32,6 @@ context('2FA WebAuthn', () => {
       let password = gen.password()
 
       beforeEach(() => {
-        cy.visit(base)
         cy.clearAllCookies()
 
         email = gen.email()
@@ -39,7 +41,8 @@ context('2FA WebAuthn', () => {
           password,
           fields: { 'traits.website': website }
         })
-        cy.login({ email, password, cookieUrl: base })
+
+        cy.login({ email, password })
 
         cy.longPrivilegedSessionTime()
         cy.task('sendCRI', {
@@ -69,7 +72,7 @@ context('2FA WebAuthn', () => {
             }
           }).then((addResult) => {
             cy.get(
-              appPrefix(app) + '*[name="webauthn_register_displayname"]'
+              appPrefix(app) + '[name="webauthn_register_displayname"]'
             ).type('key1')
 
             cy.clickWebAuthButton('register')

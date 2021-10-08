@@ -24,6 +24,7 @@ context('2FA with various methods', () => {
       before(() => {
         cy.useConfigProfile(profile)
         cy.proxy(app)
+        cy.task('resetCRI')
       })
       let email = gen.email()
       let password = gen.password()
