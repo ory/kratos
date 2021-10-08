@@ -149,7 +149,7 @@ type adminGetIdentity struct {
 	//
 	// required: false
 	// in: query
-	DeclassifyCredentials []string `json:"declassify_credential"`
+	DeclassifyCredentials []string `json:"include_credential"`
 }
 
 // swagger:route GET /identities/{id} v0alpha1 adminGetIdentity
@@ -180,7 +180,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	if declassify := r.URL.Query().Get("declassify_credential"); declassify == "oidc" {
+	if declassify := r.URL.Query().Get("include_credential"); declassify == "oidc" {
 		emit, err := i.WithDeclassifiedCredentialsOIDC(r.Context(), h.r)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
@@ -189,7 +189,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		h.r.Writer().Write(w, r, WithCredentialsInJSON(*emit))
 		return
 	} else if len(declassify) > 0 {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `declassify_credential`.", declassify)))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
 		return
 
 	}

@@ -8,7 +8,7 @@ the `GET /identities` API. This guide assumes that you have the `oidc` method en
 ```shell script
 $ curl --request GET -sL \
     --header "Content-Type: application/json" \
-    http://127.0.0.1:4434/identities/3ade335e-62e6-4abb-b190-6efd48e077fc?declassify_credential=oidc
+    http://127.0.0.1:4434/identities/3ade335e-62e6-4abb-b190-6efd48e077fc?include_credential=oidc
 
 {
   "id": "714a9ddc-9fde-42ad-be42-784dfeadd098",

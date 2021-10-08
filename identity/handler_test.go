@@ -262,7 +262,7 @@ func TestHandler(t *testing.T) {
 					assert.False(t, res.Get("credentials.oidc.config").Exists(), "credentials config should be omitted: %s", res.Raw)
 					assert.False(t, res.Get("credentials.password.config").Exists(), "credentials config should be omitted: %s", res.Raw)
 
-					res = get(t, ts, "/identities/"+id+"?declassify_credential=oidc", http.StatusOK)
+					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusOK)
 					assert.True(t, res.Get("credentials").Exists(), "credentials should be included: %s", res.Raw)
 					assert.False(t, res.Get("credentials.password").Exists(), "password credentials should not be included: %s", res.Raw)
 					assert.True(t, res.Get("credentials.oidc.config").Exists(), "oidc credentials should be included: %s", res.Raw)
@@ -290,7 +290,7 @@ func TestHandler(t *testing.T) {
 					assert.False(t, res.Get("credentials.oidc.config").Exists(), "credentials config should be omitted: %s", res.Raw)
 					assert.False(t, res.Get("credentials.password.config").Exists(), "credentials config should be omitted: %s", res.Raw)
 
-					res = get(t, ts, "/identities/"+res.Get("id").String()+"?declassify_credential=oidc", http.StatusOK)
+					res = get(t, ts, "/identities/"+res.Get("id").String()+"?include_credential=oidc", http.StatusOK)
 					assert.False(t, res.Get("credentials.password").Exists(), "password credentials should not be included: %s", res.Raw)
 					assert.False(t, res.Get("credentials.oidc").Exists(), "oidc credentials should be included: %s", res.Raw)
 				})
@@ -302,11 +302,11 @@ func TestHandler(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					t.Logf("no oidc token")
-					res := get(t, ts, "/identities/"+i.ID.String()+"?declassify_credential=oidc", http.StatusOK)
+					res := get(t, ts, "/identities/"+i.ID.String()+"?include_credential=oidc", http.StatusOK)
 					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
 
 					t.Logf("get oidc token")
-					res = get(t, ts, "/identities/"+id+"?declassify_credential=oidc", http.StatusInternalServerError)
+					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusInternalServerError)
 					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
 				})
 			}
@@ -315,11 +315,11 @@ func TestHandler(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					t.Logf("no oidc token")
-					res := get(t, ts, "/identities/"+i.ID.String()+"?declassify_credential=oidc", http.StatusOK)
+					res := get(t, ts, "/identities/"+i.ID.String()+"?include_credential=oidc", http.StatusOK)
 					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
 
 					t.Logf("get oidc token")
-					res = get(t, ts, "/identities/"+id+"?declassify_credential=oidc", http.StatusInternalServerError)
+					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusInternalServerError)
 					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
 				})
 			}
