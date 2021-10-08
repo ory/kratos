@@ -14,6 +14,7 @@ export KRATOS_BROWSER_URL=http://localhost:4433/
 export KRATOS_ADMIN_URL=http://localhost:4434/
 export KRATOS_UI_URL=http://localhost:4456/
 export KRATOS_UI_REACT_URL=http://localhost:4458/
+export KRATOS_UI_REACT_NATIVE_URL=http://localhost:4457/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
