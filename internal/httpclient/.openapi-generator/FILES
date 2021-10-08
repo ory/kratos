@@ -4,6 +4,7 @@ README.md
 api/openapi.yaml
 api_metadata.go
 api_v0alpha1.go
+api_v0alpha2.go
 client.go
 configuration.go
 docs/AdminCreateIdentityBody.md
@@ -14,6 +15,7 @@ docs/HealthNotReadyStatus.md
 docs/HealthStatus.md
 docs/Identity.md
 docs/IdentityCredentials.md
+docs/IdentitySchema.md
 docs/IdentityState.md
 docs/InlineResponse200.md
 docs/InlineResponse2001.md
@@ -62,6 +64,7 @@ docs/UiNodeInputAttributes.md
 docs/UiNodeTextAttributes.md
 docs/UiText.md
 docs/V0alpha1Api.md
+docs/V0alpha2Api.md
 docs/VerifiableIdentityAddress.md
 docs/Version.md
 git_push.sh
@@ -75,6 +78,7 @@ model_health_not_ready_status.go
 model_health_status.go
 model_identity.go
 model_identity_credentials.go
+model_identity_schema.go
 model_identity_state.go
 model_inline_response_200.go
 model_inline_response_200_1.go
