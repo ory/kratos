@@ -1,6 +1,7 @@
 package testhelpers
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
@@ -10,8 +11,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/x/tlsx"
 
@@ -29,6 +34,8 @@ import (
 type ConfigOptions map[string]interface{}
 
 func StartE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptions ConfigOptions) (publicPort, adminPort int) {
+	var tries int
+RETRY:
 	adminPort, err := freeport.GetFreePort()
 	require.NoError(t, err)
 
@@ -43,8 +50,12 @@ func StartE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 		adminUrl = fmt.Sprintf("https://127.0.0.1:%d", adminPort)
 	}
 
+	dbt, err := os.MkdirTemp(os.TempDir(), "ory-kratos-e2e-examples-*")
+	require.NoError(t, err)
+	dsn := "sqlite://" + filepath.Join(dbt, "db.sqlite") + "?_fk=true&mode=rwc"
+
 	ctx := configx.ContextWithConfigOptions(context.Background(),
-		configx.WithValue("dsn", "memory"),
+		configx.WithValue("dsn", dsn),
 		configx.WithValue("dev", true),
 		configx.WithValue("log.level", "trace"),
 		configx.WithValue("log.leak_sensitive_values", true),
@@ -55,21 +66,47 @@ func StartE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 		configx.WithValues(configOptions),
 	)
 
-	//nolint:staticcheck
-	ctx = context.WithValue(ctx, "dsn", "memory")
-	ctx, cancel := context.WithCancel(ctx)
-	t.Cleanup(cancel)
-
 	executor := &cmdx.CommandExecuter{New: func() *cobra.Command {
 		return cmd.NewRootCmd()
 	}, Ctx: ctx}
 
-	go func() {
-		t.Log("Starting server...")
-		_ = executor.ExecNoErr(t, "serve", "--config", configFile, "--watch-courier")
-	}()
+	_ = executor.ExecNoErr(t, "migrate", "sql", dsn, "--yes")
+
+	//nolint:staticcheck
+	ctx = context.WithValue(ctx, "dsn", dsn)
+	ctx, cancel := context.WithCancel(ctx)
+	t.Cleanup(cancel)
+
+	t.Log("Starting server...")
+	stdOut, stdErr := &bytes.Buffer{}, &bytes.Buffer{}
+	eg := executor.ExecBackground(nil, stdErr, stdOut, "serve", "--config", configFile, "--watch-courier")
+
+	err = waitTimeout(t, eg, time.Second)
+	if err != nil && strings.Contains(err.Error(), "address already in use") && tries < 5 {
+		tries++
+		t.Logf("Detected an instance with port reuse, retrying #%d...", tries)
+		time.Sleep(time.Millisecond * 500)
+		goto RETRY
+	}
+	require.NoError(t, err)
 
 	return publicPort, adminPort
+}
+
+// waitTimeout waits for the waitgroup for the specified max timeout.
+// Returns true if waiting timed out.
+func waitTimeout(t *testing.T, wg *errgroup.Group, timeout time.Duration) (err error) {
+	c := make(chan struct{})
+	go func() {
+		defer close(c)
+		err = wg.Wait()
+	}()
+	select {
+	case <-c:
+		return
+	case <-time.After(timeout):
+		return
+	}
 }
 
 func StartE2EServer(t *testing.T, configFile string, configOptions ConfigOptions) (publicUrl, adminUrl string) {
