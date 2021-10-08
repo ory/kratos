@@ -40,6 +40,15 @@ const (
 
 const numCodes = 12
 
+var allSettingsNodes = []string{
+	node.LookupRegenerate,
+	node.LookupReveal,
+	node.LookupRegenerate,
+	node.LookupDisable,
+	node.LookupCodes,
+	node.LookupConfirm,
+}
+
 // swagger:model submitSelfServiceSettingsFlowWithLookupMethodBody
 type submitSelfServiceSettingsFlowWithLookupMethodBody struct {
 	// If set to true will reveal the lookup secrets
@@ -170,9 +179,10 @@ func (s *Strategy) continueSettingsFlowDisable(w http.ResponseWriter, r *http.Re
 
 	i.DeleteCredentialsType(s.ID())
 
-	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupCodes)
-	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
-	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupDisable)
+	for _, n := range allSettingsNodes {
+		ctxUpdate.Flow.UI.Nodes.Remove(n)
+	}
+
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewRegenerateLookupNode())
 	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRevealed), false)
 	if err != nil {
@@ -211,10 +221,14 @@ func (s *Strategy) continueSettingsFlowReveal(w http.ResponseWriter, r *http.Req
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode lookup codes from JSON.").WithDebug(err.Error()))
 	}
 
+	for _, n := range allSettingsNodes {
+		ctxUpdate.Flow.UI.Nodes.Remove(n)
+	}
+
 	ctxUpdate.Flow.UI.Nodes.Upsert(creds.ToNode())
-	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewDisableLookupNode())
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewRegenerateLookupNode())
+
 	ctxUpdate.Flow.InternalContext, err = sjson.SetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), internalContextKeyRevealed), true)
 	if err != nil {
 		return err
@@ -233,10 +247,11 @@ func (s *Strategy) continueSettingsFlowRegenerate(w http.ResponseWriter, r *http
 		codes[k] = RecoveryCode{Code: randx.MustString(8, randx.AlphaLowerNum)}
 	}
 
+	for _, n := range allSettingsNodes {
+		ctxUpdate.Flow.UI.Nodes.Remove(n)
+	}
+
 	ctxUpdate.Flow.UI.Nodes.Upsert((&CredentialsConfig{RecoveryCodes: codes}).ToNode())
-	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupRegenerate)
-	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupReveal)
-	ctxUpdate.Flow.UI.Nodes.Remove(node.LookupDisable)
 	ctxUpdate.Flow.UI.Nodes.Upsert(NewConfirmLookupNode())
 
 	var err error
