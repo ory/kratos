@@ -6,4 +6,3 @@ services:
 
   kratos:
     image: oryd/kratos:latest-sqlite
-

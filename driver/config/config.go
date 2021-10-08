@@ -42,7 +42,6 @@ import (
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"
-	"github.com/ory/x/tlsx"
 	"github.com/ory/x/tracing"
 )
 

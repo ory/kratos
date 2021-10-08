@@ -1,9 +1,17 @@
 ---
-id: reveal-credentials title: Get Access, Refresh, ID Tokens from Social Sign In
+id: retrieve-social-sign-in-access-refresh-id-token
+title: Get Access, Refresh, ID Tokens from Social Sign In Providers
 ---
 
 This document describes how to retrieve OpenID Connect / OAuth 2.0 Access, Refresh, and ID Tokens from Social Sign In at
 the `GET /identities` API. This guide assumes that you have the `oidc` method enabled.
+
+:::note
+
+Please be aware that these tokens are only set when an identity sign ups with, or links a new Social Sign In provider. They
+are not updated when an identity signs in!
+
+:::
 
 ```shell script
 $ curl --request GET -sL \
@@ -22,18 +30,18 @@ $ curl --request GET -sL \
       "config": {
         "providers": [
           {
-            "initial_id_token": "********************",
             "subject": "some-user",
             "provider": "google",
             "initial_access_token": "********************",
             "initial_refresh_token": "********************",
+            "initial_id_token": "********************",
           },
           {
-            "initial_id_token": "********************",
             "subject": "another-user",
             "provider": "github",
             "initial_access_token": "********************",
             "initial_refresh_token": "********************",
+            "initial_id_token": "********************",
           }
         ]
       },

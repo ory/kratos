@@ -352,14 +352,13 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	raw, ok := token.Extra("id_token").(string)
 	var it string
-	if ok {
-		it, err = s.d.Cipher().Encrypt(r.Context(), []byte(raw))
-		if err != nil {
+	if idToken, ok := token.Extra("id_token").(string); ok {
+		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
 			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	}
+
 	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
@@ -383,7 +382,10 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
 		conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
 			Subject: claims.Subject, Provider: provider.Config().ID,
-			InitialAccessToken: cat, InitialRefreshToken: crt})
+			InitialAccessToken: cat,
+			InitialRefreshToken: crt,
+			InitialIDToken: it,
+		})
 
 		creds.Config, err = json.Marshal(conf)
 		if err != nil {

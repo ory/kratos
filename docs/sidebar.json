@@ -60,7 +60,7 @@
       "guides/zero-trust-iap-proxy-identity-access-proxy",
       "guides/multi-tenancy-multitenant",
       "guides/secret-key-rotation",
-      "guides/reveal-credentials",
+      "guides/retrieve-social-sign-in-access-refresh-id-token",
       "guides/setting-up-noop-cipher-parameters",
       "guides/setting-up-xchacha-cipher-parameters",
       "guides/setting-up-aes-cipher-parameters",
