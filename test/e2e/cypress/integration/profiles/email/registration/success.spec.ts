@@ -106,14 +106,13 @@ context('Registration success with email profile', () => {
       cy.browserReturnUrlOry()
       cy.proxy('express')
       cy.visit(express.registration + '?return_to=https://www.ory.sh/')
-      cy.ensureCorrectApp('express')
       cy.wait(105)
 
       const email = gen.email()
       const password = gen.password()
       const website = 'https://www.ory.sh/'
 
-      cy.get('input[name="traits"]').should('not.exist')
+      cy.get(appPrefix('express')+'input[name="traits"]').should('not.exist')
       cy.get('input[name="traits.email"]').type(email)
       cy.get('input[name="traits.website').type(website)
       cy.get('input[name="password"]').type(password)
