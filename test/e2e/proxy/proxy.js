@@ -20,12 +20,16 @@ app.use('/schemas/', proxy(process.env.KRATOS_PUBLIC_URL, '/schemas/'))
 app.use('/.well-known/', proxy(process.env.KRATOS_PUBLIC_URL, '/.well-known/'))
 
 app.use('/', (req, res, next) => {
-  const pc = fs.readFileSync(require.resolve('../proxy.json'))
-  if (JSON.parse(pc.toString()) === 'react') {
-    proxy(process.env.KRATOS_UI_REACT_URL)(req, res, next)
-  } else {
-    proxy(process.env.KRATOS_UI_URL)(req, res, next)
+  const pc = JSON.parse(fs.readFileSync(require.resolve('../proxy.json')).toString())
+  switch (pc) {
+    case 'react':
+      proxy(process.env.KRATOS_UI_REACT_URL)(req, res, next)
+      return
+    case 'react-native':
+      proxy(process.env.KRATOS_UI_REACT_NATIVE_URL)(req, res, next)
+      return
   }
+  proxy(process.env.KRATOS_UI_URL)(req, res, next)
 })
 
 const port = parseInt(process.env.PORT) || 4455
