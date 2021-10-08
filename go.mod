@@ -13,6 +13,7 @@ replace (
 	github.com/ory/kratos-client-go => ./internal/httpclient
 	github.com/ory/x => github.com/ory/x v0.0.288
 	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
+	golang.org/x/sys => golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
 	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 )
 
@@ -46,9 +47,11 @@ require (
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v27 v27.0.1
+	github.com/google/go-github/v38 v38.1.0
 	github.com/google/go-jsonnet v0.17.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/sessions v1.2.1
+	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/hashicorp/consul/api v1.5.0
 	github.com/hashicorp/go-retryablehttp v0.6.8
 	github.com/hashicorp/golang-lru v0.5.4
