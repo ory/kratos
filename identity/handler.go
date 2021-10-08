@@ -142,11 +142,14 @@ type adminGetIdentity struct {
 	// in: path
 	ID string `json:"id"`
 
-	// RevealCredentials parameters to add credentials in the response
+	// DeclassifyCredentials will declassify one or more identity's credentials
+	//
+	// Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,
+	// Refresh and (optionally) OpenID Connect ID Token.
 	//
 	// required: false
 	// in: query
-	RevealCredentials string `json:"reveal_credentials"`
+	DeclassifyCredentials []string `json:"declassify_credential"`
 }
 
 // swagger:route GET /identities/{id} v0alpha1 adminGetIdentity
@@ -176,14 +179,22 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
-	if r.URL.Query().Get("reveal_credentials") == "oidc_token" {
-		err = i.GetOIDCToken(r.Context(), h.r)
+
+	if declassify := r.URL.Query().Get("declassify_credential"); declassify == "oidc" {
+		emit, err := i.WithDeclassifiedCredentialsOIDC(r.Context(), h.r)
 		if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
+		h.r.Writer().Write(w, r, WithCredentialsInJSON(*emit))
+		return
+	} else if len(declassify) > 0 {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `declassify_credential`.", declassify)))
+		return
+
 	}
-	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
+
+	h.r.Writer().Write(w, r, WithCredentialsMetadataInJSON(*i))
 }
 
 // swagger:parameters adminCreateIdentity

@@ -164,13 +164,16 @@ func TestHandler(t *testing.T) {
 
 	t.Run("suite=create and update", func(t *testing.T) {
 		var i identity.Identity
-		var createOidcIdentity = func(identifier, accessToken, refreshToken string, encrypt bool) string {
-			accessTokenEncrypted := accessToken
-			refreshTokenEncrypted := refreshToken
-			if encrypt {
-				accessTokenEncrypted, _ = reg.Cipher().Encrypt(context.Background(), []byte(accessToken))
-				refreshTokenEncrypted, _ = reg.Cipher().Encrypt(context.Background(), []byte(refreshToken))
+		var createOidcIdentity = func(t *testing.T, identifier, accessToken, refreshToken, idToken string, encrypt bool) string {
+			transform := func(token string) string {
+				if !encrypt {
+					return token
+				}
+				c, err := reg.Cipher().Encrypt(context.Background(), []byte(token))
+				require.NoError(t, err)
+				return c
 			}
+
 			iId := x.NewUUID()
 			toJson := func(c oidc.CredentialsConfig) []byte {
 				out, err := json.Marshal(&c)
@@ -188,8 +191,16 @@ func TestHandler(t *testing.T) {
 							{
 								Subject:             "foo",
 								Provider:            "bar",
-								InitialAccessToken:  accessTokenEncrypted,
-								InitialRefreshToken: refreshTokenEncrypted,
+								InitialAccessToken:  transform(accessToken + "0"),
+								InitialRefreshToken: transform(refreshToken + "0"),
+								InitialIDToken:      transform(idToken + "0"),
+							},
+							{
+								Subject:             "baz",
+								Provider:            "zab",
+								InitialAccessToken:  transform(accessToken + "1"),
+								InitialRefreshToken: transform(refreshToken + "1"),
+								InitialIDToken:      transform(idToken + "1"),
 							},
 						}}),
 					},
@@ -243,43 +254,71 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=should get oidc credential", func(t *testing.T) {
-			id := createOidcIdentity("foo.oidc@bar.com", "foo_token", "bar_token", true)
+			id := createOidcIdentity(t, "foo.oidc@bar.com", "access_token", "refresh_token", "id_token", true)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
-					t.Logf("no oidc token")
-					res := get(t, ts, "/identities/"+i.ID.String()+"?reveal_credentials=oidc_token", http.StatusOK)
-					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
+					res := get(t, ts, "/identities/"+id, http.StatusOK)
+					assert.False(t, res.Get("credentials.oidc.config").Exists(), "credentials config should be omitted: %s", res.Raw)
+					assert.False(t, res.Get("credentials.password.config").Exists(), "credentials config should be omitted: %s", res.Raw)
 
-					t.Logf("get oidc token")
-					res = get(t, ts, "/identities/"+id+"?reveal_credentials=oidc_token", http.StatusOK)
-					assert.Contains(t, res.Raw, "identifier_credentials", res.Raw)
+					res = get(t, ts, "/identities/"+id+"?declassify_credential=oidc", http.StatusOK)
+					assert.True(t, res.Get("credentials").Exists(), "credentials should be included: %s", res.Raw)
+					assert.False(t, res.Get("credentials.password").Exists(), "password credentials should not be included: %s", res.Raw)
+					assert.True(t, res.Get("credentials.oidc.config").Exists(), "oidc credentials should be included: %s", res.Raw)
+
+					assert.EqualValues(t, "foo", res.Get("credentials.oidc.config.providers.0.subject").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "bar", res.Get("credentials.oidc.config.providers.0.provider").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "access_token0", res.Get("credentials.oidc.config.providers.0.initial_access_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "refresh_token0", res.Get("credentials.oidc.config.providers.0.initial_refresh_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "id_token0", res.Get("credentials.oidc.config.providers.0.initial_id_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "baz", res.Get("credentials.oidc.config.providers.1.subject").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "zab", res.Get("credentials.oidc.config.providers.1.provider").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "access_token1", res.Get("credentials.oidc.config.providers.1.initial_access_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "refresh_token1", res.Get("credentials.oidc.config.providers.1.initial_refresh_token").String(), "credentials should be included: %s", res.Raw)
+					assert.EqualValues(t, "id_token1", res.Get("credentials.oidc.config.providers.1.initial_id_token").String(), "credentials should be included: %s", res.Raw)
+				})
+			}
+		})
+
+		t.Run("case=should pass if no oidc credentials are set", func(t *testing.T) {
+			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+				t.Run("endpoint="+name, func(t *testing.T) {
+					res := send(t, ts, "POST", "/identities", http.StatusCreated, json.RawMessage(`{"traits": {"bar":"baz"}}`))
+
+					res = get(t, ts, "/identities/"+res.Get("id").String(), http.StatusOK)
+					assert.False(t, res.Get("credentials.oidc.config").Exists(), "credentials config should be omitted: %s", res.Raw)
+					assert.False(t, res.Get("credentials.password.config").Exists(), "credentials config should be omitted: %s", res.Raw)
+
+					res = get(t, ts, "/identities/"+res.Get("id").String()+"?declassify_credential=oidc", http.StatusOK)
+					assert.False(t, res.Get("credentials.password").Exists(), "password credentials should not be included: %s", res.Raw)
+					assert.False(t, res.Get("credentials.oidc").Exists(), "oidc credentials should be included: %s", res.Raw)
 				})
 			}
 		})
 
 		t.Run("case=should fail to get oidc credential", func(t *testing.T) {
-			id := createOidcIdentity("foo-failed.oidc@bar.com", "foo_token", "bar_token", false)
+			id := createOidcIdentity(t, "foo-failed.oidc@bar.com", "foo_token", "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					t.Logf("no oidc token")
-					res := get(t, ts, "/identities/"+i.ID.String()+"?reveal_credentials=oidc_token", http.StatusOK)
+					res := get(t, ts, "/identities/"+i.ID.String()+"?declassify_credential=oidc", http.StatusOK)
 					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
 
 					t.Logf("get oidc token")
-					res = get(t, ts, "/identities/"+id+"?reveal_credentials=oidc_token", http.StatusInternalServerError)
+					res = get(t, ts, "/identities/"+id+"?declassify_credential=oidc", http.StatusInternalServerError)
 					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
 				})
 			}
 			e, _ := reg.Cipher().Encrypt(context.Background(), []byte("foo_token"))
-			id = createOidcIdentity("foo-failed-2.oidc@bar.com", e, "bar_token", false)
+			id = createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					t.Logf("no oidc token")
-					res := get(t, ts, "/identities/"+i.ID.String()+"?reveal_credentials=oidc_token", http.StatusOK)
+					res := get(t, ts, "/identities/"+i.ID.String()+"?declassify_credential=oidc", http.StatusOK)
 					assert.NotContains(t, res.Raw, "identifier_credentials", res.Raw)
 
 					t.Logf("get oidc token")
-					res = get(t, ts, "/identities/"+id+"?reveal_credentials=oidc_token", http.StatusInternalServerError)
+					res = get(t, ts, "/identities/"+id+"?declassify_credential=oidc", http.StatusInternalServerError)
 					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
 				})
 			}

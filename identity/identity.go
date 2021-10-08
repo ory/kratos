@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tidwall/sjson"
+
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/cipher"
@@ -260,19 +262,22 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-type IdentityWithCredentialsMetadataInJSON Identity
+type WithCredentialsInJSON Identity
 
-func (i IdentityWithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
+func (i WithCredentialsInJSON) MarshalJSON() ([]byte, error) {
+	type localIdentity Identity
+	return json.Marshal(localIdentity(i))
+}
+
+type WithCredentialsMetadataInJSON Identity
+
+func (i WithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	for k, v := range i.Credentials {
 		v.Config = nil
 		i.Credentials[k] = v
 	}
-	result, err := json.Marshal(localIdentity(i))
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return json.Marshal(localIdentity(i))
 }
 
 func (i *Identity) ValidateNID() error {
@@ -302,40 +307,58 @@ func (i *Identity) ValidateNID() error {
 	return nil
 }
 
-func (i *Identity) GetOIDCToken(ctx context.Context, c cipher.Provider) error {
-	for credType, credential := range i.Credentials {
-		if credType != CredentialsTypeOIDC {
+func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher.Provider) (*Identity, error) {
+	credsToPublish := make(map[CredentialsType]Credentials)
+
+	for ct, original := range i.Credentials {
+		if ct != CredentialsTypeOIDC {
 			continue
 		}
 
-		encryptedIDToken := gjson.GetBytes(credential.Config, "providers.0.initial_id_token").String()
-		idToken, err := c.Cipher().Decrypt(ctx, encryptedIDToken)
-		if err != nil {
-			return err
+		toPublish := original
+		toPublish.Config = []byte{}
+
+		for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
+			var i int
+			var err error
+			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
+				key := fmt.Sprintf("%d.%s", i, token)
+				ciphertext := v.Get(token).String()
+
+				var plaintext []byte
+				plaintext, err = c.Cipher().Decrypt(ctx, ciphertext)
+				if err != nil {
+					return false
+				}
+
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
+				if err != nil {
+					return false
+				}
+
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.subject", i), v.Get("subject").String())
+				if err != nil {
+					return false
+				}
+
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
+				if err != nil {
+					return false
+				}
+
+				i++
+				return true
+			})
+
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		encryptedAccessToken := gjson.GetBytes(credential.Config, "providers.0.initial_access_token").String()
-		accessToken, err := c.Cipher().Decrypt(ctx, encryptedAccessToken)
-		if err != nil {
-			return err
-		}
-
-		encryptedRefreshToken := gjson.GetBytes(credential.Config, "providers.0.initial_refresh_token").String()
-		refreshToken, err := c.Cipher().Decrypt(ctx, encryptedRefreshToken)
-		if err != nil {
-			return err
-		}
-		fmt.Println("encryptedAccessToken=" + encryptedAccessToken)
-		credential.IDToken = string(idToken)
-		credential.AccessToken = string(accessToken)
-		credential.RefreshToken = string(refreshToken)
-		i.Credentials[credType] = credential
-		//i.IdentifierCredentials = append(i.IdentifierCredentials, IdentifierCredential{
-		//	Subject:      gjson.GetBytes(credential.Config, "providers.0.subject").String(),
-		//	Provider:     gjson.GetBytes(credential.Config, "providers.0.provider").String(),
-		//	AccessToken:  string(accessToken),
-		//	RefreshToken: string(refreshToken),
-		//})
+		credsToPublish[ct] = toPublish
 	}
-	return nil
+
+	ii := *i
+	ii.Credentials = credsToPublish
+	return &ii, nil
 }

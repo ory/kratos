@@ -78,7 +78,7 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 	i.Credentials = nil
 
 	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
+	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataInJSON(*i)))
 
 	assert.False(t, gjson.Get(b.String(), "credentials").Exists())
 }
@@ -94,7 +94,7 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 	i.Credentials = credentials
 
 	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
+	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataInJSON(*i)))
 
 	credentialsInJson := gjson.Get(b.String(), "credentials")
 	assert.True(t, credentialsInJson.Exists())
