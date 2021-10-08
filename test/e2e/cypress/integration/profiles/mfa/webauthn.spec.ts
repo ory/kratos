@@ -214,7 +214,8 @@ context('2FA WebAuthn', () => {
               expect(loc.href).to.include('/login')
             })
 
-            cy.get('button[name="webauthn_login_trigger"]').click()
+            cy.get('*[name="webauthn_login_trigger"]').should('have.length', 1)
+            cy.clickWebAuthButton('login')
             cy.location().should((loc) => {
               expect(loc.href).to.not.include('/login')
             })
