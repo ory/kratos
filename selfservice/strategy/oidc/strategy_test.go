@@ -289,13 +289,21 @@ func TestStrategy(t *testing.T) {
 
 	t.Run("case=register and then login", func(t *testing.T) {
 		subject = "register-then-login@ory.sh"
-		scope = []string{"openid"}
+		scope = []string{"openid", "offline"}
+
+		expectTokens := func(t *testing.T, body []byte) {
+			i, err := reg.PrivilegedIdentityPool().GetIdentity(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body,"identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			assertx.EqualAsJSON(t, json.RawMessage(`{"baz":"bar"}`), json.RawMessage(c))
+		}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
+			expectTokens(t,body)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
@@ -303,6 +311,7 @@ func TestStrategy(t *testing.T) {
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
+			expectTokens(t,body)
 		})
 	})
 
