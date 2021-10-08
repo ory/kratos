@@ -88,7 +88,9 @@ describe('Basic email profile with succeeding login flows', () => {
     })
 
     it('should redirect to return_to when retrying expired flow', () => {
-      cy.get(appPrefix('express')+'input[name="password_identifier"]').type(email.toUpperCase())
+      cy.get(appPrefix('express') + 'input[name="password_identifier"]').type(
+        email.toUpperCase()
+      )
       cy.get('input[name="password"]').type(password)
 
       cy.longLoginLifespan()

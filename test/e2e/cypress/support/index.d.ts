@@ -415,6 +415,13 @@ declare global {
        * Which app to proxy
        */
       proxy(app: 'react' | 'express'): Chainable<void>
+
+      /**
+       * Log a user in on mobile
+       *
+       * @param opts
+       */
+      loginMobile(opts: { email: string; password: string }): Chainable<void>
     }
   }
 }

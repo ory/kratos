@@ -45,7 +45,7 @@ context('Mobile Profile', () => {
         cy.get('div[data-testid="submit-form"]').click()
         cy.get('*[data-testid="field/password"]').should(
           'contain.text',
-          'Property password is missing.'
+          'Property password is missing'
         )
       })
 
@@ -56,7 +56,7 @@ context('Mobile Profile', () => {
         cy.get('div[data-testid="submit-form"]').click()
         cy.get('*[data-testid="field/traits.email"]').should(
           'contain.text',
-          'Property email is missing.'
+          'Property email is missing'
         )
       })
 
@@ -76,16 +76,13 @@ context('Mobile Profile', () => {
         cy.get('div[data-testid="submit-form"]').click()
         cy.get('*[data-testid="field/password"]').should(
           'contain.text',
-          'Property password is missing.'
+          'Property password is missing'
         )
       })
 
       it('should show an error when the website is too short', () => {
         cy.get('input[data-testid="traits.website"]').type('http://s')
         cy.get('input[data-testid="traits.email"]').type(email)
-
-        // fixme https://github.com/ory/kratos/issues/368
-        cy.get('input[data-testid="password"]').type(password)
 
         cy.get('div[data-testid="submit-form"]').click()
         cy.get('*[data-testid="field/traits.website"]').should(
