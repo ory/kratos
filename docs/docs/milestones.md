@@ -94,6 +94,8 @@ New feature or request.
       ([kratos#1071](https://github.com/ory/kratos/issues/1071))
 - [ ] User deactivation does not deactivate user sessions
       ([kratos#1811](https://github.com/ory/kratos/issues/1811))
+- [ ] Implement full-spec with e2e tests for react native app
+      ([kratos#1820](https://github.com/ory/kratos/issues/1820))
 - [x] Validate identity schema on load
       ([kratos#701](https://github.com/ory/kratos/issues/701)) -
       [@Alano Terblanche](https://github.com/Benehiko)
