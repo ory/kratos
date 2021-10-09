@@ -10,11 +10,12 @@ import (
 	"testing"
 
 	"github.com/bxcodec/faker/v3"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
