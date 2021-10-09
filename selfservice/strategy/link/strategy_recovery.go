@@ -10,6 +10,11 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -19,10 +24,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 const (
@@ -325,6 +326,9 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.RecoveryAddress.IdentityID)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
+	}
+	if recovered.State == identity.StateInactive {
+		return s.HandleRecoveryError(w, r, f, nil, herodot.ErrNotFound)
 	}
 
 	// mark address as verified only for a self-service flow
