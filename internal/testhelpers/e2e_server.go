@@ -66,16 +66,16 @@ RETRY:
 		configx.WithValues(configOptions),
 	)
 
+	//nolint:staticcheck
+	ctx = context.WithValue(ctx, "dsn", dsn)
+	ctx, cancel := context.WithCancel(ctx)
+	t.Cleanup(cancel)
+
 	executor := &cmdx.CommandExecuter{New: func() *cobra.Command {
 		return cmd.NewRootCmd()
 	}, Ctx: ctx}
 
 	_ = executor.ExecNoErr(t, "migrate", "sql", dsn, "--yes")
-
-	//nolint:staticcheck
-	ctx = context.WithValue(ctx, "dsn", dsn)
-	ctx, cancel := context.WithCancel(ctx)
-	t.Cleanup(cancel)
 
 	t.Log("Starting server...")
 	stdOut, stdErr := &bytes.Buffer{}, &bytes.Buffer{}
