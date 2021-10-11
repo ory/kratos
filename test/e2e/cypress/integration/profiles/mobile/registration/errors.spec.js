@@ -45,7 +45,7 @@ context('Mobile Profile', () => {
         cy.get('div[data-testid="submit-form"]').click()
         cy.get('*[data-testid="field/password"]').should(
           'contain.text',
-          'length must be'
+          'Property password is missing.'
         )
       })
 
@@ -56,7 +56,7 @@ context('Mobile Profile', () => {
         cy.get('div[data-testid="submit-form"]').click()
         cy.get('*[data-testid="field/traits.email"]').should(
           'contain.text',
-          'valid "email"'
+          'Property email is missing.'
         )
       })
 
@@ -76,7 +76,7 @@ context('Mobile Profile', () => {
         cy.get('div[data-testid="submit-form"]').click()
         cy.get('*[data-testid="field/password"]').should(
           'contain.text',
-          'length must be'
+          'Property password is missing.'
         )
       })
 
