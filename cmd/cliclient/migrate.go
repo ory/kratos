@@ -54,18 +54,16 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 	}
 
 	err := d.Init(cmd.Context(), driver.SkipNetworkInit)
-	cmdx.Must(err, "An error occurred planning migrations: %s", err)
+	cmdx.Must(err, "An error occurred initializing migrations: %s", err)
 
 	var plan bytes.Buffer
 	statuses, err := d.Persister().MigrationStatus(cmd.Context())
-	cmdx.Must(err, "An error occurred planning migrations: %s", err)
-	cmdx.Must(err, "An error occurred planning migrations: %s", statuses.Write(&plan))
-
-	fmt.Println("The following migration is planned:")
-	fmt.Println("")
-	fmt.Printf("%s", plan.String())
+	cmdx.Must(err, "An error occurred planning migrations:%s \n-- Migration Plan --\n%s", err, statuses.Write(&plan))
 
 	if !flagx.MustGetBool(cmd, "yes") {
+		fmt.Println("The following migration is planned:")
+		fmt.Println("")
+		fmt.Printf("%s", plan.String())
 		fmt.Println("")
 		fmt.Println("To skip the next question use flag --yes (at your own risk).")
 		if !askForConfirmation("Do you wish to execute this migration plan?") {
