@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -34,8 +35,10 @@ import (
 type ConfigOptions map[string]interface{}
 
 func StartE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptions ConfigOptions) (publicPort, adminPort int) {
-	var tries int
-RETRY:
+	return startE2EServerOnly(t, configFile, isTLS, configOptions, 0)
+}
+
+func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptions ConfigOptions, tries int) (publicPort, adminPort int) {
 	adminPort, err := freeport.GetFreePort()
 	require.NoError(t, err)
 
@@ -57,7 +60,7 @@ RETRY:
 	ctx := configx.ContextWithConfigOptions(context.Background(),
 		configx.WithValue("dsn", dsn),
 		configx.WithValue("dev", true),
-		configx.WithValue("log.level", "trace"),
+		configx.WithValue("log.level", "info"),
 		configx.WithValue("log.leak_sensitive_values", true),
 		configx.WithValue("serve.public.port", publicPort),
 		configx.WithValue("serve.admin.port", adminPort),
@@ -69,11 +72,13 @@ RETRY:
 	//nolint:staticcheck
 	ctx = context.WithValue(ctx, "dsn", dsn)
 	ctx, cancel := context.WithCancel(ctx)
-	t.Cleanup(cancel)
 
-	executor := &cmdx.CommandExecuter{New: func() *cobra.Command {
-		return cmd.NewRootCmd()
-	}, Ctx: ctx}
+	executor := &cmdx.CommandExecuter{
+		New: func() *cobra.Command {
+			return cmd.NewRootCmd()
+		},
+		Ctx: ctx,
+	}
 
 	_ = executor.ExecNoErr(t, "migrate", "sql", dsn, "--yes")
 
@@ -82,14 +87,17 @@ RETRY:
 	eg := executor.ExecBackground(nil, stdErr, stdOut, "serve", "--config", configFile, "--watch-courier")
 
 	err = waitTimeout(t, eg, time.Second)
-	if err != nil && strings.Contains(err.Error(), "address already in use") && tries < 5 {
-		tries++
-		t.Logf("Detected an instance with port reuse, retrying #%d...", tries)
-		time.Sleep(time.Millisecond * 500)
-		goto RETRY
+	if err != nil && tries < 5 {
+		if !errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "address already in use") {
+			t.Logf("Detected an instance with port reuse, retrying #%d...", tries)
+			time.Sleep(time.Millisecond * 500)
+			cancel()
+			return startE2EServerOnly(t, configFile, isTLS, configOptions, tries+1)
+		}
 	}
-	require.NoError(t, err)
 
+	require.NoError(t, err)
+	t.Cleanup(cancel)
 	return publicPort, adminPort
 }
 
