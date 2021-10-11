@@ -4,14 +4,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// migrateCmd represents the migrate command
-var migrateCmd = &cobra.Command{
-	Use:   "migrate",
-	Short: "Various migration helpers",
+func NewMigrateCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "migrate",
+		Short: "Various migration helpers",
+	}
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(migrateCmd)
-
-	migrateCmd.AddCommand(migrateSqlCmd)
+	c := NewMigrateCmd()
+	parent.AddCommand(c)
+	c.AddCommand(NewMigrateSQLCmd())
 }

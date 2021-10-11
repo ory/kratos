@@ -6,8 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/ghodss/yaml"
-	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,6 +14,9 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/ghodss/yaml"
+	"github.com/spf13/cobra"
 
 	"github.com/ory/x/watcherx"
 
@@ -997,7 +998,6 @@ func TestIdentitySchemaValidation(t *testing.T) {
 					cancel()
 					tmpConfig.Close()
 				})
-
 
 				go marshalAndWrite(t, ctx, tmpConfig, i)
 

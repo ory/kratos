@@ -763,13 +763,13 @@
             "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
             "type": "string"
           },
-          "traits": {
+          "provider": {
             "description": "The provider to register with",
             "type": "string"
           }
         },
         "required": [
-          "traits",
+          "provider",
           "method"
         ],
         "type": "object"
@@ -876,13 +876,13 @@
             "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
             "type": "string"
           },
-          "traits": {
+          "provider": {
             "description": "The provider to register with",
             "type": "string"
           }
         },
         "required": [
-          "traits",
+          "provider",
           "method"
         ],
         "type": "object"
