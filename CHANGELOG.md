@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-10-08)](#2021-10-08)
+- [ (2021-10-11)](#2021-10-11)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -207,7 +207,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-10-08)
+# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-10-11)
 
 
 ### Bug Fixes
@@ -215,6 +215,7 @@
 * Add middleware earlier [#1775](https://github.com/ory/kratos/issues/1775) ([#1776](https://github.com/ory/kratos/issues/1776)) ([b9d253e](https://github.com/ory/kratos/commit/b9d253ef05ff7cd616111a817d03a17e39f8f4a8))
 * API client leaks stack trace with an error ([#1772](https://github.com/ory/kratos/issues/1772)) ([d3aff6d](https://github.com/ory/kratos/commit/d3aff6d3eb11942fbfd6f2de71f4399053075b62)), closes [#1771](https://github.com/ory/kratos/issues/1771)
 * Correct swagger path for /identities/:id/session endpoint ([#1756](https://github.com/ory/kratos/issues/1756)) ([d614f2a](https://github.com/ory/kratos/commit/d614f2a737eef90ad60a4bdedae248b74131ff35))
+* Githup-app name in config ([#1822](https://github.com/ory/kratos/issues/1822)) ([1b50963](https://github.com/ory/kratos/commit/1b50963525ceaceea9afb8d1236d728de3107a8e))
 * OIDC provider field in spec ([#1809](https://github.com/ory/kratos/issues/1809)) ([11b25de](https://github.com/ory/kratos/commit/11b25deb46b73c7d0ab95a77ff2ab60c032c1942))
 * Omitempty for VerifiedAt and StateChangedAt ([#1736](https://github.com/ory/kratos/issues/1736)) ([bf2ec6e](https://github.com/ory/kratos/commit/bf2ec6e6ae8d656ea6dcac037dedd3603ad12915)):
 
@@ -227,6 +228,7 @@
 
 * Add a commandline example for the logout ([#1753](https://github.com/ory/kratos/issues/1753)) ([81ba264](https://github.com/ory/kratos/commit/81ba2647a66fca99b7ed2e56a67deec75ac06b89))
 * Add missing angle bracket ([#1799](https://github.com/ory/kratos/issues/1799)) ([4270140](https://github.com/ory/kratos/commit/427014052ef905c2003e2cd0133d57bf83819776))
+* Fix invalid syntax ([#1819](https://github.com/ory/kratos/issues/1819)) ([8cd6428](https://github.com/ory/kratos/commit/8cd6428e40610fa40b9c59414beb3d5c614dddaa))
 * Fix the flow links used for rendering ([#1752](https://github.com/ory/kratos/issues/1752)) ([131d2c2](https://github.com/ory/kratos/commit/131d2c284d4191ee979077937ea3b48fce772f3c))
 * Update quickstart curl examples ([#1778](https://github.com/ory/kratos/issues/1778)) ([6c677c4](https://github.com/ory/kratos/commit/6c677c49df8fa8d48e7c0bbf91bbd18874f4c514))
 * Use correct link ([f007919](https://github.com/ory/kratos/commit/f007919b7bd86c1d1b20b3625709e01b5f123302)), closes [#1793](https://github.com/ory/kratos/issues/1793)
@@ -247,7 +249,9 @@
 
 ### Tests
 
+* **e2e:** Resolve regressions ([af9aedc](https://github.com/ory/kratos/commit/af9aedc8d29678f480b1b6bad128aefbacd6a373))
 * Fix tests in cmd/serve ([#1755](https://github.com/ory/kratos/issues/1755)) ([b704d08](https://github.com/ory/kratos/commit/b704d08382a9059157c2a649872e88943d66a99f))
+* Resolve flaky example tests ([#1817](https://github.com/ory/kratos/issues/1817)) ([0e700d8](https://github.com/ory/kratos/commit/0e700d89c0aaa99b9eec7ce070b7974373377f03))
 
 
 # [0.7.6-alpha.1](https://github.com/ory/kratos/compare/v0.7.5-alpha.1...v0.7.6-alpha.1) (2021-09-12)
