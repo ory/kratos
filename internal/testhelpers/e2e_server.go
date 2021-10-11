@@ -57,10 +57,11 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 	require.NoError(t, err)
 	dsn := "sqlite://" + filepath.Join(dbt, "db.sqlite") + "?_fk=true&mode=rwc"
 
-	ctx := configx.ContextWithConfigOptions(context.Background(),
+	ctx := configx.ContextWithConfigOptions(
+		context.Background(),
 		configx.WithValue("dsn", dsn),
 		configx.WithValue("dev", true),
-		configx.WithValue("log.level", "info"),
+		configx.WithValue("log.level", "error"),
 		configx.WithValue("log.leak_sensitive_values", true),
 		configx.WithValue("serve.public.port", publicPort),
 		configx.WithValue("serve.admin.port", adminPort),
@@ -72,7 +73,6 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 	//nolint:staticcheck
 	ctx = context.WithValue(ctx, "dsn", dsn)
 	ctx, cancel := context.WithCancel(ctx)
-
 	executor := &cmdx.CommandExecuter{
 		New: func() *cobra.Command {
 			return cmd.NewRootCmd()
@@ -80,7 +80,9 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 		Ctx: ctx,
 	}
 
+	t.Log("Starting migrations...")
 	_ = executor.ExecNoErr(t, "migrate", "sql", dsn, "--yes")
+	t.Logf("Migration done")
 
 	t.Log("Starting server...")
 	stdOut, stdErr := &bytes.Buffer{}, &bytes.Buffer{}
@@ -95,8 +97,8 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 			return startE2EServerOnly(t, configFile, isTLS, configOptions, tries+1)
 		}
 	}
-
 	require.NoError(t, err)
+
 	t.Cleanup(cancel)
 	return publicPort, adminPort
 }
