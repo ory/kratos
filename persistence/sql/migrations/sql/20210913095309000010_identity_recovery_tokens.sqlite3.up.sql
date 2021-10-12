@@ -1,1 +1,1 @@
-ALTER TABLE "_identity_recovery_tokens_tmp" RENAME TO "identity_recovery_tokens";
+ALTER TABLE identity_recovery_tokens ADD COLUMN identity_id CHAR(36) NULL REFERENCES identities(id) ON DELETE CASCADE ON UPDATE RESTRICT;

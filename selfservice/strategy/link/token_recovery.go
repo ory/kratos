@@ -48,7 +48,7 @@ type RecoveryToken struct {
 	// FlowID is a helper struct field for gobuffalo.pop.
 	FlowID     uuid.NullUUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
 	NID        uuid.UUID     `json:"-"  faker:"-" db:"nid"`
-	IdentityID uuid.UUID     `json:"identity_id"  faker:"-" db:"identity_id"`
+	IdentityID uuid.NullUUID `json:"identity_id"  faker:"-" db:"identity_id"`
 }
 
 func (RecoveryToken) TableName(ctx context.Context) string {
@@ -57,10 +57,10 @@ func (RecoveryToken) TableName(ctx context.Context) string {
 
 func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryToken {
 	now := time.Now().UTC()
-	var identityId = uuid.UUID{}
+	var identityID = uuid.UUID{}
 	var recoveryAddressID = uuid.NullUUID{UUID: uuid.UUID{}, Valid: false}
 	if address != nil {
-		identityId = address.IdentityID
+		identityID = address.IdentityID
 		recoveryAddressID.UUID = address.ID
 		recoveryAddressID.Valid = true
 	}
@@ -70,7 +70,10 @@ func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.
 		RecoveryAddress:   address,
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,
-		IdentityID:        identityId,
+		IdentityID: uuid.NullUUID{
+			UUID:  identityID,
+			Valid: uuid.Nil != identityID,
+		},
 		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true},
 		RecoveryAddressID: recoveryAddressID,
 	}
@@ -79,11 +82,14 @@ func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.
 func NewRecoveryToken(identityID uuid.UUID, expiresIn time.Duration) *RecoveryToken {
 	now := time.Now().UTC()
 	return &RecoveryToken{
-		ID:                x.NewUUID(),
-		Token:             randx.MustString(32, randx.AlphaNum),
-		ExpiresAt:         now.Add(expiresIn),
-		IssuedAt:          now,
-		IdentityID:        identityID,
+		ID:        x.NewUUID(),
+		Token:     randx.MustString(32, randx.AlphaNum),
+		ExpiresAt: now.Add(expiresIn),
+		IssuedAt:  now,
+		IdentityID: uuid.NullUUID{
+			UUID:  identityID,
+			Valid: uuid.Nil != identityID,
+		},
 		RecoveryAddressID: uuid.NullUUID{UUID: uuid.UUID{}, Valid: false},
 	}
 }

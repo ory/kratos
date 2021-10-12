@@ -1,3 +1,5 @@
+change_column("identity_recovery_tokens", "identity_recovery_address_id", "uuid", {"size": 36,"null": true})
+
 {{ if .IsSQLite }}
   sql("ALTER TABLE identity_recovery_tokens ADD COLUMN identity_id CHAR(36) NULL REFERENCES identities(id) ON DELETE CASCADE ON UPDATE RESTRICT")
 {{ else }}
@@ -8,4 +10,3 @@
       "on_update": "RESTRICT",
   })
 {{ end }}
-change_column("identity_recovery_tokens", "identity_recovery_address_id", "uuid", {"size": 36,"null": true})

@@ -1,1 +1,1 @@
-ALTER TABLE "identity_recovery_tokens" RENAME COLUMN "identity_recovery_address_id" TO "_identity_recovery_address_id_tmp";
+UPDATE "identity_recovery_tokens" SET "identity_recovery_address_id" = "_identity_recovery_address_id_tmp";

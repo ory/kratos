@@ -1,1 +1,1 @@
-DROP TABLE "identity_recovery_tokens";
+ALTER TABLE "_identity_recovery_tokens_tmp" RENAME TO "identity_recovery_tokens";

@@ -1,1 +1,1 @@
-ALTER TABLE identity_recovery_tokens ADD COLUMN identity_id CHAR(36) NULL REFERENCES identities(id) ON DELETE CASCADE ON UPDATE RESTRICT;
+DROP INDEX IF EXISTS "identity_recovery_tokens_nid_idx";

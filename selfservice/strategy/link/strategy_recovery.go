@@ -313,7 +313,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID)
+	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID.UUID)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
