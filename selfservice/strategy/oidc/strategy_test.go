@@ -727,3 +727,40 @@ func TestDisabledEndpoint(t *testing.T) {
 		})
 	})
 }
+
+func TestPostEndpointRedirect(t *testing.T) {
+	var (
+		conf, reg        = internal.NewFastRegistryWithMocks(t)
+		subject, website string
+		scope            []string
+	)
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), true)
+
+	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &scope)
+
+	publicTS, adminTS := testhelpers.NewKratosServers(t)
+
+	viperSetProviderConfig(
+		t,
+		conf,
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple", "client"),
+	)
+	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
+
+	t.Run("case=should redirect to GET and preserve parameters"+publicTS.URL, func(t *testing.T) {
+		// create a client that does not follow redirects
+		c := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+		res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/apple", url.Values{"state": {"foo"}, "test": {"3"}})
+		require.NoError(t, err)
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusFound, res.StatusCode)
+
+		location, err := res.Location()
+		require.NoError(t, err)
+		assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/apple?state=foo&test=3", location.String())
+	})
+}
