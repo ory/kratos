@@ -264,7 +264,8 @@ func TestHandler(t *testing.T) {
 
 					res = get(t, ts, "/identities/"+id+"?include_credential=oidc", http.StatusOK)
 					assert.True(t, res.Get("credentials").Exists(), "credentials should be included: %s", res.Raw)
-					assert.False(t, res.Get("credentials.password").Exists(), "password credentials should not be included: %s", res.Raw)
+					assert.True(t, res.Get("credentials.password").Exists(), "password meta should be included: %s", res.Raw)
+					assert.False(t, res.Get("credentials.password.false").Exists(), "password credentials should not be included: %s", res.Raw)
 					assert.True(t, res.Get("credentials.oidc.config").Exists(), "oidc credentials should be included: %s", res.Raw)
 
 					assert.EqualValues(t, "foo", res.Get("credentials.oidc.config.providers.0.subject").String(), "credentials should be included: %s", res.Raw)

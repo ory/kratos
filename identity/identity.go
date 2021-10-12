@@ -313,6 +313,9 @@ func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher
 
 	for ct, original := range i.Credentials {
 		if ct != CredentialsTypeOIDC {
+			toPublish := original
+			toPublish.Config = []byte{}
+			credsToPublish[ct] = toPublish
 			continue
 		}
 
