@@ -1017,7 +1017,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 					assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
 				}
 
-				wg.Done()
+				wg.Wait()
 			})
 		}
 
