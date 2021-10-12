@@ -32,7 +32,7 @@ func TestNewIdentity(t *testing.T) {
 func TestMarshalExcludesCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			ID: uuid.UUID{},
 		},
 	}
@@ -49,7 +49,7 @@ func TestMarshalExcludesCredentials(t *testing.T) {
 func TestMarshalExcludesCredentialsByReference(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			ID: uuid.UUID{},
 		},
 	}
@@ -86,7 +86,7 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 func TestMarshalIdentityWithCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	credentials := map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			Type:   CredentialsTypePassword,
 			Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
 		},
