@@ -274,9 +274,6 @@ Something is not working.
 - [ ] Add option to remove recovery codes
       ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Hide SQLite migration message
-      ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] return_to_query_param not honored on OIDC login
       ([kratos#1773](https://github.com/ory/kratos/issues/1773)) -
       [@hackerman](https://github.com/aeneasr)
@@ -284,6 +281,9 @@ Something is not working.
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect
       ([kratos#782](https://github.com/ory/kratos/issues/782))
+- [x] Hide SQLite migration message
+      ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
