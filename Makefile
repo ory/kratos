@@ -162,8 +162,8 @@ migrations-render-replace: .bin/ory
 
 .PHONY: migratest-refresh
 migratest-refresh:
-		cd persistence/sql/migratest; UPDATE_SNAPSHOTS=true go test -tags sqlite -short .
+		cd persistence/sql/migratest; UPDATE_SNAPSHOTS=true go test -p 1 -tags sqlite -short .
 
 .PHONY: test-update-snapshots
 test-update-snapshots:
-		UPDATE_SNAPSHOTS=true go test -tags sqlite -short ./...
+		UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...
