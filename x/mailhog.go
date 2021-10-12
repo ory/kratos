@@ -52,7 +52,7 @@ func RunTestSMTP() (smtp, api string, err error) {
 	}
 	resources = append(resources, resource)
 
-	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%s", resource.GetPort("1025/tcp"))
+	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%s/?disable_starttls=true", resource.GetPort("1025/tcp"))
 	api = fmt.Sprintf("http://127.0.0.1:%s", resource.GetPort("8025/tcp"))
 	if err := backoff.Retry(func() error {
 		res, err := http.Get(api + "/api/v2/messages")

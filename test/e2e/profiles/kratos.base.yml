@@ -41,4 +41,4 @@ hashers:
 
 courier:
   smtp:
-    connection_uri: smtps://test:test@127.0.0.1:1025/?skip_ssl_verify=true&legacy_ssl=true
+    connection_uri: smtps://test:test@127.0.0.1:1025/?skip_ssl_verify=true

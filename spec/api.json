@@ -91,6 +91,9 @@
             "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
             "type": "string"
           },
+          "state": {
+            "$ref": "#/components/schemas/identityState"
+          },
           "traits": {
             "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
             "type": "object"
@@ -283,6 +286,26 @@
           "$ref": "#/components/schemas/identity"
         },
         "title": "A list of identities.",
+        "type": "array"
+      },
+      "identitySchema": {
+        "properties": {
+          "id": {
+            "description": "The ID of the Identity JSON Schema",
+            "type": "string"
+          },
+          "schema": {
+            "description": "The actual Identity JSON Schema",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "identitySchemas": {
+        "description": "Raw identity Schema list",
+        "items": {
+          "$ref": "#/components/schemas/identitySchema"
+        },
         "type": "array"
       },
       "identityState": {
@@ -740,13 +763,13 @@
             "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
             "type": "string"
           },
-          "traits": {
+          "provider": {
             "description": "The provider to register with",
             "type": "string"
           }
         },
         "required": [
-          "traits",
+          "provider",
           "method"
         ],
         "type": "object"
@@ -853,13 +876,13 @@
             "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
             "type": "string"
           },
-          "traits": {
+          "provider": {
             "description": "The provider to register with",
             "type": "string"
           }
         },
         "required": [
-          "traits",
+          "provider",
           "method"
         ],
         "type": "object"
@@ -1900,6 +1923,62 @@
         "summary": "Create a Recovery Link",
         "tags": [
           "v0alpha1"
+        ]
+      }
+    },
+    "/schemas": {
+      "get": {
+        "description": "Get all Identity Schemas",
+        "operationId": "listIdentitySchemas",
+        "parameters": [
+          {
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "default": 100,
+              "format": "int64",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Pagination Page",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/identitySchemas"
+                }
+              }
+            },
+            "description": "identitySchemas"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonError"
+                }
+              }
+            },
+            "description": "jsonError"
+          }
+        },
+        "tags": [
+          "v0alpha2"
         ]
       }
     },

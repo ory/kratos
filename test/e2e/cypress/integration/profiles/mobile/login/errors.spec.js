@@ -37,7 +37,7 @@ context('Mobile Profile', () => {
 
         cy.get('*[data-testid="field/password"]').should(
           'contain.text',
-          'length must be >= 1, but got 0'
+          'Property password is missing.'
         )
       })
 

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/corp"
 	"github.com/ory/x/dbal"
 
@@ -97,6 +99,7 @@ func TestMigrations(t *testing.T) {
 			t.Run("suite=fixtures", func(t *testing.T) {
 				d := driver.New(
 					context.Background(),
+					&cobra.Command{},
 					configx.WithValues(map[string]interface{}{
 						config.ViperKeyDSN:                      url,
 						config.ViperKeyPublicBaseURL:            "https://www.ory.sh/",

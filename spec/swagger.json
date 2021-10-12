@@ -488,6 +488,57 @@
         }
       }
     },
+    "/schemas": {
+      "get": {
+        "description": "Get all Identity Schemas",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "operationId": "listIdentitySchemas",
+        "parameters": [
+          {
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 100,
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "description": "Pagination Page",
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "identitySchemas",
+            "schema": {
+              "$ref": "#/definitions/identitySchemas"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
     "/schemas/{id}": {
       "get": {
         "description": "Get a JSON Schema",
@@ -1906,6 +1957,9 @@
           "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
           "type": "string"
         },
+        "state": {
+          "$ref": "#/definitions/identityState"
+        },
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
           "type": "object"
@@ -2093,6 +2147,26 @@
       "title": "A list of identities.",
       "items": {
         "$ref": "#/definitions/identity"
+      }
+    },
+    "identitySchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The ID of the Identity JSON Schema",
+          "type": "string"
+        },
+        "schema": {
+          "description": "The actual Identity JSON Schema",
+          "type": "object"
+        }
+      }
+    },
+    "identitySchemas": {
+      "description": "Raw identity Schema list",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/identitySchema"
       }
     },
     "identityState": {
@@ -2513,7 +2587,7 @@
       "description": "SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload\nwhen using the oidc method.",
       "type": "object",
       "required": [
-        "traits",
+        "provider",
         "method"
       ],
       "properties": {
@@ -2525,7 +2599,7 @@
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
         },
-        "traits": {
+        "provider": {
           "description": "The provider to register with",
           "type": "string"
         }
@@ -2602,7 +2676,7 @@
       "description": "SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload\nwhen using the oidc method.",
       "type": "object",
       "required": [
-        "traits",
+        "provider",
         "method"
       ],
       "properties": {
@@ -2614,7 +2688,7 @@
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
         },
-        "traits": {
+        "provider": {
           "description": "The provider to register with",
           "type": "string"
         }
