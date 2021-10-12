@@ -6,13 +6,13 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **CsrfToken** | Pointer to **string** | The CSRF Token | [optional] 
 **Method** | **string** | Method to use  This field must be set to &#x60;oidc&#x60; when using the oidc method. | 
-**Traits** | **string** | The provider to register with | 
+**Provider** | **string** | The provider to register with | 
 
 ## Methods
 
 ### NewSubmitSelfServiceLoginFlowWithOidcMethodBody
 
-`func NewSubmitSelfServiceLoginFlowWithOidcMethodBody(method string, traits string, ) *SubmitSelfServiceLoginFlowWithOidcMethodBody`
+`func NewSubmitSelfServiceLoginFlowWithOidcMethodBody(method string, provider string, ) *SubmitSelfServiceLoginFlowWithOidcMethodBody`
 
 NewSubmitSelfServiceLoginFlowWithOidcMethodBody instantiates a new SubmitSelfServiceLoginFlowWithOidcMethodBody object
 This constructor will assign default values to properties that have it defined,
@@ -72,24 +72,24 @@ and a boolean to check if the value has been set.
 SetMethod sets Method field to given value.
 
 
-### GetTraits
+### GetProvider
 
-`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraits() string`
+`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetProvider() string`
 
-GetTraits returns the Traits field if non-nil, zero value otherwise.
+GetProvider returns the Provider field if non-nil, zero value otherwise.
 
-### GetTraitsOk
+### GetProviderOk
 
-`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraitsOk() (*string, bool)`
+`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetProviderOk() (*string, bool)`
 
-GetTraitsOk returns a tuple with the Traits field if it's non-nil, zero value otherwise
+GetProviderOk returns a tuple with the Provider field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetTraits
+### SetProvider
 
-`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetTraits(v string)`
+`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetProvider(v string)`
 
-SetTraits sets Traits field to given value.
+SetProvider sets Provider field to given value.
 
 
 

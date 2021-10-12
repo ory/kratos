@@ -694,6 +694,20 @@ type V0alpha2Api interface {
 	InitializeSelfServiceVerificationFlowWithoutBrowserExecute(r V0alpha2ApiApiInitializeSelfServiceVerificationFlowWithoutBrowserRequest) (*SelfServiceVerificationFlow, *http.Response, error)
 
 	/*
+	 * ListIdentitySchemas Method for ListIdentitySchemas
+	 * Get all Identity Schemas
+	 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	 * @return V0alpha2ApiApiListIdentitySchemasRequest
+	 */
+	ListIdentitySchemas(ctx context.Context) V0alpha2ApiApiListIdentitySchemasRequest
+
+	/*
+	 * ListIdentitySchemasExecute executes the request
+	 * @return []IdentitySchema
+	 */
+	ListIdentitySchemasExecute(r V0alpha2ApiApiListIdentitySchemasRequest) ([]IdentitySchema, *http.Response, error)
+
+	/*
 			 * SubmitSelfServiceLoginFlow Submit a Login Flow
 			 * :::info
 
@@ -724,6 +738,8 @@ type V0alpha2Api interface {
 		`has_session_already`: The user is already signed in.
 		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+		`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+		Most likely used in Social Sign In flows.
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -837,6 +853,8 @@ type V0alpha2Api interface {
 		`has_session_already`: The user is already signed in.
 		`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+		`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+		Most likely used in Social Sign In flows.
 
 		More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -891,6 +909,8 @@ type V0alpha2Api interface {
 		`intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
 		identity logged in instead.
 		`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+		`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+		Most likely used in Social Sign In flows.
 
 		More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -4550,9 +4570,6 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExec
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.xSessionToken == nil {
-		return localVarReturnValue, nil, reportError("xSessionToken is required and must be specified")
-	}
 
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -4571,7 +4588,9 @@ func (a *V0alpha2ApiService) InitializeSelfServiceSettingsFlowWithoutBrowserExec
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	if r.xSessionToken != nil {
+		localVarHeaderParams["X-Session-Token"] = parameterToString(*r.xSessionToken, "")
+	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -4884,6 +4903,133 @@ func (a *V0alpha2ApiService) InitializeSelfServiceVerificationFlowWithoutBrowser
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
+type V0alpha2ApiApiListIdentitySchemasRequest struct {
+	ctx        context.Context
+	ApiService V0alpha2Api
+	perPage    *int64
+	page       *int64
+}
+
+func (r V0alpha2ApiApiListIdentitySchemasRequest) PerPage(perPage int64) V0alpha2ApiApiListIdentitySchemasRequest {
+	r.perPage = &perPage
+	return r
+}
+func (r V0alpha2ApiApiListIdentitySchemasRequest) Page(page int64) V0alpha2ApiApiListIdentitySchemasRequest {
+	r.page = &page
+	return r
+}
+
+func (r V0alpha2ApiApiListIdentitySchemasRequest) Execute() ([]IdentitySchema, *http.Response, error) {
+	return r.ApiService.ListIdentitySchemasExecute(r)
+}
+
+/*
+ * ListIdentitySchemas Method for ListIdentitySchemas
+ * Get all Identity Schemas
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @return V0alpha2ApiApiListIdentitySchemasRequest
+ */
+func (a *V0alpha2ApiService) ListIdentitySchemas(ctx context.Context) V0alpha2ApiApiListIdentitySchemasRequest {
+	return V0alpha2ApiApiListIdentitySchemasRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+/*
+ * Execute executes the request
+ * @return []IdentitySchema
+ */
+func (a *V0alpha2ApiService) ListIdentitySchemasExecute(r V0alpha2ApiApiListIdentitySchemasRequest) ([]IdentitySchema, *http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodGet
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+		localVarReturnValue  []IdentitySchema
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.ListIdentitySchemas")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/schemas"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	if r.perPage != nil {
+		localVarQueryParams.Add("per_page", parameterToString(*r.perPage, ""))
+	}
+	if r.page != nil {
+		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
+	}
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest struct {
 	ctx                            context.Context
 	ApiService                     V0alpha2Api
@@ -4940,6 +5086,8 @@ case of an error, the `error.id` of the JSON response body can be one of:
 `has_session_already`: The user is already signed in.
 `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+Most likely used in Social Sign In flows.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -5027,6 +5175,16 @@ func (a *V0alpha2ApiService) SubmitSelfServiceLoginFlowExecute(r V0alpha2ApiApiS
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
 			var v SelfServiceLoginFlow
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 422 {
+			var v SelfServiceBrowserLocationChangeRequiredError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -5520,6 +5678,8 @@ case of an error, the `error.id` of the JSON response body can be one of:
 `has_session_already`: The user is already signed in.
 `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+Most likely used in Social Sign In flows.
 
 More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -5604,6 +5764,16 @@ func (a *V0alpha2ApiService) SubmitSelfServiceRegistrationFlowExecute(r V0alpha2
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
 			var v SelfServiceRegistrationFlow
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 422 {
+			var v SelfServiceBrowserLocationChangeRequiredError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
@@ -5702,6 +5872,8 @@ or initiate a refresh login flow otherwise.
 `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
 identity logged in instead.
 `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+Most likely used in Social Sign In flows.
 
 More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
@@ -5809,6 +5981,16 @@ func (a *V0alpha2ApiService) SubmitSelfServiceSettingsFlowExecute(r V0alpha2ApiA
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
 			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 422 {
+			var v SelfServiceBrowserLocationChangeRequiredError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()

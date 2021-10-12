@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 **CsrfToken** | Pointer to **string** | CSRFToken is the anti-CSRF token | [optional] 
 **Method** | **string** | Method  Should be set to \&quot;totp\&quot; when trying to add, update, or remove a totp pairing. | 
 **Password** | **string** | Password is the updated password | 
-**Traits** | **map[string]interface{}** | Traits contains all of the identity&#39;s traits. | 
+**Traits** | **map[string]interface{}** | The identity&#39;s traits  in: body | 
 **Flow** | Pointer to **string** | Flow ID is the flow&#39;s ID.  in: query | [optional] 
 **Link** | Pointer to **string** | Link this provider  Either this or &#x60;unlink&#x60; must be set.  type: string in: body | [optional] 
 **Unlink** | Pointer to **string** | Unlink this provider  Either this or &#x60;link&#x60; must be set.  type: string in: body | [optional] 

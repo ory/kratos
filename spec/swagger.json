@@ -522,6 +522,57 @@
         }
       }
     },
+    "/schemas": {
+      "get": {
+        "description": "Get all Identity Schemas",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "operationId": "listIdentitySchemas",
+        "parameters": [
+          {
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 100,
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "description": "Pagination Page",
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "identitySchemas",
+            "schema": {
+              "$ref": "#/definitions/identitySchemas"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
     "/schemas/{id}": {
       "get": {
         "description": "Get a JSON Schema",
@@ -621,7 +672,7 @@
     },
     "/self-service/login": {
       "post": {
-        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`has_session_already`: The user is already signed in.\n`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": ":::info\n\nThis endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.\n\n:::\n\nUse this endpoint to complete a login flow. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`has_session_already`: The user is already signed in.\n`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -676,6 +727,12 @@
             "description": "selfServiceLoginFlow",
             "schema": {
               "$ref": "#/definitions/selfServiceLoginFlow"
+            }
+          },
+          "422": {
+            "description": "selfServiceBrowserLocationChangeRequiredError",
+            "schema": {
+              "$ref": "#/definitions/selfServiceBrowserLocationChangeRequiredError"
             }
           },
           "500": {
@@ -1210,7 +1267,7 @@
     },
     "/self-service/registration": {
       "post": {
-        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`has_session_already`: The user is already signed in.\n`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect a Content-Type of `application/x-www-form-urlencoded` or `application/json` to be sent in the body and respond with\na HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nBrowser flows with an accept header of `application/json` will not redirect but instead respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nIf this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`has_session_already`: The user is already signed in.\n`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1257,6 +1314,12 @@
             "description": "selfServiceRegistrationFlow",
             "schema": {
               "$ref": "#/definitions/selfServiceRegistrationFlow"
+            }
+          },
+          "422": {
+            "description": "selfServiceBrowserLocationChangeRequiredError",
+            "schema": {
+              "$ref": "#/definitions/selfServiceBrowserLocationChangeRequiredError"
             }
           },
           "500": {
@@ -1415,7 +1478,7 @@
             "sessionToken": []
           }
         ],
-        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.\nImplies that the user needs to re-authenticate.\n\nBrowser flows without HTTP Header `Accept` or with `Accept: text/*` respond with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.\n\nBrowser flows with HTTP Header `Accept: application/json` respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 401 when the endpoint is called without a valid session cookie.\nHTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.\nHTTP 400 on form validation errors.\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.\n\nIf this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`needs_privileged_session`: The identity requested to change something that needs a privileged session. Redirect\nthe identity to the login init endpoint with query parameters `?refresh=true\u0026return_to=\u003cthe-current-browser-url\u003e`,\nor initiate a refresh login flow otherwise.\n`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`no_active_session`: No Ory Session was found - sign in a user first.\n`intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other\nidentity logged in instead.\n`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.\nImplies that the user needs to re-authenticate.\n\nBrowser flows without HTTP Header `Accept` or with `Accept: text/*` respond with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached or the session's AAL is too low.\n\nBrowser flows with HTTP Header `Accept: application/json` respond with\nHTTP 200 and a application/json body with the signed in identity and a `Set-Cookie` header on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 401 when the endpoint is called without a valid session cookie.\nHTTP 403 when the page is accessed without a session cookie or the session's AAL is too low.\nHTTP 400 on form validation errors.\n\nDepending on your configuration this endpoint might return a 403 error if the session has a lower Authenticator\nAssurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn\ncredentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user\nto sign in with the second factor (happens automatically for server-side browser flows) or change the configuration.\n\nIf this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the\ncase of an error, the `error.id` of the JSON response body can be one of:\n\n`needs_privileged_session`: The identity requested to change something that needs a privileged session. Redirect\nthe identity to the login init endpoint with query parameters `?refresh=true\u0026return_to=\u003cthe-current-browser-url\u003e`,\nor initiate a refresh login flow otherwise.\n`csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.\n`no_active_session`: No Ory Session was found - sign in a user first.\n`intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other\nidentity logged in instead.\n`forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!\n`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.\nMost likely used in Social Sign In flows.\n\nMore information can be found at [Ory Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1482,6 +1545,12 @@
               "$ref": "#/definitions/jsonError"
             }
           },
+          "422": {
+            "description": "selfServiceBrowserLocationChangeRequiredError",
+            "schema": {
+              "$ref": "#/definitions/selfServiceBrowserLocationChangeRequiredError"
+            }
+          },
           "500": {
             "description": "jsonError",
             "schema": {
@@ -1508,8 +1577,7 @@
             "type": "string",
             "description": "The Session Token of the Identity performing the settings flow.",
             "name": "X-Session-Token",
-            "in": "header",
-            "required": true
+            "in": "header"
           }
         ],
         "responses": {
@@ -2021,6 +2089,9 @@
           "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
           "type": "string"
         },
+        "state": {
+          "$ref": "#/definitions/identityState"
+        },
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
           "type": "object"
@@ -2276,6 +2347,26 @@
         "$ref": "#/definitions/identity"
       }
     },
+    "identitySchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The ID of the Identity JSON Schema",
+          "type": "string"
+        },
+        "schema": {
+          "description": "The actual Identity JSON Schema",
+          "type": "object"
+        }
+      }
+    },
+    "identitySchemas": {
+      "description": "Raw identity Schema list",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/identitySchema"
+      }
+    },
     "identityState": {
       "description": "The state can either be `active` or `inactive`.",
       "type": "string",
@@ -2373,6 +2464,19 @@
       "format": "date-time",
       "title": "NullTime implements sql.NullTime functionality."
     },
+    "selfServiceBrowserLocationChangeRequiredError": {
+      "type": "object",
+      "title": "Is sent when a flow requires a browser to change its location.",
+      "properties": {
+        "error": {
+          "$ref": "#/definitions/genericError"
+        },
+        "redirect_browser_to": {
+          "description": "Since when the flow has expired",
+          "type": "string"
+        }
+      }
+    },
     "selfServiceError": {
       "type": "object",
       "required": [
@@ -2401,52 +2505,12 @@
     "selfServiceFlowExpiredError": {
       "description": "Is sent when a flow is expired",
       "type": "object",
-      "required": [
-        "message"
-      ],
       "properties": {
-        "code": {
-          "description": "The status code",
-          "type": "integer",
-          "format": "int64",
-          "example": 404
-        },
-        "debug": {
-          "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
-          "type": "string",
-          "example": "SQL field \"foo\" is not a bool."
-        },
-        "details": {
-          "description": "Further error details",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "id": {
-          "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
-          "type": "string"
-        },
-        "message": {
-          "description": "Error message\n\nThe error's message.",
-          "type": "string",
-          "example": "The resource could not be found"
-        },
-        "reason": {
-          "description": "A human-readable reason for the error",
-          "type": "string",
-          "example": "User with ID 1234 does not exist."
-        },
-        "request": {
-          "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
-          "type": "string",
-          "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6"
+        "error": {
+          "$ref": "#/definitions/genericError"
         },
         "since": {
           "$ref": "#/definitions/Duration"
-        },
-        "status": {
-          "description": "The status description",
-          "type": "string",
-          "example": "Not Found"
         },
         "use_flow_id": {
           "$ref": "#/definitions/UUID"
@@ -2886,7 +2950,7 @@
       "description": "SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload\nwhen using the oidc method.",
       "type": "object",
       "required": [
-        "traits",
+        "provider",
         "method"
       ],
       "properties": {
@@ -2898,7 +2962,7 @@
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
         },
-        "traits": {
+        "provider": {
           "description": "The provider to register with",
           "type": "string"
         }
@@ -3018,7 +3082,7 @@
       "description": "SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload\nwhen using the oidc method.",
       "type": "object",
       "required": [
-        "traits",
+        "provider",
         "method"
       ],
       "properties": {
@@ -3030,9 +3094,13 @@
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
         },
-        "traits": {
+        "provider": {
           "description": "The provider to register with",
           "type": "string"
+        },
+        "traits": {
+          "description": "The identity traits",
+          "type": "object"
         }
       }
     },
@@ -3116,6 +3184,10 @@
         "method": {
           "description": "Method\n\nShould be set to profile when trying to update a profile.",
           "type": "string"
+        },
+        "traits": {
+          "description": "The identity's traits\n\nin: body",
+          "type": "object"
         },
         "unlink": {
           "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
@@ -3413,10 +3485,6 @@
         "disabled": {
           "description": "Sets the input's disabled field to true or false.",
           "type": "boolean"
-        },
-        "initial_value": {
-          "description": "The input's initial value.",
-          "type": "object"
         },
         "label": {
           "$ref": "#/definitions/uiText"

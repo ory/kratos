@@ -433,6 +433,52 @@ paths:
       summary: Create a Recovery Link
       tags:
       - v0alpha2
+  /schemas:
+    get:
+      description: Get all Identity Schemas
+      operationId: listIdentitySchemas
+      parameters:
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 100
+          format: int64
+          maximum: 500
+          minimum: 1
+          type: integer
+        style: form
+      - description: Pagination Page
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          format: int64
+          minimum: 0
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/identitySchemas'
+          description: identitySchemas
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      tags:
+      - v0alpha2
   /schemas/{id}:
     get:
       description: Get a JSON Schema
@@ -547,6 +593,8 @@ paths:
         `has_session_already`: The user is already signed in.
         `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
         `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+        Most likely used in Social Sign In flows.
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: submitSelfServiceLoginFlow
@@ -596,6 +644,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceLoginFlow'
           description: selfServiceLoginFlow
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/selfServiceBrowserLocationChangeRequiredError'
+          description: selfServiceBrowserLocationChangeRequiredError
         "500":
           content:
             application/json:
@@ -1269,6 +1323,8 @@ paths:
         `has_session_already`: The user is already signed in.
         `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
         `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+        Most likely used in Social Sign In flows.
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
       operationId: submitSelfServiceRegistrationFlow
@@ -1310,6 +1366,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/selfServiceRegistrationFlow'
           description: selfServiceRegistrationFlow
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/selfServiceBrowserLocationChangeRequiredError'
+          description: selfServiceBrowserLocationChangeRequiredError
         "500":
           content:
             application/json:
@@ -1549,6 +1611,8 @@ paths:
         `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
         identity logged in instead.
         `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
+        Most likely used in Social Sign In flows.
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
       operationId: submitSelfServiceSettingsFlow
@@ -1610,6 +1674,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/selfServiceBrowserLocationChangeRequiredError'
+          description: selfServiceBrowserLocationChangeRequiredError
         "500":
           content:
             application/json:
@@ -1652,7 +1722,7 @@ paths:
         explode: false
         in: header
         name: X-Session-Token
-        required: true
+        required: false
         schema:
           type: string
         style: simple
@@ -2294,6 +2364,8 @@ components:
           description: SchemaID is the ID of the JSON Schema to be used for validating
             the identity's traits.
           type: string
+        state:
+          $ref: '#/components/schemas/identityState'
         traits:
           description: |-
             Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -2610,6 +2682,23 @@ components:
         $ref: '#/components/schemas/identity'
       title: A list of identities.
       type: array
+    identitySchema:
+      example:
+        schema: '{}'
+        id: id
+      properties:
+        id:
+          description: The ID of the Identity JSON Schema
+          type: string
+        schema:
+          description: The actual Identity JSON Schema
+          type: object
+      type: object
+    identitySchemas:
+      description: Raw identity Schema list
+      items:
+        $ref: '#/components/schemas/identitySchema'
+      type: array
     identityState:
       description: The state can either be `active` or `inactive`.
       enum:
@@ -2707,6 +2796,15 @@ components:
       format: date-time
       title: NullTime implements sql.NullTime functionality.
       type: string
+    selfServiceBrowserLocationChangeRequiredError:
+      properties:
+        error:
+          $ref: '#/components/schemas/genericError'
+        redirect_browser_to:
+          description: Since when the flow has expired
+          type: string
+      title: Is sent when a flow requires a browser to change its location.
+      type: object
     selfServiceError:
       example:
         updated_at: 2000-01-23T04:56:07.000+00:00
@@ -2733,48 +2831,8 @@ components:
     selfServiceFlowExpiredError:
       description: Is sent when a flow is expired
       properties:
-        code:
-          description: The status code
-          example: 404
-          format: int64
-          type: integer
-        debug:
-          description: |-
-            Debug information
-
-            This field is often not exposed to protect against leaking
-            sensitive information.
-          example: SQL field "foo" is not a bool.
-          type: string
-        details:
-          additionalProperties: true
-          description: Further error details
-          type: object
-        id:
-          description: |-
-            The error ID
-
-            Useful when trying to identify various errors in application logic.
-          type: string
-        message:
-          description: |-
-            Error message
-
-            The error's message.
-          example: The resource could not be found
-          type: string
-        reason:
-          description: A human-readable reason for the error
-          example: User with ID 1234 does not exist.
-          type: string
-        request:
-          description: |-
-            The request ID
-
-            The request ID is often exposed internally in order to trace
-            errors across service architectures. This is often a UUID.
-          example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
-          type: string
+        error:
+          $ref: '#/components/schemas/genericError'
         since:
           description: |-
             A Duration represents the elapsed time between two instants
@@ -2782,15 +2840,9 @@ components:
             largest representable duration to approximately 290 years.
           format: int64
           type: integer
-        status:
-          description: The status description
-          example: Not Found
-          type: string
         use_flow_id:
           format: uuid4
           type: string
-      required:
-      - message
       type: object
     selfServiceFlowType:
       description: The flow type can either be `api` or `browser`.
@@ -3637,12 +3689,12 @@ components:
 
             This field must be set to `oidc` when using the oidc method.
           type: string
-        traits:
+        provider:
           description: The provider to register with
           type: string
       required:
       - method
-      - traits
+      - provider
       type: object
     submitSelfServiceLoginFlowWithPasswordMethodBody:
       properties:
@@ -3773,12 +3825,15 @@ components:
 
             This field must be set to `oidc` when using the oidc method.
           type: string
-        traits:
+        provider:
           description: The provider to register with
           type: string
+        traits:
+          description: The identity traits
+          type: object
       required:
       - method
-      - traits
+      - provider
       type: object
     submitSelfServiceRegistrationFlowWithPasswordMethodBody:
       description: |-
@@ -3869,6 +3924,12 @@ components:
 
             Should be set to profile when trying to update a profile.
           type: string
+        traits:
+          description: |-
+            The identity's traits
+
+            in: body
+          type: object
         unlink:
           description: |-
             Unlink this provider
@@ -4397,9 +4458,6 @@ components:
         disabled:
           description: Sets the input's disabled field to true or false.
           type: boolean
-        initial_value:
-          description: The input's initial value.
-          nullable: true
         label:
           $ref: '#/components/schemas/uiText'
         name:
