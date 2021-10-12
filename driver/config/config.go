@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/duo-labs/webauthn/protocol"
 	"io"
 	"net"
 	"net/http"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/duo-labs/webauthn/protocol"
 
 	"github.com/duo-labs/webauthn/webauthn"
 

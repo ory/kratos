@@ -632,6 +632,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(t, l,
+						&cobra.Command{},
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 							config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,

@@ -364,12 +364,6 @@ func (h *Handler) fetchPublicFlow(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
-func (h *Handler) wrapErrorForbidden(err error) error {
-	return errors.WithStack(herodot.ErrForbidden.
-		WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").
-		WithTrace(err).WithDebugf("%s", err))
-}
-
 func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request) error {
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	pr, err := h.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)

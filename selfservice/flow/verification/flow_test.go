@@ -11,8 +11,6 @@ import (
 
 	"github.com/ory/x/jsonx"
 
-	"github.com/spf13/cobra"
-
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/verification"
 
