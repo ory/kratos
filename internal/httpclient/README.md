@@ -90,6 +90,7 @@ Class | Method | HTTP request | Description
 *V0alpha1Api* | [**AdminCreateIdentity**](docs/V0alpha1Api.md#admincreateidentity) | **Post** /identities | Create an Identity
 *V0alpha1Api* | [**AdminCreateSelfServiceRecoveryLink**](docs/V0alpha1Api.md#admincreateselfservicerecoverylink) | **Post** /recovery/link | Create a Recovery Link
 *V0alpha1Api* | [**AdminDeleteIdentity**](docs/V0alpha1Api.md#admindeleteidentity) | **Delete** /identities/{id} | Delete an Identity
+*V0alpha1Api* | [**AdminDeleteIdentitySessions**](docs/V0alpha1Api.md#admindeleteidentitysessions) | **Delete** /identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 *V0alpha1Api* | [**AdminGetIdentity**](docs/V0alpha1Api.md#admingetidentity) | **Get** /identities/{id} | Get an Identity
 *V0alpha1Api* | [**AdminListIdentities**](docs/V0alpha1Api.md#adminlistidentities) | **Get** /identities | List Identities
 *V0alpha1Api* | [**AdminUpdateIdentity**](docs/V0alpha1Api.md#adminupdateidentity) | **Put** /identities/{id} | Update an Identity
@@ -119,6 +120,7 @@ Class | Method | HTTP request | Description
 *V0alpha1Api* | [**SubmitSelfServiceSettingsFlow**](docs/V0alpha1Api.md#submitselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
 *V0alpha1Api* | [**SubmitSelfServiceVerificationFlow**](docs/V0alpha1Api.md#submitselfserviceverificationflow) | **Post** /self-service/verification | Complete Verification Flow
 *V0alpha1Api* | [**ToSession**](docs/V0alpha1Api.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
+*V0alpha2Api* | [**ListIdentitySchemas**](docs/V0alpha2Api.md#listidentityschemas) | **Get** /schemas | 
 
 
 ## Documentation For Models
@@ -126,43 +128,18 @@ Class | Method | HTTP request | Description
  - [AdminCreateIdentityBody](docs/AdminCreateIdentityBody.md)
  - [AdminCreateSelfServiceRecoveryLinkBody](docs/AdminCreateSelfServiceRecoveryLinkBody.md)
  - [AdminUpdateIdentityBody](docs/AdminUpdateIdentityBody.md)
- - [AuthenticateOKBody](docs/AuthenticateOKBody.md)
- - [ContainerChangeResponseItem](docs/ContainerChangeResponseItem.md)
- - [ContainerCreateCreatedBody](docs/ContainerCreateCreatedBody.md)
- - [ContainerTopOKBody](docs/ContainerTopOKBody.md)
- - [ContainerUpdateOKBody](docs/ContainerUpdateOKBody.md)
- - [ContainerWaitOKBody](docs/ContainerWaitOKBody.md)
- - [ContainerWaitOKBodyError](docs/ContainerWaitOKBodyError.md)
- - [ErrorResponse](docs/ErrorResponse.md)
  - [GenericError](docs/GenericError.md)
- - [GraphDriverData](docs/GraphDriverData.md)
  - [HealthNotReadyStatus](docs/HealthNotReadyStatus.md)
  - [HealthStatus](docs/HealthStatus.md)
- - [IdResponse](docs/IdResponse.md)
  - [Identity](docs/Identity.md)
  - [IdentityCredentials](docs/IdentityCredentials.md)
+ - [IdentitySchema](docs/IdentitySchema.md)
  - [IdentityState](docs/IdentityState.md)
- - [ImageDeleteResponseItem](docs/ImageDeleteResponseItem.md)
- - [ImageSummary](docs/ImageSummary.md)
  - [InlineResponse200](docs/InlineResponse200.md)
  - [InlineResponse2001](docs/InlineResponse2001.md)
  - [InlineResponse503](docs/InlineResponse503.md)
  - [JsonError](docs/JsonError.md)
  - [Meta](docs/Meta.md)
- - [Plugin](docs/Plugin.md)
- - [PluginConfig](docs/PluginConfig.md)
- - [PluginConfigArgs](docs/PluginConfigArgs.md)
- - [PluginConfigInterface](docs/PluginConfigInterface.md)
- - [PluginConfigLinux](docs/PluginConfigLinux.md)
- - [PluginConfigNetwork](docs/PluginConfigNetwork.md)
- - [PluginConfigRootfs](docs/PluginConfigRootfs.md)
- - [PluginConfigUser](docs/PluginConfigUser.md)
- - [PluginDevice](docs/PluginDevice.md)
- - [PluginEnv](docs/PluginEnv.md)
- - [PluginInterfaceType](docs/PluginInterfaceType.md)
- - [PluginMount](docs/PluginMount.md)
- - [PluginSettings](docs/PluginSettings.md)
- - [Port](docs/Port.md)
  - [RecoveryAddress](docs/RecoveryAddress.md)
  - [SelfServiceError](docs/SelfServiceError.md)
  - [SelfServiceLoginFlow](docs/SelfServiceLoginFlow.md)
@@ -175,7 +152,6 @@ Class | Method | HTTP request | Description
  - [SelfServiceSettingsFlowState](docs/SelfServiceSettingsFlowState.md)
  - [SelfServiceVerificationFlow](docs/SelfServiceVerificationFlow.md)
  - [SelfServiceVerificationFlowState](docs/SelfServiceVerificationFlowState.md)
- - [ServiceUpdateResponse](docs/ServiceUpdateResponse.md)
  - [Session](docs/Session.md)
  - [SettingsProfileFormConfig](docs/SettingsProfileFormConfig.md)
  - [SubmitSelfServiceLoginFlowBody](docs/SubmitSelfServiceLoginFlowBody.md)
@@ -206,8 +182,6 @@ Class | Method | HTTP request | Description
  - [UiText](docs/UiText.md)
  - [VerifiableIdentityAddress](docs/VerifiableIdentityAddress.md)
  - [Version](docs/Version.md)
- - [Volume](docs/Volume.md)
- - [VolumeUsageData](docs/VolumeUsageData.md)
 
 
 ## Documentation For Authorization

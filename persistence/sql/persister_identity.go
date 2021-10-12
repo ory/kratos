@@ -213,7 +213,8 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		i.SchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
-	i.StateChangedAt = sqlxx.NullTime(time.Now())
+	stateChangedAt := sqlxx.NullTime(time.Now())
+	i.StateChangedAt = &stateChangedAt
 	if i.State == "" {
 		i.State = identity.StateActive
 	}

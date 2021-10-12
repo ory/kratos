@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/configx"
@@ -18,6 +20,7 @@ import (
 func TestDriverNew(t *testing.T) {
 	r := driver.New(
 		context.Background(),
+		&cobra.Command{},
 		configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 		configx.SkipValidation())
 

@@ -1,5 +1,5 @@
 {
-  "$id": "https://github.com/ory/kratos/driver/config/.schema/config.schema.json",
+  "$id": "https://github.com/ory/kratos/embedx/config.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Ory Kratos Configuration",
   "type": "object",
@@ -314,8 +314,8 @@
           "type": "string",
           "enum": [
             "github",
+            "github-app",
             "gitlab",
-            "gitlab-app",
             "generic",
             "google",
             "microsoft",
@@ -1097,6 +1097,18 @@
               "type": "string",
               "examples": [
                 "Bob"
+              ]
+            },
+            "headers": {
+              "title": "SMTP Headers",
+              "description": "These headers will be passed in the SMTP conversation -- e.g. when using the AWS SES SMTP interface for cross-account sending.",
+              "type": "object",
+              "examples": [
+                {
+                  "X-SES-SOURCE-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
+                  "X-SES-FROM-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com",
+                  "X-SES-RETURN-PATH-ARN": "arn:aws:ses:us-west-2:123456789012:identity/example.com"
+                }
               ]
             }
           },

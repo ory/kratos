@@ -7,6 +7,7 @@ Method | HTTP request | Description
 [**AdminCreateIdentity**](V0alpha1Api.md#AdminCreateIdentity) | **Post** /identities | Create an Identity
 [**AdminCreateSelfServiceRecoveryLink**](V0alpha1Api.md#AdminCreateSelfServiceRecoveryLink) | **Post** /recovery/link | Create a Recovery Link
 [**AdminDeleteIdentity**](V0alpha1Api.md#AdminDeleteIdentity) | **Delete** /identities/{id} | Delete an Identity
+[**AdminDeleteIdentitySessions**](V0alpha1Api.md#AdminDeleteIdentitySessions) | **Delete** /identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 [**AdminGetIdentity**](V0alpha1Api.md#AdminGetIdentity) | **Get** /identities/{id} | Get an Identity
 [**AdminListIdentities**](V0alpha1Api.md#AdminListIdentities) | **Get** /identities | List Identities
 [**AdminUpdateIdentity**](V0alpha1Api.md#AdminUpdateIdentity) | **Put** /identities/{id} | Update an Identity
@@ -215,6 +216,74 @@ Name | Type | Description  | Notes
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiAdminDeleteIdentityRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+[oryAccessToken](../README.md#oryAccessToken)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## AdminDeleteIdentitySessions
+
+> AdminDeleteIdentitySessions(ctx, id).Execute()
+
+Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    id := "id_example" // string | ID is the identity's ID.
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.V0alpha1Api.AdminDeleteIdentitySessions(context.Background(), id).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `V0alpha1Api.AdminDeleteIdentitySessions``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**id** | **string** | ID is the identity&#39;s ID. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiAdminDeleteIdentitySessionsRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -1645,7 +1714,7 @@ import (
 
 func main() {
     flow := "flow_example" // string | The Login Flow ID  The value for this parameter comes from `flow` URL Query parameter sent to your application (e.g. `/login?flow=abcde`).
-    submitSelfServiceLoginFlowBody := openapiclient.submitSelfServiceLoginFlowBody{SubmitSelfServiceLoginFlowWithPasswordMethodBody: openapiclient.NewSubmitSelfServiceLoginFlowWithPasswordMethodBody("Method_example", "Password_example", "PasswordIdentifier_example")} // SubmitSelfServiceLoginFlowBody |  (optional)
+    submitSelfServiceLoginFlowBody := openapiclient.submitSelfServiceLoginFlowBody{SubmitSelfServiceLoginFlowWithOidcMethodBody: openapiclient.NewSubmitSelfServiceLoginFlowWithOidcMethodBody("Method_example", "Traits_example")} // SubmitSelfServiceLoginFlowBody |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)

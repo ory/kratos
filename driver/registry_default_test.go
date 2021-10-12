@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -548,6 +550,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(t, l,
+						&cobra.Command{},
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 							config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
@@ -560,6 +563,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(t, l,
+						&cobra.Command{},
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 							config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,
@@ -572,6 +576,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(t *testing.T) *config.Config {
 					return config.MustNew(t, l,
+						&cobra.Command{},
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 						}),
@@ -581,6 +586,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(t *testing.T) *config.Config {
 					return config.MustNew(t, l,
+						&cobra.Command{},
 						configx.WithConfigFiles("../test/e2e/profiles/verification/.kratos.yml"),
 						configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 						configx.SkipValidation())
