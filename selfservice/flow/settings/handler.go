@@ -152,7 +152,6 @@ type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 	// The Session Token of the Identity performing the settings flow.
 	//
 	// in: header
-	// required: true
 	SessionToken string `json:"X-Session-Token"`
 }
 
