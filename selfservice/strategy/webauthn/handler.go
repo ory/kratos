@@ -14,6 +14,9 @@ var jsOnLoad []byte
 
 const webAuthnRoute = "/.well-known/ory/webauthn.js"
 
+// swagger:model webAuthnJavaScript
+type webAuthnJavaScript string
+
 // swagger:route GET /.well-known/ory/webauthn.js v0alpha2 getWebAuthnJavaScript
 //
 // Get WebAuthn JavaScript
@@ -39,7 +42,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", webAuthnRoute); handle == nil {
 		r.GET(webAuthnRoute, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
-			_, _ = w.Write(jsOnLoad)
+			_, _ = w.Write([]byte(webAuthnJavaScript(jsOnLoad)))
 		})
 	}
 }
