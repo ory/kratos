@@ -85,6 +85,11 @@ secrets:
     - default secret with a lot of chars
   cookie:
     - cookie secret with a lot of chars
+  cipher:
+    - secret-thirty-two-character-long
+
+ciphers:
+  algorithm: xchacha20-poly1305
 
 hashers:
   argon2:

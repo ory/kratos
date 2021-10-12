@@ -12,7 +12,7 @@ import (
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
 
-	ghapi "github.com/google/go-github/v27/github"
+	ghapi "github.com/google/go-github/v38/github"
 
 	"github.com/ory/herodot"
 )

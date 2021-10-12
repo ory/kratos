@@ -29,10 +29,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ory/x/dbal"
-
-	"github.com/ory/x/stringsx"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/inhies/go-bytesize"
@@ -42,8 +38,10 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/configx"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tracing"
 )
 
@@ -52,6 +50,7 @@ const (
 	DefaultBrowserReturnURL                                         = "default_browser_return_url"
 	DefaultSQLiteMemoryDSN                                          = dbal.SQLiteInMemory
 	DefaultPasswordHashingAlgorithm                                 = "argon2"
+	DefaultCipherAlgorithm                                          = "noop"
 	UnknownVersion                                                  = "unknown version"
 	ViperKeyDSN                                                     = "dsn"
 	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
@@ -61,6 +60,7 @@ const (
 	ViperKeyCourierSMTPHeaders                                      = "courier.smtp.headers"
 	ViperKeySecretsDefault                                          = "secrets.default"
 	ViperKeySecretsCookie                                           = "secrets.cookie"
+	ViperKeySecretsCipher                                           = "secrets.cipher"
 	ViperKeyPublicBaseURL                                           = "serve.public.base_url"
 	ViperKeyPublicDomainAliases                                     = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                              = "serve.public.port"
@@ -130,6 +130,7 @@ const (
 	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
+	ViperKeyCipherAlgorithm                                         = "ciphers.algorithm"
 	ViperKeyLinkLifespan                                            = "selfservice.methods.link.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
@@ -251,7 +252,7 @@ func New(ctx context.Context, l *logrusx.Logger, cmd *cobra.Command, opts ...con
 
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
-		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "client_secret"),
+		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "secrets.cipher", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
@@ -612,6 +613,26 @@ func (p *Config) SecretsSession() [][]byte {
 		result[k] = []byte(v)
 	}
 
+	return result
+}
+
+func (p *Config) SecretsCipher() [][32]byte {
+	secrets := p.p.Strings(ViperKeySecretsCipher)
+	var cleanSecrets []string
+	for k := range secrets {
+		if len(secrets[k]) == 32 {
+			cleanSecrets = append(cleanSecrets, secrets[k])
+		}
+	}
+	if len(cleanSecrets) == 0 {
+		return [][32]byte{}
+	}
+	result := make([][32]byte, len(cleanSecrets))
+	for n, s := range secrets {
+		for k, v := range []byte(s) {
+			result[n][k] = byte(v)
+		}
+	}
 	return result
 }
 
@@ -979,6 +1000,21 @@ func (p *Config) HasherPasswordHashingAlgorithm() string {
 		fallthrough
 	default:
 		return configValue
+	}
+}
+
+func (p *Config) CipherAlgorithm() string {
+	configValue := p.p.StringF(ViperKeyCipherAlgorithm, DefaultCipherAlgorithm)
+	switch configValue {
+	case "noop":
+		return configValue
+	case "xchacha20-poly1305":
+		return configValue
+	case "aes":
+		fallthrough
+	default:
+		return configValue
+
 	}
 }
 

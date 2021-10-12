@@ -1654,6 +1654,17 @@
             "minLength": 16
           },
           "uniqueItems": true
+        },
+        "cipher": {
+          "type": "array",
+          "title": "Secrets to use for encryption by cipher",
+          "description": "The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.",
+          "items": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 32
+          },
+          "minItems": 1
         }
       },
       "additionalProperties": false
@@ -1740,6 +1751,23 @@
         }
       },
       "additionalProperties": false
+    },
+    "ciphers" : {
+      "title": "Cipher Algorithm Configuration",
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "title": "ciphering algorithm",
+          "description": "One of the values: noop, aes, xchacha20-poly1305",
+          "type": "string",
+          "default": "noop",
+          "enum": [
+            "noop",
+            "aes",
+            "xchacha20-poly1305"
+          ]
+        }
+      }
     },
     "cookies": {
       "type": "object",
@@ -1929,6 +1957,36 @@
         "required": [
           "courier"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "ciphers" : {
+            "properties": {
+              "algorithm": {
+                "oneOf": [
+                  {
+                    "const": "aes"
+                  },
+                  {
+                    "const": "xchacha20-poly1305"
+                  }
+                ]
+              }
+            },
+            "required": ["algorithm"]
+          }
+        },
+        "required": ["ciphers"]
+      },
+      "then": {
+        "required": ["secrets"],
+        "properties": {
+          "secrets": {
+            "required": ["cipher"]
+          }
+        }
       }
     }
   ],

@@ -1726,6 +1726,22 @@ secrets:
   cookie:
     - ipsumipsumipsumi
 
+  ## Secret Keys for Ciphering ##
+  #
+  # The first secret in the array is used for encrypting data while all other keys are used to decrypt data.
+  # for now is only used for access and refresh token from oidc.
+  #
+  # WARNING the secret key must be 32 caracters long all keys that not 32 characters long will be ignore
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export SECRETS_CIPHER=<value>
+  # - Windows Command Line (CMD):
+  #    > set SECRETS_CIPHER=<value>
+  #
+  cipher:
+    - ipsumipsumipsumi
+
   ## Default Encryption Signing Secrets ##
   #
   # The first secret in the array is used for signing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
@@ -1738,6 +1754,23 @@ secrets:
   #
   default:
     - ipsumipsumipsumi
+
+## Ciphering Configuration ##
+#
+cipher:
+  ## cipher algorithm
+  #
+  # one of the values noop, aes, xchacha20-poly1305
+  #
+  # Default : noop
+  # noop does not do any encryption
+  #
+  # Set the value using environmental variables on
+  # - Linux/macOS:
+  #    $ export CIPHER_ALGORITHM=<value>
+  # - Windows Command Line (CMD):
+  #    > set CIPHER_ALGORITHM=<value>
+  algorithm: noop
 
 ## Hashing Algorithm Configuration ##
 #

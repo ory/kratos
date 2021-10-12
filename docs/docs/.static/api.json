@@ -1500,6 +1500,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The tokens oidc\n\nThis query is EXPERIMENTAL and subject to potential breaking changes in the future.\nThe only value for now is `oidc_token`",
+            "in": "query",
+            "name": "reveal_credentials",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

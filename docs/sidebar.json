@@ -60,6 +60,10 @@
       "guides/zero-trust-iap-proxy-identity-access-proxy",
       "guides/multi-tenancy-multitenant",
       "guides/secret-key-rotation",
+      "guides/retrieve-social-sign-in-access-refresh-id-token",
+      "guides/setting-up-noop-cipher-parameters",
+      "guides/setting-up-xchacha-cipher-parameters",
+      "guides/setting-up-aes-cipher-parameters",
       "guides/high-availability-ha",
       "guides/docker",
       "guides/https-tls",
@@ -109,7 +113,7 @@
     "Debug & Help": [
       "debug/csrf",
       "debug/performance-out-of-memory-password-hashing-argon2",
-      "debug/debugging_in_docker"
+      "debug/debug-docker-delve-ory-kratos"
     ]
   },
   {

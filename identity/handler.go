@@ -1,14 +1,18 @@
 package identity
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/cipher"
+
+	"github.com/ory/herodot"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -28,6 +32,7 @@ type (
 		x.WriterProvider
 		config.Provider
 		x.CSRFProvider
+		cipher.Provider
 	}
 	HandlerProvider interface {
 		IdentityHandler() *Handler
@@ -36,6 +41,10 @@ type (
 		r handlerDependencies
 	}
 )
+
+func (h *Handler) Config(ctx context.Context) *config.Config {
+	return h.r.Config(ctx)
+}
 
 func NewHandler(r handlerDependencies) *Handler {
 	return &Handler{r: r}
@@ -132,6 +141,15 @@ type adminGetIdentity struct {
 	// required: true
 	// in: path
 	ID string `json:"id"`
+
+	// DeclassifyCredentials will declassify one or more identity's credentials
+	//
+	// Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,
+	// Refresh and (optionally) OpenID Connect ID Token.
+	//
+	// required: false
+	// in: query
+	DeclassifyCredentials []string `json:"include_credential"`
 }
 
 // swagger:route GET /identities/{id} v0alpha1 adminGetIdentity
@@ -162,7 +180,21 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
+	if declassify := r.URL.Query().Get("include_credential"); declassify == "oidc" {
+		emit, err := i.WithDeclassifiedCredentialsOIDC(r.Context(), h.r)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+		h.r.Writer().Write(w, r, WithCredentialsInJSON(*emit))
+		return
+	} else if len(declassify) > 0 {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
+		return
+
+	}
+
+	h.r.Writer().Write(w, r, WithCredentialsMetadataInJSON(*i))
 }
 
 // swagger:parameters adminCreateIdentity

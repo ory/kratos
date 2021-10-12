@@ -48,6 +48,7 @@ func NewConfigurationWithDefaults(t *testing.T) *config.Config {
 			config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
 			config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
 			config.ViperKeyDefaultIdentitySchemaURL:          UnsetDefaultIdentitySchema,
+			config.ViperKeySecretsCipher:                     []string{"secret-thirty-two-character-long"},
 		}),
 		configx.SkipValidation(),
 	)
