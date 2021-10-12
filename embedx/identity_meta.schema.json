@@ -1,0 +1,48 @@
+{
+  "$id": "ory://identity-meta",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "http://json-schema.org/draft-07/schema#"
+    },
+    {
+      "properties": {
+        "properties": {
+          "type": "object",
+          "required": [
+            "traits"
+          ],
+          "properties": {
+            "traits": {
+              "type": "object",
+              "required": ["properties"],
+              "properties": {
+                "type": {
+                  "const": "object"
+                },
+                "properties": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "patternProperties": {
+                    ".*": {
+                      "type": "object",
+                      "allOf": [
+                        {
+                          "$ref": "ory://identity-extension"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "properties"
+      ]
+    }
+  ]
+}

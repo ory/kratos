@@ -62,9 +62,6 @@ New feature or request.
 - [ ] Rename strategy to method in internal APIs and Documentation
       ([kratos#683](https://github.com/ory/kratos/issues/683)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Validate identity schema on load
-      ([kratos#701](https://github.com/ory/kratos/issues/701)) -
-      [@Alano Terblanche](https://github.com/Benehiko)
 - [ ] Support OAuth2 and OpenID Connect in API-based flows
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
@@ -95,6 +92,13 @@ New feature or request.
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
 - [ ] Expand password validation error messages to facilitate i18n
       ([kratos#1071](https://github.com/ory/kratos/issues/1071))
+- [ ] User deactivation does not deactivate user sessions
+      ([kratos#1811](https://github.com/ory/kratos/issues/1811))
+- [ ] Implement full-spec with e2e tests for react native app
+      ([kratos#1820](https://github.com/ory/kratos/issues/1820))
+- [x] Validate identity schema on load
+      ([kratos#701](https://github.com/ory/kratos/issues/701)) -
+      [@Alano Terblanche](https://github.com/Benehiko)
 - [x] Field validation answer status code 422 instead of 400
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
@@ -270,9 +274,6 @@ Something is not working.
 - [ ] Add option to remove recovery codes
       ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Hide SQLite migration message
-      ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] return_to_query_param not honored on OIDC login
       ([kratos#1773](https://github.com/ory/kratos/issues/1773)) -
       [@hackerman](https://github.com/aeneasr)
@@ -280,6 +281,9 @@ Something is not working.
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect
       ([kratos#782](https://github.com/ory/kratos/issues/782))
+- [x] Hide SQLite migration message
+      ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -302,7 +306,8 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
+- [ ] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
+      better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
 
@@ -337,6 +342,7 @@ Blocks milestones or other issues or pulls.
 
 #### Pull Requests
 
-- [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
+- [ ] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
+      better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)

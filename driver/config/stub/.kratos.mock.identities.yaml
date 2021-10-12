@@ -1,0 +1,14 @@
+dsn: sqlite://foo.db?mode=memory&_fk=true
+
+selfservice:
+  default_browser_return_url: http://return-to-3-test.ory.sh/
+
+identity:
+  default_schema_url: http://test.kratos.ory.sh/default-identity.schema.json
+  schemas:
+    - id: other
+      url: http://test.kratos.ory.sh/other-identity.schema.json
+
+courier:
+  smtp:
+    connection_uri: smtp://foo:bar@baz/

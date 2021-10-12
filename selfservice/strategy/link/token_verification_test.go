@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/logrusx"
@@ -21,7 +23,7 @@ import (
 )
 
 func TestVerificationToken(t *testing.T) {
-	conf, err := config.New(context.Background(), logrusx.New("", ""), configx.SkipValidation())
+	conf, err := config.New(context.Background(), logrusx.New("", ""), &cobra.Command{}, configx.SkipValidation())
 	require.NoError(t, err)
 
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}

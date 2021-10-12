@@ -58,7 +58,7 @@ type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
 	// The provider to register with
 	//
 	// required: true
-	Provider string `json:"traits"`
+	Provider string `json:"provider"`
 
 	// The CSRF Token
 	CSRFToken string `json:"csrf_token"`
