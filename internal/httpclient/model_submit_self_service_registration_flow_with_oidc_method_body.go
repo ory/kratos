@@ -22,17 +22,19 @@ type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
 	// Method to use  This field must be set to `oidc` when using the oidc method.
 	Method string `json:"method"`
 	// The provider to register with
-	Traits string `json:"traits"`
+	Provider string `json:"provider"`
+	// The identity traits
+	Traits map[string]interface{} `json:"traits,omitempty"`
 }
 
 // NewSubmitSelfServiceRegistrationFlowWithOidcMethodBody instantiates a new SubmitSelfServiceRegistrationFlowWithOidcMethodBody object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitSelfServiceRegistrationFlowWithOidcMethodBody(method string, traits string) *SubmitSelfServiceRegistrationFlowWithOidcMethodBody {
+func NewSubmitSelfServiceRegistrationFlowWithOidcMethodBody(method string, provider string) *SubmitSelfServiceRegistrationFlowWithOidcMethodBody {
 	this := SubmitSelfServiceRegistrationFlowWithOidcMethodBody{}
 	this.Method = method
-	this.Traits = traits
+	this.Provider = provider
 	return &this
 }
 
@@ -100,27 +102,59 @@ func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) SetMethod(v string
 	o.Method = v
 }
 
-// GetTraits returns the Traits field value
-func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) GetTraits() string {
+// GetProvider returns the Provider field value
+func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) GetProvider() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.Traits
+	return o.Provider
 }
 
-// GetTraitsOk returns a tuple with the Traits field value
+// GetProviderOk returns a tuple with the Provider field value
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) GetTraitsOk() (*string, bool) {
+func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) GetProviderOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.Traits, true
+	return &o.Provider, true
 }
 
-// SetTraits sets field value
-func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) SetTraits(v string) {
+// SetProvider sets field value
+func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) SetProvider(v string) {
+	o.Provider = v
+}
+
+// GetTraits returns the Traits field value if set, zero value otherwise.
+func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) GetTraits() map[string]interface{} {
+	if o == nil || o.Traits == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.Traits
+}
+
+// GetTraitsOk returns a tuple with the Traits field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) GetTraitsOk() (map[string]interface{}, bool) {
+	if o == nil || o.Traits == nil {
+		return nil, false
+	}
+	return o.Traits, true
+}
+
+// HasTraits returns a boolean if a field has been set.
+func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) HasTraits() bool {
+	if o != nil && o.Traits != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTraits gets a reference to the given map[string]interface{} and assigns it to the Traits field.
+func (o *SubmitSelfServiceRegistrationFlowWithOidcMethodBody) SetTraits(v map[string]interface{}) {
 	o.Traits = v
 }
 
@@ -133,6 +167,9 @@ func (o SubmitSelfServiceRegistrationFlowWithOidcMethodBody) MarshalJSON() ([]by
 		toSerialize["method"] = o.Method
 	}
 	if true {
+		toSerialize["provider"] = o.Provider
+	}
+	if o.Traits != nil {
 		toSerialize["traits"] = o.Traits
 	}
 	return json.Marshal(toSerialize)

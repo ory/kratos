@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Flow** | Pointer to **string** | Flow ID is the flow&#39;s ID.  in: query | [optional] 
 **Link** | Pointer to **string** | Link this provider  Either this or &#x60;unlink&#x60; must be set.  type: string in: body | [optional] 
 **Method** | **string** | Method  Should be set to profile when trying to update a profile. | 
+**Traits** | Pointer to **map[string]interface{}** | The identity&#39;s traits  in: body | [optional] 
 **Unlink** | Pointer to **string** | Unlink this provider  Either this or &#x60;link&#x60; must be set.  type: string in: body | [optional] 
 
 ## Methods
@@ -97,6 +98,31 @@ and a boolean to check if the value has been set.
 
 SetMethod sets Method field to given value.
 
+
+### GetTraits
+
+`func (o *SubmitSelfServiceSettingsFlowWithOidcMethodBody) GetTraits() map[string]interface{}`
+
+GetTraits returns the Traits field if non-nil, zero value otherwise.
+
+### GetTraitsOk
+
+`func (o *SubmitSelfServiceSettingsFlowWithOidcMethodBody) GetTraitsOk() (*map[string]interface{}, bool)`
+
+GetTraitsOk returns a tuple with the Traits field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetTraits
+
+`func (o *SubmitSelfServiceSettingsFlowWithOidcMethodBody) SetTraits(v map[string]interface{})`
+
+SetTraits sets Traits field to given value.
+
+### HasTraits
+
+`func (o *SubmitSelfServiceSettingsFlowWithOidcMethodBody) HasTraits() bool`
+
+HasTraits returns a boolean if a field has been set.
 
 ### GetUnlink
 

@@ -17,6 +17,7 @@ docs/HealthStatus.md
 docs/Identity.md
 docs/IdentityCredentials.md
 docs/IdentityCredentialsType.md
+docs/IdentitySchema.md
 docs/IdentityState.md
 docs/InlineResponse200.md
 docs/InlineResponse2001.md
@@ -25,6 +26,7 @@ docs/JsonError.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
 docs/RecoveryAddress.md
+docs/SelfServiceBrowserLocationChangeRequiredError.md
 docs/SelfServiceError.md
 docs/SelfServiceFlowExpiredError.md
 docs/SelfServiceLoginFlow.md
@@ -91,6 +93,7 @@ model_health_status.go
 model_identity.go
 model_identity_credentials.go
 model_identity_credentials_type.go
+model_identity_schema.go
 model_identity_state.go
 model_inline_response_200.go
 model_inline_response_200_1.go
@@ -98,6 +101,7 @@ model_inline_response_503.go
 model_json_error.go
 model_needs_privileged_session_error.go
 model_recovery_address.go
+model_self_service_browser_location_change_required_error.go
 model_self_service_error.go
 model_self_service_flow_expired_error.go
 model_self_service_login_flow.go

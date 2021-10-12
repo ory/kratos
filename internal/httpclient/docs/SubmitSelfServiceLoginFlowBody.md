@@ -8,14 +8,14 @@ Name | Type | Description | Notes
 **Method** | **string** | Method should be set to \&quot;totp\&quot; when logging in using the TOTP strategy. | 
 **Password** | **string** | The user&#39;s password. | 
 **PasswordIdentifier** | **string** | Identifier is the email or username of the user trying to log in. | 
-**Traits** | **string** | The provider to register with | 
+**Provider** | **string** | The provider to register with | 
 **TotpCode** | **string** | The TOTP code. | 
 
 ## Methods
 
 ### NewSubmitSelfServiceLoginFlowBody
 
-`func NewSubmitSelfServiceLoginFlowBody(method string, password string, passwordIdentifier string, traits string, totpCode string, ) *SubmitSelfServiceLoginFlowBody`
+`func NewSubmitSelfServiceLoginFlowBody(method string, password string, passwordIdentifier string, provider string, totpCode string, ) *SubmitSelfServiceLoginFlowBody`
 
 NewSubmitSelfServiceLoginFlowBody instantiates a new SubmitSelfServiceLoginFlowBody object
 This constructor will assign default values to properties that have it defined,
@@ -115,24 +115,24 @@ and a boolean to check if the value has been set.
 SetPasswordIdentifier sets PasswordIdentifier field to given value.
 
 
-### GetTraits
+### GetProvider
 
-`func (o *SubmitSelfServiceLoginFlowBody) GetTraits() string`
+`func (o *SubmitSelfServiceLoginFlowBody) GetProvider() string`
 
-GetTraits returns the Traits field if non-nil, zero value otherwise.
+GetProvider returns the Provider field if non-nil, zero value otherwise.
 
-### GetTraitsOk
+### GetProviderOk
 
-`func (o *SubmitSelfServiceLoginFlowBody) GetTraitsOk() (*string, bool)`
+`func (o *SubmitSelfServiceLoginFlowBody) GetProviderOk() (*string, bool)`
 
-GetTraitsOk returns a tuple with the Traits field if it's non-nil, zero value otherwise
+GetProviderOk returns a tuple with the Provider field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetTraits
+### SetProvider
 
-`func (o *SubmitSelfServiceLoginFlowBody) SetTraits(v string)`
+`func (o *SubmitSelfServiceLoginFlowBody) SetProvider(v string)`
 
-SetTraits sets Traits field to given value.
+SetProvider sets Provider field to given value.
 
 
 ### GetTotpCode

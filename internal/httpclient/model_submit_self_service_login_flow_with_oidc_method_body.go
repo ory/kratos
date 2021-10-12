@@ -22,17 +22,17 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	// Method to use  This field must be set to `oidc` when using the oidc method.
 	Method string `json:"method"`
 	// The provider to register with
-	Traits string `json:"traits"`
+	Provider string `json:"provider"`
 }
 
 // NewSubmitSelfServiceLoginFlowWithOidcMethodBody instantiates a new SubmitSelfServiceLoginFlowWithOidcMethodBody object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitSelfServiceLoginFlowWithOidcMethodBody(method string, traits string) *SubmitSelfServiceLoginFlowWithOidcMethodBody {
+func NewSubmitSelfServiceLoginFlowWithOidcMethodBody(method string, provider string) *SubmitSelfServiceLoginFlowWithOidcMethodBody {
 	this := SubmitSelfServiceLoginFlowWithOidcMethodBody{}
 	this.Method = method
-	this.Traits = traits
+	this.Provider = provider
 	return &this
 }
 
@@ -100,28 +100,28 @@ func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetMethod(v string) {
 	o.Method = v
 }
 
-// GetTraits returns the Traits field value
-func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraits() string {
+// GetProvider returns the Provider field value
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetProvider() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.Traits
+	return o.Provider
 }
 
-// GetTraitsOk returns a tuple with the Traits field value
+// GetProviderOk returns a tuple with the Provider field value
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraitsOk() (*string, bool) {
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetProviderOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.Traits, true
+	return &o.Provider, true
 }
 
-// SetTraits sets field value
-func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetTraits(v string) {
-	o.Traits = v
+// SetProvider sets field value
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetProvider(v string) {
+	o.Provider = v
 }
 
 func (o SubmitSelfServiceLoginFlowWithOidcMethodBody) MarshalJSON() ([]byte, error) {
@@ -133,7 +133,7 @@ func (o SubmitSelfServiceLoginFlowWithOidcMethodBody) MarshalJSON() ([]byte, err
 		toSerialize["method"] = o.Method
 	}
 	if true {
-		toSerialize["traits"] = o.Traits
+		toSerialize["provider"] = o.Provider
 	}
 	return json.Marshal(toSerialize)
 }
