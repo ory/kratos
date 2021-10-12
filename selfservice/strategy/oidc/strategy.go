@@ -167,7 +167,7 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 		q := dest.Query()
 		for key, values := range r.Form {
 			for _, value := range values {
-				q.Add(key, value)
+				q.Set(key, value)
 			}
 		}
 		dest.RawQuery = q.Encode()
