@@ -112,7 +112,7 @@ func TestMigrations(t *testing.T) {
 			t.Logf("URL: %s", url)
 
 			t.Run("suite=up", func(t *testing.T) {
-				tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata", l)
+				tm := popx.NewTestMigrator(t, c, os.DirFS("../migrations/sql"), os.DirFS("./testdata"), l)
 				require.NoError(t, tm.Up(ctx))
 			})
 
@@ -285,7 +285,7 @@ func TestMigrations(t *testing.T) {
 			})
 
 			t.Run("suite=down", func(t *testing.T) {
-				tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata", l)
+				tm := popx.NewTestMigrator(t, c, os.DirFS("../migrations/sql"), os.DirFS("./testdata"), l)
 				require.NoError(t, tm.Down(ctx, -1))
 			})
 		}

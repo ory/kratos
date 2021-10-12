@@ -14,9 +14,6 @@ var jsOnLoad []byte
 
 const webAuthnRoute = "/.well-known/ory/webauthn.js"
 
-// swagger:model webAuthnJavaScript
-type webAuthnJavaScript string
-
 // swagger:route GET /.well-known/ory/webauthn.js v0alpha2 getWebAuthnJavaScript
 //
 // Get WebAuthn JavaScript
