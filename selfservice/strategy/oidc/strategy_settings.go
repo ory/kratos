@@ -382,9 +382,9 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
 		conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
 			Subject: claims.Subject, Provider: provider.Config().ID,
-			InitialAccessToken: cat,
+			InitialAccessToken:  cat,
 			InitialRefreshToken: crt,
-			InitialIDToken: it,
+			InitialIDToken:      it,
 		})
 
 		creds.Config, err = json.Marshal(conf)

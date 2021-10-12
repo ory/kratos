@@ -1353,7 +1353,7 @@ func TestSettingsStrategy(t *testing.T) {
 			t.Cleanup(reset(t))
 
 			subject = "hackerman+new-connection-new-oidc+" + testID
-			scope = []string{"openid","offline"}
+			scope = []string{"openid", "offline"}
 
 			agent, provider := "password", "google"
 			_, res, req := link(t, agent, provider)
