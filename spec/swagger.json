@@ -2584,7 +2584,7 @@
       "description": "SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload\nwhen using the oidc method.",
       "type": "object",
       "required": [
-        "traits",
+        "provider",
         "method"
       ],
       "properties": {
@@ -2596,7 +2596,7 @@
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
         },
-        "traits": {
+        "provider": {
           "description": "The provider to register with",
           "type": "string"
         }
@@ -2673,7 +2673,7 @@
       "description": "SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload\nwhen using the oidc method.",
       "type": "object",
       "required": [
-        "traits",
+        "provider",
         "method"
       ],
       "properties": {
@@ -2685,7 +2685,7 @@
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
         },
-        "traits": {
+        "provider": {
           "description": "The provider to register with",
           "type": "string"
         }
