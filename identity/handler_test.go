@@ -14,20 +14,18 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 
 	"github.com/bxcodec/faker/v3"
-
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/schema"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 )
 
@@ -236,6 +234,7 @@ func TestHandler(t *testing.T) {
 					assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 					assert.EqualValues(t, defaultSchemaExternalURL, res.Get("schema_url").String(), "%s", res.Raw)
 					assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
+					assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
 				})
 			}
 		})
@@ -249,6 +248,7 @@ func TestHandler(t *testing.T) {
 					assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 					assert.EqualValues(t, defaultSchemaExternalURL, res.Get("schema_url").String(), "%s", res.Raw)
 					assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
+					assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
 					assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 				})
 			}
@@ -396,6 +396,20 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should not be able to create an identity with an invalid state", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				var cr identity.AdminCreateIdentityBody
+				cr.SchemaID = "employee"
+				cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`)
+				cr.State = "invalid-state"
+
+				res := send(t, ts, "POST", "/identities", http.StatusBadRequest, &cr)
+				assert.Contains(t, res.Get("error.reason").String(), `identity state is not valid`, "%s", res.Raw)
+			})
+		}
+	})
+
 	t.Run("case=should create an identity with a different schema", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
@@ -406,6 +420,41 @@ func TestHandler(t *testing.T) {
 				res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=should create an identity with an explicit active state", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				var cr identity.AdminCreateIdentityBody
+				cr.SchemaID = "employee"
+				cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`)
+				cr.State = identity.StateActive
+
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
+				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
+				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
+				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
+			})
+		}
+	})
+
+	t.Run("case=should create an identity with an explicit inactive state", func(t *testing.T) {
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				var cr identity.AdminCreateIdentityBody
+				cr.SchemaID = "employee"
+				cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`)
+				cr.State = identity.StateInactive
+
+				res := send(t, ts, "POST", "/identities", http.StatusCreated, &cr)
+				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
+				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
+				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
 				assert.EqualValues(t, mockServerURL.String()+"/schemas/employee", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
