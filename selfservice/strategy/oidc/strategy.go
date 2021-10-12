@@ -172,7 +172,7 @@ func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httpr
 		}
 		dest.RawQuery = q.Encode()
 	}
-	dest.Path = filepath.Join(publicUrl.Path + dest.Path)
+	dest.Path = filepath.Join(publicUrl.Path, dest.Path)
 
 	http.Redirect(w, r, dest.String(), http.StatusFound)
 }
