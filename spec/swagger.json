@@ -217,6 +217,15 @@
             "name": "id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "DeclassifyCredentials will declassify one or more identity's credentials\n\nCurrently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,\nRefresh and (optionally) OpenID Connect ID Token.",
+            "name": "include_credential",
+            "in": "query"
           }
         ],
         "responses": {
