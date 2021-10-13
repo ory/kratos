@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -96,7 +95,7 @@ func IsArgon2idHash(hash []byte) bool {
 }
 
 func IsPbkdf2Hash(hash []byte) bool {
-	res, _ := regexp.Match("^\\$pbkdf2_sha[0-9]{1,3}\\$", hash)
+	res, _ := regexp.Match("^\\$pbkdf2-sha[0-9]{1,3}\\$", hash)
 	return res
 }
 
@@ -137,7 +136,7 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 }
 
 // decodePbkdf2Hash decodes PBKDF2 encoded password hash.
-// format: $pbkdf2_<algorithm>$<iteration>$<salt>$<hash>
+// format: $pbkdf2-<algorithm>$i=<iteration>,l=<length>$<salt>$<hash>
 func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 5 {
@@ -145,17 +144,16 @@ func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err err
 	}
 
 	p = new(Pbkdf2)
-	algParts := strings.SplitN(parts[1], "_", 2)
+	algParts := strings.SplitN(parts[1], "-", 2)
 	if len(algParts) != 2 {
 		return nil, nil, nil, ErrInvalidHash
 	}
 	p.Algorithm = algParts[1]
 
-	iter, err := strconv.ParseUint(parts[2], 10, 32)
+	_, err = fmt.Sscanf(parts[2], "i=%d,l=%d", &p.Iterations, &p.KeyLength)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.Iterations = uint32(iter)
 
 	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[3])
 	if err != nil {
