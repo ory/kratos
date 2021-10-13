@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -1010,7 +1011,12 @@ func TestIdentitySchemaValidation(t *testing.T) {
 					tmpConfig.Close()
 				})
 
-				go marshalAndWrite(t, ctx, tmpConfig, i)
+				var wg sync.WaitGroup
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					marshalAndWrite(t, ctx, tmpConfig, i)
+				}()
 
 				select {
 				case <-ctx.Done():
@@ -1021,6 +1027,8 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 					assert.Contains(t, lastHook, "The changed identity schema configuration is invalid and could not be loaded.")
 				}
+
+				wg.Wait()
 			})
 		}
 
