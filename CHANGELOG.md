@@ -2,8 +2,10 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-10-11)](#2021-10-11)
+- [ (2021-10-13)](#2021-10-13)
+  - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
     - [Tests](#tests)
@@ -28,19 +30,19 @@
     - [Documentation](#documentation-3)
     - [Tests](#tests-2)
 - [0.7.0-alpha.1 (2021-07-13)](#070-alpha1-2021-07-13)
-  - [Breaking Changes](#breaking-changes)
+  - [Breaking Changes](#breaking-changes-1)
     - [Bug Fixes](#bug-fixes-4)
     - [Code Generation](#code-generation-5)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-4)
     - [Features](#features-3)
     - [Tests](#tests-3)
     - [Unclassified](#unclassified)
 - [0.6.3-alpha.1 (2021-05-17)](#063-alpha1-2021-05-17)
-  - [Breaking Changes](#breaking-changes-1)
+  - [Breaking Changes](#breaking-changes-2)
     - [Bug Fixes](#bug-fixes-5)
     - [Code Generation](#code-generation-6)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
 - [0.6.2-alpha.1 (2021-05-14)](#062-alpha1-2021-05-14)
     - [Code Generation](#code-generation-7)
     - [Documentation](#documentation-5)
@@ -52,10 +54,10 @@
     - [Code Generation](#code-generation-9)
     - [Features](#features-5)
 - [0.6.0-alpha.1 (2021-05-05)](#060-alpha1-2021-05-05)
-  - [Breaking Changes](#breaking-changes-2)
+  - [Breaking Changes](#breaking-changes-3)
     - [Bug Fixes](#bug-fixes-7)
     - [Code Generation](#code-generation-10)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-6)
     - [Features](#features-6)
     - [Tests](#tests-4)
@@ -70,7 +72,7 @@
 - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
     - [Bug Fixes](#bug-fixes-9)
     - [Code Generation](#code-generation-12)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-8)
     - [Features](#features-8)
 - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
@@ -92,10 +94,10 @@
     - [Tests](#tests-8)
     - [Unclassified](#unclassified-3)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
-  - [Breaking Changes](#breaking-changes-3)
+  - [Breaking Changes](#breaking-changes-4)
     - [Bug Fixes](#bug-fixes-13)
     - [Code Generation](#code-generation-16)
-    - [Code Refactoring](#code-refactoring-4)
+    - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-12)
     - [Features](#features-11)
     - [Tests](#tests-9)
@@ -117,18 +119,18 @@
     - [Bug Fixes](#bug-fixes-18)
     - [Code Generation](#code-generation-21)
 - [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
-  - [Breaking Changes](#breaking-changes-4)
+  - [Breaking Changes](#breaking-changes-5)
     - [Bug Fixes](#bug-fixes-19)
     - [Code Generation](#code-generation-22)
-    - [Code Refactoring](#code-refactoring-5)
+    - [Code Refactoring](#code-refactoring-6)
     - [Documentation](#documentation-14)
     - [Features](#features-12)
     - [Unclassified](#unclassified-5)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-  - [Breaking Changes](#breaking-changes-5)
+  - [Breaking Changes](#breaking-changes-6)
     - [Bug Fixes](#bug-fixes-20)
     - [Chores](#chores)
-    - [Code Refactoring](#code-refactoring-6)
+    - [Code Refactoring](#code-refactoring-7)
     - [Documentation](#documentation-15)
     - [Features](#features-13)
     - [Unclassified](#unclassified-6)
@@ -136,20 +138,20 @@
     - [Chores](#chores-1)
     - [Documentation](#documentation-16)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-  - [Breaking Changes](#breaking-changes-6)
+  - [Breaking Changes](#breaking-changes-7)
     - [Bug Fixes](#bug-fixes-21)
     - [Chores](#chores-2)
-    - [Code Refactoring](#code-refactoring-7)
+    - [Code Refactoring](#code-refactoring-8)
     - [Documentation](#documentation-17)
     - [Features](#features-14)
     - [Unclassified](#unclassified-7)
 - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-22)
-    - [Code Refactoring](#code-refactoring-8)
+    - [Code Refactoring](#code-refactoring-9)
     - [Documentation](#documentation-18)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-23)
-    - [Code Refactoring](#code-refactoring-9)
+    - [Code Refactoring](#code-refactoring-10)
     - [Documentation](#documentation-19)
     - [Features](#features-15)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
@@ -207,7 +209,18 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-10-11)
+# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-10-13)
+## Breaking Changes
+
+The SMTPS scheme used in courier config url with cleartext/StartTLS/TLS SMTP connection types is now only supporting implicit TLS. For StartTLS and cleartext SMTP, please use the smtp scheme instead.
+
+Example:
+- SMTP Cleartext: `smtp://foo:bar@my-mailserver:1234/?disable_starttls=true`
+- SMTP with StartTLS: `smtps://foo:bar@my-mailserver:1234/` -> `smtp://foo:bar@my-mailserver:1234/`
+- SMTP with implicit TLS: `smtps://foo:bar@my-mailserver:1234/?legacy_ssl=true` -> `smtps://foo:bar@my-mailserver:1234/`
+
+This patch changes the naming and number of prometheus metrics (see: https://github.com/ory/x/pull/379). In short: all metrics will have now `http_` prefix to conform to Prometheus best practices.
+
 
 
 ### Bug Fixes
@@ -223,6 +236,15 @@
     
     
 
+* **test:** OIDC storategy test ([#1836](https://github.com/ory/kratos/issues/1836)) ([b877dbe](https://github.com/ory/kratos/commit/b877dbecaf84e2d102bcceff4ad85c5b4efe18c5))
+
+### Code Refactoring
+
+* **courier:** Support SMTP schemes for implicit TLS, explicit StartTLS, and cleartext SMTP ([#1831](https://github.com/ory/kratos/issues/1831)) ([4cb082c](https://github.com/ory/kratos/commit/4cb082ce1e15ddd1d992a2def9e7d6410142cc02)), closes [#1770](https://github.com/ory/kratos/issues/1770) [#1769](https://github.com/ory/kratos/issues/1769)
+* Improved prometheus metrics ([#1830](https://github.com/ory/kratos/issues/1830)) ([0be993b](https://github.com/ory/kratos/commit/0be993bebeb9e50d90806ad13f60bb8d72c3b2d3)), closes [#1735](https://github.com/ory/kratos/issues/1735):
+
+    This will add new prometheus metrics for Kratos that are more useful for alerting and increase overall observability.
+
 
 ### Documentation
 
@@ -236,6 +258,14 @@
 ### Features
 
 * Add smtp headers config option ([#1747](https://github.com/ory/kratos/issues/1747)) ([7ffe0e9](https://github.com/ory/kratos/commit/7ffe0e9766e930615dbb6833e650b73a8975a544)), closes [#1725](https://github.com/ory/kratos/issues/1725)
+* API to return access, refresh, id tokens from social sign in ([#1818](https://github.com/ory/kratos/issues/1818)) ([198991a](https://github.com/ory/kratos/commit/198991a9ce25fbaccc927be3bd3f6b1593771bec)), closes [#1518](https://github.com/ory/kratos/issues/1518) [#397](https://github.com/ory/kratos/issues/397):
+
+    This patch introduces the new `include_credential` query parameter to the `GET /identities` endpoint which allows administrators to receive the initial access, refresh, and ID tokens from Social Sign In (OpenID Connect / OAuth 2.0) flows.
+    
+    These tokens can be stored in an encrypted format (XChaCha20Poly1305 or AES-GCM) in the database if an appropriate encryption secret is set. To get started easily these values are not encrypted per default.
+    
+    For more information head [over to the docs](https://kratos/docs/guides/retrieve-social-sign-in-access-refresh-id-token).
+
 * Endpoint to list all identity schemas ([#1703](https://github.com/ory/kratos/issues/1703)) ([aa23d5d](https://github.com/ory/kratos/commit/aa23d5d5af28d8a7789b4a0c7e97197c7758ad98)), closes [#1699](https://github.com/ory/kratos/issues/1699)
 * Identity schema validation on startup ([#1779](https://github.com/ory/kratos/issues/1779)) ([99db3f0](https://github.com/ory/kratos/commit/99db3f03afd4b2525cbce54133a1abd1d49d2886)), closes [#701](https://github.com/ory/kratos/issues/701)
 * Implement endpoint for invalidating all sessions for a given identity ([#1740](https://github.com/ory/kratos/issues/1740)) ([dbd1689](https://github.com/ory/kratos/commit/dbd1689c11fd0a3d999ea09b553dd4a14a7a6972)), closes [#655](https://github.com/ory/kratos/issues/655):
@@ -246,11 +276,17 @@
 * Introduce cve scanning ([#1798](https://github.com/ory/kratos/issues/1798)) ([ade13ea](https://github.com/ory/kratos/commit/ade13ea082ee11e9c1005de3ccb3ae6b5f02bb49))
 * **logout:** Add logout token to browser response ([#1758](https://github.com/ory/kratos/issues/1758)) ([d3f1177](https://github.com/ory/kratos/commit/d3f1177a9a82dc2c4f930f15c6ec87c3ec5a1d53))
 * Mark recovery email address verified ([#1665](https://github.com/ory/kratos/issues/1665)) ([e3efc5d](https://github.com/ory/kratos/commit/e3efc5d0673106115a236e38b5d76d6672d64d20)), closes [#1662](https://github.com/ory/kratos/issues/1662)
+* Sign in with apple ([#1833](https://github.com/ory/kratos/issues/1833)) ([16ed123](https://github.com/ory/kratos/commit/16ed123adba06167f70eb952ae3877d4476f8c71)), closes [#1782](https://github.com/ory/kratos/issues/1782):
+
+    Adds an adapter and configuration options for enabling Social Sign In with Apple.
+
+* Support setting the identity state via the admin API ([#1805](https://github.com/ory/kratos/issues/1805)) ([29c060b](https://github.com/ory/kratos/commit/29c060bd348733eeafee98d5f255c737a8cbcad0)), closes [#1767](https://github.com/ory/kratos/issues/1767)
 
 ### Tests
 
 * **e2e:** Resolve regressions ([af9aedc](https://github.com/ory/kratos/commit/af9aedc8d29678f480b1b6bad128aefbacd6a373))
 * Fix tests in cmd/serve ([#1755](https://github.com/ory/kratos/issues/1755)) ([b704d08](https://github.com/ory/kratos/commit/b704d08382a9059157c2a649872e88943d66a99f))
+* Resolve flaky config test ([#1832](https://github.com/ory/kratos/issues/1832)) ([db98d01](https://github.com/ory/kratos/commit/db98d010639bfc387ef927c4f80ff6cd0ebc9588))
 * Resolve flaky example tests ([#1817](https://github.com/ory/kratos/issues/1817)) ([0e700d8](https://github.com/ory/kratos/commit/0e700d89c0aaa99b9eec7ce070b7974373377f03))
 
 
