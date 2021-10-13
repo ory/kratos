@@ -872,7 +872,6 @@ func TestLoadingTLSConfig(t *testing.T) {
 }
 
 func TestIdentitySchemaValidation(t *testing.T) {
-
 	files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
 
 	type identity struct {
@@ -923,7 +922,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 	testWatch := func(t *testing.T, ctx context.Context, cmd *cobra.Command, i *configFile) (*config.Config, *test.Hook, *os.File, *configFile, chan bool) {
 		c := make(chan bool, 1)
-		tdir := t.TempDir() // os.TempDir() + "/" + strconv.Itoa(time.Now().Nanosecond())
+		tdir := t.TempDir()
 		assert.NoError(t,
 			os.MkdirAll(tdir, // DO NOT CHANGE THIS: https://github.com/fsnotify/fsnotify/issues/340
 				os.ModePerm))
@@ -1013,10 +1012,10 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 				var wg sync.WaitGroup
 				wg.Add(1)
-				go func() {
+				go func(t *testing.T, ctx context.Context, tmpFile *os.File, identity *configFile) {
 					defer wg.Done()
 					marshalAndWrite(t, ctx, tmpConfig, i)
-				}()
+				}(t, ctx, tmpConfig, i)
 
 				select {
 				case <-ctx.Done():
@@ -1031,6 +1030,5 @@ func TestIdentitySchemaValidation(t *testing.T) {
 				wg.Wait()
 			})
 		}
-
 	})
 }
