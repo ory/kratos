@@ -291,11 +291,17 @@ func TestStrategy(t *testing.T) {
 		subject = "register-then-login@ory.sh"
 		scope = []string{"openid", "offline"}
 
-		expectTokens := func(t *testing.T, body []byte) {
+		expectTokens := func(t *testing.T, provider string, body []byte) {
 			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
 			require.NoError(t, err)
 			c := i.Credentials[identity.CredentialsTypeOIDC].Config
-			assertx.EqualAsJSON(t, json.RawMessage(`{"baz":"bar"}`), json.RawMessage(c))
+			assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
+			assertx.EqualAsJSONExcept(
+				t,
+				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
+				json.RawMessage(c),
+				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+			)
 		}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
@@ -303,7 +309,7 @@ func TestStrategy(t *testing.T) {
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
-			expectTokens(t, body)
+			expectTokens(t, "valid", body)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
@@ -311,7 +317,7 @@ func TestStrategy(t *testing.T) {
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
-			expectTokens(t, body)
+			expectTokens(t, "valid", body)
 		})
 	})
 
