@@ -295,6 +295,7 @@ func TestStrategy(t *testing.T) {
 			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
 			require.NoError(t, err)
 			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			assert.NotEmpty(t, gjson.Get("providers.0.initial_access_token").String())
 			assertx.EqualAsJSONExcept(
 				t,
 				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
@@ -308,7 +309,6 @@ func TestStrategy(t *testing.T) {
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
-			t.Logf(string(body))
 			expectTokens(t, "valid", body)
 		})
 
