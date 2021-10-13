@@ -182,8 +182,6 @@ Something is not working.
 
 #### Issues
 
-- [ ] kratos identities import - include "state" property of identity
-      ([kratos#1767](https://github.com/ory/kratos/issues/1767))
 - [ ] Panic on recovery for deactivated user
       ([kratos#1794](https://github.com/ory/kratos/issues/1794))
 - [x] Submitting successful link verification again ends up with JSON response
@@ -196,6 +194,8 @@ Something is not working.
 - [x] 0.7.3.alpha.1, docker, panic if SESSION_COOKIE_NAME is set in
       docker-compose.yml
       ([kratos#1695](https://github.com/ory/kratos/issues/1695))
+- [x] kratos identities import - include "state" property of identity
+      ([kratos#1767](https://github.com/ory/kratos/issues/1767))
 
 #### Pull Requests
 
