@@ -28,10 +28,11 @@ context('Testing logout flows', () => {
           password,
           fields: { 'traits.website': website }
         })
-        cy.login({ email, password, cookieUrl: route })
       })
 
       beforeEach(() => {
+        cy.clearAllCookies()
+        cy.login({ email, password, cookieUrl: route })
         cy.visit(route)
       })
 

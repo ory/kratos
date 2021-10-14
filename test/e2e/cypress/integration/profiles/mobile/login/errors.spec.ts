@@ -3,6 +3,7 @@ import { gen, MOBILE_URL } from '../../../../helpers'
 context('Mobile Profile', () => {
   describe('Login Flow Errors', () => {
     before(() => {
+      cy.clearAllCookies()
       cy.useConfigProfile('mobile')
     })
 

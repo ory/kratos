@@ -237,6 +237,7 @@ context('2FA WebAuthn', () => {
             })
 
             cy.get('button[name="webauthn_login_trigger"]').should('not.exist')
+            cy.get('[data-testid="ui/message/1010003"]').should('exist')
           })
         })
       })

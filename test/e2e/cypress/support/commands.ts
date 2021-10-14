@@ -15,7 +15,7 @@ import dayjs from 'dayjs'
 import YAML from 'yamljs'
 import { Session } from '@ory/kratos-client'
 
-const configFile = 'test/e2e/kratos.generated.yml'
+const configFile = 'kratos.generated.yml'
 
 const mergeFields = (form, fields) => {
   const result = {}
@@ -39,7 +39,7 @@ const updateConfigFile = (cb: (arg: any) => any) => {
 
 Cypress.Commands.add('useConfigProfile', (profile: string) => {
   console.log('Switching config profile to:', profile)
-  cy.readFile(`test/e2e/kratos.${profile}.yml`).then((contents) =>
+  cy.readFile(`kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
   cy.wait(100)
@@ -47,8 +47,8 @@ Cypress.Commands.add('useConfigProfile', (profile: string) => {
 
 Cypress.Commands.add('proxy', (app: string) => {
   console.log('Switching proxy profile to:', app)
-  cy.writeFile(`test/e2e/proxy.json`, `"${app}"`)
-  cy.readFile(`test/e2e/proxy.json`).should('eq', app)
+  cy.writeFile(`proxy.json`, `"${app}"`)
+  cy.readFile(`proxy.json`).should('eq', app)
   cy.wait(100)
   cy.clearAllCookies()
   cy.visit(APP_URL + '/')
@@ -391,11 +391,13 @@ Cypress.Commands.add(
     if (rememberConsent) {
       cy.get('#remember').click()
     }
+
     if (acceptConsent) {
       cy.get('#accept').click()
     } else {
       cy.get('#reject').click()
     }
+    cy.location('pathname').should('not.include', 'consent')
 
     if (expectSession) {
       cy.getSession()
