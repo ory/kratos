@@ -117,8 +117,6 @@ Affects documentation.
 - [ ] Config JSON Schema needs example values
       ([kratos#179](https://github.com/ory/kratos/issues/179)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] doc page for ui error messages
-      ([kratos#1784](https://github.com/ory/kratos/issues/1784))
 - [x] Tag version in docker-compose before commit&tag push
       ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
@@ -133,6 +131,8 @@ A request for comments to discuss and share ideas.
       [@hackerman](https://github.com/aeneasr)
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
+- [ ] Strategies to prevent mass email sending for several flows
+      ([kratos#1835](https://github.com/ory/kratos/issues/1835))
 - [x] Field validation answer status code 422 instead of 400
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
@@ -256,6 +256,9 @@ Affects documentation.
 
 #### Issues
 
+- [ ] doc page for ui error messages
+      ([kratos#1784](https://github.com/ory/kratos/issues/1784)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Document that identity information (traits, etc) are available to token
       holders and backend systems
       ([kratos#43](https://github.com/ory/kratos/issues/43)) -
