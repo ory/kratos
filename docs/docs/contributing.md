@@ -50,7 +50,7 @@ won't be yelled at for giving it your best effort. The worst that can happen is
 that you'll be politely asked to change something. We appreciate any sort of
 contributions, and don't want a wall of rules to get in the way of that.
 
-That said, if you want to ensure that a pull request is likely to be merged,
+If you want to ensure that a pull request is likely to be merged,
 talk to us! You can find out our thoughts and ensure that your contribution
 won't clash or be obviated by Ory Kratos's normal direction. A great way to do
 this is via [Ory Kratos Discussions](https://github.com/ory/kratos/discussions)
