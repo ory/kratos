@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2021-10-13)](#2021-10-13)
+- [ (2021-10-14)](#2021-10-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -209,7 +209,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-10-13)
+# [](https://github.com/ory/kratos/compare/v0.7.6-alpha.1...v) (2021-10-14)
 ## Breaking Changes
 
 The SMTPS scheme used in courier config url with cleartext/StartTLS/TLS SMTP connection types is now only supporting implicit TLS. For StartTLS and cleartext SMTP, please use the smtp scheme instead.
@@ -286,6 +286,7 @@ This patch changes the naming and number of prometheus metrics (see: https://git
 
 * **e2e:** Resolve regressions ([af9aedc](https://github.com/ory/kratos/commit/af9aedc8d29678f480b1b6bad128aefbacd6a373))
 * Fix tests in cmd/serve ([#1755](https://github.com/ory/kratos/issues/1755)) ([b704d08](https://github.com/ory/kratos/commit/b704d08382a9059157c2a649872e88943d66a99f))
+* Resolve flaky config test ([147c670](https://github.com/ory/kratos/commit/147c6704a9d38b5687eb8aba5661f24f99e577e3))
 * Resolve flaky config test ([#1832](https://github.com/ory/kratos/issues/1832)) ([db98d01](https://github.com/ory/kratos/commit/db98d010639bfc387ef927c4f80ff6cd0ebc9588))
 * Resolve flaky example tests ([#1817](https://github.com/ory/kratos/issues/1817)) ([0e700d8](https://github.com/ory/kratos/commit/0e700d89c0aaa99b9eec7ce070b7974373377f03))
 
