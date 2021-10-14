@@ -5,9 +5,9 @@
     "attributes": {
       "name": "csrf_token",
       "type": "hidden",
-      "value": "",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -18,8 +18,9 @@
     "attributes": {
       "name": "traits.email",
       "type": "email",
-      "value": "hackerman+@ory.sh",
-      "disabled": false
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -30,7 +31,8 @@
     "attributes": {
       "name": "traits.name",
       "type": "text",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -42,7 +44,8 @@
       "name": "method",
       "type": "submit",
       "value": "profile",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {
@@ -60,7 +63,8 @@
       "name": "password",
       "type": "password",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {
@@ -78,7 +82,8 @@
       "name": "method",
       "type": "submit",
       "value": "password",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {
@@ -96,7 +101,8 @@
       "name": "link",
       "type": "submit",
       "value": "github",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {
@@ -117,7 +123,8 @@
       "name": "link",
       "type": "submit",
       "value": "google",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {

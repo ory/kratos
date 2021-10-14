@@ -2,6 +2,7 @@ package registration_test
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -36,7 +37,7 @@ func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
-	public, admin := testhelpers.NewKratosServer(t, reg)
+	_, admin := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -132,13 +133,13 @@ func TestHandleError(t *testing.T) {
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
 				defer res.Body.Close()
-				require.Contains(t, res.Request.URL.String(), public.URL+registration.RouteGetFlow)
-				require.Equal(t, http.StatusOK, res.StatusCode)
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				assert.Equal(t, int(text.ErrorValidationRegistrationFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()))
-				assert.NotEqual(t, registrationFlow.ID.String(), gjson.GetBytes(body, "id").String())
+				require.Equal(t, http.StatusInternalServerError, res.StatusCode, "%+v\n\t%s", res.Request, body)
+
+				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.GetBytes(body, "use_flow_id").String())
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(anHourAgo), json.RawMessage(body), []string{"since", "redirect_browser_to", "use_flow_id"})
 			})
 
 			t.Run("case=validation error", func(t *testing.T) {

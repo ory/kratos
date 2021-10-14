@@ -113,10 +113,11 @@ func TestCompleteLogin(t *testing.T) {
 			d       string
 			code    string
 			message string
+			key     string
 		}{
-			{d: "empty", message: text.NewErrorValidationLookupInvalid().Text},
-			{d: "invalid", code: "invalid", message: text.NewErrorValidationLookupInvalid().Text},
-			{d: "already-used", code: "key-1", message: text.NewErrorValidationLookupAlreadyUsed().Text},
+			{d: "empty", key: lookupCodeGJSONQuery + ".messages.0.text", message: "Property lookup_secret is missing."},
+			{d: "invalid", key: "ui.messages.0.text", code: "invalid", message: text.NewErrorValidationLookupInvalid().Text},
+			{d: "already-used", key: "ui.messages.0.text", code: "key-1", message: text.NewErrorValidationLookupAlreadyUsed().Text},
 		} {
 			t.Run(fmt.Sprintf("code=%s", tc.d), func(t *testing.T) {
 				id, _ := createIdentity(t, reg)
@@ -127,7 +128,7 @@ func TestCompleteLogin(t *testing.T) {
 				check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
 					checkURL(t, shouldRedirect, res)
 					assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-					assert.Equal(t, tc.message, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+					assert.Equal(t, tc.message, gjson.Get(body, tc.key).String(), "%s", body)
 				}
 
 				t.Run("type=api", func(t *testing.T) {

@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/snapshotx"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/ioutilx"
@@ -479,67 +481,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "https://foo/self-service/registration?flow=86c92228-005a-4c44-8280-d1df266e59e8",
-  "method": "POST",
-  "nodes": [
-    {
-      "type": "input",
-      "group": "default",
-      "attributes": {
-        "name": "csrf_token",
-        "type": "hidden",
-        "value": "OWl2Yjl2enlvY3dkeXJ0bzgzcHpvZnZmaHgxeHQwczc=",
-        "required": true,
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {}
-    },
-    {
-      "type": "input",
-      "group": "oidc",
-      "attributes": {
-        "name": "provider",
-        "type": "submit",
-        "value": "valid",
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1040002,
-          "text": "Sign up with valid",
-          "type": "info",
-          "context": {
-            "provider": "valid"
-          }
-        }
-      }
-    },
-    {
-      "type": "input",
-      "group": "oidc",
-      "attributes": {
-        "name": "provider",
-        "type": "submit",
-        "value": "invalid-issuer",
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1040002,
-          "text": "Sign up with invalid-issuer",
-          "type": "info",
-          "context": {
-            "provider": "invalid-issuer"
-          }
-        }
-      }
-    }
-  ]
-}`), sr.UI, []string{"action", "nodes.0.attributes.value"})
+		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
@@ -549,67 +491,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, identity.AuthenticatorAssuranceLevel1, sr))
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "https://foo/self-service/login?flow=117b721a-8b4a-4e0c-83d0-5879ffbd3608",
-  "method": "POST",
-  "nodes": [
-    {
-      "type": "input",
-      "group": "default",
-      "attributes": {
-        "name": "csrf_token",
-        "type": "hidden",
-        "value": "NzdjN3JkdGNzdXVkMGJmanZzZTRocHljenk4Z2Vwem8=",
-        "required": true,
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {}
-    },
-    {
-      "type": "input",
-      "group": "oidc",
-      "attributes": {
-        "name": "provider",
-        "type": "submit",
-        "value": "valid",
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1010002,
-          "text": "Sign in with valid",
-          "type": "info",
-          "context": {
-            "provider": "valid"
-          }
-        }
-      }
-    },
-    {
-      "type": "input",
-      "group": "oidc",
-      "attributes": {
-        "name": "provider",
-        "type": "submit",
-        "value": "invalid-issuer",
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1010002,
-          "text": "Sign in with invalid-issuer",
-          "type": "info",
-          "context": {
-            "provider": "invalid-issuer"
-          }
-        }
-      }
-    }
-  ]
-}`), sr.UI, []string{"action", "nodes.0.attributes.value"})
+		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
 }
 

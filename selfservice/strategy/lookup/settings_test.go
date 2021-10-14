@@ -243,14 +243,16 @@ func TestCompleteSettings(t *testing.T) {
 				t.Run("type=api", func(t *testing.T) {
 					actual, res := doAPIFlow(t, payload, id)
 					assert.Equal(t, http.StatusForbidden, res.StatusCode)
-					assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+					assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(), publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
+					assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 					checkIdentity(t)
 				})
 
 				t.Run("type=spa", func(t *testing.T) {
 					actual, res := doBrowserFlow(t, true, payload, id)
 					assert.Equal(t, http.StatusForbidden, res.StatusCode)
-					assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+					assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(), publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
+					assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 					checkIdentity(t)
 				})
 
@@ -469,7 +471,7 @@ func TestCompleteSettings(t *testing.T) {
 
 					actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 					require.NoError(t, err)
-					assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)))
+					assert.Equal(t, "{}", gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeLookup, lookup.InternalContextKeyRegenerated)).Raw)
 				}
 
 				t.Run("type=api", func(t *testing.T) {

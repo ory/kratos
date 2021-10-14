@@ -2,6 +2,7 @@ package settings_test
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -41,7 +42,7 @@ func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
-	public, admin := testhelpers.NewKratosServer(t, reg)
+	_, admin := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -151,14 +152,14 @@ func TestHandleError(t *testing.T) {
 				res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
 				defer res.Body.Close()
-				require.Contains(t, res.Request.URL.String(), public.URL+settings.RouteGetFlow)
+				require.Contains(t, res.Request.URL.String(), ts.URL+"/error")
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				require.Equal(t, http.StatusOK, res.StatusCode, "%+v\n\t%s", res.Request, body)
+				require.Equal(t, http.StatusInternalServerError, res.StatusCode, "%+v\n\t%s", res.Request, body)
 
-				assert.Equal(t, int(text.ErrorValidationSettingsFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()), "%s", body)
-				assert.NotEqual(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
+				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.GetBytes(body, "use_flow_id").String())
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expiredAnHourAgo), json.RawMessage(body), []string{"since", "redirect_browser_to", "use_flow_id"})
 			})
 
 			t.Run("case=validation error", func(t *testing.T) {

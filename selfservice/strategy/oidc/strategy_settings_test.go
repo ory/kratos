@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/snapshotx"
+
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/ui/container"
-	"github.com/ory/x/assertx"
-
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/kratos/corpx"
@@ -40,31 +40,6 @@ import (
 func init() {
 	corpx.RegisterFakes()
 }
-
-var (
-	csrfField = testhelpers.NewFakeCSRFNode()
-)
-
-//go:embed fixtures/expectedPasswordFields.json
-var expectedPasswordFields []byte
-
-//go:embed fixtures/expectedOryerFields.json
-var expectedOryerFields []byte
-
-//go:embed fixtures/expectedGithuberFields.json
-var expectedGithuberFields []byte
-
-//go:embed fixtures/multiuserFields.json
-var multiuserFields []byte
-
-//go:embed fixtures/newConnectionFields.json
-var newConnectionFields []byte
-
-//go:embed fixtures/newAnotherConnectionFields.json
-var newAnotherConnectionFields []byte
-
-//go:embed fixtures/linkConnectionNoCredentials.json
-var linkConnectionNoCredentials []byte
 
 func TestSettingsStrategy(t *testing.T) {
 	if testing.Short() {
@@ -215,17 +190,16 @@ func TestSettingsStrategy(t *testing.T) {
 
 	t.Run("case=should adjust linkable providers based on linked credentials", func(t *testing.T) {
 		for _, tc := range []struct {
-			agent    string
-			expected json.RawMessage
+			agent string
 		}{
-			{agent: "password", expected: json.RawMessage(expectedPasswordFields)},
-			{agent: "oryer", expected: json.RawMessage(expectedOryerFields)},
-			{agent: "githuber", expected: json.RawMessage(expectedGithuberFields)},
-			{agent: "multiuser", expected: json.RawMessage(multiuserFields)},
+			{agent: "password"},
+			{agent: "oryer"},
+			{agent: "githuber"},
+			{agent: "multiuser"},
 		} {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
 				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
-				assertx.EqualAsJSONExcept(t, tc.expected, rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+				snapshotx.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
 			})
 		}
 	})
@@ -279,36 +253,37 @@ func TestSettingsStrategy(t *testing.T) {
 			return
 		}
 
-		var unlinkInvalid = func(agent, provider string, expectedFields json.RawMessage) func(t *testing.T) {
+		var unlinkInvalid = func(agent, provider string) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
-				assertx.EqualAsJSONExcept(t, expectedFields, req.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"}, "%s", body)
-
-				t.Logf("%s", req.Id)
-				t.Logf("%s", body)
 
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
 				//assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
-				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
-				assertx.EqualAsJSONExcept(t, expectedFields,
-					json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), []string{"0.attributes.value", "1.attributes.value"}, "%s", body)
+				t.Run("flow=fetch", func(t *testing.T) {
+					snapshotx.SnapshotTExcept(t, req.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+				})
 
+				t.Run("flow=json", func(t *testing.T) {
+					snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), []string{"0.attributes.value", "1.attributes.value"})
+				})
+
+				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 					"can not unlink non-existing OpenID Connect")
 			}
 		}
 
 		t.Run("case=should not be able to unlink the last remaining connection",
-			unlinkInvalid("oryer", "ory", expectedOryerFields))
+			unlinkInvalid("oryer", "ory"))
 
 		t.Run("case=should not be able to unlink an non-existing connection",
-			unlinkInvalid("oryer", "i-do-not-exist", expectedOryerFields))
+			unlinkInvalid("oryer", "i-do-not-exist"))
 
 		t.Run("case=should not be able to unlink a connection not yet linked",
-			unlinkInvalid("githuber", "google", expectedGithuberFields))
+			unlinkInvalid("githuber", "google"))
 
 		t.Run("case=should unlink a connection", func(t *testing.T) {
 			agent, provider := "githuber", "github"
@@ -369,7 +344,7 @@ func TestSettingsStrategy(t *testing.T) {
 			return
 		}
 
-		var linkInvalid = func(agent, provider string, expectedFields json.RawMessage) func(t *testing.T) {
+		var linkInvalid = func(agent, provider string) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
@@ -378,7 +353,7 @@ func TestSettingsStrategy(t *testing.T) {
 				assert.Contains(t, gjson.GetBytes(body, "ui.action").String(), publicTS.URL+settings.RouteSubmitFlow+"?flow=")
 
 				// The original options to link google and github are still there
-				assertx.EqualAsJSONExcept(t, expectedFields, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), []string{"0.attributes.value", "1.attributes.value"})
+				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(body, `ui.nodes`).Raw), []string{"0.attributes.value", "1.attributes.value"})
 
 				assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
 					"can not link unknown or already existing OpenID Connect connection")
@@ -386,10 +361,10 @@ func TestSettingsStrategy(t *testing.T) {
 		}
 
 		t.Run("case=should not be able to link an non-existing connection",
-			linkInvalid("oryer", "i-do-not-exist", expectedOryerFields))
+			linkInvalid("oryer", "i-do-not-exist"))
 
 		t.Run("case=should not be able to link a connection which already exists",
-			linkInvalid("githuber", "github", expectedGithuberFields))
+			linkInvalid("githuber", "github"))
 
 		t.Run("case=should not be able to link a connection already linked by another identity", func(t *testing.T) {
 			// While this theoretically allows for account enumeration - because we see an error indicator if an
@@ -451,11 +426,15 @@ func TestSettingsStrategy(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, updatedFlowSDK.State)
 
-			assertx.EqualAsJSONExcept(t, json.RawMessage(newConnectionFields), originalFlow.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
-
-			expected := json.RawMessage(newAnotherConnectionFields)
-			assertx.EqualAsJSONExcept(t, expected, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), []string{"0.attributes.value", "1.attributes.value"}, res.Request.URL)
-			assertx.EqualAsJSONExcept(t, expected, updatedFlowSDK.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+			t.Run("flow=original", func(t *testing.T) {
+				snapshotx.SnapshotTExcept(t, originalFlow.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+			})
+			t.Run("flow=response", func(t *testing.T) {
+				snapshotx.SnapshotTExcept(t, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), []string{"0.attributes.value", "1.attributes.value"})
+			})
+			t.Run("flow=fetch", func(t *testing.T) {
+				snapshotx.SnapshotTExcept(t, updatedFlowSDK.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+			})
 
 			checkCredentials(t, true, users[agent].ID, provider, subject, true)
 		})
@@ -474,7 +453,7 @@ func TestSettingsStrategy(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.State)
 
-			assertx.EqualAsJSONExcept(t, json.RawMessage(linkConnectionNoCredentials), rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
+			snapshotx.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value", "1.attributes.value"})
 
 			checkCredentials(t, true, users[agent].ID, provider, subject, true)
 		})

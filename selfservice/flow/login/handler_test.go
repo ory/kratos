@@ -265,8 +265,9 @@ func TestFlowLifecycle(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "10m")
 			})
 
+			expired := time.Now().Add(-time.Minute)
 			run := func(t *testing.T, tt flow.Type, aal string, values string, isSPA bool) (string, *http.Response) {
-				f := login.Flow{Type: tt, ExpiresAt: time.Now().Add(-time.Minute), IssuedAt: time.Now(),
+				f := login.Flow{Type: tt, ExpiresAt: expired, IssuedAt: time.Now(),
 					UI: container.New(""), Refresh: false, RequestedAAL: identity.AuthenticatorAssuranceLevel(aal)}
 				require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
@@ -288,9 +289,10 @@ func TestFlowLifecycle(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				body, res := run(t, flow.TypeAPI, "aal1", `{"method":"password"}`, false)
+				actual, res := run(t, flow.TypeAPI, "aal1", `{"method":"password"}`, false)
 				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
-				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "expired", "%s", body)
+				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -300,9 +302,10 @@ func TestFlowLifecycle(t *testing.T) {
 			})
 
 			t.Run("type=SPA", func(t *testing.T) {
-				body, res := run(t, flow.TypeBrowser, "aal1", `{"method":"password"}`, true)
+				actual, res := run(t, flow.TypeBrowser, "aal1", `{"method":"password"}`, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
-				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "expired", "%s", body)
+				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 		})
 	})
