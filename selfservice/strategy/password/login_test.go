@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/urlx"
@@ -188,9 +190,9 @@ func TestCompleteLogin(t *testing.T) {
 
 			time.Sleep(time.Millisecond * 60)
 			actual, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
-			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteGetFlow)
-			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -210,9 +212,9 @@ func TestCompleteLogin(t *testing.T) {
 
 			time.Sleep(time.Millisecond * 60)
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
-			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteGetFlow)
-			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
+			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 		})
 	})
 
@@ -391,8 +393,8 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
 
 			ensureFieldsExist(t, []byte(body))
-			assert.Equal(t, "length must be >= 1, but got 0", gjson.Get(body, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "%s", body)
-			assert.Equal(t, "length must be >= 1, but got 0", gjson.Get(body, "ui.nodes.#(attributes.name==password_identifier).messages.0.text").String(), "%s", body)
+			assert.Equal(t, "Property password is missing.", gjson.Get(body, "ui.nodes.#(attributes.name==password).messages.0.text").String(), "%s", body)
+			assert.Equal(t, "Property password_identifier is missing.", gjson.Get(body, "ui.nodes.#(attributes.name==password_identifier).messages.0.text").String(), "%s", body)
 			assert.Len(t, gjson.Get(body, "ui.nodes").Array(), 4)
 
 			// This must not include the password!

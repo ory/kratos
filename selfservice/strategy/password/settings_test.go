@@ -160,7 +160,7 @@ func TestSettings(t *testing.T) {
 				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, apiUser1), conf)
 				actual := testhelpers.SubmitSettingsForm(t, true, false, apiUser1, publicTS, payload,
 					http.StatusForbidden, publicTS.URL+settings.RouteSubmitFlow)
-				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+				assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 				assert.NotEmpty(t, json.RawMessage(gjson.Get(actual, "redirect_browser_to").String()))
 			})
 

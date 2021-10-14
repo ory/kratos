@@ -200,7 +200,7 @@ func TestCompleteSettings(t *testing.T) {
 			} else {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			}
-			assert.Contains(t, gjson.Get(body, registerDisplayNameGJSONQuery+".messages.0.text").String(), "length must be >= 1, but got 0", "%s", body)
+			assert.Contains(t, gjson.Get(body, registerDisplayNameGJSONQuery+".messages.0.text").String(), "Property webauthn_register_displayname is missing.", "%s", body)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -276,8 +276,9 @@ func TestCompleteSettings(t *testing.T) {
 			}, id)
 
 			if spa {
+				assert.NotEmpty(t, gjson.Get(body, "redirect_browser_to").String())
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(body, "error").Raw))
+				assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(body), []string{"redirect_browser_to"})
 			} else {
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL+"/login-ts")
 				assertx.EqualAsJSON(t, text.NewInfoLoginReAuth(), json.RawMessage(gjson.Get(body, "ui.messages.0").Raw))

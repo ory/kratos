@@ -157,14 +157,16 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			actual, res := doAPIFlow(t, payload, id)
 			assert.Equal(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+			assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(), publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
+			assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 			checkIdentity(t)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			actual, res := doBrowserFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+			assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(), publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
+			assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 			checkIdentity(t)
 		})
 
@@ -196,14 +198,16 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			actual, res := doAPIFlow(t, payload, id)
 			assert.Equal(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+			assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(), publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
+			assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 			checkIdentity(t)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			actual, res := doBrowserFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+			assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(), publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
+			assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
 			checkIdentity(t)
 		})
 

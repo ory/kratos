@@ -185,7 +185,7 @@ func TestCompleteLogin(t *testing.T) {
 		check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
 			checkURL(t, shouldRedirect, res)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-			assert.Equal(t, "length must be >= 6, but got 0", gjson.Get(body, totpCodeGJSONQuery+".messages.0.text").String(), "%s", body)
+			assert.Equal(t, "Property totp_code is missing.", gjson.Get(body, totpCodeGJSONQuery+".messages.0.text").String(), "%s", body)
 		}
 
 		t.Run("type=api", func(t *testing.T) {
