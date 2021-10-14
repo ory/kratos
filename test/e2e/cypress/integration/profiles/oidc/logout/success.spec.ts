@@ -23,15 +23,14 @@ context('Social Sign Out Successes', () => {
         cy.proxy(app)
       })
 
-      const email = gen.email()
-
       before(() => {
         cy.clearAllCookies()
-        cy.registerOidc({ email, website, route: registration })
       })
 
       beforeEach(() => {
         cy.visit(base)
+        const email = gen.email()
+        cy.registerOidc({ email, website, route: registration })
       })
 
       it('should sign out and be able to sign in again', () => {
