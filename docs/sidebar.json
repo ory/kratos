@@ -13,7 +13,9 @@
     "Concepts": [
       "concepts/index",
       "concepts/terminology",
+      "concepts/session",
       "concepts/ui-user-interface",
+      "concepts/management-ui",
       "concepts/identity-schema",
       {
         "label": "Identity Credentials",
@@ -21,7 +23,10 @@
         "items": [
           "concepts/credentials",
           "concepts/credentials/username-email-password",
-          "concepts/credentials/openid-connect-oidc-oauth2"
+          "concepts/credentials/openid-connect-oidc-oauth2",
+          "concepts/credentials/lookup-secrets",
+          "concepts/credentials/totp",
+          "concepts/credentials/webauthn"
         ]
       },
       "concepts/browser-redirect-flow-completion",
@@ -50,6 +55,7 @@
   },
   {
     "Guides": [
+      "guides/2fa",
       "guides/sign-in-with-github-google-facebook-linkedin",
       "guides/login-session",
       "guides/configuring-cookies",
