@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/cmd"
-	"github.com/ory/kratos/text"
-	"github.com/pkg/errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -16,6 +13,11 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/cmd"
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/clidoc"
 )
