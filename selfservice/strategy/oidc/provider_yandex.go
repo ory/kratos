@@ -44,7 +44,7 @@ func (g *ProviderYandex) oauth2() *oauth2.Config {
 	}
 }
 
-func (g *ProviderYandex) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderYandex) AuthCodeURLOptions(r Ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

@@ -12,7 +12,7 @@ type Provider interface {
 	Config() *Configuration
 	OAuth2(ctx context.Context) (*oauth2.Config, error)
 	Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error)
-	AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
+	AuthCodeURLOptions(r Ider) []oauth2.AuthCodeOption
 }
 
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.

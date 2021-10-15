@@ -12,6 +12,9 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+// CustomProviders allows external modules to register providers
+var CustomProviders = map[string]func(config *Configuration, public *url.URL) Provider{}
+
 type Configuration struct {
 	// ID is the provider's ID
 	ID string `json:"id"`
@@ -136,6 +139,14 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderYandex(&p, public), nil
 			case addProviderName("apple"):
 				return NewProviderApple(&p, public), nil
+			}
+
+			if customProvider, ok := CustomProviders[p.ID]; ok {
+				return customProvider(&p, public), nil
+			}
+
+			for cpName := range CustomProviders {
+				addProviderName(cpName)
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}

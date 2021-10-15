@@ -49,7 +49,7 @@ func (g *ProviderGitHubApp) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 	return g.oauth2(), nil
 }
 
-func (g *ProviderGitHubApp) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderGitHubApp) AuthCodeURLOptions(r Ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

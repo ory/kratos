@@ -45,7 +45,7 @@ func (g *ProviderVK) oauth2() *oauth2.Config {
 	}
 }
 
-func (g *ProviderVK) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+func (g *ProviderVK) AuthCodeURLOptions(r Ider) []oauth2.AuthCodeOption {
 	return []oauth2.AuthCodeOption{}
 }
 

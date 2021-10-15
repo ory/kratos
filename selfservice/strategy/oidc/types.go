@@ -75,6 +75,6 @@ func NewFlowMethod(f *container.Container) *FlowMethod {
 	return &FlowMethod{Container: f}
 }
 
-type ider interface {
+type Ider interface {
 	GetID() uuid.UUID
 }
