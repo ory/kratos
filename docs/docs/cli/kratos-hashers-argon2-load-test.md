@@ -38,7 +38,7 @@ kratos hashers argon2 load-test &lt;authentication-requests-per-minute&gt; [flag
       --key-length uint32             Length of the key in bytes. (default 32)
       --memory byte_size              Memory to use. (default 128.00MB)
       --min-duration duration         Minimal duration a hashing operation (~login request) takes. (default 500ms)
-      --parallelism uint8             Number of threads to use. (default 72)
+      --parallelism uint8             Number of threads to use. (default 96)
   -q, --quiet                         Be quiet with output printing.
       --salt-length uint32            Length of the salt in bytes. (default 16)
 ```
