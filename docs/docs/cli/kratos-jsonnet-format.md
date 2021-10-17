@@ -1,7 +1,7 @@
 ---
 id: kratos-jsonnet-format
 title: kratos jsonnet format
-description: kratos jsonnet format 
+description: kratos jsonnet format
 ---
 
 <!--
@@ -9,9 +9,8 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos jsonnet format
-
-
 
 ### Synopsis
 
@@ -57,5 +56,5 @@ kratos jsonnet format path/to/files/*.jsonnet [more/files.jsonnet, [supports/**/
 
 ### SEE ALSO
 
-* [kratos jsonnet](kratos-jsonnet)	 - Helpers for linting and formatting JSONNet code
-
+- [kratos jsonnet](kratos-jsonnet) - Helpers for linting and formatting JSONNet
+  code

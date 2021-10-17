@@ -9,6 +9,7 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos courier
 
 Commands related to the Ory Kratos message courier
@@ -22,6 +23,6 @@ Commands related to the Ory Kratos message courier
 
 ### SEE ALSO
 
-* [kratos](kratos)	 - 
-* [kratos courier watch](kratos-courier-watch)	 - Starts the Ory Kratos message courier
-
+- [kratos](kratos) -
+- [kratos courier watch](kratos-courier-watch) - Starts the Ory Kratos message
+  courier
