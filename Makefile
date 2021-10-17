@@ -10,8 +10,6 @@ export PWD                := $(shell pwd)
 export BUILD_DATE         := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export VCS_REF            := $(shell git rev-parse HEAD)
 export QUICKSTART_OPTIONS ?= ""
-export KRATOS_IMAGE       ?= "oryd/kratos:latest-sqlite"
-
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/ory/x/tools/listx \
@@ -115,13 +113,13 @@ sdk: .bin/swagger .bin/ory node_modules
 
 .PHONY: quickstart
 quickstart:
-		docker pull ${KRATOS_IMAGE}
+		docker pull oryd/kratos:latest-sqlite
 		docker pull oryd/kratos-selfservice-ui-node:latest
 		docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 
 .PHONY: quickstart-dev
 quickstart-dev:
-		docker build -f .docker/Dockerfile-build -t ${KRATOS_IMAGE} .
+		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
 		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
@@ -134,7 +132,7 @@ format: .bin/goimports docs/node_modules node_modules
 # Build local docker image
 .PHONY: docker
 docker:
-		docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t ${KRATOS_IMAGE} .
+		docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .
 
 # Runs the documentation tests
 .PHONY: test-docs
