@@ -9,6 +9,7 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos remote version
 
 Print the version of an Ory Kratos instance
@@ -33,5 +34,5 @@ kratos remote version [flags]
 
 ### SEE ALSO
 
-* [kratos remote](kratos-remote)	 - Helpers and management for remote Ory Kratos instances
-
+- [kratos remote](kratos-remote) - Helpers and management for remote Ory Kratos
+  instances
