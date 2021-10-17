@@ -1,9 +1,7 @@
 ---
 id: kratos-hashers-argon2-load-test
 title: kratos hashers argon2 load-test
-description:
-  kratos hashers argon2 load-test Simulate the password hashing with a number of
-  concurrent requests/minute.
+description: kratos hashers argon2 load-test Simulate the password hashing with a number of concurrent requests/minute.
 ---
 
 <!--
@@ -11,16 +9,13 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
-
 ## kratos hashers argon2 load-test
 
 Simulate the password hashing with a number of concurrent requests/minute.
 
 ### Synopsis
 
-Simulates a number of concurrent authentication requests per minute. Gives
-statistical data about the measured performance and resource consumption. Can be
-used to tune and test the hashing parameters for peak demand situations.
+Simulates a number of concurrent authentication requests per minute. Gives statistical data about the measured performance and resource consumption. Can be used to tune and test the hashing parameters for peak demand situations.
 
 ```
 kratos hashers argon2 load-test &lt;authentication-requests-per-minute&gt; [flags]
@@ -38,11 +33,12 @@ kratos hashers argon2 load-test &lt;authentication-requests-per-minute&gt; [flag
       --key-length uint32             Length of the key in bytes. (default 32)
       --memory byte_size              Memory to use. (default 128.00MB)
       --min-duration duration         Minimal duration a hashing operation (~login request) takes. (default 500ms)
-      --parallelism uint8             Number of threads to use. (default 96)
+      --parallelism uint8             Number of threads to use. (default 32)
   -q, --quiet                         Be quiet with output printing.
       --salt-length uint32            Length of the salt in bytes. (default 16)
 ```
 
 ### SEE ALSO
 
-- [kratos hashers argon2](kratos-hashers-argon2) -
+* [kratos hashers argon2](kratos-hashers-argon2)	 - 
+

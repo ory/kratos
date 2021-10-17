@@ -9,7 +9,6 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
-
 ## kratos serve
 
 Run the Ory Kratos server
@@ -30,4 +29,5 @@ kratos serve [flags]
 
 ### SEE ALSO
 
-- [kratos](kratos) -
+* [kratos](kratos)	 - 
+

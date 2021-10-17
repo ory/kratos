@@ -3,10 +3,6 @@ package text
 import (
 	"fmt"
 	"time"
-
-	"github.com/pkg/errors"
-
-	"github.com/ory/herodot"
 )
 
 const (
@@ -54,13 +50,6 @@ func NewRecoveryEmailSent() *Message {
 		Text:    "An email containing a recovery link has been sent to the email address you provided.",
 		Context: context(nil),
 	}
-}
-
-func NewErrorValidationRecoveryMissingRecoveryToken() error {
-	return errors.WithStack(herodot.
-		ErrBadRequest.
-		WithDetail("error_id", ErrorValidationRecoveryMissingRecoveryToken).
-		WithReason("A recovery request was made but no recovery token was included in the request, please retry the flow."))
 }
 
 func NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed() *Message {
