@@ -62,6 +62,11 @@ log:
 secrets:
   cookie:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+  cipher:
+    - 32-LONG-SECRET-NOT-SECURE-AT-ALL
+
+ciphers:
+  algorithm: xchacha20-poly1305
 
 hashers:
   argon2:
@@ -76,4 +81,4 @@ identity:
 
 courier:
   smtp:
-    connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true&legacy_ssl=true
+    connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true

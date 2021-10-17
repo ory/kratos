@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -15,13 +16,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+
+	"github.com/ory/x/jsonschemax"
+
+	"github.com/ory/x/watcherx"
+
+	"github.com/ory/jsonschema/v3"
+	"github.com/ory/kratos/embedx"
+
 	"github.com/ory/x/tlsx"
 
 	"github.com/google/uuid"
-
-	"github.com/ory/x/dbal"
-
-	"github.com/ory/x/stringsx"
 
 	"github.com/stretchr/testify/require"
 
@@ -32,8 +38,10 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/configx"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tracing"
 )
 
@@ -42,6 +50,7 @@ const (
 	DefaultBrowserReturnURL                                         = "default_browser_return_url"
 	DefaultSQLiteMemoryDSN                                          = dbal.SQLiteInMemory
 	DefaultPasswordHashingAlgorithm                                 = "argon2"
+	DefaultCipherAlgorithm                                          = "noop"
 	UnknownVersion                                                  = "unknown version"
 	ViperKeyDSN                                                     = "dsn"
 	ViperKeyCourierSMTPURL                                          = "courier.smtp.connection_uri"
@@ -51,6 +60,7 @@ const (
 	ViperKeyCourierSMTPHeaders                                      = "courier.smtp.headers"
 	ViperKeySecretsDefault                                          = "secrets.default"
 	ViperKeySecretsCookie                                           = "secrets.cookie"
+	ViperKeySecretsCipher                                           = "secrets.cipher"
 	ViperKeyPublicBaseURL                                           = "serve.public.base_url"
 	ViperKeyPublicDomainAliases                                     = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                              = "serve.public.port"
@@ -120,6 +130,7 @@ const (
 	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
+	ViperKeyCipherAlgorithm                                         = "ciphers.algorithm"
 	ViperKeyLinkLifespan                                            = "selfservice.methods.link.config.lifespan"
 	ViperKeyPasswordHaveIBeenPwnedHost                              = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                           = "selfservice.methods.password.config.haveibeenpwned_enabled"
@@ -173,8 +184,10 @@ type (
 	}
 	Schemas []Schema
 	Config  struct {
-		l *logrusx.Logger
-		p *configx.Provider
+		l              *logrusx.Logger
+		p              *configx.Provider
+		identitySchema *jsonschema.Schema
+		cmd            *cobra.Command
 	}
 
 	Provider interface {
@@ -228,29 +241,97 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
-	p, err := New(context.TODO(), l, opts...)
+func MustNew(t *testing.T, l *logrusx.Logger, cmd *cobra.Command, opts ...configx.OptionModifier) *Config {
+	p, err := New(context.TODO(), l, cmd, opts...)
 	require.NoError(t, err)
 	return p
 }
 
-func New(ctx context.Context, l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, cmd *cobra.Command, opts ...configx.OptionModifier) (*Config, error) {
+	var c *Config
+
 	opts = append([]configx.OptionModifier{
 		configx.WithStderrValidationReporter(),
-		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "client_secret"),
+		configx.OmitKeysFromTracing("dsn", "courier.smtp.connection_uri", "secrets.default", "secrets.cookie", "secrets.cipher", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
 		configx.WithContext(ctx),
+		configx.AttachWatcher(func(event watcherx.Event, err error) {
+			if c == nil {
+				panic(errors.New("the config provider did not initialise correctly in time"))
+			}
+			if err := c.validateIdentitySchemas(); err != nil {
+				l.WithError(err).
+					Errorf("The changed identity schema configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting the process.")
+			}
+		}),
 	}, opts...)
 
-	p, err := configx.New(ValidationSchema, opts...)
+	p, err := configx.New([]byte(embedx.ConfigSchema), opts...)
 	if err != nil {
 		return nil, err
 	}
 
 	l.UseConfig(p)
-	return &Config{l: l, p: p}, nil
+
+	c = &Config{l: l, p: p, cmd: cmd}
+
+	if !p.SkipValidation() {
+		if err := c.validateIdentitySchemas(); err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
+}
+
+func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
+	if p.identitySchema == nil {
+		c := jsonschema.NewCompiler()
+		err := embedx.AddSchemaResources(c, embedx.IdentityMeta)
+		if err != nil {
+			return nil, err
+		}
+		p.identitySchema, err = c.Compile(embedx.IdentityMeta.GetSchemaID())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return p.identitySchema, nil
+}
+
+func (p *Config) validateIdentitySchemas() error {
+	j, err := p.getIdentitySchemaValidator()
+	if err != nil {
+		return err
+	}
+
+	for _, s := range p.IdentityTraitsSchemas() {
+		resource, err := jsonschema.LoadURL(s.URL)
+		if err != nil {
+			return err
+		}
+		defer resource.Close()
+
+		schema, err := io.ReadAll(resource)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err = j.Validate(bytes.NewBuffer(schema)); err != nil {
+			p.formatJsonErrors(schema, err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Config) formatJsonErrors(schema []byte, err error) {
+	_, _ = fmt.Fprintln(p.cmd.ErrOrStderr(), "")
+
+	jsonschemax.FormatValidationErrorForCLI(p.cmd.ErrOrStderr(), schema, err)
 }
 
 func (p *Config) Source() *configx.Provider {
@@ -532,6 +613,26 @@ func (p *Config) SecretsSession() [][]byte {
 		result[k] = []byte(v)
 	}
 
+	return result
+}
+
+func (p *Config) SecretsCipher() [][32]byte {
+	secrets := p.p.Strings(ViperKeySecretsCipher)
+	var cleanSecrets []string
+	for k := range secrets {
+		if len(secrets[k]) == 32 {
+			cleanSecrets = append(cleanSecrets, secrets[k])
+		}
+	}
+	if len(cleanSecrets) == 0 {
+		return [][32]byte{}
+	}
+	result := make([][32]byte, len(cleanSecrets))
+	for n, s := range secrets {
+		for k, v := range []byte(s) {
+			result[n][k] = byte(v)
+		}
+	}
 	return result
 }
 
@@ -899,6 +1000,21 @@ func (p *Config) HasherPasswordHashingAlgorithm() string {
 		fallthrough
 	default:
 		return configValue
+	}
+}
+
+func (p *Config) CipherAlgorithm() string {
+	configValue := p.p.StringF(ViperKeyCipherAlgorithm, DefaultCipherAlgorithm)
+	switch configValue {
+	case "noop":
+		return configValue
+	case "xchacha20-poly1305":
+		return configValue
+	case "aes":
+		fallthrough
+	default:
+		return configValue
+
 	}
 }
 

@@ -301,6 +301,56 @@ paths:
       summary: Update an Identity
       tags:
       - v0alpha1
+  /identities/{id}/sessions:
+    delete:
+      description: |-
+        This endpoint is useful for:
+
+        To forcefully logout Identity from all devices and sessions
+      operationId: adminDeleteIdentitySessions
+      parameters:
+      - description: ID is the identity's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: Calling this endpoint irrecoverably and permanently deletes and invalidates
+        all sessions that belong to the given Identity.
+      tags:
+      - v0alpha1
   /metrics/prometheus:
     get:
       description: |-
@@ -360,6 +410,52 @@ paths:
       summary: Create a Recovery Link
       tags:
       - v0alpha1
+  /schemas:
+    get:
+      description: Get all Identity Schemas
+      operationId: listIdentitySchemas
+      parameters:
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 100
+          format: int64
+          maximum: 500
+          minimum: 1
+          type: integer
+        style: form
+      - description: Pagination Page
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          format: int64
+          minimum: 0
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/identitySchemas'
+          description: identitySchemas
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      tags:
+      - v0alpha2
   /schemas/{id}:
     get:
       description: Get a JSON Schema
@@ -2007,6 +2103,8 @@ components:
           description: SchemaID is the ID of the JSON Schema to be used for validating
             the identity's traits.
           type: string
+        state:
+          $ref: '#/components/schemas/identityState'
         traits:
           description: |-
             Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -2242,6 +2340,23 @@ components:
         $ref: '#/components/schemas/identity'
       title: A list of identities.
       type: array
+    identitySchema:
+      example:
+        schema: '{}'
+        id: id
+      properties:
+        id:
+          description: The ID of the Identity JSON Schema
+          type: string
+        schema:
+          description: The actual Identity JSON Schema
+          type: object
+      type: object
+    identitySchemas:
+      description: Raw identity Schema list
+      items:
+        $ref: '#/components/schemas/identitySchema'
+      type: array
     identityState:
       description: The state can either be `active` or `inactive`.
       enum:
@@ -2425,14 +2540,19 @@ components:
     selfServiceLogoutUrl:
       example:
         logout_url: logout_url
+        logout_token: logout_token
       properties:
+        logout_token:
+          description: LogoutToken can be used to perform logout using AJAX.
+          type: string
         logout_url:
           description: |-
-            LogoutURL can be opened in a browser to
+            LogoutURL can be opened in a browser to sign the user out.
 
             format: uri
           type: string
       required:
+      - logout_token
       - logout_url
       type: object
     selfServiceRecoveryFlow:

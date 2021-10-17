@@ -16,6 +16,7 @@ import (
 
 	"github.com/gobuffalo/pop/v5"
 
+	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/schema"
@@ -90,6 +91,8 @@ type RegistryDefault struct {
 
 	passwordHasher    hash.Hasher
 	passwordValidator password2.Validator
+
+	crypter cipher.Cipher
 
 	errorHandler *errorx.Handler
 	errorManager *errorx.Manager
@@ -166,6 +169,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 
 	m.RecoveryHandler().RegisterAdminRoutes(router)
 	m.AllRecoveryStrategies().RegisterAdminRoutes(router)
+	m.SessionHandler().RegisterAdminRoutes(router)
 
 	m.VerificationHandler().RegisterAdminRoutes(router)
 	m.AllVerificationStrategies().RegisterAdminRoutes(router)
@@ -358,6 +362,21 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 		m.sessionHandler = session.NewHandler(m)
 	}
 	return m.sessionHandler
+}
+
+func (m *RegistryDefault) Cipher() cipher.Cipher {
+	if m.crypter == nil {
+		switch m.c.CipherAlgorithm() {
+		case "xchacha20-poly1305":
+			m.crypter = cipher.NewCryptChaCha20(m)
+		case "aes":
+			m.crypter = cipher.NewCryptAES(m)
+		default:
+			m.crypter = cipher.NewNoop(m)
+			m.l.Logger.Warning("No encryption configuration found. Default algorithm (noop) will be use that mean sensitive data will be recorded in plaintext")
+		}
+	}
+	return m.crypter
 }
 
 func (m *RegistryDefault) Hasher() hash.Hasher {
@@ -637,7 +656,7 @@ func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
 	m.rwl.Lock()
 	defer m.rwl.Unlock()
 	if m.pmm == nil {
-		m.pmm = prometheus.NewMetricsManager("kratos", m.buildVersion, m.buildHash, m.buildDate)
+		m.pmm = prometheus.NewMetricsManagerWithPrefix("kratos", prometheus.HTTPMetrics, m.buildVersion, m.buildHash, m.buildDate)
 	}
 	return m.pmm
 }

@@ -4,9 +4,12 @@ SHELL=/bin/bash -o pipefail
 #  K := $(foreach exec,$(EXECUTABLES),\
 #          $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
 
-export GO111MODULE := on
-export PATH := .bin:${PATH}
-export PWD := $(shell pwd)
+export GO111MODULE        := on
+export PATH               := .bin:${PATH}
+export PWD                := $(shell pwd)
+export BUILD_DATE         := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+export VCS_REF            := $(shell git rev-parse HEAD)
+export QUICKSTART_OPTIONS ?= ""
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/ory/x/tools/listx \
@@ -52,7 +55,7 @@ docs: docs/node_modules
 
 .PHONY: lint
 lint: .bin/golangci-lint
-		golangci-lint run -v ./...
+		golangci-lint run -v --timeout 10m ./...
 
 .PHONY: mocks
 mocks: .bin/mockgen
@@ -117,7 +120,7 @@ quickstart:
 .PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml up --build --force-recreate
+		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
 .PHONY: format
@@ -126,10 +129,10 @@ format: .bin/goimports docs/node_modules node_modules
 		cd docs; npm run format
 		npm run format
 
-# Runs tests in short mode, without database adapters
+# Build local docker image
 .PHONY: docker
 docker:
-		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
+		docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .
 
 # Runs the documentation tests
 .PHONY: test-docs

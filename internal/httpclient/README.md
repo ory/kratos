@@ -90,6 +90,7 @@ Class | Method | HTTP request | Description
 *V0alpha1Api* | [**AdminCreateIdentity**](docs/V0alpha1Api.md#admincreateidentity) | **Post** /identities | Create an Identity
 *V0alpha1Api* | [**AdminCreateSelfServiceRecoveryLink**](docs/V0alpha1Api.md#admincreateselfservicerecoverylink) | **Post** /recovery/link | Create a Recovery Link
 *V0alpha1Api* | [**AdminDeleteIdentity**](docs/V0alpha1Api.md#admindeleteidentity) | **Delete** /identities/{id} | Delete an Identity
+*V0alpha1Api* | [**AdminDeleteIdentitySessions**](docs/V0alpha1Api.md#admindeleteidentitysessions) | **Delete** /identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 *V0alpha1Api* | [**AdminGetIdentity**](docs/V0alpha1Api.md#admingetidentity) | **Get** /identities/{id} | Get an Identity
 *V0alpha1Api* | [**AdminListIdentities**](docs/V0alpha1Api.md#adminlistidentities) | **Get** /identities | List Identities
 *V0alpha1Api* | [**AdminUpdateIdentity**](docs/V0alpha1Api.md#adminupdateidentity) | **Put** /identities/{id} | Update an Identity
@@ -119,6 +120,7 @@ Class | Method | HTTP request | Description
 *V0alpha1Api* | [**SubmitSelfServiceSettingsFlow**](docs/V0alpha1Api.md#submitselfservicesettingsflow) | **Post** /self-service/settings | Complete Settings Flow
 *V0alpha1Api* | [**SubmitSelfServiceVerificationFlow**](docs/V0alpha1Api.md#submitselfserviceverificationflow) | **Post** /self-service/verification | Complete Verification Flow
 *V0alpha1Api* | [**ToSession**](docs/V0alpha1Api.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To
+*V0alpha2Api* | [**ListIdentitySchemas**](docs/V0alpha2Api.md#listidentityschemas) | **Get** /schemas | 
 
 
 ## Documentation For Models
@@ -131,6 +133,7 @@ Class | Method | HTTP request | Description
  - [HealthStatus](docs/HealthStatus.md)
  - [Identity](docs/Identity.md)
  - [IdentityCredentials](docs/IdentityCredentials.md)
+ - [IdentitySchema](docs/IdentitySchema.md)
  - [IdentityState](docs/IdentityState.md)
  - [InlineResponse200](docs/InlineResponse200.md)
  - [InlineResponse2001](docs/InlineResponse2001.md)

@@ -32,7 +32,7 @@ func TestNewIdentity(t *testing.T) {
 func TestMarshalExcludesCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			ID: uuid.UUID{},
 		},
 	}
@@ -49,7 +49,7 @@ func TestMarshalExcludesCredentials(t *testing.T) {
 func TestMarshalExcludesCredentialsByReference(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			ID: uuid.UUID{},
 		},
 	}
@@ -78,7 +78,7 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 	i.Credentials = nil
 
 	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
+	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataInJSON(*i)))
 
 	assert.False(t, gjson.Get(b.String(), "credentials").Exists())
 }
@@ -86,7 +86,7 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 func TestMarshalIdentityWithCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	credentials := map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			Type:   CredentialsTypePassword,
 			Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
 		},
@@ -94,7 +94,7 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 	i.Credentials = credentials
 
 	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
+	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataInJSON(*i)))
 
 	credentialsInJson := gjson.Get(b.String(), "credentials")
 	assert.True(t, credentialsInJson.Exists())

@@ -289,13 +289,27 @@ func TestStrategy(t *testing.T) {
 
 	t.Run("case=register and then login", func(t *testing.T) {
 		subject = "register-then-login@ory.sh"
-		scope = []string{"openid"}
+		scope = []string{"openid", "offline"}
+
+		expectTokens := func(t *testing.T, provider string, body []byte) {
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			assert.NotEmpty(t, gjson.GetBytes(c, "providers.0.initial_access_token").String())
+			assertx.EqualAsJSONExcept(
+				t,
+				json.RawMessage(fmt.Sprintf(`{"providers": [{"subject":"%s","provider":"%s"}]}`, subject, provider)),
+				json.RawMessage(c),
+				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
+			)
+		}
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
+			expectTokens(t, "valid", body)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
@@ -303,6 +317,7 @@ func TestStrategy(t *testing.T) {
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
+			expectTokens(t, "valid", body)
 		})
 	})
 
@@ -716,5 +731,42 @@ func TestDisabledEndpoint(t *testing.T) {
 			b := ioutilx.MustReadAll(res.Body)
 			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
 		})
+	})
+}
+
+func TestPostEndpointRedirect(t *testing.T) {
+	var (
+		conf, reg        = internal.NewFastRegistryWithMocks(t)
+		subject, website string
+		scope            []string
+	)
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), true)
+
+	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &website, &scope)
+
+	publicTS, adminTS := testhelpers.NewKratosServers(t)
+
+	viperSetProviderConfig(
+		t,
+		conf,
+		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "apple", "client"),
+	)
+	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
+
+	t.Run("case=should redirect to GET and preserve parameters"+publicTS.URL, func(t *testing.T) {
+		// create a client that does not follow redirects
+		c := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+		res, err := c.PostForm(publicTS.URL+"/self-service/methods/oidc/callback/apple", url.Values{"state": {"foo"}, "test": {"3"}})
+		require.NoError(t, err)
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusFound, res.StatusCode)
+
+		location, err := res.Location()
+		require.NoError(t, err)
+		assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/apple?state=foo&test=3", location.String())
 	})
 }

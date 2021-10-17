@@ -814,7 +814,7 @@ func TestSettingsStrategy(t *testing.T) {
 		return req.Ui.Action
 	}
 
-	var checkCredentials = func(t *testing.T, shouldExist bool, iid uuid.UUID, provider, subject string) {
+	var checkCredentials = func(t *testing.T, shouldExist bool, iid uuid.UUID, provider, subject string, expectTokens bool) {
 		actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), iid)
 		require.NoError(t, err)
 
@@ -832,6 +832,11 @@ func TestSettingsStrategy(t *testing.T) {
 		for _, p := range cc.Providers {
 			if p.Provider == provider && p.Subject == subject {
 				found = true
+				if expectTokens {
+					assert.NotEmpty(t, p.InitialIDToken)
+					assert.NotEmpty(t, p.InitialAccessToken)
+					assert.NotEmpty(t, p.InitialRefreshToken)
+				}
 				break
 			}
 		}
@@ -893,7 +898,7 @@ func TestSettingsStrategy(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 			require.Equal(t, "success", gjson.GetBytes(body, "state").String(), "%s", body)
 
-			checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID)
+			checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID, false)
 		})
 
 		t.Run("case=should not be able to unlink a connection without a privileged session", func(t *testing.T) {
@@ -910,7 +915,7 @@ func TestSettingsStrategy(t *testing.T) {
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 
-				checkCredentials(t, true, users[agent].ID, provider, "hackerman+github+"+testID)
+				checkCredentials(t, true, users[agent].ID, provider, "hackerman+github+"+testID, false)
 
 				return req
 			}
@@ -931,7 +936,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
-				checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID)
+				checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID, false)
 			})
 		})
 	})
@@ -1016,7 +1021,7 @@ func TestSettingsStrategy(t *testing.T) {
 			t.Cleanup(reset(t))
 
 			subject = "hackerman+new-connection+" + testID
-			scope = []string{"openid"}
+			scope = []string{"openid", "offline"}
 
 			agent, provider := "githuber", "google"
 			updatedFlow, res, originalFlow := link(t, agent, provider)
@@ -1341,14 +1346,14 @@ func TestSettingsStrategy(t *testing.T) {
 			assertx.EqualAsJSON(t, expected, json.RawMessage(gjson.GetBytes(updatedFlow, "ui.nodes").Raw), res.Request.URL)
 			assertx.EqualAsJSON(t, expected, updatedFlowSDK.Ui.Nodes)
 
-			checkCredentials(t, true, users[agent].ID, provider, subject)
+			checkCredentials(t, true, users[agent].ID, provider, subject, true)
 		})
 
 		t.Run("case=should link a connection even if user does not have oidc credentials yet", func(t *testing.T) {
 			t.Cleanup(reset(t))
 
 			subject = "hackerman+new-connection-new-oidc+" + testID
-			scope = []string{"openid"}
+			scope = []string{"openid", "offline"}
 
 			agent, provider := "password", "google"
 			_, res, req := link(t, agent, provider)
@@ -1514,7 +1519,7 @@ func TestSettingsStrategy(t *testing.T) {
   }
 ]`), rs.Ui.Nodes)
 
-			checkCredentials(t, true, users[agent].ID, provider, subject)
+			checkCredentials(t, true, users[agent].ID, provider, subject, true)
 		})
 
 		t.Run("case=should not be able to link a connection without a privileged session", func(t *testing.T) {
@@ -1532,7 +1537,7 @@ func TestSettingsStrategy(t *testing.T) {
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.State)
 
-				checkCredentials(t, false, users[agent].ID, provider, subject)
+				checkCredentials(t, false, users[agent].ID, provider, subject, true)
 
 				return req
 			}
@@ -1553,7 +1558,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
-				checkCredentials(t, true, users[agent].ID, provider, subject)
+				checkCredentials(t, true, users[agent].ID, provider, subject, true)
 			})
 		})
 	})

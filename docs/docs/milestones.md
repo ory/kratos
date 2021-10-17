@@ -62,9 +62,6 @@ New feature or request.
 - [ ] Rename strategy to method in internal APIs and Documentation
       ([kratos#683](https://github.com/ory/kratos/issues/683)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Validate identity schema on load
-      ([kratos#701](https://github.com/ory/kratos/issues/701)) -
-      [@Alano Terblanche](https://github.com/Benehiko)
 - [ ] Support OAuth2 and OpenID Connect in API-based flows
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
@@ -82,8 +79,6 @@ New feature or request.
       ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [ ] Allow account recovery for identities without email address
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
-- [ ] Field validation answer status code 422 instead of 400
-      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
       ([kratos#1589](https://github.com/ory/kratos/issues/1589))
 - [ ] Deprecate webhook loader without URI scheme
@@ -95,10 +90,21 @@ New feature or request.
       ([kratos#1643](https://github.com/ory/kratos/issues/1643))
 - [ ] Regenerate lookup secrets as part of login when last secret was used
       ([kratos#1649](https://github.com/ory/kratos/issues/1649))
-- [ ] Endpoint for fetching all schema IDs or all schemas
-      ([kratos#1699](https://github.com/ory/kratos/issues/1699))
+- [ ] Expand password validation error messages to facilitate i18n
+      ([kratos#1071](https://github.com/ory/kratos/issues/1071))
+- [ ] User deactivation does not deactivate user sessions
+      ([kratos#1811](https://github.com/ory/kratos/issues/1811))
+- [ ] Implement full-spec with e2e tests for react native app
+      ([kratos#1820](https://github.com/ory/kratos/issues/1820))
+- [x] Validate identity schema on load
+      ([kratos#701](https://github.com/ory/kratos/issues/701)) -
+      [@Alano Terblanche](https://github.com/Benehiko)
+- [x] Field validation answer status code 422 instead of 400
+      ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
+- [x] Endpoint for fetching all schema IDs or all schemas
+      ([kratos#1699](https://github.com/ory/kratos/issues/1699))
 - [x] Email Courier SMTP Header Configuration
       ([kratos#1725](https://github.com/ory/kratos/issues/1725))
 
@@ -125,7 +131,9 @@ A request for comments to discuss and share ideas.
       [@hackerman](https://github.com/aeneasr)
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
-- [ ] Field validation answer status code 422 instead of 400
+- [ ] Strategies to prevent mass email sending for several flows
+      ([kratos#1835](https://github.com/ory/kratos/issues/1835))
+- [x] Field validation answer status code 422 instead of 400
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
       ([kratos#1647](https://github.com/ory/kratos/issues/1647))
@@ -174,6 +182,8 @@ Something is not working.
 
 #### Issues
 
+- [ ] Panic on recovery for deactivated user
+      ([kratos#1794](https://github.com/ory/kratos/issues/1794))
 - [x] Submitting successful link verification again ends up with JSON response
       ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
       [@hackerman](https://github.com/aeneasr)
@@ -184,6 +194,8 @@ Something is not working.
 - [x] 0.7.3.alpha.1, docker, panic if SESSION_COOKIE_NAME is set in
       docker-compose.yml
       ([kratos#1695](https://github.com/ory/kratos/issues/1695))
+- [x] kratos identities import - include "state" property of identity
+      ([kratos#1767](https://github.com/ory/kratos/issues/1767))
 
 #### Pull Requests
 
@@ -244,6 +256,9 @@ Affects documentation.
 
 #### Issues
 
+- [ ] doc page for ui error messages
+      ([kratos#1784](https://github.com/ory/kratos/issues/1784)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Document that identity information (traits, etc) are available to token
       holders and backend systems
       ([kratos#43](https://github.com/ory/kratos/issues/43)) -
@@ -262,10 +277,16 @@ Something is not working.
 - [ ] Add option to remove recovery codes
       ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] return_to_query_param not honored on OIDC login
+      ([kratos#1773](https://github.com/ory/kratos/issues/1773)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect
       ([kratos#782](https://github.com/ory/kratos/issues/782))
+- [x] Hide SQLite migration message
+      ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -276,6 +297,8 @@ New feature or request.
 - [ ] Add `return_to` to self-service SDK methods including logout
       ([kratos#1605](https://github.com/ory/kratos/issues/1605)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Provide return_to value as part of flow entity
+      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
@@ -286,7 +309,8 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
+- [ ] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
+      better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
 
@@ -321,6 +345,7 @@ Blocks milestones or other issues or pulls.
 
 #### Pull Requests
 
-- [ ] feat: add 2FA with WebAuthn, TOTP, Lookup Secrets
+- [ ] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
+      better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)

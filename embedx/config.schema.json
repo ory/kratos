@@ -1,5 +1,5 @@
 {
-  "$id": "https://github.com/ory/kratos/driver/config/.schema/config.schema.json",
+  "$id": "https://github.com/ory/kratos/embedx/config.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Ory Kratos Configuration",
   "type": "object",
@@ -314,8 +314,8 @@
           "type": "string",
           "enum": [
             "github",
+            "github-app",
             "gitlab",
-            "gitlab-app",
             "generic",
             "google",
             "microsoft",
@@ -324,7 +324,8 @@
             "facebook",
             "auth0",
             "vk",
-            "yandex"
+            "yandex",
+            "apple"
           ],
           "examples": [
             "google"
@@ -394,6 +395,30 @@
             "contoso.onmicrosoft.com"
           ]
         },
+        "team_id": {
+          "title": "Apple Developer Team ID",
+          "description": "Apple Developer Team ID needed for generating a JWT token for client secret",
+          "type": "string",
+          "examples": [
+            "KP76DQS54M"
+          ]
+        },
+        "private_key_id": {
+          "title": "Apple Private Key Identifier",
+          "description": "Sign In with Apple Private Key Identifier needed for generating a JWT token for client secret",
+          "type": "string",
+          "examples": [
+            "UX56C66723"
+          ]
+        },
+        "private_key": {
+          "title": "Apple Private Key",
+          "description": "Sign In with Apple Private Key needed for generating a JWT token for client secret",
+          "type": "string",
+          "examples": [
+            "-----BEGIN PRIVATE KEY-----\n........\n-----END PRIVATE KEY-----"
+          ]
+        },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
         }
@@ -403,34 +428,101 @@
         "id",
         "provider",
         "client_id",
-        "client_secret",
         "mapper_url"
       ],
-      "if": {
-        "properties": {
-          "provider": {
-            "const": "microsoft"
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "microsoft"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "required": [
+              "tenant"
+            ]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "tenant": {}
+              },
+              "required": [
+                "tenant"
+              ]
+            }
           }
         },
-        "required": [
-          "provider"
-        ]
-      },
-      "then": {
-        "required": [
-          "tenant"
-        ]
-      },
-      "else": {
-        "not": {
-          "properties": {
-            "tenant": {}
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "apple"
+              }
+            },
+            "required": [
+              "provider"
+            ]
           },
-          "required": [
-            "tenant"
-          ]
+          "then": {
+            "not": {
+              "properties": {
+                "client_secret": {}
+              },
+              "required": [
+                "client_secret"
+              ]
+            },
+            "required": [
+              "private_key_id",
+              "private_key",
+              "team_id"
+            ]
+          },
+          "else": {
+            "required": [
+              "client_secret"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "properties": {
+                    "team_id": {}
+                  },
+                  "required": [
+                    "team_id"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "properties": {
+                    "private_key_id": {}
+                  },
+                  "required": [
+                    "private_key_id"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "properties": {
+                    "private_key": {}
+                  },
+                  "required": [
+                    "private_key"
+                  ]
+                }
+              }
+            ]
+          }
         }
-      }
+      ]
     },
     "selfServiceHooks": {
       "type": "array",
@@ -1077,9 +1169,14 @@
           "properties": {
             "connection_uri": {
               "title": "SMTP connection string",
-              "description": "This URI will be used to connect to the SMTP server. Use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates. Please keep in mind that any host other than localhost / 127.0.0.1 must use smtp over TLS (smtps) or the connection will not be possible.",
+              "description": "This URI will be used to connect to the SMTP server. Use the scheme smtps for implicit TLS sessions or smtp for explicit StartTLS/cleartext sessions. Please note that TLS is always enforced with certificate trust verification by default for security reasons on both schemes. With the smtp scheme you can use the query parameter (`?disable_starttls=true`) to allow cleartext sessions or (`?disable_starttls=false`) to enforce StartTLS (default behaviour). Additionally, use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates (default behaviour) on both implicit and explicit TLS sessions.",
               "examples": [
-                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false"
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false",
+                "smtp://foo:bar@my-mailserver:1234/?disable_starttls=true (NOT RECOMMENDED: Cleartext smtp for devel and legacy infrastructure only)",
+                "smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate trust verification)",
+                "smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Explicit StartTLS without certificate trust verification)",
+                "smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust verification)",
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)"
               ],
               "type": "string",
               "pattern": "^smtps?:\\/\\/.*"
@@ -1649,6 +1746,17 @@
             "minLength": 16
           },
           "uniqueItems": true
+        },
+        "cipher": {
+          "type": "array",
+          "title": "Secrets to use for encryption by cipher",
+          "description": "The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.",
+          "items": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 32
+          },
+          "minItems": 1
         }
       },
       "additionalProperties": false
@@ -1735,6 +1843,23 @@
         }
       },
       "additionalProperties": false
+    },
+    "ciphers" : {
+      "title": "Cipher Algorithm Configuration",
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "title": "ciphering algorithm",
+          "description": "One of the values: noop, aes, xchacha20-poly1305",
+          "type": "string",
+          "default": "noop",
+          "enum": [
+            "noop",
+            "aes",
+            "xchacha20-poly1305"
+          ]
+        }
+      }
     },
     "cookies": {
       "type": "object",
@@ -1924,6 +2049,36 @@
         "required": [
           "courier"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "ciphers" : {
+            "properties": {
+              "algorithm": {
+                "oneOf": [
+                  {
+                    "const": "aes"
+                  },
+                  {
+                    "const": "xchacha20-poly1305"
+                  }
+                ]
+              }
+            },
+            "required": ["algorithm"]
+          }
+        },
+        "required": ["ciphers"]
+      },
+      "then": {
+        "required": ["secrets"],
+        "properties": {
+          "secrets": {
+            "required": ["cipher"]
+          }
+        }
       }
     }
   ],

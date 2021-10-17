@@ -56,7 +56,7 @@ needs users. Therefore, we need:
 and of course:
 
 - A dashboard that shows
-  `Hello {{ traits.name.first }} {{ traits.name.last }}}!` which is only visible
+  `Hello {{ traits.name.first }} {{ traits.name.last }}!` which is only visible
   when the user is signed in.
 
 ## Setup
@@ -230,9 +230,8 @@ Here's a play-by-play of what happened:
    Kratos' browser API requires a `<flow_id>` in order to log you in. It looked
    for this ID in the URL as a query parameter but couldn't find it.
 3. `/auth/login` redirected you to
-   `https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser`,
-   which is one of Ory Kratos' APIs used for logging in browser-based
-   applications.
+   `http://127.0.0.1:4434/self-service/login/browser`, which is one of Ory Kratos'
+   APIs used for logging in browser-based applications.
 4. Kratos handled `/self-service/login/browser` which created and persisted a
    new flow with `csrf_token`. Kratos would check no session exists, redirected
    the browser to `/auth/login?flow=<flow_id>`. If session exists already, the
@@ -253,23 +252,24 @@ not work!
 
 :::
 
-We can use `curl` to see what Ory Kratos responds with. Try visiting
-`http://127.0.0.1:4455/auth/login`, copying the generated `<flow_id>`, and
-making the request yourself:
+We can use `curl` to get an example of the payload that Ory Kratos responds
+with. `GET` a valid `<flow_id>` and make a request to `/self-service/login/`:
 
 ```shell-session
-$ # curl -s "http://127.0.0.1:4434/self-service/login/flows?id=07016811-917d-4788-bb9c-fc297897af6c" \
-$ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
-  | jq
-
+$ flowId=$(curl -s -X GET \
+    -H "Accept: application/json" \
+    http://127.0.0.1:4433/self-service/login/api | jq -r '.id')
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    "http://127.0.0.1:4433/self-service/login/flows?id=$flowId" | jq
 {
-  "id": "07016811-917d-4788-bb9c-fc297897af6c",
-  "type": "browser",
-  "expires_at": "2021-04-28T08:37:53.924337873Z",
-  "issued_at": "2021-04-28T08:27:53.924337873Z",
-  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login/browser",
+  "id": "5b299430-0e68-441f-b1c5-a83657bdb25f",
+  "type": "api",
+  "expires_at": "2021-09-22T12:44:41.2436371Z",
+  "issued_at": "2021-09-22T12:34:41.2436371Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/api",
   "ui": {
-    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/login?flow=07016811-917d-4788-bb9c-fc297897af6c",
+    "action": "http://127.0.0.1:4433/self-service/login?flow=5b299430-0e68-441f-b1c5-a83657bdb25f",
     "method": "POST",
     "nodes": [
       {
@@ -278,11 +278,11 @@ $ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
         "attributes": {
           "name": "csrf_token",
           "type": "hidden",
-          "value": "IuiHo8fajl6Nwi2CfR33bmC7ZI+geYY44oinK/npkS9gaeV6DlkzS0voYZuyGawsCruvlawFl/pY6/Ph6d9JVg==",
+          "value": "",
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {}
       },
       {
@@ -295,7 +295,7 @@ $ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070004,
@@ -313,7 +313,7 @@ $ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070001,
@@ -331,7 +331,7 @@ $ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
           "value": "password",
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1010001,
@@ -343,6 +343,8 @@ $ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
       }
     ]
   },
+  "created_at": "2021-09-22T12:34:41.244707Z",
+  "updated_at": "2021-09-22T12:34:41.244707Z",
   "forced": false
 }
 ```
@@ -360,26 +362,26 @@ The network trace should look familiar by now:
 
 ![Registration with network trace screen of your secured app](images/quickstart/secureapp-registration-ntrace.png)
 
-If we try to sign up using a password like `123456`, Krato's password policy
-will complain:
-
-![Registration with network trace screen of your secured app](images/quickstart/secureapp-registration-pwpolicy.png)
-
-The error message is coming directly from Ory Kratos' Admin API:
+To get an example of the payload for a registration flow, we can use the same
+`curl` request as above, now to the `self-service/registration` endpoint.
 
 ```shell script
-# curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/flows?id=f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c" \
-$ curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/flows?id=<flow_id>" \
-  | jq
+$ flowId=$(curl -s -X GET \
+    -H "Accept: application/json" \
+    http://127.0.0.1:4433/self-service/registration/api | jq -r '.id')
+
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    "http://127.0.0.1:4433/self-service/registration/flows?id=$flowId" | jq
 
 {
-  "id": "f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c",
-  "type": "browser",
-  "expires_at": "2021-04-28T08:54:12.951178972Z",
-  "issued_at": "2021-04-28T08:44:12.951178972Z",
-  "request_url": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration/browser",
+  "id": "4d1d11c8-12f0-4d29-8801-795c5072ed7a",
+  "type": "api",
+  "expires_at": "2021-09-22T18:10:11.0677811Z",
+  "issued_at": "2021-09-22T18:00:11.0677811Z",
+  "request_url": "http://127.0.0.1:4433/self-service/registration/api",
   "ui": {
-    "action": "https://playground.projects.oryapis.com/api/kratos/public/self-service/registration?flow=f0c0830a-f5b2-4c2d-a37f-2e70152a4f7c",
+    "action": "http://127.0.0.1:4433/self-service/registration?flow=4d1d11c8-12f0-4d29-8801-795c5072ed7a",
     "method": "POST",
     "nodes": [
       {
@@ -388,11 +390,11 @@ $ curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-servic
         "attributes": {
           "name": "csrf_token",
           "type": "hidden",
-          "value": "408SIAOvpKxW/WbcYfKue26MlLTMbON7T7JT1yhiSemhznD5yiwZuZDXKsWu9vU5BIxfrsAQ8rn10QcdOFSRkA==",
+          "value": "",
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {}
       },
       {
@@ -403,7 +405,7 @@ $ curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-servic
           "type": "email",
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070002,
@@ -421,7 +423,7 @@ $ curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-servic
           "required": true,
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070001,
@@ -438,7 +440,7 @@ $ curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-servic
           "type": "text",
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070002,
@@ -455,7 +457,7 @@ $ curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-servic
           "type": "text",
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1070002,
@@ -473,7 +475,7 @@ $ curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-servic
           "value": "password",
           "disabled": false
         },
-        "messages": null,
+        "messages": [],
         "meta": {
           "label": {
             "id": 1040001,
@@ -487,6 +489,11 @@ $ curl -s "https://playground.projects.oryapis.com/api/kratos/public/self-servic
   }
 }
 ```
+
+If we try to sign up using a password like `123456`, Krato's password policy
+will complain:
+
+![Registration with network trace screen of your secured app](images/quickstart/secureapp-registration-pwpolicy.png)
 
 Setting a password that doesn't violate these policies, we will be immediately
 redirected to the dashboard:
@@ -574,9 +581,8 @@ or else Kratos will use fallback URLs.
 
 :::
 
-In the future, this guide will support more use cases such as:
-
-- GitHub to login and registration
+This is just scratching the surface of Ory Kratos, see [Next Steps](#next-steps)
+for pointers how to continue.
 
 ## Cleaning Up Docker
 
@@ -590,10 +596,20 @@ docker-compose -f quickstart.yml rm -fsv
 
 ## Next Steps
 
-Here is some information if you want to modify the quickstart to test Ory Kratos
-in with different settings.
+Here is some information should you want to modify the quickstart:
 
-**Using different databases**
+**Social Login**
+
+[Step-by-step guides](http://localhost:3000/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin)
+to add sign up and login with popular OIDC providers to the Ory Kratos Quickstart, for example:
+
+- [GitHub](http://localhost:3000/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin#github)
+- [Google](http://localhost:3000/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin#google)
+- [Facebook](http://localhost:3000/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin#facebook)  
+  and
+  [many more](http://localhost:3000/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin).
+
+**Use a different database**
 
 If you want to run the quickstart with PostgreSQL, run the following
 docker-compose:
@@ -606,7 +622,7 @@ docker-compose:
 If you want to run the quickstart with MySQL, run the following docker-compose:
 `docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-mysql.yml up --build --force-recreate`
 
-**Changing ports**
+**Change ports**
 
 If you want to change ports for the SelfService-UI, you need to change them in
 `quickstart.yml` as well as in the
@@ -620,17 +636,11 @@ UI or the Mailslurper.
 
 **Hooks**
 
-If you want to change the redirects happening after registration,login or a
-settings change, take a look at this document: [Hooks](self-service/hooks.mdx).
+To change the redirects happening after registration,login or a settings change,
+take a look at this document: [Hooks](self-service/hooks.mdx).
 
 If you delete the `session` hook from `kratos.yml`, the user will _not_ be
 immediately signed in after registration.
-
-**OIDC**
-
-If you want to test Ory Kratos integration with different OIDC providers, you
-will find more information in this document:
-[OIDC](guides/sign-in-with-github-google-facebook-linkedin.mdx)
 
 ### Quickstart Configuration
 

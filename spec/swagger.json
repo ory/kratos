@@ -217,6 +217,15 @@
             "name": "id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "DeclassifyCredentials will declassify one or more identity's credentials\n\nCurrently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,\nRefresh and (optionally) OpenID Connect ID Token.",
+            "name": "include_credential",
+            "in": "query"
           }
         ],
         "responses": {
@@ -358,6 +367,63 @@
         }
       }
     },
+    "/identities/{id}/sessions": {
+      "delete": {
+        "security": [
+          {
+            "oryAccessToken": []
+          }
+        ],
+        "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha1"
+        ],
+        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
+        "operationId": "adminDeleteIdentitySessions",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID is the identity's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "401": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "404": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
     "/metrics/prometheus": {
       "get": {
         "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4434\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
@@ -420,6 +486,57 @@
             "description": "jsonError",
             "schema": {
               "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
+    "/schemas": {
+      "get": {
+        "description": "Get all Identity Schemas",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "operationId": "listIdentitySchemas",
+        "parameters": [
+          {
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 100,
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "description": "Pagination Page",
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "identitySchemas",
+            "schema": {
+              "$ref": "#/definitions/identitySchemas"
             }
           },
           "500": {
@@ -1849,6 +1966,9 @@
           "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
           "type": "string"
         },
+        "state": {
+          "$ref": "#/definitions/identityState"
+        },
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
           "type": "object"
@@ -2038,6 +2158,26 @@
         "$ref": "#/definitions/identity"
       }
     },
+    "identitySchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The ID of the Identity JSON Schema",
+          "type": "string"
+        },
+        "schema": {
+          "description": "The actual Identity JSON Schema",
+          "type": "object"
+        }
+      }
+    },
+    "identitySchemas": {
+      "description": "Raw identity Schema list",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/identitySchema"
+      }
+    },
     "identityState": {
       "description": "The state can either be `active` or `inactive`.",
       "type": "string",
@@ -2169,11 +2309,16 @@
     "selfServiceLogoutUrl": {
       "type": "object",
       "required": [
-        "logout_url"
+        "logout_url",
+        "logout_token"
       ],
       "properties": {
+        "logout_token": {
+          "description": "LogoutToken can be used to perform logout using AJAX.",
+          "type": "string"
+        },
         "logout_url": {
-          "description": "LogoutURL can be opened in a browser to\n\nformat: uri",
+          "description": "LogoutURL can be opened in a browser to sign the user out.\n\nformat: uri",
           "type": "string"
         }
       }
@@ -2451,7 +2596,7 @@
       "description": "SubmitSelfServiceLoginFlowWithOidcMethodBody is used to decode the login form payload\nwhen using the oidc method.",
       "type": "object",
       "required": [
-        "traits",
+        "provider",
         "method"
       ],
       "properties": {
@@ -2463,7 +2608,7 @@
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
         },
-        "traits": {
+        "provider": {
           "description": "The provider to register with",
           "type": "string"
         }
@@ -2540,7 +2685,7 @@
       "description": "SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload\nwhen using the oidc method.",
       "type": "object",
       "required": [
-        "traits",
+        "provider",
         "method"
       ],
       "properties": {
@@ -2552,7 +2697,7 @@
           "description": "Method to use\n\nThis field must be set to `oidc` when using the oidc method.",
           "type": "string"
         },
-        "traits": {
+        "provider": {
           "description": "The provider to register with",
           "type": "string"
         }
