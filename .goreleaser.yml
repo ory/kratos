@@ -9,6 +9,7 @@ before:
   hooks:
     - go mod download
     - go mod tidy
+    - go install github.com/CycloneDX/cyclonedx-gomod@v1.0.0
 
 builds:
   -
@@ -28,7 +29,12 @@ builds:
       - amd64
     goos:
       - darwin
-
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+          env:
+            - GOARCH={{ .Arch }}
+            - GOOS={{ .Os }}
   -
     id: kratos-sqlite-linux
     flags:
@@ -43,6 +49,12 @@ builds:
       - amd64
     goos:
       - linux
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+          env:
+            - GOARCH={{ .Arch }}
+            - GOOS={{ .Os }}
   -
     id: kratos-sqlite-linux-libmusl
     flags:
@@ -58,6 +70,12 @@ builds:
       - amd64
     goos:
       - linux
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+          env:
+            - GOARCH={{ .Arch }}
+            - GOOS={{ .Os }}
   -
     id: kratos-sqlite-windows
     flags:
@@ -77,6 +95,12 @@ builds:
       - amd64
     goos:
       - windows
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+          env:
+            - GOARCH={{ .Arch }}
+            - GOOS={{ .Os }}
 
   -
     id: kratos
@@ -98,6 +122,12 @@ builds:
       - linux
       - windows
       - darwin
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+          env:
+            - GOARCH={{ .Arch }}
+            - GOOS={{ .Os }}
 
 archives:
   - id: kratos-sqlite
@@ -220,3 +250,5 @@ release:
     - kratos-sqlite
     - kratos-sqlite-libmusl
     - kratos
+  extra_files:
+    - glob: ./*.bom.json
