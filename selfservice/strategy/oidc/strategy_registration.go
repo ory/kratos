@@ -69,8 +69,8 @@ type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
 	Method string `json:"method"`
 }
 
-func (s *Strategy) decodeRegistration(p *SubmitSelfServiceRegistrationFlowWithOidcMethodBody, r *http.Request) error {
-	raw, err := sjson.SetBytes(registrationSchema,
+func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
+	raw, err := sjson.SetBytes(linkSchema,
 		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
@@ -86,7 +86,8 @@ func (s *Strategy) decodeRegistration(p *SubmitSelfServiceRegistrationFlowWithOi
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderUseQueryAndBody(),
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
-		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
+		decoderx.HTTPDecoderJSONFollowsFormFormat(),
+	); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -95,7 +96,7 @@ func (s *Strategy) decodeRegistration(p *SubmitSelfServiceRegistrationFlowWithOi
 
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
 	var p SubmitSelfServiceRegistrationFlowWithOidcMethodBody
-	if err := s.decodeRegistration(&p, r); err != nil {
+	if err := s.newLinkDecoder(&p, r); err != nil {
 		return s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 

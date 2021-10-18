@@ -8,8 +8,6 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/ory/x/decoderx"
-
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/x/sqlcon"
@@ -70,24 +68,6 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	Method string `json:"method"`
 }
 
-func (s *Strategy) decodeLogin(p *SubmitSelfServiceLoginFlowWithOidcMethodBody, r *http.Request) error {
-	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(loginSchema)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if err := s.dec.Decode(r, &p, compiler,
-		decoderx.HTTPKeepRequestBody(true),
-		decoderx.HTTPDecoderUseQueryAndBody(),
-		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
-		decoderx.HTTPDecoderSetValidatePayloads(false),
-		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
-}
-
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
@@ -146,7 +126,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	var p SubmitSelfServiceLoginFlowWithOidcMethodBody
-	if err := s.decodeLogin(&p, r); err != nil {
+	if err := s.newLinkDecoder(&p, r); err != nil {
 		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 
