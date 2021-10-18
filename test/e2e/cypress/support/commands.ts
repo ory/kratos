@@ -63,6 +63,13 @@ Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
   })
 })
 
+Cypress.Commands.add('setIdentitySchema', (schema: string) => {
+  updateConfigFile((config) => {
+    config.identity.default_schema_url = schema
+    return config
+  })
+})
+
 Cypress.Commands.add('longPrivilegedSessionTime', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.privileged_session_max_age = '5m'

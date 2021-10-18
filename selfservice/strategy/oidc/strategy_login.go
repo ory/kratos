@@ -66,6 +66,9 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	//
 	// required: true
 	Method string `json:"method"`
+
+	// The identity traits. This is a placeholder for the registration flow.
+	Traits json.RawMessage `json:"traits"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
@@ -163,7 +166,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
 			FlowID: f.ID.String(),
-			Traits: json.RawMessage("{}"),
+			Traits: p.Traits,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)

@@ -422,6 +422,12 @@ declare global {
        * @param opts
        */
       loginMobile(opts: { email: string; password: string }): Chainable<void>
+
+      /**
+       * Set the identity schema
+       * @param schema
+       */
+      setIdentitySchema(schema: string): Chainable<void>
     }
   }
 }

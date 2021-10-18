@@ -26,6 +26,9 @@ context('Social Sign Up Successes', () => {
       beforeEach(() => {
         cy.clearAllCookies()
         cy.visit(registration)
+        cy.setIdentitySchema(
+          'file://test/e2e/profiles/oidc/identity.traits.schema.json'
+        )
       })
 
       const shouldSession = (email) => (session) => {
@@ -83,6 +86,8 @@ context('Social Sign Up Successes', () => {
 
         cy.triggerOidc()
 
+        cy.location('pathname').should('not.contain', '/consent')
+
         cy.getSession().should((session) => {
           shouldSession(email)(session)
           expect(session.identity.traits.consent).to.equal(true)
@@ -109,6 +114,10 @@ context('Social Sign Up Successes', () => {
       })
 
       it('should be able to convert a sign in flow to a sign up flow', () => {
+        cy.setIdentitySchema(
+          'file://test/e2e/profiles/oidc/identity-required.traits.schema.json'
+        )
+
         const email = gen.email()
         cy.visit(login)
         cy.triggerOidc()
@@ -132,11 +141,16 @@ context('Social Sign Up Successes', () => {
           'contain.text',
           'length must be >= 10'
         )
+        cy.get('[name="traits.requirednested"]').should('not.exist')
+        cy.get('[name="traits.requirednested.a"]').siblings('label').click()
+        cy.get('[name="traits.consent"]').siblings('label').click()
         cy.get('[name="traits.website"]')
           .should('have.value', 'http://s')
           .clear()
           .type(website)
         cy.triggerOidc()
+
+        cy.location('pathname').should('not.contain', '/registration')
 
         cy.getSession().should(shouldSession(email))
       })
