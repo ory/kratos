@@ -7,18 +7,23 @@ context('Mobile Profile', () => {
     })
 
     describe('password', () => {
-      const email = gen.email()
-      const password = gen.password()
+      let email = gen.email()
+      let password = gen.password()
 
       before(() => {
+        cy.clearAllCookies()
+      })
+
+      beforeEach(() => {
+        email = gen.email()
+        password = gen.password()
+
         cy.registerApi({
           email,
           password,
           fields: { 'traits.website': website }
         })
-      })
 
-      beforeEach(() => {
         cy.loginMobile({ email, password })
         cy.visit(MOBILE_URL + '/Settings')
       })
