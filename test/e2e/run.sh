@@ -154,7 +154,8 @@ run() {
   if [ -z ${REACT_UI_PATH+x} ]; then
     (
       cd "$react_ui_dir"
-      PORT=4458 NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run build && npm run start --port 4458 \
+      NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run build
+      NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run start -- --port 4458 \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   else
