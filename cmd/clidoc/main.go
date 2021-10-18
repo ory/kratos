@@ -22,8 +22,8 @@ import (
 	"github.com/ory/x/clidoc"
 )
 
-var aSecondAgo = time.Now().Add(-time.Second)
-var inAMinute = time.Now().Add(time.Minute)
+var aSecondAgo = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(-time.Second)
+var inAMinute = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(time.Minute)
 
 var messages = map[string]*text.Message{
 	"NewInfoNodeLabelVerifyOTP":                  text.NewInfoNodeLabelVerifyOTP(),
@@ -105,6 +105,13 @@ var messages = map[string]*text.Message{
 }
 
 func main() {
+	text.Now = func() time.Time {
+		return inAMinute
+	}
+	text.Until = func(t time.Time) time.Duration {
+		return time.Second
+	}
+
 	if err := clidoc.Generate(cmd.NewRootCmd(), os.Args[1:]); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate CLI docs: %+v", err)
 		os.Exit(1)
@@ -145,6 +152,9 @@ func writeMessages(path string) error {
 	}
 
 	sort.Slice(toSort, func(i, j int) bool {
+		if toSort[i].ID == toSort[j].ID {
+			return toSort[i].Text < toSort[j].Text
+		}
 		return toSort[i].ID < toSort[j].ID
 	})
 
