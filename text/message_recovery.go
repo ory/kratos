@@ -26,13 +26,13 @@ func NewErrorValidationRecoveryFlowExpired(ago time.Duration) *Message {
 		Text: fmt.Sprintf("The recovery flow expired %.2f minutes ago, please try again.", ago.Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
-			"expired_at": time.Now().Add(ago),
+			"expired_at": Now().UTC().Add(ago),
 		}),
 	}
 }
 
 func NewRecoverySuccessful(privilegedSessionExpiresAt time.Time) *Message {
-	hasLeft := time.Until(privilegedSessionExpiresAt)
+	hasLeft := Until(privilegedSessionExpiresAt)
 	return &Message{
 		ID:   InfoSelfServiceRecoverySuccessful,
 		Type: Info,
