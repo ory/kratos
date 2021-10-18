@@ -45,11 +45,7 @@ context('Mobile Profile', () => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[data-testid="field/method/totp"]').click()
-
-        cy.get('*[data-testid="form-messages"]').should(
-          'contain.text',
-          'Your changes have been saved!'
-        )
+        cy.expectSettingsSaved()
 
         // Form should look different now
         cy.get('*[data-testid="field/totp_secret_key/text"]').should(

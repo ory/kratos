@@ -34,6 +34,7 @@ context('Mobile Profile', () => {
           cy.wrap($e).type(authenticator.generate(totpSecret))
         })
         cy.get('*[data-testid="field/method/totp"]').click()
+        cy.expectSettingsSaved()
 
         // Set up backup code
         cy.get('*[data-testid="field/lookup_secret_regenerate/true"]').click()
@@ -42,6 +43,7 @@ context('Mobile Profile', () => {
           recoveryCodes = $e.text().trim().split(', ')
         })
         cy.get('*[data-testid="field/lookup_secret_confirm/true"]').click()
+        cy.expectSettingsSaved()
 
         // Lets sign in with TOTP
         cy.visit(MOBILE_URL + '/Login?aal=aal2&refresh=true')
