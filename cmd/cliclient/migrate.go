@@ -29,7 +29,7 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 	if flagx.MustGetBool(cmd, "read-from-env") {
 		d = driver.NewWithoutInit(
 			cmd.Context(),
-			cmd,
+			cmd.ErrOrStderr(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation())
 		if len(d.Config(cmd.Context()).DSN()) == 0 {
@@ -47,7 +47,7 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 		}
 		d = driver.NewWithoutInit(
 			cmd.Context(),
-			cmd,
+			cmd.ErrOrStderr(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation(),
 			configx.WithValue(config.ViperKeyDSN, args[0]))

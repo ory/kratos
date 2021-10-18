@@ -20,8 +20,6 @@ import (
 
 	"github.com/duo-labs/webauthn/webauthn"
 
-	"github.com/spf13/cobra"
-
 	"github.com/ory/x/jsonschemax"
 
 	"github.com/ory/x/watcherx"
@@ -202,7 +200,7 @@ type (
 		l              *logrusx.Logger
 		p              *configx.Provider
 		identitySchema *jsonschema.Schema
-		cmd            *cobra.Command
+		stdOutOrErr    io.Writer
 	}
 
 	Provider interface {
@@ -256,13 +254,13 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-func MustNew(t *testing.T, l *logrusx.Logger, cmd *cobra.Command, opts ...configx.OptionModifier) *Config {
-	p, err := New(context.TODO(), l, cmd, opts...)
+func MustNew(t *testing.T, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) *Config {
+	p, err := New(context.TODO(), l, stdOutOrErr, opts...)
 	require.NoError(t, err)
 	return p
 }
 
-func New(ctx context.Context, l *logrusx.Logger, cmd *cobra.Command, opts ...configx.OptionModifier) (*Config, error) {
+func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) (*Config, error) {
 	var c *Config
 
 	opts = append([]configx.OptionModifier{
@@ -290,7 +288,7 @@ func New(ctx context.Context, l *logrusx.Logger, cmd *cobra.Command, opts ...con
 
 	l.UseConfig(p)
 
-	c = &Config{l: l, p: p, cmd: cmd}
+	c = &Config{l: l, p: p, stdOutOrErr: stdOutOrErr}
 
 	if !p.SkipValidation() {
 		if err := c.validateIdentitySchemas(); err != nil {
@@ -344,9 +342,8 @@ func (p *Config) validateIdentitySchemas() error {
 }
 
 func (p *Config) formatJsonErrors(schema []byte, err error) {
-	_, _ = fmt.Fprintln(p.cmd.ErrOrStderr(), "")
-
-	jsonschemax.FormatValidationErrorForCLI(p.cmd.ErrOrStderr(), schema, err)
+	_, _ = fmt.Fprintln(p.stdOutOrErr, "")
+	jsonschemax.FormatValidationErrorForCLI(p.stdOutOrErr, schema, err)
 }
 
 func (p *Config) Source() *configx.Provider {

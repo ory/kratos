@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/cobra"
-
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"
 
@@ -119,7 +117,7 @@ func TestMigrations(t *testing.T) {
 			t.Run("suite=fixtures", func(t *testing.T) {
 				d := driver.New(
 					context.Background(),
-					&cobra.Command{},
+					os.Stderr,
 					configx.WithValues(map[string]interface{}{
 						config.ViperKeyDSN:                      url,
 						config.ViperKeyPublicBaseURL:            "https://www.ory.sh/",
