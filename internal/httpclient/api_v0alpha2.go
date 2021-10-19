@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 )
 
@@ -1593,9 +1594,15 @@ func (a *V0alpha2ApiService) AdminDeleteIdentitySessionsExecute(r V0alpha2ApiApi
 }
 
 type V0alpha2ApiApiAdminGetIdentityRequest struct {
-	ctx        context.Context
-	ApiService V0alpha2Api
-	id         string
+	ctx               context.Context
+	ApiService        V0alpha2Api
+	id                string
+	includeCredential *[]string
+}
+
+func (r V0alpha2ApiApiAdminGetIdentityRequest) IncludeCredential(includeCredential []string) V0alpha2ApiApiAdminGetIdentityRequest {
+	r.includeCredential = &includeCredential
+	return r
 }
 
 func (r V0alpha2ApiApiAdminGetIdentityRequest) Execute() (*Identity, *http.Response, error) {
@@ -1643,6 +1650,17 @@ func (a *V0alpha2ApiService) AdminGetIdentityExecute(r V0alpha2ApiApiAdminGetIde
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.includeCredential != nil {
+		t := *r.includeCredential
+		if reflect.TypeOf(t).Kind() == reflect.Slice {
+			s := reflect.ValueOf(t)
+			for i := 0; i < s.Len(); i++ {
+				localVarQueryParams.Add("include_credential", parameterToString(s.Index(i), "multi"))
+			}
+		} else {
+			localVarQueryParams.Add("include_credential", parameterToString(t, "multi"))
+		}
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 

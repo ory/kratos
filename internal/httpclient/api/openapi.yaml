@@ -240,6 +240,20 @@ paths:
         schema:
           type: string
         style: simple
+      - description: |-
+          DeclassifyCredentials will declassify one or more identity's credentials
+
+          Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,
+          Refresh and (optionally) OpenID Connect ID Token.
+        explode: true
+        in: query
+        name: include_credential
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
       responses:
         "200":
           content:
@@ -2904,8 +2918,8 @@ components:
             text: text
             type: type
         updated_at: 2000-01-23T04:56:07.000+00:00
-        forced: true
         created_at: 2000-01-23T04:56:07.000+00:00
+        refresh: true
         return_to: return_to
         id: id
         type: type
@@ -2924,9 +2938,6 @@ components:
             a new flow has to be initiated.
           format: date-time
           type: string
-        forced:
-          description: Refresh stores whether this login flow should enforce re-authentication.
-          type: boolean
         id:
           format: uuid4
           type: string
@@ -2934,6 +2945,9 @@ components:
           description: IssuedAt is the time (UTC) when the flow started.
           format: date-time
           type: string
+        refresh:
+          description: Refresh stores whether this login flow should enforce re-authentication.
+          type: boolean
         request_url:
           description: |-
             RequestURL is the initial URL that was requested from Ory Kratos. It can be used
@@ -3692,6 +3706,10 @@ components:
         provider:
           description: The provider to register with
           type: string
+        traits:
+          description: The identity traits. This is a placeholder for the registration
+            flow.
+          type: object
       required:
       - method
       - provider
