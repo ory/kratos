@@ -8,11 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type TestStruct struct {
-	TestString string           `json:"string"`
-	TestRaw    *json.RawMessage `json:"raw"`
-}
-
 func TestStructToMap(t *testing.T) {
 	m := json.RawMessage(`{"string": "123"}`)
 	r, err := StructToMap(struct {
