@@ -632,6 +632,16 @@
         }
       }
     },
+    "featureRequiredAal": {
+      "title": "Required Authenticator Assurance Level",
+      "description": "Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.",
+      "type": "string",
+      "enum": [
+        "aal1",
+        "highest_available"
+      ],
+      "default": "highest_available"
+    },
     "selfServiceAfterSettings": {
       "type": "object",
       "additionalProperties": false,
@@ -839,6 +849,9 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "required_aal": {
+                  "$ref": "#/definitions/featureRequiredAal"
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterSettings"
@@ -1105,6 +1118,117 @@
                   },
                   "additionalProperties": false
                 }
+              }
+            },
+            "totp": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the TOTP method",
+                  "default": false
+                },
+                "config": {
+                  "type": "object",
+                  "title": "TOTP Configuration",
+                  "properties": {
+                    "issuer": {
+                      "title": "TOTP Issuer",
+                      "description": "The issuer (e.g. a domain name) will be shown in the TOTP app (e.g. Google Authenticator). It helps the user differentiate between different codes.",
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "lookup_secret": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the lookup secret method",
+                  "default": false
+                }
+              }
+            },
+            "webauthn": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the WebAuthn method",
+                  "default": false
+                },
+                "config": {
+                  "type": "object",
+                  "title": "WebAuthn Configuration",
+                  "properties": {
+                    "rp": {
+                      "title": "Relying Party (RP) Config",
+                      "required": [
+                        "id",
+                        "display_name"
+                      ],
+                      "properties": {
+                        "display_name": {
+                          "type": "string",
+                          "title": "Relying Party Display Name",
+                          "description": "An name to help the user identify this RP.",
+                          "examples": [
+                            "Ory Foundation"
+                          ]
+                        },
+                        "id": {
+                          "type": "string",
+                          "title": "Relying Party Identifier",
+                          "description": "The id must be a subset of the domain currently in the browser.",
+                          "examples": [
+                            "ory.sh"
+                          ]
+                        },
+                        "origin": {
+                          "type": "string",
+                          "title": "Relying Party Origin",
+                          "description": "An explicit RP origin. If left empty, this defaults to `id`.",
+                          "format": "uri",
+                          "examples": [
+                            "https://www.ory.sh/login"
+                          ]
+                        },
+                        "icon": {
+                          "type": "string",
+                          "title": "Relying Party Icon",
+                          "description": "An icon to help the user identify this RP.",
+                          "format": "uri",
+                          "examples": [
+                            "https://www.ory.sh/an-icon.png"
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              },
+              "then": {
+                "required": [
+                  "config"
+                ]
               }
             },
             "oidc": {
@@ -1895,6 +2019,17 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "whoami": {
+          "title": "WhoAmI / ToSession Settings",
+          "description": "Control how the `/sessions/whoami` endpoint is behaving.",
+          "type": "object",
+          "properties": {
+            "required_aal": {
+              "$ref": "#/definitions/featureRequiredAal"
+            }
+          },
+          "additionalProperties": false
+        },
         "lifespan": {
           "title": "Session Lifespan",
           "description": "Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.",

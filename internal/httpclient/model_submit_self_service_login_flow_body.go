@@ -20,6 +20,7 @@ import (
 type SubmitSelfServiceLoginFlowBody struct {
 	SubmitSelfServiceLoginFlowWithOidcMethodBody     *SubmitSelfServiceLoginFlowWithOidcMethodBody
 	SubmitSelfServiceLoginFlowWithPasswordMethodBody *SubmitSelfServiceLoginFlowWithPasswordMethodBody
+	SubmitSelfServiceLoginFlowWithTotpMethodBody     *SubmitSelfServiceLoginFlowWithTotpMethodBody
 }
 
 // SubmitSelfServiceLoginFlowWithOidcMethodBodyAsSubmitSelfServiceLoginFlowBody is a convenience function that returns SubmitSelfServiceLoginFlowWithOidcMethodBody wrapped in SubmitSelfServiceLoginFlowBody
@@ -33,6 +34,13 @@ func SubmitSelfServiceLoginFlowWithOidcMethodBodyAsSubmitSelfServiceLoginFlowBod
 func SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(v *SubmitSelfServiceLoginFlowWithPasswordMethodBody) SubmitSelfServiceLoginFlowBody {
 	return SubmitSelfServiceLoginFlowBody{
 		SubmitSelfServiceLoginFlowWithPasswordMethodBody: v,
+	}
+}
+
+// SubmitSelfServiceLoginFlowWithTotpMethodBodyAsSubmitSelfServiceLoginFlowBody is a convenience function that returns SubmitSelfServiceLoginFlowWithTotpMethodBody wrapped in SubmitSelfServiceLoginFlowBody
+func SubmitSelfServiceLoginFlowWithTotpMethodBodyAsSubmitSelfServiceLoginFlowBody(v *SubmitSelfServiceLoginFlowWithTotpMethodBody) SubmitSelfServiceLoginFlowBody {
+	return SubmitSelfServiceLoginFlowBody{
+		SubmitSelfServiceLoginFlowWithTotpMethodBody: v,
 	}
 }
 
@@ -66,10 +74,24 @@ func (dst *SubmitSelfServiceLoginFlowBody) UnmarshalJSON(data []byte) error {
 		dst.SubmitSelfServiceLoginFlowWithPasswordMethodBody = nil
 	}
 
+	// try to unmarshal data into SubmitSelfServiceLoginFlowWithTotpMethodBody
+	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceLoginFlowWithTotpMethodBody)
+	if err == nil {
+		jsonSubmitSelfServiceLoginFlowWithTotpMethodBody, _ := json.Marshal(dst.SubmitSelfServiceLoginFlowWithTotpMethodBody)
+		if string(jsonSubmitSelfServiceLoginFlowWithTotpMethodBody) == "{}" { // empty struct
+			dst.SubmitSelfServiceLoginFlowWithTotpMethodBody = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.SubmitSelfServiceLoginFlowWithTotpMethodBody = nil
+	}
+
 	if match > 1 { // more than 1 match
 		// reset to nil
 		dst.SubmitSelfServiceLoginFlowWithOidcMethodBody = nil
 		dst.SubmitSelfServiceLoginFlowWithPasswordMethodBody = nil
+		dst.SubmitSelfServiceLoginFlowWithTotpMethodBody = nil
 
 		return fmt.Errorf("Data matches more than one schema in oneOf(SubmitSelfServiceLoginFlowBody)")
 	} else if match == 1 {
@@ -89,6 +111,10 @@ func (src SubmitSelfServiceLoginFlowBody) MarshalJSON() ([]byte, error) {
 		return json.Marshal(&src.SubmitSelfServiceLoginFlowWithPasswordMethodBody)
 	}
 
+	if src.SubmitSelfServiceLoginFlowWithTotpMethodBody != nil {
+		return json.Marshal(&src.SubmitSelfServiceLoginFlowWithTotpMethodBody)
+	}
+
 	return nil, nil // no data in oneOf schemas
 }
 
@@ -103,6 +129,10 @@ func (obj *SubmitSelfServiceLoginFlowBody) GetActualInstance() interface{} {
 
 	if obj.SubmitSelfServiceLoginFlowWithPasswordMethodBody != nil {
 		return obj.SubmitSelfServiceLoginFlowWithPasswordMethodBody
+	}
+
+	if obj.SubmitSelfServiceLoginFlowWithTotpMethodBody != nil {
+		return obj.SubmitSelfServiceLoginFlowWithTotpMethodBody
 	}
 
 	// all schemas are nil

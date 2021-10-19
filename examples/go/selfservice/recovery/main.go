@@ -17,7 +17,7 @@ func performRecovery(email string) *ory.SelfServiceRecoveryFlow {
 	ctx := context.Background()
 
 	// Initialize the flow
-	flow, res, err := client.V0alpha1Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(ctx).Execute()
+	flow, res, err := client.V0alpha2Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -25,7 +25,7 @@ func performRecovery(email string) *ory.SelfServiceRecoveryFlow {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	afterSubmit, res, err := client.V0alpha1Api.SubmitSelfServiceRecoveryFlow(ctx).Flow(flow.Id).
+	afterSubmit, res, err := client.V0alpha2Api.SubmitSelfServiceRecoveryFlow(ctx).Flow(flow.Id).
 		SubmitSelfServiceRecoveryFlowBody(ory.SubmitSelfServiceRecoveryFlowWithLinkMethodBodyAsSubmitSelfServiceRecoveryFlowBody(&ory.SubmitSelfServiceRecoveryFlowWithLinkMethodBody{
 			Email:  email,
 			Method: "link",

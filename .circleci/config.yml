@@ -10,6 +10,7 @@ orbs:
   golangci: ory/golangci@0.0.18
   prettier: ory/prettier@0.0.11
   go: circleci/go@1.5.0
+  browser-tools: circleci/browser-tools@1.2.1
   node: circleci/node@4.2.0
 
 jobs:
@@ -92,19 +93,22 @@ jobs:
           - MYSQL_ROOT_PASSWORD=test
       - image: oryd/mailslurper:latest-smtps
     steps:
+      - browser-tools/install-browser-tools
       - checkout
 
       - restore_cache:
           keys:
-            - v2-e2e-deps-{{ checksum "package-lock.json" }}
+            - v3-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
       - run: npm ci
+      - run: cd test/e2e; npm ci
       - run: sudo npm i -g expo-cli
       - save_cache:
-          key: v2-e2e-deps-{{ checksum "package-lock.json" }}
+          key: v3-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
           paths:
             - node_modules
             - ~/.cache # cypress
             - ~/.npm/node_modules # global npm
+            - test/e2e/node_modules # e2e npm
 
       - go/load-cache
       - go/mod-download
@@ -132,6 +136,11 @@ jobs:
             git clone https://github.com/ory/kratos-selfservice-ui-react-native.git --depth 1 --branch master "$rn_ui_dir"
             cd "$rn_ui_dir"
             npm i
+
+      - run:
+          description: "Unset DISPLAY - see https://github.com/cypress-io/cypress/issues/4034"
+          command: |
+            echo "unset DISPLAY" >> $BASH_ENV
 
       - run:
           description: Run sqlite e2e test

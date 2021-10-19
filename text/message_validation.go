@@ -16,6 +16,10 @@ const (
 	ErrorValidationTOTPVerifierWrong
 	ErrorValidationIdentifierMissing
 	ErrorValidationAddressNotVerified
+	ErrorValidationNoTOTPDevice
+	ErrorValidationLookupAlreadyUsed
+	ErrorValidationNoWebAuthnDevice
+	ErrorValidationNoLookup
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
@@ -94,7 +98,25 @@ func NewErrorValidationDuplicateCredentials() *Message {
 func NewErrorValidationTOTPVerifierWrong() *Message {
 	return &Message{
 		ID:      ErrorValidationTOTPVerifierWrong,
-		Text:    "The provided authentication code is invalid.",
+		Text:    "The provided authentication code is invalid, please try again.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationLookupAlreadyUsed() *Message {
+	return &Message{
+		ID:      ErrorValidationLookupAlreadyUsed,
+		Text:    "This backup recovery code has already been used.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationLookupInvalid() *Message {
+	return &Message{
+		ID:      ErrorValidationLookupAlreadyUsed,
+		Text:    "The backup recovery code is not valid.",
 		Type:    Error,
 		Context: context(nil),
 	}
@@ -113,5 +135,32 @@ func NewErrorValidationAddressNotVerified() *Message {
 		ID:   ErrorValidationAddressNotVerified,
 		Text: "Account not active yet. Did you forget to verify your email address?",
 		Type: Error,
+	}
+}
+
+func NewErrorValidationNoTOTPDevice() *Message {
+	return &Message{
+		ID:      ErrorValidationNoTOTPDevice,
+		Text:    "You have no TOTP device set up.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationNoLookup() *Message {
+	return &Message{
+		ID:      ErrorValidationNoLookup,
+		Text:    "You have no backup recovery codes set up.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationNoWebAuthnDevice() *Message {
+	return &Message{
+		ID:      ErrorValidationNoWebAuthnDevice,
+		Text:    "You have no WebAuthn device set up.",
+		Type:    Error,
+		Context: context(nil),
 	}
 }

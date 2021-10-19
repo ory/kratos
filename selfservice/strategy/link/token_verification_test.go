@@ -1,16 +1,12 @@
-package link
+package link_test
 
 import (
-	"context"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/spf13/cobra"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/configx"
-	"github.com/ory/x/logrusx"
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/strategy/link"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,8 +19,7 @@ import (
 )
 
 func TestVerificationToken(t *testing.T) {
-	conf, err := config.New(context.Background(), logrusx.New("", ""), &cobra.Command{}, configx.SkipValidation())
-	require.NoError(t, err)
+	conf, _ := internal.NewFastRegistryWithMocks(t)
 
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 	t.Run("func=NewSelfServiceVerificationToken", func(t *testing.T) {
@@ -34,7 +29,7 @@ func TestVerificationToken(t *testing.T) {
 
 			tokens := make([]string, 10)
 			for k := range tokens {
-				tokens[k] = NewSelfServiceVerificationToken(nil, f, time.Hour).Token
+				tokens[k] = link.NewSelfServiceVerificationToken(nil, f, time.Hour).Token
 			}
 
 			assert.Len(t, stringslice.Unique(tokens), len(tokens))
@@ -45,7 +40,7 @@ func TestVerificationToken(t *testing.T) {
 			f, err := verification.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
-			token := NewSelfServiceVerificationToken(nil, f, -time.Hour)
+			token := link.NewSelfServiceVerificationToken(nil, f, -time.Hour)
 			require.Error(t, token.Valid())
 			assert.EqualError(t, token.Valid(), f.Valid().Error())
 		})

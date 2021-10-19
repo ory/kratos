@@ -26,8 +26,10 @@ type SelfServiceVerificationFlow struct {
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt *time.Time `json:"issued_at,omitempty"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
-	RequestUrl *string                          `json:"request_url,omitempty"`
-	State      SelfServiceVerificationFlowState `json:"state"`
+	RequestUrl *string `json:"request_url,omitempty"`
+	// ReturnTo contains the requested return_to URL.
+	ReturnTo *string                          `json:"return_to,omitempty"`
+	State    SelfServiceVerificationFlowState `json:"state"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`
 	Ui   UiContainer `json:"ui"`
@@ -206,6 +208,38 @@ func (o *SelfServiceVerificationFlow) SetRequestUrl(v string) {
 	o.RequestUrl = &v
 }
 
+// GetReturnTo returns the ReturnTo field value if set, zero value otherwise.
+func (o *SelfServiceVerificationFlow) GetReturnTo() string {
+	if o == nil || o.ReturnTo == nil {
+		var ret string
+		return ret
+	}
+	return *o.ReturnTo
+}
+
+// GetReturnToOk returns a tuple with the ReturnTo field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceVerificationFlow) GetReturnToOk() (*string, bool) {
+	if o == nil || o.ReturnTo == nil {
+		return nil, false
+	}
+	return o.ReturnTo, true
+}
+
+// HasReturnTo returns a boolean if a field has been set.
+func (o *SelfServiceVerificationFlow) HasReturnTo() bool {
+	if o != nil && o.ReturnTo != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetReturnTo gets a reference to the given string and assigns it to the ReturnTo field.
+func (o *SelfServiceVerificationFlow) SetReturnTo(v string) {
+	o.ReturnTo = &v
+}
+
 // GetState returns the State field value
 func (o *SelfServiceVerificationFlow) GetState() SelfServiceVerificationFlowState {
 	if o == nil {
@@ -294,6 +328,9 @@ func (o SelfServiceVerificationFlow) MarshalJSON() ([]byte, error) {
 	}
 	if o.RequestUrl != nil {
 		toSerialize["request_url"] = o.RequestUrl
+	}
+	if o.ReturnTo != nil {
+		toSerialize["return_to"] = o.ReturnTo
 	}
 	if true {
 		toSerialize["state"] = o.State

@@ -99,7 +99,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject, website *string,
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(body)).Decode(&response))
 		require.NotNil(t, response.RedirectTo, "%s", body)
 
-		http.Redirect(w, r, response.RedirectTo, http.StatusFound)
+		http.Redirect(w, r, response.RedirectTo, http.StatusSeeOther)
 	}
 
 	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

@@ -62,7 +62,7 @@ type getSelfServiceError struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /self-service/errors v0alpha1 getSelfServiceError
+// swagger:route GET /self-service/errors v0alpha2 getSelfServiceError
 //
 // Get Self-Service Errors
 //

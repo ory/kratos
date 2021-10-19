@@ -1,6 +1,7 @@
 package oidc_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,6 +13,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/snapshotx"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/ioutilx"
 
@@ -57,7 +62,9 @@ func TestStrategy(t *testing.T) {
 	returnTS := newReturnTs(t, reg)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	ts, tsA := testhelpers.NewKratosServers(t)
+	routerP := x.NewRouterPublic()
+	routerA := x.NewRouterAdmin()
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 
 	viperSetProviderConfig(
 		t,
@@ -72,7 +79,6 @@ func TestStrategy(t *testing.T) {
 			Mapper:       "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
-	testhelpers.InitKratosServers(t, reg, ts, tsA)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
@@ -268,6 +274,29 @@ func TestStrategy(t *testing.T) {
 		}
 	})
 
+	t.Run("case=should fail because password can not handle AAL2", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration-aal.schema.json")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+		})
+		bc := testhelpers.NewDebugClient(t)
+		f := testhelpers.InitializeLoginFlowViaAPI(t, bc, ts, false)
+
+		update, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+		require.NoError(t, err)
+		update.RequestedAAL = identity.AuthenticatorAssuranceLevel2
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), update))
+
+		req, err := http.NewRequest("POST", f.Ui.Action, bytes.NewBufferString(`{"method":"oidc"}`))
+		require.NoError(t, err)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+
+		actual, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, routerP.Router, req)
+		assert.Contains(t, res.Request.URL.String(), ts.URL+login.RouteSubmitFlow)
+		assert.Equal(t, text.NewErrorValidationLoginNoStrategyFound().Text, gjson.GetBytes(actual, "ui.messages.0.text").String())
+	})
+
 	t.Run("case=should fail login because scope was not provided", func(t *testing.T) {
 		r := newLoginFlow(t, returnTS.URL, time.Minute)
 		action := afv(t, r.ID, "valid")
@@ -448,139 +477,21 @@ func TestStrategy(t *testing.T) {
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
-		sr := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
+		sr, err := registration.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
+		require.NoError(t, err)
 		require.NoError(t, reg.RegistrationStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "https://foo/self-service/registration?flow=86c92228-005a-4c44-8280-d1df266e59e8",
-  "method": "POST",
-  "nodes": [
-    {
-      "type": "input",
-      "group": "default",
-      "attributes": {
-        "name": "csrf_token",
-        "type": "hidden",
-        "value": "OWl2Yjl2enlvY3dkeXJ0bzgzcHpvZnZmaHgxeHQwczc=",
-        "required": true,
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {}
-    },
-    {
-      "type": "input",
-      "group": "oidc",
-      "attributes": {
-        "name": "provider",
-        "type": "submit",
-        "value": "valid",
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1040002,
-          "text": "Sign up with valid",
-          "type": "info",
-          "context": {
-            "provider": "valid"
-          }
-        }
-      }
-    },
-    {
-      "type": "input",
-      "group": "oidc",
-      "attributes": {
-        "name": "provider",
-        "type": "submit",
-        "value": "invalid-issuer",
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1040002,
-          "text": "Sign up with invalid-issuer",
-          "type": "info",
-          "context": {
-            "provider": "invalid-issuer"
-          }
-        }
-      }
-    }
-  ]
-}`), sr.UI, []string{"action", "nodes.0.attributes.value"})
+		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
-		sr := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
-		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
+		sr, err := login.NewFlow(conf, time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
+		require.NoError(t, err)
+		require.NoError(t, reg.LoginStrategies(context.Background()).MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, identity.AuthenticatorAssuranceLevel1, sr))
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(`{
-  "action": "https://foo/self-service/login?flow=117b721a-8b4a-4e0c-83d0-5879ffbd3608",
-  "method": "POST",
-  "nodes": [
-    {
-      "type": "input",
-      "group": "default",
-      "attributes": {
-        "name": "csrf_token",
-        "type": "hidden",
-        "value": "NzdjN3JkdGNzdXVkMGJmanZzZTRocHljenk4Z2Vwem8=",
-        "required": true,
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {}
-    },
-    {
-      "type": "input",
-      "group": "oidc",
-      "attributes": {
-        "name": "provider",
-        "type": "submit",
-        "value": "valid",
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1010002,
-          "text": "Sign in with valid",
-          "type": "info",
-          "context": {
-            "provider": "valid"
-          }
-        }
-      }
-    },
-    {
-      "type": "input",
-      "group": "oidc",
-      "attributes": {
-        "name": "provider",
-        "type": "submit",
-        "value": "invalid-issuer",
-        "disabled": false
-      },
-      "messages": [],
-      "meta": {
-        "label": {
-          "id": 1010002,
-          "text": "Sign in with invalid-issuer",
-          "type": "info",
-          "context": {
-            "provider": "invalid-issuer"
-          }
-        }
-      }
-    }
-  ]
-}`), sr.UI, []string{"action", "nodes.0.attributes.value"})
+		snapshotx.SnapshotTExcept(t, sr.UI, []string{"action", "nodes.0.attributes.value"})
 	})
 }
 

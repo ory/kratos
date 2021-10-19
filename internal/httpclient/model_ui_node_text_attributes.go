@@ -17,15 +17,20 @@ import (
 
 // UiNodeTextAttributes struct for UiNodeTextAttributes
 type UiNodeTextAttributes struct {
-	Text UiText `json:"text"`
+	// A unique identifier
+	Id       string `json:"id"`
+	NodeType string `json:"node_type"`
+	Text     UiText `json:"text"`
 }
 
 // NewUiNodeTextAttributes instantiates a new UiNodeTextAttributes object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeTextAttributes(text UiText) *UiNodeTextAttributes {
+func NewUiNodeTextAttributes(id string, nodeType string, text UiText) *UiNodeTextAttributes {
 	this := UiNodeTextAttributes{}
+	this.Id = id
+	this.NodeType = nodeType
 	this.Text = text
 	return &this
 }
@@ -36,6 +41,54 @@ func NewUiNodeTextAttributes(text UiText) *UiNodeTextAttributes {
 func NewUiNodeTextAttributesWithDefaults() *UiNodeTextAttributes {
 	this := UiNodeTextAttributes{}
 	return &this
+}
+
+// GetId returns the Id field value
+func (o *UiNodeTextAttributes) GetId() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Id
+}
+
+// GetIdOk returns a tuple with the Id field value
+// and a boolean to check if the value has been set.
+func (o *UiNodeTextAttributes) GetIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Id, true
+}
+
+// SetId sets field value
+func (o *UiNodeTextAttributes) SetId(v string) {
+	o.Id = v
+}
+
+// GetNodeType returns the NodeType field value
+func (o *UiNodeTextAttributes) GetNodeType() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.NodeType
+}
+
+// GetNodeTypeOk returns a tuple with the NodeType field value
+// and a boolean to check if the value has been set.
+func (o *UiNodeTextAttributes) GetNodeTypeOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.NodeType, true
+}
+
+// SetNodeType sets field value
+func (o *UiNodeTextAttributes) SetNodeType(v string) {
+	o.NodeType = v
 }
 
 // GetText returns the Text field value
@@ -64,6 +117,12 @@ func (o *UiNodeTextAttributes) SetText(v UiText) {
 
 func (o UiNodeTextAttributes) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if true {
+		toSerialize["id"] = o.Id
+	}
+	if true {
+		toSerialize["node_type"] = o.NodeType
+	}
 	if true {
 		toSerialize["text"] = o.Text
 	}

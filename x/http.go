@@ -104,7 +104,7 @@ func (ct *TransportWithHost) RoundTrip(req *http.Request) (*http.Response, error
 	return ct.RoundTripper.RoundTrip(req)
 }
 
-func AcceptToRedirectOrJson(
+func AcceptToRedirectOrJSON(
 	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string,
 ) {
 	switch httputil.NegotiateContentType(r, []string{
@@ -112,6 +112,11 @@ func AcceptToRedirectOrJson(
 		"application/json",
 	}, "text/html") {
 	case "application/json":
+		if err, ok := out.(error); ok {
+			writer.WriteError(w, r, err)
+			return
+		}
+
 		writer.Write(w, r, out)
 	case "text/html":
 		fallthrough

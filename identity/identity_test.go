@@ -29,6 +29,41 @@ func TestNewIdentity(t *testing.T) {
 	assert.True(t, i.IsActive())
 }
 
+func TestIdentityCredentials(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i.Credentials = nil
+
+	// Shouldn't error if map is nil
+	i.DeleteCredentialsType(CredentialsTypeTOTP)
+
+	expectedTOTP := Credentials{ID: x.NewUUID(), Type: CredentialsTypeTOTP}
+	i.SetCredentials(CredentialsTypeTOTP, expectedTOTP)
+	actual, found := i.GetCredentials(CredentialsTypeTOTP)
+	assert.True(t, found, "should set and find the credential if map was nil")
+	assert.Equal(t, &expectedTOTP, actual)
+
+	expectedPassword := Credentials{ID: x.NewUUID(), Type: CredentialsTypePassword}
+	i.SetCredentials(CredentialsTypePassword, expectedPassword)
+	actual, found = i.GetCredentials(CredentialsTypePassword)
+	assert.True(t, found, "should set and find the credential if map was not nil")
+	assert.Equal(t, &expectedPassword, actual)
+
+	expectedOIDC := Credentials{ID: x.NewUUID()}
+	i.SetCredentials(CredentialsTypeOIDC, expectedOIDC)
+	actual, found = i.GetCredentials(CredentialsTypeOIDC)
+	assert.True(t, found)
+	assert.Equal(t, expectedOIDC.ID, actual.ID)
+	assert.Equal(t, CredentialsTypeOIDC, actual.Type, "should set the type if we forgot to set it in the credentials struct")
+
+	i.DeleteCredentialsType(CredentialsTypePassword)
+	_, found = i.GetCredentials(CredentialsTypePassword)
+	assert.False(t, found, "should delete a credential properly")
+
+	actual, found = i.GetCredentials(CredentialsTypeTOTP)
+	assert.True(t, found, "but not alter other credentials")
+	assert.Equal(t, &expectedTOTP, actual)
+}
+
 func TestMarshalExcludesCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{

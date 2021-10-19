@@ -20,6 +20,9 @@ type (
 			Password struct {
 				Identifier bool `json:"identifier"`
 			} `json:"password"`
+			TOTP struct {
+				AccountName bool `json:"account_name"`
+			} `json:"totp"`
 		} `json:"credentials"`
 		Verification struct {
 			Via string `json:"via"`

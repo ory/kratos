@@ -23,6 +23,8 @@ type GenericError struct {
 	Debug *string `json:"debug,omitempty"`
 	// Further error details
 	Details map[string]interface{} `json:"details,omitempty"`
+	// The error ID  Useful when trying to identify various errors in application logic.
+	Id *string `json:"id,omitempty"`
 	// Error message  The error's message.
 	Message string `json:"message"`
 	// A human-readable reason for the error
@@ -145,6 +147,38 @@ func (o *GenericError) HasDetails() bool {
 // SetDetails gets a reference to the given map[string]interface{} and assigns it to the Details field.
 func (o *GenericError) SetDetails(v map[string]interface{}) {
 	o.Details = v
+}
+
+// GetId returns the Id field value if set, zero value otherwise.
+func (o *GenericError) GetId() string {
+	if o == nil || o.Id == nil {
+		var ret string
+		return ret
+	}
+	return *o.Id
+}
+
+// GetIdOk returns a tuple with the Id field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *GenericError) GetIdOk() (*string, bool) {
+	if o == nil || o.Id == nil {
+		return nil, false
+	}
+	return o.Id, true
+}
+
+// HasId returns a boolean if a field has been set.
+func (o *GenericError) HasId() bool {
+	if o != nil && o.Id != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetId gets a reference to the given string and assigns it to the Id field.
+func (o *GenericError) SetId(v string) {
+	o.Id = &v
 }
 
 // GetMessage returns the Message field value
@@ -277,6 +311,9 @@ func (o GenericError) MarshalJSON() ([]byte, error) {
 	}
 	if o.Details != nil {
 		toSerialize["details"] = o.Details
+	}
+	if o.Id != nil {
+		toSerialize["id"] = o.Id
 	}
 	if true {
 		toSerialize["message"] = o.Message

@@ -67,9 +67,7 @@ func NewFakeCSRFNode() *kratos.UiNode {
 			Name:     "csrf_token",
 			Required: pointerx.Bool(true),
 			Type:     "hidden",
-			Value: &kratos.UiNodeInputAttributesValue{
-				String: pointerx.String(x.FakeCSRFToken),
-			},
+			Value:    x.FakeCSRFToken,
 		}),
 	}
 }
@@ -82,7 +80,7 @@ func NewSDKEmailNode(group string) *kratos.UiNode {
 			Name:     "email",
 			Type:     "email",
 			Required: pointerx.Bool(true),
-			Value:    &kratos.UiNodeInputAttributesValue{String: pointerx.String("email")},
+			Value:    "email",
 		}),
 	}
 }
@@ -95,9 +93,9 @@ func NewSDKOIDCNode(name, provider string) *kratos.UiNode {
 		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 			Name:  name,
 			Type:  "submit",
-			Value: &kratos.UiNodeInputAttributesValue{String: pointerx.String(provider)},
+			Value: provider,
 		}),
-		Meta: kratos.Meta{
+		Meta: kratos.UiNodeMeta{
 			Label: &kratos.UiText{
 				Id:   int64(t.ID),
 				Text: t.Text,
@@ -114,7 +112,7 @@ func NewMethodSubmit(group, value string) *kratos.UiNode {
 		Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
 			Name:  "method",
 			Type:  "submit",
-			Value: &kratos.UiNodeInputAttributesValue{String: pointerx.String(value)},
+			Value: value,
 		}),
 	}
 }

@@ -8,6 +8,8 @@ import (
 
 	"golang.org/x/oauth2"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -32,8 +34,13 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, l *login.Flow) error {
+func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, l *login.Flow) error {
 	if l.Type != flow.TypeBrowser {
+		return nil
+	}
+
+	// This strategy can only solve AAL1
+	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
 		return nil
 	}
 
@@ -59,6 +66,9 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	//
 	// required: true
 	Method string `json:"method"`
+
+	// The identity traits. This is a placeholder for the registration flow.
+	Traits json.RawMessage `json:"traits"`
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
@@ -99,9 +109,11 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 	}
 
+	sess := session.NewInactiveSession()
+	sess.CompletedLoginFor(s.ID())
 	for _, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, a, i); err != nil {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, a, i, sess); err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
 			return nil, nil
@@ -111,12 +123,17 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) (i *identity.Identity, err error) {
-	if err := r.ParseForm(); err != nil {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		return nil, err
+	}
+
+	var p SubmitSelfServiceLoginFlowWithOidcMethodBody
+	if err := s.newLinkDecoder(&p, r); err != nil {
 		return nil, s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 
-	var pid = r.Form.Get("provider") // this can come from both url query and post body
+	var pid = p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
@@ -149,17 +166,23 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
 			FlowID: f.ID.String(),
-			Form:   r.PostForm,
+			Traits: p.Traits,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	f.Active = identity.CredentialsTypeOIDC
+	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
-	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
+	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	if x.IsJSONRequest(r) {
+		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
+	} else {
+		http.Redirect(w, r, codeURL, http.StatusSeeOther)
+	}
+
 	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
 }

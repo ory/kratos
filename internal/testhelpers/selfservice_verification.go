@@ -42,7 +42,7 @@ func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kr
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err, "%s", res.Request.URL.String())
 	assert.Empty(t, rs.Active)
 
@@ -70,7 +70,7 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 	}
 
 	require.NoError(t, res.Body.Close())
-	rs, _, err := publicClient.V0alpha1Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+	rs, _, err := publicClient.V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 
@@ -80,7 +80,7 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA b
 func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, _, err := publicClient.V0alpha1Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(context.Background()).Execute()
+	rs, _, err := publicClient.V0alpha2Api.InitializeSelfServiceRecoveryFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 

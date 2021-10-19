@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -63,6 +64,40 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 				_, err := p.GetSettingsFlow(ctx, r.ID)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})
+		})
+
+		t.Run("case=should create and update and properly deal with internal context", func(t *testing.T) {
+			for k, tc := range []struct {
+				in     []byte
+				expect string
+			}{
+				{in: []byte("[]"), expect: "{}"},
+				{expect: "{}"},
+				{in: []byte("null"), expect: "{}"},
+				{in: []byte(`{"foo":"bar"}`), expect: `{"foo":"bar"}`},
+			} {
+				t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
+					r := newFlow(t)
+					r.InternalContext = tc.in
+					require.NoError(t, p.CreateSettingsFlow(ctx, r))
+					assert.Equal(t, tc.expect, string(r.InternalContext))
+
+					r.InternalContext = tc.in
+					require.NoError(t, p.UpdateSettingsFlow(ctx, r))
+					assert.Equal(t, tc.expect, string(r.InternalContext))
+				})
+			}
+		})
+
+		t.Run("case=should ensure that internal context is an object", func(t *testing.T) {
+			r := newFlow(t)
+			r.InternalContext = []byte("null")
+			require.NoError(t, p.CreateSettingsFlow(ctx, r))
+			assert.Equal(t, "{}", string(r.InternalContext))
+
+			r.InternalContext = nil
+			require.NoError(t, p.UpdateSettingsFlow(ctx, r))
+			assert.Equal(t, "{}", string(r.InternalContext))
 		})
 
 		t.Run("case=should create with set ids", func(t *testing.T) {
@@ -208,8 +243,8 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 				require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at) VALUES (?, ?, 'default', '{}', ?, ?)", iid2, nid2, time.Now(), time.Now()).Exec())
 
 				sid1, sid2 := x.NewUUID(), x.NewUUID()
-				require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO selfservice_settings_flows (id, nid, identity_id, ui, created_at, updated_at, expires_at, request_url) VALUES (?, ?, ?, '{}', ?, ?, ?, '')", sid1, nid1, iid1, time.Now(), time.Now(), time.Now().Add(time.Hour)).Exec())
-				require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO selfservice_settings_flows (id, nid, identity_id, ui, created_at, updated_at, expires_at, request_url) VALUES (?, ?, ?, '{}', ?, ?, ?, '')", sid2, nid2, iid2, time.Now(), time.Now(), time.Now().Add(time.Hour)).Exec())
+				require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO selfservice_settings_flows (id, nid, identity_id, ui, created_at, updated_at, expires_at, request_url, internal_context) VALUES (?, ?, ?, '{}', ?, ?, ?, '', '{}')", sid1, nid1, iid1, time.Now(), time.Now(), time.Now().Add(time.Hour)).Exec())
+				require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO selfservice_settings_flows (id, nid, identity_id, ui, created_at, updated_at, expires_at, request_url, internal_context) VALUES (?, ?, ?, '{}', ?, ?, ?, '', '{}')", sid2, nid2, iid2, time.Now(), time.Now(), time.Now().Add(time.Hour)).Exec())
 
 				_, err := p.GetSettingsFlow(ctx, sid1)
 				require.NoError(t, err)

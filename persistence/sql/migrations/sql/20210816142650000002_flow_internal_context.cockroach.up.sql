@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_login_flows" RENAME COLUMN "internal_context" TO "_internal_context_tmp";
