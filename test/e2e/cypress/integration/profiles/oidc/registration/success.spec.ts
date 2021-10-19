@@ -110,6 +110,8 @@ context('Social Sign Up Successes', () => {
         cy.visit(registration)
         cy.triggerOidc()
 
+        cy.location('pathname').should('not.contain', '/consent')
+
         cy.getSession().should(shouldSession(email))
       })
 
