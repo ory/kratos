@@ -12,40 +12,29 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-
 	"github.com/gofrs/uuid"
-
 	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/strategy/link"
-
-	"github.com/ory/kratos/ui/node"
-
-	kratos "github.com/ory/kratos-client-go"
-
-	"github.com/ory/kratos/corpx"
-
-	"github.com/ory/x/ioutilx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/x/sqlxx"
-
-	"github.com/ory/x/assertx"
-
-	"github.com/ory/x/pointerx"
-
+	kratos "github.com/ory/kratos-client-go"
+	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
@@ -187,7 +176,7 @@ func TestRecovery(t *testing.T) {
 
 	public, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
 
-	var createIdentityToRecover = func(email string) {
+	var createIdentityToRecover = func(email string) *identity.Identity {
 		var id = &identity.Identity{
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
@@ -201,6 +190,7 @@ func TestRecovery(t *testing.T) {
 		assert.False(t, addr.Verified)
 		assert.Nil(t, addr.VerifiedAt)
 		assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+		return id
 	}
 
 	var expect = func(t *testing.T, hc *http.Client, isAPI, isSPA bool, values func(url.Values), c int) string {
@@ -385,6 +375,96 @@ func TestRecovery(t *testing.T) {
 			check(t, expectSuccess(t, nil, true, false, func(v url.Values) {
 				v.Set("email", email)
 			}), email)
+		})
+	})
+
+	t.Run("description=should not be able to recover an account that is deleted / disabled right after recovery email was sent", func(t *testing.T) {
+		var check = func(t *testing.T, recoverySubmissionResponse, recoveryEmail string, action string, id *identity.Identity) {
+			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
+
+			switch action {
+			case "inactivated":
+				id.State = identity.StateInactive
+				require.NoError(t, reg.Persister().UpdateIdentity(context.Background(), id))
+			case "deleted":
+				require.NoError(t, reg.Persister().DeleteIdentity(context.Background(), id.ID))
+			}
+
+			assert.NoError(t, err)
+			assert.False(t, addr.Verified)
+			assert.Nil(t, addr.VerifiedAt)
+			assert.Equal(t, identity.VerifiableAddressStatusPending, addr.Status)
+
+			assert.EqualValues(t, node.RecoveryLinkGroup, gjson.Get(recoverySubmissionResponse, "active").String(), "%s", recoverySubmissionResponse)
+			assert.EqualValues(t, recoveryEmail, gjson.Get(recoverySubmissionResponse, "ui.nodes.#(attributes.name==email).attributes.value").String(), "%s", recoverySubmissionResponse)
+			require.Len(t, gjson.Get(recoverySubmissionResponse, "ui.messages").Array(), 1, "%s", recoverySubmissionResponse)
+			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(recoverySubmissionResponse, "ui.messages.0").Raw))
+
+			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
+
+			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+
+			assert.Contains(t, recoveryLink, public.URL+recovery.RouteSubmitFlow)
+			assert.Contains(t, recoveryLink, "token=")
+
+			cl := testhelpers.NewClientWithCookies(t)
+
+			res, err := cl.Get(recoveryLink)
+			require.NoError(t, err)
+
+			// both 'inactivated' and 'deleted' action have the same result
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+			b := ioutilx.MustReadAll(res.Body)
+			assert.Contains(t, string(b), "The recovery token is invalid or has already been used. Please retry the flow.")
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			email := "notrecoverme1@ory.sh"
+			id := createIdentityToRecover(email)
+			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
+				v.Set("email", email)
+			}), email, "inactivated", id)
+
+			// make sure state is active before sending recovery email
+			id.State = identity.StateActive
+			require.NoError(t, reg.Persister().UpdateIdentity(context.Background(), id))
+
+			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
+				v.Set("email", email)
+			}), email, "deleted", id)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			email := "notrecoverme2@ory.sh"
+			id := createIdentityToRecover(email)
+			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
+				v.Set("email", email)
+			}), email, "inactivated", id)
+
+			// make sure state is active before sending recovery email
+			id.State = identity.StateActive
+			require.NoError(t, reg.Persister().UpdateIdentity(context.Background(), id))
+
+			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
+				v.Set("email", email)
+			}), email, "deleted", id)
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			email := "notrecoverme3@ory.sh"
+			id := createIdentityToRecover(email)
+			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
+				v.Set("email", email)
+			}), email, "inactivated", id)
+
+			// make sure state is active before sending recovery email
+			id.State = identity.StateActive
+			require.NoError(t, reg.Persister().UpdateIdentity(context.Background(), id))
+
+			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
+				v.Set("email", email)
+			}), email, "deleted", id)
 		})
 	})
 
