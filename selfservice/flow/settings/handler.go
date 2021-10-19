@@ -2,12 +2,9 @@ package settings
 
 import (
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/ory/kratos/text"
-
-	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlcon"
@@ -265,17 +262,8 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); errors.As(err, new(session.ErrAALNotSatisfied)) {
-		if x.IsJSONRequest(r) {
-			h.d.Writer().WriteError(w, r, err)
-		} else {
-			http.Redirect(w, r, urlx.CopyWithQuery(
-				urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow),
-				url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
-		}
-		return
-	} else if err != nil {
-		h.d.Writer().WriteError(w, r, err)
+	if err :=  h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
 

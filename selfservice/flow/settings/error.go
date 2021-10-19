@@ -126,13 +126,13 @@ func (s *ErrorHandler) WriteFlowError(
 		WithField("settings_flow", f).
 		Info("Encountered self-service settings error.")
 
-	if f == nil {
-		s.forward(w, r, f, err)
-		return
+	shouldRespondWithJSON := x.IsJSONRequest(r)
+	if f != nil && f.Type == flow.TypeAPI {
+		shouldRespondWithJSON = true
 	}
 
 	if errors.Is(err, session.ErrNoActiveSessionFound) {
-		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, err)
 		} else {
 			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
@@ -141,13 +141,18 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
-		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, err)
 		} else {
 			http.Redirect(w, r, urlx.CopyWithQuery(
 				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow),
 				url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
 		}
+		return
+	}
+
+	if f == nil {
+		s.forward(w, r, f, err)
 		return
 	}
 
@@ -169,7 +174,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if errors.Is(err, flow.ErrStrategyAsksToReturnToUI) {
-		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+		if shouldRespondWithJSON {
 			s.d.Writer().Write(w, r, f)
 		} else {
 			http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
