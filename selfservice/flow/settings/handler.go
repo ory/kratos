@@ -262,7 +262,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if err :=  h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(r, s, h.d.Config(r.Context()).SelfServiceSettingsRequiredAAL()); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, nil, nil, err)
 		return
 	}
