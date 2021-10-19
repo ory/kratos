@@ -38,6 +38,7 @@ context('2FA with various methods', () => {
           password,
           fields: { 'traits.website': website }
         })
+        cy.clearAllCookies()
         cy.login({ email, password, cookieUrl: base })
         cy.longPrivilegedSessionTime()
         cy.task('sendCRI', {
