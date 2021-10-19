@@ -218,7 +218,7 @@ that your company deserves a spot here, reach out to
 
 We also want to thank all individual contributors
 
-<a href="https://opencollective.com/ory" target="_blank"><img src="https://opencollective.com/ory/contributors.svg?width=890&button=false" /></a>
+<a href="https://opencollective.com/ory" target="_blank"><img src="https://opencollective.com/ory/contributors.svg?width=890&limit=740&button=false" /></a>
 
 as well as all of our backers
 
