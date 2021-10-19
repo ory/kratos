@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/session"
 
 	"github.com/pkg/errors"
@@ -78,9 +78,9 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
-	if !s.d.Hasher().IsSameAlgorithm([]byte(o.HashedPassword)) {
+	if !s.d.Hasher().Understands([]byte(o.HashedPassword)) {
 		if err := s.migratePasswordHash(r.Context(), i.ID, []byte(p.Password)); err != nil {
-			s.d.Logger().Errorf("Unable to upgrade password hashing algorithm: %s", err)
+			return nil, s.handleLoginError(w, r, f, &p, err)
 		}
 	}
 
@@ -100,7 +100,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	}
 	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
-		return errors.Errorf("Unable to encode password options to JSON: %s", err)
+		return errors.Wrap(err, "unable to encode password configuration to JSON")
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identifier)
@@ -110,7 +110,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 
 	c, ok := i.GetCredentials(s.ID())
 	if !ok {
-		return errors.Errorf("Not found a credential.")
+		return errors.New("expected to find password credential but could not")
 	}
 
 	c.Config = co
@@ -125,7 +125,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return nil
 	}
 
-  // This block adds the identifier to the method when the request is forced - as a hint for the user.
+	// This block adds the identifier to the method when the request is forced - as a hint for the user.
 	var identifier string
 	if !sr.IsForced() {
 		// do nothing

@@ -47,7 +47,7 @@ func (h *Pbkdf2) Generate(_ context.Context, password []byte) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (h *Pbkdf2) IsSameAlgorithm(hash []byte) bool {
+func (h *Pbkdf2) Understands(hash []byte) bool {
 	return IsPbkdf2Hash(hash)
 }
 

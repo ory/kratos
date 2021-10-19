@@ -64,6 +64,6 @@ func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	return b.Bytes(), nil
 }
 
-func (h *Argon2) IsSameAlgorithm(hash []byte) bool {
+func (h *Argon2) Understands(hash []byte) bool {
 	return IsArgon2idHash(hash)
 }

@@ -27,7 +27,7 @@ func Compare(ctx context.Context, password []byte, hash []byte) error {
 	case IsPbkdf2Hash(hash):
 		return ComparePbkdf2(ctx, password, hash)
 	default:
-		return ErrUnknownHashAlgorithm
+		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
 }
 
@@ -61,7 +61,7 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
 		return nil
 	}
-	return ErrMismatchedHashAndPassword
+	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
 func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
@@ -81,22 +81,25 @@ func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
 	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
 		return nil
 	}
-	return ErrMismatchedHashAndPassword
+	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+var (
+	isBcryptHash   = regexp.MustCompile("^\\$2[abzy]?\\$")
+	isArgon2idHash = regexp.MustCompile("^\\$argon2id\\$")
+	isPbkdf2Hash   = regexp.MustCompile("^\\$pbkdf2-sha[0-9]{1,3}\\$")
+)
+
 func IsBcryptHash(hash []byte) bool {
-	res, _ := regexp.Match("^\\$2[abzy]?\\$", hash)
-	return res
+	return isBcryptHash.Match(hash)
 }
 
 func IsArgon2idHash(hash []byte) bool {
-	res, _ := regexp.Match("^\\$argon2id\\$", hash)
-	return res
+	return isArgon2idHash.Match(hash)
 }
 
 func IsPbkdf2Hash(hash []byte) bool {
-	res, _ := regexp.Match("^\\$pbkdf2-sha[0-9]{1,3}\\$", hash)
-	return res
+	return isPbkdf2Hash.Match(hash)
 }
 
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {

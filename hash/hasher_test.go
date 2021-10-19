@@ -76,7 +76,7 @@ func TestBcryptHasherGeneratesHash(t *testing.T) {
 			hs, err := hasher.Generate(context.Background(), pw)
 
 			assert.Nil(t, err)
-			assert.True(t, hasher.IsSameAlgorithm(hs))
+			assert.True(t, hasher.Understands(hs))
 
 			// Valid format: $2a$12$[22 character salt][31 character hash]
 			assert.Equal(t, 60, len(string(hs)), "invalid bcrypt hash length")
@@ -107,7 +107,7 @@ func TestComparatorBcryptSuccess(t *testing.T) {
 			hs, err := hasher.Generate(context.Background(), pw)
 
 			assert.Nil(t, err)
-			assert.True(t, hasher.IsSameAlgorithm(hs))
+			assert.True(t, hasher.Understands(hs))
 
 			err = hash.CompareBcrypt(context.Background(), pw, hs)
 			assert.Nil(t, err, "hash validation fails")
@@ -183,7 +183,7 @@ func TestPbkdf2Hasher(t *testing.T) {
 					t.Logf("hash: %s", hs)
 					require.NoError(t, hash.ComparePbkdf2(context.Background(), pw, hs))
 
-					assert.True(t, hasher.IsSameAlgorithm(hs))
+					assert.True(t, hasher.Understands(hs))
 
 					mod := make([]byte, len(pw))
 					copy(mod, pw)

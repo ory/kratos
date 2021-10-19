@@ -48,6 +48,6 @@ func validateBcryptPasswordLength(password []byte) error {
 	return nil
 }
 
-func (h *Bcrypt) IsSameAlgorithm(hash []byte) bool {
+func (h *Bcrypt) Understands(hash []byte) bool {
 	return IsBcryptHash(hash)
 }
