@@ -47,7 +47,8 @@ $ kratos help
 
 ## Windows
 
-You can install Ory Kratos using [scoop](https://scoop.sh) on Windows (Powershell is required):
+You can install Ory Kratos using [scoop](https://scoop.sh) on Windows
+(Powershell is required):
 
 ```shell
 > scoop bucket add ory-kratos https://github.com/ory/scoop-kratos.git
