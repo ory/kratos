@@ -1,0 +1,21 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/totp/login.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "totp_code",
+    "method"
+  ],
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "totp_code": {
+      "type": "string",
+      "minLength": 6
+    }
+  }
+}

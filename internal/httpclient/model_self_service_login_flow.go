@@ -18,19 +18,21 @@ import (
 
 // SelfServiceLoginFlow This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\" endpoint by a client.  Once a login flow is completed successfully, a session cookie or session token will be issued.
 type SelfServiceLoginFlow struct {
-	// and so on.
-	Active *string `json:"active,omitempty"`
+	Active *IdentityCredentialsType `json:"active,omitempty"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
-	// Forced stores whether this login flow should enforce re-authentication.
+	// Refresh stores whether this login flow should enforce re-authentication.
 	Forced *bool  `json:"forced,omitempty"`
 	Id     string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow started.
 	IssuedAt time.Time `json:"issued_at"`
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL's path or query for example.
-	RequestUrl string `json:"request_url"`
+	RequestUrl   string                       `json:"request_url"`
+	RequestedAal *AuthenticatorAssuranceLevel `json:"requested_aal,omitempty"`
+	// ReturnTo contains the requested return_to URL.
+	ReturnTo *string `json:"return_to,omitempty"`
 	// The flow type can either be `api` or `browser`.
 	Type string      `json:"type"`
 	Ui   UiContainer `json:"ui"`
@@ -62,9 +64,9 @@ func NewSelfServiceLoginFlowWithDefaults() *SelfServiceLoginFlow {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *SelfServiceLoginFlow) GetActive() string {
+func (o *SelfServiceLoginFlow) GetActive() IdentityCredentialsType {
 	if o == nil || o.Active == nil {
-		var ret string
+		var ret IdentityCredentialsType
 		return ret
 	}
 	return *o.Active
@@ -72,7 +74,7 @@ func (o *SelfServiceLoginFlow) GetActive() string {
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *SelfServiceLoginFlow) GetActiveOk() (*string, bool) {
+func (o *SelfServiceLoginFlow) GetActiveOk() (*IdentityCredentialsType, bool) {
 	if o == nil || o.Active == nil {
 		return nil, false
 	}
@@ -88,8 +90,8 @@ func (o *SelfServiceLoginFlow) HasActive() bool {
 	return false
 }
 
-// SetActive gets a reference to the given string and assigns it to the Active field.
-func (o *SelfServiceLoginFlow) SetActive(v string) {
+// SetActive gets a reference to the given IdentityCredentialsType and assigns it to the Active field.
+func (o *SelfServiceLoginFlow) SetActive(v IdentityCredentialsType) {
 	o.Active = &v
 }
 
@@ -253,6 +255,70 @@ func (o *SelfServiceLoginFlow) SetRequestUrl(v string) {
 	o.RequestUrl = v
 }
 
+// GetRequestedAal returns the RequestedAal field value if set, zero value otherwise.
+func (o *SelfServiceLoginFlow) GetRequestedAal() AuthenticatorAssuranceLevel {
+	if o == nil || o.RequestedAal == nil {
+		var ret AuthenticatorAssuranceLevel
+		return ret
+	}
+	return *o.RequestedAal
+}
+
+// GetRequestedAalOk returns a tuple with the RequestedAal field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceLoginFlow) GetRequestedAalOk() (*AuthenticatorAssuranceLevel, bool) {
+	if o == nil || o.RequestedAal == nil {
+		return nil, false
+	}
+	return o.RequestedAal, true
+}
+
+// HasRequestedAal returns a boolean if a field has been set.
+func (o *SelfServiceLoginFlow) HasRequestedAal() bool {
+	if o != nil && o.RequestedAal != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetRequestedAal gets a reference to the given AuthenticatorAssuranceLevel and assigns it to the RequestedAal field.
+func (o *SelfServiceLoginFlow) SetRequestedAal(v AuthenticatorAssuranceLevel) {
+	o.RequestedAal = &v
+}
+
+// GetReturnTo returns the ReturnTo field value if set, zero value otherwise.
+func (o *SelfServiceLoginFlow) GetReturnTo() string {
+	if o == nil || o.ReturnTo == nil {
+		var ret string
+		return ret
+	}
+	return *o.ReturnTo
+}
+
+// GetReturnToOk returns a tuple with the ReturnTo field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SelfServiceLoginFlow) GetReturnToOk() (*string, bool) {
+	if o == nil || o.ReturnTo == nil {
+		return nil, false
+	}
+	return o.ReturnTo, true
+}
+
+// HasReturnTo returns a boolean if a field has been set.
+func (o *SelfServiceLoginFlow) HasReturnTo() bool {
+	if o != nil && o.ReturnTo != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetReturnTo gets a reference to the given string and assigns it to the ReturnTo field.
+func (o *SelfServiceLoginFlow) SetReturnTo(v string) {
+	o.ReturnTo = &v
+}
+
 // GetType returns the Type field value
 func (o *SelfServiceLoginFlow) GetType() string {
 	if o == nil {
@@ -355,6 +421,12 @@ func (o SelfServiceLoginFlow) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["request_url"] = o.RequestUrl
+	}
+	if o.RequestedAal != nil {
+		toSerialize["requested_aal"] = o.RequestedAal
+	}
+	if o.ReturnTo != nil {
+		toSerialize["return_to"] = o.ReturnTo
 	}
 	if true {
 		toSerialize["type"] = o.Type

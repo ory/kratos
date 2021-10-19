@@ -79,7 +79,7 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
 
-		sse, _, err := sdk.V0alpha1Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
+		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 
 		return sse.Error, nil
@@ -126,7 +126,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				verificationFlow = newFlow(t, time.Minute, flow.TypeAPI)
-				flowError = verification.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(anHourAgo)
 				methodName = verification.StrategyVerificationLinkName
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -194,7 +194,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			verificationFlow = &verification.Flow{Type: flow.TypeBrowser}
-			flowError = verification.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(anHourAgo)
 			methodName = node.VerificationLinkGroup
 
 			lf, _ := expectVerificationUI(t)

@@ -8,6 +8,9 @@ func sortNodes(n node.Nodes) error {
 			node.DefaultGroup,
 			node.OpenIDConnectGroup,
 			node.PasswordGroup,
+			node.WebAuthnGroup,
+			node.TOTPGroup,
+			node.LookupGroup,
 		}),
 		node.SortUseOrder([]string{
 			"password_identifier",

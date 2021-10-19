@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/davecgh/go-spew/spew"
 
 	"github.com/gofrs/uuid"
@@ -53,12 +55,6 @@ func init() {
 	corpx.RegisterFakes()
 }
 
-//go:embed fixtures/recovery_init.json
-var recoveryInitFixture []byte
-
-//go:embed fixtures/recovery_submit.json
-var recoverySubmitFixture []byte
-
 func TestAdminStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
@@ -93,7 +89,7 @@ func TestAdminStrategy(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
-		_, _, err := adminSDK.V0alpha1Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+		_, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
 			IdentityId: x.NewUUID().String(),
 		}).Execute()
 		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
@@ -105,7 +101,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		_, _, err := adminSDK.V0alpha1Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+		_, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
 			IdentityId: id.ID.String(),
 		}).Execute()
 		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
@@ -119,7 +115,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		rl, _, err := adminSDK.V0alpha1Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+		rl, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
 			IdentityId: id.ID.String(),
 			ExpiresIn:  pointerx.String("100ms"),
 		}).Execute()
@@ -149,7 +145,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		rl, _, err := adminSDK.V0alpha1Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+		rl, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
 			IdentityId: id.ID.String(),
 		}).Execute()
 		require.NoError(t, err)
@@ -228,14 +224,14 @@ func TestRecovery(t *testing.T) {
 		body := expectSuccess(t, nil, false, false, func(v url.Values) {
 			v.Set("email", "test@ory.sh")
 		})
-		assertx.EqualAsJSONExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), json.RawMessage(recoverySubmitFixture), []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), []string{"0.attributes.value"})
 	})
 
 	t.Run("description=should set all the correct recovery payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(recoveryInitFixture), rs.Ui.Nodes, []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+recovery.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
@@ -361,6 +357,13 @@ func TestRecovery(t *testing.T) {
 			assert.True(t, addr.Verified)
 			assert.NotEqual(t, sqlxx.NullTime{}, addr.VerifiedAt)
 			assert.Equal(t, identity.VerifiableAddressStatusCompleted, addr.Status)
+
+			res, err = cl.Get(public.URL + session.RouteWhoami)
+			require.NoError(t, err)
+			body = x.MustReadAll(res.Body)
+			require.NoError(t, res.Body.Close())
+			assert.Equal(t, "link_recovery", gjson.GetBytes(body, "authentication_methods.0.method").String(), "%s", body)
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -402,7 +405,7 @@ func TestRecovery(t *testing.T) {
 			res, err := cl.Get(recoveryLink)
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
-			assert.Equal(t, http.StatusFound, res.StatusCode)
+			assert.Equal(t, http.StatusSeeOther, res.StatusCode)
 			require.Len(t, cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)), 2)
 			cookies := spew.Sdump(cl.Jar.Cookies(urlx.ParseOrPanic(public.URL)))
 			assert.Contains(t, cookies, x.CSRFTokenName)
@@ -431,7 +434,7 @@ func TestRecovery(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
 
-		rs, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, rs.Ui.Messages, 1)
@@ -491,7 +494,7 @@ func TestRecovery(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		rs, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		rs, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, rs.Ui.Messages, 1)
@@ -521,7 +524,7 @@ func TestDisabledEndpoint(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Create(context.Background(),
 				&id, identity.ManagerAllowWriteProtectedTraits))
 
-			rl, _, err := adminSDK.V0alpha1Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+			rl, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
 				IdentityId: id.ID.String(),
 			}).Execute()
 			assert.Nil(t, rl)

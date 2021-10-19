@@ -7,7 +7,16 @@ const (
 	InfoNodeLabelSave                              // 1070003
 	InfoNodeLabelID                                // 1070004
 	InfoNodeLabelSubmit                            // 1070005
+	InfoNodeLabelVerifyOTP                         // 1070006
 )
+
+func NewInfoNodeLabelVerifyOTP() *Message {
+	return &Message{
+		ID:   InfoNodeLabelVerifyOTP,
+		Text: "Verify code",
+		Type: Info,
+	}
+}
 
 func NewInfoNodeInputPassword() *Message {
 	return &Message{

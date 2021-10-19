@@ -17,7 +17,7 @@ func deleteIdentity() {
 
 	identity := pkg.CreateIdentity(client)
 
-	res, err := client.V0alpha1Api.AdminDeleteIdentity(ctx, identity.Id).Execute()
+	res, err := client.V0alpha2Api.AdminDeleteIdentity(ctx, identity.Id).Execute()
 	pkg.SDKExitOnError(err, res)
 }
 

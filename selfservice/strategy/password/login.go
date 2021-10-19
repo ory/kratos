@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"time"
 
+
 	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/session"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -38,7 +41,11 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *l
 	return err
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		return nil, err
+	}
+
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
 		return nil, err
 	}
@@ -78,6 +85,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 	}
 
 	f.Active = identity.CredentialsTypePassword
+	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
@@ -111,8 +119,13 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	return s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
-	// This block adds the identifier to the method when the request is forced - as a hint for the user.
+func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
+	// This strategy can only solve AAL1
+	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		return nil
+	}
+
+  // This block adds the identifier to the method when the request is forced - as a hint for the user.
 	var identifier string
 	if !sr.IsForced() {
 		// do nothing

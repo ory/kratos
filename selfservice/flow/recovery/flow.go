@@ -2,6 +2,7 @@ package recovery
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -54,6 +55,9 @@ type Flow struct {
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
 
+	// ReturnTo contains the requested return_to URL.
+	ReturnTo string `json:"return_to,omitempty" db:"-"`
+
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
 	Active sqlxx.NullString `json:"active,omitempty" faker:"-" db:"active_method"`
@@ -89,10 +93,24 @@ type Flow struct {
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
+
+	// Pre-validate the return to URL which is contained in the HTTP request.
+	requestURL := x.RequestURL(r).String()
+	_, err := x.SecureRedirectTo(r,
+		conf.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(requestURL),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	req := &Flow{
-		ID:        id,
-		ExpiresAt: now.Add(exp), IssuedAt: now,
-		RequestURL: x.RequestURL(r).String(),
+		ID:         id,
+		ExpiresAt:  now.Add(exp),
+		IssuedAt:   now,
+		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
@@ -143,7 +161,7 @@ func (f Flow) GetNID() uuid.UUID {
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }
@@ -155,4 +173,12 @@ func (f *Flow) AppendTo(src *url.URL) *url.URL {
 func (f *Flow) SetCSRFToken(token string) {
 	f.CSRFToken = token
 	f.UI.SetCSRF(token)
+}
+
+func (f Flow) MarshalJSON() ([]byte, error) {
+	type local Flow
+	if u, err := url.Parse(f.RequestURL); err == nil {
+		f.ReturnTo = u.Query().Get("return_to")
+	}
+	return json.Marshal(local(f))
 }

@@ -92,7 +92,7 @@ type toSession struct {
 	Cookie string `json:"Cookie"`
 }
 
-// swagger:route GET /sessions/whoami v0alpha1 toSession
+// swagger:route GET /sessions/whoami v0alpha2 toSession
 //
 // Check Who the Current HTTP Session Belongs To
 //
@@ -121,6 +121,11 @@ type toSession struct {
 //  // console.log(session)
 //	```
 //
+// Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
+// Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
+// credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
+// to sign in with the second factor or change the configuration.
+//
 // This endpoint is useful for:
 //
 // - AJAX calls. Remember to send credentials and set up CORS correctly!
@@ -135,6 +140,11 @@ type toSession struct {
 //
 // If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
 //
+// As explained above, this request may fail due to several reasons. The `error.id` can be one of:
+//
+// - `no_active_session`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
+// - `aal_needs_upgrade`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
+//
 //     Produces:
 //     - application/json
 //
@@ -143,12 +153,24 @@ type toSession struct {
 //     Responses:
 //       200: session
 //       401: jsonError
+//       403: jsonError
 //       500: jsonError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		return
+	}
+
+	var aalErr *ErrAALNotSatisfied
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, h.r.Config(r.Context()).SessionWhoAmIAAL()); errors.As(err, &aalErr) {
+		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
+		h.r.Writer().WriteError(w, r, err)
+		return
+	} else if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("Unable to determine AAL."))
 		return
 	}
 
@@ -171,7 +193,7 @@ type adminDeleteIdentitySessions struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /identities/{id}/sessions v0alpha1 adminDeleteIdentitySessions
+// swagger:route DELETE /identities/{id}/sessions v0alpha2 adminDeleteIdentitySessions
 //
 // Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 //

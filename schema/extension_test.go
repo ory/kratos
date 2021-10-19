@@ -13,12 +13,16 @@ import (
 )
 
 type extensionStub struct {
-	identifiers []string
+	identifiers  []string
+	accountNames []string
 }
 
 func (r *extensionStub) Run(ctx jsonschema.ValidationContext, config ExtensionConfig, value interface{}) error {
 	if config.Credentials.Password.Identifier {
 		r.identifiers = append(r.identifiers, fmt.Sprintf("%s", value))
+	}
+	if config.Credentials.TOTP.AccountName {
+		r.accountNames = append(r.accountNames, fmt.Sprintf("%s", value))
 	}
 	return nil
 }
@@ -60,6 +64,7 @@ func TestExtensionRunner(t *testing.T) {
 				}
 
 				assert.EqualValues(t, tc.expect, r.identifiers)
+				assert.EqualValues(t, tc.expect, r.accountNames)
 			})
 		}
 	})
