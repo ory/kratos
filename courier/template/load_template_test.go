@@ -37,17 +37,15 @@ func TestLoadTextTemplate(t *testing.T) {
 	})
 
 	t.Run("method=with Sprig functions", func(t *testing.T) {
-		cache, _ = lru.New(16)            // prevent cache hit
-		m := make(map[string]interface{}) // create a simple model
-		m["input"] = "hello world"
+		cache, _ = lru.New(16)                              // prevent cache hit
+		m := map[string]interface{}{"input": "hello world"} // create a simple model
 		actual := executeTextTemplate(t, "courier/builtin/templates/test_stub", "email.body.sprig.gotmpl", "", m)
 		assert.Contains(t, actual, "HelloWorld,HELLOWORLD")
 	})
 
 	t.Run("method=html with nested templates", func(t *testing.T) {
-		cache, _ = lru.New(16)            // prevent cache hit
-		m := make(map[string]interface{}) // create a simple model
-		m["lang"] = "en_US"
+		cache, _ = lru.New(16)                       // prevent cache hit
+		m := map[string]interface{}{"lang": "en_US"} // create a simple model
 		actual := executeHTMLTemplate(t, "courier/builtin/templates/test_stub", "email.body.html.gotmpl", "email.body.html*", m)
 		assert.Contains(t, actual, "lang=en_US")
 	})

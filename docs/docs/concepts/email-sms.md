@@ -80,35 +80,43 @@ courier:
   #
   template_override_path: /conf/courier-templates
 ```
+
 Ory Kratos comes with built-in templates. If you wish to define your own, custom
-templates, you should define `template_override_path`, as shown above, to indicate
-where your custom templates are located. This will become the `<root-directory>`
-for your custom templates, as indicated below.
+templates, you should define `template_override_path`, as shown above, to
+indicate where your custom templates are located. This will become the
+`<template-root>` for your custom templates, as indicated below.
 
 `email.subject.gotmpl`, `email.body.gotmpl` and `email.body.plaintext.gotmpl`
-are common template file names expected in the sub directories of the root directory,
-corresponding to the respective methods for filling e-mail subject and body.
+are common template file names expected in the sub directories of the root
+directory, corresponding to the respective methods for filling e-mail subject
+and body.
 
-> Templates use the golang template engine in the `text/template` package for rendering
-the `email.subject.gotmpl` and `email.body.plaintext.gotmpl` templates, and the
-`html/template` package for rendering the `email.body.gotmpl` template:
-> https://pkg.go.dev/text/template
+> Templates use the golang template engine in the `text/template` package for
+> rendering the `email.subject.gotmpl` and `email.body.plaintext.gotmpl`
+> templates, and the `html/template` package for rendering the
+> `email.body.gotmpl` template: https://pkg.go.dev/text/template >
 > https://pkg.go.dev/html/template
-> 
-> Templates can use the [Sprig](https://github.com/Masterminds/sprig) library, which provides more than 100 commonly used template functions:
+>
+> Templates can use the [Sprig](https://github.com/Masterminds/sprig) library,
+> which provides more than 100 commonly used template functions:
 > http://masterminds.github.io/sprig/
+
 - **recovery**: recovery email templates directory, expected to be located in
-`<root_directory>/recovery`
-  - valid: sub directory, expected to be located in `<root-directory>/recovery/valid`,
-  containing templates with variables `To`, `RecoveryURL` and `Identity` for validating a recovery
-  - invalid: sub directory, expected to be located in `<root-directory>/recovery/invalid`,
-  containing templates with variables `To` for invalidating a recovery
-- **verification**: verification email templates directory, expected to be located in
-`<root_directory>/verification`
-  - valid: sub directory, expected to be located in `<root-directory>/verification/valid`,
-  containing templates with variables `To`, `VerificationURL` and `Identity` for validating a verification
-  - invalid: sub directory, expected to be located in `<root-directory>/verification/invalid`,
-  containing templates with variables `To` for invalidating a verification
+  `<root_directory>/recovery`
+  - valid: sub directory, expected to be located in
+    `<template-root>/recovery/valid`, containing templates with variables `To`,
+    `RecoveryURL` and `Identity` for validating a recovery
+  - invalid: sub directory, expected to be located in
+    `<template-root>/recovery/invalid`, containing templates with variables `To`
+    for invalidating a recovery
+- **verification**: verification email templates directory, expected to be
+  located in `<root_directory>/verification`
+  - valid: sub directory, expected to be located in
+    `<template-root>/verification/valid`, containing templates with variables
+    `To`, `VerificationURL` and `Identity` for validating a verification
+  - invalid: sub directory, expected to be located in
+    `<template-root>/verification/invalid`, containing templates with variables
+    `To` for invalidating a verification
 
 For example:
 [`https://github.com/ory/kratos/blob/master/courier/template/courier/builtin/templates/verification/valid/email.body.gotmpl`](https://github.com/ory/kratos/blob/master/courier/template/courier/builtin/templates/verification/valid/email.body.gotmpl)
@@ -122,50 +130,56 @@ Hi, please verify your account by clicking the following link:
 ```gotmp title="courier/template/templates/verification/valid/email.body.plaintext.gotmpl"
 Hi, please verify your account by clicking the following link: {{ .VerificationURL }}
 ```
+
 ### The Identity attribute
-To be able to customize the content of templates based on the identity of the recipient of the e-mail,
-the identity has been made available as `Identity`. This object is a map containing all the attributes
-of an identity, such as `id`, `state`, `recovery_addresses`, `verifiable_addresses` and `traits`. 
- 
+
+To be able to customize the content of templates based on the identity of the
+recipient of the e-mail, the identity has been made available as `Identity`.
+This object is a map containing all the attributes of an identity, such as `id`,
+`state`, `recovery_addresses`, `verifiable_addresses` and `traits`.
+
 ### Nested templates
-You can use nested templates to render `email.subject.gotmpl`, `email.body.gotmpl` and 
-`email.body.plaintext.gotmpl` templates. 
+
+You can use nested templates to render `email.subject.gotmpl`,
+`email.body.gotmpl` and `email.body.plaintext.gotmpl` templates.
 
 #### Example: i18n customization
-Using nested templates, you can either use in-line template definitions, or as in this example, use
-separate templates. In this example, we will define the email body for recovery e-mails. Assuming
-that we have an attribute named `lang` that contains the required language in the `traits` of
-the identity, we can define our templates as indicated below.
 
-*<root-directory/recovery/valid/email.body.gotmpl:*
+Using nested templates, you can either use in-line template definitions, or as
+in this example, use separate templates. In this example, we will define the
+email body for recovery e-mails. Assuming that we have an attribute named `lang`
+that contains the required language in the `traits` of the identity, we can
+define our templates as indicated below.
 
-```
-{{- if eq .Identity.traits.language "de" -}} 
-{{ template "email.body.de.gotmpl" . }} 
-{{- else -}} 
-{{ template "email.body.en.gotmpl" . }} 
-{{- end -}} 
+```txt file="<template-root>/recovery/valid/email.body.gotmpl"
+
+{{- if eq .Identity.traits.language "de" -}}
+{{ template "email.body.de.gotmpl" . }}
+{{- else -}}
+{{ template "email.body.en.gotmpl" . }}
+{{- end -}}
 <a href="{{ .RecoveryURL }}">{{.RecoveryURL }}</a>
 ```
 
-*<root-directory/recovery/valid/email.body.de.gotmpl:*
+```txt file="<template-root>/recovery/valid/email.body.de.gotmpl"
 
-```
 Hallo {{ upper .Identity.traits.firstName }},
 
 Um Ihr Konto wiederherzustellen, klicken Sie bitte auf den folgenden Link:
 ```
 
-*<root-directory/recovery/valid/email.body.en.gotmpl:*
+```txt file="<template-root>/recovery/valid/email.body.en.gotmpl"
 
-```
+
 Hello {{ upper .Identity.traits.firstName }},
 
 to recover your account, please click on the link below:
 ```
-As indicated by the example, we need a root template, which is the `email.body.gotmpl` template, and
-then we define sub templates that conform to the following pattern: `email.body*`. You can also see
-that the `Identity` of the user is available in all templates, and that you can use Sprig functions
+
+As indicated by the example, we need a root template, which is the
+`email.body.gotmpl` template, and then we define sub templates that conform to
+the following pattern: `email.body*`. You can also see that the `Identity` of
+the user is available in all templates, and that you can use Sprig functions
 also in the nested templates.
 
 ## Sending SMS

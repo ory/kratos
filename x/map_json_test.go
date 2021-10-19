@@ -15,15 +15,20 @@ type TestStruct struct {
 
 func TestStructToMap(t *testing.T) {
 	m := json.RawMessage(`{"string": "123"}`)
-	r, err := StructToMap(&TestStruct{
+	r, err := StructToMap(struct {
+		TestString string           `json:"string"`
+		TestRaw    *json.RawMessage `json:"raw"`
+	}{
 		TestString: "string",
 		TestRaw:    &m,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, r["string"], "string")
-
-	raw := r["raw"].(map[string]interface{})
-	assert.Equal(t, raw["string"], "123")
+	assert.Equal(t, map[string]interface{}{
+		"string": "string",
+		"raw": map[string]interface{}{
+			"string": "123",
+		},
+	}, r)
 }
 
 func TestTypeMap(t *testing.T) {
