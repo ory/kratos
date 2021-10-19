@@ -1,11 +1,30 @@
 package x
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type TestStruct struct {
+	TestString string           `json:"string"`
+	TestRaw    *json.RawMessage `json:"raw"`
+}
+
+func TestStructToMap(t *testing.T) {
+	m := json.RawMessage(`{"string": "123"}`)
+	r, err := StructToMap(&TestStruct{
+		TestString: "string",
+		TestRaw:    &m,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, r["string"], "string")
+
+	raw := r["raw"].(map[string]interface{})
+	assert.Equal(t, raw["string"], "123")
+}
 
 func TestTypeMap(t *testing.T) {
 	r, err := TypeMap(map[string]string{
