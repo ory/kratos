@@ -9,6 +9,7 @@ Name | Type | Description | Notes
 **Password** | **string** | The user&#39;s password. | 
 **PasswordIdentifier** | **string** | Identifier is the email or username of the user trying to log in. | 
 **Provider** | **string** | The provider to register with | 
+**Traits** | Pointer to **map[string]interface{}** | The identity traits. This is a placeholder for the registration flow. | [optional] 
 **TotpCode** | **string** | The TOTP code. | 
 
 ## Methods
@@ -134,6 +135,31 @@ and a boolean to check if the value has been set.
 
 SetProvider sets Provider field to given value.
 
+
+### GetTraits
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetTraits() map[string]interface{}`
+
+GetTraits returns the Traits field if non-nil, zero value otherwise.
+
+### GetTraitsOk
+
+`func (o *SubmitSelfServiceLoginFlowBody) GetTraitsOk() (*map[string]interface{}, bool)`
+
+GetTraitsOk returns a tuple with the Traits field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetTraits
+
+`func (o *SubmitSelfServiceLoginFlowBody) SetTraits(v map[string]interface{})`
+
+SetTraits sets Traits field to given value.
+
+### HasTraits
+
+`func (o *SubmitSelfServiceLoginFlowBody) HasTraits() bool`
+
+HasTraits returns a boolean if a field has been set.
 
 ### GetTotpCode
 

@@ -548,10 +548,6 @@
             "format": "date-time",
             "type": "string"
           },
-          "forced": {
-            "description": "Refresh stores whether this login flow should enforce re-authentication.",
-            "type": "boolean"
-          },
           "id": {
             "$ref": "#/components/schemas/UUID"
           },
@@ -559,6 +555,10 @@
             "description": "IssuedAt is the time (UTC) when the flow started.",
             "format": "date-time",
             "type": "string"
+          },
+          "refresh": {
+            "description": "Refresh stores whether this login flow should enforce re-authentication.",
+            "type": "boolean"
           },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
@@ -1009,6 +1009,10 @@
           "provider": {
             "description": "The provider to register with",
             "type": "string"
+          },
+          "traits": {
+            "description": "The identity traits. This is a placeholder for the registration flow.",
+            "type": "object"
           }
         },
         "required": [

@@ -95,7 +95,7 @@ type Flow struct {
 	CSRFToken string `json:"-" db:"csrf_token"`
 
 	// Refresh stores whether this login flow should enforce re-authentication.
-	Refresh bool `json:"forced" db:"forced"`
+	Refresh bool `json:"refresh" db:"forced"`
 
 	// RequestedAAL stores if the flow was requested to update the authenticator assurance level.
 	//
