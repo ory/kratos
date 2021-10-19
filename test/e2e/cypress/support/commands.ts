@@ -440,6 +440,7 @@ Cypress.Commands.add(
   ({ expectSession = true, url = APP_URL + '/login' }) => {
     cy.visit(url)
     cy.triggerOidc('hydra')
+    cy.location('href').should('not.eq', '/consent')
     if (expectSession) {
       cy.getSession()
     } else {
