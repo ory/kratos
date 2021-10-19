@@ -76,6 +76,14 @@ context('2FA lookup secrets', () => {
           expect(loc.href).to.include('/login')
         })
         cy.shouldShow2FAScreen()
+
+        // If we visit settings page we still end up at 2fa screen
+        cy.visit(settings)
+        cy.location().should((loc) => {
+          expect(loc.href).to.include('/login')
+        })
+
+        cy.shouldShow2FAScreen()
         cy.get('input[name="totp_code"]').then(($e) => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
