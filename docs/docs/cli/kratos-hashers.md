@@ -9,6 +9,7 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos hashers
 
 This command contains helpers around hashing
@@ -21,6 +22,5 @@ This command contains helpers around hashing
 
 ### SEE ALSO
 
-* [kratos](kratos)	 - 
-* [kratos hashers argon2](kratos-hashers-argon2)	 - 
-
+- [kratos](kratos) -
+- [kratos hashers argon2](kratos-hashers-argon2) -
