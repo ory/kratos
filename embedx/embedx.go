@@ -2,8 +2,9 @@ package embedx
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
 	"io"
+
+	"github.com/pkg/errors"
 
 	"github.com/tidwall/gjson"
 
