@@ -308,7 +308,7 @@ func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
 		}
 		p.identitySchema, err = c.Compile(embedx.IdentityMeta.GetSchemaID())
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 	}
 
@@ -324,7 +324,7 @@ func (p *Config) validateIdentitySchemas() error {
 	for _, s := range p.IdentityTraitsSchemas() {
 		resource, err := jsonschema.LoadURL(s.URL)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		defer resource.Close()
 
@@ -335,7 +335,7 @@ func (p *Config) validateIdentitySchemas() error {
 
 		if err = j.Validate(bytes.NewBuffer(schema)); err != nil {
 			p.formatJsonErrors(schema, err)
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	return nil

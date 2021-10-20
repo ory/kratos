@@ -2,7 +2,7 @@ package embedx
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/pkg/errors"
 	"io"
 
 	"github.com/tidwall/gjson"
@@ -61,7 +61,7 @@ func getSchema(schema SchemaType) (*Schema, error) {
 	if val, ok := schemas[schema]; ok {
 		return val, nil
 	}
-	return nil, fmt.Errorf("the specified schema type (%d) is not supported", int(schema))
+	return nil, errors.Errorf("the specified schema type (%d) is not supported", int(schema))
 }
 
 func (s SchemaType) GetSchemaID() string {
@@ -73,7 +73,6 @@ func (s SchemaType) GetSchemaID() string {
 func AddSchemaResources(c interface {
 	AddResource(url string, r io.Reader) error
 }, opts ...SchemaType) error {
-
 	var sc []*Schema
 
 	for _, o := range opts {
@@ -96,7 +95,7 @@ func addSchemaResources(c interface {
 }, schemas []*Schema) error {
 	for _, s := range schemas {
 		if err := c.AddResource(s.id, bytes.NewBufferString(s.data)); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		if s.dependencies != nil {
 			if err := addSchemaResources(c, s.dependencies); err != nil {
