@@ -265,7 +265,9 @@ context('2FA lookup secrets', () => {
           expect: { email },
           type: { email: email, password: password }
         })
-        cy.location('pathname').should('not.include', '/login')
+        cy.getLookupSecrets().should((c) => {
+          expect(c).to.not.be.empty
+        })
         cy.getSession()
       })
 
