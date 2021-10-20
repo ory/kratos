@@ -64,7 +64,7 @@ fi
 
 if [ -z ${CI+x} ]; then
   docker rm mailslurper hydra hydra-ui -f || true
-  docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps >"${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
+  docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
 fi
 
 dev=no
@@ -80,6 +80,7 @@ done
 run() {
   killall kratos || true
   killall node || true
+  killall modd || true
   killall hydra || true
   killall hydra-login-consent || true
 
