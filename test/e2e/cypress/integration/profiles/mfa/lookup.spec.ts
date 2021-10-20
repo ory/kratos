@@ -264,6 +264,8 @@ context('2FA lookup secrets', () => {
           expect: { email },
           type: { email: email, password: password }
         })
+        cy.location('pathname').should('not.include', '/login')
+        cy.getSession()
       })
 
       it('should not show lookup as an option if not configured', () => {
