@@ -25,13 +25,13 @@ Something is not working.
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] panic: a handle is already registered for path
-      '/self-service/recovery/methods/link'
-      ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [ ] Relative path in ui_url or default_browser_return_url cause runtime crash
       ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [ ] /schemas/default does not work with base64 identity schemas
       ([kratos#1529](https://github.com/ory/kratos/issues/1529))
+- [x] panic: a handle is already registered for path
+      '/self-service/recovery/methods/link'
+      ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [x] Auto-Login on Registration flow does not return `session`, only `identity`
       for SPA requests
       ([kratos#1604](https://github.com/ory/kratos/issues/1604))
@@ -230,6 +230,9 @@ Something is not working.
       ([kratos#1077](https://github.com/ory/kratos/issues/1077))
 - [ ] Email verification link is automatically opened by mail provider
       ([kratos#1202](https://github.com/ory/kratos/issues/1202))
+- [ ] Delete self-service flows after completion
+      ([kratos#952](https://github.com/ory/kratos/issues/952)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] recovery link is open by email app
       ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 
@@ -249,6 +252,9 @@ New feature or request.
       [@Alano Terblanche](https://github.com/Benehiko)
 - [ ] Write new recovery and verification strategy that does not rely on links
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
+- [ ] Delete self-service flows after completion
+      ([kratos#952](https://github.com/ory/kratos/issues/952)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -256,12 +262,12 @@ Affects documentation.
 
 #### Issues
 
-- [ ] doc page for ui error messages
-      ([kratos#1784](https://github.com/ory/kratos/issues/1784)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] Document that identity information (traits, etc) are available to token
       holders and backend systems
       ([kratos#43](https://github.com/ory/kratos/issues/43)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] doc page for ui error messages
+      ([kratos#1784](https://github.com/ory/kratos/issues/1784)) -
       [@hackerman](https://github.com/aeneasr)
 
 ## [v0.8.0-alpha.1](https://github.com/ory/kratos/milestone/10)
@@ -274,16 +280,16 @@ Something is not working.
 
 #### Issues
 
-- [ ] Add option to remove recovery codes
-      ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
-      [@hackerman](https://github.com/aeneasr)
-- [ ] return_to_query_param not honored on OIDC login
-      ([kratos#1773](https://github.com/ory/kratos/issues/1773)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect
       ([kratos#782](https://github.com/ory/kratos/issues/782))
+- [x] Add option to remove recovery codes
+      ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] return_to_query_param not honored on OIDC login
+      ([kratos#1773](https://github.com/ory/kratos/issues/1773)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Hide SQLite migration message
       ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
       [@hackerman](https://github.com/aeneasr)
@@ -294,11 +300,6 @@ New feature or request.
 
 #### Issues
 
-- [ ] Add `return_to` to self-service SDK methods including logout
-      ([kratos#1605](https://github.com/ory/kratos/issues/1605)) -
-      [@hackerman](https://github.com/aeneasr)
-- [ ] Provide return_to value as part of flow entity
-      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
 - [x] Implement identity state and administrative deactivation, deletion of
       identities ([kratos#598](https://github.com/ory/kratos/issues/598)) -
       [@hackerman](https://github.com/aeneasr)
@@ -306,10 +307,15 @@ New feature or request.
       ([kratos#791](https://github.com/ory/kratos/issues/791))
 - [x] More meta information about the managed identity
       ([kratos#820](https://github.com/ory/kratos/issues/820))
+- [x] Provide return_to value as part of flow entity
+      ([kratos#1121](https://github.com/ory/kratos/issues/1121))
+- [x] Add `return_to` to self-service SDK methods including logout
+      ([kratos#1605](https://github.com/ory/kratos/issues/1605)) -
+      [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
-- [ ] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
+- [x] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
       better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
@@ -339,13 +345,13 @@ Blocks milestones or other issues or pulls.
 - [ ] Ory Kratos 0.8 Release Prep
       ([kratos#1663](https://github.com/ory/kratos/issues/1663)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Add option to remove recovery codes
+- [x] Add option to remove recovery codes
       ([kratos#1751](https://github.com/ory/kratos/issues/1751)) -
       [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
-- [ ] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
+- [x] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
       better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
