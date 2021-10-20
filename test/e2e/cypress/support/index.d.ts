@@ -23,8 +23,8 @@ declare global {
        * @param opts
        */
       getSession(opts?: {
-        expectAal: 'aal2' | 'aal1'
-        expectMethods: Array<'password' | 'webauthn' | 'lookup_secret' | 'totp'>
+        expectAal?: 'aal2' | 'aal1'
+        expectMethods?: Array<'password' | 'webauthn' | 'lookup_secret' | 'totp'>
       }): Chainable<Session>
 
       /**

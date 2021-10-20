@@ -1,6 +1,6 @@
-import { appPrefix, gen, website } from '../../../helpers'
-import { routes as express } from '../../../helpers/express'
-import { routes as react } from '../../../helpers/react'
+import {appPrefix, gen, website} from '../../../helpers'
+import {routes as express} from '../../../helpers/express'
+import {routes as react} from '../../../helpers/react'
 
 context('2FA lookup secrets', () => {
   ;[
@@ -18,7 +18,7 @@ context('2FA lookup secrets', () => {
       app: 'express' as 'express',
       profile: 'mfa'
     }
-  ].forEach(({ settings, login, profile, app, base }) => {
+  ].forEach(({settings, login, profile, app, base}) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
@@ -36,9 +36,9 @@ context('2FA lookup secrets', () => {
         cy.registerApi({
           email,
           password,
-          fields: { 'traits.website': website }
+          fields: {'traits.website': website}
         })
-        cy.login({ email, password, cookieUrl: base })
+        cy.login({email, password, cookieUrl: base})
 
         cy.longPrivilegedSessionTime()
         cy.sessionRequiresNo2fa()
@@ -58,13 +58,13 @@ context('2FA lookup secrets', () => {
         cy.shortPrivilegedSessionTime()
         cy.get('button[name="lookup_secret_disable"]').click()
         cy.reauth({
-          expect: { email },
-          type: { email: email, password: password }
+          expect: {email},
+          type: {email: email, password: password}
         })
         cy.expectSettingsSaved()
 
         cy.clearAllCookies()
-        cy.login({ email: email, password: password, cookieUrl: base })
+        cy.login({email: email, password: password, cookieUrl: base})
 
         cy.visit(login + '?aal=aal2')
         cy.get('h2').should('contain.text', 'Two-Factor Authentication')
@@ -242,8 +242,8 @@ context('2FA lookup secrets', () => {
         cy.visit(settings)
         cy.get('button[name="lookup_secret_regenerate"]').click()
         cy.reauth({
-          expect: { email },
-          type: { email: email, password: password }
+          expect: {email},
+          type: {email: email, password: password}
         })
 
         let codes
@@ -254,21 +254,23 @@ context('2FA lookup secrets', () => {
         cy.shortPrivilegedSessionTime()
         cy.get('button[name="lookup_secret_confirm"]').click()
         cy.reauth({
-          expect: { email },
-          type: { email: email, password: password }
+          expect: {email},
+          type: {email: email, password: password}
         })
         cy.expectSettingsSaved()
 
         cy.shortPrivilegedSessionTime()
         cy.get('button[name="lookup_secret_reveal"]').click()
         cy.reauth({
-          expect: { email },
-          type: { email: email, password: password }
+          expect: {email},
+          type: {email: email, password: password}
         })
         cy.getLookupSecrets().should((c) => {
           expect(c).to.not.be.empty
         })
-        cy.getSession()
+        cy.getSession({
+          expectAal: 'aal2',
+        })
       })
 
       it('should not show lookup as an option if not configured', () => {
