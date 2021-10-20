@@ -142,7 +142,7 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
 		if shouldRespondWithJSON {
-			s.d.Writer().WriteError(w, r, err)
+			s.d.Writer().WriteError(w, r, aalErr)
 		} else {
 			http.Redirect(w, r, urlx.CopyWithQuery(
 				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow),

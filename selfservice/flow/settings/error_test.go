@@ -231,7 +231,8 @@ func TestHandleError(t *testing.T) {
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				require.NotEmpty(t, gjson.GetBytes(body, "redirect_browser_to").String())
+				assertx.EqualAsJSONExcept(t, session.NewErrAALNotSatisfied(""), json.RawMessage(body), []string{"redirect_browser_to"})
 			})
 
 			t.Run("case=generic error", func(t *testing.T) {
