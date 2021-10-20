@@ -22,8 +22,16 @@ var (
 //
 // swagger:model errorAuthenticatorAssuranceLevelNotSatisfied
 type ErrAALNotSatisfied struct {
-	*herodot.DefaultError
+	DefaultError *herodot.DefaultError `json:"error"`
 	RedirectTo string `json:"redirect_browser_to"`
+}
+
+func (e *ErrAALNotSatisfied) EnhanceJSONError() interface{} {
+	return e
+}
+
+func (e *ErrAALNotSatisfied) Error() string {
+	return e.DefaultError.Error()
 }
 
 // NewErrAALNotSatisfied creates a new ErrAALNotSatisfied.
