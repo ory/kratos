@@ -99,7 +99,7 @@ model_inline_response_200.go
 model_inline_response_200_1.go
 model_inline_response_503.go
 model_json_error.go
-model_needs_privileged_session_error.go
+model_session_refresh_required_error.go
 model_recovery_address.go
 model_self_service_browser_location_change_required_error.go
 model_self_service_error.go
