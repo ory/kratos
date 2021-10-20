@@ -257,6 +257,7 @@ context('2FA lookup secrets', () => {
           expect: { email },
           type: { email: email, password: password }
         })
+        cy.expectSettingsSaved()
 
         cy.shortPrivilegedSessionTime()
         cy.get('button[name="lookup_secret_reveal"]').click()
