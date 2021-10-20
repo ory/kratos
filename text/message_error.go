@@ -3,18 +3,18 @@ package text
 // This file contains error IDs for all system errors / JSON errors
 
 const (
-	ErrIDNeedsPrivilegedSession                        = "needs_privileged_session"
+	ErrIDNeedsPrivilegedSession                        = "session_refresh_required"
 	ErrIDSelfServiceFlowExpired                        = "self_service_flow_expired"
 	ErrIDSelfServiceBrowserLocationChangeRequiredError = "browser_location_change_required"
 
-	ErrIDAlreadyLoggedIn             = "has_session_already"
-	ErrIDAddressNotVerified          = "no_verified_address"
-	ErrIDSessionHasAALAlready        = "session_fulfills_aal"
-	ErrIDSessionRequiredForHigherAAL = "aal_needs_session"
-	ErrIDHigherAALRequired           = "aal_needs_upgrade"
-	ErrNoActiveSession               = "no_active_session"
-	ErrIDRedirectURLNotAllowed       = "forbidden_return_to"
-	ErrIDInitiatedBySomeoneElse      = "intended_for_someone_else"
+	ErrIDAlreadyLoggedIn             = "session_already_available"
+	ErrIDAddressNotVerified          = "session_verified_address_required"
+	ErrIDSessionHasAALAlready        = "session_aal_already_fulfilled"
+	ErrIDSessionRequiredForHigherAAL = "session_aal1_required"
+	ErrIDHigherAALRequired           = "session_aal2_required"
+	ErrNoActiveSession               = "session_inactive"
+	ErrIDRedirectURLNotAllowed       = "self_service_flow_return_to_forbidden"
+	ErrIDInitiatedBySomeoneElse      = "security_identity_mismatch"
 
-	ErrIDCSRF = "csrf_violation"
+	ErrIDCSRF = "security_csrf_violation"
 )

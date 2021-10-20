@@ -172,8 +172,8 @@ type initializeSelfServiceSettingsFlowWithoutBrowser struct {
 //
 // In the case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `no_active_session`: No Ory Session was found - sign in a user first.
+// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `session_inactive`: No Ory Session was found - sign in a user first.
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
@@ -238,9 +238,9 @@ type initializeSelfServiceSettingsFlowForBrowsers struct {
 // If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `no_active_session`: No Ory Session was found - sign in a user first.
-// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `session_inactive`: No Ory Session was found - sign in a user first.
+// - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
@@ -325,9 +325,9 @@ type getSelfServiceSettingsFlow struct {
 // If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `no_active_session`: No Ory Session was found - sign in a user first.
-// - `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `session_inactive`: No Ory Session was found - sign in a user first.
+// - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
 //		identity logged in instead.
 //
 // More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -448,14 +448,14 @@ type submitSelfServiceSettingsFlowBody struct{}
 // If this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `needs_privileged_session`: The identity requested to change something that needs a privileged session. Redirect
+// - `session_refresh_required`: The identity requested to change something that needs a privileged session. Redirect
 //		the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
 //		or initiate a refresh login flow otherwise.
-// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `no_active_session`: No Ory Session was found - sign in a user first.
-// - `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `session_inactive`: No Ory Session was found - sign in a user first.
+// - `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
 //		identity logged in instead.
-// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+// - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 // - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 //		Most likely used in Social Sign In flows.
 //

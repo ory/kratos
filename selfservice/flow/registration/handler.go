@@ -145,8 +145,8 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 //
 // In the case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `has_session_already`: The user is already signed in.
-// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `session_already_available`: The user is already signed in.
+// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
@@ -197,9 +197,9 @@ type initializeSelfServiceRegistrationFlowForBrowsers struct {
 // If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `has_session_already`: The user is already signed in.
-// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+// - `session_already_available`: The user is already signed in.
+// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 //
 // If this endpoint is called via an AJAX request, the response contains the registration flow without a redirect.
 //
@@ -282,7 +282,7 @@ type getSelfServiceRegistrationFlow struct {
 //
 // This request may fail due to several reasons. The `error.id` can be one of:
 //
-// - `has_session_already`: The user is already signed in.
+// - `session_already_available`: The user is already signed in.
 // - `self_service_flow_expired`: The flow is expired and you should request a new one.
 //
 // More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -374,9 +374,9 @@ type submitSelfServiceRegistrationFlowBody struct{}
 // If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
 // case of an error, the `error.id` of the JSON response body can be one of:
 //
-// - `has_session_already`: The user is already signed in.
-// - `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-// - `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+// - `session_already_available`: The user is already signed in.
+// - `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+// - `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 // - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 //		Most likely used in Social Sign In flows.
 //
