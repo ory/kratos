@@ -196,8 +196,8 @@ func (s *ManagerHTTP) DoesSessionSatisfy(r *http.Request, sess *Session, request
 			return nil
 		}
 
-		return errors.WithStack(NewErrAALNotSatisfied(
-			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config(r.Context()).SelfPublicURL(r), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String()))
+		return NewErrAALNotSatisfied(
+			urlx.CopyWithQuery(urlx.AppendPaths(s.r.Config(r.Context()).SelfPublicURL(r), "/self-service/login/browser"), url.Values{"aal": {"aal2"}}).String())
 	}
 	return errors.Errorf("requested unknown aal: %s", requestedAAL)
 }
