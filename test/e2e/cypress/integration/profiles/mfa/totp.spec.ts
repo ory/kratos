@@ -80,7 +80,7 @@ context('2FA lookup secrets', () => {
         // If we visit settings page we still end up at 2fa screen
         cy.visit(settings)
         cy.location().should((loc) => {
-          expect(loc.href).to.include('/login')
+          expect(loc.pathname).to.include('/login')
         })
 
         cy.shouldShow2FAScreen()
@@ -88,7 +88,9 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[name="method"][value="totp"]').click()
-        cy.expectSettingsSaved()
+        cy.location().should((loc) => {
+          expect(loc.pathname).to.oneOf(['/welcome', '/'])
+        })
         cy.getSession({
           expectAal: 'aal2',
           expectMethods: ['password', 'totp']
