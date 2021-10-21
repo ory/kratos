@@ -79,6 +79,9 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if !s.d.Hasher().Understands([]byte(o.HashedPassword)) {
+		// Migrate password hash if not configured hasher.
+		// But Kratos doesn't have ability to import credentials now.
+		// see https://github.com/ory/kratos/issues/605
 		if err := s.migratePasswordHash(r.Context(), i.ID, []byte(p.Password)); err != nil {
 			return nil, s.handleLoginError(w, r, f, &p, err)
 		}
