@@ -166,7 +166,7 @@ declare global {
        * @param opts
        */
       reauth(opts: {
-        expect: { email }
+        expect: { email; success?: boolean }
         type: { email?: string; password?: string }
       }): Chainable<void>
 

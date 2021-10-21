@@ -527,13 +527,13 @@ Cypress.Commands.add('logout', () => {
 Cypress.Commands.add(
   'reauth',
   ({
-    expect: { email },
+    expect: { email, success = true },
     type: { email: temail, password: tpassword } = {
       email: undefined,
       password: undefined
     }
   }) => {
-    cy.url().should('include', '/login')
+    cy.location('pathname').should('contain', '/login')
     cy.get('input[name="password_identifier"]').should('have.value', email)
     if (temail) {
       cy.get('input[name="password_identifier"]').clear().type(temail)
@@ -543,6 +543,9 @@ Cypress.Commands.add(
     }
     cy.longPrivilegedSessionTime()
     cy.get('button[value="password"]').click()
+    if (success) {
+      cy.location('pathname').should('not.contain', '/login')
+    }
   }
 )
 
