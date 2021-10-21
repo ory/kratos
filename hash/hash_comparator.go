@@ -85,9 +85,9 @@ func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
 }
 
 var (
-	isBcryptHash   = regexp.MustCompile("^\\$2[abzy]?\\$")
-	isArgon2idHash = regexp.MustCompile("^\\$argon2id\\$")
-	isPbkdf2Hash   = regexp.MustCompile("^\\$pbkdf2-sha[0-9]{1,3}\\$")
+	isBcryptHash   = regexp.MustCompile(`^\$2[abzy]?\$`)
+	isArgon2idHash = regexp.MustCompile(`^\$argon2id\$`)
+	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
 )
 
 func IsBcryptHash(hash []byte) bool {
