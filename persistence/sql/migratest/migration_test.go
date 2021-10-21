@@ -2,13 +2,15 @@ package migratest
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/bradleyjkemp/cupaloy/v2"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/corp"
 	"github.com/ory/x/dbal"
@@ -43,6 +45,22 @@ func init() {
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
 	})
+}
+
+func snapshotFor(paths ...string) *cupaloy.Config {
+	return cupaloy.New(
+		cupaloy.CreateNewAutomatically(true),
+		cupaloy.FailOnUpdate(true),
+		cupaloy.SnapshotFileExtension(".json"),
+		cupaloy.SnapshotSubdirectory(filepath.Join(paths...)),
+	)
+}
+
+func CompareWithFixture(t *testing.T, actual interface{}, prefix string, id string) {
+	s := snapshotFor("fixtures", prefix)
+	actualJSON, err := json.MarshalIndent(actual, "", "  ")
+	require.NoError(t, err)
+	assert.NoError(t, s.SnapshotWithName(id, actualJSON))
 }
 
 func TestMigrations(t *testing.T) {
@@ -92,14 +110,14 @@ func TestMigrations(t *testing.T) {
 			t.Logf("URL: %s", url)
 
 			t.Run("suite=up", func(t *testing.T) {
-				tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata", l)
+				tm := popx.NewTestMigrator(t, c, os.DirFS("../migrations/sql"), os.DirFS("./testdata"), l)
 				require.NoError(t, tm.Up(ctx))
 			})
 
 			t.Run("suite=fixtures", func(t *testing.T) {
 				d := driver.New(
 					context.Background(),
-					&cobra.Command{},
+					os.Stderr,
 					configx.WithValues(map[string]interface{}{
 						config.ViperKeyDSN:                      url,
 						config.ViperKeyPublicBaseURL:            "https://www.ory.sh/",
@@ -121,17 +139,17 @@ func TestMigrations(t *testing.T) {
 						require.NoError(t, err)
 
 						for _, a := range actual.VerifiableAddresses {
-							migratest.CompareWithFixture(t, a, "identity_verification_address", a.ID.String())
+							CompareWithFixture(t, a, "identity_verification_address", a.ID.String())
 						}
 
 						for _, a := range actual.RecoveryAddresses {
-							migratest.CompareWithFixture(t, a, "identity_recovery_address", a.ID.String())
+							CompareWithFixture(t, a, "identity_recovery_address", a.ID.String())
 						}
 
 						// Prevents ordering to get in the way.
 						actual.VerifiableAddresses = nil
 						actual.RecoveryAddresses = nil
-						migratest.CompareWithFixture(t, actual, "identity", id.ID.String())
+						CompareWithFixture(t, actual, "identity", id.ID.String())
 					}
 
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "identity"), found)
@@ -144,7 +162,7 @@ func TestMigrations(t *testing.T) {
 					require.NotEmpty(t, ids)
 
 					for _, id := range ids {
-						migratest.CompareWithFixture(t, id, "verification_token", id.ID.String())
+						CompareWithFixture(t, id, "verification_token", id.ID.String())
 					}
 				})
 
@@ -159,7 +177,7 @@ func TestMigrations(t *testing.T) {
 						actual, err := d.SessionPersister().GetSession(context.Background(), id.ID)
 						require.NoErrorf(t, err, "Trying to get session: %s", id.ID)
 						require.NotEmpty(t, actual.LogoutToken, "check if migrations have generated a logout token for existing sessions")
-						migratest.CompareWithFixture(t, actual, "session", id.ID.String())
+						CompareWithFixture(t, actual, "session", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "session"), found)
 				})
@@ -174,7 +192,7 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						migratest.CompareWithFixture(t, actual, "login_flow", id.ID.String())
+						CompareWithFixture(t, actual, "login_flow", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "login_flow"), found)
 				})
@@ -189,7 +207,7 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						migratest.CompareWithFixture(t, actual, "registration_flow", id.ID.String())
+						CompareWithFixture(t, actual, "registration_flow", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "registration_flow"), found)
 				})
@@ -203,8 +221,8 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						found = append(found, id.ID.String())
 						actual, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
-						require.NoError(t, err)
-						migratest.CompareWithFixture(t, actual, "settings_flow", id.ID.String())
+						require.NoError(t, err, id.ID.String())
+						CompareWithFixture(t, actual, "settings_flow", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "settings_flow"), found)
 				})
@@ -219,7 +237,7 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						migratest.CompareWithFixture(t, actual, "recovery_flow", id.ID.String())
+						CompareWithFixture(t, actual, "recovery_flow", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_flow"), found)
 				})
@@ -234,7 +252,7 @@ func TestMigrations(t *testing.T) {
 						found = append(found, id.ID.String())
 						actual, err := d.VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						migratest.CompareWithFixture(t, actual, "verification_flow", id.ID.String())
+						CompareWithFixture(t, actual, "verification_flow", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "verification_flow"), found)
 				})
@@ -247,7 +265,7 @@ func TestMigrations(t *testing.T) {
 					var found []string
 					for _, id := range ids {
 						found = append(found, id.ID.String())
-						migratest.CompareWithFixture(t, id, "recovery_token", id.ID.String())
+						CompareWithFixture(t, id, "recovery_token", id.ID.String())
 					}
 					migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "recovery_token"), found)
 				})
@@ -265,7 +283,7 @@ func TestMigrations(t *testing.T) {
 			})
 
 			t.Run("suite=down", func(t *testing.T) {
-				tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata", l)
+				tm := popx.NewTestMigrator(t, c, os.DirFS("../migrations/sql"), os.DirFS("./testdata"), l)
 				require.NoError(t, tm.Down(ctx, -1))
 			})
 		}

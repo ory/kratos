@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/identity"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -36,10 +38,14 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
 			expected.Active = true
+			expected.AMR = session.AuthenticationMethods{
+				{Method: identity.CredentialsTypePassword, CompletedAt: time.Now().UTC().Round(time.Second)},
+				{Method: identity.CredentialsTypeOIDC, CompletedAt: time.Now().UTC().Round(time.Second)},
+			}
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 
 			assert.Equal(t, uuid.Nil, expected.ID)
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 			assert.NotEqual(t, uuid.Nil, expected.ID)
 
 			check := func(actual *session.Session, err error) {
@@ -53,6 +59,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.EqualValues(t, expected.ExpiresAt.Unix(), actual.ExpiresAt.Unix())
 				assert.Equal(t, expected.AuthenticatedAt.Unix(), actual.AuthenticatedAt.Unix())
 				assert.Equal(t, expected.IssuedAt.Unix(), actual.IssuedAt.Unix())
+				assert.Equal(t, expected.AuthenticatorAssuranceLevel, actual.AuthenticatorAssuranceLevel)
+				assert.Equal(t, expected.AMR, actual.AMR)
 			}
 
 			t.Run("method=get by id", func(t *testing.T) {
@@ -74,13 +82,31 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
 				})
 			})
+
+			t.Run("case=update session", func(t *testing.T) {
+				expected.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel3
+				require.NoError(t, p.UpsertSession(ctx, &expected))
+
+				actual, err := p.GetSessionByToken(ctx, expected.Token)
+				check(actual, err)
+				assert.Equal(t, identity.AuthenticatorAssuranceLevel3, actual.AuthenticatorAssuranceLevel)
+			})
+
+			t.Run("case=remove amr and update", func(t *testing.T) {
+				expected.AMR = nil
+				require.NoError(t, p.UpsertSession(ctx, &expected))
+
+				actual, err := p.GetSessionByToken(ctx, expected.Token)
+				check(actual, err)
+				assert.Empty(t, actual.AMR)
+			})
 		})
 
 		t.Run("case=delete session", func(t *testing.T) {
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
@@ -100,7 +126,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			var expected session.Session
 			require.NoError(t, faker.FakeData(&expected))
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
@@ -121,7 +147,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, faker.FakeData(&expected))
 			expected.Active = true
 			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
-			require.NoError(t, p.CreateSession(ctx, &expected))
+			require.NoError(t, p.UpsertSession(ctx, &expected))
 
 			actual, err := p.GetSession(ctx, expected.ID)
 			require.NoError(t, err)
@@ -150,12 +176,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, faker.FakeData(&expected1))
 			require.NoError(t, p.CreateIdentity(ctx, expected1.Identity))
 
-			require.NoError(t, p.CreateSession(ctx, &expected1))
+			require.NoError(t, p.UpsertSession(ctx, &expected1))
 
 			require.NoError(t, faker.FakeData(&expected2))
 			expected2.Identity = expected1.Identity
 			expected2.IdentityID = expected1.IdentityID
-			require.NoError(t, p.CreateSession(ctx, &expected2))
+			require.NoError(t, p.UpsertSession(ctx, &expected2))
 
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
@@ -183,8 +209,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			t1, t2 := randx.MustString(32, randx.AlphaNum), randx.MustString(32, randx.AlphaNum)
 			sid1, sid2 := x.NewUUID(), x.NewUUID()
-			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", sid1, nid1, iid1, t1, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum)).Exec())
-			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", sid2, nid2, iid2, t2, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum)).Exec())
+			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token, authentication_methods) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sid1, nid1, iid1, t1, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum), "[]").Exec())
+			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO sessions (id, nid, identity_id, token, expires_at,authenticated_at, created_at, updated_at, logout_token, authentication_methods) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sid2, nid2, iid2, t2, time.Now().Add(time.Hour), time.Now(), time.Now(), time.Now(), randx.MustString(32, randx.AlphaNum), "[]").Exec())
 
 			_, err := p.GetSession(ctx, sid1)
 			require.NoError(t, err)

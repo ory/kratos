@@ -17,6 +17,12 @@
               "password": {
                 "identifier": true
               }
+            },
+            "verification": {
+              "via": "email"
+            },
+            "recovery": {
+              "via": "email"
             }
           }
         },
@@ -25,6 +31,23 @@
           "type": "string",
           "format": "uri",
           "minLength": 10
+        },
+        "tos": {
+          "title": "Accept Terms of Service",
+          "type": "boolean"
+        },
+        "age": {
+          "title": "Age",
+          "type": "number",
+          "maximum": 300
+        },
+        "consent": {
+          "title": "Consent",
+          "type": "boolean"
+        },
+        "newsletter": {
+          "title": "Newsletter",
+          "type": "boolean"
         }
       },
       "required": [

@@ -1,0 +1,64 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "required": true,
+      "type": "hidden",
+      "value": "Yms2cmo1NTA2OWFub3F3dHI2NHcxNnd2MTNsNzhocTk="
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "webauthn_register_displayname",
+      "type": "text",
+      "value": ""
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050013,
+        "text": "Name of the security key",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "webauthn_register_trigger",
+      "onclick": "// noinspection JSAnnotator\nif (!window.PublicKeyCredential) {\n  alert('This browser does not support WebAuthn!');\n} else {\n  function bufferDecode(value) {\n    return Uint8Array.from(atob(value), c =\u003e c.charCodeAt(0));\n  }\n\n  function bufferEncode(value) {\n    return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))\n      .replace(/\\+/g, '-')\n      .replace(/\\//g, '_')\n      .replace(/=/g, '');\n  }\n\n  const opt = {\"publicKey\":{\"challenge\":\"jL11UA6hT+HxhilPeOinWmaYVUj3CbW0BWFecAOtXfI=\",\"rp\":{\"name\":\"Ory Corp\",\"id\":\"localhost\"},\"user\":{\"name\":\"placeholder\",\"icon\":\"https://via.placeholder.com/128\",\"displayName\":\"placeholder\",\"id\":\"yUL/larKSTabHb6K6Lk9ug==\"},\"pubKeyCredParams\":[{\"type\":\"public-key\",\"alg\":-7},{\"type\":\"public-key\",\"alg\":-35},{\"type\":\"public-key\",\"alg\":-36},{\"type\":\"public-key\",\"alg\":-257},{\"type\":\"public-key\",\"alg\":-258},{\"type\":\"public-key\",\"alg\":-259},{\"type\":\"public-key\",\"alg\":-37},{\"type\":\"public-key\",\"alg\":-38},{\"type\":\"public-key\",\"alg\":-39},{\"type\":\"public-key\",\"alg\":-8}],\"authenticatorSelection\":{\"requireResidentKey\":false,\"userVerification\":\"preferred\"},\"timeout\":60000}}\n  opt.publicKey.user.id = bufferDecode(opt.publicKey.user.id);\n  opt.publicKey.challenge = bufferDecode(opt.publicKey.challenge);\n\n  if (opt.publicKey.excludeCredentials) {\n    opt.publicKey.excludeCredentials = opt.publicKey.excludeCredentials.map(function (value) {\n      return {\n        ...value,\n        id: bufferDecode(value.id)\n      }\n    })\n  }\n\n  navigator.credentials.create(opt).then(function (credential) {\n    document.querySelector('*[name=\"webauthn_register\"]').value = JSON.stringify({\n      id: credential.id,\n      rawId: bufferEncode(credential.rawId),\n      type: credential.type,\n      response: {\n        attestationObject: bufferEncode(credential.response.attestationObject),\n        clientDataJSON: bufferEncode(credential.response.clientDataJSON),\n      },\n    })\n\n    document.querySelector('*[name=\"webauthn_register_trigger\"]').closest('form').submit()\n  }).catch((err) =\u003e {\n    alert(err)\n  })\n}\n",
+      "type": "button",
+      "value": ""
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050012,
+        "text": "Add security key",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "webauthn_register",
+      "type": "hidden",
+      "value": ""
+    },
+    "group": "webauthn",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  }
+]

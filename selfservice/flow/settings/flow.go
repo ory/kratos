@@ -2,9 +2,14 @@ package settings
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/text"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/ui/container"
@@ -62,6 +67,9 @@ type Flow struct {
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
 
+	// ReturnTo contains the requested return_to URL.
+	ReturnTo string `json:"return_to,omitempty" db:"-"`
+
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
 	Active sqlxx.NullString `json:"active,omitempty" db:"active_method"`
@@ -71,7 +79,9 @@ type Flow struct {
 	// required: true
 	UI *container.Container `json:"ui" db:"ui"`
 
-	// Identity contains all of the identity's data in raw form.
+	// Identity contains the identity's data in raw form.
+	//
+	// If `state` is `success` this will be the updated identity!
 	//
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
@@ -86,6 +96,9 @@ type Flow struct {
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
 
+	// InternalContext stores internal context used by internals - for example MFA keys.
+	InternalContext sqlxx.JSONRawMessage `db:"internal_context" json:"-" faker:"-"`
+
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
@@ -95,31 +108,35 @@ type Flow struct {
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-// The Response for Settings Flows via API
-//
-// swagger:model successfulSelfServiceSettingsWithoutBrowser
-type APIFlowResponse struct {
-	// The Flow
-	//
-	// required: true
-	Flow *Flow `json:"flow"`
-
-	// The Identity
-	//
-	// The updated identity
-	//
-	// required: true
-	Identity *identity.Identity `json:"identity"`
+func MustNewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
+	f, err := NewFlow(conf, exp, r, i, ft)
+	if err != nil {
+		panic(err)
+	}
+	return f
 }
 
-func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
+
+	// Pre-validate the return to URL which is contained in the HTTP request.
+	requestURL := x.RequestURL(r).String()
+	_, err := x.SecureRedirectTo(r,
+		conf.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(requestURL),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Flow{
 		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
-		RequestURL: x.RequestURL(r).String(),
+		RequestURL: requestURL,
 		IdentityID: i.ID,
 		Identity:   i,
 		Type:       ft,
@@ -128,7 +145,8 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
-	}
+		InternalContext: []byte("{}"),
+	}, nil
 }
 
 func (f *Flow) GetType() flow.Type {
@@ -157,13 +175,27 @@ func (f *Flow) AppendTo(src *url.URL) *url.URL {
 
 func (f *Flow) Valid(s *session.Session) error {
 	if f.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 
 	if f.IdentityID != s.Identity.ID {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf(
+		return errors.WithStack(herodot.ErrBadRequest.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf(
 			"You must restart the flow because the resumable session was initiated by another person."))
 	}
 
 	return nil
+}
+
+func (f *Flow) EnsureInternalContext() {
+	if !gjson.ParseBytes(f.InternalContext).IsObject() {
+		f.InternalContext = []byte("{}")
+	}
+}
+
+func (f Flow) MarshalJSON() ([]byte, error) {
+	type local Flow
+	if u, err := url.Parse(f.RequestURL); err == nil {
+		f.ReturnTo = u.Query().Get("return_to")
+	}
+	return json.Marshal(local(f))
 }

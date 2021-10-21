@@ -1,20 +1,12 @@
-serve:
-  public:
-    cors:
-      enabled: true
-      allowed_headers:
-        - Authorization
-        - Content-Type
-        - X-Session-Token
-
 selfservice:
   flows:
     settings:
       privileged_session_max_age: 5m
+      required_aal: aal1
 
     logout:
       after:
-        default_browser_return_url: http://127.0.0.1:4455/auth/login
+        default_browser_return_url: http://localhost:4455/login
 
     registration:
       after:
@@ -23,5 +15,28 @@ selfservice:
             -
               hook: session
 
+  methods:
+    totp:
+      enabled: true
+      config:
+        issuer: issuer.ory.sh
+    lookup_secret:
+      enabled: true
+    webauthn:
+      enabled: true
+      config:
+        rp:
+          id: localhost
+          origin: http://localhost:4455
+          display_name: Ory
+
 identity:
   default_schema_url: file://test/e2e/profiles/email/identity.traits.schema.json
+
+secrets:
+  cipher:
+    - secret-thirty-two-character-long
+
+session:
+  whoami:
+    required_aal: aal1

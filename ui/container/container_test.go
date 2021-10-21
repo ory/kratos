@@ -183,7 +183,7 @@ func TestContainer(t *testing.T) {
 					Nodes: node.Nodes{
 						node.NewInputField("fruits", nil, node.DefaultGroup, node.InputAttributeTypeText),
 						node.NewInputField("meal.chef", nil, node.DefaultGroup, node.InputAttributeTypeText),
-						node.NewInputField("meal.name", nil, node.DefaultGroup, node.InputAttributeTypeText),
+						node.NewInputField("meal.name", nil, node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute),
 
 						// FIXME https://github.com/ory/kratos/issues/1316
 						//

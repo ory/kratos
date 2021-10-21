@@ -12,7 +12,7 @@ import (
 var client = pkg.NewSDK("playground")
 
 func getError() *ory.SelfServiceError {
-	e, res, err := client.V0alpha1Api.GetSelfServiceErrorExecute(ory.V0alpha1ApiApiGetSelfServiceErrorRequest{}.Id("stub:500"))
+	e, res, err := client.V0alpha2Api.GetSelfServiceErrorExecute(ory.V0alpha2ApiApiGetSelfServiceErrorRequest{}.Id("stub:500"))
 	pkg.SDKExitOnError(err, res)
 	return e
 }

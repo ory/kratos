@@ -1,0 +1,8 @@
+proxy
+profiles
+hydra-login-consent
+cypress/videos
+cypress/screenshots
+*.log
+*.yml
+

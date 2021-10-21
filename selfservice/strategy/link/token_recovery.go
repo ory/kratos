@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
@@ -96,7 +98,7 @@ func NewRecoveryToken(identityID uuid.UUID, expiresIn time.Duration) *RecoveryTo
 
 func (f *RecoveryToken) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(recovery.NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }

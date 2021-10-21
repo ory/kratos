@@ -45,7 +45,7 @@ func TestSessionDestroyer(t *testing.T) {
 			s.IdentityID = uuid.Nil
 			s.Identity = &i
 
-			require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), &s))
+			require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), &s))
 		}
 
 		// Should revoke all the sessions.

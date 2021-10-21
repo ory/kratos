@@ -2,9 +2,14 @@ package registration
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/ui/container"
@@ -43,11 +48,17 @@ type Flow struct {
 	// required: true
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 
+	// InternalContext stores internal context used by internals - for example MFA keys.
+	InternalContext sqlxx.JSONRawMessage `db:"internal_context" json:"-" faker:"-"`
+
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
 	//
 	// required: true
 	RequestURL string `json:"request_url" faker:"url" db:"request_url"`
+
+	// ReturnTo contains the requested return_to URL.
+	ReturnTo string `json:"return_to,omitempty" db:"-"`
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
@@ -69,21 +80,35 @@ type Flow struct {
 	NID       uuid.UUID `json:"-"  faker:"-" db:"nid"`
 }
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
+
+	// Pre-validate the return to URL which is contained in the HTTP request.
+	requestURL := x.RequestURL(r).String()
+	_, err := x.SecureRedirectTo(r,
+		conf.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(requestURL),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Flow{
 		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
-		RequestURL: x.RequestURL(r).String(),
+		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
-		CSRFToken: csrf,
-		Type:      ft,
-	}
+		CSRFToken:       csrf,
+		Type:            ft,
+		InternalContext: []byte("{}"),
+	}, nil
 }
 
 func (f Flow) TableName(ctx context.Context) string {
@@ -100,7 +125,7 @@ func (f Flow) GetNID() uuid.UUID {
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }
@@ -115,4 +140,18 @@ func (f *Flow) GetType() flow.Type {
 
 func (f *Flow) GetRequestURL() string {
 	return f.RequestURL
+}
+
+func (f *Flow) EnsureInternalContext() {
+	if !gjson.ParseBytes(f.InternalContext).IsObject() {
+		f.InternalContext = []byte("{}")
+	}
+}
+
+func (f Flow) MarshalJSON() ([]byte, error) {
+	type local Flow
+	if u, err := url.Parse(f.RequestURL); err == nil {
+		f.ReturnTo = u.Query().Get("return_to")
+	}
+	return json.Marshal(local(f))
 }

@@ -1726,6 +1726,22 @@ secrets:
   cookie:
     - ipsumipsumipsumi
 
+  ## Secret Keys for Ciphering ##
+  #
+  # The first secret in the array is used for encrypting data while all other keys are used to decrypt data.
+  # for now is only used for access and refresh token from oidc.
+  #
+  # WARNING the secret key must be 32 caracters long all keys that not 32 characters long will be ignore
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export SECRETS_CIPHER=<value>
+  # - Windows Command Line (CMD):
+  #    > set SECRETS_CIPHER=<value>
+  #
+  cipher:
+    - ipsumipsumipsumi
+
   ## Default Encryption Signing Secrets ##
   #
   # The first secret in the array is used for signing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
@@ -1738,6 +1754,23 @@ secrets:
   #
   default:
     - ipsumipsumipsumi
+
+## Ciphering Configuration ##
+#
+cipher:
+  ## cipher algorithm
+  #
+  # one of the values noop, aes, xchacha20-poly1305
+  #
+  # Default : noop
+  # noop does not do any encryption
+  #
+  # Set the value using environmental variables on
+  # - Linux/macOS:
+  #    $ export CIPHER_ALGORITHM=<value>
+  # - Windows Command Line (CMD):
+  #    > set CIPHER_ALGORITHM=<value>
+  algorithm: noop
 
 ## Hashing Algorithm Configuration ##
 #
@@ -2143,10 +2176,20 @@ courier:
   smtp:
     ## SMTP connection string ##
     #
-    # This URI will be used to connect to the SMTP server. Use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates. Please keep in mind that any host other than localhost / 127.0.0.1 must use smtp over TLS (smtps) or the connection will not be possible.
+    # This URI will be used to connect to the SMTP server. Use the scheme smtps for implicit TLS sessions or smtp for explicit StartTLS/cleartext sessions. Please note that TLS is always enforced with certificate trust verification by default for security reasons on both schemes. With the smtp scheme you can use the query parameter (`?disable_starttls=true`) to allow cleartext sessions or (`?disable_starttls=false`) to enforce StartTLS (default behaviour). Additionally, use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates (default behaviour) on both implicit and explicit TLS sessions.
     #
     # Examples:
     # - smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false
+    # - "smtp://foo:bar@my-mailserver:1234/?disable_starttls=true (NOT RECOMMENDED:
+    #   Cleartext smtp for devel and legacy infrastructure only)"
+    # - smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate trust
+    #   verification)
+    # - "smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED:
+    #   Explicit StartTLS without certificate trust verification)"
+    # - smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust
+    #   verification)
+    # - "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED:
+    #   Implicit TLS without certificate trust verification)"
     #
     # Set this value using environment variables on
     # - Linux/macOS:

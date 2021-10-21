@@ -13,3 +13,7 @@ dsn: foo
 
 identity:
   default_schema_url: https://example.com
+
+secrets:
+  cipher:
+    - secret-thirty-two-character-long

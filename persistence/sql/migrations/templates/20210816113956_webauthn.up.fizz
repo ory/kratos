@@ -1,0 +1,1 @@
+sql("INSERT INTO identity_credential_types (id, name) SELECT '6b213fa0-e6ad-46cb-8878-b088d2ce2e3c', 'webauthn' WHERE NOT EXISTS ( SELECT * FROM identity_credential_types WHERE name = 'webauthn')")

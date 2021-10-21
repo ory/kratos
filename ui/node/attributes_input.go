@@ -48,9 +48,42 @@ func applyInputAttributes(opts []InputAttributesModifier, attributes *InputAttri
 	return attributes
 }
 
+type ImageAttributesModifier func(attributes *ImageAttributes)
+type ImageAttributesModifiers []ImageAttributesModifier
+
+func WithImageAttributes(f func(a *ImageAttributes)) func(a *ImageAttributes) {
+	return func(a *ImageAttributes) {
+		f(a)
+	}
+}
+
+func applyImageAttributes(opts ImageAttributesModifiers, attributes *ImageAttributes) *ImageAttributes {
+	for _, f := range opts {
+		f(attributes)
+	}
+	return attributes
+}
+
+type ScriptAttributesModifier func(attributes *ScriptAttributes)
+type ScriptAttributesModifiers []ScriptAttributesModifier
+
+func WithScriptAttributes(f func(a *ScriptAttributes)) func(a *ScriptAttributes) {
+	return func(a *ScriptAttributes) {
+		f(a)
+	}
+}
+
+func applyScriptAttributes(opts ScriptAttributesModifiers, attributes *ScriptAttributes) *ScriptAttributes {
+	for _, f := range opts {
+		f(attributes)
+	}
+	return attributes
+}
+
 func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...InputAttributesModifier) *Node {
 	return &Node{
-		Type: Input, Group: group,
+		Type:       Input,
+		Group:      group,
 		Attributes: applyInputAttributes(opts, &InputAttributes{Name: name, Type: toFormType(name, value), FieldValue: value}),
 		Meta:       &Meta{},
 	}
@@ -58,16 +91,62 @@ func NewInputFieldFromJSON(name string, value interface{}, group Group, opts ...
 
 func NewInputField(name string, value interface{}, group Group, inputType InputAttributeType, opts ...InputAttributesModifier) *Node {
 	return &Node{
-		Type: Input, Group: group,
+		Type:       Input,
+		Group:      group,
 		Attributes: applyInputAttributes(opts, &InputAttributes{Name: name, Type: inputType, FieldValue: value}),
 		Meta:       &Meta{},
 	}
 }
 
+func NewImageField(id string, src string, group Group, opts ...ImageAttributesModifier) *Node {
+	return &Node{
+		Type:       Image,
+		Group:      group,
+		Attributes: applyImageAttributes(opts, &ImageAttributes{Source: src, Identifier: id}),
+		Meta:       &Meta{},
+	}
+}
+
+func NewTextField(id string, text *text.Message, group Group) *Node {
+	return &Node{
+		Type:       Text,
+		Group:      group,
+		Attributes: &TextAttributes{Text: text, Identifier: id},
+		Meta:       &Meta{},
+	}
+}
+
+func NewAnchorField(id string, href string, group Group, title *text.Message) *Node {
+	return &Node{
+		Type:       Anchor,
+		Group:      group,
+		Attributes: &AnchorAttributes{Title: title, HREF: href, Identifier: id},
+		Meta:       &Meta{},
+	}
+}
+
+func NewScriptField(name string, src string, group Group, integrity string, opts ...ScriptAttributesModifier) *Node {
+	return &Node{
+		Type:  Script,
+		Group: group,
+		Attributes: applyScriptAttributes(opts, &ScriptAttributes{
+			Identifier:     name,
+			Type:           "text/javascript",
+			Source:         src,
+			Async:          true,
+			ReferrerPolicy: "no-referrer",
+			CrossOrigin:    "anonymous",
+			Integrity:      integrity,
+		}),
+		Meta: &Meta{},
+	}
+}
+
 func NewInputFieldFromSchema(name string, group Group, p jsonschemax.Path, opts ...InputAttributesModifier) *Node {
 	attr := &InputAttributes{
-		Name: name,
-		Type: toFormType(p.Name, p.Type),
+		Name:     name,
+		Type:     toFormType(p.Name, p.Type),
+		Required: p.Required,
 	}
 
 	// If format is set, we can make a more distinct decision:

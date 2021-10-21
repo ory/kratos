@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -81,7 +83,7 @@ func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token) 
 		// If it is the primary email or it's the last email (no primary email set?), set the email.
 		if e.GetPrimary() || k == len(emails) {
 			claims.Email = e.GetEmail()
-			claims.EmailVerified = e.GetVerified()
+			claims.EmailVerified = x.ConvertibleBoolean(e.GetVerified())
 			break
 		}
 	}

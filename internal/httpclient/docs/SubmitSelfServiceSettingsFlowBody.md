@@ -4,13 +4,15 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**CsrfToken** | Pointer to **string** | The Anti-CSRF Token  This token is only required when performing browser flows. | [optional] 
-**Method** | **string** | Method  Should be set to profile when trying to update a profile. | 
+**CsrfToken** | Pointer to **string** | CSRFToken is the anti-CSRF token | [optional] 
+**Method** | **string** | Method  Should be set to \&quot;totp\&quot; when trying to add, update, or remove a totp pairing. | 
 **Password** | **string** | Password is the updated password | 
-**Traits** | **map[string]interface{}** | Traits contains all of the identity&#39;s traits. | 
+**Traits** | **map[string]interface{}** | The identity&#39;s traits  in: body | 
 **Flow** | Pointer to **string** | Flow ID is the flow&#39;s ID.  in: query | [optional] 
 **Link** | Pointer to **string** | Link this provider  Either this or &#x60;unlink&#x60; must be set.  type: string in: body | [optional] 
 **Unlink** | Pointer to **string** | Unlink this provider  Either this or &#x60;link&#x60; must be set.  type: string in: body | [optional] 
+**TotpCode** | Pointer to **string** | ValidationTOTP must contain a valid TOTP based on the | [optional] 
+**TotpUnlink** | Pointer to **bool** | UnlinkTOTP if true will remove the TOTP pairing, effectively removing the credential. This can be used to set up a new TOTP device. | [optional] 
 
 ## Methods
 
@@ -190,6 +192,56 @@ SetUnlink sets Unlink field to given value.
 `func (o *SubmitSelfServiceSettingsFlowBody) HasUnlink() bool`
 
 HasUnlink returns a boolean if a field has been set.
+
+### GetTotpCode
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetTotpCode() string`
+
+GetTotpCode returns the TotpCode field if non-nil, zero value otherwise.
+
+### GetTotpCodeOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetTotpCodeOk() (*string, bool)`
+
+GetTotpCodeOk returns a tuple with the TotpCode field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetTotpCode
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetTotpCode(v string)`
+
+SetTotpCode sets TotpCode field to given value.
+
+### HasTotpCode
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasTotpCode() bool`
+
+HasTotpCode returns a boolean if a field has been set.
+
+### GetTotpUnlink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetTotpUnlink() bool`
+
+GetTotpUnlink returns the TotpUnlink field if non-nil, zero value otherwise.
+
+### GetTotpUnlinkOk
+
+`func (o *SubmitSelfServiceSettingsFlowBody) GetTotpUnlinkOk() (*bool, bool)`
+
+GetTotpUnlinkOk returns a tuple with the TotpUnlink field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetTotpUnlink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) SetTotpUnlink(v bool)`
+
+SetTotpUnlink sets TotpUnlink field to given value.
+
+### HasTotpUnlink
+
+`func (o *SubmitSelfServiceSettingsFlowBody) HasTotpUnlink() bool`
+
+HasTotpUnlink returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

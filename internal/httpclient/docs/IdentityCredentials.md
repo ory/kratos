@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 **Config** | Pointer to **map[string]interface{}** |  | [optional] 
 **CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 **Identifiers** | Pointer to **[]string** | Identifiers represents a list of unique identifiers this credential type matches. | [optional] 
-**Type** | Pointer to **string** | and so on. | [optional] 
+**Type** | Pointer to [**IdentityCredentialsType**](IdentityCredentialsType.md) |  | [optional] 
 **UpdatedAt** | Pointer to **time.Time** | UpdatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 
 ## Methods
@@ -106,20 +106,20 @@ HasIdentifiers returns a boolean if a field has been set.
 
 ### GetType
 
-`func (o *IdentityCredentials) GetType() string`
+`func (o *IdentityCredentials) GetType() IdentityCredentialsType`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *IdentityCredentials) GetTypeOk() (*string, bool)`
+`func (o *IdentityCredentials) GetTypeOk() (*IdentityCredentialsType, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *IdentityCredentials) SetType(v string)`
+`func (o *IdentityCredentials) SetType(v IdentityCredentialsType)`
 
 SetType sets Type field to given value.
 

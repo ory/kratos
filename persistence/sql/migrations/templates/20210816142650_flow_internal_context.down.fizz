@@ -1,0 +1,2 @@
+drop_column("selfservice_login_flows", "internal_context")
+drop_column("selfservice_registration_flows", "internal_context")

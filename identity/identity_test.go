@@ -29,10 +29,45 @@ func TestNewIdentity(t *testing.T) {
 	assert.True(t, i.IsActive())
 }
 
+func TestIdentityCredentials(t *testing.T) {
+	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i.Credentials = nil
+
+	// Shouldn't error if map is nil
+	i.DeleteCredentialsType(CredentialsTypeTOTP)
+
+	expectedTOTP := Credentials{ID: x.NewUUID(), Type: CredentialsTypeTOTP}
+	i.SetCredentials(CredentialsTypeTOTP, expectedTOTP)
+	actual, found := i.GetCredentials(CredentialsTypeTOTP)
+	assert.True(t, found, "should set and find the credential if map was nil")
+	assert.Equal(t, &expectedTOTP, actual)
+
+	expectedPassword := Credentials{ID: x.NewUUID(), Type: CredentialsTypePassword}
+	i.SetCredentials(CredentialsTypePassword, expectedPassword)
+	actual, found = i.GetCredentials(CredentialsTypePassword)
+	assert.True(t, found, "should set and find the credential if map was not nil")
+	assert.Equal(t, &expectedPassword, actual)
+
+	expectedOIDC := Credentials{ID: x.NewUUID()}
+	i.SetCredentials(CredentialsTypeOIDC, expectedOIDC)
+	actual, found = i.GetCredentials(CredentialsTypeOIDC)
+	assert.True(t, found)
+	assert.Equal(t, expectedOIDC.ID, actual.ID)
+	assert.Equal(t, CredentialsTypeOIDC, actual.Type, "should set the type if we forgot to set it in the credentials struct")
+
+	i.DeleteCredentialsType(CredentialsTypePassword)
+	_, found = i.GetCredentials(CredentialsTypePassword)
+	assert.False(t, found, "should delete a credential properly")
+
+	actual, found = i.GetCredentials(CredentialsTypeTOTP)
+	assert.True(t, found, "but not alter other credentials")
+	assert.Equal(t, &expectedTOTP, actual)
+}
+
 func TestMarshalExcludesCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			ID: uuid.UUID{},
 		},
 	}
@@ -49,7 +84,7 @@ func TestMarshalExcludesCredentials(t *testing.T) {
 func TestMarshalExcludesCredentialsByReference(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			ID: uuid.UUID{},
 		},
 	}
@@ -78,7 +113,7 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 	i.Credentials = nil
 
 	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
+	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataInJSON(*i)))
 
 	assert.False(t, gjson.Get(b.String(), "credentials").Exists())
 }
@@ -86,7 +121,7 @@ func TestMarshalIdentityWithCredentialsWhenCredentialsNil(t *testing.T) {
 func TestMarshalIdentityWithCredentials(t *testing.T) {
 	i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	credentials := map[CredentialsType]Credentials{
-		CredentialsTypePassword: Credentials{
+		CredentialsTypePassword: {
 			Type:   CredentialsTypePassword,
 			Config: sqlxx.JSONRawMessage("{\"some\" : \"secret\"}"),
 		},
@@ -94,7 +129,7 @@ func TestMarshalIdentityWithCredentials(t *testing.T) {
 	i.Credentials = credentials
 
 	var b bytes.Buffer
-	require.Nil(t, json.NewEncoder(&b).Encode(IdentityWithCredentialsMetadataInJSON(*i)))
+	require.Nil(t, json.NewEncoder(&b).Encode(WithCredentialsMetadataInJSON(*i)))
 
 	credentialsInJson := gjson.Get(b.String(), "credentials")
 	assert.True(t, credentialsInJson.Exists())

@@ -19,3 +19,10 @@ func TestCredentialsEqual(t *testing.T) {
 	derived["foo"].Identifiers[0] = "baz"
 	assert.NotEqual(t, original, derived)
 }
+
+func TestAALOrder(t *testing.T) {
+	assert.True(t, NoAuthenticatorAssuranceLevel < AuthenticatorAssuranceLevel1)
+	assert.True(t, AuthenticatorAssuranceLevel1 < AuthenticatorAssuranceLevel2)
+	assert.True(t, AuthenticatorAssuranceLevel1 < AuthenticatorAssuranceLevel3)
+	assert.True(t, AuthenticatorAssuranceLevel2 < AuthenticatorAssuranceLevel3)
+}
