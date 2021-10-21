@@ -73,6 +73,31 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 	})
 }
 
+func TestSecureRedirectToIsWhiteListedHost(t *testing.T) {
+	testCases := []struct {
+		n              string
+		whitelistedURL string
+		redirectURL    string
+		valid          bool
+	}{
+		{n: "case= Domain is whitelisted", whitelistedURL: "foo.bar", redirectURL: "https://foo.bar/redir", valid: true},
+		{n: "case= Domain prefix is whitelisted", whitelistedURL: "*.bar", redirectURL: "https://foo.bar/redir", valid: true},
+		{n: "case= Subdomain prefix is whitelisted", whitelistedURL: "*.foo.bar", redirectURL: "https://auth.foo.bar/redir", valid: true},
+		{n: "case= Domain is not whitelisted", whitelistedURL: "foo.baz", redirectURL: "https://foo.bar/redir", valid: false},
+		{n: "case= Domain wildcard is not whitelisted", whitelistedURL: "*.foo.baz", redirectURL: "https://foo.bar/redir", valid: false},
+		{n: "case= Subdomain is not whitelisted", whitelistedURL: "*.foo.baz", redirectURL: "https://auth.foo.bar/redir", valid: false},
+	}
+	for _, tCase := range testCases {
+		t.Run(tCase.n, func(t *testing.T) {
+			whitelistedURL, err := url.Parse(tCase.whitelistedURL)
+			require.NoError(t, err)
+			redirectURL, err := url.Parse(tCase.redirectURL)
+			require.NoError(t, err)
+			assert.Equal(t, x.SecureRedirectToIsWhiteListedHost(redirectURL, *whitelistedURL), tCase.valid)
+		})
+	}
+}
+
 func TestSecureRedirectTo(t *testing.T) {
 
 	var newServer = func(t *testing.T, isTLS bool, isRelative bool, expectErr bool, opts func(ts *httptest.Server) []x.SecureRedirectOption) *httptest.Server {
