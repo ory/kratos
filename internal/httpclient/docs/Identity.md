@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 **RecoveryAddresses** | Pointer to [**[]RecoveryAddress**](RecoveryAddress.md) | RecoveryAddresses contains all the addresses that can be used to recover an identity. | [optional] 
 **SchemaId** | **string** | SchemaID is the ID of the JSON Schema to be used for validating the identity&#39;s traits. | 
 **SchemaUrl** | **string** | SchemaURL is the URL of the endpoint where the identity&#39;s traits schema can be fetched from.  format: url | 
-**State** | **string** | State is the identity&#39;s state. | 
+**State** | Pointer to [**IdentityState**](IdentityState.md) |  | [optional] 
 **StateChangedAt** | Pointer to **time.Time** |  | [optional] 
 **Traits** | **interface{}** | Traits represent an identity&#39;s traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in &#x60;schema_url&#x60;. | 
 **UpdatedAt** | Pointer to **time.Time** | UpdatedAt is a helper struct field for gobuffalo.pop. | [optional] 
@@ -20,7 +20,7 @@ Name | Type | Description | Notes
 
 ### NewIdentity
 
-`func NewIdentity(id string, schemaId string, schemaUrl string, state string, traits interface{}, ) *Identity`
+`func NewIdentity(id string, schemaId string, schemaUrl string, traits interface{}, ) *Identity`
 
 NewIdentity instantiates a new Identity object
 This constructor will assign default values to properties that have it defined,
@@ -172,23 +172,28 @@ SetSchemaUrl sets SchemaUrl field to given value.
 
 ### GetState
 
-`func (o *Identity) GetState() string`
+`func (o *Identity) GetState() IdentityState`
 
 GetState returns the State field if non-nil, zero value otherwise.
 
 ### GetStateOk
 
-`func (o *Identity) GetStateOk() (*string, bool)`
+`func (o *Identity) GetStateOk() (*IdentityState, bool)`
 
 GetStateOk returns a tuple with the State field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetState
 
-`func (o *Identity) SetState(v string)`
+`func (o *Identity) SetState(v IdentityState)`
 
 SetState sets State field to given value.
 
+### HasState
+
+`func (o *Identity) HasState() bool`
+
+HasState returns a boolean if a field has been set.
 
 ### GetStateChangedAt
 

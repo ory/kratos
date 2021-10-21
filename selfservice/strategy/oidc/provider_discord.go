@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -56,7 +58,9 @@ func (d *ProviderDiscord) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 			oauth2.SetAuthURLParam("prompt", "consent"),
 		}
 	}
-	return []oauth2.AuthCodeOption{}
+	return []oauth2.AuthCodeOption{
+		oauth2.SetAuthURLParam("prompt", "none"),
+	}
 }
 
 func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
@@ -85,7 +89,7 @@ func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token) (*
 		PreferredUsername: user.Username,
 		Picture:           user.AvatarURL(""),
 		Email:             user.Email,
-		EmailVerified:     user.Verified,
+		EmailVerified:     x.ConvertibleBoolean(user.Verified),
 		Locale:            user.Locale,
 	}
 

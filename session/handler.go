@@ -3,6 +3,7 @@ package session
 import (
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -23,6 +24,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		x.CSRFProvider
+		config.Provider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -43,35 +45,86 @@ func NewHandler(
 }
 
 const (
-	RouteWhoami = "/sessions/whoami"
+	RouteCollection    = "/sessions"
+	RouteWhoami        = RouteCollection + "/whoami"
+	RouteIdentity      = "/identities"
+	RouteDeleteSession = RouteIdentity + "/:id/sessions"
 )
 
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
+		http.MethodDelete} {
+		// Redirect to public endpoint
+		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
+	}
+
+	admin.DELETE(RouteDeleteSession, h.deleteIdentitySessions)
+}
+
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.r.CSRFHandler().ExemptPath(RouteWhoami)
+	// We need to completely ignore the whoami/logout path so that we do not accidentally set
+	// some cookie.
+	h.r.CSRFHandler().IgnorePath(RouteWhoami)
+	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
 	}
+	public.DELETE(RouteDeleteSession, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
 // swagger:parameters toSession
 type toSession struct {
+	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
 
+	// Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+	// scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+	// An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+	//
+	// It is ok if more than one cookie are included here as all other cookies will be ignored.
+	//
 	// in: header
-	SessionCookie string `json:"X-Session-Cookie"`
+	Cookie string `json:"Cookie"`
 }
 
-// swagger:route GET /sessions/whoami public toSession
+// swagger:route GET /sessions/whoami v0alpha2 toSession
 //
 // Check Who the Current HTTP Session Belongs To
 //
 // Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
 // Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
 // Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
+//
+// If you call this endpoint from a server-side application, you must forward the HTTP Cookie Header to this endpoint:
+//
+//	```js
+//	// pseudo-code example
+//	router.get('/protected-endpoint', async function (req, res) {
+//	  const session = await client.toSession(undefined, req.header('cookie'))
+//
+//    // console.log(session)
+//	})
+//	```
+//
+// When calling this endpoint from a non-browser application (e.g. mobile app) you must include the session token:
+//
+//	```js
+//	// pseudo-code example
+//	// ...
+//	const session = await client.toSession("the-session-token")
+//
+//  // console.log(session)
+//	```
+//
+// Depending on your configuration this endpoint might return a 403 status code if the session has a lower Authenticator
+// Assurance Level (AAL) than is possible for the identity. This can happen if the identity has password + webauthn
+// credentials (which would result in AAL2) but the session has only AAL1. If this error occurs, ask the user
+// to sign in with the second factor or change the configuration.
 //
 // This endpoint is useful for:
 //
@@ -83,10 +136,14 @@ type toSession struct {
 //
 // - if the `Cookie` HTTP header was set containing an Ory Kratos Session Cookie;
 // - if the `Authorization: bearer <ory-session-token>` HTTP header was set with a valid Ory Kratos Session Token;
-// - if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token;
-// - if the `X-Session-Cookie` HTTP header was set containing a valid Ory Kratos Session Cookie (only the value!).
+// - if the `X-Session-Token` HTTP header was set with a valid Ory Kratos Session Token.
 //
 // If none of these headers are set or the cooke or token are invalid, the endpoint returns a HTTP 401 status code.
+//
+// As explained above, this request may fail due to several reasons. The `error.id` can be one of:
+//
+// - `no_active_session`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
+// - `aal_needs_upgrade`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
 //
 //     Produces:
 //     - application/json
@@ -96,12 +153,24 @@ type toSession struct {
 //     Responses:
 //       200: session
 //       401: jsonError
+//       403: jsonError
 //       500: jsonError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		return
+	}
+
+	var aalErr *ErrAALNotSatisfied
+	if err := h.r.SessionManager().DoesSessionSatisfy(r, s, h.r.Config(r.Context()).SessionWhoAmIAAL()); errors.As(err, &aalErr) {
+		h.r.Audit().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
+		h.r.Writer().WriteError(w, r, err)
+		return
+	} else if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("Unable to determine AAL."))
 		return
 	}
 
@@ -114,6 +183,49 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	h.r.Writer().Write(w, r, s)
 }
 
+// swagger:parameters adminDeleteIdentitySessions
+// nolint:deadcode,unused
+type adminDeleteIdentitySessions struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route DELETE /identities/{id}/sessions v0alpha2 adminDeleteIdentitySessions
+//
+// Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
+//
+// This endpoint is useful for:
+//
+// - To forcefully logout Identity from all devices and sessions
+//
+//     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
+//
+//     Responses:
+//       204: emptyResponse
+//       400: jsonError
+//       401: jsonError
+//       404: jsonError
+//       500: jsonError
+func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	iID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+	if err := h.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), iID); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
@@ -122,7 +234,7 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 				return
 			}
 
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("This endpoint can only be accessed with a valid session. Please log in and try again.").WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("This endpoint can only be accessed with a valid session. Please log in and try again.")))
 			return
 		}
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
@@ -54,13 +56,14 @@ func (RecoveryToken) TableName(ctx context.Context) string {
 	return corp.ContextualizeTableName(ctx, "identity_recovery_tokens")
 }
 
-func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow) *RecoveryToken {
+func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryToken {
+	now := time.Now().UTC()
 	return &RecoveryToken{
 		ID:              x.NewUUID(),
 		Token:           randx.MustString(32, randx.AlphaNum),
 		RecoveryAddress: address,
-		ExpiresAt:       f.ExpiresAt,
-		IssuedAt:        time.Now().UTC(),
+		ExpiresAt:       now.Add(expiresIn),
+		IssuedAt:        now,
 		FlowID:          uuid.NullUUID{UUID: f.ID, Valid: true}}
 }
 
@@ -77,7 +80,7 @@ func NewRecoveryToken(address *identity.RecoveryAddress, expiresIn time.Duration
 
 func (f *RecoveryToken) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(recovery.NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }

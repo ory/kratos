@@ -14,10 +14,12 @@ import (
 
 func (p *Persister) CreateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
 	r.NID = corp.ContextualizeNID(ctx, p.nid)
+	r.EnsureInternalContext()
 	return p.GetConnection(ctx).Create(r)
 }
 
 func (p *Persister) UpdateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
+	r.EnsureInternalContext()
 	cp := *r
 	cp.NID = corp.ContextualizeNID(ctx, p.nid)
 	return p.update(ctx, cp)

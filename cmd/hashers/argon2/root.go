@@ -66,6 +66,7 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 	conf.config, err = config.New(
 		context.Background(),
 		l,
+		cmd.ErrOrStderr(),
 		configx.WithFlags(cmd.Flags()),
 		configx.SkipValidation(),
 		configx.WithContext(cmd.Context()),

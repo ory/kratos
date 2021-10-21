@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_registration_flows" ALTER COLUMN "internal_context" SET NOT NULL;

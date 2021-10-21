@@ -1,0 +1,1 @@
+ALTER TABLE "identity_credential_identifiers" DROP COLUMN "_identity_credential_type_id_tmp";

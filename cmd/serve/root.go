@@ -30,7 +30,7 @@ func NewServeCmd() (serveCmd *cobra.Command) {
 		Use:   "serve",
 		Short: "Run the Ory Kratos server",
 		Run: func(cmd *cobra.Command, args []string) {
-			d := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
+			d := driver.New(cmd.Context(), cmd.ErrOrStderr(), configx.WithFlags(cmd.Flags()))
 
 			if d.Config(cmd.Context()).IsInsecureDevMode() {
 				d.Logger().Warn(`

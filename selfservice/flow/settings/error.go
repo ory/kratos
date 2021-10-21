@@ -4,7 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"time"
+
+	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/ui/node"
 
@@ -44,31 +45,28 @@ type (
 	ErrorHandler struct {
 		d errorHandlerDependencies
 	}
-
-	FlowExpiredError struct {
-		*herodot.DefaultError
-		ago time.Duration
-	}
-
-	FlowNeedsReAuth struct {
-		*herodot.DefaultError
-	}
 )
 
-func NewFlowNeedsReAuth() *FlowNeedsReAuth {
-	return &FlowNeedsReAuth{DefaultError: herodot.ErrForbidden.
-		WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate.")}
+// Is sent when a privileged session is required to perform the settings update.
+//
+// swagger:model needsPrivilegedSessionError
+type FlowNeedsReAuth struct {
+	*herodot.DefaultError `json:"error"`
+
+	// Points to where to redirect the user to next.
+	//
+	// required: true
+	RedirectBrowserTo string `json:"redirect_browser_to"`
 }
 
-func NewFlowExpiredError(at time.Time) *FlowExpiredError {
-	ago := time.Since(at)
-	return &FlowExpiredError{
-		ago: ago,
-		DefaultError: herodot.ErrBadRequest.
-			WithError("settings flow expired").
-			WithReasonf(`The settings flow has expired. Please restart the flow.`).
-			WithReasonf("The settings flow expired %.2f minutes ago, please try again.", ago.Minutes()),
-	}
+func (e *FlowNeedsReAuth) EnhanceJSONError() interface{} {
+	return e
+}
+
+func NewFlowNeedsReAuth() *FlowNeedsReAuth {
+	return &FlowNeedsReAuth{
+		DefaultError: herodot.ErrForbidden.WithID(text.ErrIDNeedsPrivilegedSession).
+			WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate.")}
 }
 
 func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
@@ -79,17 +77,39 @@ func (s *ErrorHandler) reauthenticate(
 	w http.ResponseWriter,
 	r *http.Request,
 	f *Flow,
-	err error,
+	err *FlowNeedsReAuth,
 ) {
+	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), r.URL.Path), r.URL.Query())
+	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(r),
+		url.Values{"refresh": {"true"}, "return_to": {returnTo.String()}}),
+		login.RouteInitBrowserFlow).String()
+	err.RedirectBrowserTo = redirectTo
 	if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), r.URL.Path), r.URL.Query())
-	http.Redirect(w, r, urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(r),
-		url.Values{"refresh": {"true"}, "return_to": {returnTo.String()}}),
-		login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
+	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+}
+
+func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r *http.Request, f *Flow, id *identity.Identity, err error) (*flow.ExpiredError, error) {
+	e := new(flow.ExpiredError)
+	if !errors.As(err, &e) {
+		return nil, nil
+	}
+
+	// create new flow because the old one is not valid
+	a, err := s.d.SettingsHandler().FromOldFlow(w, r, id, *f)
+	if err != nil {
+		return nil, err
+	}
+
+	a.UI.Messages.Add(text.NewErrorValidationSettingsFlowExpired(e.Ago))
+	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), a); err != nil {
+		return nil, err
+	}
+
+	return e.WithFlow(a), nil
 }
 
 func (s *ErrorHandler) WriteFlowError(
@@ -111,37 +131,54 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if e := new(FlowExpiredError); errors.As(err, &e) {
+	if errors.Is(err, session.ErrNoActiveSessionFound) {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, err)
+		} else {
+			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
+		}
+		return
+	}
+
+	if aalErr := new(session.ErrAALNotSatisfied); errors.As(err, &aalErr) {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, err)
+		} else {
+			http.Redirect(w, r, urlx.CopyWithQuery(
+				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow),
+				url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
+		}
+		return
+	}
+
+	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, id, err); inner != nil {
+		s.forward(w, r, f, err)
+		return
+	} else if expired != nil {
 		if id == nil {
 			s.forward(w, r, f, err)
 			return
 		}
 
-		// create new flow because the old one is not valid
-		a, err := s.d.SettingsHandler().NewFlow(w, r, id, f.Type)
-		if err != nil {
-			// failed to create a new session and redirect to it, handle that error as a new one
-			s.WriteFlowError(w, r, group, f, id, err)
-			return
-		}
-
-		a.UI.Messages.Add(text.NewErrorValidationSettingsFlowExpired(e.ago))
-		if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), a); err != nil {
-			s.forward(w, r, a, err)
-			return
-		}
-
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
-				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusSeeOther)
+			s.d.Writer().WriteError(w, r, expired)
 		} else {
-			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
+			http.Redirect(w, r, expired.GetFlow().AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
+		}
+		return
+	}
+
+	if errors.Is(err, flow.ErrStrategyAsksToReturnToUI) {
+		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {
+			s.d.Writer().Write(w, r, f)
+		} else {
+			http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusSeeOther)
 		}
 		return
 	}
 
 	if e := new(FlowNeedsReAuth); errors.As(err, &e) {
-		s.reauthenticate(w, r, f, err)
+		s.reauthenticate(w, r, f, e)
 		return
 	}
 

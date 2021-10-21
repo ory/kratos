@@ -58,17 +58,29 @@ func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 	router.GET(RouteSubmitFlow, h.submitLogout)
 }
 
-// swagger:model logoutUrl
-type logoutURL struct {
-	// LogoutURL can be opened in a browser to
-	//
-	// format: uri
-	LogoutURL string `json:"logout_url"`
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(RouteInitBrowserFlow, x.RedirectToPublicRoute(h.d))
+	admin.DELETE(RouteAPIFlow, x.RedirectToPublicRoute(h.d))
+	admin.GET(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-// swagger:parameters createSelfServiceLogoutUrlForBrowsers
+// swagger:model selfServiceLogoutUrl
+type selfServiceLogoutUrl struct {
+	// LogoutURL can be opened in a browser to sign the user out.
+	//
+	// format: uri
+	// required: true
+	LogoutURL string `json:"logout_url"`
+
+	// LogoutToken can be used to perform logout using AJAX.
+	//
+	// required: true
+	LogoutToken string `json:"logout_token"`
+}
+
+// swagger:parameters createSelfServiceLogoutFlowUrlForBrowsers
 // nolint:deadcode,unused
-type createSelfServiceLogoutUrlForBrowsers struct {
+type createSelfServiceLogoutFlowUrlForBrowsers struct {
 	// HTTP Cookies
 	//
 	// If you call this endpoint from a backend, please include the
@@ -79,25 +91,15 @@ type createSelfServiceLogoutUrlForBrowsers struct {
 	Cookie string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/logout/browser public createSelfServiceLogoutUrlForBrowsers
+// swagger:route GET /self-service/logout/browser v0alpha2 createSelfServiceLogoutFlowUrlForBrowsers
 //
-// Initialize Logout Flow for Browsers
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
+// Create a Logout URL for Browsers
 //
 // This endpoint initializes a browser-based user logout flow and a URL which can be used to log out the user.
-//
-// :::note
 //
 // This endpoint is NOT INTENDED for API clients and only works
 // with browsers (Chrome, Firefox, ...). For API clients you can
 // call the `/self-service/logout/api` URL directly with the Ory Session Token.
-//
-// :::
 //
 // The URL is only valid for the currently signed in user. If no user is signed in, this endpoint returns
 // a 401 error.
@@ -110,7 +112,7 @@ type createSelfServiceLogoutUrlForBrowsers struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: logoutUrl
+//       200: selfServiceLogoutUrl
 //       401: jsonError
 //       500: jsonError
 func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -120,7 +122,8 @@ func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r
 		return
 	}
 
-	h.d.Writer().Write(w, r, &logoutURL{
+	h.d.Writer().Write(w, r, &selfServiceLogoutUrl{
+		LogoutToken: sess.LogoutToken,
 		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteSubmitFlow),
 			url.Values{"token": {sess.LogoutToken}}).String(),
 	})
@@ -128,7 +131,7 @@ func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r
 
 // swagger:parameters submitSelfServiceLogoutFlowWithoutBrowser
 // nolint:deadcode,unused
-type submitSelfServiceLogoutWithoutBrowser struct {
+type submitSelfServiceLogoutFlowWithoutBrowser struct {
 	// in: body
 	// required: true
 	Body submitSelfServiceLogoutFlowWithoutBrowserBody
@@ -145,15 +148,9 @@ type submitSelfServiceLogoutFlowWithoutBrowserBody struct {
 	SessionToken string `json:"session_token"`
 }
 
-// swagger:route DELETE /self-service/logout/api public submitSelfServiceLogoutFlowWithoutBrowser
+// swagger:route DELETE /self-service/logout/api v0alpha2 submitSelfServiceLogoutFlowWithoutBrowser
 //
 // Perform Logout for APIs, Services, Apps, ...
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // Use this endpoint to log out an identity using an Ory Session Token. If the Ory Session Token was successfully
 // revoked, the server returns a 204 No Content response. A 204 No Content response is also sent when
@@ -199,26 +196,25 @@ func (h *Handler) submitSelfServiceLogoutFlowWithoutBrowser(w http.ResponseWrite
 }
 
 // nolint:deadcode,unused
-// swagger:parameters submitSelfServiceLogout
-type submitSelfServiceLogout struct {
+// swagger:parameters submitSelfServiceLogoutFlow
+type submitSelfServiceLogoutFlow struct {
 	// A Valid Logout Token
 	//
 	// If you do not have a logout token because you only have a session cookie,
 	// call `/self-service/logout/urls` to generate a URL for this endpoint.
 	//
-	// in: path
+	// in: query
 	Token string `json:"token"`
+
+	// The URL to return to after the logout was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
 }
 
-// swagger:route POST /self-service/logout public submitSelfServiceLogoutFlow
+// swagger:route GET /self-service/logout v0alpha2 submitSelfServiceLogoutFlow
 //
 // Complete Self-Service Logout
-//
-// :::info
-//
-// This endpoint is EXPERIMENTAL and subject to potential breaking changes in the future.
-//
-// :::
 //
 // This endpoint logs out an identity in a self-service manner.
 //
@@ -228,13 +224,9 @@ type submitSelfServiceLogout struct {
 // If the `Accept` HTTP header is set to `application/json`, a 204 No Content response
 // will be sent on successful logout instead.
 //
-// :::note
-//
 // This endpoint is NOT INTENDED for API clients and only works
 // with browsers (Chrome, Firefox, ...). For API clients you can
 // call the `/self-service/logout/api` URL directly with the Ory Session Token.
-//
-// :::
 //
 // More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 //
@@ -268,7 +260,7 @@ func (h *Handler) submitLogout(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), sess.Token); err != nil {
+	if err := h.d.SessionManager().PurgeFromRequest(r.Context(), w, r); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}

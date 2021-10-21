@@ -4,12 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **bool** | Whether or not the session is active. | [optional] 
-**AuthenticatedAt** | Pointer to **time.Time** | The Session Authentication Timestamp  When this session was authenticated at. | [optional] 
+**Active** | Pointer to **bool** | Active state. If false the session is no longer active. | [optional] 
+**AuthenticatedAt** | Pointer to **time.Time** | The Session Authentication Timestamp  When this session was authenticated at. If multi-factor authentication was used this is the time when the last factor was authenticated (e.g. the TOTP code challenge was completed). | [optional] 
+**AuthenticationMethods** | Pointer to [**[]SessionAuthenticationMethod**](SessionAuthenticationMethod.md) | A list of authenticators which were used to authenticate the session. | [optional] 
+**AuthenticatorAssuranceLevel** | Pointer to [**AuthenticatorAssuranceLevel**](AuthenticatorAssuranceLevel.md) |  | [optional] 
 **ExpiresAt** | Pointer to **time.Time** | The Session Expiry  When this session expires at. | [optional] 
 **Id** | **string** |  | 
 **Identity** | [**Identity**](Identity.md) |  | 
-**IssuedAt** | Pointer to **time.Time** | The Session Issuance Timestamp  When this session was authenticated at. | [optional] 
+**IssuedAt** | Pointer to **time.Time** | The Session Issuance Timestamp  When this session was issued at. Usually equal or close to &#x60;authenticated_at&#x60;. | [optional] 
 
 ## Methods
 
@@ -79,6 +81,56 @@ SetAuthenticatedAt sets AuthenticatedAt field to given value.
 `func (o *Session) HasAuthenticatedAt() bool`
 
 HasAuthenticatedAt returns a boolean if a field has been set.
+
+### GetAuthenticationMethods
+
+`func (o *Session) GetAuthenticationMethods() []SessionAuthenticationMethod`
+
+GetAuthenticationMethods returns the AuthenticationMethods field if non-nil, zero value otherwise.
+
+### GetAuthenticationMethodsOk
+
+`func (o *Session) GetAuthenticationMethodsOk() (*[]SessionAuthenticationMethod, bool)`
+
+GetAuthenticationMethodsOk returns a tuple with the AuthenticationMethods field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAuthenticationMethods
+
+`func (o *Session) SetAuthenticationMethods(v []SessionAuthenticationMethod)`
+
+SetAuthenticationMethods sets AuthenticationMethods field to given value.
+
+### HasAuthenticationMethods
+
+`func (o *Session) HasAuthenticationMethods() bool`
+
+HasAuthenticationMethods returns a boolean if a field has been set.
+
+### GetAuthenticatorAssuranceLevel
+
+`func (o *Session) GetAuthenticatorAssuranceLevel() AuthenticatorAssuranceLevel`
+
+GetAuthenticatorAssuranceLevel returns the AuthenticatorAssuranceLevel field if non-nil, zero value otherwise.
+
+### GetAuthenticatorAssuranceLevelOk
+
+`func (o *Session) GetAuthenticatorAssuranceLevelOk() (*AuthenticatorAssuranceLevel, bool)`
+
+GetAuthenticatorAssuranceLevelOk returns a tuple with the AuthenticatorAssuranceLevel field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAuthenticatorAssuranceLevel
+
+`func (o *Session) SetAuthenticatorAssuranceLevel(v AuthenticatorAssuranceLevel)`
+
+SetAuthenticatorAssuranceLevel sets AuthenticatorAssuranceLevel field to given value.
+
+### HasAuthenticatorAssuranceLevel
+
+`func (o *Session) HasAuthenticatorAssuranceLevel() bool`
+
+HasAuthenticatorAssuranceLevel returns a boolean if a field has been set.
 
 ### GetExpiresAt
 

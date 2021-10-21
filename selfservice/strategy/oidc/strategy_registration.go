@@ -6,6 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/tidwall/sjson"
+
+	"github.com/ory/x/decoderx"
+
+	"golang.org/x/oauth2"
+
 	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/text"
@@ -25,17 +31,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const (
-	registrationFormPayloadSchema = `{
-  "$id": "https://schemas.ory.sh/kratos/selfservice/oidc/registration/config.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "traits": {}
-  }
-}`
-)
-
 var _ registration.Strategy = new(Strategy)
 
 func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
@@ -50,12 +45,62 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	return s.populateMethod(r, f.UI, text.NewInfoRegistrationWith)
 }
 
+// SubmitSelfServiceRegistrationFlowWithOidcMethodBody is used to decode the registration form payload
+// when using the oidc method.
+//
+// swagger:model submitSelfServiceRegistrationFlowWithOidcMethodBody
+type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
+	// The provider to register with
+	//
+	// required: true
+	Provider string `json:"provider"`
+
+	// The CSRF Token
+	CSRFToken string `json:"csrf_token"`
+
+	// The identity traits
+	Traits json.RawMessage `json:"traits"`
+
+	// Method to use
+	//
+	// This field must be set to `oidc` when using the oidc method.
+	//
+	// required: true
+	Method string `json:"method"`
+}
+
+func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
+	raw, err := sjson.SetBytes(linkSchema,
+		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(raw)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := s.dec.Decode(r, &p, compiler,
+		decoderx.HTTPKeepRequestBody(true),
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderUseQueryAndBody(),
+		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),
+		decoderx.HTTPDecoderJSONFollowsFormFormat(),
+	); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
 func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
-	if err := r.ParseForm(); err != nil {
+	var p SubmitSelfServiceRegistrationFlowWithOidcMethodBody
+	if err := s.newLinkDecoder(&p, r); err != nil {
 		return s.handleError(w, r, f, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 	}
 
-	var pid = r.Form.Get("provider") // this can come from both url query and post body
+	var pid = p.Provider // this can come from both url query and post body
 	if pid == "" {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
@@ -88,18 +133,23 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		continuity.WithPayload(&authCodeContainer{
 			State:  state,
 			FlowID: f.ID.String(),
-			Form:   r.PostForm,
+			Traits: p.Traits,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
-	http.Redirect(w, r, c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
+	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	if x.IsJSONRequest(r) {
+		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
+	} else {
+		http.Redirect(w, r, codeURL, http.StatusSeeOther)
+	}
 
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -120,7 +170,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 		}
 
-		if _, err := s.processLogin(w, r, ar, claims, provider, container); err != nil {
+		if _, err := s.processLogin(w, r, ar, token, claims, provider, container); err != nil {
 			return ar, err
 		}
 		return nil, nil
@@ -160,26 +210,46 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		WithRequest(r).
 		WithField("oidc_provider", provider.Config().ID).
 		WithSensitiveField("oidc_claims", claims).
-		WithField("mapper_jsonnet_output", evaluated).
+		WithSensitiveField("mapper_jsonnet_output", evaluated).
 		WithField("mapper_jsonnet_url", provider.Config().Mapper).
 		Debug("OpenID Connect Jsonnet mapper completed.")
 
-	option, err := decoderRegistration(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String())
+	i.Traits, err = merge(container.Traits, json.RawMessage(i.Traits))
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	i.Traits, err = merge(container.Form.Encode(), json.RawMessage(i.Traits), option)
-	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
-	}
+	s.d.Logger().
+		WithRequest(r).
+		WithField("oidc_provider", provider.Config().ID).
+		WithSensitiveField("identity_traits", i.Traits).
+		WithSensitiveField("mapper_jsonnet_output", evaluated).
+		WithField("mapper_jsonnet_url", provider.Config().Mapper).
+		Debug("Merged form values and OpenID Connect Jsonnet output.")
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	creds, err := NewCredentials(provider.Config().ID, claims.Subject)
+	var it string
+	if idToken, ok := token.Extra("id_token").(string); ok {
+		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
+			return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+		}
+	}
+
+	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
+	}
+
+	creds, err := NewCredentials(it, cat, crt, provider.Config().ID, claims.Subject)
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}

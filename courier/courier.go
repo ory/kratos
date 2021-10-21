@@ -45,26 +45,31 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 		Port:     int(port),
 		Username: uri.User.Username(),
 		Password: password,
-		// We are setting this to false because it breaks STARTTLS which is the most
-		// common SMTP auto today. SSL is almost never used.
-		SSL:          false,
+
 		Timeout:      time.Second * 10,
 		RetryFailure: true,
 	}
 
-	//var ssl bool
-	//var tlsConfig *tls.Config
-	if uri.Scheme == "smtps" {
-		sslSkipVerify, _ := strconv.ParseBool(uri.Query().Get("skip_ssl_verify"))
+	sslSkipVerify, _ := strconv.ParseBool(uri.Query().Get("skip_ssl_verify"))
+
+	// SMTP schemes
+	// smtp: smtp clear text (with uri parameter) or with StartTLS (enforced by default)
+	// smtps: smtp with implicit TLS (recommended way in 2021 to avoid StartTLS downgrade attacks
+	//    and defaulting to fully-encrypted protocols https://datatracker.ietf.org/doc/html/rfc8314)
+	switch uri.Scheme {
+	case "smtp":
+		// Enforcing StartTLS by default for security best practices (config review, etc.)
+		skipStartTLS, _ := strconv.ParseBool(uri.Query().Get("disable_starttls"))
+		if !skipStartTLS {
+			// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
+			dialer.TLSConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, ServerName: uri.Hostname()}
+			// Enforcing StartTLS
+			dialer.StartTLSPolicy = gomail.MandatoryStartTLS
+		}
+	case "smtps":
 		// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
 		dialer.TLSConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify, ServerName: uri.Hostname()}
-
-		// Since uri.Scheme is smtps we should make TLS mandatory:
-		dialer.StartTLSPolicy = gomail.MandatoryStartTLS
-
-		if legacySsl, _ := strconv.ParseBool(uri.Query().Get("legacy_ssl")); legacySsl {
-			dialer.SSL = true
-		}
+		dialer.SSL = true
 	}
 
 	return &Courier{
@@ -157,6 +162,12 @@ func (m *Courier) DispatchMessage(ctx context.Context, msg Message) error {
 
 		gm.SetHeader("To", msg.Recipient)
 		gm.SetHeader("Subject", msg.Subject)
+
+		headers := m.d.Config(ctx).CourierSMTPHeaders()
+		for k, v := range headers {
+			gm.SetHeader(k, v)
+		}
+
 		gm.SetBody("text/plain", msg.Body)
 
 		tmpl, err := NewEmailTemplateFromMessage(m.d.Config(ctx), msg)

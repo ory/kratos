@@ -20,6 +20,11 @@
             }
           }
         },
+        "name": {
+          "type": "string",
+          "format": "email",
+          "minLength": 10
+        },
         "stringy": {
           "type": "string"
         },

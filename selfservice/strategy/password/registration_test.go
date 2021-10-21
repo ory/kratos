@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/ui/container"
@@ -179,7 +181,7 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
 			}
 
-			fakeFlow := &kratos.RegistrationFlow{Ui: kratos.UiContainer{
+			fakeFlow := &kratos.SelfServiceRegistrationFlow{Ui: kratos.UiContainer{
 				Action: publicTS.URL + registration.RouteSubmitFlow + "?flow=" + x.NewUUID().String(),
 			}}
 
@@ -200,7 +202,7 @@ func TestRegistration(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				actual, res := testhelpers.RegistrationMakeRequest(t, false, false, fakeFlow, browserClient, "")
 				assert.Contains(t, res.Request.URL.String(), errTS.URL)
-				check(t, gjson.Get(actual, "0").Raw)
+				check(t, actual)
 			})
 		})
 
@@ -215,9 +217,9 @@ func TestRegistration(t *testing.T) {
 
 				time.Sleep(time.Millisecond * 600)
 				actual, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "{}")
-				assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteGetFlow)
-				assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
-				assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
+				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 
 			t.Run("type=spa", func(t *testing.T) {
@@ -226,9 +228,9 @@ func TestRegistration(t *testing.T) {
 
 				time.Sleep(time.Millisecond * 600)
 				actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, "{}")
-				assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteGetFlow)
-				assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
-				assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(), "expired", "%s", actual)
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
+				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -250,7 +252,7 @@ func TestRegistration(t *testing.T) {
 				testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+registration.RouteSubmitFlow, conf.SelfServiceFlowRegistrationUI().String()))
 		}
 
-		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
+		t.Run("case=should fail because the return_to url is not allowed", func(t *testing.T) {
 			var check = func(t *testing.T, actual string) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
@@ -323,7 +325,7 @@ func TestRegistration(t *testing.T) {
 				actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
 				assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
-					json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
+					json.RawMessage(actual), "%s", actual)
 			})
 
 			t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {
@@ -464,7 +466,7 @@ func TestRegistration(t *testing.T) {
 				})
 				body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, apiClient, values.Encode())
 				assert.Contains(t, res.Request.URL.String(), errTS.URL)
-				check(t, gjson.Get(body, "0").Raw)
+				check(t, body)
 			})
 		})
 
@@ -515,7 +517,7 @@ func TestRegistration(t *testing.T) {
 				})
 				assert.Equal(t, `registration-identifier-8-spa`, gjson.Get(body, "identity.traits.username").String(), "%s", body)
 				assert.Empty(t, gjson.Get(body, "session_token").String(), "%s", body)
-				assert.Empty(t, gjson.Get(body, "session.id").String(), "%s", body)
+				assert.NotEmpty(t, gjson.Get(body, "session.id").String(), "%s", body)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/session"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -23,7 +25,7 @@ import (
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
-func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *submitSelfServiceLoginFlowWithPasswordMethod, err error) error {
+func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *login.Flow, payload *submitSelfServiceLoginFlowWithPasswordMethodBody, err error) error {
 	if f != nil {
 		f.UI.Nodes.ResetNodes("password")
 		f.UI.Nodes.SetValueAttribute("password_identifier", payload.Identifier)
@@ -35,25 +37,16 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, f *l
 	return err
 }
 
-// nolint:deadcode,unused
-// swagger:parameters submitSelfServiceLoginFlowWithPasswordMethod
-type submitSelfServiceLoginFlowWithPasswordMethodParameters struct {
-	// The Flow ID
-	//
-	// required: true
-	// in: query
-	Flow string `json:"flow"`
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
+		return nil, err
+	}
 
-	// in: body
-	Body submitSelfServiceLoginFlowWithPasswordMethod
-}
-
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) (i *identity.Identity, err error) {
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, s.ID().String(), s.d); err != nil {
 		return nil, err
 	}
 
-	var p submitSelfServiceLoginFlowWithPasswordMethod
+	var p submitSelfServiceLoginFlowWithPasswordMethodBody
 	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
@@ -81,10 +74,20 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow) 
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
+	f.Active = s.ID()
+	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
+		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+	}
+
 	return i, nil
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
+func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
+	// This strategy can only solve AAL1
+	if requestedAAL > identity.AuthenticatorAssuranceLevel1 {
+		return nil
+	}
+
 	// This block adds the identifier to the method when the request is forced - as a hint for the user.
 	var identifier string
 	if !sr.IsForced() {

@@ -1,0 +1,1 @@
+INSERT INTO identity_credential_types (id, name) SELECT '567a0730-7f48-4dd7-a13d-df87a51c245f', 'lookup_secret' WHERE NOT EXISTS ( SELECT * FROM identity_credential_types WHERE name = 'lookup_secret');

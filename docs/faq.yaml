@@ -43,7 +43,7 @@
     What is the correct flow to sanitize the username and make sure it satisfies
     a specific regex (e.g. only alphanumeric characters)?
   a: |
-    In the identity json schema using [Regular Expressions](https://json-schema.org/understanding-json-schema/reference/string.html#regular-expressions).
+    In the Identity Schema using [Regular Expressions](https://json-schema.org/understanding-json-schema/reference/string.html#regular-expressions).
     To sanitize usernames coming from third-party OIDC providers like Google or GitHub
     you write [jsonnet code](https://jsonnet.org).
 - tags:

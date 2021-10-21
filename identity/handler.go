@@ -1,24 +1,28 @@
 package identity
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/herodot"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/x"
-
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
+
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/x"
 )
 
-const RouteBase = "/identities"
+const RouteCollection = "/identities"
+const RouteItem = RouteCollection + "/:id"
 
 type (
 	handlerDependencies interface {
@@ -27,6 +31,8 @@ type (
 		ManagementProvider
 		x.WriterProvider
 		config.Provider
+		x.CSRFProvider
+		cipher.Provider
 	}
 	HandlerProvider interface {
 		IdentityHandler() *Handler
@@ -36,42 +42,40 @@ type (
 	}
 )
 
+func (h *Handler) Config(ctx context.Context) *config.Config {
+	return h.r.Config(ctx)
+}
+
 func NewHandler(r handlerDependencies) *Handler {
 	return &Handler{r: r}
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteBase, h.list)
-	admin.GET(RouteBase+"/:id", h.get)
-	admin.DELETE(RouteBase+"/:id", h.delete)
-
-	admin.POST(RouteBase, h.create)
-	admin.PUT(RouteBase+"/:id", h.update)
+func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.r.CSRFHandler().IgnoreGlobs(RouteCollection, RouteCollection+"/*")
+	public.GET(RouteCollection, x.RedirectToAdminRoute(h.r))
+	public.GET(RouteItem, x.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteItem, x.RedirectToAdminRoute(h.r))
+	public.POST(RouteCollection, x.RedirectToAdminRoute(h.r))
+	public.PUT(RouteItem, x.RedirectToAdminRoute(h.r))
 }
 
-// A single identity.
-//
-// swagger:response identityResponse
-// nolint:deadcode,unused
-type identityResponse struct {
-	// required: true
-	// in: body
-	Body *Identity
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(RouteCollection, h.list)
+	admin.GET(RouteItem, h.get)
+	admin.DELETE(RouteItem, h.delete)
+
+	admin.POST(RouteCollection, h.create)
+	admin.PUT(RouteItem, h.update)
 }
 
 // A list of identities.
-// swagger:response identityList
+// swagger:model identityList
 // nolint:deadcode,unused
-type identitiesListResponse struct {
-	// in: body
-	// required: true
-	// type: array
-	Body []Identity
-}
+type identityList []Identity
 
-// swagger:parameters listIdentities
+// swagger:parameters adminListIdentities
 // nolint:deadcode,unused
-type listIdentityParameters struct {
+type adminListIdentities struct {
 	// Items per Page
 	//
 	// This is the number of items per page.
@@ -92,7 +96,7 @@ type listIdentityParameters struct {
 	Page int `json:"page"`
 }
 
-// swagger:route GET /identities admin listIdentities
+// swagger:route GET /identities v0alpha2 adminListIdentities
 //
 // List Identities
 //
@@ -104,6 +108,9 @@ type listIdentityParameters struct {
 //     - application/json
 //
 //     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
 //
 //     Responses:
 //       200: identityList
@@ -122,21 +129,30 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfAdminURL(), RouteBase), total, page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfAdminURL(), RouteCollection), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, is)
 }
 
-// swagger:parameters getIdentity
+// swagger:parameters adminGetIdentity
 // nolint:deadcode,unused
-type getIdentityParameters struct {
+type adminGetIdentity struct {
 	// ID must be set to the ID of identity you want to get
 	//
 	// required: true
 	// in: path
 	ID string `json:"id"`
+
+	// DeclassifyCredentials will declassify one or more identity's credentials
+	//
+	// Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,
+	// Refresh and (optionally) OpenID Connect ID Token.
+	//
+	// required: false
+	// in: query
+	DeclassifyCredentials []string `json:"include_credential"`
 }
 
-// swagger:route GET /identities/{id} admin getIdentity
+// swagger:route GET /identities/{id} v0alpha2 adminGetIdentity
 //
 // Get an Identity
 //
@@ -150,8 +166,11 @@ type getIdentityParameters struct {
 //
 //     Schemes: http, https
 //
+//     Security:
+//       oryAccessToken:
+//
 //     Responses:
-//       200: identityResponse
+//       200: identity
 //       404: jsonError
 //       500: jsonError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -161,22 +180,35 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	h.r.Writer().Write(w, r, IdentityWithCredentialsMetadataInJSON(*i))
+	if declassify := r.URL.Query().Get("include_credential"); declassify == "oidc" {
+		emit, err := i.WithDeclassifiedCredentialsOIDC(r.Context(), h.r)
+		if err != nil {
+			h.r.Writer().WriteError(w, r, err)
+			return
+		}
+		h.r.Writer().Write(w, r, WithCredentialsInJSON(*emit))
+		return
+	} else if len(declassify) > 0 {
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Invalid value `%s` for parameter `include_credential`.", declassify)))
+		return
+
+	}
+
+	h.r.Writer().Write(w, r, WithCredentialsMetadataInJSON(*i))
 }
 
-// swagger:parameters createIdentity
+// swagger:parameters adminCreateIdentity
 // nolint:deadcode,unused
-type createIdentityParameters struct {
+type adminCreateIdentity struct {
 	// in: body
-	Body CreateIdentity
+	Body AdminCreateIdentityBody
 }
 
-// swagger:model createIdentity
-type CreateIdentity struct {
+// swagger:model adminCreateIdentityBody
+type AdminCreateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
 	// required: true
-	// in: body
 	SchemaID string `json:"schema_id"`
 
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -184,11 +216,15 @@ type CreateIdentity struct {
 	// in `schema_url`.
 	//
 	// required: true
-	// in: body
 	Traits json.RawMessage `json:"traits"`
+
+	// State is the identity's state.
+	//
+	// required: false
+	State State `json:"state"`
 }
 
-// swagger:route POST /identities admin createIdentity
+// swagger:route POST /identities v0alpha2 adminCreateIdentity
 //
 // Create an Identity
 //
@@ -205,19 +241,31 @@ type CreateIdentity struct {
 //
 //     Schemes: http, https
 //
+//     Security:
+//       oryAccessToken:
+//
 //     Responses:
-//       201: identityResponse
+//       201: identity
 //       400: jsonError
 //		 409: jsonError
 //       500: jsonError
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var cr CreateIdentity
+	var cr AdminCreateIdentityBody
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
 		return
 	}
 
-	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: StateActive, StateChangedAt: sqlxx.NullTime(time.Now())}
+	stateChangedAt := sqlxx.NullTime(time.Now())
+	state := StateActive
+	if cr.State != "" {
+		if err := cr.State.IsValid(); err != nil {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+			return
+		}
+		state = cr.State
+	}
+	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: state, StateChangedAt: &stateChangedAt}
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -233,9 +281,9 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	)
 }
 
-// swagger:parameters updateIdentity
+// swagger:parameters adminUpdateIdentity
 // nolint:deadcode,unused
-type updateIdentityParameters struct {
+type adminUpdateIdentity struct {
 	// ID must be set to the ID of identity you want to update
 	//
 	// required: true
@@ -243,11 +291,10 @@ type updateIdentityParameters struct {
 	ID string `json:"id"`
 
 	// in: body
-	Body UpdateIdentity
+	Body AdminUpdateIdentityBody
 }
 
-// swagger:model updateIdentity
-type UpdateIdentity struct {
+type AdminUpdateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
 	// will update the Identity's SchemaID.
 	SchemaID string `json:"schema_id"`
@@ -265,7 +312,7 @@ type UpdateIdentity struct {
 	State State `json:"state"`
 }
 
-// swagger:route PUT /identities/{id} admin updateIdentity
+// swagger:route PUT /identities/{id} v0alpha2 adminUpdateIdentity
 //
 // Update an Identity
 //
@@ -284,6 +331,9 @@ type UpdateIdentity struct {
 //
 //     Schemes: http, https
 //
+//     Security:
+//       oryAccessToken:
+//
 //     Responses:
 //       200: identity
 //       400: jsonError
@@ -291,7 +341,7 @@ type UpdateIdentity struct {
 //		 409: jsonError
 //       500: jsonError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var ur UpdateIdentity
+	var ur AdminUpdateIdentityBody
 	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -310,11 +360,14 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	if ur.State != "" && identity.State != ur.State {
 		if err := ur.State.IsValid(); err != nil {
-			h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)))
+			return
 		}
 
+		stateChangedAt := sqlxx.NullTime(time.Now())
+
 		identity.State = ur.State
-		identity.StateChangedAt = sqlxx.NullTime(time.Now())
+		identity.StateChangedAt = &stateChangedAt
 	}
 
 	identity.Traits = []byte(ur.Traits)
@@ -330,9 +383,9 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	h.r.Writer().Write(w, r, identity)
 }
 
-// swagger:parameters deleteIdentity
+// swagger:parameters adminDeleteIdentity
 // nolint:deadcode,unused
-type deleteIdentityParameters struct {
+type adminDeleteIdentity struct {
 	// ID is the identity's ID.
 	//
 	// required: true
@@ -340,7 +393,7 @@ type deleteIdentityParameters struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /identities/{id} admin deleteIdentity
+// swagger:route DELETE /identities/{id} v0alpha2 adminDeleteIdentity
 //
 // Delete an Identity
 //
@@ -354,6 +407,9 @@ type deleteIdentityParameters struct {
 //     - application/json
 //
 //     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
 //
 //     Responses:
 //       204: emptyResponse

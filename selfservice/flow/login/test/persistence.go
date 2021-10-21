@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -72,7 +73,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 
 		t.Run("case=should properly set the flow type", func(t *testing.T) {
 			expected := newFlow(t)
-			expected.Forced = true
+			expected.Refresh = true
 			expected.Type = flow.TypeAPI
 			expected.UI = container.New("ory-sh")
 
@@ -85,14 +86,14 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 
 			actual.UI = container.New("not-ory-sh")
 			actual.Type = flow.TypeBrowser
-			actual.Forced = true
+			actual.Refresh = true
 
 			require.NoError(t, p.UpdateLoginFlow(ctx, actual))
 
 			actual, err = p.GetLoginFlow(ctx, actual.ID)
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeBrowser, actual.Type)
-			assert.True(t, actual.Forced)
+			assert.True(t, actual.Refresh)
 			assert.Equal(t, "not-ory-sh", actual.UI.Action)
 		})
 
@@ -109,6 +110,29 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			actual, err = p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assertx.EqualAsJSON(t, expected.UI, actual.UI)
+		})
+
+		t.Run("case=should create and update and properly deal with internal context", func(t *testing.T) {
+			for k, tc := range []struct {
+				in     []byte
+				expect string
+			}{
+				{in: []byte("[]"), expect: "{}"},
+				{expect: "{}"},
+				{in: []byte("null"), expect: "{}"},
+				{in: []byte(`{"foo":"bar"}`), expect: `{"foo":"bar"}`},
+			} {
+				t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
+					r := newFlow(t)
+					r.InternalContext = tc.in
+					require.NoError(t, p.CreateLoginFlow(ctx, r))
+					assert.Equal(t, tc.expect, string(r.InternalContext))
+
+					r.InternalContext = tc.in
+					require.NoError(t, p.UpdateLoginFlow(ctx, r))
+					assert.Equal(t, tc.expect, string(r.InternalContext))
+				})
+			}
 		})
 
 		t.Run("case=network", func(t *testing.T) {
@@ -152,7 +176,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 
 				actual, err := p.GetLoginFlow(ctx, id)
 				require.NoError(t, err)
-				require.False(t, actual.Forced)
+				require.False(t, actual.Refresh)
 			})
 
 			t.Run("can not update on another network", func(t *testing.T) {

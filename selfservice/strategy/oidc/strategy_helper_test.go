@@ -99,7 +99,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject, website *string,
 		require.NoError(t, json.NewDecoder(bytes.NewBuffer(body)).Decode(&response))
 		require.NotNil(t, response.RedirectTo, "%s", body)
 
-		http.Redirect(w, r, response.RedirectTo, http.StatusFound)
+		http.Redirect(w, r, response.RedirectTo, http.StatusSeeOther)
 	}
 
 	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -287,6 +287,6 @@ func newClient(t *testing.T, jar *cookiejar.Jar) *http.Client {
 func AssertSystemError(t *testing.T, errTS *httptest.Server, res *http.Response, body []byte, code int, reason string) {
 	require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
 
-	assert.Equal(t, int64(code), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-	assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), reason, "%s", body)
+	assert.Equal(t, int64(code), gjson.GetBytes(body, "code").Int(), "%s", body)
+	assert.Contains(t, gjson.GetBytes(body, "reason").String(), reason, "%s", body)
 }

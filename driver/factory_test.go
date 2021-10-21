@@ -2,6 +2,7 @@ package driver_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -18,6 +19,7 @@ import (
 func TestDriverNew(t *testing.T) {
 	r := driver.New(
 		context.Background(),
+		os.Stderr,
 		configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 		configx.SkipValidation())
 

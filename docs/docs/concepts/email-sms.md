@@ -35,13 +35,26 @@ courier can be started with the `kratos courier watch` command
 ## Sending E-Mails via SMTP
 
 To have E-Mail delivery running with Ory Kratos requires an SMTP server. This is
-set up in the configuration file using an absolute URL with the `smtp` schema:
+set up in the configuration file using an absolute URL with the `smtp` or
+`smtps` scheme:
 
 ```yaml title="path/to/my/kratos/config.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
 courier:
   smtp:
-    connection_uri: smtps://test:test@my-smtp-server:1025/
+    connection_uri: smtps://foo:bar@my-smtp-server:1234/
+    # Examples:
+    # - "smtp://foo:bar@my-mailserver:1234/?disable_starttls=true
+    #   (NOT RECOMMENDED: Cleartext smtp for devel and legacy infrastructure
+    #   only)"
+    # - smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate
+    #   trust verification)
+    # - "smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT
+    #   RECOMMENDED: Explicit StartTLS without certificate trust verification)"
+    # - smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust
+    #   verification)
+    # - "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT
+    #   RECOMMENDED: Implicit TLS without certificate trust verification)"
 ```
 
 ### Sender Address and Template Customization
@@ -110,6 +123,21 @@ Hi, please verify your account by clicking the following link:
 
 ```gotmp title="courier/template/templates/verification/valid/email.body.plaintext.gotmpl"
 Hi, please verify your account by clicking the following link: {{ .VerificationURL }}
+```
+
+### Custom Headers
+
+You can configure custom SMTP headers. For example, if integrating with AWS SES
+SMTP interface, the headers can be configured for cross-account sending:
+
+```yaml title="path/to/my/kratos/config.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+courier:
+  smtp:
+    headers:
+      X-SES-SOURCE-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+      X-SES-FROM-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
+      X-SES-RETURN-PATH-ARN: arn:aws:ses:us-west-2:123456789012:identity/example.com
 ```
 
 ## Sending SMS

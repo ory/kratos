@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"crypto/tls"
 	"net/http"
 	"sync"
 
@@ -22,7 +23,6 @@ import (
 
 	stdctx "context"
 
-	"github.com/gorilla/context"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 
@@ -82,6 +82,9 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
+	n.Use(sqa(ctx, cmd, r))
+	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
 	csrf := x.NewCSRFHandler(router, r)
@@ -92,9 +95,6 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
-	n.Use(sqa(ctx, cmd, r))
-	n.Use(r.PrometheusManager())
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
@@ -106,7 +106,11 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		handler = cors.New(options).Handler(handler)
 	}
 
-	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(handler)})
+	certs := c.GetTSLCertificatesForPublic()
+	server := graceful.WithDefaults(&http.Server{
+		Handler:   handler,
+		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+	})
 	addr := c.PublicListenOn()
 
 	l.Printf("Starting the public httpd on: %s", addr)
@@ -116,7 +120,10 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 			return err
 		}
 
-		return server.Serve(listener)
+		if certs == nil {
+			return server.Serve(listener)
+		}
+		return server.ServeTLS(listener, "", "")
 	}, server.Shutdown); err != nil {
 		l.Fatalf("Failed to gracefully shutdown public httpd: %s", err)
 	}
@@ -134,20 +141,24 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
+	n.Use(sqa(ctx, cmd, r))
+	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
-	n.Use(sqa(ctx, cmd, r))
-	n.Use(r.PrometheusManager())
 
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
 	n.UseHandler(router)
-	server := graceful.WithDefaults(&http.Server{Handler: context.ClearHandler(n)})
+	certs := c.GetTSLCertificatesForAdmin()
+	server := graceful.WithDefaults(&http.Server{
+		Handler:   n,
+		TLSConfig: &tls.Config{Certificates: certs, MinVersion: tls.VersionTLS12},
+	})
 	addr := c.AdminListenOn()
 
 	l.Printf("Starting the admin httpd on: %s", addr)
@@ -157,7 +168,10 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 			return err
 		}
 
-		return server.Serve(listener)
+		if certs == nil {
+			return server.Serve(listener)
+		}
+		return server.ServeTLS(listener, "", "")
 	}, server.Shutdown); err != nil {
 		l.Fatalf("Failed to gracefully shutdown admin httpd: %s", err)
 	}
@@ -199,7 +213,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 				registration.RouteSubmitFlow,
 
 				session.RouteWhoami,
-				identity.RouteBase,
+				identity.RouteCollection,
 
 				settings.RouteInitBrowserFlow,
 				settings.RouteInitAPIFlow,

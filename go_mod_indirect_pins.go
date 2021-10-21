@@ -1,3 +1,4 @@
+//go:build tools
 // +build tools
 
 package main
@@ -7,8 +8,6 @@ import (
 	_ "github.com/mattn/goveralls"
 	_ "github.com/sqs/goreturns"
 	_ "golang.org/x/tools/cmd/cover"
-
-	_ "github.com/sqs/goreturns"
 
 	_ "github.com/gobuffalo/fizz"
 
@@ -21,5 +20,6 @@ import (
 
 	_ "github.com/davidrjonas/semver-cli"
 
+	_ "github.com/cortesi/modd/cmd/modd"
 	_ "github.com/hashicorp/consul/api"
 )

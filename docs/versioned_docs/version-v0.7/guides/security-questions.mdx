@@ -1,0 +1,53 @@
+---
+id: security-questions-best-practice
+title: Choosing Security Questions
+---
+
+Security questions are currently not supported for this flow, but might be added
+in a future version of Ory Kratos.
+
+This section contains an overview of picking the right security questions.
+Another good resource is
+[Choosing and Using Security Questions Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Choosing_and_Using_Security_Questions_Cheat_Sheet.html).
+
+> One option is to allow the user to self-construct their own questions. The
+> problem with this though is that you end up with either painfully obvious
+> questions:
+>
+> - **What colour is the sky?**
+> - **How do you spell “password”?**
+>
+> Questions which can put people in an uncomfortable position when a human uses
+> the secret question for verification (such as in a call centre):
+>
+> **Who did I sleep with at the Christmas party?**
+>
+> When it comes to secret questions, people need to be saved from themselves! In
+> other words, the site itself should define the secret question, or rather
+> define a series of secret questions from which the user can choose. And not
+> just choose one either; ideally, the user should define two or more secret
+> questions at the time of account registration which can then be used as a
+> second channel of identity verification. Having multiple questions adds a
+> higher degree of confidence to the verification process plus gives you
+> opportunity to add randomness (not always show the same question) plus
+> provides a bit of redundancy should someone legitimate forget an answer.
+>
+> So what makes a good secret question? There are a few different factors:
+>
+> - It should be concise – the question is to the point and unambiguous
+> - The answer is specific – you don’t want a question which could be answered
+>   in different ways by the same person
+> - The possible answers must be diverse – a question about someone’s favourite
+>   colour would result in a small subset of possible answers
+> - Answer discovery should be hard – if you can readily find the answer for
+>   anyone (think high-profile people) then it’s no good
+> - The answer must be constant over time – asking for someone’s favourite movie
+>   may result in a different answer a year from now
+>
+> [Source](https://www.troyhunt.com/everything-you-ever-wanted-to-know/)
+
+Here are some good examples:
+
+- What was the first concert you ever went to and where? (e.g. "Pink Floyd at
+  Gotham City Stadium")
+- ...

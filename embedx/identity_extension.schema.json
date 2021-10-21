@@ -1,0 +1,71 @@
+{
+  "$id": "ory://identity-extension",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "allOf": [
+    {
+      "properties": {
+        "ory.sh/kratos": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "credentials": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "password": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "identifier": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "totp": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "account_name": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "verification": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "via": {
+                  "type": "string",
+                  "enum": [
+                    "email"
+                  ]
+                }
+              }
+            },
+            "recovery": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "via": {
+                  "type": "string",
+                  "enum": [
+                    "email"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#"
+        }
+      }
+    }
+  ]
+}

@@ -73,6 +73,36 @@ func TestNodesSort(t *testing.T) {
 				node.PasswordGroup,
 			}),
 		},
+		"4.json": {
+			node.SortBySchema(filepath.Join("fixtures/sort/schema", "4.json")),
+			node.SortByGroups([]node.Group{
+				node.DefaultGroup,
+				node.ProfileGroup,
+				node.PasswordGroup,
+				node.OpenIDConnectGroup,
+				node.LookupGroup,
+				node.WebAuthnGroup,
+				node.TOTPGroup,
+			}),
+			node.SortUseOrderAppend([]string{
+				// Lookup
+				node.LookupReveal,
+				node.LookupRegenerate,
+				node.LookupCodes,
+				node.LookupConfirm,
+
+				// Lookup
+				node.WebAuthnRemove,
+				node.WebAuthnRegisterDisplayName,
+				node.WebAuthnRegister,
+
+				// TOTP
+				node.TOTPSecretKey,
+				node.TOTPQR,
+				node.TOTPUnlink,
+				node.TOTPCode,
+			}),
+		},
 	}
 
 	for _, in := range inputs {

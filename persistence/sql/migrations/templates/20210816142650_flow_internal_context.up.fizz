@@ -1,0 +1,7 @@
+add_column("selfservice_login_flows", "internal_context", "json", { "null": true })
+sql("UPDATE selfservice_login_flows SET internal_context='{}'")
+change_column("selfservice_login_flows", "internal_context", "json")
+
+add_column("selfservice_registration_flows", "internal_context", "json", { "null": true })
+sql("UPDATE selfservice_registration_flows SET internal_context='{}'")
+change_column("selfservice_registration_flows", "internal_context", "json")

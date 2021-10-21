@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow/registration"
+
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/assertx"
@@ -22,7 +24,6 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
 
@@ -37,8 +38,8 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool) *kratos.RegistrationFlow {
-	req, err := http.NewRequest("GET", ts.URL+registration.RouteInitBrowserFlow, nil)
+func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, isSPA bool, opts ...InitFlowWithOption) *kratos.SelfServiceRegistrationFlow {
+	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, registration.RouteInitBrowserFlow, false, opts...), nil)
 	require.NoError(t, err)
 
 	if isSPA {
@@ -55,15 +56,14 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 		flowID = gjson.GetBytes(body, "id").String()
 	}
 
-	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
+	rs, _, err := NewSDKCustomClient(ts, client).V0alpha2Api.GetSelfServiceRegistrationFlow(context.Background()).Id(flowID).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
-
 	return rs
 }
 
-func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
-	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.InitializeSelfServiceRegistrationWithoutBrowser(context.Background()).Execute()
+func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.SelfServiceRegistrationFlow {
+	rs, _, err := NewSDKCustomClient(ts, client).V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(context.Background()).Execute()
 	require.NoError(t, err)
 	assert.Empty(t, rs.Active)
 	return rs
@@ -73,7 +73,7 @@ func RegistrationMakeRequest(
 	t *testing.T,
 	isAPI bool,
 	isSPA bool,
-	f *kratos.RegistrationFlow,
+	f *kratos.SelfServiceRegistrationFlow,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -109,7 +109,7 @@ func SubmitRegistrationForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var payload *kratos.RegistrationFlow
+	var payload *kratos.SelfServiceRegistrationFlow
 	if isAPI {
 		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS)
 	} else {

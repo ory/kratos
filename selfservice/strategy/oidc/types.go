@@ -23,10 +23,17 @@ type CredentialsConfig struct {
 	Providers []ProviderCredentialsConfig `json:"providers"`
 }
 
-func NewCredentials(provider, subject string) (*identity.Credentials, error) {
+func NewCredentials(idToken, accessToken, refreshToken, provider, subject string) (*identity.Credentials, error) {
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(CredentialsConfig{
-		Providers: []ProviderCredentialsConfig{{Subject: subject, Provider: provider}},
+		Providers: []ProviderCredentialsConfig{
+			{
+				Subject:             subject,
+				Provider:            provider,
+				InitialIDToken:      idToken,
+				InitialAccessToken:  accessToken,
+				InitialRefreshToken: refreshToken,
+			}},
 	}); err != nil {
 		return nil, errors.WithStack(x.PseudoPanic.
 			WithDebugf("Unable to encode password options to JSON: %s", err))
@@ -40,8 +47,11 @@ func NewCredentials(provider, subject string) (*identity.Credentials, error) {
 }
 
 type ProviderCredentialsConfig struct {
-	Subject  string `json:"subject"`
-	Provider string `json:"provider"`
+	Subject             string `json:"subject"`
+	Provider            string `json:"provider"`
+	InitialIDToken      string `json:"initial_id_token"`
+	InitialAccessToken  string `json:"initial_access_token"`
+	InitialRefreshToken string `json:"initial_refresh_token"`
 }
 
 type FlowMethod struct {

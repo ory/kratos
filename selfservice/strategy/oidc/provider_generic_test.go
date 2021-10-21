@@ -47,8 +47,8 @@ func makeAuthCodeURL(t *testing.T, r *login.Flow) string {
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	t.Run("case=expect prompt to be login with forced flag", func(t *testing.T) {
 		r := &login.Flow{
-			ID:     x.NewUUID(),
-			Forced: true,
+			ID:      x.NewUUID(),
+			Refresh: true,
 		}
 		assert.Contains(t, makeAuthCodeURL(t, r), "prompt=login")
 	})

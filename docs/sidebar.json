@@ -13,15 +13,20 @@
     "Concepts": [
       "concepts/index",
       "concepts/terminology",
+      "concepts/session",
       "concepts/ui-user-interface",
-      "concepts/identity-data-model",
+      "concepts/management-ui",
+      "concepts/identity-schema",
       {
         "label": "Identity Credentials",
         "type": "category",
         "items": [
           "concepts/credentials",
           "concepts/credentials/username-email-password",
-          "concepts/credentials/openid-connect-oidc-oauth2"
+          "concepts/credentials/openid-connect-oidc-oauth2",
+          "concepts/credentials/lookup-secrets",
+          "concepts/credentials/totp",
+          "concepts/credentials/webauthn"
         ]
       },
       "concepts/browser-redirect-flow-completion",
@@ -50,6 +55,7 @@
   },
   {
     "Guides": [
+      "guides/2fa",
       "guides/sign-in-with-github-google-facebook-linkedin",
       "guides/login-session",
       "guides/configuring-cookies",
@@ -60,8 +66,13 @@
       "guides/zero-trust-iap-proxy-identity-access-proxy",
       "guides/multi-tenancy-multitenant",
       "guides/secret-key-rotation",
+      "guides/retrieve-social-sign-in-access-refresh-id-token",
+      "guides/setting-up-noop-cipher-parameters",
+      "guides/setting-up-xchacha-cipher-parameters",
+      "guides/setting-up-aes-cipher-parameters",
       "guides/high-availability-ha",
       "guides/docker",
+      "guides/https-tls",
       "guides/setting-up-password-hashing-parameters",
       "guides/integration-with-other-systems-using-web-hooks",
       "guides/tracing"
@@ -78,6 +89,11 @@
           "cli/kratos",
           "cli/kratos-courier",
           "cli/kratos-courier-watch",
+          "cli/kratos-hashers",
+          "cli/kratos-hashers-argon2",
+          "cli/kratos-hashers-argon2-calibrate",
+          "cli/kratos-hashers-argon2-hash",
+          "cli/kratos-hashers-argon2-load-test",
           "cli/kratos-identities",
           "cli/kratos-identities-delete",
           "cli/kratos-identities-get",
@@ -102,7 +118,8 @@
   {
     "Debug & Help": [
       "debug/csrf",
-      "debug/performance-out-of-memory-password-hashing-argon2"
+      "debug/performance-out-of-memory-password-hashing-argon2",
+      "debug/debug-docker-delve-ory-kratos"
     ]
   },
   {

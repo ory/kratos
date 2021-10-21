@@ -1,0 +1,152 @@
+{
+  "method": "POST",
+  "nodes": [
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "csrf_token",
+        "node_type": "input",
+        "required": true,
+        "type": "hidden"
+      },
+      "group": "default",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.email",
+        "node_type": "input",
+        "type": "text"
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.stringy",
+        "node_type": "input",
+        "type": "text",
+        "value": "foobar"
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.numby",
+        "node_type": "input",
+        "type": "number",
+        "value": 2.5
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.booly",
+        "node_type": "input",
+        "type": "checkbox",
+        "value": false
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.should_big_number",
+        "node_type": "input",
+        "type": "number",
+        "value": 2048
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "traits.should_long_string",
+        "node_type": "input",
+        "type": "text",
+        "value": "asdfasdfasdfasdfasfdasdfasdfasdf"
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {},
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "method",
+        "node_type": "input",
+        "type": "submit",
+        "value": "profile"
+      },
+      "group": "profile",
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1070003,
+          "text": "Save",
+          "type": "info"
+        }
+      },
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "password",
+        "node_type": "input",
+        "required": true,
+        "type": "password"
+      },
+      "group": "password",
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1070001,
+          "text": "Password",
+          "type": "info"
+        }
+      },
+      "type": "input"
+    },
+    {
+      "attributes": {
+        "disabled": false,
+        "name": "method",
+        "node_type": "input",
+        "type": "submit",
+        "value": "password"
+      },
+      "group": "password",
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1070003,
+          "text": "Save",
+          "type": "info"
+        }
+      },
+      "type": "input"
+    }
+  ]
+}

@@ -21,7 +21,10 @@ type UiNodeInputAttributes struct {
 	Disabled bool    `json:"disabled"`
 	Label    *UiText `json:"label,omitempty"`
 	// The input's element name.
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	NodeType string `json:"node_type"`
+	// OnClick may contain javascript which should be executed on click. This is primarily used for WebAuthn.
+	Onclick *string `json:"onclick,omitempty"`
 	// The input's pattern.
 	Pattern *string `json:"pattern,omitempty"`
 	// Mark this input field as required.
@@ -35,10 +38,11 @@ type UiNodeInputAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeInputAttributes(disabled bool, name string, type_ string) *UiNodeInputAttributes {
+func NewUiNodeInputAttributes(disabled bool, name string, nodeType string, type_ string) *UiNodeInputAttributes {
 	this := UiNodeInputAttributes{}
 	this.Disabled = disabled
 	this.Name = name
+	this.NodeType = nodeType
 	this.Type = type_
 	return &this
 }
@@ -129,6 +133,62 @@ func (o *UiNodeInputAttributes) GetNameOk() (*string, bool) {
 // SetName sets field value
 func (o *UiNodeInputAttributes) SetName(v string) {
 	o.Name = v
+}
+
+// GetNodeType returns the NodeType field value
+func (o *UiNodeInputAttributes) GetNodeType() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.NodeType
+}
+
+// GetNodeTypeOk returns a tuple with the NodeType field value
+// and a boolean to check if the value has been set.
+func (o *UiNodeInputAttributes) GetNodeTypeOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.NodeType, true
+}
+
+// SetNodeType sets field value
+func (o *UiNodeInputAttributes) SetNodeType(v string) {
+	o.NodeType = v
+}
+
+// GetOnclick returns the Onclick field value if set, zero value otherwise.
+func (o *UiNodeInputAttributes) GetOnclick() string {
+	if o == nil || o.Onclick == nil {
+		var ret string
+		return ret
+	}
+	return *o.Onclick
+}
+
+// GetOnclickOk returns a tuple with the Onclick field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UiNodeInputAttributes) GetOnclickOk() (*string, bool) {
+	if o == nil || o.Onclick == nil {
+		return nil, false
+	}
+	return o.Onclick, true
+}
+
+// HasOnclick returns a boolean if a field has been set.
+func (o *UiNodeInputAttributes) HasOnclick() bool {
+	if o != nil && o.Onclick != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetOnclick gets a reference to the given string and assigns it to the Onclick field.
+func (o *UiNodeInputAttributes) SetOnclick(v string) {
+	o.Onclick = &v
 }
 
 // GetPattern returns the Pattern field value if set, zero value otherwise.
@@ -262,6 +322,12 @@ func (o UiNodeInputAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["name"] = o.Name
+	}
+	if true {
+		toSerialize["node_type"] = o.NodeType
+	}
+	if o.Onclick != nil {
+		toSerialize["onclick"] = o.Onclick
 	}
 	if o.Pattern != nil {
 		toSerialize["pattern"] = o.Pattern

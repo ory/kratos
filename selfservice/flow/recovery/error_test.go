@@ -73,16 +73,16 @@ func TestHandleError(t *testing.T) {
 		return f
 	}
 
-	expectErrorUI := func(t *testing.T) ([]map[string]interface{}, *http.Response) {
+	expectErrorUI := func(t *testing.T) (map[string]interface{}, *http.Response) {
 		res, err := ts.Client().Get(ts.URL + "/error")
 		require.NoError(t, err)
 		defer res.Body.Close()
-		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?error=")
+		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
 
-		sse, _, err := sdk.PublicApi.GetSelfServiceError(context.Background()).Error_(res.Request.URL.Query().Get("error")).Execute()
+		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 
-		return sse.Errors, nil
+		return sse.Error, nil
 	}
 
 	anHourAgo := time.Now().Add(-time.Hour)
@@ -94,7 +94,7 @@ func TestHandleError(t *testing.T) {
 		methodName = recovery.StrategyRecoveryLinkName
 
 		sse, _ := expectErrorUI(t)
-		assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
+		assertx.EqualAsJSON(t, flowError, sse)
 	})
 
 	t.Run("case=error with nil flow detects application/json", func(t *testing.T) {
@@ -107,7 +107,7 @@ func TestHandleError(t *testing.T) {
 		require.NoError(t, err)
 		defer res.Body.Close()
 		assert.Contains(t, res.Header.Get("Content-Type"), "application/json")
-		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?error=")
+		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
 
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
-				flowError = recovery.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(anHourAgo)
 				methodName = recovery.StrategyRecoveryLinkName
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -194,7 +194,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser}
-			flowError = recovery.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(anHourAgo)
 			methodName = node.RecoveryLinkGroup
 
 			lf, _ := expectRecoveryUI(t)
@@ -223,7 +223,7 @@ func TestHandleError(t *testing.T) {
 			methodName = node.RecoveryLinkGroup
 
 			sse, _ := expectErrorUI(t)
-			assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
+			assertx.EqualAsJSON(t, flowError, sse)
 		})
 	})
 }

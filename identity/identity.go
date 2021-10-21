@@ -4,8 +4,15 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
+
+	"github.com/tidwall/sjson"
+
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/kratos/corp"
 
@@ -20,7 +27,11 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:enum State
+// An Identity's State
+//
+// The state can either be `active` or `inactive`.
+//
+// swagger:model identityState
 type State string
 
 const (
@@ -35,6 +46,13 @@ func (lt State) IsValid() error {
 	}
 	return errors.New("identity state is not valid")
 }
+
+//type IdentifierCredential struct {
+//	Subject      string `json:"subject"`
+//	Provider     string `json:"provider"`
+//	AccessToken  string `json:"access_token"`
+//	RefreshToken string `json:"refresh_token"`
+//}
 
 // Identity represents an Ory Kratos identity
 //
@@ -56,6 +74,9 @@ type Identity struct {
 	// Credentials represents all credentials that can be used for authenticating this identity.
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
+	//// IdentifierCredentials contains the access and refresh token for oidc identifier
+	//IdentifierCredentials []IdentifierCredential `json:"identifier_credentials,omitempty" faker:"-" db:"-"`
+
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
 	// required: true
@@ -69,14 +90,11 @@ type Identity struct {
 
 	// State is the identity's state.
 	//
-	// enum:
-	// - active
-	// - inactive
-	// required: true
+	// This value has currently no effect.
 	State State `json:"state" faker:"-" db:"state"`
 
 	// StateChangedAt contains the last time when the identity's state changed.
-	StateChangedAt sqlxx.NullTime `json:"state_changed_at" faker:"-" db:"state_changed_at"`
+	StateChangedAt *sqlxx.NullTime `json:"state_changed_at,omitempty" faker:"-" db:"state_changed_at"`
 
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 	// in a self-service manner. The input will always be validated against the JSON Schema defined
@@ -171,6 +189,16 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.Credentials[t] = c
 }
 
+func (i *Identity) DeleteCredentialsType(t CredentialsType) {
+	i.lock().Lock()
+	defer i.lock().Unlock()
+	if i.Credentials == nil {
+		return
+	}
+
+	delete(i.Credentials, t)
+}
+
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	i.lock().RLock()
 	defer i.lock().RUnlock()
@@ -207,6 +235,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		traitsSchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
+	stateChangedAt := sqlxx.NullTime(time.Now())
 	return &Identity{
 		ID:                  x.NewUUID(),
 		Credentials:         map[CredentialsType]Credentials{},
@@ -214,7 +243,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		SchemaID:            traitsSchemaID,
 		VerifiableAddresses: []VerifiableAddress{},
 		State:               StateActive,
-		StateChangedAt:      sqlxx.NullTime(time.Now()),
+		StateChangedAt:      &stateChangedAt,
 		l:                   new(sync.RWMutex),
 	}
 }
@@ -244,20 +273,22 @@ func (i *Identity) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-type IdentityWithCredentialsMetadataInJSON Identity
+type WithCredentialsInJSON Identity
 
-func (i IdentityWithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
+func (i WithCredentialsInJSON) MarshalJSON() ([]byte, error) {
+	type localIdentity Identity
+	return json.Marshal(localIdentity(i))
+}
+
+type WithCredentialsMetadataInJSON Identity
+
+func (i WithCredentialsMetadataInJSON) MarshalJSON() ([]byte, error) {
 	type localIdentity Identity
 	for k, v := range i.Credentials {
 		v.Config = nil
 		i.Credentials[k] = v
 	}
-
-	result, err := json.Marshal(localIdentity(i))
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return json.Marshal(localIdentity(i))
 }
 
 func (i *Identity) ValidateNID() error {
@@ -285,4 +316,63 @@ func (i *Identity) ValidateNID() error {
 	}
 
 	return nil
+}
+
+func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher.Provider) (*Identity, error) {
+	credsToPublish := make(map[CredentialsType]Credentials)
+
+	for ct, original := range i.Credentials {
+		if ct != CredentialsTypeOIDC {
+			toPublish := original
+			toPublish.Config = []byte{}
+			credsToPublish[ct] = toPublish
+			continue
+		}
+
+		toPublish := original
+		toPublish.Config = []byte{}
+
+		for _, token := range []string{"initial_id_token", "initial_access_token", "initial_refresh_token"} {
+			var i int
+			var err error
+			gjson.GetBytes(original.Config, "providers").ForEach(func(_, v gjson.Result) bool {
+				key := fmt.Sprintf("%d.%s", i, token)
+				ciphertext := v.Get(token).String()
+
+				var plaintext []byte
+				plaintext, err = c.Cipher().Decrypt(ctx, ciphertext)
+				if err != nil {
+					return false
+				}
+
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, "providers."+key, string(plaintext))
+				if err != nil {
+					return false
+				}
+
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.subject", i), v.Get("subject").String())
+				if err != nil {
+					return false
+				}
+
+				toPublish.Config, err = sjson.SetBytes(toPublish.Config, fmt.Sprintf("providers.%d.provider", i), v.Get("provider").String())
+				if err != nil {
+					return false
+				}
+
+				i++
+				return true
+			})
+
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		credsToPublish[ct] = toPublish
+	}
+
+	ii := *i
+	ii.Credentials = credsToPublish
+	return &ii, nil
 }

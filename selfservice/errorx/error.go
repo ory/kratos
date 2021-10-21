@@ -11,7 +11,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// swagger:model selfServiceErrorContainer
+// swagger:model selfServiceError
 type ErrorContainer struct {
 	// ID of the error container.
 	//
@@ -19,10 +19,8 @@ type ErrorContainer struct {
 	ID  uuid.UUID `db:"id" json:"id"`
 	NID uuid.UUID `json:"-" db:"nid"`
 
-	// Errors in the container
-	//
-	// required: true
-	Errors json.RawMessage `json:"errors" db:"errors"`
+	// The error
+	Errors json.RawMessage `json:"error" db:"errors"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"created_at" db:"created_at"`

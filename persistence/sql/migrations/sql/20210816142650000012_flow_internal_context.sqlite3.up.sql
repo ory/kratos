@@ -1,0 +1,1 @@
+CREATE INDEX "selfservice_registration_flows_nid_idx" ON "_selfservice_registration_flows_tmp" (id, nid);

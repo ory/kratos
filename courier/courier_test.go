@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/kratos/x"
+	gomail "github.com/ory/mail/v3"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -20,6 +21,7 @@ import (
 
 	dhelper "github.com/ory/x/sqlcon/dockertest"
 
+	courier "github.com/ory/kratos/courier"
 	templates "github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
@@ -30,6 +32,33 @@ func TestMain(m *testing.M) {
 	atexit := dhelper.NewOnExit()
 	atexit.Add(x.CleanUpTestSMTP)
 	atexit.Exit(m.Run())
+}
+
+func TestNewSMTP(t *testing.T) {
+	setupConfig := func(stringURL string) *courier.Courier {
+		conf, _ := internal.NewFastRegistryWithMocks(t)
+		conf.MustSet(config.ViperKeyCourierSMTPURL, stringURL)
+		t.Logf("SMTP URL: %s", conf.CourierSMTPURL().String())
+		return courier.NewSMTP(nil, conf)
+	}
+
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	//Should enforce StartTLS => dialer.StartTLSPolicy = gomail.MandatoryStartTLS and dialer.SSL = false
+	smtp := setupConfig("smtp://foo:bar@my-server:1234/")
+	assert.Equal(t, smtp.Dialer.StartTLSPolicy, gomail.MandatoryStartTLS, "StartTLS not enforced")
+	assert.Equal(t, smtp.Dialer.SSL, false, "Implicit TLS should not be enabled")
+
+	//Should enforce TLS => dialer.SSL = true
+	smtp = setupConfig("smtps://foo:bar@my-server:1234/")
+	assert.Equal(t, smtp.Dialer.SSL, true, "Implicit TLS should be enabled")
+
+	//Should allow cleartext => dialer.StartTLSPolicy = gomail.OpportunisticStartTLS and dialer.SSL = false
+	smtp = setupConfig("smtp://foo:bar@my-server:1234/?disable_starttls=true")
+	assert.Equal(t, smtp.Dialer.StartTLSPolicy, gomail.OpportunisticStartTLS, "StartTLS is enforced")
+	assert.Equal(t, smtp.Dialer.SSL, false, "Implicit TLS should not be enabled")
 }
 
 func TestSMTP(t *testing.T) {
@@ -70,8 +99,12 @@ func TestSMTP(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, uuid.Nil, id)
 
-	// The third email contains a sender name
+	// The third email contains a sender name and custom headers
 	conf.MustSet(config.ViperKeyCourierSMTPFromName, "Bob")
+	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header1", "foo")
+	conf.MustSet(config.ViperKeyCourierSMTPHeaders+".test-stub-header2", "bar")
+	customerHeaders := conf.CourierSMTPHeaders()
+	require.Len(t, customerHeaders, 2)
 	id, err = c.QueueEmail(ctx, templates.NewTestStub(conf, &templates.TestStubModel{
 		To:      "test-recipient-3@example.org",
 		Subject: "test-subject-3",
@@ -122,6 +155,8 @@ func TestSMTP(t *testing.T) {
 		assert.Contains(t, string(body), "test-stub@ory.sh")
 	}
 
-	// Assertion for the third email with sender name
+	// Assertion for the third email with sender name and headers
 	assert.Contains(t, string(body), "Bob")
+	assert.Contains(t, string(body), `"test-stub-header1":["foo"]`)
+	assert.Contains(t, string(body), `"test-stub-header2":["bar"]`)
 }

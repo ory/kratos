@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_login_flows" DROP COLUMN "_internal_context_tmp";

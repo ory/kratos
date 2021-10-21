@@ -2,6 +2,7 @@ package recovery
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -24,7 +25,7 @@ import (
 //
 // We recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)
 //
-// swagger:model recoveryFlow
+// swagger:model selfServiceRecoveryFlow
 type Flow struct {
 	// ID represents the request's unique ID. When performing the recovery flow, this
 	// represents the id in the recovery ui's query parameter: http://<selfservice.flows.recovery.ui_url>?request=<id>
@@ -53,6 +54,9 @@ type Flow struct {
 	//
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
+
+	// ReturnTo contains the requested return_to URL.
+	ReturnTo string `json:"return_to,omitempty" db:"-"`
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
@@ -89,10 +93,24 @@ type Flow struct {
 func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
+
+	// Pre-validate the return to URL which is contained in the HTTP request.
+	requestURL := x.RequestURL(r).String()
+	_, err := x.SecureRedirectTo(r,
+		conf.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(requestURL),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	req := &Flow{
-		ID:        id,
-		ExpiresAt: now.Add(exp), IssuedAt: now,
-		RequestURL: x.RequestURL(r).String(),
+		ID:         id,
+		ExpiresAt:  now.Add(exp),
+		IssuedAt:   now,
+		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
@@ -109,6 +127,16 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	}
 
 	return req, nil
+}
+
+func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of Flow) (*Flow, error) {
+	nf, err := NewFlow(conf, exp, csrf, r, strategies, of.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	nf.RequestURL = of.RequestURL
+	return nf, nil
 }
 
 func (f *Flow) GetType() flow.Type {
@@ -133,11 +161,24 @@ func (f Flow) GetNID() uuid.UUID {
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
 	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
+}
+
+func (f *Flow) SetCSRFToken(token string) {
+	f.CSRFToken = token
+	f.UI.SetCSRF(token)
+}
+
+func (f Flow) MarshalJSON() ([]byte, error) {
+	type local Flow
+	if u, err := url.Parse(f.RequestURL); err == nil {
+		f.ReturnTo = u.Query().Get("return_to")
+	}
+	return json.Marshal(local(f))
 }

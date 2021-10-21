@@ -1,19 +1,18 @@
 package verification_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/jsonx"
+
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/verification"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/configx"
-	"github.com/ory/x/logrusx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,8 +24,7 @@ import (
 )
 
 func TestFlow(t *testing.T) {
-	conf, err := config.New(context.Background(), logrusx.New("", ""), configx.SkipValidation())
-	require.NoError(t, err)
+	conf, _ := internal.NewFastRegistryWithMocks(t)
 
 	must := func(r *verification.Flow, err error) *verification.Flow {
 		require.NoError(t, err)
@@ -51,6 +49,14 @@ func TestFlow(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+
+	t.Run("type=return_to", func(t *testing.T) {
+		_, err := verification.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, nil, flow.TypeBrowser)
+		require.Error(t, err)
+
+		_, err = verification.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(nil), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
+		require.NoError(t, err)
+	})
 
 	assert.EqualValues(t, verification.StateChooseMethod,
 		must(verification.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser)).State)
@@ -84,15 +90,17 @@ func TestNewPostHookFlow(t *testing.T) {
 		t.Log(originalFlow.RequestURL)
 		f, err := verification.NewPostHookFlow(conf, time.Second, "", u, nil, &originalFlow)
 		require.NoError(t, err)
-		url, err := urlx.Parse(f.RequestURL)
+		u, err := urlx.Parse(f.RequestURL)
 		require.NoError(t, err)
-		assert.Equal(t, "", url.Query().Get("after_verification_return_to"))
-		assert.Equal(t, expectedReturnTo, url.Query().Get("return_to"))
+		assert.Equal(t, "", u.Query().Get("after_verification_return_to"))
+		assert.Equal(t, expectedReturnTo, u.Query().Get("return_to"))
 	}
+
 	t.Run("case=after_verification_return_to supplied", func(t *testing.T) {
 		expectedReturnTo := "http://foo.com/verification_callback"
 		expectReturnTo(t, url.Values{"after_verification_return_to": {expectedReturnTo}}, expectedReturnTo)
 	})
+
 	t.Run("case=return_to supplied", func(t *testing.T) {
 		expectReturnTo(t, url.Values{"return_to": {"http://foo.com/original_flow_callback"}}, "")
 	})
@@ -104,5 +112,10 @@ func TestNewPostHookFlow(t *testing.T) {
 			"after_verification_return_to": {expectedReturnTo},
 		}, expectedReturnTo)
 	})
+}
 
+func TestFlowEncodeJSON(t *testing.T) {
+	assert.EqualValues(t, "", gjson.Get(jsonx.TestMarshalJSONString(t, &verification.Flow{RequestURL: "https://foo.bar?foo=bar"}), "return_to").String())
+	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &verification.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
+	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, verification.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 }

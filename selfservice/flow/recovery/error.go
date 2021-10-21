@@ -3,7 +3,6 @@ package recovery
 import (
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/ory/x/sqlxx"
 
@@ -25,22 +24,6 @@ var (
 	ErrHookAbortFlow   = errors.New("aborted recovery hook execution")
 	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus recovery is not possible.")
 )
-
-type FlowExpiredError struct {
-	*herodot.DefaultError
-	ago time.Duration
-}
-
-func NewFlowExpiredError(at time.Time) *FlowExpiredError {
-	ago := time.Since(at)
-	return &FlowExpiredError{
-		ago: ago,
-		DefaultError: herodot.ErrBadRequest.
-			WithError("recovery flow expired").
-			WithReasonf(`The recovery flow has expired. Please restart the flow.`).
-			WithReasonf("The recovery flow expired %.2f minutes ago, please try again.", ago.Minutes()),
-	}
-}
 
 type (
 	errorHandlerDependencies interface {
@@ -67,15 +50,6 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 	return &ErrorHandler{d: d}
 }
 
-func MethodToNodeGroup(method string) node.Group {
-	switch method {
-	case StrategyRecoveryLinkName:
-		return node.RecoveryLinkGroup
-	default:
-		return node.DefaultGroup
-	}
-}
-
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -94,16 +68,16 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if e := new(FlowExpiredError); errors.As(err, &e) {
+	if e := new(flow.ExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := NewFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), f.Type)
+		a, err := FromOldFlow(s.d.Config(r.Context()), s.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(r.Context()), *f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, f, group, err)
 			return
 		}
 
-		a.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.ago))
+		a.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(e.Ago))
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return

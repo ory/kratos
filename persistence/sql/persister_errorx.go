@@ -24,7 +24,7 @@ import (
 
 var _ errorx.Persister = new(Persister)
 
-func (p *Persister) Add(ctx context.Context, csrfToken string, errs ...error) (uuid.UUID, error) {
+func (p *Persister) Add(ctx context.Context, csrfToken string, errs error) (uuid.UUID, error) {
 	buf, err := p.encodeSelfServiceErrors(errs)
 	if err != nil {
 		return uuid.Nil, err
@@ -77,24 +77,21 @@ func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bo
 	return sqlcon.HandleError(err)
 }
 
-func (p *Persister) encodeSelfServiceErrors(errs []error) (*bytes.Buffer, error) {
-	es := make([]interface{}, len(errs))
-	for k, e := range errs {
-		if e == nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
-		}
+func (p *Persister) encodeSelfServiceErrors(e error) (*bytes.Buffer, error) {
+	if e == nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
+	}
 
-		if c := new(herodot.DefaultError); errors.As(e, &c) {
-			es[k] = c
-		} else if c := new(jsonschema.ValidationError); errors.As(e, &c) {
-			es[k] = c
-		} else {
-			es[k] = herodot.ToDefaultError(e, "")
-		}
+	if c := new(herodot.DefaultError); errors.As(e, &c) {
+		e = c
+	} else if c := new(jsonschema.ValidationError); errors.As(e, &c) {
+		e = c
+	} else {
+		e = herodot.ToDefaultError(e, "")
 	}
 
 	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(es); err != nil {
+	if err := json.NewEncoder(&b).Encode(e); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encode error messages.").WithDebug(err.Error()))
 	}
 

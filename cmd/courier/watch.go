@@ -4,7 +4,6 @@ import (
 	cx "context"
 	"net/http"
 
-	"github.com/gorilla/context"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 
@@ -20,7 +19,7 @@ func NewWatchCmd() *cobra.Command {
 		Use:   "watch",
 		Short: "Starts the Ory Kratos message courier",
 		Run: func(cmd *cobra.Command, args []string) {
-			r := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
+			r := driver.New(cmd.Context(), cmd.ErrOrStderr(), configx.WithFlags(cmd.Flags()))
 			StartCourier(cmd.Context(), r)
 		},
 	}
@@ -56,7 +55,7 @@ func ServeMetrics(ctx cx.Context, r driver.Registry) {
 
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.MetricsListenOn(),
-		Handler: context.ClearHandler(n),
+		Handler: n,
 	})
 
 	l.Printf("Starting the metrics httpd on: %s", server.Addr)

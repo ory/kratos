@@ -1,0 +1,60 @@
+---
+id: user-logout
+title: User Logout
+---
+
+Ory Kratos supports two logout flows:
+
+- Browser-based (easy): This flow works for all applications running on top of a
+  browser. Websites, single-page apps, Cordova/Ionic, and so on.
+- API-based (advanced): This flow works for native applications like iOS
+  (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
+
+import { apiFlow, browserFlow } from './code/logout'
+import CodeTabs from '@theme/Code/CodeTabs'
+
+## Self-Service Logout for Server-Side Browser Applications
+
+To ensure that a logout was indeed intended by the user, Ory Kratos first
+generates a Logout URL for a given Ory Session Cookie. You can then open the
+Logout URL in the Browser.
+
+import SelfServiceLogoutBrowserFlow from '@theme/SelfServiceLogoutBrowserFlow'
+
+<SelfServiceLogoutBrowserFlow />
+
+After successful logout, the browser will be redirected either to the
+`return_to` query parameter from the initial request URL, or fall back to the
+`default_browser_return_url` value set in Ory Kratos' configuration file:
+
+```yaml
+# kratos.yaml
+selfservice:
+  flows:
+    logout:
+      after:
+        default_browser_return_url: http://test.kratos.ory.sh:4000/
+```
+
+<CodeTabs items={browserFlow} />
+
+If an error occurs, the browser is redirected to the
+[Error UI](./user-facing-errors.md).
+
+## Self-Service Logout for Client-Side Browser Applications
+
+Similar to Server-Side Browser Applications, Ory Kratos first generates a Logout
+URL for a given Ory Session Cookie. However, you can simply call the Logout URL
+using an AJAX request. Ory Kratos returns a `204 No Content` response on success
+or an error otherwise.
+
+import SelfServiceLogoutSPAFlow from '@theme/SelfServiceLogoutSPAFlow'
+
+<SelfServiceLogoutSPAFlow />
+
+## Self-Service Logout for API Clients
+
+API clients (e.g. native mobile apps) use Ory Session Tokens. To revoke such a
+token, call the logout API endpoint:
+
+<CodeTabs items={apiFlow} />

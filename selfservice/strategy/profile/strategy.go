@@ -104,7 +104,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 }
 
 func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (*settings.UpdateContext, error) {
-	var p submitSelfServiceBrowserSettingsProfileStrategyFlow
+	var p submitSelfServiceSettingsFlowWithProfileMethodBody
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		return ctxUpdate, s.continueFlow(w, r, ctxUpdate, &p)
@@ -138,7 +138,7 @@ func (s *Strategy) Settings(w http.ResponseWriter, r *http.Request, f *settings.
 	return ctxUpdate, nil
 }
 
-func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceBrowserSettingsProfileStrategyFlow) error {
+func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *submitSelfServiceSettingsFlowWithProfileMethodBody) error {
 	if err := flow.MethodEnabledAndAllowed(r.Context(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}
@@ -173,26 +173,9 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 	return nil
 }
 
-// Complete profile update payload
-//
-// swagger:parameters submitSelfServiceBrowserSettingsProfileStrategyFlow
 // nolint:deadcode,unused
-type submitSelfServiceBrowserSettingsProfileStrategyFlowParameters struct {
-	// Request is the request ID.
-	//
-	// required: true
-	// in: query
-	// format: uuid
-	Flow string `json:"flow"`
-
-	// in: body
-	// required: true
-	Body submitSelfServiceBrowserSettingsProfileStrategyFlow
-}
-
-// nolint:deadcode,unused
-// swagger:model submitSelfServiceSettingsFlowWithProfileMethod
-type submitSelfServiceBrowserSettingsProfileStrategyFlow struct {
+// swagger:model submitSelfServiceSettingsFlowWithProfileMethodBody
+type submitSelfServiceSettingsFlowWithProfileMethodBody struct {
 	// Traits contains all of the identity's traits.
 	//
 	// required: true
@@ -202,7 +185,7 @@ type submitSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	//
 	// Should be set to profile when trying to update a profile.
 	//
-	// type: string
+	// required: true
 	Method string `json:"method"`
 
 	// FlowIDRequestID is the flow ID.
@@ -216,11 +199,11 @@ type submitSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	CSRFToken string `json:"csrf_token"`
 }
 
-func (p *submitSelfServiceBrowserSettingsProfileStrategyFlow) GetFlowID() uuid.UUID {
+func (p *submitSelfServiceSettingsFlowWithProfileMethodBody) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.FlowID)
 }
 
-func (p *submitSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uuid.UUID) {
+func (p *submitSelfServiceSettingsFlowWithProfileMethodBody) SetFlowID(rid uuid.UUID) {
 	p.FlowID = rid.String()
 }
 
@@ -236,7 +219,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *submitSelfServiceBrowserSettingsProfileStrategyFlow, err error) error {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *submitSelfServiceSettingsFlowWithProfileMethodBody, err error) error {
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),

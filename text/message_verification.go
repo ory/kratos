@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	InfoSelfServiceVerification          ID = 1070000 + iota // 1070000
-	InfoSelfServiceVerificationEmailSent                     // 1070002
+	InfoSelfServiceVerification           ID = 1070000 + iota // 1070000
+	InfoSelfServiceVerificationEmailSent                      // 1070001
+	InfoSelfServiceVerificationSuccessful                     // 1060002
 )
 
 const (
@@ -25,8 +26,16 @@ func NewErrorValidationVerificationFlowExpired(ago time.Duration) *Message {
 		Text: fmt.Sprintf("The verification flow expired %.2f minutes ago, please try again.", ago.Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
-			"expired_at": time.Now().Add(ago),
+			"expired_at": Now().UTC().Add(ago),
 		}),
+	}
+}
+
+func NewInfoSelfServiceVerificationSuccessful() *Message {
+	return &Message{
+		ID:   InfoSelfServiceRecoverySuccessful,
+		Type: Info,
+		Text: "You successfully verified your email address.",
 	}
 }
 
