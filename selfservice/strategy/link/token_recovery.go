@@ -4,16 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
 
 	"github.com/ory/x/randx"
 
+	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
 )
@@ -67,11 +65,11 @@ func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.
 		recoveryAddressID.Valid = true
 	}
 	return &RecoveryToken{
-		ID:                x.NewUUID(),
-		Token:             randx.MustString(32, randx.AlphaNum),
-		RecoveryAddress:   address,
-		ExpiresAt:         now.Add(expiresIn),
-		IssuedAt:          now,
+		ID:              x.NewUUID(),
+		Token:           randx.MustString(32, randx.AlphaNum),
+		RecoveryAddress: address,
+		ExpiresAt:       now.Add(expiresIn),
+		IssuedAt:        now,
 		IdentityID: uuid.NullUUID{
 			UUID:  identityID,
 			Valid: uuid.Nil != identityID,
