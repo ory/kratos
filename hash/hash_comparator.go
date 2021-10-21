@@ -139,7 +139,7 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 }
 
 // decodePbkdf2Hash decodes PBKDF2 encoded password hash.
-// format: $pbkdf2-<algorithm>$i=<iteration>,l=<length>$<salt>$<hash>
+// format: $pbkdf2-<digest>$i=<iterations>,l=<length>$<salt>$<hash>
 func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 5 {
@@ -147,11 +147,11 @@ func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err err
 	}
 
 	p = new(Pbkdf2)
-	algParts := strings.SplitN(parts[1], "-", 2)
-	if len(algParts) != 2 {
+	digestParts := strings.SplitN(parts[1], "-", 2)
+	if len(digestParts) != 2 {
 		return nil, nil, nil, ErrInvalidHash
 	}
-	p.Algorithm = algParts[1]
+	p.Algorithm = digestParts[1]
 
 	_, err = fmt.Sscanf(parts[2], "i=%d,l=%d", &p.Iterations, &p.KeyLength)
 	if err != nil {
