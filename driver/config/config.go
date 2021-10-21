@@ -679,7 +679,8 @@ func (p *Config) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {
 			continue
 		}
 		eTLD, icann := publicsuffix.PublicSuffix(parsed.Host)
-		if parsed.Host[:1] == "*" &&
+		if len(parsed.Host) > 0 &&
+			parsed.Host[:1] == "*" &&
 			icann &&
 			parsed.Host == fmt.Sprintf("*.%s", eTLD) {
 			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
