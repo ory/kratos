@@ -82,8 +82,10 @@ describe('Basic email profile with succeeding login flows', () => {
 
       cy.shortLoginLifespan()
       cy.browserReturnUrlOry()
-      cy.clearAllCookies()
+    })
 
+    beforeEach(() => {
+      cy.clearAllCookies()
       cy.visit(express.login + '?return_to=https://www.ory.sh/')
     })
 
