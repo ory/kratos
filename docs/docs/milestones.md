@@ -3,6 +3,19 @@ id: milestones
 title: Milestones and Roadmap
 ---
 
+## [Stable Release](https://github.com/ory/kratos/milestone/15)
+
+All issues which need to be resolved before we release Ory Kratos as stable.
+
+### [Feat](https://github.com/ory/kratos/labels/feat)
+
+New feature or request.
+
+#### Issues
+
+- [ ] Support prefixed env vars
+      ([kratos#1855](https://github.com/ory/kratos/issues/1855))
+
 ## [Incubating Release](https://github.com/ory/kratos/milestone/14)
 
 This milestone tracks all issues we want to resolve before Ory Kratos goes into
@@ -182,8 +195,6 @@ Something is not working.
 
 #### Issues
 
-- [ ] Panic on recovery for deactivated user
-      ([kratos#1794](https://github.com/ory/kratos/issues/1794))
 - [x] Submitting successful link verification again ends up with JSON response
       ([kratos#1546](https://github.com/ory/kratos/issues/1546)) -
       [@hackerman](https://github.com/aeneasr)
@@ -196,6 +207,8 @@ Something is not working.
       ([kratos#1695](https://github.com/ory/kratos/issues/1695))
 - [x] kratos identities import - include "state" property of identity
       ([kratos#1767](https://github.com/ory/kratos/issues/1767))
+- [x] Panic on recovery for deactivated user
+      ([kratos#1794](https://github.com/ory/kratos/issues/1794))
 
 #### Pull Requests
 
@@ -233,6 +246,8 @@ Something is not working.
 - [ ] Delete self-service flows after completion
       ([kratos#952](https://github.com/ory/kratos/issues/952)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Dotenv files are respected and incorrectly override environment variables
+      ([kratos#1856](https://github.com/ory/kratos/issues/1856))
 - [x] recovery link is open by email app
       ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 
