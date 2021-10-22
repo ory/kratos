@@ -140,9 +140,9 @@ func (sc ServerConfigurations) URL(index int, variables map[string]string) (stri
 			if !found {
 				return "", fmt.Errorf("The variable %s in the server URL has invalid value %v. Must be %v", name, value, variable.EnumValues)
 			}
-			url = strings.ReplaceAll(url, "{"+name+"}", value)
+			url = strings.Replace(url, "{"+name+"}", value, -1)
 		} else {
-			url = strings.ReplaceAll(url, "{"+name+"}", variable.DefaultValue)
+			url = strings.Replace(url, "{"+name+"}", variable.DefaultValue, -1)
 		}
 	}
 	return url, nil
