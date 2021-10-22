@@ -1359,8 +1359,7 @@ func (a *V0alpha2ApiService) AdminDeleteIdentityExecute(r V0alpha2ApiApiAdminDel
 	}
 
 	localVarPath := localBasePath + "/identities/{id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
-
+	localVarPath = strings.ReplaceAll(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")))
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
@@ -1488,8 +1487,8 @@ func (a *V0alpha2ApiService) AdminDeleteIdentitySessionsExecute(r V0alpha2ApiApi
 	}
 
 	localVarPath := localBasePath + "/identities/{id}/sessions"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
 
+	localVarPath = strings.ReplaceAll(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")))
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
@@ -1929,8 +1928,7 @@ func (a *V0alpha2ApiService) AdminUpdateIdentityExecute(r V0alpha2ApiApiAdminUpd
 	}
 
 	localVarPath := localBasePath + "/identities/{id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
-
+	localVarPath = strings.ReplaceAll(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")))
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
@@ -2227,8 +2225,7 @@ func (a *V0alpha2ApiService) GetJsonSchemaExecute(r V0alpha2ApiApiGetJsonSchemaR
 	}
 
 	localVarPath := localBasePath + "/schemas/{id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
-
+	localVarPath = strings.ReplaceAll(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")))
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}

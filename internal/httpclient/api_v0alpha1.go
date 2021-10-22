@@ -92,8 +92,7 @@ func (a *V0alpha1ApiService) AdminDeleteIdentitySessionsExecute(r V0alpha1ApiApi
 	}
 
 	localVarPath := localBasePath + "/identities/{id}/sessions"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
-
+	localVarPath = strings.ReplaceAll(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")))
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
