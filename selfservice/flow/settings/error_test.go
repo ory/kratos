@@ -156,7 +156,7 @@ func TestHandleError(t *testing.T) {
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				require.Equal(t, http.StatusInternalServerError, res.StatusCode, "%+v\n\t%s", res.Request, body)
+				require.Equal(t, http.StatusGone, res.StatusCode, "%+v\n\t%s", res.Request, body)
 
 				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.GetBytes(body, "use_flow_id").String())
 				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expiredAnHourAgo), json.RawMessage(body), []string{"since", "redirect_browser_to", "use_flow_id"})
@@ -221,7 +221,7 @@ func TestHandleError(t *testing.T) {
 
 				settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 				settingsFlow.IdentityID = id.ID
-				flowError = errors.WithStack(session.NewErrAALNotSatisfied(""))
+				flowError = errors.WithStack(session.NewErrAALNotSatisfied("a"))
 				flowMethod = settings.StrategyProfile
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -231,8 +231,7 @@ func TestHandleError(t *testing.T) {
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				require.NotEmpty(t, gjson.GetBytes(body, "redirect_browser_to").String())
-				assertx.EqualAsJSONExcept(t, session.NewErrAALNotSatisfied(""), json.RawMessage(body), []string{"redirect_browser_to"})
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied("a"), json.RawMessage(body))
 			})
 
 			t.Run("case=generic error", func(t *testing.T) {

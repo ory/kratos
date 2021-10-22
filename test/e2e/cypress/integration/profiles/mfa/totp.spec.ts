@@ -33,12 +33,12 @@ context('2FA lookup secrets', () => {
         cy.clearAllCookies()
         email = gen.email()
         password = gen.password()
-        cy.registerApi({
+
+        cy.register({
           email,
           password,
           fields: { 'traits.website': website }
         })
-        cy.login({ email, password, cookieUrl: base })
         cy.longPrivilegedSessionTime()
 
         cy.useLaxAal()
@@ -56,9 +56,7 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[name="method"][value="totp"]').click()
-        cy.location('pathname').should((loc) => {
-          expect(loc).to.include('/settings')
-        })
+        cy.expectSettingsSaved()
         cy.getSession({
           expectAal: 'aal2',
           expectMethods: ['password', 'totp']
@@ -139,6 +137,7 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[name="method"][value="totp"]').click()
+        cy.location('pathname').should('not.contain', '/login')
         cy.getSession({
           expectAal: 'aal2',
           expectMethods: ['password', 'totp', 'totp']
@@ -170,6 +169,7 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(newSecret))
         })
         cy.get('*[name="method"][value="totp"]').click()
+        cy.expectSettingsSaved()
 
         // Old secret no longer works in login
         cy.visit(login + '?aal=aal2&refresh=true')
@@ -190,6 +190,9 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(newSecret))
         })
         cy.get('*[name="method"][value="totp"]').click()
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.not.include('/login')
+        })
 
         cy.getSession({
           expectAal: 'aal2',

@@ -304,8 +304,7 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, aal2Identity, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				require.NotEmpty(t, gjson.Get(actual, "redirect_browser_to").String())
-				assertx.EqualAsJSONExcept(t, session.NewErrAALNotSatisfied(""), json.RawMessage(actual), []string{"redirect_browser_to"})
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(actual))
 			})
 
 			t.Run("type=api", func(t *testing.T) {
