@@ -52,7 +52,7 @@ module.exports = {
     }
   ],
   updateConfig: {
-    src: '../driver/config/.schema/config.schema.json',
+    src: '../embedx/config.schema.json',
     dst: './docs/reference/configuration.md'
   }
 }
