@@ -97,7 +97,7 @@ describe('Basic email profile with succeeding login flows', () => {
 
       cy.longLoginLifespan()
       cy.submitPasswordForm()
-      cy.get('.messages .message').should(
+      cy.get('[data-testid="ui/message/4010001"]').should(
         'contain.text',
         'The login flow expired'
       )
