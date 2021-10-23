@@ -466,10 +466,6 @@
         "title": "Is sent when a privileged session is required to perform the settings update.",
         "type": "object"
       },
-      "nullJsonRawMessage": {
-        "description": "NullJSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger and is NULLable-",
-        "type": "object"
-      },
       "nullTime": {
         "format": "date-time",
         "title": "NullTime implements sql.NullTime functionality.",
@@ -477,14 +473,54 @@
       },
       "selfServiceBrowserLocationChangeRequiredError": {
         "properties": {
-          "error": {
-            "$ref": "#/components/schemas/genericError"
+          "code": {
+            "description": "The status code",
+            "example": 404,
+            "format": "int64",
+            "type": "integer"
+          },
+          "debug": {
+            "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
+            "example": "SQL field \"foo\" is not a bool.",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "description": "Further error details",
+            "type": "object"
+          },
+          "id": {
+            "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
+            "type": "string"
+          },
+          "message": {
+            "description": "Error message\n\nThe error's message.",
+            "example": "The resource could not be found",
+            "type": "string"
+          },
+          "reason": {
+            "description": "A human-readable reason for the error",
+            "example": "User with ID 1234 does not exist.",
+            "type": "string"
           },
           "redirect_browser_to": {
             "description": "Since when the flow has expired",
             "type": "string"
+          },
+          "request": {
+            "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
+            "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
+            "type": "string"
+          },
+          "status": {
+            "description": "The status description",
+            "example": "Not Found",
+            "type": "string"
           }
         },
+        "required": [
+          "message"
+        ],
         "title": "Is sent when a flow requires a browser to change its location.",
         "type": "object"
       },
@@ -515,16 +551,56 @@
       "selfServiceFlowExpiredError": {
         "description": "Is sent when a flow is expired",
         "properties": {
-          "error": {
-            "$ref": "#/components/schemas/genericError"
+          "code": {
+            "description": "The status code",
+            "example": 404,
+            "format": "int64",
+            "type": "integer"
+          },
+          "debug": {
+            "description": "Debug information\n\nThis field is often not exposed to protect against leaking\nsensitive information.",
+            "example": "SQL field \"foo\" is not a bool.",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "description": "Further error details",
+            "type": "object"
+          },
+          "id": {
+            "description": "The error ID\n\nUseful when trying to identify various errors in application logic.",
+            "type": "string"
+          },
+          "message": {
+            "description": "Error message\n\nThe error's message.",
+            "example": "The resource could not be found",
+            "type": "string"
+          },
+          "reason": {
+            "description": "A human-readable reason for the error",
+            "example": "User with ID 1234 does not exist.",
+            "type": "string"
+          },
+          "request": {
+            "description": "The request ID\n\nThe request ID is often exposed internally in order to trace\nerrors across service architectures. This is often a UUID.",
+            "example": "d7ef54b1-ec15-46e6-bccb-524b82c035e6",
+            "type": "string"
           },
           "since": {
             "$ref": "#/components/schemas/Duration"
+          },
+          "status": {
+            "description": "The status description",
+            "example": "Not Found",
+            "type": "string"
           },
           "use_flow_id": {
             "$ref": "#/components/schemas/UUID"
           }
         },
+        "required": [
+          "message"
+        ],
         "type": "object"
       },
       "selfServiceFlowType": {
@@ -2370,21 +2446,6 @@
         "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
         "tags": [
           "v0alpha2"
-        ]
-      }
-    },
-    "/metrics/prometheus": {
-      "get": {
-        "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4434\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
-        "operationId": "prometheus",
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/emptyResponse"
-          }
-        },
-        "summary": "Get snapshot metrics from the service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
-        "tags": [
-          "metadata"
         ]
       }
     },

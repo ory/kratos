@@ -388,25 +388,6 @@ paths:
         all sessions that belong to the given Identity.
       tags:
       - v0alpha2
-  /metrics/prometheus:
-    get:
-      description: |-
-        ```
-        metadata:
-        annotations:
-        prometheus.io/port: "4434"
-        prometheus.io/path: "/metrics/prometheus"
-        ```
-      operationId: prometheus
-      responses:
-        "200":
-          description: Empty responses are sent when, for example, resources are deleted.
-            The HTTP status code for empty responses is typically 201.
-      summary: |-
-        Get snapshot metrics from the service. If you're using k8s, you can then add annotations to
-        your deployment like so:
-      tags:
-      - metadata
   /recovery/link:
     post:
       description: |-
@@ -2802,21 +2783,63 @@ components:
       title: Is sent when a privileged session is required to perform the settings
         update.
       type: object
-    nullJsonRawMessage:
-      description: NullJSONRawMessage represents a json.RawMessage that works well
-        with JSON, SQL, and Swagger and is NULLable-
-      type: object
     nullTime:
       format: date-time
       title: NullTime implements sql.NullTime functionality.
       type: string
     selfServiceBrowserLocationChangeRequiredError:
       properties:
-        error:
-          $ref: '#/components/schemas/genericError'
+        code:
+          description: The status code
+          example: 404
+          format: int64
+          type: integer
+        debug:
+          description: |-
+            Debug information
+
+            This field is often not exposed to protect against leaking
+            sensitive information.
+          example: SQL field "foo" is not a bool.
+          type: string
+        details:
+          additionalProperties: true
+          description: Further error details
+          type: object
+        id:
+          description: |-
+            The error ID
+
+            Useful when trying to identify various errors in application logic.
+          type: string
+        message:
+          description: |-
+            Error message
+
+            The error's message.
+          example: The resource could not be found
+          type: string
+        reason:
+          description: A human-readable reason for the error
+          example: User with ID 1234 does not exist.
+          type: string
         redirect_browser_to:
           description: Since when the flow has expired
           type: string
+        request:
+          description: |-
+            The request ID
+
+            The request ID is often exposed internally in order to trace
+            errors across service architectures. This is often a UUID.
+          example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
+          type: string
+        status:
+          description: The status description
+          example: Not Found
+          type: string
+      required:
+      - message
       title: Is sent when a flow requires a browser to change its location.
       type: object
     selfServiceError:
@@ -2845,8 +2868,48 @@ components:
     selfServiceFlowExpiredError:
       description: Is sent when a flow is expired
       properties:
-        error:
-          $ref: '#/components/schemas/genericError'
+        code:
+          description: The status code
+          example: 404
+          format: int64
+          type: integer
+        debug:
+          description: |-
+            Debug information
+
+            This field is often not exposed to protect against leaking
+            sensitive information.
+          example: SQL field "foo" is not a bool.
+          type: string
+        details:
+          additionalProperties: true
+          description: Further error details
+          type: object
+        id:
+          description: |-
+            The error ID
+
+            Useful when trying to identify various errors in application logic.
+          type: string
+        message:
+          description: |-
+            Error message
+
+            The error's message.
+          example: The resource could not be found
+          type: string
+        reason:
+          description: A human-readable reason for the error
+          example: User with ID 1234 does not exist.
+          type: string
+        request:
+          description: |-
+            The request ID
+
+            The request ID is often exposed internally in order to trace
+            errors across service architectures. This is often a UUID.
+          example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
+          type: string
         since:
           description: |-
             A Duration represents the elapsed time between two instants
@@ -2854,9 +2917,15 @@ components:
             largest representable duration to approximately 290 years.
           format: int64
           type: integer
+        status:
+          description: The status description
+          example: Not Found
+          type: string
         use_flow_id:
           format: uuid4
           type: string
+      required:
+      - message
       type: object
     selfServiceFlowType:
       description: The flow type can either be `api` or `browser`.
