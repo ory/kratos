@@ -43,11 +43,6 @@ describe('Basic email profile with failing login flows', () => {
       })
 
       describe('shows validation errors when invalid signup data is used', () => {
-        beforeEach(() => {
-          cy.clearAllCookies()
-          cy.visit(route)
-        })
-
         it('should show an error when the identifier is missing', () => {
           cy.submitPasswordForm()
           cy.get('*[data-testid="ui/message/4000002"]').should(
