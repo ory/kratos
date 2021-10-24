@@ -87,7 +87,7 @@ jobs:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: kratos
       - image: cockroachdb/cockroach:v21.1.9
-        command: start --insecure
+        command: start-single-node --insecure
       - image: mysql:5.7
         environment:
           - MYSQL_ROOT_PASSWORD=test
