@@ -34,7 +34,7 @@ const updateConfigFile = (cb: (arg: any) => any) => {
     config = cb(config)
     cy.writeFile(configFile, YAML.stringify(config))
   })
-  cy.wait(100)
+  cy.wait(200)
 }
 
 Cypress.Commands.add('useConfigProfile', (profile: string) => {
@@ -42,18 +42,18 @@ Cypress.Commands.add('useConfigProfile', (profile: string) => {
   cy.readFile(`kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
-  cy.wait(100)
+  cy.wait(200)
 })
 
 Cypress.Commands.add('proxy', (app: string) => {
   console.log('Switching proxy profile to:', app)
   cy.writeFile(`proxy.json`, `"${app}"`)
   cy.readFile(`proxy.json`).should('eq', app)
-  cy.wait(100)
-  cy.clearAllCookies()
+  cy.wait(200)
   cy.visit(APP_URL + '/')
   cy.get(`[data-testid="app-${app}"]`).should('exist')
   cy.clearAllCookies()
+  cy.visit(APP_URL + '/')
 })
 
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
