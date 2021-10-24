@@ -105,7 +105,7 @@ run() {
     URLS_CONSENT=http://localhost:4446/consent \
     hydra serve all --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
 
-  (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://localhost:4445/health/alive)
+  (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive)
 
   hydra clients delete \
     --endpoint http://localhost:4445 \
@@ -188,14 +188,14 @@ run() {
 
   (modd -f test/e2e/modd.conf >"${base}/test/e2e/kratos.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -l -t 300000 http-get://localhost:4434/health/ready \
-    http-get://localhost:4455/health/alive \
-    http-get://localhost:4445/health/ready \
-    http-get://localhost:4446/ \
-    http-get://localhost:4456/health/alive \
-    http-get://localhost:4457/ \
-    http-get://localhost:4437/mail \
-    http-get://localhost:4458/
+  npm run wait-on -- -v -l -t 300000 http-get://127.0.0.1:4434/health/ready \
+    http-get://127.0.0.1:4455/health/ready \
+    http-get://127.0.0.1:4445/health/ready \
+    http-get://127.0.0.1:4446/ \
+    http-get://127.0.0.1:4456/health/alive \
+    http-get://127.0.0.1:4457/ \
+    http-get://127.0.0.1:4437/mail \
+    http-get://127.0.0.1:4458/
 
   if [[ $dev == "yes" ]]; then
     (cd test/e2e; npm run test:watch -- --config integrationFolder="cypress/integration")
