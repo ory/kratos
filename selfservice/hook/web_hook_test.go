@@ -12,9 +12,13 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/sirupsen/logrus/hooks/test"
+
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/httpx"
-	"github.com/sirupsen/logrus/hooks/test"
 
 	"github.com/ory/x/logrusx"
 
@@ -189,6 +193,7 @@ func TestWebHookConfig(t *testing.T) {
 		url          string
 		body         string
 		rawConfig    string
+		canInterrupt bool
 		authStrategy AuthStrategy
 	}{
 		{
@@ -201,6 +206,21 @@ func TestWebHookConfig(t *testing.T) {
 				"method": "POST",
 				"body": "/path/to/my/jsonnet1.file"
 			}`,
+			canInterrupt: false,
+			authStrategy: &noopAuthStrategy{},
+		},
+		{
+			strategy: "empty_blocking",
+			method:   "POST",
+			url:      "https://test.kratos.ory.sh/my_hook1",
+			body:     "/path/to/my/jsonnet1.file",
+			rawConfig: `{
+				"url": "https://test.kratos.ory.sh/my_hook1",
+				"method": "POST",
+				"body": "/path/to/my/jsonnet1.file",
+				"canInterrupt": true
+			}`,
+			canInterrupt: true,
 			authStrategy: &noopAuthStrategy{},
 		},
 		{
@@ -220,6 +240,7 @@ func TestWebHookConfig(t *testing.T) {
 					}
 				}
 			}`,
+			canInterrupt: false,
 			authStrategy: &basicAuthStrategy{},
 		},
 		{
@@ -240,6 +261,7 @@ func TestWebHookConfig(t *testing.T) {
 					}
 				}
 			}`,
+			canInterrupt: false,
 			authStrategy: &apiKeyStrategy{},
 		},
 		{
@@ -260,6 +282,7 @@ func TestWebHookConfig(t *testing.T) {
 					}
 				}
 			}`,
+			canInterrupt: false,
 			authStrategy: &apiKeyStrategy{},
 		},
 	} {
@@ -299,6 +322,13 @@ func TestWebHooks(t *testing.T) {
 	webHookHttpCodeEndPoint := func(code int) httprouter.Handle {
 		return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 			w.WriteHeader(code)
+		}
+	}
+
+	webHookHttpCodeWithBodyEndPoint := func(code int, body []byte) httprouter.Handle {
+		return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+			w.WriteHeader(code)
+			_, _ = w.Write(body)
 		}
 	}
 
@@ -526,6 +556,220 @@ func TestWebHooks(t *testing.T) {
 								assert.Emptyf(t, whr.Body, "HTTP %s is not allowed to have a body", method)
 							}
 						})
+					}
+				})
+			}
+		})
+	}
+
+	webHookResponse := []byte(
+		`{
+			"Messages": [{
+				"InstancePtr": "#/traits/username",
+				"Message": "validation error",
+				"DetailedMessages": [{
+					"ID": 1234,
+					"Text": "error message",
+					"Type": "validation"
+				}]
+			}]
+		}`,
+	)
+
+	webhookError := schema.NewValidationListError()
+	webhookError.WithError("#/traits/username", "validation error", text.Messages{{ID: 1234, Type: "validation", Text: "error message"}})
+
+	for _, tc := range []struct {
+		uc              string
+		callWebHook     func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error
+		webHookResponse func() (int, []byte)
+		createFlow      func() flow.Flow
+		expectedError   error
+	}{
+		{
+			uc:         "Pre Login Hook - no block",
+			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+				return wh.ExecuteLoginPreHook(nil, req, f.(*login.Flow))
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+		{
+			uc:         "Pre Login Hook - block",
+			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+				return wh.ExecuteLoginPreHook(nil, req, f.(*login.Flow))
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Post Login Hook - no block",
+			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+		{
+			uc:         "Post Login Hook - block",
+			createFlow: func() flow.Flow { return &login.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecuteLoginPostHook(nil, req, node.PasswordGroup, f.(*login.Flow), s)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Pre Registration Hook - no block",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+				return wh.ExecuteRegistrationPreHook(nil, req, f.(*registration.Flow))
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+		{
+			uc:         "Pre Registration Hook - block",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, _ *session.Session) error {
+				return wh.ExecuteRegistrationPreHook(nil, req, f.(*registration.Flow))
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Post Registration Hook - no block",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+		{
+			uc:         "Post Registration Hook - block",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Post Recovery Hook - no block",
+			createFlow: func() flow.Flow { return &recovery.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostRecoveryHook(nil, req, f.(*recovery.Flow), s)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+		{
+			uc:         "Post Recovery Hook - block",
+			createFlow: func() flow.Flow { return &recovery.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostRecoveryHook(nil, req, f.(*recovery.Flow), s)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Post Verification Hook - no block",
+			createFlow: func() flow.Flow { return &verification.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+		{
+			uc:         "Post Verification Hook - block",
+			createFlow: func() flow.Flow { return &verification.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Post Settings Hook - no block",
+			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+		{
+			uc:         "Post Settings Hook - block",
+			createFlow: func() flow.Flow { return &settings.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecuteSettingsPostPersistHook(nil, req, f.(*settings.Flow), s.Identity)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+	} {
+		t.Run("uc="+tc.uc, func(t *testing.T) {
+			for _, method := range []string{"CONNECT", "DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"} {
+				t.Run("method="+method, func(t *testing.T) {
+					f := tc.createFlow()
+					req := &http.Request{
+						Header:     map[string][]string{"Some-Header": {"Some-Value"}},
+						RequestURI: "https://www.ory.sh/some_end_point",
+						Method:     http.MethodPost,
+					}
+					s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
+					ts := newServer(webHookHttpCodeWithBodyEndPoint(tc.webHookResponse()))
+					conf := json.RawMessage(fmt.Sprintf(`{
+								"url": "%s",
+								"method": "%s",
+								"body": "%s",
+								"canInterrupt": true
+							}`, ts.URL+path, method, "file://./stub/test_body.jsonnet"))
+
+					wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)
+
+					err := tc.callWebHook(wh, req, f, s)
+					if tc.expectedError == nil {
+						assert.NoError(t, err)
+						return
+					}
+
+					var validationError *schema.ValidationListError
+					if assert.ErrorAs(t, err, &validationError) {
+						assert.Equal(t, validationError, tc.expectedError)
 					}
 				})
 			}
