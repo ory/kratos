@@ -36,6 +36,7 @@ describe('Basic email profile with succeeding login flows', () => {
         cy.get(`${appPrefix(app)}input[name="password_identifier"]`).type(email)
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
+        cy.location('pathname').should('not.contain', '/login')
 
         cy.getSession().should((session) => {
           const { identity } = session
@@ -51,6 +52,7 @@ describe('Basic email profile with succeeding login flows', () => {
         cy.get('input[name="password_identifier"]').type(email.toUpperCase())
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
+        cy.location('pathname').should('not.contain', '/login')
 
         cy.getSession().should((session) => {
           const { identity } = session
@@ -82,20 +84,22 @@ describe('Basic email profile with succeeding login flows', () => {
 
       cy.shortLoginLifespan()
       cy.browserReturnUrlOry()
-      cy.clearAllCookies()
+    })
 
+    beforeEach(() => {
+      cy.clearAllCookies()
       cy.visit(express.login + '?return_to=https://www.ory.sh/')
     })
 
     it('should redirect to return_to when retrying expired flow', () => {
+      cy.longLoginLifespan()
       cy.get(appPrefix('express') + 'input[name="password_identifier"]').type(
         email.toUpperCase()
       )
       cy.get('input[name="password"]').type(password)
 
-      cy.longLoginLifespan()
       cy.submitPasswordForm()
-      cy.get('.messages .message').should(
+      cy.get('[data-testid="ui/message/4010001"]').should(
         'contain.text',
         'The login flow expired'
       )

@@ -312,7 +312,7 @@ Name | Type | Description  | Notes
 
 ## AdminGetIdentity
 
-> Identity AdminGetIdentity(ctx, id).Execute()
+> Identity AdminGetIdentity(ctx, id).IncludeCredential(includeCredential).Execute()
 
 Get an Identity
 
@@ -332,10 +332,11 @@ import (
 
 func main() {
     id := "id_example" // string | ID must be set to the ID of identity you want to get
+    includeCredential := []string{"Inner_example"} // []string | DeclassifyCredentials will declassify one or more identity's credentials  Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access, Refresh and (optionally) OpenID Connect ID Token. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.AdminGetIdentity(context.Background(), id).Execute()
+    resp, r, err := apiClient.V0alpha2Api.AdminGetIdentity(context.Background(), id).IncludeCredential(includeCredential).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminGetIdentity``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -361,6 +362,7 @@ Other parameters are passed through a pointer to a apiAdminGetIdentityRequest st
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
+ **includeCredential** | **[]string** | DeclassifyCredentials will declassify one or more identity&#39;s credentials  Currently, only &#x60;oidc&#x60; is supported. This will return the initial OAuth 2.0 Access, Refresh and (optionally) OpenID Connect ID Token. | 
 
 ### Return type
 

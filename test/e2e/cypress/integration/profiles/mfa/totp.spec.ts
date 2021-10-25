@@ -1,4 +1,4 @@
-import { APP_URL, gen, website } from '../../../helpers'
+import { gen, website } from '../../../helpers'
 import { authenticator } from 'otplib'
 import { routes as react } from '../../../helpers/react'
 import { routes as express } from '../../../helpers/express'
@@ -33,12 +33,12 @@ context('2FA lookup secrets', () => {
         cy.clearAllCookies()
         email = gen.email()
         password = gen.password()
-        cy.registerApi({
+
+        cy.register({
           email,
           password,
           fields: { 'traits.website': website }
         })
-        cy.login({ email, password, cookieUrl: base })
         cy.longPrivilegedSessionTime()
 
         cy.useLaxAal()
@@ -56,9 +56,7 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[name="method"][value="totp"]').click()
-        cy.location().should((loc) => {
-          expect(loc.href).to.include('/settings')
-        })
+        cy.expectSettingsSaved()
         cy.getSession({
           expectAal: 'aal2',
           expectMethods: ['password', 'totp']
@@ -72,16 +70,24 @@ context('2FA lookup secrets', () => {
         cy.submitPasswordForm()
 
         // MFA is now requested
-        cy.location().should((loc) => {
-          expect(loc.href).to.include('/login')
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.include('/login')
         })
+        cy.shouldShow2FAScreen()
+
+        // If we visit settings page we still end up at 2fa screen
+        cy.visit(settings)
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.include('/login')
+        })
+
         cy.shouldShow2FAScreen()
         cy.get('input[name="totp_code"]').then(($e) => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[name="method"][value="totp"]').click()
-        cy.location().should((loc) => {
-          expect(loc.href).to.not.include('/login')
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.oneOf(['/welcome', '/'])
         })
         cy.getSession({
           expectAal: 'aal2',
@@ -114,8 +120,8 @@ context('2FA lookup secrets', () => {
 
         // Let's try to do 2FA
         cy.visit(login + '?aal=aal2&refresh=true')
-        cy.location().should((loc) => {
-          expect(loc.href).to.include('/login')
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.include('/login')
         })
         cy.get('*[name="method"][value="password"]').should('not.exist')
 
@@ -131,6 +137,7 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(secret))
         })
         cy.get('*[name="method"][value="totp"]').click()
+        cy.location('pathname').should('not.contain', '/login')
         cy.getSession({
           expectAal: 'aal2',
           expectMethods: ['password', 'totp', 'totp']
@@ -147,8 +154,8 @@ context('2FA lookup secrets', () => {
 
         // 2FA should be gone
         cy.visit(login + '?aal=aal2&refresh=true')
-        cy.location().should((loc) => {
-          expect(loc.href).to.include('/login')
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.include('/login')
         })
         cy.get('*[name="method"][value="totp"]').should('not.exist')
 
@@ -162,11 +169,12 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(newSecret))
         })
         cy.get('*[name="method"][value="totp"]').click()
+        cy.expectSettingsSaved()
 
         // Old secret no longer works in login
         cy.visit(login + '?aal=aal2&refresh=true')
-        cy.location().should((loc) => {
-          expect(loc.href).to.include('/login')
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.include('/login')
         })
         cy.get('input[name="totp_code"]').then(($e) => {
           cy.wrap($e).type(authenticator.generate(secret))
@@ -182,6 +190,9 @@ context('2FA lookup secrets', () => {
           cy.wrap($e).type(authenticator.generate(newSecret))
         })
         cy.get('*[name="method"][value="totp"]').click()
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.not.include('/login')
+        })
 
         cy.getSession({
           expectAal: 'aal2',
@@ -191,8 +202,8 @@ context('2FA lookup secrets', () => {
 
       it('should not show totp as an option if not configured', () => {
         cy.visit(login + '?aal=aal2')
-        cy.location().should((loc) => {
-          expect(loc.href).to.include('/login')
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.include('/login')
         })
 
         cy.get('*[name="method"][value="totp"]').should('not.exist')

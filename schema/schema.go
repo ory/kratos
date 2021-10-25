@@ -65,7 +65,7 @@ func computeKeyPositions(schema []byte, dest *[]string, parents []string) {
 	switch gjson.GetBytes(schema, "type").String() {
 	case "object":
 		gjson.GetBytes(schema, "properties").ForEach(func(key, value gjson.Result) bool {
-			computeKeyPositions([]byte(value.Raw), dest, append(parents, strings.Replace(key.String(), ".", "\\.", -1)))
+			computeKeyPositions([]byte(value.Raw), dest, append(parents, strings.ReplaceAll(key.String(), ".", "\\.")))
 			return true
 		})
 	default:

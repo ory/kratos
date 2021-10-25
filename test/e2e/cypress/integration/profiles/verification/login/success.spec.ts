@@ -1,4 +1,4 @@
-import { APP_URL, appPrefix, gen } from '../../../../helpers'
+import { appPrefix, gen } from '../../../../helpers'
 import { routes as react } from '../../../../helpers/react'
 import { routes as express } from '../../../../helpers/express'
 
@@ -37,6 +37,8 @@ context('Account Verification Login Success', () => {
         )
         cy.get('input[name="password"]').type(identity.password)
         cy.get('button[value="password"]').click()
+
+        cy.location('pathname').should('not.contain', '/login')
 
         cy.getSession()
       })

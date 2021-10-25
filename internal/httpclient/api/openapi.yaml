@@ -11,6 +11,7 @@ info:
   license:
     name: Apache 2.0
   title: Ory Kratos API
+  version: v0.8.0-alpha.1.pre.3
 servers:
 - url: /
 paths:
@@ -240,6 +241,20 @@ paths:
         schema:
           type: string
         style: simple
+      - description: |-
+          DeclassifyCredentials will declassify one or more identity's credentials
+
+          Currently, only `oidc` is supported. This will return the initial OAuth 2.0 Access,
+          Refresh and (optionally) OpenID Connect ID Token.
+        explode: true
+        in: query
+        name: include_credential
+        required: false
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
       responses:
         "200":
           content:
@@ -374,25 +389,6 @@ paths:
         all sessions that belong to the given Identity.
       tags:
       - v0alpha2
-  /metrics/prometheus:
-    get:
-      description: |-
-        ```
-        metadata:
-        annotations:
-        prometheus.io/port: "4434"
-        prometheus.io/path: "/metrics/prometheus"
-        ```
-      operationId: prometheus
-      responses:
-        "200":
-          description: Empty responses are sent when, for example, resources are deleted.
-            The HTTP status code for empty responses is typically 201.
-      summary: |-
-        Get snapshot metrics from the service. If you're using k8s, you can then add annotations to
-        your deployment like so:
-      tags:
-      - metadata
   /recovery/link:
     post:
       description: |-
@@ -590,9 +586,9 @@ paths:
         If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
         case of an error, the `error.id` of the JSON response body can be one of:
 
-        `has_session_already`: The user is already signed in.
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `session_already_available`: The user is already signed in.
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
         `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
         Most likely used in Social Sign In flows.
 
@@ -675,9 +671,9 @@ paths:
 
         In the case of an error, the `error.id` of the JSON response body can be one of:
 
-        `has_session_already`: The user is already signed in.
-        `aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `session_already_available`: The user is already signed in.
+        `session_aal1_required`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -755,10 +751,10 @@ paths:
         If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
         case of an error, the `error.id` of the JSON response body can be one of:
 
-        `has_session_already`: The user is already signed in.
-        `aal_needs_session`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `session_already_available`: The user is already signed in.
+        `session_aal1_required`: Multi-factor auth (e.g. 2fa) was requested but the user has no session yet.
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
@@ -847,7 +843,7 @@ paths:
 
         This request may fail due to several reasons. The `error.id` can be one of:
 
-        `has_session_already`: The user is already signed in.
+        `session_already_available`: The user is already signed in.
         `self_service_flow_expired`: The flow is expired and you should request a new one.
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -1320,9 +1316,9 @@ paths:
         If this endpoint is called with `Accept: application/json` in the header, the response contains the flow without a redirect. In the
         case of an error, the `error.id` of the JSON response body can be one of:
 
-        `has_session_already`: The user is already signed in.
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `session_already_available`: The user is already signed in.
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
         `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
         Most likely used in Social Sign In flows.
 
@@ -1397,8 +1393,8 @@ paths:
 
         In the case of an error, the `error.id` of the JSON response body can be one of:
 
-        `has_session_already`: The user is already signed in.
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `session_already_available`: The user is already signed in.
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -1445,9 +1441,9 @@ paths:
         If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
         case of an error, the `error.id` of the JSON response body can be one of:
 
-        `has_session_already`: The user is already signed in.
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `session_already_available`: The user is already signed in.
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
         If this endpoint is called via an AJAX request, the response contains the registration flow without a redirect.
 
@@ -1505,7 +1501,7 @@ paths:
 
         This request may fail due to several reasons. The `error.id` can be one of:
 
-        `has_session_already`: The user is already signed in.
+        `session_already_available`: The user is already signed in.
         `self_service_flow_expired`: The flow is expired and you should request a new one.
 
         More information can be found at [Ory Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -1603,14 +1599,14 @@ paths:
         If this endpoint is called with a `Accept: application/json` HTTP header, the response contains the flow without a redirect. In the
         case of an error, the `error.id` of the JSON response body can be one of:
 
-        `needs_privileged_session`: The identity requested to change something that needs a privileged session. Redirect
+        `session_refresh_required`: The identity requested to change something that needs a privileged session. Redirect
         the identity to the login init endpoint with query parameters `?refresh=true&return_to=<the-current-browser-url>`,
         or initiate a refresh login flow otherwise.
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-        `no_active_session`: No Ory Session was found - sign in a user first.
-        `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `session_inactive`: No Ory Session was found - sign in a user first.
+        `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
         identity logged in instead.
-        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
         `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
         Most likely used in Social Sign In flows.
 
@@ -1710,8 +1706,8 @@ paths:
 
         In the case of an error, the `error.id` of the JSON response body can be one of:
 
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-        `no_active_session`: No Ory Session was found - sign in a user first.
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `session_inactive`: No Ory Session was found - sign in a user first.
 
         This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
@@ -1770,9 +1766,9 @@ paths:
         If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
         case of an error, the `error.id` of the JSON response body can be one of:
 
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-        `no_active_session`: No Ory Session was found - sign in a user first.
-        `forbidden_return_to`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `session_inactive`: No Ory Session was found - sign in a user first.
+        `security_identity_mismatch`: The requested `?return_to` address is not allowed to be used. Adjust this in the configuration!
 
         This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
@@ -1840,9 +1836,9 @@ paths:
         If this endpoint is called via an AJAX request, the response contains the flow without a redirect. In the
         case of an error, the `error.id` of the JSON response body can be one of:
 
-        `csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
-        `no_active_session`: No Ory Session was found - sign in a user first.
-        `intended_for_someone_else`: The flow was interrupted with `needs_privileged_session` but apparently some other
+        `security_csrf_violation`: Unable to fetch the flow because a CSRF violation occurred.
+        `session_inactive`: No Ory Session was found - sign in a user first.
+        `security_identity_mismatch`: The flow was interrupted with `session_refresh_required` but apparently some other
         identity logged in instead.
 
         More information can be found at [Ory Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
@@ -2206,8 +2202,8 @@ paths:
 
         As explained above, this request may fail due to several reasons. The `error.id` can be one of:
 
-        `no_active_session`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
-        `aal_needs_upgrade`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
+        `session_inactive`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
+        `session_aal2_required`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
       operationId: toSession
       parameters:
       - description: Set the Session Token when calling from non-browser clients.
@@ -2788,21 +2784,63 @@ components:
       title: Is sent when a privileged session is required to perform the settings
         update.
       type: object
-    nullJsonRawMessage:
-      description: NullJSONRawMessage represents a json.RawMessage that works well
-        with JSON, SQL, and Swagger and is NULLable-
-      type: object
     nullTime:
       format: date-time
       title: NullTime implements sql.NullTime functionality.
       type: string
     selfServiceBrowserLocationChangeRequiredError:
       properties:
-        error:
-          $ref: '#/components/schemas/genericError'
+        code:
+          description: The status code
+          example: 404
+          format: int64
+          type: integer
+        debug:
+          description: |-
+            Debug information
+
+            This field is often not exposed to protect against leaking
+            sensitive information.
+          example: SQL field "foo" is not a bool.
+          type: string
+        details:
+          additionalProperties: true
+          description: Further error details
+          type: object
+        id:
+          description: |-
+            The error ID
+
+            Useful when trying to identify various errors in application logic.
+          type: string
+        message:
+          description: |-
+            Error message
+
+            The error's message.
+          example: The resource could not be found
+          type: string
+        reason:
+          description: A human-readable reason for the error
+          example: User with ID 1234 does not exist.
+          type: string
         redirect_browser_to:
           description: Since when the flow has expired
           type: string
+        request:
+          description: |-
+            The request ID
+
+            The request ID is often exposed internally in order to trace
+            errors across service architectures. This is often a UUID.
+          example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
+          type: string
+        status:
+          description: The status description
+          example: Not Found
+          type: string
+      required:
+      - message
       title: Is sent when a flow requires a browser to change its location.
       type: object
     selfServiceError:
@@ -2831,8 +2869,48 @@ components:
     selfServiceFlowExpiredError:
       description: Is sent when a flow is expired
       properties:
-        error:
-          $ref: '#/components/schemas/genericError'
+        code:
+          description: The status code
+          example: 404
+          format: int64
+          type: integer
+        debug:
+          description: |-
+            Debug information
+
+            This field is often not exposed to protect against leaking
+            sensitive information.
+          example: SQL field "foo" is not a bool.
+          type: string
+        details:
+          additionalProperties: true
+          description: Further error details
+          type: object
+        id:
+          description: |-
+            The error ID
+
+            Useful when trying to identify various errors in application logic.
+          type: string
+        message:
+          description: |-
+            Error message
+
+            The error's message.
+          example: The resource could not be found
+          type: string
+        reason:
+          description: A human-readable reason for the error
+          example: User with ID 1234 does not exist.
+          type: string
+        request:
+          description: |-
+            The request ID
+
+            The request ID is often exposed internally in order to trace
+            errors across service architectures. This is often a UUID.
+          example: d7ef54b1-ec15-46e6-bccb-524b82c035e6
+          type: string
         since:
           description: |-
             A Duration represents the elapsed time between two instants
@@ -2840,9 +2918,15 @@ components:
             largest representable duration to approximately 290 years.
           format: int64
           type: integer
+        status:
+          description: The status description
+          example: Not Found
+          type: string
         use_flow_id:
           format: uuid4
           type: string
+      required:
+      - message
       type: object
     selfServiceFlowType:
       description: The flow type can either be `api` or `browser`.
@@ -2904,8 +2988,8 @@ components:
             text: text
             type: type
         updated_at: 2000-01-23T04:56:07.000+00:00
-        forced: true
         created_at: 2000-01-23T04:56:07.000+00:00
+        refresh: true
         return_to: return_to
         id: id
         type: type
@@ -2924,9 +3008,6 @@ components:
             a new flow has to be initiated.
           format: date-time
           type: string
-        forced:
-          description: Refresh stores whether this login flow should enforce re-authentication.
-          type: boolean
         id:
           format: uuid4
           type: string
@@ -2934,6 +3015,9 @@ components:
           description: IssuedAt is the time (UTC) when the flow started.
           format: date-time
           type: string
+        refresh:
+          description: Refresh stores whether this login flow should enforce re-authentication.
+          type: boolean
         request_url:
           description: |-
             RequestURL is the initial URL that was requested from Ory Kratos. It can be used
@@ -3692,6 +3776,10 @@ components:
         provider:
           description: The provider to register with
           type: string
+        traits:
+          description: The identity traits. This is a placeholder for the registration
+            flow.
+          type: object
       required:
       - method
       - provider

@@ -38,6 +38,7 @@ context('2FA with various methods', () => {
           password,
           fields: { 'traits.website': website }
         })
+        cy.clearAllCookies()
         cy.login({ email, password, cookieUrl: base })
         cy.longPrivilegedSessionTime()
         cy.task('sendCRI', {
@@ -97,6 +98,8 @@ context('2FA with various methods', () => {
               cy.wrap($e).type(authenticator.generate(secret))
             })
             cy.get('[name="method"][value="totp"]').click()
+            cy.location('pathname').should('not.include', '/login')
+
             cy.getSession({
               expectAal: 'aal2',
               expectMethods: [
@@ -129,6 +132,8 @@ context('2FA with various methods', () => {
               cy.wrap($e).type(codes[1])
             })
             cy.get('[name="method"][value="lookup_secret"]').click()
+            cy.location('pathname').should('not.include', '/login')
+
             cy.getSession({
               expectAal: 'aal2',
               expectMethods: [

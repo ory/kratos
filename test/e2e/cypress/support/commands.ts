@@ -34,7 +34,7 @@ const updateConfigFile = (cb: (arg: any) => any) => {
     config = cb(config)
     cy.writeFile(configFile, YAML.stringify(config))
   })
-  cy.wait(100)
+  cy.wait(200)
 }
 
 Cypress.Commands.add('useConfigProfile', (profile: string) => {
@@ -42,18 +42,18 @@ Cypress.Commands.add('useConfigProfile', (profile: string) => {
   cy.readFile(`kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
-  cy.wait(100)
+  cy.wait(200)
 })
 
 Cypress.Commands.add('proxy', (app: string) => {
   console.log('Switching proxy profile to:', app)
   cy.writeFile(`proxy.json`, `"${app}"`)
   cy.readFile(`proxy.json`).should('eq', app)
-  cy.wait(100)
-  cy.clearAllCookies()
+  cy.wait(200)
   cy.visit(APP_URL + '/')
   cy.get(`[data-testid="app-${app}"]`).should('exist')
   cy.clearAllCookies()
+  cy.visit(APP_URL + '/')
 })
 
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
@@ -440,6 +440,7 @@ Cypress.Commands.add(
   ({ expectSession = true, url = APP_URL + '/login' }) => {
     cy.visit(url)
     cy.triggerOidc('hydra')
+    cy.location('href').should('not.eq', '/consent')
     if (expectSession) {
       cy.getSession()
     } else {
@@ -526,13 +527,13 @@ Cypress.Commands.add('logout', () => {
 Cypress.Commands.add(
   'reauth',
   ({
-    expect: { email },
+    expect: { email, success = true },
     type: { email: temail, password: tpassword } = {
       email: undefined,
       password: undefined
     }
   }) => {
-    cy.url().should('include', '/login')
+    cy.location('pathname').should('contain', '/login')
     cy.get('input[name="password_identifier"]').should('have.value', email)
     if (temail) {
       cy.get('input[name="password_identifier"]').clear().type(temail)
@@ -542,6 +543,9 @@ Cypress.Commands.add(
     }
     cy.longPrivilegedSessionTime()
     cy.get('button[value="password"]').click()
+    if (success) {
+      cy.location('pathname').should('not.contain', '/login')
+    }
   }
 )
 

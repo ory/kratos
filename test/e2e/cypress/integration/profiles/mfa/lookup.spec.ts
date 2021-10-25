@@ -257,12 +257,19 @@ context('2FA lookup secrets', () => {
           expect: { email },
           type: { email: email, password: password }
         })
+        cy.expectSettingsSaved()
 
         cy.shortPrivilegedSessionTime()
         cy.get('button[name="lookup_secret_reveal"]').click()
         cy.reauth({
           expect: { email },
           type: { email: email, password: password }
+        })
+        cy.getLookupSecrets().should((c) => {
+          expect(c).to.not.be.empty
+        })
+        cy.getSession({
+          expectAal: 'aal2'
         })
       })
 

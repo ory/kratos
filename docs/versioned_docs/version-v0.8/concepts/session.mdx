@@ -1,0 +1,182 @@
+---
+id: session
+title: Ory Session Token / Ory Session Cookie
+---
+
+When an identity or end-user authenticates using e.g. the `password` method,
+they will receive an Ory Session. The Ory Session can either be issued as an
+
+- Ory Session Cookie, which is used for all browser-flows (e.g. PHP app, single
+  page app, ...);
+- Ory Session Token, which is used for non-browser flows (e.g. native apps).
+
+The session's content may look like the following:
+
+```json5
+{
+  id: '1338410d-c473-4503-a96a-53efa06e2531',
+  active: true,
+  expires_at: '2021-10-15T15:58:57.683338Z',
+  authenticated_at: '2021-10-14T15:58:57.683338Z',
+  authenticator_assurance_level: 'aal2',
+  authentication_methods: [
+    {
+      method: 'password',
+      completed_at: '2021-10-14T15:55:19.03621Z'
+    },
+    {
+      method: 'lookup_secret',
+      completed_at: '2021-10-14T15:56:21.257867Z'
+    },
+    {
+      method: 'lookup_secret',
+      completed_at: '2021-10-14T15:58:57.683337Z'
+    },
+    {
+      method: 'lookup_secret',
+      completed_at: '2021-10-14T16:03:14.833192Z'
+    }
+  ],
+  issued_at: '2021-10-14T15:58:57.683338Z',
+  identity: {
+    id: '9496bbd5-f426-473f-b087-c7df853f274a',
+    schema_id: 'default',
+    schema_url: 'https://<your-project-slug>.projects.oryapis.com/schemas/default',
+    state: 'active',
+    state_changed_at: '2021-10-14T17:55:17.885497+02:00',
+    traits: {
+      website: 'https://www.ory.sh/',
+      email: '0.wz4yhr0zwyd@ory.sh'
+    },
+    verifiable_addresses: [
+      {
+        id: '4de14270-ca13-4efb-ac3f-8f03b1f649d8',
+        value: '0.wz4yhr0zwyd@ory.sh',
+        verified: false,
+        via: 'email',
+        status: 'sent',
+        created_at: '2021-10-14T17:55:17.886639+02:00',
+        updated_at: '2021-10-14T18:03:14.839009+02:00'
+      }
+    ],
+    recovery_addresses: [
+      {
+        id: 'fdab5a5f-5efc-4202-93b5-fd3ee632420b',
+        value: '0.wz4yhr0zwyd@ory.sh',
+        via: 'email',
+        created_at: '2021-10-14T17:55:17.886831+02:00',
+        updated_at: '2021-10-14T18:03:14.839105+02:00'
+      }
+    ],
+    created_at: '2021-10-14T17:55:17.886237+02:00',
+    updated_at: '2021-10-14T17:55:17.886237+02:00'
+  }
+}
+```
+
+### `active`
+
+If set to true, Ory Session is active and can be used to authenticate requests.
+
+### `expires_at`
+
+Indicates when the Ory Session expires.
+
+### `authenticated_at`
+
+Indicates the time of the most recent authentication. When a new Ory Session is
+created (e.g. because of a successful login), this is set to the current time.
+
+This field is updated when:
+
+- The end-user authenticates with a second factor (e.g. TOTP)
+- The end-user refreshes their Ory Session using the
+  [`/self-service/login/browser`](../reference/api#operation/initializeSelfServiceLoginFlowForBrowsers)
+  or
+  [`/self-service/login/api`](../reference/api#operation/initializeSelfServiceLoginFlowWithoutBrowser)
+  endpoint and setting `refresh` to `true`
+
+## Ory Session Cookie
+
+The Ory Session Cookie will be issued when the end-user is using a browser (e.g.
+Chrome) to sign in. You can fetch the session's payload using the
+`/sessions/whoami` endpoint:
+
+```
+curl 'https://<your-project-slug>.projects.oryapis.com/sessions/whoami' \
+  -H 'Accept: application/json \
+  -H 'Cookie: ory_kratos_session=MTYzNDIyNzEzN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJRTFDYWtvME5VNVlaVWxvYVZWeWJrUnZhSEF4YmxSV2VVRlhNMWwxVlVGenxXpsk2cL21Dclk3nCoXV41N6bFxvVJSt7CeICy_815Aw=='
+```
+
+## Ory Session Token
+
+The Ory Session Token will be issued when the end-user is using, for example, a
+native mobile app to sign in. In this case, you need to include the Ory Session
+Token in the `Authorization` HTTP Header
+
+```
+curl 'https://<your-project-slug>.projects.oryapis.com/sessions/whoami' \
+  -H 'Accept: application/json \
+  -H 'Authorization: Bearer BRFbGMzTnBiMjVmZEcEdjM1J5YVc1bkRDSUFvME5VNVlaVeWJrUnZhSEF4YmxSV2VVRlhNMWwxVlVGenxXpsk2cLXV41N6bFxvVJSt7CeICy'
+```
+
+or alternatively in the `X-Session-Token` HTTP Header:
+
+```
+curl 'https://<your-project-slug>.projects.oryapis.com/sessions/whoami' \
+  -H 'Accept: application/json \
+  -H 'X-Session-Token: BRFbGMzTnBiMjVmZEcEdjM1J5YVc1bkRDSUFvME5VNVlaVeWJrUnZhSEF4YmxSV2VVRlhNMWwxVlVGenxXpsk2cLXV41N6bFxvVJSt7CeICy'
+```
+
+## Privileged Sessions
+
+import { privilegedVideo } from '../self-service/flows/code/settings'
+
+Some profile changes, such as updating the password or adding / removing second
+factors, require a privileged Ory Session Token or Ory Session Cookie to be
+completed successfully:
+
+<video controls width="100%">
+  <source src={privilegedVideo.webm} type="video/webm" />
+  <source src={privilegedVideo.mp4} type="video/mp4" />
+  Sorry, your browser doesn't support embedded videos.
+</video>
+
+Ory Sessions are considered "privileged" if their `authenticated_at` time is not
+older than the `privileged_session_max_age` specified in your config:
+
+```yml title="path/to/kratos/config.yml"
+selfservice:
+  flows:
+    settings:
+      privileged_session_max_age: 15m
+```
+
+In the example above, an Ory Session would be considered "privileged" for 15
+minutes. The end-user can perform any profile changes (e.g. update password,
+link another social provider, add a 2fa method, ...) without being prompted to
+re-authenticate.
+
+This flow is similar to
+[GitHub's sudo mode](https://help.github.com/en/github/authenticating-to-github/sudo-mode)!
+
+## Refreshing Sessions
+
+You can prompt the user to re-authenticate by interacting with the
+[`/self-service/login/browser`](../reference/api#operation/initializeSelfServiceLoginFlowForBrowsers)
+or
+[`/self-service/login/api`](../reference/api#operation/initializeSelfServiceLoginFlowWithoutBrowser)
+API and setting the `refresh` parameter to true. Once the user has
+re-authenticated, the `authenticated_at` timestamp of the Ory Session will be
+set to the current time.
+
+```
+/self-service/login/browser?refresh=true
+```
+
+If enabled, you can also refresh the second factor by setting both `refresh` and
+`aal`:
+
+```
+/self-service/login/browser?refresh=true&aal=aal2
+```
