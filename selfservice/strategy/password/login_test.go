@@ -19,11 +19,12 @@ import (
 	"github.com/ory/x/urlx"
 
 	kratos "github.com/ory/kratos-client-go"
-
-	"github.com/ory/x/ioutilx"
+	"github.com/ory/kratos/hash"
+	"github.com/ory/kratos/selfservice/strategy/password"
 
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/stretchr/testify/assert"
@@ -710,5 +711,63 @@ func TestCompleteLogin(t *testing.T) {
 			check(t, expectValidationError(t, true, false, false, values))
 		})
 
+	})
+
+	t.Run("should upgrade password not primary hashing algorithm", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		h := &hash.Pbkdf2{
+			Algorithm:  "sha256",
+			Iterations: 100000,
+			SaltLength: 32,
+			KeyLength:  32,
+		}
+		p, _ := h.Generate(context.Background(), []byte(pwd))
+
+		iId := x.NewUUID()
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+			ID:     iId,
+			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{identifier},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				},
+			},
+			VerifiableAddresses: []identity.VerifiableAddress{
+				{
+					ID:         x.NewUUID(),
+					Value:      identifier,
+					Verified:   true,
+					CreatedAt:  time.Now(),
+					IdentityID: iId,
+				},
+			},
+		}))
+
+		var values = func(v url.Values) {
+			v.Set("password_identifier", identifier)
+			v.Set("password", pwd)
+		}
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+
+		body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+			false, false, http.StatusOK, redirTS.URL)
+
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
+
+		// check if password hash algorithm is upgraded
+		_, c, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypePassword, identifier)
+		require.NoError(t, err)
+		var o password.CredentialsConfig
+		require.NoError(t, json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o))
+		assert.True(t, reg.Hasher().Understands([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+		assert.True(t, hash.IsBcryptHash([]byte(o.HashedPassword)), "%s", o.HashedPassword)
+
+		// retry after upgraded
+		body = testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+			false, true, http.StatusOK, redirTS.URL)
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 	})
 }

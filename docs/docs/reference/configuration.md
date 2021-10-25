@@ -2039,7 +2039,8 @@ hashers:
 
   ## Password hashing algorithm ##
   #
-  # One of the values: argon2, bcrypt
+  # One of the values: argon2, bcrypt.
+  # If database stores a password hashed by another algorithm, the password will be migrated to this algorithm when user logins using password flow.
   #
   # Default value: bcrypt
   #
