@@ -709,6 +709,24 @@ selfservice:
       #
       privileged_session_max_age: 1h
 
+      ## Required Authenticator Assurance Level ##
+      #
+      # Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.
+      #
+      # Default value: highest_available
+      #
+      # One of:
+      # - aal1
+      # - highest_available
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_FLOWS_SETTINGS_REQUIRED_AAL=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_FLOWS_SETTINGS_REQUIRED_AAL=<value>
+      #
+      required_aal: aal1
+
       ## after ##
       #
       after:
@@ -964,6 +982,132 @@ selfservice:
       #
       enabled: false
 
+    ## totp ##
+    #
+    totp:
+      ## TOTP Configuration ##
+      #
+      config:
+        ## TOTP Issuer ##
+        #
+        # The issuer (e.g. a domain name) will be shown in the TOTP app (e.g. Google Authenticator). It helps the user differentiate between different codes.
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_TOTP_CONFIG_ISSUER=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_TOTP_CONFIG_ISSUER=<value>
+        #
+        issuer: ''
+
+      ## Enables the TOTP method ##
+      #
+      # Default value: false
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_METHODS_TOTP_ENABLED=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_METHODS_TOTP_ENABLED=<value>
+      #
+      enabled: false
+
+    ## lookup_secret ##
+    #
+    lookup_secret:
+      ## Enables the lookup secret method ##
+      #
+      # Default value: false
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_METHODS_LOOKUP_SECRET_ENABLED=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_METHODS_LOOKUP_SECRET_ENABLED=<value>
+      #
+      enabled: false
+
+    ## webauthn ##
+    #
+    webauthn:
+      ## WebAuthn Configuration ##
+      #
+      config:
+        ## Relying Party (RP) Config ##
+        #
+        rp:
+          ## Relying Party Identifier ##
+          #
+          # The id must be a subset of the domain currently in the browser.
+          #
+          # Examples:
+          # - ory.sh
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export SELFSERVICE_METHODS_WEBAUTHN_CONFIG_RP_ID=<value>
+          # - Windows Command Line (CMD):
+          #    > set SELFSERVICE_METHODS_WEBAUTHN_CONFIG_RP_ID=<value>
+          #
+          id: ory.sh
+
+          ## Relying Party Display Name ##
+          #
+          # An name to help the user identify this RP.
+          #
+          # Examples:
+          # - Ory Foundation
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export SELFSERVICE_METHODS_WEBAUTHN_CONFIG_RP_DISPLAY_NAME=<value>
+          # - Windows Command Line (CMD):
+          #    > set SELFSERVICE_METHODS_WEBAUTHN_CONFIG_RP_DISPLAY_NAME=<value>
+          #
+          display_name: Ory Foundation
+
+          ## Relying Party Icon ##
+          #
+          # An icon to help the user identify this RP.
+          #
+          # Examples:
+          # - https://www.ory.sh/an-icon.png
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export SELFSERVICE_METHODS_WEBAUTHN_CONFIG_RP_ICON=<value>
+          # - Windows Command Line (CMD):
+          #    > set SELFSERVICE_METHODS_WEBAUTHN_CONFIG_RP_ICON=<value>
+          #
+          icon: https://www.ory.sh/an-icon.png
+
+          ## Relying Party Origin ##
+          #
+          # An explicit RP origin. If left empty, this defaults to `id`.
+          #
+          # Examples:
+          # - https://www.ory.sh/login
+          #
+          # Set this value using environment variables on
+          # - Linux/macOS:
+          #    $ export SELFSERVICE_METHODS_WEBAUTHN_CONFIG_RP_ORIGIN=<value>
+          # - Windows Command Line (CMD):
+          #    > set SELFSERVICE_METHODS_WEBAUTHN_CONFIG_RP_ORIGIN=<value>
+          #
+          origin: https://www.ory.sh/login
+
+      ## Enables the WebAuthn method ##
+      #
+      # Default value: false
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_METHODS_WEBAUTHN_ENABLED=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_METHODS_WEBAUTHN_ENABLED=<value>
+      #
+      enabled: false
+
     ## Specify OpenID Connect and OAuth2 Configuration ##
     #
     # Set this value using environment variables on
@@ -992,14 +1136,20 @@ selfservice:
           - id: google
             provider: google
             client_id: ''
-            client_secret: ''
             mapper_url: file://path/to/oidc.jsonnet
+            client_secret: ''
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - offline_access
             tenant: common
+            team_id: KP76DQS54M
+            private_key_id: UX56C66723
+            private_key: |-
+              -----BEGIN PRIVATE KEY-----
+              ........
+              -----END PRIVATE KEY-----
             requested_claims:
               id_token:
                 email:
@@ -1726,12 +1876,9 @@ secrets:
   cookie:
     - ipsumipsumipsumi
 
-  ## Secret Keys for Ciphering ##
+  ## Secrets to use for encryption by cipher ##
   #
-  # The first secret in the array is used for encrypting data while all other keys are used to decrypt data.
-  # for now is only used for access and refresh token from oidc.
-  #
-  # WARNING the secret key must be 32 caracters long all keys that not 32 characters long will be ignore
+  # The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -1740,7 +1887,7 @@ secrets:
   #    > set SECRETS_CIPHER=<value>
   #
   cipher:
-    - ipsumipsumipsumi
+    - ipsumipsumipsumipsumipsumipsumip
 
   ## Default Encryption Signing Secrets ##
   #
@@ -1754,23 +1901,6 @@ secrets:
   #
   default:
     - ipsumipsumipsumi
-
-## Ciphering Configuration ##
-#
-cipher:
-  ## cipher algorithm
-  #
-  # one of the values noop, aes, xchacha20-poly1305
-  #
-  # Default : noop
-  # noop does not do any encryption
-  #
-  # Set the value using environmental variables on
-  # - Linux/macOS:
-  #    $ export CIPHER_ALGORITHM=<value>
-  # - Windows Command Line (CMD):
-  #    > set CIPHER_ALGORITHM=<value>
-  algorithm: noop
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1925,6 +2055,28 @@ hashers:
   #
   algorithm: argon2
 
+## Cipher Algorithm Configuration ##
+#
+ciphers:
+  ## ciphering algorithm ##
+  #
+  # One of the values: noop, aes, xchacha20-poly1305
+  #
+  # Default value: noop
+  #
+  # One of:
+  # - noop
+  # - aes
+  # - xchacha20-poly1305
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export CIPHERS_ALGORITHM=<value>
+  # - Windows Command Line (CMD):
+  #    > set CIPHERS_ALGORITHM=<value>
+  #
+  algorithm: noop
+
 ## HTTP Cookie Configuration ##
 #
 # Configure the HTTP Cookies. Applies to both CSRF and session cookies.
@@ -1978,6 +2130,25 @@ cookies:
 ## session ##
 #
 session:
+  ## Session Lifespan ##
+  #
+  # Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.
+  #
+  # Default value: 24h
+  #
+  # Examples:
+  # - 1h
+  # - 1m
+  # - 1s
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export SESSION_LIFESPAN=<value>
+  # - Windows Command Line (CMD):
+  #    > set SESSION_LIFESPAN=<value>
+  #
+  lifespan: 1h
+
   ## cookie ##
   #
   cookie:
@@ -2050,24 +2221,28 @@ session:
     #
     domain: ''
 
-  ## Session Lifespan ##
+  ## WhoAmI / ToSession Settings ##
   #
-  # Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.
+  # Control how the `/sessions/whoami` endpoint is behaving.
   #
-  # Default value: 24h
-  #
-  # Examples:
-  # - 1h
-  # - 1m
-  # - 1s
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export SESSION_LIFESPAN=<value>
-  # - Windows Command Line (CMD):
-  #    > set SESSION_LIFESPAN=<value>
-  #
-  lifespan: 1h
+  whoami:
+    ## Required Authenticator Assurance Level ##
+    #
+    # Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.
+    #
+    # Default value: highest_available
+    #
+    # One of:
+    # - aal1
+    # - highest_available
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SESSION_WHOAMI_REQUIRED_AAL=<value>
+    # - Windows Command Line (CMD):
+    #    > set SESSION_WHOAMI_REQUIRED_AAL=<value>
+    #
+    required_aal: aal1
 
 ## The kratos version this config is written for. ##
 #
