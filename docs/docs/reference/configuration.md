@@ -2040,7 +2040,7 @@ hashers:
   ## Password hashing algorithm ##
   #
   # One of the values: argon2, bcrypt.
-  # If database stores a password hashed by another algorithm, the password will be migrated to this algorithm when user logins using password flow.
+  # Any other hashes will be migrated to the set algorithm once an identity authenticates using their password.
   #
   # Default value: bcrypt
   #
