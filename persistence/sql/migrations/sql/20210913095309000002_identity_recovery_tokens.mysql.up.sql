@@ -1,1 +1,1 @@
-ALTER TABLE `identity_recovery_tokens` ADD CONSTRAINT `identity_recovery_tokens_identity_id_fk_idx` FOREIGN KEY (`identity_id`) REFERENCES `identities` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE;
+UPDATE identity_recovery_tokens SET identity_id=(SELECT identity_id FROM identity_recovery_addresses ira WHERE id=identity_recovery_tokens.identity_recovery_address_id) WHERE identity_id IS NULL;
