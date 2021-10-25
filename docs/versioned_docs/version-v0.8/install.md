@@ -11,7 +11,7 @@ binaries, Docker images, and support various package managers.
 We recommend using Docker to run Ory Kratos:
 
 ```shell
-$ docker pull oryd/kratos:v0.8.0-alpha.1.pre.0
+$ docker pull oryd/kratos:v0.8.0-alpha.1.pre.1
 $ docker run --rm -it oryd/kratos help
 ```
 
@@ -23,8 +23,8 @@ You can find more detailed information on the official Kratos docker images
 You can install Ory Kratos using [homebrew](https://brew.sh/) on macOS:
 
 ```shell
-$ brew tap ory/kratos
-$ brew install ory/kratos/kratos
+$ brew tap ory/tap
+$ brew install ory/tap/kratos
 $ kratos help
 ```
 
@@ -34,7 +34,7 @@ On linux, you can use `bash <(curl ...)` to fetch the latest stable binary
 using:
 
 ```shell
-$ bash <(curl https://raw.githubusercontent.com/ory/kratos/v0.8.0-alpha.1.pre.0/install.sh) -b . v0.8.0-alpha.1.pre.0
+$ bash <(curl https://raw.githubusercontent.com/ory/kratos/v0.8.0-alpha.1.pre.1/install.sh) -b . v0.8.0-alpha.1.pre.1
 $ ./kratos help
 ```
 
