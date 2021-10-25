@@ -41,10 +41,8 @@ context('Account Verification Error', () => {
         cy.longLinkLifespan()
 
         identity = gen.identity()
-        cy.register(identity)
+        cy.registerApi(identity)
         cy.deleteMail({ atLeast: 1 }) // clean up registration email
-
-        cy.clearAllCookies()
         cy.login(identity)
         cy.visit(verification)
       })
@@ -52,7 +50,7 @@ context('Account Verification Error', () => {
       it('is unable to verify the email address if the code is expired', () => {
         cy.shortLinkLifespan()
 
-        cy.visit(APP_URL + '/verification')
+        cy.visit(verification)
         cy.get('input[name="email"]').type(identity.email)
         cy.get('button[value="link"]').click()
 
@@ -79,7 +77,6 @@ context('Account Verification Error', () => {
           expect(verifyHrefPattern.test(link.href)).to.be.true
 
           cy.visit(link.href + '-not') // add random stuff to the confirm challenge
-          cy.log(link.href)
           cy.getSession().then(
             assertVerifiableAddress({
               isVerified: false,

@@ -110,6 +110,10 @@ context('Social Sign Up Successes', () => {
         cy.visit(registration)
         cy.triggerOidc()
 
+        cy.location('pathname').should((path) => {
+          expect(path).to.oneOf(['/', '/welcome'])
+        })
+
         cy.getSession().should(shouldSession(email))
       })
 

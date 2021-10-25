@@ -51,7 +51,7 @@ func TestFlowLifecycle(t *testing.T) {
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/password.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
-		r := gjson.GetBytes(body, "forced")
+		r := gjson.GetBytes(body, "refresh")
 		assert.True(t, r.Exists(), "%s", body)
 		assert.Equal(t, isForced, r.Bool(), "%s", body)
 		if isApi {

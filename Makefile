@@ -82,8 +82,8 @@ test-coverage: .bin/go-acc .bin/goveralls
 .PHONY: sdk
 sdk: .bin/swagger .bin/ory node_modules
 		swagger generate spec -m -o spec/swagger.json \
-			-x github.com/ory/kratos-client-go \
-			-x github.com/ory/dockertest
+			-c github.com/ory/kratos \
+			-c github.com/ory/x/healthx
 		ory dev swagger sanitize ./spec/swagger.json
 		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
@@ -99,7 +99,7 @@ sdk: .bin/swagger .bin/ory node_modules
 					-p file://.schema/openapi/patches/generic_error.yaml \
 					spec/swagger.json spec/api.json
 
-		rm -rf internal/httpclient/models internal/httpclient/clients
+		rm -rf internal/httpclient
 		mkdir -p internal/httpclient/
 		npm run openapi-generator-cli -- generate -i "spec/api.json" \
 				-g go \
