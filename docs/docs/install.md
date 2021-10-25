@@ -23,8 +23,8 @@ You can find more detailed information on the official Kratos docker images
 You can install Ory Kratos using [homebrew](https://brew.sh/) on macOS:
 
 ```shell
-$ brew tap ory/kratos
-$ brew install ory/kratos/kratos
+$ brew tap ory/tap
+$ brew install ory/tap/kratos
 $ kratos help
 ```
 

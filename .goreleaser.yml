@@ -194,7 +194,7 @@ changelog:
 brews:
   - tap:
       owner: ory
-      name: homebrew-kratos
+      name: homebrew-tap
     ids:
     - kratos-sqlite
     homepage:  https://www.ory.sh
