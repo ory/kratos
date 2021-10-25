@@ -42,34 +42,24 @@ context('Settings failures with email profile', () => {
       })
 
       beforeEach(() => {
+        cy.longPrivilegedSessionTime()
+
+        cy.visit(base)
         cy.clearAllCookies()
+
         cy.login({ email, password, cookieUrl: base })
         cy.visit(route)
       })
 
-      describe('global errors', () => {
-        it('fails when CSRF is incorrect', () => {
-          cy.get(appPrefix(app) + 'input[name="password"]').type('123456')
-          cy.shouldHaveCsrfError({ app })
-        })
-
-        it('fails when a disallowed return_to url is requested', () => {
-          cy.shouldErrorOnDisallowedReturnTo(
-            route + '?return_to=https://not-allowed',
-            { app }
-          )
-        })
-      })
-
       describe('profile', () => {
         beforeEach(() => {
-          cy.longPrivilegedSessionTime()
+          cy.visit(route)
         })
 
         it('fails with validation errors', () => {
           cy.get('input[name="traits.website"]').clear().type('http://s')
           cy.get('[name="method"][value="profile"]').click()
-          cy.get('*[data-testid^="ui/message"]').should(
+          cy.get('[data-testid^="ui/message"]').should(
             'contain.text',
             'length must be >= 10'
           )
@@ -130,12 +120,14 @@ context('Settings failures with email profile', () => {
           cy.get('input[name="traits.email"]').clear().type(up(email))
           cy.shortPrivilegedSessionTime() // wait for the privileged session to time out
           cy.get('button[value="profile"]').click()
+          cy.location('pathname').should('not.contain', '/settings')
 
           cy.visit(route)
           cy.get('input[name="traits.website"]')
             .clear()
             .type('http://github.com/aeneasr')
           cy.get('button[value="profile"]').click()
+          cy.expectSettingsSaved()
 
           cy.getSession().should((session) => {
             const { identity } = session
@@ -240,12 +232,11 @@ context('Settings failures with email profile', () => {
           const email = gen.email()
           const password = gen.password()
           cy.clearAllCookies()
-          cy.registerApi({
+          cy.register({
             email,
             password,
             fields: { 'traits.website': website }
           })
-          cy.login({ email, password, cookieUrl: base })
           cy.visit(route)
 
           // checks here that we're checking settingsRequest.id == cookie.stored.id
@@ -262,6 +253,7 @@ context('Settings failures with email profile', () => {
 
           cy.location('pathname').should('include', '/login')
           cy.reauth({ expect: { email }, type: { password: password } })
+
           cy.location('pathname').should('include', '/settings')
           cy.get('input[name="password"]').should('exist')
 
@@ -285,6 +277,20 @@ context('Settings failures with email profile', () => {
             expectSession: false,
             cookieUrl: base
           })
+        })
+      })
+
+      describe('global errors', () => {
+        it('fails when CSRF is incorrect', () => {
+          cy.get(appPrefix(app) + 'input[name="password"]').type('123456')
+          cy.shouldHaveCsrfError({ app })
+        })
+
+        it('fails when a disallowed return_to url is requested', () => {
+          cy.shouldErrorOnDisallowedReturnTo(
+            route + '?return_to=https://not-allowed',
+            { app }
+          )
         })
       })
     })

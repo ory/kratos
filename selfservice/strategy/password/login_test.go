@@ -290,9 +290,9 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	var expectValidationError = func(t *testing.T, isAPI, forced, isSPA bool, values func(url.Values)) string {
+	var expectValidationError = func(t *testing.T, isAPI, refresh, isSPA bool, values func(url.Values)) string {
 		return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
-			isSPA, forced,
+			isSPA, refresh,
 			testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
 			testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI().String()))
 	}
@@ -493,7 +493,7 @@ func TestCompleteLogin(t *testing.T) {
 
 					body, err := ioutil.ReadAll(res.Body)
 					require.NoError(t, err)
-					assert.True(t, gjson.GetBytes(body, "forced").Bool())
+					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
 					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password_identifier).attributes.value").String(), "%s", body)
 					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
 				})
@@ -530,7 +530,7 @@ func TestCompleteLogin(t *testing.T) {
 					defer res.Body.Close()
 					body := ioutilx.MustReadAll(res.Body)
 
-					assert.True(t, gjson.GetBytes(body, "forced").Bool())
+					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
 					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password_identifier).attributes.value").String(), "%s", body)
 					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
 				})
@@ -564,7 +564,7 @@ func TestCompleteLogin(t *testing.T) {
 					defer res.Body.Close()
 					body := ioutilx.MustReadAll(res.Body)
 
-					assert.True(t, gjson.GetBytes(body, "forced").Bool())
+					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
 					assert.Equal(t, identifier, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password_identifier).attributes.value").String(), "%s", body)
 					assert.Empty(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password).attributes.value").String(), "%s", body)
 				})
@@ -575,7 +575,7 @@ func TestCompleteLogin(t *testing.T) {
 					defer res.Body.Close()
 					body := ioutilx.MustReadAll(res.Body)
 
-					assert.True(t, gjson.GetBytes(body, "forced").Bool())
+					assert.True(t, gjson.GetBytes(body, "refresh").Bool())
 					assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "verifying that", "%s", body)
 				})
 			})
@@ -637,7 +637,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
-	t.Run("should be a new session with forced flag", func(t *testing.T) {
+	t.Run("should be a new session with refresh flag", func(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(identifier, pwd)
 

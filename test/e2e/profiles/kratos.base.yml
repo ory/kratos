@@ -11,6 +11,7 @@ selfservice:
   whitelisted_return_urls:
     - http://localhost:4455
     - https://www.ory.sh/
+    - https://example.org/
   methods:
     link:
       config:

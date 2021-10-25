@@ -24,7 +24,7 @@ var (
 //
 // swagger:model selfServiceFlowExpiredError
 type ExpiredError struct {
-	DefaultError *herodot.DefaultError `json:"error"`
+	*herodot.DefaultError `json:"error"`
 
 	// Since when the flow has expired
 	Ago time.Duration `json:"since"`
@@ -49,10 +49,6 @@ func (e *ExpiredError) EnhanceJSONError() interface{} {
 	return e
 }
 
-func (e *ExpiredError) Error() string {
-	return e.DefaultError.Error()
-}
-
 func NewFlowExpiredError(at time.Time) *ExpiredError {
 	ago := time.Since(at)
 	return &ExpiredError{
@@ -67,7 +63,7 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 //
 // swagger:model selfServiceBrowserLocationChangeRequiredError
 type BrowserLocationChangeRequiredError struct {
-	DefaultError *herodot.DefaultError `json:"error"`
+	*herodot.DefaultError `json:"error"`
 
 	// Since when the flow has expired
 	RedirectBrowserTo string `json:"redirect_browser_to"`
@@ -89,8 +85,4 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 			ErrorField:  "browser location change required",
 		},
 	}
-}
-
-func (e *BrowserLocationChangeRequiredError) Error() string {
-	return e.DefaultError.Error()
 }

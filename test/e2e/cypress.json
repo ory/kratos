@@ -1,5 +1,6 @@
 {
   "chromeWebSecurity": false,
+  "baseUrl": "http://localhost:4455/",
   "fixturesFolder": "cypress/fixtures",
   "integrationFolder": "cypress/integration",
   "pluginsFile": "cypress/plugins/index.js",

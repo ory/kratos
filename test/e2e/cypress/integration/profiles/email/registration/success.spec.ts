@@ -22,6 +22,7 @@ context('Registration success with email profile', () => {
       })
 
       beforeEach(() => {
+        cy.clearAllCookies()
         cy.visit(route)
       })
 
