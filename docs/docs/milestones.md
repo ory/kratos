@@ -330,12 +330,12 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] fix: slow CLI start up time
-      ([kratos#1878](https://github.com/ory/kratos/pull/1878))
 - [x] feat: ReactJS, better SPA APIs, 2FA with WebAuthn & TOTP & Lookup Secrets,
       better errors, typescript e2e tests
       ([kratos#1624](https://github.com/ory/kratos/pull/1624)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] fix: slow CLI start up time
+      ([kratos#1878](https://github.com/ory/kratos/pull/1878))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
