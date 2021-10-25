@@ -77,8 +77,8 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.R
 			if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 				return err
 			}
-			rt.RecoveryAddress = &ra
 		}
+		rt.RecoveryAddress = &ra
 
 		/* #nosec G201 TableName is static */
 		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", rt.TableName(ctx)), time.Now().UTC(), rt.ID, nid).Exec()
