@@ -25,6 +25,7 @@ import (
 	"github.com/ory/x/watcherx"
 
 	"github.com/ory/jsonschema/v3"
+
 	"github.com/ory/kratos/embedx"
 
 	"github.com/ory/x/tlsx"
