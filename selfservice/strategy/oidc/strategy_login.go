@@ -109,10 +109,41 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 	}
 
+	// UPDATE TOKEN
+	var it string
+	if idToken, ok := token.Extra("id_token").(string); ok {
+		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
+			return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+		}
+	}
+
+	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
+	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
+	if err != nil {
+		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+	}
+
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginFor(s.ID(), identity.AuthenticatorAssuranceLevel1)
-	for _, c := range o.Providers {
+	for k, c := range o.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
+			i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), i.ID)
+			if err != nil {
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			}
+			o.Providers[k].InitialIDToken = it
+			o.Providers[k].InitialAccessToken = cat
+			o.Providers[k].InitialRefreshToken = crt
+			creds := i.Credentials[s.ID()]
+			creds.Config, err = json.Marshal(o)
+			if err != nil {
+				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
+			}
+			i.Credentials[s.ID()] = creds
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, a, i, sess); err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
@@ -123,7 +154,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, ss *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		return nil, err
 	}

@@ -3,6 +3,9 @@ package login
 import (
 	"context"
 	"fmt"
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/sqlcon"
 	"net/http"
 	"time"
 
@@ -32,6 +35,7 @@ type (
 
 type (
 	executorDependencies interface {
+		identity.ManagementProvider
 		config.Provider
 		session.ManagementProvider
 		session.PersistenceProvider
@@ -98,6 +102,22 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, a *
 		WithField("identity_id", i.ID).
 		WithField("flow_method", a.Active).
 		Debug("Running ExecuteLoginPostHook.")
+
+	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion,
+		identity.ManagerAllowWriteProtectedTraits}
+
+	if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
+		if errors.Is(err, identity.ErrProtectedFieldModified) {
+			e.d.Logger().WithError(err).Debug("Modifying protected field requires re-authentication.")
+			return herodot.ErrForbidden.
+				WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate.")
+		}
+		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			return schema.NewDuplicateCredentialsError()
+		}
+		return err
+	}
+
 	for k, executor := range e.d.PostLoginHooks(r.Context(), a.Active) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
