@@ -252,7 +252,7 @@ func (e *WebHook) execute(data *templateContext) error {
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body io.Reader
+	var body *bytes.Reader
 	if conf.method != "TRACE" {
 		// According to the HTTP spec any request method, but TRACE is allowed to
 		// have a body. Even this is a really bad practice for some of them, like for
@@ -263,6 +263,9 @@ func (e *WebHook) execute(data *templateContext) error {
 		}
 	}
 
+	if body == nil {
+		body = bytes.NewReader(make([]byte, 0))
+	}
 	if err = doHttpCall(conf.method, conf.url, conf.auth, body); err != nil {
 		return fmt.Errorf("failed to call web hook %w", err)
 	}
@@ -271,7 +274,7 @@ func (e *WebHook) execute(data *templateContext) error {
 
 func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*bytes.Reader, error) {
 	if len(templateURI) == 0 {
-		return nil, nil
+		return bytes.NewReader(make([]byte, 0)), nil
 	}
 
 	f := fetcher.NewFetcher()
