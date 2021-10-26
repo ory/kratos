@@ -1891,7 +1891,7 @@
       "properties": {
         "algorithm": {
           "title": "Password hashing algorithm",
-          "description": "One of the values: argon2, bcrypt",
+          "description": "One of the values: argon2, bcrypt.\nAny other hashes will be migrated to the set algorithm once an identity authenticates using their password.",
           "type": "string",
           "default": "bcrypt",
           "enum": [
