@@ -46,11 +46,11 @@ type RecoveryToken struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 	// RecoveryAddressID is a helper struct field for gobuffalo.pop.
-	RecoveryAddressID uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
+	RecoveryAddressID *uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
 	FlowID     uuid.NullUUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
 	NID        uuid.UUID     `json:"-"  faker:"-" db:"nid"`
-	IdentityID uuid.NullUUID `json:"identity_id"  faker:"-" db:"identity_id"`
+	IdentityID uuid.UUID     `json:"identity_id"  faker:"-" db:"identity_id"`
 }
 
 func (RecoveryToken) TableName(ctx context.Context) string {
@@ -66,32 +66,25 @@ func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.
 		recoveryAddressID = address.ID
 	}
 	return &RecoveryToken{
-		ID:              x.NewUUID(),
-		Token:           randx.MustString(32, randx.AlphaNum),
-		RecoveryAddress: address,
-		ExpiresAt:       now.Add(expiresIn),
-		IssuedAt:        now,
-		IdentityID: uuid.NullUUID{
-			UUID:  identityID,
-			Valid: uuid.Nil != identityID,
-		},
+		ID:                x.NewUUID(),
+		Token:             randx.MustString(32, randx.AlphaNum),
+		RecoveryAddress:   address,
+		ExpiresAt:         now.Add(expiresIn),
+		IssuedAt:          now,
+		IdentityID:        identityID,
 		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true},
-		RecoveryAddressID: recoveryAddressID,
+		RecoveryAddressID: &recoveryAddressID,
 	}
 }
 
 func NewRecoveryToken(identityID uuid.UUID, expiresIn time.Duration) *RecoveryToken {
 	now := time.Now().UTC()
 	return &RecoveryToken{
-		ID:        x.NewUUID(),
-		Token:     randx.MustString(32, randx.AlphaNum),
-		ExpiresAt: now.Add(expiresIn),
-		IssuedAt:  now,
-		IdentityID: uuid.NullUUID{
-			UUID:  identityID,
-			Valid: uuid.Nil != identityID,
-		},
-		RecoveryAddressID: uuid.UUID{},
+		ID:         x.NewUUID(),
+		Token:      randx.MustString(32, randx.AlphaNum),
+		ExpiresAt:  now.Add(expiresIn),
+		IssuedAt:   now,
+		IdentityID: identityID,
 	}
 }
 

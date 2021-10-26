@@ -53,11 +53,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
 				return &link.RecoveryToken{Token: x.NewUUID().String(), FlowID: uuid.NullUUID{UUID: req.ID, Valid: true},
-					RecoveryAddress:   &i.RecoveryAddresses[0],
-					RecoveryAddressID: i.RecoveryAddresses[0].ID,
-					ExpiresAt:         time.Now(),
-					IssuedAt:          time.Now(),
-					IdentityID:        uuid.NullUUID{UUID: i.ID, Valid: true},
+					RecoveryAddress: &i.RecoveryAddresses[0],
+					ExpiresAt:       time.Now(),
+					IssuedAt:        time.Now(),
+					IdentityID:      i.ID,
 				}
 			}
 

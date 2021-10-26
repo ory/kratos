@@ -1,1 +1,1 @@
-DELETE FROM identity_recovery_tokens WHERE identity_recovery_address_id IS NULL AND identity_id = '';
+ALTER TABLE `identity_recovery_tokens` MODIFY `identity_id` char(36) NOT NULL;

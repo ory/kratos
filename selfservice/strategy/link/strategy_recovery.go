@@ -317,7 +317,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID.UUID)
+	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}
