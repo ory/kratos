@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **CsrfToken** | Pointer to **string** | The CSRF Token | [optional] 
 **Method** | **string** | Method to use  This field must be set to &#x60;oidc&#x60; when using the oidc method. | 
 **Provider** | **string** | The provider to register with | 
+**Traits** | Pointer to **map[string]interface{}** | The identity traits. This is a placeholder for the registration flow. | [optional] 
 
 ## Methods
 
@@ -91,6 +92,31 @@ and a boolean to check if the value has been set.
 
 SetProvider sets Provider field to given value.
 
+
+### GetTraits
+
+`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraits() map[string]interface{}`
+
+GetTraits returns the Traits field if non-nil, zero value otherwise.
+
+### GetTraitsOk
+
+`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraitsOk() (*map[string]interface{}, bool)`
+
+GetTraitsOk returns a tuple with the Traits field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetTraits
+
+`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetTraits(v map[string]interface{})`
+
+SetTraits sets Traits field to given value.
+
+### HasTraits
+
+`func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) HasTraits() bool`
+
+HasTraits returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/assertx"
+
 	"github.com/ory/kratos/session"
 
 	"github.com/gofrs/uuid"
@@ -83,7 +85,7 @@ func TestHandler(t *testing.T) {
 			route = settings.RouteInitAPIFlow
 		}
 		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
-		if isSPA {
+		if isSPA || isAPI {
 			req.Header.Set("Accept", "application/json")
 		}
 		res, err := hc.Do(req)
@@ -124,8 +126,8 @@ func TestHandler(t *testing.T) {
 			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, true)
-				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.EqualValues(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String())
+				assert.Equal(t, http.StatusForbidden, res.StatusCode, "%s", body)
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
 			})
 		})
 
@@ -140,8 +142,8 @@ func TestHandler(t *testing.T) {
 			t.Run("description=can not init if identity has aal2 but session has aal1", func(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				res, body := initFlow(t, aal2Identity, false)
-				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.EqualValues(t, "Session does not fulfill the requested Authenticator Assurance Level", gjson.GetBytes(body, "error.message").String(), "%s", body)
+				assert.Contains(t, res.Request.URL.String(), reg.Config(context.Background()).SelfServiceFlowLoginUI().String())
+				assert.EqualValues(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", body)
 			})
 		})
 
@@ -164,7 +166,7 @@ func TestHandler(t *testing.T) {
 					}})
 				res, body := initSPAFlow(t, user1)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.EqualValues(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String())
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
 			})
 		})
 	})
@@ -264,7 +266,7 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, res.Body.Close())
 
 				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
-				assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.GetBytes(body, "error.reason").String(), "%s", body)
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(body))
 			})
 		})
 	})
@@ -287,6 +289,7 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, http.StatusOK, res.StatusCode)
 				assert.Equal(t, "Please complete the second authentication challenge.", gjson.Get(actual, "ui.messages.0.text").String(), actual)
 			})
+
 			t.Run("type=spa", func(t *testing.T) {
 				t.Cleanup(func() {
 					conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
@@ -301,7 +304,7 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				actual, res := testhelpers.SettingsMakeRequest(t, false, true, &f, aal2Identity, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.Get(actual, "error.reason").String(), actual)
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(actual))
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -318,7 +321,7 @@ func TestHandler(t *testing.T) {
 				conf.MustSet(config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
 				actual, res := testhelpers.SettingsMakeRequest(t, true, false, &f, aal2Identity, `{"method":"not-exists"}`)
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
-				assert.Equal(t, session.NewErrAALNotSatisfied("").Reason(), gjson.Get(actual, "error.reason").String(), actual)
+				assertx.EqualAsJSON(t, session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"), json.RawMessage(actual))
 			})
 		})
 

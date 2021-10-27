@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/pbkdf2"
 
 	"github.com/ory/kratos/driver/config"
 )
@@ -18,12 +19,15 @@ import (
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
 
 func Compare(ctx context.Context, password []byte, hash []byte) error {
-	if IsBcryptHash(hash) {
+	switch {
+	case IsBcryptHash(hash):
 		return CompareBcrypt(ctx, password, hash)
-	} else if IsArgon2idHash(hash) {
+	case IsArgon2idHash(hash):
 		return CompareArgon2id(ctx, password, hash)
-	} else {
-		return ErrUnknownHashAlgorithm
+	case IsPbkdf2Hash(hash):
+		return ComparePbkdf2(ctx, password, hash)
+	default:
+		return errors.WithStack(ErrUnknownHashAlgorithm)
 	}
 }
 
@@ -57,17 +61,45 @@ func CompareArgon2id(_ context.Context, password []byte, hash []byte) error {
 	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
 		return nil
 	}
-	return ErrMismatchedHashAndPassword
+	return errors.WithStack(ErrMismatchedHashAndPassword)
 }
 
+func ComparePbkdf2(_ context.Context, password []byte, hash []byte) error {
+	// Extract the parameters, salt and derived key from the encoded password
+	// hash.
+	p, salt, hash, err := decodePbkdf2Hash(string(hash))
+	if err != nil {
+		return err
+	}
+
+	// Derive the key from the other password using the same parameters.
+	otherHash := pbkdf2.Key(password, salt, int(p.Iterations), int(p.KeyLength), getPseudorandomFunctionForPbkdf2(p.Algorithm))
+
+	// Check that the contents of the hashed passwords are identical. Note
+	// that we are using the subtle.ConstantTimeCompare() function for this
+	// to help prevent timing attacks.
+	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
+		return nil
+	}
+	return errors.WithStack(ErrMismatchedHashAndPassword)
+}
+
+var (
+	isBcryptHash   = regexp.MustCompile(`^\$2[abzy]?\$`)
+	isArgon2idHash = regexp.MustCompile(`^\$argon2id\$`)
+	isPbkdf2Hash   = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
+)
+
 func IsBcryptHash(hash []byte) bool {
-	res, _ := regexp.Match("^\\$2[abzy]?\\$", hash)
-	return res
+	return isBcryptHash.Match(hash)
 }
 
 func IsArgon2idHash(hash []byte) bool {
-	res, _ := regexp.Match("^\\$argon2id\\$", hash)
-	return res
+	return isArgon2idHash.Match(hash)
+}
+
+func IsPbkdf2Hash(hash []byte) bool {
+	return isPbkdf2Hash.Match(hash)
 }
 
 func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
@@ -98,6 +130,41 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 	p.SaltLength = uint32(len(salt))
 
 	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[5])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.KeyLength = uint32(len(hash))
+
+	return p, salt, hash, nil
+}
+
+// decodePbkdf2Hash decodes PBKDF2 encoded password hash.
+// format: $pbkdf2-<digest>$i=<iterations>,l=<length>$<salt>$<hash>
+func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err error) {
+	parts := strings.Split(encodedHash, "$")
+	if len(parts) != 5 {
+		return nil, nil, nil, ErrInvalidHash
+	}
+
+	p = new(Pbkdf2)
+	digestParts := strings.SplitN(parts[1], "-", 2)
+	if len(digestParts) != 2 {
+		return nil, nil, nil, ErrInvalidHash
+	}
+	p.Algorithm = digestParts[1]
+
+	_, err = fmt.Sscanf(parts[2], "i=%d,l=%d", &p.Iterations, &p.KeyLength)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[3])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.SaltLength = uint32(len(salt))
+
+	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
 		return nil, nil, nil, err
 	}

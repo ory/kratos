@@ -142,8 +142,8 @@ type toSession struct {
 //
 // As explained above, this request may fail due to several reasons. The `error.id` can be one of:
 //
-// - `no_active_session`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
-// - `aal_needs_upgrade`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
+// - `session_inactive`: No active session was found in the request (e.g. no Ory Session Cookie / Ory Session Token).
+// - `session_aal2_required`: An active session was found but it does not fulfil the Authenticator Assurance Level, implying that the session must (e.g.) authenticate the second factor.
 //
 //     Produces:
 //     - application/json

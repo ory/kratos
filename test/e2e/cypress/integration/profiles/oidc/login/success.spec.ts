@@ -1,4 +1,4 @@
-import { appPrefix, gen, website } from '../../../../helpers'
+import { gen, website } from '../../../../helpers'
 import { routes as react } from '../../../../helpers/react'
 import { routes as express } from '../../../../helpers/express'
 
@@ -40,13 +40,13 @@ context('Social Sign In Successes', () => {
         cy.registerOidc({
           email,
           website,
-          route: registration + '?return_to=https://www.ory.sh/'
+          route: registration + '?return_to=https://example.org/'
         })
-        cy.location('href').should('eq', 'https://www.ory.sh/')
+        cy.location('href').should('eq', 'https://example.org/')
         cy.logout()
         cy.noSession()
-        cy.loginOidc({ url: login + '?return_to=https://www.ory.sh/' })
-        cy.location('href').should('eq', 'https://www.ory.sh/')
+        cy.loginOidc({ url: login + '?return_to=https://example.org/' })
+        cy.location('href').should('eq', 'https://example.org/')
       })
     })
   })

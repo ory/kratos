@@ -7,9 +7,9 @@ Name | Type | Description | Notes
 **Active** | Pointer to [**IdentityCredentialsType**](IdentityCredentialsType.md) |  | [optional] 
 **CreatedAt** | Pointer to **time.Time** | CreatedAt is a helper struct field for gobuffalo.pop. | [optional] 
 **ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
-**Forced** | Pointer to **bool** | Refresh stores whether this login flow should enforce re-authentication. | [optional] 
 **Id** | **string** |  | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow started. | 
+**Refresh** | Pointer to **bool** | Refresh stores whether this login flow should enforce re-authentication. | [optional] 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
 **RequestedAal** | Pointer to [**AuthenticatorAssuranceLevel**](AuthenticatorAssuranceLevel.md) |  | [optional] 
 **ReturnTo** | Pointer to **string** | ReturnTo contains the requested return_to URL. | [optional] 
@@ -106,31 +106,6 @@ and a boolean to check if the value has been set.
 SetExpiresAt sets ExpiresAt field to given value.
 
 
-### GetForced
-
-`func (o *SelfServiceLoginFlow) GetForced() bool`
-
-GetForced returns the Forced field if non-nil, zero value otherwise.
-
-### GetForcedOk
-
-`func (o *SelfServiceLoginFlow) GetForcedOk() (*bool, bool)`
-
-GetForcedOk returns a tuple with the Forced field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetForced
-
-`func (o *SelfServiceLoginFlow) SetForced(v bool)`
-
-SetForced sets Forced field to given value.
-
-### HasForced
-
-`func (o *SelfServiceLoginFlow) HasForced() bool`
-
-HasForced returns a boolean if a field has been set.
-
 ### GetId
 
 `func (o *SelfServiceLoginFlow) GetId() string`
@@ -170,6 +145,31 @@ and a boolean to check if the value has been set.
 
 SetIssuedAt sets IssuedAt field to given value.
 
+
+### GetRefresh
+
+`func (o *SelfServiceLoginFlow) GetRefresh() bool`
+
+GetRefresh returns the Refresh field if non-nil, zero value otherwise.
+
+### GetRefreshOk
+
+`func (o *SelfServiceLoginFlow) GetRefreshOk() (*bool, bool)`
+
+GetRefreshOk returns a tuple with the Refresh field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRefresh
+
+`func (o *SelfServiceLoginFlow) SetRefresh(v bool)`
+
+SetRefresh sets Refresh field to given value.
+
+### HasRefresh
+
+`func (o *SelfServiceLoginFlow) HasRefresh() bool`
+
+HasRefresh returns a boolean if a field has been set.
 
 ### GetRequestUrl
 

@@ -23,6 +23,8 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	Method string `json:"method"`
 	// The provider to register with
 	Provider string `json:"provider"`
+	// The identity traits. This is a placeholder for the registration flow.
+	Traits map[string]interface{} `json:"traits,omitempty"`
 }
 
 // NewSubmitSelfServiceLoginFlowWithOidcMethodBody instantiates a new SubmitSelfServiceLoginFlowWithOidcMethodBody object
@@ -124,6 +126,38 @@ func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetProvider(v string) {
 	o.Provider = v
 }
 
+// GetTraits returns the Traits field value if set, zero value otherwise.
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraits() map[string]interface{} {
+	if o == nil || o.Traits == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.Traits
+}
+
+// GetTraitsOk returns a tuple with the Traits field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraitsOk() (map[string]interface{}, bool) {
+	if o == nil || o.Traits == nil {
+		return nil, false
+	}
+	return o.Traits, true
+}
+
+// HasTraits returns a boolean if a field has been set.
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) HasTraits() bool {
+	if o != nil && o.Traits != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTraits gets a reference to the given map[string]interface{} and assigns it to the Traits field.
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetTraits(v map[string]interface{}) {
+	o.Traits = v
+}
+
 func (o SubmitSelfServiceLoginFlowWithOidcMethodBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.CsrfToken != nil {
@@ -134,6 +168,9 @@ func (o SubmitSelfServiceLoginFlowWithOidcMethodBody) MarshalJSON() ([]byte, err
 	}
 	if true {
 		toSerialize["provider"] = o.Provider
+	}
+	if o.Traits != nil {
+		toSerialize["traits"] = o.Traits
 	}
 	return json.Marshal(toSerialize)
 }
