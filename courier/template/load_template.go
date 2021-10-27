@@ -20,13 +20,32 @@ var templates embed.FS
 
 var cache, _ = lru.New(16)
 
-func loadBuiltInTemplate(osdir, name string, html bool) (interface {
-	Execute(io.Writer, interface{}) error
-}, error) {
+type ExecutableTemplate struct {
+	Template interface {
+		Execute(wr io.Writer, data interface{}) error
+	}
+}
+
+func newExecutableHTMLTemplate(t *htemplate.Template) *ExecutableTemplate {
+	return &ExecutableTemplate{Template: t}
+}
+
+func newExecutableTextTemplate(t *template.Template) *ExecutableTemplate {
+	return &ExecutableTemplate{Template: t}
+}
+
+func (t *ExecutableTemplate) Execute(data interface{}) (string, error) {
+	var tb bytes.Buffer
+	if err := t.Template.Execute(&tb, data); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return tb.String(), nil
+}
+
+func loadBuiltInTemplate(osdir, name string, html bool) (*ExecutableTemplate, error) {
 	if t, found := cache.Get(name); found {
-		return t.(interface {
-			Execute(io.Writer, interface{}) error
-		}), nil
+		return t.(*ExecutableTemplate), nil
 	}
 
 	file, err := os.DirFS(osdir).Open(name)
@@ -47,30 +66,28 @@ func loadBuiltInTemplate(osdir, name string, html bool) (interface {
 		return nil, errors.WithStack(err)
 	}
 
-	var tpl interface {
-		Execute(io.Writer, interface{}) error
-	}
+	var tpl *ExecutableTemplate
 	if html {
-		tpl, err = htemplate.New(name).Funcs(sprig.HtmlFuncMap()).Parse(b.String())
+		t, err := htemplate.New(name).Funcs(sprig.HtmlFuncMap()).Parse(b.String())
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		tpl = newExecutableHTMLTemplate(t)
 	} else {
-		tpl, err = template.New(name).Funcs(sprig.TxtFuncMap()).Parse(b.String())
-	}
-
-	if err != nil {
-		return nil, errors.WithStack(err)
+		t, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(b.String())
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		tpl = newExecutableTextTemplate(t)
 	}
 
 	_ = cache.Add(name, tpl)
 	return tpl, nil
 }
 
-func loadTemplate(osdir, name, pattern string, html bool) (interface {
-	Execute(io.Writer, interface{}) error
-}, error) {
+func loadTemplate(osdir, name, pattern string, html bool) (*ExecutableTemplate, error) {
 	if t, found := cache.Get(name); found {
-		return t.(interface {
-			Execute(io.Writer, interface{}) error
-		}), nil
+		return t.(*ExecutableTemplate), nil
 	}
 
 	// make sure osdir and template name exists, otherwise fallback to built in templates
@@ -88,19 +105,19 @@ func loadTemplate(osdir, name, pattern string, html bool) (interface {
 		}
 	}
 
-	// parse templates matching glob
-	var tpl interface {
-		Execute(io.Writer, interface{}) error
-	}
-	var err error
+	var tpl *ExecutableTemplate
 	if html {
-		tpl, _ = htemplate.New(filepath.Base(name)).Funcs(sprig.HtmlFuncMap()).ParseGlob(path.Join(osdir, glob))
+		t, err := htemplate.New(filepath.Base(name)).Funcs(sprig.HtmlFuncMap()).ParseGlob(path.Join(osdir, glob))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		tpl = newExecutableHTMLTemplate(t)
 	} else {
-		tpl, _ = template.New(filepath.Base(name)).Funcs(sprig.TxtFuncMap()).ParseGlob(path.Join(osdir, glob))
-	}
-
-	if err != nil || tpl == nil {
-		return nil, errors.WithStack(err)
+		t, err := template.New(filepath.Base(name)).Funcs(sprig.TxtFuncMap()).ParseGlob(path.Join(osdir, glob))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		tpl = newExecutableTextTemplate(t)
 	}
 
 	_ = cache.Add(name, tpl)
@@ -112,13 +129,7 @@ func loadTextTemplate(osdir, name, pattern string, model interface{}) (string, e
 	if err != nil {
 		return "", err
 	}
-
-	var tb bytes.Buffer
-	if err := t.Execute(&tb, model); err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return tb.String(), nil
+	return t.Execute(model)
 }
 
 func loadHTMLTemplate(osdir, name, pattern string, model interface{}) (string, error) {
@@ -126,11 +137,5 @@ func loadHTMLTemplate(osdir, name, pattern string, model interface{}) (string, e
 	if err != nil {
 		return "", err
 	}
-
-	var tb bytes.Buffer
-	if err := t.Execute(&tb, model); err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return tb.String(), nil
+	return t.Execute(model)
 }
