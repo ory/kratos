@@ -252,7 +252,7 @@ func (e *WebHook) execute(data *templateContext) error {
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body *bytes.Reader
+	var body io.Reader
 	if conf.method != "TRACE" {
 		// According to the HTTP spec any request method, but TRACE is allowed to
 		// have a body. Even this is a really bad practice for some of them, like for
