@@ -22,7 +22,7 @@ services:
     image: oryd/kratos-selfservice-ui-node:v0.8.0-alpha.2
     environment:
       - KRATOS_PUBLIC_URL=http://kratos:4433/
-      - KRATOS_ADMIN_URL=http://kratos:4434/
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
     networks:
       - intranet
     restart: on-failure
