@@ -2039,7 +2039,8 @@ hashers:
 
   ## Password hashing algorithm ##
   #
-  # One of the values: argon2, bcrypt
+  # One of the values: argon2, bcrypt.
+  # Any other hashes will be migrated to the set algorithm once an identity authenticates using their password.
   #
   # Default value: bcrypt
   #
