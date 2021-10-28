@@ -33,21 +33,21 @@ selfservice:
 
     verification:
       enabled: true
-      ui_url: http://127.0.0.1:4455/verify
+      ui_url: http://127.0.0.1:4455/verification
       after:
         default_browser_return_url: http://127.0.0.1:4455/
 
     logout:
       after:
-        default_browser_return_url: http://127.0.0.1:4455/auth/login
+        default_browser_return_url: http://127.0.0.1:4455/login
 
     login:
-      ui_url: http://127.0.0.1:4455/auth/login
+      ui_url: http://127.0.0.1:4455/login
       lifespan: 10m
 
     registration:
       lifespan: 10m
-      ui_url: http://127.0.0.1:4455/auth/registration
+      ui_url: http://127.0.0.1:4455/registration
       after:
         password:
           hooks:

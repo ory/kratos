@@ -69,8 +69,8 @@ To ensure that no one can access the dashboard without prior authentication
 
 <CodeFromRemote
   lang="js"
-  link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/middleware/simple.ts"
-  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/middleware/simple.ts"
+  title="https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/pkg/middleware.ts"
+  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/pkg/middleware.ts"
 />
 
 :::info
@@ -209,7 +209,7 @@ end
 
 Enough theory, it's time to get this thing going! Let's start by trying to open
 the dashboard - **go to
-[127.0.0.1:4455/dashboard](http://127.0.0.1:4455/dashboard)**.
+[127.0.0.1:4455/welcome](http://127.0.0.1:4455/welcome)**.
 
 You should notice that you're ending up at the login endpoint instead of the
 dashboard:
@@ -528,7 +528,7 @@ response):
 ![SecureApp Dashboard](images/quickstart/secureapp-verified-dashboard.png)
 
 To re-request the verification email, fill out the form at
-[127.0.0.1:4455/verify](http://127.0.0.1:4455/verify).
+[127.0.0.1:4455/verification](http://127.0.0.1:4455/verification).
 
 To learn more about verification recovery, head over to the
 [Email and Phone Verification and Account Activation Documentation](self-service/flows/verify-email-account-activation.mdx).
@@ -605,7 +605,7 @@ for example:
 
 - [GitHub](./guides/sign-in-with-github-google-facebook-linkedin#github)
 - [Google](./guides/sign-in-with-github-google-facebook-linkedin#google)
-- [Facebook](./guides/sign-in-with-github-google-facebook-linkedin#facebook)  
+- [Facebook](./guides/sign-in-with-github-google-facebook-linkedin#facebook)
   and [many more](./guides/sign-in-with-github-google-facebook-linkedin).
 
 **Use a different database**
@@ -643,7 +643,7 @@ immediately signed in after registration.
 
 ### Quickstart Configuration
 
-In this tutorial we use a simplified configuration.  
+In this tutorial we use a simplified configuration.
 You can find it in
 [`contrib/quickstart/kratos/email-password/kratos.yml`](https://github.com/ory/kratos/blob/master/contrib/quickstart/kratos/email-password/kratos.yml).
 In the same place the
