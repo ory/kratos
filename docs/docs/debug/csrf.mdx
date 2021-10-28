@@ -84,13 +84,13 @@ to the SecureApp's Dashboard. Alternatively you can use piping in your app as we
 do in the Quickstart guide.
 
 We do not recommend running them on separate subdomains, e.g.
-`https://kratos.my-website/` and `https://secureapp.my-website/`).
+`https://kratos.my-website/` and `https://secureapp.my-website/`.
 
 To allow cookies to work across subdomains, make sure to set the domain name in
 the Kratos config file under
 [`session.cookie.domain`](https://www.ory.sh/kratos/docs/next/guides/configuring-cookies/#session-cookies).
 
-Running the apps on different TLDs will not work at all, e.g. e.g.
+Running the apps on different TLDs will not work at all, e.g.
 `https://kratos-my-website/` and `https://secureapp-my-website/`.
 
 Running the services on different ports however is ok, if the domain stays the
