@@ -42,6 +42,8 @@ Something is not working.
       ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [ ] /schemas/default does not work with base64 identity schemas
       ([kratos#1529](https://github.com/ory/kratos/issues/1529))
+- [ ] Courier Watcher should start a (tracing-) span
+      ([kratos#1886](https://github.com/ory/kratos/issues/1886))
 - [x] panic: a handle is already registered for path
       '/self-service/recovery/methods/link'
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
