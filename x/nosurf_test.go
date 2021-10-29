@@ -86,7 +86,7 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 	expectError := func(t *testing.T, err error, req *http.Request) {
 		rec := httptest.NewRecorder()
 		h(rec, req)
-		assertx.EqualAsJSON(t, x.ErrInvalidCSRFTokenAJAXNoCookies, json.RawMessage(gjson.Get(rec.Body.String(), "error").Raw))
+		assertx.EqualAsJSON(t, err, json.RawMessage(gjson.Get(rec.Body.String(), "error").Raw))
 	}
 
 	newAjaxRequest := func() *http.Request {

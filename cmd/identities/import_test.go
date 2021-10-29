@@ -25,7 +25,7 @@ func TestImportCmd(t *testing.T) {
 	reg := setup(t, c)
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
-		i := kratos.CreateIdentity{
+		i := kratos.AdminCreateIdentityBody{
 			SchemaId: config.DefaultIdentityTraitsSchemaID,
 			Traits:   map[string]interface{}{},
 		}
@@ -46,7 +46,7 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports multiple identities from single file", func(t *testing.T) {
-		i := []kratos.CreateIdentity{
+		i := []kratos.AdminCreateIdentityBody{
 			{
 				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
@@ -78,7 +78,7 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports a new identity from STD_IN", func(t *testing.T) {
-		i := []kratos.CreateIdentity{
+		i := []kratos.AdminCreateIdentityBody{
 			{
 				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
@@ -106,7 +106,7 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports multiple identities from STD_IN", func(t *testing.T) {
-		i := kratos.CreateIdentity{
+		i := kratos.AdminCreateIdentityBody{
 			SchemaId: config.DefaultIdentityTraitsSchemaID,
 			Traits:   map[string]interface{}{},
 		}

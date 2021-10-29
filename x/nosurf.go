@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/kratos/text"
+
 	"github.com/ory/kratos/driver/config"
 
 	"github.com/pkg/errors"
@@ -17,7 +19,9 @@ import (
 )
 
 var (
-	ErrInvalidCSRFToken = herodot.ErrForbidden.WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
+	ErrInvalidCSRFToken = herodot.ErrForbidden.
+				WithID(text.ErrIDCSRF).
+				WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
 				WithDetail("docs", "https://www.ory.sh/kratos/docs/debug/csrf").
 				WithReason("The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
 	ErrGone = herodot.DefaultError{

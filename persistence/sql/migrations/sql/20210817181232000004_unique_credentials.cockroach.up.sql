@@ -1,0 +1,1 @@
+ALTER TABLE "identity_credential_identifiers" DROP CONSTRAINT "identity_credential_identifiers_type_id_fk_idx";

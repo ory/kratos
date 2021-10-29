@@ -3,6 +3,9 @@ identity:
 secrets:
   default:
     - 10yn1c7grc46j6zg284vtynebjpcvakj
+  cipher:
+    - secret-thirty-two-character-long
+
 selfservice:
   default_browser_return_url: "#/definitions/defaultReturnTo"
   flows:

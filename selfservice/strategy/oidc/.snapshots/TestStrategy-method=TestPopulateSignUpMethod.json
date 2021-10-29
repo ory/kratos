@@ -1,0 +1,62 @@
+{
+  "method": "POST",
+  "nodes": [
+    {
+      "type": "input",
+      "group": "default",
+      "attributes": {
+        "name": "csrf_token",
+        "type": "hidden",
+        "required": true,
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {}
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
+        "value": "valid",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with valid",
+          "type": "info",
+          "context": {
+            "provider": "valid"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
+        "value": "invalid-issuer",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with invalid-issuer",
+          "type": "info",
+          "context": {
+            "provider": "invalid-issuer"
+          }
+        }
+      }
+    }
+  ]
+}

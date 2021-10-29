@@ -5,13 +5,15 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Href** | **string** | The link&#39;s href (destination) URL.  format: uri | 
+**Id** | **string** | A unique identifier | 
+**NodeType** | **string** |  | 
 **Title** | [**UiText**](UiText.md) |  | 
 
 ## Methods
 
 ### NewUiNodeAnchorAttributes
 
-`func NewUiNodeAnchorAttributes(href string, title UiText, ) *UiNodeAnchorAttributes`
+`func NewUiNodeAnchorAttributes(href string, id string, nodeType string, title UiText, ) *UiNodeAnchorAttributes`
 
 NewUiNodeAnchorAttributes instantiates a new UiNodeAnchorAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -44,6 +46,46 @@ and a boolean to check if the value has been set.
 `func (o *UiNodeAnchorAttributes) SetHref(v string)`
 
 SetHref sets Href field to given value.
+
+
+### GetId
+
+`func (o *UiNodeAnchorAttributes) GetId() string`
+
+GetId returns the Id field if non-nil, zero value otherwise.
+
+### GetIdOk
+
+`func (o *UiNodeAnchorAttributes) GetIdOk() (*string, bool)`
+
+GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetId
+
+`func (o *UiNodeAnchorAttributes) SetId(v string)`
+
+SetId sets Id field to given value.
+
+
+### GetNodeType
+
+`func (o *UiNodeAnchorAttributes) GetNodeType() string`
+
+GetNodeType returns the NodeType field if non-nil, zero value otherwise.
+
+### GetNodeTypeOk
+
+`func (o *UiNodeAnchorAttributes) GetNodeTypeOk() (*string, bool)`
+
+GetNodeTypeOk returns a tuple with the NodeType field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetNodeType
+
+`func (o *UiNodeAnchorAttributes) SetNodeType(v string)`
+
+SetNodeType sets NodeType field to given value.
 
 
 ### GetTitle

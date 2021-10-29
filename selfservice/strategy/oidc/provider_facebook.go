@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
@@ -105,7 +107,7 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token) (
 		PreferredUsername: user.Name,
 		Picture:           user.Picture.Data.Url,
 		Email:             user.Email,
-		EmailVerified:     user.EmailVerified,
+		EmailVerified:     x.ConvertibleBoolean(user.EmailVerified),
 		Gender:            user.Gender,
 		Birthdate:         user.BirthDay,
 	}, nil

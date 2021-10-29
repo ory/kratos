@@ -17,7 +17,7 @@ func performVerification(email string) *ory.SelfServiceVerificationFlow {
 	ctx := context.Background()
 
 	// Initialize the flow
-	flow, res, err := client.V0alpha1Api.InitializeSelfServiceVerificationFlowWithoutBrowser(ctx).Execute()
+	flow, res, err := client.V0alpha2Api.InitializeSelfServiceVerificationFlowWithoutBrowser(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -25,7 +25,7 @@ func performVerification(email string) *ory.SelfServiceVerificationFlow {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	afterSubmit, res, err := client.V0alpha1Api.SubmitSelfServiceVerificationFlow(ctx).Flow(flow.Id).
+	afterSubmit, res, err := client.V0alpha2Api.SubmitSelfServiceVerificationFlow(ctx).Flow(flow.Id).
 		SubmitSelfServiceVerificationFlowBody(ory.SubmitSelfServiceVerificationFlowWithLinkMethodBodyAsSubmitSelfServiceVerificationFlowBody(&ory.SubmitSelfServiceVerificationFlowWithLinkMethodBody{
 			Email:  email,
 			Method: "link",

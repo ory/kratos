@@ -5,6 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **SchemaId** | **string** | SchemaID is the ID of the JSON Schema to be used for validating the identity&#39;s traits. | 
+**State** | Pointer to [**IdentityState**](IdentityState.md) |  | [optional] 
 **Traits** | **map[string]interface{}** | Traits represent an identity&#39;s traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in &#x60;schema_url&#x60;. | 
 
 ## Methods
@@ -45,6 +46,31 @@ and a boolean to check if the value has been set.
 
 SetSchemaId sets SchemaId field to given value.
 
+
+### GetState
+
+`func (o *AdminCreateIdentityBody) GetState() IdentityState`
+
+GetState returns the State field if non-nil, zero value otherwise.
+
+### GetStateOk
+
+`func (o *AdminCreateIdentityBody) GetStateOk() (*IdentityState, bool)`
+
+GetStateOk returns a tuple with the State field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetState
+
+`func (o *AdminCreateIdentityBody) SetState(v IdentityState)`
+
+SetState sets State field to given value.
+
+### HasState
+
+`func (o *AdminCreateIdentityBody) HasState() bool`
+
+HasState returns a boolean if a field has been set.
 
 ### GetTraits
 

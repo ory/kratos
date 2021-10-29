@@ -33,11 +33,15 @@ const (
 	ProfileGroup          Group = "profile"
 	RecoveryLinkGroup     Group = "link"
 	VerificationLinkGroup Group = "link"
+	TOTPGroup             Group = "totp"
+	LookupGroup           Group = "lookup_secret"
+	WebAuthnGroup         Group = "webauthn"
 
 	Text   Type = "text"
 	Input  Type = "input"
 	Image  Type = "img"
 	Anchor Type = "a"
+	Script Type = "script"
 )
 
 // swagger:model uiNodes
@@ -88,6 +92,8 @@ type Node struct {
 //
 // This might include a label and other information that can optionally
 // be used to render UIs.
+//
+// swagger:model uiNodeMeta
 type Meta struct {
 	// Label represents the node's label.
 	//
@@ -174,10 +180,11 @@ func getStringSliceIndexOf(needle []string, haystack string) int {
 }
 
 type sortOptions struct {
-	orderByGroups   []string
-	schemaRef       string
-	keysInOrder     []string
-	keysInOrderPost func([]string) []string
+	orderByGroups     []string
+	schemaRef         string
+	keysInOrder       []string
+	keysInOrderAppend []string
+	keysInOrderPost   func([]string) []string
 }
 
 type SortOption func(*sortOptions)
@@ -200,6 +207,11 @@ func SortBySchema(schemaRef string) func(*sortOptions) {
 func SortUseOrder(keysInOrder []string) func(*sortOptions) {
 	return func(options *sortOptions) {
 		options.keysInOrder = keysInOrder
+	}
+}
+func SortUseOrderAppend(keysInOrder []string) func(*sortOptions) {
+	return func(options *sortOptions) {
+		options.keysInOrderAppend = keysInOrder
 	}
 }
 
@@ -228,12 +240,14 @@ func (n Nodes) SortBySchema(opts ...SortOption) error {
 		o.keysInOrder = o.keysInOrderPost(o.keysInOrder)
 	}
 
+	o.keysInOrder = append(o.keysInOrder, o.keysInOrderAppend...)
+
 	getKeyPosition := func(node *Node) int {
 		lastPrefix := len(o.keysInOrder)
 
 		// Method should always be the last element in the list
 		if node.Attributes.ID() == "method" {
-			return len(n) + 1
+			return len(n) + len(o.keysInOrder) + 1
 		}
 
 		for i, n := range o.keysInOrder {
@@ -334,13 +348,25 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 	var attr Attributes
 	switch t := gjson.GetBytes(data, "type").String(); Type(t) {
 	case Text:
-		attr = new(TextAttributes)
+		attr = &TextAttributes{
+			NodeType: Text,
+		}
 	case Input:
-		attr = new(InputAttributes)
+		attr = &InputAttributes{
+			NodeType: Input,
+		}
 	case Anchor:
-		attr = new(AnchorAttributes)
+		attr = &AnchorAttributes{
+			NodeType: Anchor,
+		}
 	case Image:
-		attr = new(ImageAttributes)
+		attr = &ImageAttributes{
+			NodeType: Image,
+		}
+	case Script:
+		attr = &ScriptAttributes{
+			NodeType: Script,
+		}
 	default:
 		return fmt.Errorf("unexpected node type: %s", t)
 	}
@@ -363,15 +389,22 @@ func (n *Node) UnmarshalJSON(data []byte) error {
 func (n *Node) MarshalJSON() ([]byte, error) {
 	var t Type
 	if n.Attributes != nil {
-		switch n.Attributes.(type) {
+		switch attr := n.Attributes.(type) {
 		case *TextAttributes:
 			t = Text
+			attr.NodeType = Text
 		case *InputAttributes:
 			t = Input
+			attr.NodeType = Input
 		case *AnchorAttributes:
 			t = Anchor
+			attr.NodeType = Anchor
 		case *ImageAttributes:
 			t = Image
+			attr.NodeType = Image
+		case *ScriptAttributes:
+			t = Script
+			attr.NodeType = Script
 		default:
 			return nil, errors.WithStack(fmt.Errorf("unknown node type: %T", n.Attributes))
 		}

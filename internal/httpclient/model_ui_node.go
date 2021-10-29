@@ -3,7 +3,7 @@
  *
  * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
- * API version: 1.0.0
+ * API version: v0.8.0-alpha.3
  * Contact: hi@ory.sh
  */
 
@@ -20,7 +20,7 @@ type UiNode struct {
 	Attributes UiNodeAttributes `json:"attributes"`
 	Group      string           `json:"group"`
 	Messages   []UiText         `json:"messages"`
-	Meta       Meta             `json:"meta"`
+	Meta       UiNodeMeta       `json:"meta"`
 	Type       string           `json:"type"`
 }
 
@@ -28,7 +28,7 @@ type UiNode struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta Meta, type_ string) *UiNode {
+func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, meta UiNodeMeta, type_ string) *UiNode {
 	this := UiNode{}
 	this.Attributes = attributes
 	this.Group = group
@@ -119,9 +119,9 @@ func (o *UiNode) SetMessages(v []UiText) {
 }
 
 // GetMeta returns the Meta field value
-func (o *UiNode) GetMeta() Meta {
+func (o *UiNode) GetMeta() UiNodeMeta {
 	if o == nil {
-		var ret Meta
+		var ret UiNodeMeta
 		return ret
 	}
 
@@ -130,7 +130,7 @@ func (o *UiNode) GetMeta() Meta {
 
 // GetMetaOk returns a tuple with the Meta field value
 // and a boolean to check if the value has been set.
-func (o *UiNode) GetMetaOk() (*Meta, bool) {
+func (o *UiNode) GetMetaOk() (*UiNodeMeta, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -138,7 +138,7 @@ func (o *UiNode) GetMetaOk() (*Meta, bool) {
 }
 
 // SetMeta sets field value
-func (o *UiNode) SetMeta(v Meta) {
+func (o *UiNode) SetMeta(v UiNodeMeta) {
 	o.Meta = v
 }
 

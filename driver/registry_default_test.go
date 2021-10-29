@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
-
-	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
 
@@ -478,54 +477,109 @@ func TestDriverDefault_Hooks(t *testing.T) {
 }
 
 func TestDriverDefault_Strategies(t *testing.T) {
-	for k, tc := range []struct {
-		prep   func(conf *config.Config)
-		expect []string
-	}{
-		{prep: func(conf *config.Config) {
-			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
-		}},
-		{prep: func(conf *config.Config) {
-			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-		}, expect: []string{"password"}},
-		{prep: func(conf *config.Config) {
-			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
-			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-		}, expect: []string{"password", "oidc"}},
-	} {
-		t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
-			conf, reg := internal.NewFastRegistryWithMocks(t)
-			tc.prep(conf)
+	t.Run("case=registration", func(t *testing.T) {
+		for k, tc := range []struct {
+			prep   func(conf *config.Config)
+			expect []string
+		}{
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
+				}},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+				},
+				expect: []string{"password"},
+			},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+				},
+				expect: []string{"password", "oidc"},
+			},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".totp.enabled", true)
+				},
+				expect: []string{"password", "oidc"},
+			},
+		} {
+			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
 
-			t.Run("case=registration", func(t *testing.T) {
 				s := reg.RegistrationStrategies(context.Background())
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
 					assert.Equal(t, e, s[k].ID().String())
 				}
 			})
+		}
+	})
 
-			t.Run("case=login", func(t *testing.T) {
+	t.Run("case=login", func(t *testing.T) {
+		for k, tc := range []struct {
+			prep   func(conf *config.Config)
+			expect []string
+		}{
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
+				}},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+				},
+				expect: []string{"password"},
+			},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+				},
+				expect: []string{"password", "oidc"},
+			},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".totp.enabled", true)
+				},
+				expect: []string{"password", "oidc", "totp"},
+			},
+		} {
+			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
 				s := reg.LoginStrategies(context.Background())
 				require.Len(t, s, len(tc.expect))
 				for k, e := range tc.expect {
 					assert.Equal(t, e, s[k].ID().String())
 				}
 			})
-		})
-	}
+		}
+	})
 
 	t.Run("case=recovery", func(t *testing.T) {
 		for k, tc := range []struct {
 			prep   func(conf *config.Config)
 			expect []string
 		}{
-			{prep: func(conf *config.Config) {
-				conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
-			}},
-			{prep: func(conf *config.Config) {
-				conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
-			}, expect: []string{"link"}},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
+				},
+			},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
+				}, expect: []string{"link"},
+			},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
 				conf, reg := internal.NewFastRegistryWithMocks(t)
@@ -550,7 +604,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(t, l,
-						&cobra.Command{},
+						os.Stderr,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 							config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
@@ -563,7 +617,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			{
 				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(t, l,
-						&cobra.Command{},
+						os.Stderr,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 							config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,
@@ -572,26 +626,44 @@ func TestDriverDefault_Strategies(t *testing.T) {
 						configx.SkipValidation())
 					return c
 				},
-				expect: []string{"profile"}},
+				expect: []string{"profile"},
+			},
+			{
+				prep: func(t *testing.T) *config.Config {
+					c := config.MustNew(t, l,
+						os.Stderr,
+						configx.WithValues(map[string]interface{}{
+							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
+							config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,
+							config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
+							config.ViperKeySelfServiceStrategyConfig + ".totp.enabled":     true,
+						}),
+						configx.SkipValidation())
+					return c
+				},
+				expect: []string{"profile", "totp"},
+			},
 			{
 				prep: func(t *testing.T) *config.Config {
 					return config.MustNew(t, l,
-						&cobra.Command{},
+						os.Stderr,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 						}),
 						configx.SkipValidation())
 				},
-				expect: []string{"password", "profile"}},
+				expect: []string{"password", "profile"},
+			},
 			{
 				prep: func(t *testing.T) *config.Config {
 					return config.MustNew(t, l,
-						&cobra.Command{},
+						os.Stderr,
 						configx.WithConfigFiles("../test/e2e/profiles/verification/.kratos.yml"),
 						configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 						configx.SkipValidation())
 				},
-				expect: []string{"password", "profile"}},
+				expect: []string{"password", "profile"},
+			},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
 				conf := tc.prep(t)
@@ -614,7 +686,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	t.Run("case=all login strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc"}
+		expects := []string{"password", "oidc", "totp", "webauthn", "lookup_secret"}
 		s := reg.AllLoginStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {
@@ -632,7 +704,7 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 	})
 
 	t.Run("case=all settings strategies", func(t *testing.T) {
-		expects := []string{"password", "oidc", "profile"}
+		expects := []string{"password", "oidc", "profile", "totp", "webauthn", "lookup_secret"}
 		s := reg.AllSettingsStrategies()
 		require.Len(t, s, len(expects))
 		for k, e := range expects {
