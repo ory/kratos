@@ -132,4 +132,14 @@ func TestGetFlow(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
 	})
+	t.Run("case=relative redirect when self-service verification ui is a relative URL", func(t *testing.T) {
+		router := x.NewRouterPublic()
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceVerificationUI, "/verification-ts")
+		assert.Regexp(
+			t,
+			"^/verification-ts.*$",
+			testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+verification.RouteInitBrowserFlow),
+		)
+	})
 }

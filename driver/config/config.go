@@ -654,7 +654,7 @@ func (p *Config) SecretsCipher() [][32]byte {
 }
 
 func (p *Config) SelfServiceBrowserDefaultReturnTo() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
 }
 
 func (p *Config) guessBaseURL(keyHost, keyPort string, defaultPort int) *url.URL {
@@ -758,23 +758,23 @@ func (p *Config) CourierSMTPURL() *url.URL {
 }
 
 func (p *Config) SelfServiceFlowLoginUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceLoginUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceLoginUI)
 }
 
 func (p *Config) SelfServiceFlowSettingsUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceSettingsURL)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceSettingsURL)
 }
 
 func (p *Config) SelfServiceFlowErrorURL() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceErrorUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceErrorUI)
 }
 
 func (p *Config) SelfServiceFlowRegistrationUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceRegistrationUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceRegistrationUI)
 }
 
 func (p *Config) SelfServiceFlowRecoveryUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceRecoveryUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceRecoveryUI)
 }
 
 // SessionLifespan returns nil when the value is not set.
@@ -845,20 +845,25 @@ func splitUrlAndFragment(s string) (string, string) {
 	return s[:i], s[i+1:]
 }
 
-func (p *Config) ParseURIOrFail(key string) *url.URL {
+func (p *Config) ParseAbsoluteOrRelativeURIOrFail(key string) *url.URL {
 	u, frag := splitUrlAndFragment(p.p.String(key))
 	parsed, err := url.ParseRequestURI(u)
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	if parsed.Scheme == "" {
-		p.l.WithField("reason", "expected scheme to be set").
-			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
-	}
 
 	if frag != "" {
 		parsed.Fragment = frag
+	}
+	return parsed
+}
+
+func (p *Config) ParseURIOrFail(key string) *url.URL {
+	parsed := p.ParseAbsoluteOrRelativeURIOrFail(key)
+	if parsed.Scheme == "" {
+		p.l.WithField("reason", "expected scheme to be set").
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
 	return parsed
 }
@@ -884,7 +889,7 @@ func (p *Config) MetricsListenOn() string {
 }
 
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceVerificationUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceVerificationUI)
 }
 
 func (p *Config) SelfServiceFlowVerificationRequestLifespan() time.Duration {
