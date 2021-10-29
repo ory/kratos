@@ -83,6 +83,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/#/error", pWithFragments.SelfServiceFlowErrorURL().String())
 
 			pWithRelativeFragments := config.MustNew(t, logrusx.New("", ""),
+				os.Stderr,
 				configx.WithValues(map[string]interface{}{
 					config.ViperKeySelfServiceLoginUI:        "/login",
 					config.ViperKeySelfServiceSettingsURL:    "/settings",
