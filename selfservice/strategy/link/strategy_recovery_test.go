@@ -96,16 +96,27 @@ func TestAdminStrategy(t *testing.T) {
 		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "404 Not Found")
 	})
 
-	t.Run("description=should not be able to recover an account that does not have a recovery email", func(t *testing.T) {
+	t.Run("description=should create a valid recovery link without email", func(t *testing.T) {
 		id := identity.Identity{Traits: identity.Traits(`{}`)}
+
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		_, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+		rl, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
 			IdentityId: id.ID.String(),
+			ExpiresIn:  pointerx.String("100ms"),
 		}).Execute()
-		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
-		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
+		require.NoError(t, err)
+
+		time.Sleep(time.Millisecond * 100)
+		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()))
+		res, err := publicTS.Client().Get(rl.RecoveryLink)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		// We end up here because the link is expired.
+		assert.Contains(t, res.Request.URL.Path, "/recover", rl.RecoveryLink)
 	})
 
 	t.Run("description=should create a valid recovery link and set the expiry time and not be able to recover the account", func(t *testing.T) {
