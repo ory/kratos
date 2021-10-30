@@ -266,7 +266,7 @@ func (e ValidationListError) Error() string {
 	for pos, validationErr := range e.Validations {
 		detailError = detailError + fmt.Sprintf("\n(%d) %s", pos, validationErr.Error())
 	}
-	return fmt.Sprintf("%d validation errors occurred: %s", len(e.Validations), detailError)
+	return fmt.Sprintf("%d validation errors occurred:%s", len(e.Validations), detailError)
 }
 
 func (e *ValidationListError) Add(v *ValidationError) {
