@@ -659,7 +659,7 @@ func TestWebHooks(t *testing.T) {
 			expectedError: webhookError,
 		},
 		{
-			uc:         "Post Registration Hook - no block",
+			uc:         "Post Registration Post Persist Hook - no block",
 			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
@@ -670,10 +670,32 @@ func TestWebHooks(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			uc:         "Post Registration Hook - block",
+			uc:         "Post Registration Post Persists Hook - block",
 			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
 				return wh.ExecutePostRegistrationPostPersistHook(nil, req, f.(*registration.Flow), s)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusBadRequest, webHookResponse
+			},
+			expectedError: webhookError,
+		},
+		{
+			uc:         "Post Registration Pre Persist Hook - no block",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostRegistrationPrePersistHook(nil, req, f.(*registration.Flow), s.Identity)
+			},
+			webHookResponse: func() (int, []byte) {
+				return http.StatusOK, []byte{}
+			},
+			expectedError: nil,
+		},
+		{
+			uc:         "Post Registration Pre Persist Hook - block",
+			createFlow: func() flow.Flow { return &registration.Flow{ID: x.NewUUID()} },
+			callWebHook: func(wh *WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
+				return wh.ExecutePostRegistrationPrePersistHook(nil, req, f.(*registration.Flow), s.Identity)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
