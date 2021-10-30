@@ -1,0 +1,6 @@
+sql("DELETE FROM identity_recovery_tokens WHERE identity_recovery_address_id IS NULL")
+change_column("identity_recovery_tokens", "identity_recovery_address_id", "uuid", {"size": 36})
+{{ if not .IsSQLite  }}
+  drop_foreign_key("identity_recovery_tokens", "identity_recovery_tokens_identity_id_fk_idx")
+{{ end }}
+drop_column("identity_recovery_tokens", "identity_id")

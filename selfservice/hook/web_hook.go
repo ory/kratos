@@ -300,9 +300,11 @@ func (e *WebHook) execute(data *templateContext) error {
 		}
 	}
 
-	err = doHttpCall(e.r.HttpClient(), conf.method, conf.url, conf.auth, conf.canInterrupt, body)
-	if err != nil {
-		return errors.Wrap(err, "failed to call web hook")
+	if body == nil {
+		body = bytes.NewReader(make([]byte, 0))
+	}
+	if err = doHttpCall(e.r.HttpClient(), conf.method, conf.url, conf.auth, conf.canInterrupt, body); err != nil {
+		return fmt.Errorf("failed to call web hook %w", err)
 	}
 
 	return nil
@@ -310,7 +312,7 @@ func (e *WebHook) execute(data *templateContext) error {
 
 func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*bytes.Reader, error) {
 	if len(templateURI) == 0 {
-		return nil, nil
+		return bytes.NewReader(make([]byte, 0)), nil
 	}
 
 	f := fetcher.NewFetcher()

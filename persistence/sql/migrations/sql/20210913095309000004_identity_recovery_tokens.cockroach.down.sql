@@ -1,0 +1,1 @@
+ALTER TABLE "identity_recovery_tokens" ALTER COLUMN "identity_recovery_address_id" SET NOT NULL;

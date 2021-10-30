@@ -2,15 +2,20 @@ package password
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/session"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/decoderx"
+
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -19,7 +24,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
@@ -74,12 +78,48 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
+	if !s.d.Hasher().Understands([]byte(o.HashedPassword)) {
+		// Migrate password hash if not configured hasher.
+		// But Kratos doesn't have ability to import credentials now.
+		// see https://github.com/ory/kratos/issues/605
+		if err := s.migratePasswordHash(r.Context(), i.ID, []byte(p.Password)); err != nil {
+			return nil, s.handleLoginError(w, r, f, &p, err)
+		}
+	}
+
+	f.Active = identity.CredentialsTypePassword
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
 	return i, nil
+}
+
+func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID, password []byte) error {
+	hpw, err := s.d.Hasher().Generate(ctx, password)
+	if err != nil {
+		return err
+	}
+	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
+	if err != nil {
+		return errors.Wrap(err, "unable to encode password configuration to JSON")
+	}
+
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identifier)
+	if err != nil {
+		return err
+	}
+
+	c, ok := i.GetCredentials(s.ID())
+	if !ok {
+		return errors.New("expected to find password credential but could not")
+	}
+
+	c.Config = co
+	i.SetCredentials(s.ID(), *c)
+
+	return s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i)
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
