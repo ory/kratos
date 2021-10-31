@@ -50,7 +50,12 @@ selfservice:
   whitelisted_return_urls:
     - http://return-to-1-test.ory.sh/
     - http://return-to-2-test.ory.sh/
+    - /return-to-relative-test/
   methods:
+    totp:
+      enabled: true
+      config:
+        issuer: issuer.ory.sh
     password:
       enabled: true
     oidc:

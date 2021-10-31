@@ -19,7 +19,7 @@ func NewWatchCmd() *cobra.Command {
 		Use:   "watch",
 		Short: "Starts the Ory Kratos message courier",
 		Run: func(cmd *cobra.Command, args []string) {
-			r := driver.New(cmd.Context(), cmd, configx.WithFlags(cmd.Flags()))
+			r := driver.New(cmd.Context(), cmd.ErrOrStderr(), configx.WithFlags(cmd.Flags()))
 			StartCourier(cmd.Context(), r)
 		},
 	}

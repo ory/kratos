@@ -171,7 +171,7 @@ that your company deserves a spot here, reach out to
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/sainsburys.svg" alt="Sainsbury's"></td>
             <td><a href="https://www.sainsburys.co.uk/">sainsburys.co.uk</a></td>
         </tr>
-                <tr>
+        <tr>
             <td>Adopter *</td>
             <td>Contraste</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/contraste.svg" alt="Contraste"></td>
@@ -218,7 +218,7 @@ that your company deserves a spot here, reach out to
 
 We also want to thank all individual contributors
 
-<a href="https://opencollective.com/ory" target="_blank"><img src="https://opencollective.com/ory/contributors.svg?width=890&button=false" /></a>
+<a href="https://opencollective.com/ory" target="_blank"><img src="https://opencollective.com/ory/contributors.svg?width=890&limit=714&button=false" /></a>
 
 as well as all of our backers
 
@@ -276,7 +276,7 @@ design:
 - Scales without effort
 - Minimize room for human and network errors
 
-Ory's architecture designed to run best on a Container Orchestration Systems
+Ory's architecture is designed to run best on a Container Orchestration system
 such as Kubernetes, CloudFoundry, OpenShift, and similar projects. Binaries are
 small (5-15MB) and available for all popular processor types (ARM, AMD64, i386)
 and operating systems (FreeBSD, Linux, macOS, Windows) without system
@@ -289,7 +289,7 @@ Management system that is built according to
 [cloud architecture best practices](https://www.ory.sh/docs/next/ecosystem/software-architecture-philosophy).
 It implements core use cases that almost every software application needs to
 deal with: Self-service Login and Registration, Multi-Factor Authentication
-(MFA/2FA), Account Recovery and Verification, Profile and Account Management.
+(MFA/2FA), Account Recovery and Verification, Profile, and Account Management.
 
 ### Ory Hydra: OAuth2 & OpenID Connect Server
 
@@ -447,6 +447,14 @@ go test -tags sqlite ./...
 
 # or in a module:
 cd client; go test  -tags sqlite  .
+```
+
+##### Updating Test Fixtures
+
+Some tests use fixtures. If payloads change, you can update them with:
+
+```
+make test-update-snapshots
 ```
 
 ##### End-to-End Tests

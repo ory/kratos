@@ -1,0 +1,1 @@
+UPDATE "selfservice_registration_flows" SET "internal_context" = "_internal_context_tmp";

@@ -7,7 +7,8 @@
       "type": "hidden",
       "value": "Sk3WySQDVpL5V9IuQelZTXcRVbBE1STI0HAJEcHOnM0/xPz5p1piBzuBMKZWxgYJc5TN8k8BTM9Hazrf/n76pg==",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -19,7 +20,8 @@
       "name": "oidc.provider",
       "type": "submit",
       "value": "github",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -31,7 +33,8 @@
       "name": "oidc.provider",
       "type": "submit",
       "value": "google",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -43,7 +46,8 @@
       "name": "oidc.provider",
       "type": "submit",
       "value": "hydra",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -55,7 +59,8 @@
       "name": "method",
       "type": "submit",
       "value": "oidc",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -68,7 +73,8 @@
       "type": "text",
       "value": "",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -80,7 +86,8 @@
       "name": "password",
       "type": "password",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}
@@ -92,7 +99,8 @@
       "name": "method",
       "type": "submit",
       "value": "password",
-      "disabled": false
+      "disabled": false,
+      "node_type": "input"
     },
     "messages": [],
     "meta": {}

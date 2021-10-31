@@ -20,12 +20,12 @@ func TestSettings(t *testing.T) {
 
 	email, password := pkg.RandomCredentials()
 	result := changePassword(email, password)
-	require.NotEmpty(t, result.Flow.Id)
-	assert.Equal(t, ory.SELFSERVICESETTINGSFLOWSTATE_SUCCESS, result.Flow.State)
+	require.NotEmpty(t, result.Id)
+	assert.Equal(t, ory.SELFSERVICESETTINGSFLOWSTATE_SUCCESS, result.State)
 
 	email, password = pkg.RandomCredentials()
 	result = changeTraits(email, password)
-	require.NotEmpty(t, result.Flow.Id)
-	assert.Equal(t, ory.SELFSERVICESETTINGSFLOWSTATE_SUCCESS, result.Flow.State)
+	require.NotEmpty(t, result.Id)
+	assert.Equal(t, ory.SELFSERVICESETTINGSFLOWSTATE_SUCCESS, result.State)
 	assert.Equal(t, "not-"+email, result.Identity.Traits.(map[string]interface{})["email"].(string))
 }

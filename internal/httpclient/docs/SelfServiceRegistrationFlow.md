@@ -4,11 +4,12 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Active** | Pointer to **string** | and so on. | [optional] 
+**Active** | Pointer to [**IdentityCredentialsType**](IdentityCredentialsType.md) |  | [optional] 
 **ExpiresAt** | **time.Time** | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated. | 
 **Id** | **string** |  | 
 **IssuedAt** | **time.Time** | IssuedAt is the time (UTC) when the flow occurred. | 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
+**ReturnTo** | Pointer to **string** | ReturnTo contains the requested return_to URL. | [optional] 
 **Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
 **Ui** | [**UiContainer**](UiContainer.md) |  | 
 
@@ -33,20 +34,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetActive
 
-`func (o *SelfServiceRegistrationFlow) GetActive() string`
+`func (o *SelfServiceRegistrationFlow) GetActive() IdentityCredentialsType`
 
 GetActive returns the Active field if non-nil, zero value otherwise.
 
 ### GetActiveOk
 
-`func (o *SelfServiceRegistrationFlow) GetActiveOk() (*string, bool)`
+`func (o *SelfServiceRegistrationFlow) GetActiveOk() (*IdentityCredentialsType, bool)`
 
 GetActiveOk returns a tuple with the Active field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetActive
 
-`func (o *SelfServiceRegistrationFlow) SetActive(v string)`
+`func (o *SelfServiceRegistrationFlow) SetActive(v IdentityCredentialsType)`
 
 SetActive sets Active field to given value.
 
@@ -135,6 +136,31 @@ and a boolean to check if the value has been set.
 
 SetRequestUrl sets RequestUrl field to given value.
 
+
+### GetReturnTo
+
+`func (o *SelfServiceRegistrationFlow) GetReturnTo() string`
+
+GetReturnTo returns the ReturnTo field if non-nil, zero value otherwise.
+
+### GetReturnToOk
+
+`func (o *SelfServiceRegistrationFlow) GetReturnToOk() (*string, bool)`
+
+GetReturnToOk returns a tuple with the ReturnTo field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetReturnTo
+
+`func (o *SelfServiceRegistrationFlow) SetReturnTo(v string)`
+
+SetReturnTo sets ReturnTo field to given value.
+
+### HasReturnTo
+
+`func (o *SelfServiceRegistrationFlow) HasReturnTo() bool`
+
+HasReturnTo returns a boolean if a field has been set.
 
 ### GetType
 

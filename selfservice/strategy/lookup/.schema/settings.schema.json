@@ -1,0 +1,25 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/lookup/settings.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "lookup_secret_disable": {
+      "type": "boolean"
+    },
+    "lookup_secret_reveal": {
+      "type": "boolean"
+    },
+    "lookup_secret_regenerate": {
+      "type": "boolean"
+    },
+    "lookup_secret_confirm": {
+      "type": "boolean"
+    }
+  }
+}

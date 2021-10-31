@@ -17,7 +17,8 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
 				  github.com/mikefarah/yq \
-				  github.com/mattn/goveralls
+				  github.com/mattn/goveralls \
+				  github.com/cortesi/modd/cmd/modd
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
@@ -34,7 +35,7 @@ docs/cli: .bin/clidoc
 		clidoc .
 
 .bin/ory: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/cli/master/install.sh) -b .bin v0.0.53
+		bash <(curl https://raw.githubusercontent.com/ory/cli/master/install.sh) -b .bin v0.0.59
 		touch -a -m .bin/ory
 
 node_modules: package.json Makefile
@@ -81,8 +82,8 @@ test-coverage: .bin/go-acc .bin/goveralls
 .PHONY: sdk
 sdk: .bin/swagger .bin/ory node_modules
 		swagger generate spec -m -o spec/swagger.json \
-			-x github.com/ory/kratos-client-go \
-			-x github.com/ory/dockertest
+			-c github.com/ory/kratos \
+			-c github.com/ory/x/healthx
 		ory dev swagger sanitize ./spec/swagger.json
 		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
@@ -98,7 +99,7 @@ sdk: .bin/swagger .bin/ory node_modules
 					-p file://.schema/openapi/patches/generic_error.yaml \
 					spec/swagger.json spec/api.json
 
-		rm -rf internal/httpclient/models internal/httpclient/clients
+		rm -rf internal/httpclient
 		mkdir -p internal/httpclient/
 		npm run openapi-generator-cli -- generate -i "spec/api.json" \
 				-g go \
@@ -161,4 +162,8 @@ migrations-render-replace: .bin/ory
 
 .PHONY: migratest-refresh
 migratest-refresh:
-		cd persistence/sql/migratest; go test -tags sqlite,refresh -short .
+		cd persistence/sql/migratest; UPDATE_SNAPSHOTS=true go test -p 1 -tags sqlite -short .
+
+.PHONY: test-update-snapshots
+test-update-snapshots:
+		UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...

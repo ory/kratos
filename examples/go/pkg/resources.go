@@ -29,11 +29,11 @@ func CreateIdentityWithSession(c *ory.APIClient, email, password string) (*ory.S
 	}
 
 	// Initialize a registration flow
-	flow, _, err := c.V0alpha1Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
+	flow, _, err := c.V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
 	ExitOnError(err)
 
 	// Submit the registration flow
-	result, res, err := c.V0alpha1Api.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlowBody(
+	result, res, err := c.V0alpha2Api.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlowBody(
 		ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBodyAsSubmitSelfServiceRegistrationFlowBody(&ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBody{
 			Method:   "password",
 			Password: password,
@@ -53,7 +53,7 @@ func CreateIdentity(c *ory.APIClient) *ory.Identity {
 	ctx := context.Background()
 
 	email, _ := RandomCredentials()
-	identity, _, err := c.V0alpha1Api.AdminCreateIdentity(ctx).AdminCreateIdentityBody(ory.AdminCreateIdentityBody{
+	identity, _, err := c.V0alpha2Api.AdminCreateIdentity(ctx).AdminCreateIdentityBody(ory.AdminCreateIdentityBody{
 		SchemaId: "default",
 		Traits: map[string]interface{}{
 			"email": email,

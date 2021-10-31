@@ -2,10 +2,18 @@ package login
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
+
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/sqlxx"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/driver/config"
 
@@ -55,11 +63,17 @@ type Flow struct {
 	// required: true
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 
+	// InternalContext stores internal context used by internals - for example MFA keys.
+	InternalContext sqlxx.JSONRawMessage `db:"internal_context" json:"-" faker:"-"`
+
 	// RequestURL is the initial URL that was requested from Ory Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
 	//
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
+
+	// ReturnTo contains the requested return_to URL.
+	ReturnTo string `json:"return_to,omitempty" db:"-"`
 
 	// The active login method
 	//
@@ -80,13 +94,31 @@ type Flow struct {
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
 	CSRFToken string `json:"-" db:"csrf_token"`
 
-	// Forced stores whether this login flow should enforce re-authentication.
-	Forced bool `json:"forced" db:"forced"`
+	// Refresh stores whether this login flow should enforce re-authentication.
+	Refresh bool `json:"refresh" db:"forced"`
+
+	// RequestedAAL stores if the flow was requested to update the authenticator assurance level.
+	//
+	// This value can be one of "aal1", "aal2", "aal3".
+	RequestedAAL identity.AuthenticatorAssuranceLevel `json:"requested_aal" faker:"len=4" db:"requested_aal"`
 }
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
+func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
 	now := time.Now().UTC()
 	id := x.NewUUID()
+	requestURL := x.RequestURL(r).String()
+
+	// Pre-validate the return to URL which is contained in the HTTP request.
+	_, err := x.SecureRedirectTo(r,
+		conf.SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectUseSourceURL(requestURL),
+		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Flow{
 		ID:        id,
 		ExpiresAt: now.Add(exp),
@@ -95,11 +127,15 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
 		},
-		RequestURL: x.RequestURL(r).String(),
+		RequestURL: requestURL,
 		CSRFToken:  csrf,
 		Type:       flowType,
-		Forced:     r.URL.Query().Get("refresh") == "true",
-	}
+		Refresh:    r.URL.Query().Get("refresh") == "true",
+		RequestedAAL: identity.AuthenticatorAssuranceLevel(strings.ToLower(stringsx.Coalesce(
+			r.URL.Query().Get("aal"),
+			string(identity.AuthenticatorAssuranceLevel1)))),
+		InternalContext: []byte("{}"),
+	}, nil
 }
 
 func (f *Flow) GetType() flow.Type {
@@ -120,7 +156,7 @@ func (f Flow) WhereID(ctx context.Context, alias string) string {
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }
@@ -130,7 +166,7 @@ func (f Flow) GetID() uuid.UUID {
 }
 
 func (f *Flow) IsForced() bool {
-	return f.Forced
+	return f.Refresh
 }
 
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
@@ -139,4 +175,18 @@ func (f *Flow) AppendTo(src *url.URL) *url.URL {
 
 func (f Flow) GetNID() uuid.UUID {
 	return f.NID
+}
+
+func (f *Flow) EnsureInternalContext() {
+	if !gjson.ParseBytes(f.InternalContext).IsObject() {
+		f.InternalContext = []byte("{}")
+	}
+}
+
+func (f Flow) MarshalJSON() ([]byte, error) {
+	type local Flow
+	if u, err := url.Parse(f.RequestURL); err == nil {
+		f.ReturnTo = u.Query().Get("return_to")
+	}
+	return json.Marshal(local(f))
 }

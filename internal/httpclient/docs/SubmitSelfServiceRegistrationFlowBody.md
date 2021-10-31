@@ -7,13 +7,14 @@ Name | Type | Description | Notes
 **CsrfToken** | Pointer to **string** | The CSRF Token | [optional] 
 **Method** | **string** | Method to use  This field must be set to &#x60;oidc&#x60; when using the oidc method. | 
 **Password** | **string** | Password to sign the user up with | 
-**Traits** | **string** | The provider to register with | 
+**Traits** | **map[string]interface{}** | The identity traits | 
+**Provider** | **string** | The provider to register with | 
 
 ## Methods
 
 ### NewSubmitSelfServiceRegistrationFlowBody
 
-`func NewSubmitSelfServiceRegistrationFlowBody(method string, password string, traits string, ) *SubmitSelfServiceRegistrationFlowBody`
+`func NewSubmitSelfServiceRegistrationFlowBody(method string, password string, traits map[string]interface{}, provider string, ) *SubmitSelfServiceRegistrationFlowBody`
 
 NewSubmitSelfServiceRegistrationFlowBody instantiates a new SubmitSelfServiceRegistrationFlowBody object
 This constructor will assign default values to properties that have it defined,
@@ -95,22 +96,42 @@ SetPassword sets Password field to given value.
 
 ### GetTraits
 
-`func (o *SubmitSelfServiceRegistrationFlowBody) GetTraits() string`
+`func (o *SubmitSelfServiceRegistrationFlowBody) GetTraits() map[string]interface{}`
 
 GetTraits returns the Traits field if non-nil, zero value otherwise.
 
 ### GetTraitsOk
 
-`func (o *SubmitSelfServiceRegistrationFlowBody) GetTraitsOk() (*string, bool)`
+`func (o *SubmitSelfServiceRegistrationFlowBody) GetTraitsOk() (*map[string]interface{}, bool)`
 
 GetTraitsOk returns a tuple with the Traits field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTraits
 
-`func (o *SubmitSelfServiceRegistrationFlowBody) SetTraits(v string)`
+`func (o *SubmitSelfServiceRegistrationFlowBody) SetTraits(v map[string]interface{})`
 
 SetTraits sets Traits field to given value.
+
+
+### GetProvider
+
+`func (o *SubmitSelfServiceRegistrationFlowBody) GetProvider() string`
+
+GetProvider returns the Provider field if non-nil, zero value otherwise.
+
+### GetProviderOk
+
+`func (o *SubmitSelfServiceRegistrationFlowBody) GetProviderOk() (*string, bool)`
+
+GetProviderOk returns a tuple with the Provider field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetProvider
+
+`func (o *SubmitSelfServiceRegistrationFlowBody) SetProvider(v string)`
+
+SetProvider sets Provider field to given value.
 
 
 

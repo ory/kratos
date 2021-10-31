@@ -1,2 +1,4 @@
 *.log
 kratos.*.yml
+proxy.json
+

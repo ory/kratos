@@ -1,0 +1,104 @@
+---
+id: jsonnet
+title: Data Mapping with Jsonnet
+---
+
+Some modules like the
+[OpenID Connect and OAuth2 Method](../concepts/credentials/openid-connect-oidc-oauth2.mdx)
+support [Jsonnet](https://jsonnet.org), allowing you to easily write code that
+modifies your identity's data and load it into Ory Kratos.
+
+We highly recommend checking out the official
+[learning Jsonnet tutorial](https://jsonnet.org/learning/tutorial.html).
+
+## Formatting Jsonnet Code
+
+Format Jsonnet code snippets using:
+
+```shell script
+$ kratos help jsonnet format
+
+# e.g.:
+$ kratos jsonnet format --write path/to/files/*.jsonnet
+```
+
+## Linting Jsonnet Code
+
+Lint Jsonnet code snippets using:
+
+```shell script
+$ kratos help jsonnet lint
+
+# e.g.:
+$ kratos jsonnet lint path/to/files/*.jsonnet
+```
+
+The command will exit with an exit code of `1` and print all found lint errors
+to stderr if the code snippet has lint issues.
+
+## Testing Jsonnet Code
+
+This is an anticipated future feature. For progress check out
+[kratos#391](https://github.com/ory/kratos/issues/391).
+
+## Tips & Tricks
+
+The purpose of this section is to provide you with examples for common use
+cases.
+
+### Optionality
+
+When you're unsure that a field will be set in the `claims` variable use the
+following to make the trait field also optional:
+
+```jsonnet
+local claims = std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      email: claims.sub,
+      [if "website" in claims then "website" else null]: claims.website,
+    },
+  },
+}
+```
+
+### Defaults
+
+Set defaults for the `claims` variable:
+
+```jsonnet
+local claims = {
+ website: 'i am the default website value'
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      website: claims.website
+    }
+  }
+}
+```
+
+### Raising Errors
+
+You can raise errors in the Jsonnet code. Keep in mind that these will be shown
+as system errors, not validation errors, and that the user will end up at the
+Error UI!
+
+```jsonnet
+local claims = std.extVar('claims');
+
+if std.length(claims.sub) == 0 then
+  error 'claim sub not set'
+else
+  {
+    identity: {
+      traits: {
+        // ...
+      },
+    },
+  }
+```

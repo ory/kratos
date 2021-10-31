@@ -189,6 +189,16 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.Credentials[t] = c
 }
 
+func (i *Identity) DeleteCredentialsType(t CredentialsType) {
+	i.lock().Lock()
+	defer i.lock().Unlock()
+	if i.Credentials == nil {
+		return
+	}
+
+	delete(i.Credentials, t)
+}
+
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	i.lock().RLock()
 	defer i.lock().RUnlock()

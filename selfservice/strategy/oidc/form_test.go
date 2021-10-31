@@ -3,7 +3,6 @@ package oidc
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,36 +12,33 @@ import (
 func TestMerge(t *testing.T) {
 	for k, tc := range []struct {
 		schema string
-		form   string
+		form   json.RawMessage
 		op     json.RawMessage
 		expect json.RawMessage
 	}{
 		{
-			form:   url.Values{}.Encode(),
+			form:   json.RawMessage("{}"),
 			op:     json.RawMessage("{}"),
 			expect: json.RawMessage("{}"),
 		},
 		{
-			form:   url.Values{"traits.foo": {"bar"}, "traits.bool": {"false", "true"}, "traits.opv": {"blubb"}}.Encode(),
+			form:   json.RawMessage(`{"foo": "bar", "bool": true, "opv": "blubb"}`),
 			op:     json.RawMessage(`{"baz":"bar","opv":"bla"}`),
 			expect: json.RawMessage(`{"foo":"bar","baz":"bar","bool":true,"opv":"blubb"}`),
 		},
 		{
-			form:   url.Values{"traits.foo": {}, "traits.bool": {"false", "true"}, "traits.opv": {"blubb"}}.Encode(),
+			form:   json.RawMessage(`{"bool": true, "opv": "blubb"}`),
 			op:     json.RawMessage(`{"foo":"bar","baz":"bar","opv":"bla"}`),
 			expect: json.RawMessage(`{"foo":"bar","baz":"bar","bool":true,"opv":"blubb"}`),
 		},
 		{
-			form:   url.Values{"traits.foo": {""}, "traits.bool": {"false", "true"}, "traits.opv": {"blubb"}}.Encode(),
+			form:   json.RawMessage(`{"bool": true, "opv": "blubb"}`),
 			op:     json.RawMessage(`{"foo":"bar","baz":"bar","opv":"bla"}`),
 			expect: json.RawMessage(`{"foo":"bar","baz":"bar","bool":true,"opv":"blubb"}`),
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			option, err := decoderRegistration(fmt.Sprintf("file://stub/merge/%d.schema.json", k))
-			require.NoError(t, err)
-
-			got, err := merge(tc.form, tc.op, option)
+			got, err := merge(tc.form, tc.op)
 			require.NoError(t, err)
 			assert.JSONEq(t, string(tc.expect), string(got))
 		})
