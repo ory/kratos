@@ -290,6 +290,7 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 func (p *Persister) ListIdentitiesFiltered(ctx context.Context, values url.Values, page, perPage int) ([]identity.Identity, error) {
 	is := make([]identity.Identity, 0, perPage)
 
+//`[a-zA-Z0-9\.]+`
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("identities.nid = ?", corp.ContextualizeNID(ctx, p.nid)).
 		LeftJoin("identity_verifiable_addresses verifiable_addresses", "verifiable_addresses.identity_id=identities.id").
@@ -588,12 +589,17 @@ func (p *Persister) Quote(ctx context.Context, key string) string {
 }
 func (p *Persister) buildScope(ctx context.Context, queryValues url.Values) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
+
 		for field, values := range queryValues {
 			if stringslice.Has([]string{"page", "per_page"}, field) {
 				continue
 			}
 			if ! p.validateFields(field) {
 				p.r.Logger().Warning(`field ignored. does not respect this patterns [a-zA-Z0-9\._]+`)
+				continue
+			}
+			if ! p.validateValues(values) {
+				p.r.Logger().Warning(`values ignored. does not respect this patterns [%]+`)
 				continue
 			}
 			if stringslice.Has([]string{"with_credentials"}, field) {
@@ -634,4 +640,19 @@ func (p *Persister) validateFields(field string) bool {
 		return false
 	}
 	return res
+}
+
+func (p *Persister) validateValues(values []string) bool {
+	prohibited := `[%]+`
+	for _, value := range values {
+		ok, err := regexp.MatchString(prohibited, value)
+		if err != nil {
+			p.r.Logger().Errorf("unable to check values parameter : %s", err.Error())
+			return false
+		}
+		if ok {
+			return false
+		}
+	}
+	return true
 }
