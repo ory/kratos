@@ -31,7 +31,7 @@ builds:
       - darwin
     hooks:
       post:
-        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
           env:
             - GOARCH={{ .Arch }}
             - GOOS={{ .Os }}
@@ -51,7 +51,7 @@ builds:
       - linux
     hooks:
       post:
-        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
           env:
             - GOARCH={{ .Arch }}
             - GOOS={{ .Os }}
@@ -72,7 +72,7 @@ builds:
       - linux
     hooks:
       post:
-        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}-sqlite-libmusl_{{ .Target }}.bom.json"
           env:
             - GOARCH={{ .Arch }}
             - GOOS={{ .Os }}
@@ -97,7 +97,7 @@ builds:
       - windows
     hooks:
       post:
-        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+        - cmd: cyclonedx-gomod app -licenses -json -output "{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
           env:
             - GOARCH={{ .Arch }}
             - GOOS={{ .Os }}
