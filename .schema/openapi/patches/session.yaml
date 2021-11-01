@@ -21,3 +21,4 @@
       - password
       - totp
       - oidc
+      - webauthn
