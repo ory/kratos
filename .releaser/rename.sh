@@ -13,7 +13,7 @@ filename_adjusted=${filename_adjusted//arm_7/arm32v7}
 
 if [ "$filename" != "$filename_adjusted" ]; then 
   echo "Renaming '$filename' to '$filename_adjusted' ..."
-  mv $filename $filename_adjusted 
+  mv "$filename" "$filename_adjusted" 
 else 
   echo "Skipping file '$filename' ..."
 fi
