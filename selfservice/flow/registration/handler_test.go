@@ -156,6 +156,14 @@ func TestInitFlow(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
+		t.Run("case=relative redirect when self-service registration ui is a relative URL", func(t *testing.T) {
+			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, "/registration-ts")
+			assert.Regexp(
+				t,
+				"^/registration-ts.*$",
+				testhelpers.GetSelfServiceRedirectLocation(t, publicTS.URL+registration.RouteInitBrowserFlow),
+			)
+		})
 	})
 }
 

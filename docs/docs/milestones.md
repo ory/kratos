@@ -38,8 +38,6 @@ Something is not working.
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Relative path in ui_url or default_browser_return_url cause runtime crash
-      ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [ ] /schemas/default does not work with base64 identity schemas
       ([kratos#1529](https://github.com/ory/kratos/issues/1529))
 - [ ] Courier Watcher should start a (tracing-) span
@@ -47,6 +45,8 @@ Something is not working.
 - [x] panic: a handle is already registered for path
       '/self-service/recovery/methods/link'
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
+- [x] Relative path in ui_url or default_browser_return_url cause runtime crash
+      ([kratos#1446](https://github.com/ory/kratos/issues/1446))
 - [x] Auto-Login on Registration flow does not return `session`, only `identity`
       for SPA requests
       ([kratos#1604](https://github.com/ory/kratos/issues/1604))
@@ -92,8 +92,6 @@ New feature or request.
       mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
 - [ ] login ui returned without flowid
       ([kratos#1055](https://github.com/ory/kratos/issues/1055))
-- [ ] Allow account recovery for identities without email address
-      ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
       ([kratos#1589](https://github.com/ory/kratos/issues/1589))
 - [ ] Deprecate webhook loader without URI scheme
@@ -114,6 +112,8 @@ New feature or request.
 - [x] Validate identity schema on load
       ([kratos#701](https://github.com/ory/kratos/issues/701)) -
       [@Alano Terblanche](https://github.com/Benehiko)
+- [x] Allow account recovery for identities without email address
+      ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [x] Field validation answer status code 422 instead of 400
       ([kratos#1559](https://github.com/ory/kratos/issues/1559))
 - [x] Potentially encrypt settings InternalContext
@@ -272,6 +272,9 @@ New feature or request.
 - [ ] Delete self-service flows after completion
       ([kratos#952](https://github.com/ory/kratos/issues/952)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Documentation refactoring
+      ([kratos#1904](https://github.com/ory/kratos/issues/1904)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -279,6 +282,9 @@ Affects documentation.
 
 #### Issues
 
+- [ ] Documentation refactoring
+      ([kratos#1904](https://github.com/ory/kratos/issues/1904)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Document that identity information (traits, etc) are available to token
       holders and backend systems
       ([kratos#43](https://github.com/ory/kratos/issues/43)) -

@@ -55,6 +55,7 @@ selfservice:
     - http://*.com
     - http://*.com.pl
     - http://*
+    - /return-to-relative-test/
   methods:
     totp:
       enabled: true
