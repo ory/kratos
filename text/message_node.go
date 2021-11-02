@@ -8,6 +8,7 @@ const (
 	InfoNodeLabelID                                // 1070004
 	InfoNodeLabelSubmit                            // 1070005
 	InfoNodeLabelVerifyOTP                         // 1070006
+	InfoNodeLabelEmail                             // 1070007
 )
 
 func NewInfoNodeLabelVerifyOTP() *Message {
@@ -54,6 +55,14 @@ func NewInfoNodeLabelID() *Message {
 	return &Message{
 		ID:   InfoNodeLabelID,
 		Text: "ID",
+		Type: Info,
+	}
+}
+
+func NewInfoNodeInputEmail() *Message {
+	return &Message{
+		ID:   InfoNodeLabelEmail,
+		Text: "Email",
 		Type: Info,
 	}
 }
