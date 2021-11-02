@@ -363,4 +363,14 @@ func TestHandler(t *testing.T) {
 			})
 		})
 	})
+	t.Run("case=relative redirect when self-service settings ui is a relative url", func(t *testing.T) {
+		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, "/settings-ts")
+		user1 := testhelpers.NewNoRedirectHTTPClientWithArbitrarySessionCookie(t, reg)
+		res, _ := initFlow(t, user1, false)
+		assert.Regexp(
+			t,
+			"^/settings-ts.*$",
+			res.Header.Get("Location"),
+		)
+	})
 }

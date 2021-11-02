@@ -463,6 +463,14 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 			})
 		})
+		t.Run("case=relative redirect when self-service login ui is a relative URL", func(t *testing.T) {
+			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, "/login-ts")
+			assert.Regexp(
+				t,
+				"^/login-ts.*$",
+				testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+login.RouteInitBrowserFlow),
+			)
+		})
 	})
 }
 

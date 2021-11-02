@@ -64,6 +64,20 @@ func NewHTTPClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, s
 	return c
 }
 
+func NewNoRedirectHTTPClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *http.Client {
+	maybePersistSession(t, reg, sess)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, sess))
+	}))
+	defer ts.Close()
+
+	c := NewNoRedirectClientWithCookies(t)
+
+	MockHydrateCookieClient(t, c, ts.URL)
+	return c
+}
+
 func NewTransportWithLogger(parent http.RoundTripper, t *testing.T) *TransportWithLogger {
 	return &TransportWithLogger{
 		RoundTripper: parent,
@@ -116,6 +130,18 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionCookie(t, reg, s)
+}
+
+func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
+	s, err := session.NewActiveSession(
+		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
+		NewSessionLifespanProvider(time.Hour),
+		time.Now(),
+		identity.CredentialsTypePassword,
+	)
+	require.NoError(t, err, "Could not initialize session from identity.")
+
+	return NewNoRedirectHTTPClientWithSessionCookie(t, reg, s)
 }
 
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {

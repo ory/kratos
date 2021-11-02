@@ -197,3 +197,17 @@ func SelfServiceMakeHookRequest(t *testing.T, ts *httptest.Server, suffix string
 	require.NoError(t, err)
 	return res, string(body)
 }
+
+func GetSelfServiceRedirectLocation(t *testing.T, url string) string {
+	c := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	require.NoError(t, err)
+	res, err := c.Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	return res.Header.Get("Location")
+}
