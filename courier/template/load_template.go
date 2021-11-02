@@ -20,32 +20,13 @@ var templates embed.FS
 
 var cache, _ = lru.New(16)
 
-type ExecutableTemplate struct {
-	Template interface {
-		Execute(wr io.Writer, data interface{}) error
-	}
+type Template interface {
+	Execute(wr io.Writer, data interface{}) error
 }
 
-func newExecutableHTMLTemplate(t *htemplate.Template) *ExecutableTemplate {
-	return &ExecutableTemplate{Template: t}
-}
-
-func newExecutableTextTemplate(t *template.Template) *ExecutableTemplate {
-	return &ExecutableTemplate{Template: t}
-}
-
-func (t *ExecutableTemplate) Execute(data interface{}) (string, error) {
-	var tb bytes.Buffer
-	if err := t.Template.Execute(&tb, data); err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return tb.String(), nil
-}
-
-func loadBuiltInTemplate(osdir, name string, html bool) (*ExecutableTemplate, error) {
+func loadBuiltInTemplate(osdir, name string, html bool) (Template, error) {
 	if t, found := cache.Get(name); found {
-		return t.(*ExecutableTemplate), nil
+		return t.(Template), nil
 	}
 
 	file, err := os.DirFS(osdir).Open(name)
@@ -66,28 +47,28 @@ func loadBuiltInTemplate(osdir, name string, html bool) (*ExecutableTemplate, er
 		return nil, errors.WithStack(err)
 	}
 
-	var tpl *ExecutableTemplate
+	var tpl Template
 	if html {
 		t, err := htemplate.New(name).Funcs(sprig.HtmlFuncMap()).Parse(b.String())
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		tpl = newExecutableHTMLTemplate(t)
+		tpl = t
 	} else {
 		t, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(b.String())
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		tpl = newExecutableTextTemplate(t)
+		tpl = t
 	}
 
 	_ = cache.Add(name, tpl)
 	return tpl, nil
 }
 
-func loadTemplate(osdir, name, pattern string, html bool) (*ExecutableTemplate, error) {
+func loadTemplate(osdir, name, pattern string, html bool) (Template, error) {
 	if t, found := cache.Get(name); found {
-		return t.(*ExecutableTemplate), nil
+		return t.(Template), nil
 	}
 
 	// make sure osdir and template name exists, otherwise fallback to built in templates
@@ -105,19 +86,19 @@ func loadTemplate(osdir, name, pattern string, html bool) (*ExecutableTemplate, 
 		}
 	}
 
-	var tpl *ExecutableTemplate
+	var tpl Template
 	if html {
 		t, err := htemplate.New(filepath.Base(name)).Funcs(sprig.HtmlFuncMap()).ParseGlob(path.Join(osdir, glob))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		tpl = newExecutableHTMLTemplate(t)
+		tpl = t
 	} else {
 		t, err := template.New(filepath.Base(name)).Funcs(sprig.TxtFuncMap()).ParseGlob(path.Join(osdir, glob))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		tpl = newExecutableTextTemplate(t)
+		tpl = t
 	}
 
 	_ = cache.Add(name, tpl)
@@ -129,7 +110,11 @@ func loadTextTemplate(osdir, name, pattern string, model interface{}) (string, e
 	if err != nil {
 		return "", err
 	}
-	return t.Execute(model)
+	var b bytes.Buffer
+	if err := t.Execute(&b, model); err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }
 
 func loadHTMLTemplate(osdir, name, pattern string, model interface{}) (string, error) {
@@ -137,5 +122,9 @@ func loadHTMLTemplate(osdir, name, pattern string, model interface{}) (string, e
 	if err != nil {
 		return "", err
 	}
-	return t.Execute(model)
+	var b bytes.Buffer
+	if err := t.Execute(&b, model); err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }

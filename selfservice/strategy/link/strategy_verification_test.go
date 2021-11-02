@@ -34,12 +34,6 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
-//go:embed fixtures/verification_init.json
-var verificationInitFixture []byte
-
-//go:embed fixtures/verification_submit.json
-var verificationSubmitFixture []byte
-
 func TestVerification(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
@@ -90,14 +84,14 @@ func TestVerification(t *testing.T) {
 		body := expectSuccess(t, nil, false, false, func(v url.Values) {
 			v.Set("email", "test@ory.sh")
 		})
-		assertx.EqualAsJSONExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), json.RawMessage(verificationSubmitFixture), []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, json.RawMessage(gjson.Get(body, "ui.nodes").String()), []string{"0.attributes.value"})
 	})
 
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		assertx.EqualAsJSONExcept(t, json.RawMessage(verificationInitFixture), rs.Ui.Nodes, []string{"0.attributes.value"})
+		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"0.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
 	})
@@ -207,7 +201,7 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String()+"?flow=")
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, sr.Ui.Messages, 1)
@@ -257,7 +251,7 @@ func TestVerification(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha1Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).V0alpha2Api.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
 		require.Len(t, sr.Ui.Messages, 1)
@@ -383,7 +377,7 @@ func TestVerification(t *testing.T) {
 
 		res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}, "token": {token.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusFound, res.StatusCode)
+		assert.Equal(t, http.StatusSeeOther, res.StatusCode)
 		redirectURL, err := res.Location()
 		require.NoError(t, err)
 		assert.Equal(t, returnToURL, redirectURL.String())

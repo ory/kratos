@@ -31,7 +31,7 @@ func checkReq(w http.ResponseWriter, err error) bool {
 func main() {
 	router := httprouter.New()
 
-	adminURL := urlx.ParseOrPanic(osx.GetenvDefault("HYDRA_ADMIN_URL", "http://127.0.0.1:4445"))
+	adminURL := urlx.ParseOrPanic(osx.GetenvDefault("HYDRA_ADMIN_URL", "http://localhost:4445"))
 	hc := client.NewHTTPClientWithConfig(nil, &client.TransportConfig{Schemes: []string{adminURL.Scheme}, Host: adminURL.Host, BasePath: adminURL.Path})
 
 	router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

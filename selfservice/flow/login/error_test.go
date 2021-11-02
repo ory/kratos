@@ -2,10 +2,13 @@ package login_test
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/gofrs/uuid"
 
@@ -22,6 +25,7 @@ import (
 
 	"github.com/ory/herodot"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
@@ -33,7 +37,7 @@ import (
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	public, admin := testhelpers.NewKratosServer(t, reg)
+	_, admin := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -60,9 +64,11 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *login.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f := login.NewFlow(conf, ttl, "csrf_token", req, ft)
+		f, err := login.NewFlow(conf, ttl, "csrf_token", req, ft)
+		require.NoError(t, err)
+
 		for _, s := range reg.LoginStrategies(context.Background()) {
-			require.NoError(t, s.PopulateLoginMethod(req, f))
+			require.NoError(t, s.PopulateLoginMethod(req, identity.AuthenticatorAssuranceLevel1, f))
 		}
 
 		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), f))
@@ -75,7 +81,7 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
 
-		sse, _, err := sdk.V0alpha1Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
+		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 
 		return sse.Error, nil
@@ -91,6 +97,19 @@ func TestHandleError(t *testing.T) {
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, flowError, sse)
+	})
+
+	t.Run("case=relative error", func(t *testing.T) {
+		t.Cleanup(reset)
+		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceErrorUI, "/login-ts")
+		flowError = herodot.ErrInternalServerError.WithReason("system error")
+		ct = node.PasswordGroup
+		assert.Regexp(
+			t,
+			"^/login-ts.*$",
+			testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+"/error"),
+		)
+
 	})
 
 	t.Run("case=error with nil flow detects application/json", func(t *testing.T) {
@@ -122,19 +141,19 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				loginFlow = newFlow(t, time.Minute, tc.t)
-				flowError = login.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(anHourAgo)
 				ct = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
 				defer res.Body.Close()
-				require.Contains(t, res.Request.URL.String(), public.URL+login.RouteGetFlow)
-				require.Equal(t, http.StatusOK, res.StatusCode)
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()))
-				assert.NotEqual(t, loginFlow.ID.String(), gjson.GetBytes(body, "id").String())
+				require.Equal(t, http.StatusGone, res.StatusCode, "%+v\n\t%s", res.Request, body)
+
+				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.GetBytes(body, "use_flow_id").String())
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(anHourAgo), json.RawMessage(body), []string{"since", "redirect_browser_to", "use_flow_id"})
 			})
 
 			t.Run("case=validation error", func(t *testing.T) {
@@ -190,7 +209,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			loginFlow = &login.Flow{Type: flow.TypeBrowser}
-			flowError = login.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(anHourAgo)
 			ct = node.PasswordGroup
 
 			lf, _ := expectLoginUI(t)

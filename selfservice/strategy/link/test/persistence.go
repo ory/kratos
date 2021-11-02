@@ -47,7 +47,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
 
-				address := &identity.RecoveryAddress{Value: email, Via: identity.RecoveryAddressTypeEmail}
+				address := &identity.RecoveryAddress{Value: email, Via: identity.RecoveryAddressTypeEmail, IdentityID: i.ID}
 				i.RecoveryAddresses = append(i.RecoveryAddresses, *address)
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
@@ -56,6 +56,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					RecoveryAddress: &i.RecoveryAddresses[0],
 					ExpiresAt:       time.Now(),
 					IssuedAt:        time.Now(),
+					IdentityID:      i.ID,
 				}
 			}
 
@@ -81,9 +82,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				actual, err := p.UseRecoveryToken(ctx, expected.Token)
 				require.NoError(t, err)
-				assertx.EqualAsJSONExcept(t, expected.RecoveryAddress, actual.RecoveryAddress, []string{"created_at", "updated_at"})
 				assert.Equal(t, nid, actual.NID)
-				assert.Equal(t, expected.RecoveryAddress.IdentityID, actual.RecoveryAddress.IdentityID)
+				assert.Equal(t, expected.IdentityID, actual.IdentityID)
 				assert.NotEqual(t, expected.Token, actual.Token)
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 

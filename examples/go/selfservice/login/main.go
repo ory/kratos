@@ -21,7 +21,7 @@ func performLogin() *ory.SuccessfulSelfServiceLoginWithoutBrowser {
 	_, _ = pkg.CreateIdentityWithSession(client, email, password)
 
 	// Initialize the flow
-	flow, res, err := client.V0alpha1Api.InitializeSelfServiceLoginFlowWithoutBrowser(ctx).Execute()
+	flow, res, err := client.V0alpha2Api.InitializeSelfServiceLoginFlowWithoutBrowser(ctx).Execute()
 	pkg.SDKExitOnError(err, res)
 
 	// If you want, print the flow here:
@@ -29,7 +29,7 @@ func performLogin() *ory.SuccessfulSelfServiceLoginWithoutBrowser {
 	//	pkg.PrintJSONPretty(flow)
 
 	// Submit the form
-	result, res, err := client.V0alpha1Api.SubmitSelfServiceLoginFlow(ctx).Flow(flow.Id).SubmitSelfServiceLoginFlowBody(
+	result, res, err := client.V0alpha2Api.SubmitSelfServiceLoginFlow(ctx).Flow(flow.Id).SubmitSelfServiceLoginFlowBody(
 		ory.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&ory.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
 			Method:             "password",
 			Password:           password,

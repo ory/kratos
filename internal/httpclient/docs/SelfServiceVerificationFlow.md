@@ -9,6 +9,7 @@ Name | Type | Description | Notes
 **Id** | **string** |  | 
 **IssuedAt** | Pointer to **time.Time** | IssuedAt is the time (UTC) when the request occurred. | [optional] 
 **RequestUrl** | Pointer to **string** | RequestURL is the initial URL that was requested from Ory Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | [optional] 
+**ReturnTo** | Pointer to **string** | ReturnTo contains the requested return_to URL. | [optional] 
 **State** | [**SelfServiceVerificationFlowState**](SelfServiceVerificationFlowState.md) |  | 
 **Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
 **Ui** | [**UiContainer**](UiContainer.md) |  | 
@@ -151,6 +152,31 @@ SetRequestUrl sets RequestUrl field to given value.
 `func (o *SelfServiceVerificationFlow) HasRequestUrl() bool`
 
 HasRequestUrl returns a boolean if a field has been set.
+
+### GetReturnTo
+
+`func (o *SelfServiceVerificationFlow) GetReturnTo() string`
+
+GetReturnTo returns the ReturnTo field if non-nil, zero value otherwise.
+
+### GetReturnToOk
+
+`func (o *SelfServiceVerificationFlow) GetReturnToOk() (*string, bool)`
+
+GetReturnToOk returns a tuple with the ReturnTo field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetReturnTo
+
+`func (o *SelfServiceVerificationFlow) SetReturnTo(v string)`
+
+SetReturnTo sets ReturnTo field to given value.
+
+### HasReturnTo
+
+`func (o *SelfServiceVerificationFlow) HasReturnTo() bool`
+
+HasReturnTo returns a boolean if a field has been set.
 
 ### GetState
 

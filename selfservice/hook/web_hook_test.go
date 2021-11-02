@@ -178,6 +178,12 @@ func TestJsonNetSupport(t *testing.T) {
 		require.Len(t, hook.Entries, 1)
 		assert.Contains(t, hook.LastEntry().Message, "support for filepaths without a 'file://' scheme will be dropped")
 	})
+
+	t.Run("case=return non nil body reader on empty templateURI", func(t *testing.T) {
+		body, err := createBody(l, "", nil)
+		assert.NotNil(t, body)
+		assert.Nil(t, err)
+	})
 }
 
 func TestWebHookConfig(t *testing.T) {

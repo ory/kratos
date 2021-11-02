@@ -324,7 +324,8 @@
             "facebook",
             "auth0",
             "vk",
-            "yandex"
+            "yandex",
+            "apple"
           ],
           "examples": [
             "google"
@@ -394,6 +395,30 @@
             "contoso.onmicrosoft.com"
           ]
         },
+        "team_id": {
+          "title": "Apple Developer Team ID",
+          "description": "Apple Developer Team ID needed for generating a JWT token for client secret",
+          "type": "string",
+          "examples": [
+            "KP76DQS54M"
+          ]
+        },
+        "private_key_id": {
+          "title": "Apple Private Key Identifier",
+          "description": "Sign In with Apple Private Key Identifier needed for generating a JWT token for client secret",
+          "type": "string",
+          "examples": [
+            "UX56C66723"
+          ]
+        },
+        "private_key": {
+          "title": "Apple Private Key",
+          "description": "Sign In with Apple Private Key needed for generating a JWT token for client secret",
+          "type": "string",
+          "examples": [
+            "-----BEGIN PRIVATE KEY-----\n........\n-----END PRIVATE KEY-----"
+          ]
+        },
         "requested_claims": {
           "$ref": "#/definitions/OIDCClaims"
         }
@@ -403,34 +428,101 @@
         "id",
         "provider",
         "client_id",
-        "client_secret",
         "mapper_url"
       ],
-      "if": {
-        "properties": {
-          "provider": {
-            "const": "microsoft"
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "microsoft"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "required": [
+              "tenant"
+            ]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "tenant": {}
+              },
+              "required": [
+                "tenant"
+              ]
+            }
           }
         },
-        "required": [
-          "provider"
-        ]
-      },
-      "then": {
-        "required": [
-          "tenant"
-        ]
-      },
-      "else": {
-        "not": {
-          "properties": {
-            "tenant": {}
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "apple"
+              }
+            },
+            "required": [
+              "provider"
+            ]
           },
-          "required": [
-            "tenant"
-          ]
+          "then": {
+            "not": {
+              "properties": {
+                "client_secret": {}
+              },
+              "required": [
+                "client_secret"
+              ]
+            },
+            "required": [
+              "private_key_id",
+              "private_key",
+              "team_id"
+            ]
+          },
+          "else": {
+            "required": [
+              "client_secret"
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "properties": {
+                    "team_id": {}
+                  },
+                  "required": [
+                    "team_id"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "properties": {
+                    "private_key_id": {}
+                  },
+                  "required": [
+                    "private_key_id"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "properties": {
+                    "private_key": {}
+                  },
+                  "required": [
+                    "private_key"
+                  ]
+                }
+              }
+            ]
+          }
         }
-      }
+      ]
     },
     "selfServiceHooks": {
       "type": "array",
@@ -539,6 +631,16 @@
           "additionalItems": false
         }
       }
+    },
+    "featureRequiredAal": {
+      "title": "Required Authenticator Assurance Level",
+      "description": "Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.",
+      "type": "string",
+      "enum": [
+        "aal1",
+        "highest_available"
+      ],
+      "default": "highest_available"
     },
     "selfServiceAfterSettings": {
       "type": "object",
@@ -747,6 +849,9 @@
                     "1m",
                     "1s"
                   ]
+                },
+                "required_aal": {
+                  "$ref": "#/definitions/featureRequiredAal"
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterSettings"
@@ -1015,6 +1120,117 @@
                 }
               }
             },
+            "totp": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the TOTP method",
+                  "default": false
+                },
+                "config": {
+                  "type": "object",
+                  "title": "TOTP Configuration",
+                  "properties": {
+                    "issuer": {
+                      "title": "TOTP Issuer",
+                      "description": "The issuer (e.g. a domain name) will be shown in the TOTP app (e.g. Google Authenticator). It helps the user differentiate between different codes.",
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "lookup_secret": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the lookup secret method",
+                  "default": false
+                }
+              }
+            },
+            "webauthn": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables the WebAuthn method",
+                  "default": false
+                },
+                "config": {
+                  "type": "object",
+                  "title": "WebAuthn Configuration",
+                  "properties": {
+                    "rp": {
+                      "title": "Relying Party (RP) Config",
+                      "required": [
+                        "id",
+                        "display_name"
+                      ],
+                      "properties": {
+                        "display_name": {
+                          "type": "string",
+                          "title": "Relying Party Display Name",
+                          "description": "An name to help the user identify this RP.",
+                          "examples": [
+                            "Ory Foundation"
+                          ]
+                        },
+                        "id": {
+                          "type": "string",
+                          "title": "Relying Party Identifier",
+                          "description": "The id must be a subset of the domain currently in the browser.",
+                          "examples": [
+                            "ory.sh"
+                          ]
+                        },
+                        "origin": {
+                          "type": "string",
+                          "title": "Relying Party Origin",
+                          "description": "An explicit RP origin. If left empty, this defaults to `id`.",
+                          "format": "uri",
+                          "examples": [
+                            "https://www.ory.sh/login"
+                          ]
+                        },
+                        "icon": {
+                          "type": "string",
+                          "title": "Relying Party Icon",
+                          "description": "An icon to help the user identify this RP.",
+                          "format": "uri",
+                          "examples": [
+                            "https://www.ory.sh/an-icon.png"
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              },
+              "then": {
+                "required": [
+                  "config"
+                ]
+              }
+            },
             "oidc": {
               "type": "object",
               "title": "Specify OpenID Connect and OAuth2 Configuration",
@@ -1077,9 +1293,14 @@
           "properties": {
             "connection_uri": {
               "title": "SMTP connection string",
-              "description": "This URI will be used to connect to the SMTP server. Use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates. Please keep in mind that any host other than localhost / 127.0.0.1 must use smtp over TLS (smtps) or the connection will not be possible.",
+              "description": "This URI will be used to connect to the SMTP server. Use the scheme smtps for implicit TLS sessions or smtp for explicit StartTLS/cleartext sessions. Please note that TLS is always enforced with certificate trust verification by default for security reasons on both schemes. With the smtp scheme you can use the query parameter (`?disable_starttls=true`) to allow cleartext sessions or (`?disable_starttls=false`) to enforce StartTLS (default behaviour). Additionally, use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates (default behaviour) on both implicit and explicit TLS sessions.",
               "examples": [
-                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false"
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false",
+                "smtp://foo:bar@my-mailserver:1234/?disable_starttls=true (NOT RECOMMENDED: Cleartext smtp for devel and legacy infrastructure only)",
+                "smtp://foo:bar@my-mailserver:1234/ (Explicit StartTLS with certificate trust verification)",
+                "smtp://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Explicit StartTLS without certificate trust verification)",
+                "smtps://foo:bar@my-mailserver:1234/ (Implicit TLS with certificate trust verification)",
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=true (NOT RECOMMENDED: Implicit TLS without certificate trust verification)"
               ],
               "type": "string",
               "pattern": "^smtps?:\\/\\/.*"
@@ -1649,6 +1870,17 @@
             "minLength": 16
           },
           "uniqueItems": true
+        },
+        "cipher": {
+          "type": "array",
+          "title": "Secrets to use for encryption by cipher",
+          "description": "The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.",
+          "items": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 32
+          },
+          "minItems": 1
         }
       },
       "additionalProperties": false
@@ -1659,7 +1891,7 @@
       "properties": {
         "algorithm": {
           "title": "Password hashing algorithm",
-          "description": "One of the values: argon2, bcrypt",
+          "description": "One of the values: argon2, bcrypt.\nAny other hashes will be migrated to the set algorithm once an identity authenticates using their password.",
           "type": "string",
           "default": "bcrypt",
           "enum": [
@@ -1736,6 +1968,23 @@
       },
       "additionalProperties": false
     },
+    "ciphers" : {
+      "title": "Cipher Algorithm Configuration",
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "title": "ciphering algorithm",
+          "description": "One of the values: noop, aes, xchacha20-poly1305",
+          "type": "string",
+          "default": "noop",
+          "enum": [
+            "noop",
+            "aes",
+            "xchacha20-poly1305"
+          ]
+        }
+      }
+    },
     "cookies": {
       "type": "object",
       "title": "HTTP Cookie Configuration",
@@ -1770,6 +2019,17 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "whoami": {
+          "title": "WhoAmI / ToSession Settings",
+          "description": "Control how the `/sessions/whoami` endpoint is behaving.",
+          "type": "object",
+          "properties": {
+            "required_aal": {
+              "$ref": "#/definitions/featureRequiredAal"
+            }
+          },
+          "additionalProperties": false
+        },
         "lifespan": {
           "title": "Session Lifespan",
           "description": "Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.",
@@ -1924,6 +2184,36 @@
         "required": [
           "courier"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "ciphers" : {
+            "properties": {
+              "algorithm": {
+                "oneOf": [
+                  {
+                    "const": "aes"
+                  },
+                  {
+                    "const": "xchacha20-poly1305"
+                  }
+                ]
+              }
+            },
+            "required": ["algorithm"]
+          }
+        },
+        "required": ["ciphers"]
+      },
+      "then": {
+        "required": ["secrets"],
+        "properties": {
+          "secrets": {
+            "required": ["cipher"]
+          }
+        }
       }
     }
   ],

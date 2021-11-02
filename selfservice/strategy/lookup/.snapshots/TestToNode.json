@@ -1,0 +1,57 @@
+{
+  "type": "text",
+  "group": "lookup_secret",
+  "attributes": {
+    "text": {
+      "id": 1050015,
+      "text": "used, bar, baz, used",
+      "type": "info",
+      "context": {
+        "secrets": [
+          {
+            "id": 1050014,
+            "text": "Secret was used at 2021-08-17 11:32:38 +0000 UTC",
+            "type": "info",
+            "context": {
+              "used_at": "2021-08-17T11:32:38Z"
+            }
+          },
+          {
+            "id": 1050009,
+            "text": "bar",
+            "type": "info",
+            "context": {
+              "secret": "bar"
+            }
+          },
+          {
+            "id": 1050009,
+            "text": "baz",
+            "type": "info",
+            "context": {
+              "secret": "baz"
+            }
+          },
+          {
+            "id": 1050014,
+            "text": "Secret was used at 2021-08-17 11:32:48 +0000 UTC",
+            "type": "info",
+            "context": {
+              "used_at": "2021-08-17T11:32:48Z"
+            }
+          }
+        ]
+      }
+    },
+    "id": "lookup_secret_codes",
+    "node_type": "text"
+  },
+  "messages": [],
+  "meta": {
+    "label": {
+      "id": 1050010,
+      "text": "These are your back up recovery codes. Please keep them in a safe place!",
+      "type": "info"
+    }
+  }
+}

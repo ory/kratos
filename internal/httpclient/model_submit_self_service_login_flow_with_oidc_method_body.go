@@ -3,7 +3,7 @@
  *
  * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
- * API version: 1.0.0
+ * API version: v0.8.0-alpha.3
  * Contact: hi@ory.sh
  */
 
@@ -22,17 +22,19 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	// Method to use  This field must be set to `oidc` when using the oidc method.
 	Method string `json:"method"`
 	// The provider to register with
-	Traits string `json:"traits"`
+	Provider string `json:"provider"`
+	// The identity traits. This is a placeholder for the registration flow.
+	Traits map[string]interface{} `json:"traits,omitempty"`
 }
 
 // NewSubmitSelfServiceLoginFlowWithOidcMethodBody instantiates a new SubmitSelfServiceLoginFlowWithOidcMethodBody object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSubmitSelfServiceLoginFlowWithOidcMethodBody(method string, traits string) *SubmitSelfServiceLoginFlowWithOidcMethodBody {
+func NewSubmitSelfServiceLoginFlowWithOidcMethodBody(method string, provider string) *SubmitSelfServiceLoginFlowWithOidcMethodBody {
 	this := SubmitSelfServiceLoginFlowWithOidcMethodBody{}
 	this.Method = method
-	this.Traits = traits
+	this.Provider = provider
 	return &this
 }
 
@@ -100,27 +102,59 @@ func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetMethod(v string) {
 	o.Method = v
 }
 
-// GetTraits returns the Traits field value
-func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraits() string {
+// GetProvider returns the Provider field value
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetProvider() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.Traits
+	return o.Provider
 }
 
-// GetTraitsOk returns a tuple with the Traits field value
+// GetProviderOk returns a tuple with the Provider field value
 // and a boolean to check if the value has been set.
-func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraitsOk() (*string, bool) {
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetProviderOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.Traits, true
+	return &o.Provider, true
 }
 
-// SetTraits sets field value
-func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetTraits(v string) {
+// SetProvider sets field value
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetProvider(v string) {
+	o.Provider = v
+}
+
+// GetTraits returns the Traits field value if set, zero value otherwise.
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraits() map[string]interface{} {
+	if o == nil || o.Traits == nil {
+		var ret map[string]interface{}
+		return ret
+	}
+	return o.Traits
+}
+
+// GetTraitsOk returns a tuple with the Traits field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) GetTraitsOk() (map[string]interface{}, bool) {
+	if o == nil || o.Traits == nil {
+		return nil, false
+	}
+	return o.Traits, true
+}
+
+// HasTraits returns a boolean if a field has been set.
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) HasTraits() bool {
+	if o != nil && o.Traits != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetTraits gets a reference to the given map[string]interface{} and assigns it to the Traits field.
+func (o *SubmitSelfServiceLoginFlowWithOidcMethodBody) SetTraits(v map[string]interface{}) {
 	o.Traits = v
 }
 
@@ -133,6 +167,9 @@ func (o SubmitSelfServiceLoginFlowWithOidcMethodBody) MarshalJSON() ([]byte, err
 		toSerialize["method"] = o.Method
 	}
 	if true {
+		toSerialize["provider"] = o.Provider
+	}
+	if o.Traits != nil {
 		toSerialize["traits"] = o.Traits
 	}
 	return json.Marshal(toSerialize)

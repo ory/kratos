@@ -90,7 +90,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.POST(RouteSubmitFlow, x.RedirectToPublicRoute(h.d))
 }
 
-// swagger:route GET /self-service/recovery/api v0alpha1 initializeSelfServiceRecoveryFlowWithoutBrowser
+// swagger:route GET /self-service/recovery/api v0alpha2 initializeSelfServiceRecoveryFlowWithoutBrowser
 //
 // Initialize Recovery Flow for APIs, Services, Apps, ...
 //
@@ -135,7 +135,16 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, req)
 }
 
-// swagger:route GET /self-service/recovery/browser v0alpha1 initializeSelfServiceRecoveryFlowForBrowsers
+// nolint:deadcode,unused
+// swagger:parameters initializeSelfServiceRecoveryFlowForBrowsers
+type initializeSelfServiceRecoveryFlowWithoutBrowser struct {
+	// The URL to return the browser to after the flow was completed.
+	//
+	// in: query
+	ReturnTo string `json:"return_to"`
+}
+
+// swagger:route GET /self-service/recovery/browser v0alpha2 initializeSelfServiceRecoveryFlowForBrowsers
 //
 // Initialize Recovery Flow for Browsers
 //
@@ -175,7 +184,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 	}
 
 	redirTo := f.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String()
-	x.AcceptToRedirectOrJson(w, r, h.d.Writer(), f, redirTo)
+	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), f, redirTo)
 }
 
 // nolint:deadcode,unused
@@ -200,7 +209,7 @@ type getSelfServiceRecoveryFlow struct {
 	Cookies string `json:"cookie"`
 }
 
-// swagger:route GET /self-service/recovery/flows v0alpha1 getSelfServiceRecoveryFlow
+// swagger:route GET /self-service/recovery/flows v0alpha2 getSelfServiceRecoveryFlow
 //
 // Get Recovery Flow
 //
@@ -300,7 +309,7 @@ type submitSelfServiceRecoveryFlow struct {
 // nolint:deadcode,unused
 type submitSelfServiceRecoveryFlowBody struct{}
 
-// swagger:route POST /self-service/recovery v0alpha1 submitSelfServiceRecoveryFlow
+// swagger:route POST /self-service/recovery v0alpha2 submitSelfServiceRecoveryFlow
 //
 // Complete Recovery Flow
 //

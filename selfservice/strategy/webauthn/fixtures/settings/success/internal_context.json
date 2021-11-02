@@ -1,0 +1,8 @@
+{
+  "totp_url": "otpauth://totp/issuer.ory.sh:6e11a9a7-62fd-4c88-871a-097f18f0306f?algorithm=SHA1&digits=6&issuer=issuer.ory.sh&period=30&secret=2F43HRJNMUW67EDMRR7AKQYRZP3AI6IG",
+  "webauthn_session_data": {
+    "challenge": "UlxHSTkuMvtVDoV9y5lhu9OyNUP8P7MP0RYAT6Im_rY",
+    "user_id": "bhGpp2L9TIiHGgl/GPAwbw==",
+    "userVerification": ""
+  }
+}

@@ -1,0 +1,53 @@
+[
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "csrf_token",
+      "node_type": "input",
+      "required": true,
+      "type": "hidden"
+    },
+    "group": "default",
+    "messages": [],
+    "meta": {},
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "email",
+      "node_type": "input",
+      "required": true,
+      "type": "email"
+    },
+    "group": "link",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070007,
+        "text": "Email",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  },
+  {
+    "attributes": {
+      "disabled": false,
+      "name": "method",
+      "node_type": "input",
+      "type": "submit",
+      "value": "link"
+    },
+    "group": "link",
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070005,
+        "text": "Submit",
+        "type": "info"
+      }
+    },
+    "type": "input"
+  }
+]

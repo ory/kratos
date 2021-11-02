@@ -2,6 +2,7 @@ package registration_test
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -36,7 +37,7 @@ func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
-	public, admin := testhelpers.NewKratosServer(t, reg)
+	_, admin := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
@@ -63,7 +64,8 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *registration.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f := registration.NewFlow(conf, ttl, "csrf_token", req, ft)
+		f, err := registration.NewFlow(conf, ttl, "csrf_token", req, ft)
+		require.NoError(t, err)
 		for _, s := range reg.RegistrationStrategies(context.Background()) {
 			require.NoError(t, s.PopulateRegistrationMethod(req, f))
 		}
@@ -78,7 +80,7 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?id=")
 
-		sse, _, err := sdk.V0alpha1Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
+		sse, _, err := sdk.V0alpha2Api.GetSelfServiceError(context.Background()).Id(res.Request.URL.Query().Get("id")).Execute()
 		require.NoError(t, err)
 
 		return sse.Error, nil
@@ -125,19 +127,19 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				registrationFlow = newFlow(t, time.Minute, tc.t)
-				flowError = registration.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(anHourAgo)
 				group = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
 				defer res.Body.Close()
-				require.Contains(t, res.Request.URL.String(), public.URL+registration.RouteGetFlow)
-				require.Equal(t, http.StatusOK, res.StatusCode)
 
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				assert.Equal(t, int(text.ErrorValidationRegistrationFlowExpired), int(gjson.GetBytes(body, "ui.messages.0.id").Int()))
-				assert.NotEqual(t, registrationFlow.ID.String(), gjson.GetBytes(body, "id").String())
+				require.Equal(t, http.StatusGone, res.StatusCode, "%+v\n\t%s", res.Request, body)
+
+				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.GetBytes(body, "use_flow_id").String())
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(anHourAgo), json.RawMessage(body), []string{"since", "redirect_browser_to", "use_flow_id"})
 			})
 
 			t.Run("case=validation error", func(t *testing.T) {
@@ -193,7 +195,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			registrationFlow = &registration.Flow{Type: flow.TypeBrowser}
-			flowError = registration.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(anHourAgo)
 			group = node.PasswordGroup
 
 			lf, _ := expectRegistrationUI(t)

@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
-    "strict": true,
-    "baseUrl": "../node_modules",
+    "baseUrl": "../../../node_modules",
     "target": "es5",
-    "lib": ["es5", "dom"],
-    "types": ["cypress"]
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "types": ["cypress"],
+    "esModuleInterop": true,
   },
   "include": [
-    "**/*.ts"
-  ]
+    "**/*.ts",
+    "support/index.ts",
+  ],
 }

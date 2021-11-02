@@ -109,6 +109,8 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+
 		client := testhelpers.NewClientWithCookies(t)
 		_ = setupVerificationUI(t, client)
 		body := x.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh")
@@ -129,5 +131,15 @@ func TestGetFlow(t *testing.T) {
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
 		assert.Equal(t, public.URL+verification.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
+	})
+	t.Run("case=relative redirect when self-service verification ui is a relative URL", func(t *testing.T) {
+		router := x.NewRouterPublic()
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
+		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceVerificationUI, "/verification-ts")
+		assert.Regexp(
+			t,
+			"^/verification-ts.*$",
+			testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+verification.RouteInitBrowserFlow),
+		)
 	})
 }

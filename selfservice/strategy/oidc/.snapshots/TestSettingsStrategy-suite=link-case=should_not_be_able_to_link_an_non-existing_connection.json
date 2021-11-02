@@ -1,0 +1,141 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.email",
+      "type": "email",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "traits.name",
+      "type": "text",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "input",
+    "group": "profile",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "profile",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "password",
+      "type": "password",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070001,
+        "text": "Password",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "password",
+    "attributes": {
+      "name": "method",
+      "type": "submit",
+      "value": "password",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1070003,
+        "text": "Save",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "link",
+      "type": "submit",
+      "value": "github",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050002,
+        "text": "Link github",
+        "type": "info",
+        "context": {
+          "provider": "github"
+        }
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "oidc",
+    "attributes": {
+      "name": "link",
+      "type": "submit",
+      "value": "google",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050002,
+        "text": "Link google",
+        "type": "info",
+        "context": {
+          "provider": "google"
+        }
+      }
+    }
+  }
+]

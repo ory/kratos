@@ -7,15 +7,30 @@ selfservice:
 
   flows:
     settings:
+      ui_url: http://localhost:4455/settings
       privileged_session_max_age: 1m
 
     recovery:
+      ui_url: http://localhost:4455/recovery
       enabled: true
       lifespan: 5m
 
     logout:
       after:
-        default_browser_return_url: http://127.0.0.1:4455/auth/login
+        default_browser_return_url: http://localhost:4455/login
+
+    login:
+      ui_url: http://localhost:4455/login
+    registration:
+      ui_url: http://localhost:4455/registration
+    error:
+      ui_url: http://localhost:4455/error
+    verification:
+      ui_url: http://localhost:4455/verify
 
 identity:
   default_schema_url: file://test/e2e/profiles/recovery/identity.traits.schema.json
+
+secrets:
+  cipher:
+    - secret-thirty-two-character-long

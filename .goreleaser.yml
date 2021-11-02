@@ -9,6 +9,7 @@ before:
   hooks:
     - go mod download
     - go mod tidy
+    - go install github.com/CycloneDX/cyclonedx-gomod@v1.0.0
 
 builds:
   -
@@ -28,7 +29,31 @@ builds:
       - amd64
     goos:
       - darwin
-
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+  -
+    id: kratos-sqlite-darwin-arm
+    flags:
+      - -tags
+      - sqlite
+    ldflags:
+      - -s -w -X github.com/ory/kratos/driver/config.Version={{.Tag}} -X github.com/ory/kratos/driver/config.Commit={{.FullCommit}} -X github.com/ory/kratos/driver/config.Date={{.Date}}
+      # - "-extldflags '-static'"
+    binary: kratos
+    env:
+      - CGO_ENABLED=1
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    goarch:
+      - arm64
+    goos:
+      - darwin
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
   -
     id: kratos-sqlite-linux
     flags:
@@ -43,6 +68,10 @@ builds:
       - amd64
     goos:
       - linux
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
   -
     id: kratos-sqlite-linux-libmusl
     flags:
@@ -58,6 +87,10 @@ builds:
       - amd64
     goos:
       - linux
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite-libmusl_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite-libmusl_{{ .Target }}.bom.json"
   -
     id: kratos-sqlite-windows
     flags:
@@ -77,6 +110,10 @@ builds:
       - amd64
     goos:
       - windows
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
 
   -
     id: kratos
@@ -98,11 +135,16 @@ builds:
       - linux
       - windows
       - darwin
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
 
 archives:
   - id: kratos-sqlite
     builds:
       - kratos-sqlite-windows
+      - kratos-sqlite-darwin-arm
       - kratos-sqlite-darwin
       - kratos-sqlite-linux
     replacements:
@@ -110,6 +152,7 @@ archives:
       386: 32bit
       amd64: 64bit
       arm: arm32
+      arm64: arm64
     format_overrides:
       -
         goos: windows
@@ -148,6 +191,7 @@ archives:
       386: 32bit
       amd64: 64bit
       arm: arm32
+      arm64: arm64
     format_overrides:
       - goos: windows
         format: zip
@@ -171,7 +215,7 @@ changelog:
 brews:
   - tap:
       owner: ory
-      name: homebrew-kratos
+      name: homebrew-tap
     ids:
     - kratos-sqlite
     homepage:  https://www.ory.sh
@@ -192,9 +236,12 @@ scoop:
 
 checksum:
   algorithm: sha256
+  extra_files:
+    - glob: ./dist/*.bom.json
 
 dockers:
   - dockerfile: .docker/Dockerfile-sqlite
+    use: buildx
     ids:
       - kratos-sqlite-linux-libmusl
     image_templates:
@@ -204,6 +251,7 @@ dockers:
       - "oryd/kratos:{{.Tag}}-sqlite"
       - "oryd/kratos:latest-sqlite"
   - dockerfile: .docker/Dockerfile
+    use: buildx
     ids:
       - kratos
     image_templates:
@@ -220,3 +268,5 @@ release:
     - kratos-sqlite
     - kratos-sqlite-libmusl
     - kratos
+  extra_files:
+    - glob: ./dist/*.bom.json

@@ -4,9 +4,12 @@ SHELL=/bin/bash -o pipefail
 #  K := $(foreach exec,$(EXECUTABLES),\
 #          $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
 
-export GO111MODULE := on
-export PATH := .bin:${PATH}
-export PWD := $(shell pwd)
+export GO111MODULE        := on
+export PATH               := .bin:${PATH}
+export PWD                := $(shell pwd)
+export BUILD_DATE         := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+export VCS_REF            := $(shell git rev-parse HEAD)
+export QUICKSTART_OPTIONS ?= ""
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/ory/x/tools/listx \
@@ -14,7 +17,8 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
 				  github.com/mikefarah/yq \
-				  github.com/mattn/goveralls
+				  github.com/mattn/goveralls \
+				  github.com/cortesi/modd/cmd/modd
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
@@ -31,7 +35,7 @@ docs/cli: .bin/clidoc
 		clidoc .
 
 .bin/ory: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/cli/master/install.sh) -b .bin v0.0.53
+		bash <(curl https://raw.githubusercontent.com/ory/cli/master/install.sh) -b .bin v0.0.59
 		touch -a -m .bin/ory
 
 node_modules: package.json Makefile
@@ -52,7 +56,7 @@ docs: docs/node_modules
 
 .PHONY: lint
 lint: .bin/golangci-lint
-		golangci-lint run -v ./...
+		golangci-lint run -v --timeout 10m ./...
 
 .PHONY: mocks
 mocks: .bin/mockgen
@@ -78,8 +82,8 @@ test-coverage: .bin/go-acc .bin/goveralls
 .PHONY: sdk
 sdk: .bin/swagger .bin/ory node_modules
 		swagger generate spec -m -o spec/swagger.json \
-			-x github.com/ory/kratos-client-go \
-			-x github.com/ory/dockertest
+			-c github.com/ory/kratos \
+			-c github.com/ory/x/healthx
 		ory dev swagger sanitize ./spec/swagger.json
 		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
@@ -95,7 +99,7 @@ sdk: .bin/swagger .bin/ory node_modules
 					-p file://.schema/openapi/patches/generic_error.yaml \
 					spec/swagger.json spec/api.json
 
-		rm -rf internal/httpclient/models internal/httpclient/clients
+		rm -rf internal/httpclient
 		mkdir -p internal/httpclient/
 		npm run openapi-generator-cli -- generate -i "spec/api.json" \
 				-g go \
@@ -117,7 +121,7 @@ quickstart:
 .PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml up --build --force-recreate
+		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml $(QUICKSTART_OPTIONS) up --build --force-recreate
 
 # Formats the code
 .PHONY: format
@@ -129,7 +133,7 @@ format: .bin/goimports docs/node_modules node_modules
 # Build local docker image
 .PHONY: docker
 docker:
-		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
+		docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .
 
 # Runs the documentation tests
 .PHONY: test-docs
@@ -158,4 +162,8 @@ migrations-render-replace: .bin/ory
 
 .PHONY: migratest-refresh
 migratest-refresh:
-		cd persistence/sql/migratest; go test -tags sqlite,refresh -short .
+		cd persistence/sql/migratest; UPDATE_SNAPSHOTS=true go test -p 1 -tags sqlite -short .
+
+.PHONY: test-update-snapshots
+test-update-snapshots:
+		UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite -short ./...

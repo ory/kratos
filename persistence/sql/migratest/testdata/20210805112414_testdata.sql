@@ -1,0 +1,2 @@
+INSERT INTO selfservice_settings_flows (id, nid, request_url, issued_at, expires_at, state, identity_id, created_at, updated_at, active_method, ui, internal_context)
+VALUES ('8248bb5d-8ef7-45e3-8e07-9e2003dd5352',  '884f556e-eb3a-4b9f-bee3-11345642c6c0', 'http://kratos:4433/self-service/browser/flows/settings', '2013-10-07 08:23:19', '2013-10-07 08:23:19', 'show_form', 'a251ebc2-880c-4f76-a8f3-38e6940eab0e', '2013-10-07 08:23:19', '2013-10-07 08:23:19', 'profile', '{}', '{"foo":"bar"}');

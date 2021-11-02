@@ -1,0 +1,174 @@
+[
+  {
+    "type": "input",
+    "group": "default",
+    "attributes": {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {}
+  },
+  {
+    "type": "text",
+    "group": "lookup_secret",
+    "attributes": {
+      "text": {
+        "id": 1050015,
+        "text": "key-0, used, key-2, key-3, used, key-5, key-6, used, key-8, key-9, used, key-11",
+        "type": "info",
+        "context": {
+          "secrets": [
+            {
+              "id": 1050009,
+              "text": "key-0",
+              "type": "info",
+              "context": {
+                "secret": "key-0"
+              }
+            },
+            {
+              "id": 1050014,
+              "text": "Secret was used at 2021-08-17 11:32:39 +0000 UTC",
+              "type": "info",
+              "context": {
+                "used_at": "2021-08-17T11:32:39Z"
+              }
+            },
+            {
+              "id": 1050009,
+              "text": "key-2",
+              "type": "info",
+              "context": {
+                "secret": "key-2"
+              }
+            },
+            {
+              "id": 1050009,
+              "text": "key-3",
+              "type": "info",
+              "context": {
+                "secret": "key-3"
+              }
+            },
+            {
+              "id": 1050014,
+              "text": "Secret was used at 2021-08-17 11:32:42 +0000 UTC",
+              "type": "info",
+              "context": {
+                "used_at": "2021-08-17T11:32:42Z"
+              }
+            },
+            {
+              "id": 1050009,
+              "text": "key-5",
+              "type": "info",
+              "context": {
+                "secret": "key-5"
+              }
+            },
+            {
+              "id": 1050009,
+              "text": "key-6",
+              "type": "info",
+              "context": {
+                "secret": "key-6"
+              }
+            },
+            {
+              "id": 1050014,
+              "text": "Secret was used at 2021-08-17 11:32:45 +0000 UTC",
+              "type": "info",
+              "context": {
+                "used_at": "2021-08-17T11:32:45Z"
+              }
+            },
+            {
+              "id": 1050009,
+              "text": "key-8",
+              "type": "info",
+              "context": {
+                "secret": "key-8"
+              }
+            },
+            {
+              "id": 1050009,
+              "text": "key-9",
+              "type": "info",
+              "context": {
+                "secret": "key-9"
+              }
+            },
+            {
+              "id": 1050014,
+              "text": "Secret was used at 2021-08-17 11:32:48 +0000 UTC",
+              "type": "info",
+              "context": {
+                "used_at": "2021-08-17T11:32:48Z"
+              }
+            },
+            {
+              "id": 1050009,
+              "text": "key-11",
+              "type": "info",
+              "context": {
+                "secret": "key-11"
+              }
+            }
+          ]
+        }
+      },
+      "id": "lookup_secret_codes",
+      "node_type": "text"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050010,
+        "text": "These are your back up recovery codes. Please keep them in a safe place!",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "lookup_secret",
+    "attributes": {
+      "name": "lookup_secret_disable",
+      "type": "submit",
+      "value": "true",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050016,
+        "text": "Disable this method",
+        "type": "info"
+      }
+    }
+  },
+  {
+    "type": "input",
+    "group": "lookup_secret",
+    "attributes": {
+      "name": "lookup_secret_regenerate",
+      "type": "submit",
+      "value": "true",
+      "disabled": false,
+      "node_type": "input"
+    },
+    "messages": [],
+    "meta": {
+      "label": {
+        "id": 1050008,
+        "text": "Generate new backup recovery codes",
+        "type": "info"
+      }
+    }
+  }
+]

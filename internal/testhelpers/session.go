@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/gjson"
+
 	"github.com/gobuffalo/httptest"
 	"github.com/stretchr/testify/require"
 
@@ -43,7 +46,7 @@ func maybePersistSession(t *testing.T, reg *driver.RegistryDefault, sess *sessio
 	sess.Identity = id
 	sess.IdentityID = id.ID
 
-	require.NoError(t, err, reg.SessionPersister().CreateSession(context.Background(), sess))
+	require.NoError(t, err, reg.SessionPersister().UpsertSession(context.Background(), sess))
 }
 
 func NewHTTPClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *http.Client {
@@ -57,6 +60,20 @@ func NewHTTPClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, s
 	c := NewClientWithCookies(t)
 
 	// This should work for other test servers as well because cookies ignore ports.
+	MockHydrateCookieClient(t, c, ts.URL)
+	return c
+}
+
+func NewNoRedirectHTTPClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *http.Client {
+	maybePersistSession(t, reg, sess)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, sess))
+	}))
+	defer ts.Close()
+
+	c := NewNoRedirectClientWithCookies(t)
+
 	MockHydrateCookieClient(t, c, ts.URL)
 	return c
 }
@@ -96,6 +113,7 @@ func NewHTTPClientWithArbitrarySessionToken(t *testing.T, reg *driver.RegistryDe
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
+		identity.CredentialsTypePassword,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
@@ -107,22 +125,47 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
+		identity.CredentialsTypePassword,
 	)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionCookie(t, reg, s)
 }
 
+func NewNoRedirectHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryDefault) *http.Client {
+	s, err := session.NewActiveSession(
+		&identity.Identity{ID: x.NewUUID(), State: identity.StateActive},
+		NewSessionLifespanProvider(time.Hour),
+		time.Now(),
+		identity.CredentialsTypePassword,
+	)
+	require.NoError(t, err, "Could not initialize session from identity.")
+
+	return NewNoRedirectHTTPClientWithSessionCookie(t, reg, s)
+}
+
 func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now())
+	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionCookie(t, reg, s)
 }
 
 func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
-	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now())
+	s, err := session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now(), identity.CredentialsTypePassword)
 	require.NoError(t, err, "Could not initialize session from identity.")
 
 	return NewHTTPClientWithSessionToken(t, reg, s)
+}
+
+func EnsureAAL(t *testing.T, c *http.Client, ts *httptest.Server, aal string, methods ...string) {
+	res, err := c.Get(ts.URL + session.RouteWhoami)
+	require.NoError(t, err)
+	sess := x.MustReadAll(res.Body)
+	require.NoError(t, res.Body.Close())
+	assert.EqualValues(t, aal, gjson.GetBytes(sess, "authenticator_assurance_level").String())
+	for _, method := range methods {
+		assert.EqualValues(t, method, gjson.GetBytes(sess, "authentication_methods.#(method=="+method+").method").String())
+	}
+	assert.Len(t, gjson.GetBytes(sess, "authentication_methods").Array(), 1+len(methods))
 }
