@@ -83,7 +83,7 @@ func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string 
 	}
 }
 
-var _ CSRFHandler = new(FakeCSRFHandler)
+var _ nosurf.Handler = new(FakeCSRFHandler)
 
 type FakeCSRFHandler struct{ name string }
 
@@ -91,6 +91,15 @@ func NewFakeCSRFHandler(name string) *FakeCSRFHandler {
 	return &FakeCSRFHandler{
 		name: name,
 	}
+}
+
+func (f *FakeCSRFHandler) DisablePath(s string) {
+}
+
+func (f *FakeCSRFHandler) DisableGlob(s string) {
+}
+
+func (f *FakeCSRFHandler) DisableGlobs(s ...string) {
 }
 
 func (f *FakeCSRFHandler) ExemptPath(s string) {
@@ -113,16 +122,7 @@ func (f *FakeCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request
 }
 
 type CSRFProvider interface {
-	CSRFHandler() CSRFHandler
-}
-
-type CSRFHandler interface {
-	http.Handler
-	RegenerateToken(w http.ResponseWriter, r *http.Request) string
-	ExemptPath(string)
-	IgnorePath(string)
-	IgnoreGlob(string)
-	IgnoreGlobs(...string)
+	CSRFHandler() nosurf.Handler
 }
 
 func CSRFCookieName(reg interface {
@@ -233,7 +233,7 @@ func NewCSRFHandler(
 }
 
 func NewTestCSRFHandler(router http.Handler, reg interface {
-	WithCSRFHandler(CSRFHandler)
+	WithCSRFHandler(handler nosurf.Handler)
 	WithCSRFTokenGenerator(CSRFToken)
 	WriterProvider
 	LoggingProvider

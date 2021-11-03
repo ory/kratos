@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
+	"github.com/ory/nosurf"
 
 	"github.com/ory/x/logrusx"
 
@@ -45,7 +46,7 @@ type Registry interface {
 
 	WithLogger(l *logrusx.Logger) Registry
 
-	WithCSRFHandler(c x.CSRFHandler)
+	WithCSRFHandler(c nosurf.Handler)
 	WithCSRFTokenGenerator(cg x.CSRFToken)
 
 	HealthHandler(ctx context.Context) *healthx.Handler

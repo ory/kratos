@@ -3,6 +3,7 @@ package session_test
 import (
 	"context"
 	"errors"
+	"github.com/ory/nosurf"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,10 +25,19 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var _ x.CSRFHandler = new(mockCSRFHandler)
+var _ nosurf.Handler = new(mockCSRFHandler)
 
 type mockCSRFHandler struct {
 	c int
+}
+
+func (f *mockCSRFHandler) DisablePath(s string) {
+}
+
+func (f *mockCSRFHandler) DisableGlob(s string) {
+}
+
+func (f *mockCSRFHandler) DisableGlobs(s ...string) {
 }
 
 func (f *mockCSRFHandler) IgnoreGlob(s string) {
