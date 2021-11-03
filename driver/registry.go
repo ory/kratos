@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
+
 	"github.com/ory/nosurf"
 
 	"github.com/ory/x/logrusx"

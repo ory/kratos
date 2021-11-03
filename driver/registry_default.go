@@ -2,11 +2,12 @@ package driver
 
 import (
 	"context"
-	"github.com/ory/nosurf"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 

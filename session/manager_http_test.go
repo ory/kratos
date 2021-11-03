@@ -3,11 +3,12 @@ package session_test
 import (
 	"context"
 	"errors"
-	"github.com/ory/nosurf"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/driver"
 
