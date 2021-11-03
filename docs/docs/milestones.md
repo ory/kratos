@@ -38,8 +38,6 @@ Something is not working.
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] /schemas/default does not work with base64 identity schemas
-      ([kratos#1529](https://github.com/ory/kratos/issues/1529))
 - [ ] Courier Watcher should start a (tracing-) span
       ([kratos#1886](https://github.com/ory/kratos/issues/1886))
 - [x] panic: a handle is already registered for path
@@ -47,6 +45,8 @@ Something is not working.
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [x] Relative path in ui_url or default_browser_return_url cause runtime crash
       ([kratos#1446](https://github.com/ory/kratos/issues/1446))
+- [x] /schemas/default does not work with base64 identity schemas
+      ([kratos#1529](https://github.com/ory/kratos/issues/1529))
 - [x] Auto-Login on Registration flow does not return `session`, only `identity`
       for SPA requests
       ([kratos#1604](https://github.com/ory/kratos/issues/1604))
@@ -250,6 +250,8 @@ Something is not working.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Dotenv files are respected and incorrectly override environment variables
       ([kratos#1856](https://github.com/ory/kratos/issues/1856))
+- [ ] Ask to re-authenticate despite only updating non-privileged fields.
+      ([kratos#1889](https://github.com/ory/kratos/issues/1889))
 - [x] recovery link is open by email app
       ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 
