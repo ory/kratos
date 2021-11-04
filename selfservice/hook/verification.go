@@ -68,7 +68,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
-		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, address, token); err != nil {
+		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, i, address, token); err != nil {
 			return err
 		}
 	}
