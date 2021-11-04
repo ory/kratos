@@ -1,6 +1,7 @@
 package schema_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -39,6 +40,11 @@ func TestHandler(t *testing.T) {
 			ID:     "identity2",
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
+		},
+		{
+			ID:     "base64",
+			URL:    urlx.ParseOrPanic("base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9"),
+			RawURL: "base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9",
 		},
 		{
 			ID:     "unreachable",
@@ -84,9 +90,18 @@ func TestHandler(t *testing.T) {
 	}
 
 	getFromFS := func(id string) []byte {
-		raw, err := os.ReadFile(strings.TrimPrefix(getSchemaById(id).RawURL, "file://"))
-		require.NoError(t, err)
-		return raw
+		schema := getSchemaById(id)
+
+		if schema.URL.Scheme == "file" {
+			raw, err := os.ReadFile(strings.TrimPrefix(schema.RawURL, "file://"))
+			require.NoError(t, err)
+			return raw
+		} else if schema.URL.Scheme == "base64" {
+			data, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(schema.RawURL, "base64://"))
+			require.NoError(t, err)
+			return data
+		}
+		return nil
 	}
 
 	setSchemas := func(newSchemas schema.Schemas) {
@@ -116,6 +131,12 @@ func TestHandler(t *testing.T) {
 	t.Run("case=get other schema", func(t *testing.T) {
 		server := getFromTSById("identity2", http.StatusOK)
 		file := getFromFS("identity2")
+		require.JSONEq(t, string(file), string(server))
+	})
+
+	t.Run("case=get base64 schema", func(t *testing.T) {
+		server := getFromTSById("base64", http.StatusOK)
+		file := getFromFS("base64")
 		require.JSONEq(t, string(file), string(server))
 	})
 

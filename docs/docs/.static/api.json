@@ -900,7 +900,7 @@
             "type": "string"
           },
           "method": {
-            "enum": ["link_recovery", "password", "totp", "oidc"],
+            "enum": ["link_recovery", "password", "totp", "oidc", "webauthn"],
             "title": "The method used",
             "type": "string"
           }
@@ -1758,7 +1758,7 @@
       "name": "Apache 2.0"
     },
     "title": "Ory Kratos API",
-    "version": "v0.8.0-alpha.3"
+    "version": ""
   },
   "openapi": "3.0.3",
   "paths": {
@@ -2258,7 +2258,7 @@
     },
     "/recovery/link": {
       "post": {
-        "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account. It's possible to generate a link for an account without a recovery address.",
+        "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
         "operationId": "adminCreateSelfServiceRecoveryLink",
         "requestBody": {
           "content": {

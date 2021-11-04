@@ -9,6 +9,7 @@ before:
   hooks:
     - go mod download
     - go mod tidy
+    - go install github.com/CycloneDX/cyclonedx-gomod@v1.0.0
 
 builds:
   -
@@ -28,8 +29,11 @@ builds:
       - amd64
     goos:
       - darwin
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
   -
-
     id: kratos-sqlite-darwin-arm
     flags:
       - -tags
@@ -46,7 +50,10 @@ builds:
       - arm64
     goos:
       - darwin
-
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
   -
     id: kratos-sqlite-linux
     flags:
@@ -61,7 +68,10 @@ builds:
       - amd64
     goos:
       - linux
-
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
   -
     id: kratos-sqlite-linux-libmusl
     flags:
@@ -77,7 +87,10 @@ builds:
       - amd64
     goos:
       - linux
-
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite-libmusl_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite-libmusl_{{ .Target }}.bom.json"
   -
     id: kratos-sqlite-windows
     flags:
@@ -97,6 +110,10 @@ builds:
       - amd64
     goos:
       - windows
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Target }}.bom.json"
 
   -
     id: kratos
@@ -118,6 +135,10 @@ builds:
       - linux
       - windows
       - darwin
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+        - cmd: ./.releaser/rename.sh "./dist/{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
 
 archives:
   - id: kratos-sqlite
@@ -215,6 +236,8 @@ scoop:
 
 checksum:
   algorithm: sha256
+  extra_files:
+    - glob: ./dist/*.bom.json
 
 dockers:
   - dockerfile: .docker/Dockerfile-sqlite
@@ -245,3 +268,5 @@ release:
     - kratos-sqlite
     - kratos-sqlite-libmusl
     - kratos
+  extra_files:
+    - glob: ./dist/*.bom.json
