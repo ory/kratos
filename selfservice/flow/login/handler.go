@@ -108,7 +108,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 
 	// We assume an error means the user has no session
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
-	if errors.Is(err, session.ErrNoActiveSessionFound) {
+	if e := new(session.ErrNoActiveSessionFound); errors.As(err, &e) {
 		// No session exists yet
 
 		// We can not request an AAL > 1 because we must first verify the first factor.
@@ -550,7 +550,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 
 		http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusSeeOther)
 		return
-	} else if errors.Is(err, session.ErrNoActiveSessionFound) {
+	} else if e := new(session.ErrNoActiveSessionFound); errors.As(err, &e) {
 		// Only failure scenario here is if we try to upgrade the session to a higher AAL without actually
 		// having a session.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {

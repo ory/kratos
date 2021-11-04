@@ -131,7 +131,7 @@ func (s *ErrorHandler) WriteFlowError(
 		shouldRespondWithJSON = true
 	}
 
-	if errors.Is(err, session.ErrNoActiveSessionFound) {
+	if e := new(session.ErrNoActiveSessionFound); errors.As(err, &e) {
 		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, err)
 		} else {

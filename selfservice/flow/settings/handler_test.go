@@ -3,6 +3,7 @@ package settings_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/text"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -116,6 +117,12 @@ func TestHandler(t *testing.T) {
 
 	t.Run("endpoint=init", func(t *testing.T) {
 		t.Run("description=init a flow as API", func(t *testing.T) {
+			t.Run("description=without privileges", func(t *testing.T) {
+				res, body := initFlow(t, new(http.Client), true)
+				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(),"%s", body)
+			})
+
 			t.Run("description=success", func(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				res, body := initFlow(t, user1, true)
@@ -132,6 +139,12 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("description=init a flow as browser", func(t *testing.T) {
+			t.Run("description=without privileges", func(t *testing.T) {
+				res, body := initSPAFlow(t, new(http.Client))
+				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(),"%s", body)
+			})
+
 			t.Run("description=success", func(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg)
 				res, body := initFlow(t, user1, false)
@@ -363,6 +376,7 @@ func TestHandler(t *testing.T) {
 			})
 		})
 	})
+
 	t.Run("case=relative redirect when self-service settings ui is a relative url", func(t *testing.T) {
 		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, "/settings-ts")
 		user1 := testhelpers.NewNoRedirectHTTPClientWithArbitrarySessionCookie(t, reg)
