@@ -1350,6 +1350,16 @@
         "admin": {
           "type": "object",
           "properties": {
+            "access_log": {
+              "type": "object",
+              "properties": {
+                "disable_for_health": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "additionalProperties": false
+            },
             "base_url": {
               "title": "Admin Base URL",
               "description": "The URL where the admin endpoint is exposed at.",
@@ -1388,6 +1398,16 @@
         "public": {
           "type": "object",
           "properties": {
+            "access_log": {
+              "type": "object",
+              "properties": {
+                "disable_for_health": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "additionalProperties": false
+            },
             "cors": {
               "type": "object",
               "additionalProperties": false,

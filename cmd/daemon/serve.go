@@ -82,7 +82,14 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
+	publicLogger := reqlog.NewMiddlewareFromLogger(
+		l,
+		"public#"+c.SelfPublicURL(nil).String(),
+	)
+	if r.Config(ctx).DisablePublicHealthAccessLog() {
+		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
+	}
+	n.Use(publicLogger)
 	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 
@@ -141,7 +148,14 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
+	adminLogger := reqlog.NewMiddlewareFromLogger(
+		l,
+		"admin#"+c.SelfPublicURL(nil).String(),
+	)
+	if r.Config(ctx).DisableAdminHealthAccessLog() {
+		adminLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
+	}
+	n.Use(adminLogger)
 	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 
