@@ -86,7 +86,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 		l,
 		"public#"+c.SelfPublicURL(nil).String(),
 	)
-	if r.Config(ctx).DisablePublicHealthAccessLog() {
+	if r.Config(ctx).DisablePublicHealthRequestLog() {
 		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	}
 	n.Use(publicLogger)
@@ -152,7 +152,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 		l,
 		"admin#"+c.SelfPublicURL(nil).String(),
 	)
-	if r.Config(ctx).DisableAdminHealthAccessLog() {
+	if r.Config(ctx).DisableAdminHealthRequestLog() {
 		adminLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	}
 	n.Use(adminLogger)

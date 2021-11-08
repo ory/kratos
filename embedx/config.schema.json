@@ -1350,10 +1350,12 @@
         "admin": {
           "type": "object",
           "properties": {
-            "access_log": {
+            "request_log": {
               "type": "object",
               "properties": {
                 "disable_for_health": {
+                  "title": "Disable health endpoints request logging",
+                  "description": "Disable request logging for /health/alive and /health/ready endpoints",
                   "type": "boolean",
                   "default": false
                 }
@@ -1398,10 +1400,12 @@
         "public": {
           "type": "object",
           "properties": {
-            "access_log": {
+            "request_log": {
               "type": "object",
               "properties": {
                 "disable_for_health": {
+                  "title": "Disable health endpoints request logging",
+                  "description": "Disable request logging for /health/alive and /health/ready endpoints",
                   "type": "boolean",
                   "default": false
                 }
