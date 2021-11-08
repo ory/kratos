@@ -1,0 +1,17 @@
+{
+  http_port 4455
+	auto_https off
+
+}
+
+:4455 {
+  route /ui/* {
+    uri strip_prefix /ui
+    reverse_proxy kratos-selfservice-ui-node:4438 {
+      header_up Host {http.request.hostport}
+    }
+  }
+  reverse_proxy /* kratos:4433 {
+    header_up Host {http.request.hostport}
+  }
+}
