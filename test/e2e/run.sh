@@ -20,7 +20,7 @@ export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
 if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
-  docker run --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
+  docker run --platform linux/amd64 --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
   docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
   docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
 
@@ -95,6 +95,7 @@ run() {
 
   (
     cd "$rn_ui_dir"
+    npm i -g expo-cli
     WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
@@ -155,14 +156,14 @@ run() {
   if [ -z ${REACT_UI_PATH+x} ]; then
     (
       cd "$react_ui_dir"
-      NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run build
-      NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run start -- --port 4458 \
+      ORY_KRATOS_URL=http://localhost:4433 npm run build
+      ORY_KRATOS_URL=http://localhost:4433 npm run start -- --port 4458 \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   else
     (
       cd "$react_ui_dir"
-      PORT=4458 NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run dev \
+      PORT=4458 ORY_KRATOS_URL=http://localhost:4433 npm run dev \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   fi
