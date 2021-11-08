@@ -75,7 +75,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.4
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
-	github.com/ory/nosurf v1.2.5
+	github.com/ory/nosurf v1.2.6
 	github.com/ory/x v0.0.300
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1

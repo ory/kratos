@@ -93,6 +93,12 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 
+	// Disable CSRF for these endpoints
+	csrf.DisablePath(healthx.AliveCheckPath)
+	csrf.DisablePath(healthx.ReadyCheckPath)
+	csrf.DisablePath(healthx.VersionPath)
+	csrf.DisablePath(prometheus.MetricsPrometheusPath)
+
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
 
