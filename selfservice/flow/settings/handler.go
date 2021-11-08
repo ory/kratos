@@ -84,7 +84,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if x.IsJSONRequest(r) {
-			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("Please include a valid session cookie or session token when calling this endpoint.")))
+			h.d.Writer().WriteError(w, r, session.NewErrNoActiveSessionFound())
 		} else {
 			http.Redirect(w, r, h.d.Config(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
 		}
