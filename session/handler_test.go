@@ -345,7 +345,7 @@ func TestIsAuthenticated(t *testing.T) {
 		{
 			c:    http.DefaultClient,
 			call: "/privileged/without-callback",
-			code: http.StatusForbidden,
+			code: http.StatusUnauthorized,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
