@@ -23,7 +23,6 @@ You can find more detailed information on the official Kratos docker images
 You can install Ory Kratos using [homebrew](https://brew.sh/) on macOS:
 
 ```shell
-$ brew tap ory/tap
 $ brew install ory/tap/kratos
 $ kratos help
 ```
@@ -34,7 +33,7 @@ On linux, you can use `bash <(curl ...)` to fetch the latest stable binary
 using:
 
 ```shell
-$ bash <(curl https://raw.githubusercontent.com/ory/kratos/v0.8.0-alpha.3/install.sh) -b . v0.8.0-alpha.3
+$ bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b . kratos v0.8.0-alpha.3
 $ ./kratos help
 ```
 
@@ -51,7 +50,7 @@ You can install Ory Kratos using [scoop](https://scoop.sh) on Windows
 (Powershell is required):
 
 ```shell
-> scoop bucket add ory-kratos https://github.com/ory/scoop-kratos.git
+> scoop bucket add ory https://github.com/ory/scoop.git
 > scoop install kratos
 > kratos help
 ```
