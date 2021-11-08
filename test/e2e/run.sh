@@ -12,9 +12,9 @@ export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://localhost:4433/
 export KRATOS_BROWSER_URL=http://localhost:4433/
 export KRATOS_ADMIN_URL=http://localhost:4434/
-export KRATOS_UI_URL=http://localhost:4456/
-export KRATOS_UI_REACT_URL=http://localhost:4458/
-export KRATOS_UI_REACT_NATIVE_URL=http://localhost:4457/
+export KRATOS_UI_URL=http://127.0.0.1:4456/
+export KRATOS_UI_REACT_URL=http://127.0.0.1:4458/
+export KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
