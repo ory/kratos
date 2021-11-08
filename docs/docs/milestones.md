@@ -33,13 +33,13 @@ Something is not working.
 - [ ] Fetching a settings request after error is missing identity data
       ([kratos#689](https://github.com/ory/kratos/issues/689)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Feature Request: Have access to username in email templates
-      ([kratos#925](https://github.com/ory/kratos/issues/925))
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
 - [ ] Courier Watcher should start a (tracing-) span
       ([kratos#1886](https://github.com/ory/kratos/issues/1886))
+- [x] Feature Request: Have access to username in email templates
+      ([kratos#925](https://github.com/ory/kratos/issues/925))
 - [x] panic: a handle is already registered for path
       '/self-service/recovery/methods/link'
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
@@ -81,8 +81,6 @@ New feature or request.
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
-- [ ] Add i18n support to mail templates
-      ([kratos#834](https://github.com/ory/kratos/issues/834))
 - [ ] Add option for disabling registration
       ([kratos#882](https://github.com/ory/kratos/issues/882)) -
       [@hackerman](https://github.com/aeneasr)
@@ -112,6 +110,8 @@ New feature or request.
 - [x] Validate identity schema on load
       ([kratos#701](https://github.com/ory/kratos/issues/701)) -
       [@Alano Terblanche](https://github.com/Benehiko)
+- [x] Add i18n support to mail templates
+      ([kratos#834](https://github.com/ory/kratos/issues/834))
 - [x] Allow account recovery for identities without email address
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [x] Field validation answer status code 422 instead of 400
