@@ -66,13 +66,13 @@ describe('Basic email profile with succeeding login flows', () => {
 
       it('should sign in and be redirected', () => {
         cy.browserReturnUrlOry()
-        cy.visit(route + '?return_to=https://www.ory.sh/')
+        cy.visit(route + '?return_to=https://example.org/')
 
         cy.get('input[name="password_identifier"]').type(email.toUpperCase())
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
 
-        cy.url().should('eq', 'https://www.ory.sh/')
+        cy.url().should('eq', 'https://example.org/')
       })
     })
   })
@@ -88,7 +88,7 @@ describe('Basic email profile with succeeding login flows', () => {
 
     beforeEach(() => {
       cy.clearAllCookies()
-      cy.visit(express.login + '?return_to=https://www.ory.sh/')
+      cy.visit(express.login + '?return_to=https://example.org/')
     })
 
     it('should redirect to return_to when retrying expired flow', () => {
@@ -110,7 +110,7 @@ describe('Basic email profile with succeeding login flows', () => {
       cy.submitPasswordForm()
 
       // check that redirection has happened
-      cy.url().should('eq', 'https://www.ory.sh/')
+      cy.url().should('eq', 'https://example.org/')
     })
   })
 })

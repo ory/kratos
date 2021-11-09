@@ -4,9 +4,9 @@ set -euxo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
-make .bin/hydra
-make .bin/yq
-make .bin/modd
+# make .bin/hydra
+# make .bin/yq
+# make .bin/modd
 
 export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://localhost:4433/

@@ -33,10 +33,12 @@ context('Testing logout flows', () => {
       beforeEach(() => {
         cy.clearAllCookies()
         cy.login({ email, password, cookieUrl: route })
-        cy.visit(route)
       })
 
       it('should sign out and be able to sign in again', () => {
+        cy.visit(route)
+        cy.get(`${appPrefix(app)} [data-testid="logout"]`).should('exist')
+
         cy.getSession()
         cy.getCookie('ory_kratos_session').should('not.be.null')
         cy.get(`${appPrefix(app)} [data-testid="logout"]`).click()

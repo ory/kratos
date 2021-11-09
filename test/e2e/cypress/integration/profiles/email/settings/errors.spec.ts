@@ -291,6 +291,10 @@ context('Settings failures with email profile', () => {
             route + '?return_to=https://not-allowed',
             { app }
           )
+
+          if (app === 'react') {
+            cy.get('[name="method"][value="profile"]').should('exist')
+          }
         })
       })
     })
