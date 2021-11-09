@@ -1191,7 +1191,6 @@ selfservice:
   # - - https://app.my-app.com/dashboard
   #   - /dashboard
   #   - https://www.my-app.com/
-  #   - https://*.my-app.com/
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -1203,7 +1202,6 @@ selfservice:
     - https://app.my-app.com/dashboard
     - /dashboard
     - https://www.my-app.com/
-    - https://*.my-app.com/
 
 ## serve ##
 #
@@ -1211,6 +1209,148 @@ serve:
   ## public ##
   #
   public:
+    ## cors ##
+    #
+    # Configures Cross Origin Resource Sharing for public endpoints.
+    #
+    cors:
+      ## allowed_origins ##
+      #
+      # A list of origins a cross-domain request can be executed from. If the special * value is present in the list, all origins will be allowed. An origin may contain a wildcard (*) to replace 0 or more characters (i.e.: http://*.domain.com). Only one wildcard can be used per origin.
+      #
+      # Default value: *
+      #
+      # Examples:
+      # - - https://example.com
+      #   - https://*.example.com
+      #   - https://*.foo.example.com
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=<value>
+      #
+      allowed_origins:
+        - https://example.com
+        - https://*.example.com
+        - https://*.foo.example.com
+
+      ## allowed_methods ##
+      #
+      # A list of HTTP methods the user agent is allowed to use with cross-domain requests.
+      #
+      # Default value: POST,GET,PUT,PATCH,DELETE
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_ALLOWED_METHODS=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_ALLOWED_METHODS=<value>
+      #
+      allowed_methods:
+        - POST
+
+      ## allowed_headers ##
+      #
+      # A list of non simple headers the client is allowed to use with cross-domain requests.
+      #
+      # Default value: Authorization,Content-Type,X-Session-Token
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_ALLOWED_HEADERS=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_ALLOWED_HEADERS=<value>
+      #
+      allowed_headers:
+        - ''
+
+      ## exposed_headers ##
+      #
+      # Sets which headers are safe to expose to the API of a CORS API specification.
+      #
+      # Default value: Content-Type
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_EXPOSED_HEADERS=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_EXPOSED_HEADERS=<value>
+      #
+      exposed_headers:
+        - ''
+
+      ## allow_credentials ##
+      #
+      # Sets whether the request can include user credentials like cookies, HTTP authentication or client side SSL certificates.
+      #
+      # Default value: true
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_ALLOW_CREDENTIALS=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_ALLOW_CREDENTIALS=<value>
+      #
+      allow_credentials: false
+
+      ## options_passthrough ##
+      #
+      # TODO
+      #
+      # Default value: false
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_OPTIONS_PASSTHROUGH=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_OPTIONS_PASSTHROUGH=<value>
+      #
+      options_passthrough: false
+
+      ## max_age ##
+      #
+      # Sets how long (in seconds) the results of a preflight request can be cached. If set to 0, every request is preceded by a preflight request.
+      #
+      # Minimum value: 0
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_MAX_AGE=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_MAX_AGE=<value>
+      #
+      max_age: 0
+
+      ## debug ##
+      #
+      # Adds additional log output to debug server side CORS issues.
+      #
+      # Default value: false
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_DEBUG=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_DEBUG=<value>
+      #
+      debug: false
+
+      ## enabled ##
+      #
+      # Sets whether CORS is enabled.
+      #
+      # Default value: false
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_PUBLIC_CORS_ENABLED=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_PUBLIC_CORS_ENABLED=<value>
+      #
+      enabled: false
+
     ## Base URL ##
     #
     # The URL where the endpoint is exposed at. This domain is used to generate redirects, form URLs, and more.
@@ -1375,151 +1515,41 @@ serve:
         #
         path: path/to/file.pem
 
-    ## cors ##
+    ## request_log ##
     #
-    # Configures Cross Origin Resource Sharing for public endpoints.
-    #
-    cors:
-      ## allowed_origins ##
+    request_log:
+      ## Disable health endpoints request logging ##
       #
-      # A list of origins a cross-domain request can be executed from. If the special * value is present in the list, all origins will be allowed. An origin may contain a wildcard (*) to replace 0 or more characters (i.e.: http://*.domain.com). Only one wildcard can be used per origin.
-      #
-      # Default value: *
-      #
-      # Examples:
-      # - - https://example.com
-      #   - https://*.example.com
-      #   - https://*.foo.example.com
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=<value>
-      #
-      allowed_origins:
-        - https://example.com
-        - https://*.example.com
-        - https://*.foo.example.com
-
-      ## allowed_methods ##
-      #
-      # A list of HTTP methods the user agent is allowed to use with cross-domain requests.
-      #
-      # Default value: POST,GET,PUT,PATCH,DELETE
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_ALLOWED_METHODS=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_ALLOWED_METHODS=<value>
-      #
-      allowed_methods:
-        - POST
-
-      ## allowed_headers ##
-      #
-      # A list of non simple headers the client is allowed to use with cross-domain requests.
-      #
-      # Default value: Authorization,Content-Type,X-Session-Token
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_ALLOWED_HEADERS=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_ALLOWED_HEADERS=<value>
-      #
-      allowed_headers:
-        - ''
-
-      ## exposed_headers ##
-      #
-      # Sets which headers are safe to expose to the API of a CORS API specification.
-      #
-      # Default value: Content-Type
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_EXPOSED_HEADERS=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_EXPOSED_HEADERS=<value>
-      #
-      exposed_headers:
-        - ''
-
-      ## allow_credentials ##
-      #
-      # Sets whether the request can include user credentials like cookies, HTTP authentication or client side SSL certificates.
-      #
-      # Default value: true
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_ALLOW_CREDENTIALS=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_ALLOW_CREDENTIALS=<value>
-      #
-      allow_credentials: false
-
-      ## options_passthrough ##
-      #
-      # TODO
+      # Disable request logging for /health/alive and /health/ready endpoints
       #
       # Default value: false
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_OPTIONS_PASSTHROUGH=<value>
+      #    $ export SERVE_PUBLIC_REQUEST_LOG_DISABLE_FOR_HEALTH=<value>
       # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_OPTIONS_PASSTHROUGH=<value>
+      #    > set SERVE_PUBLIC_REQUEST_LOG_DISABLE_FOR_HEALTH=<value>
       #
-      options_passthrough: false
-
-      ## max_age ##
-      #
-      # Sets how long (in seconds) the results of a preflight request can be cached. If set to 0, every request is preceded by a preflight request.
-      #
-      # Minimum value: 0
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_MAX_AGE=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_MAX_AGE=<value>
-      #
-      max_age: 0
-
-      ## debug ##
-      #
-      # Adds additional log output to debug server side CORS issues.
-      #
-      # Default value: false
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_DEBUG=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_DEBUG=<value>
-      #
-      debug: false
-
-      ## enabled ##
-      #
-      # Sets whether CORS is enabled.
-      #
-      # Default value: false
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SERVE_PUBLIC_CORS_ENABLED=<value>
-      # - Windows Command Line (CMD):
-      #    > set SERVE_PUBLIC_CORS_ENABLED=<value>
-      #
-      enabled: false
+      disable_for_health: false
 
   ## admin ##
   #
   admin:
+    ## Admin Base URL ##
+    #
+    # The URL where the admin endpoint is exposed at.
+    #
+    # Examples:
+    # - https://kratos.private-network:4434/
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SERVE_ADMIN_BASE_URL=<value>
+    # - Windows Command Line (CMD):
+    #    > set SERVE_ADMIN_BASE_URL=<value>
+    #
+    base_url: https://kratos.private-network:4434/
+
     ## Admin Host ##
     #
     # The host (interface) kratos' admin endpoint listens on.
@@ -1653,20 +1683,22 @@ serve:
         #
         path: path/to/file.pem
 
-    ## Admin Base URL ##
+    ## request_log ##
     #
-    # The URL where the admin endpoint is exposed at.
-    #
-    # Examples:
-    # - https://kratos.private-network:4434/
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export SERVE_ADMIN_BASE_URL=<value>
-    # - Windows Command Line (CMD):
-    #    > set SERVE_ADMIN_BASE_URL=<value>
-    #
-    base_url: https://kratos.private-network:4434/
+    request_log:
+      ## Disable health endpoints request logging ##
+      #
+      # Disable request logging for /health/alive and /health/ready endpoints
+      #
+      # Default value: false
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SERVE_ADMIN_REQUEST_LOG_DISABLE_FOR_HEALTH=<value>
+      # - Windows Command Line (CMD):
+      #    > set SERVE_ADMIN_REQUEST_LOG_DISABLE_FOR_HEALTH=<value>
+      #
+      disable_for_health: false
 
 ## tracing ##
 #
