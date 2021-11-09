@@ -172,44 +172,9 @@
               "href": "https://www.ory.sh/docs/cli/ory"
             },
             {
-              "label": "ory identities",
-              "type": "link",
-              "href": "https://www.ory.sh/docs/cli/ory-identities"
-            },
-            {
-              "label": "ory identities delete",
-              "type": "link",
-              "href": "https://www.ory.sh/docs/cli/ory-identities-delete"
-            },
-            {
-              "label": "ory identities get",
-              "type": "link",
-              "href": "https://www.ory.sh/docs/cli/ory-identities-get"
-            },
-            {
-              "label": "ory identities list",
-              "type": "link",
-              "href": "https://www.ory.sh/docs/cli/ory-identities-list"
-            },
-            {
               "label": "ory proxy",
               "type": "link",
               "href": "https://www.ory.sh/docs/cli/ory-proxy"
-            },
-            {
-              "label": "ory proxy api",
-              "type": "link",
-              "href": "https://www.ory.sh/docs/cli/ory-proxy-api"
-            },
-            {
-              "label": "ory proxy local",
-              "type": "link",
-              "href": "https://www.ory.sh/docs/cli/ory-proxy-local"
-            },
-            {
-              "label": "ory proxy production",
-              "type": "link",
-              "href": "https://www.ory.sh/docs/cli/ory-proxy-production"
             },
             {
               "label": "ory version",

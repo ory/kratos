@@ -3,12 +3,13 @@ package settings_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/text"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/assertx"
 
@@ -120,7 +121,7 @@ func TestHandler(t *testing.T) {
 			t.Run("description=without privileges", func(t *testing.T) {
 				res, body := initFlow(t, new(http.Client), true)
 				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(),"%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
 			})
 
 			t.Run("description=success", func(t *testing.T) {
@@ -142,7 +143,7 @@ func TestHandler(t *testing.T) {
 			t.Run("description=without privileges", func(t *testing.T) {
 				res, body := initSPAFlow(t, new(http.Client))
 				assert.Equal(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(),"%s", body)
+				assert.Equal(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
 			})
 
 			t.Run("description=success", func(t *testing.T) {
