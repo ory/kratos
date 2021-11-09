@@ -70,6 +70,27 @@ selfservice:
     - https://www.myapp.com/
 ```
 
+It's possible to add domain wildcards to our configuration.
+As an example, we're adding all subdomains of `myapp.com` to the whitelist, thus
+we can now specify a dynamic subdomain return url like so
+`?return_to=https://foo.myapp.com` or `?return_to=https://bar.myapp.com`.
+
+```yaml file="path/to/my/kratos.config.yml"
+selfservice:
+  whitelisted_return_urls:
+    - https://*.myapp.com/
+```
+
+Please remember that adding wildcards for top level domains is blocked (to prevent
+Open Redirect Attacks).If we try to add a wild card for a top level domain we'll get
+an error: `Ignoring wildcard ...`. So adding something like this won't work:
+
+```yaml file="path/to/my/kratos.config.yml"
+selfservice:
+  whitelisted_return_urls:
+    - https://*.com/
+```
+
 ### Post-Login Redirection
 
 Post-login redirection considers the following configuration keys:
