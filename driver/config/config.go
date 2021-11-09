@@ -69,6 +69,9 @@ const (
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
+	ViperKeyCourierSMSRequestConfig                          = "courier.sms.request_config"
+	ViperKeyCourierSMSEnabled                                = "courier.sms.enabled"
+	ViperKeyCourierSMSFrom                                   = "courier.sms.from"
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
@@ -235,6 +238,9 @@ type (
 		CourierSMTPFrom() string
 		CourierSMTPFromName() string
 		CourierSMTPHeaders() map[string]string
+		CourierSMSEnabled() bool
+		CourierSMSFrom() string
+		CourierSMSRequestConfig() json.RawMessage
 		CourierTemplatesRoot() string
 		CourierTemplatesVerificationInvalid() *CourierEmailTemplate
 		CourierTemplatesVerificationValid() *CourierEmailTemplate
@@ -917,6 +923,33 @@ func (p *Config) CourierTemplatesRecoveryValid() *CourierEmailTemplate {
 
 func (p *Config) CourierSMTPHeaders() map[string]string {
 	return p.p.StringMap(ViperKeyCourierSMTPHeaders)
+}
+
+func (p *Config) CourierSMSRequestConfig() json.RawMessage {
+	if !p.p.Bool(ViperKeyCourierSMSEnabled) {
+		return nil
+	}
+
+	out, err := p.p.Marshal(kjson.Parser())
+	if err != nil {
+		p.l.WithError(err).Warn("Unable to marshal self service strategy configuration.")
+		return nil
+	}
+
+	config := gjson.GetBytes(out, ViperKeyCourierSMSRequestConfig).Raw
+	if len(config) <= 0 {
+		return json.RawMessage("{}")
+	}
+
+	return json.RawMessage(config)
+}
+
+func (p *Config) CourierSMSFrom() string {
+	return p.p.StringF(ViperKeyCourierSMSFrom, "Ory Kratos")
+}
+
+func (p *Config) CourierSMSEnabled() bool {
+	return p.p.Bool(ViperKeyCourierSMSEnabled)
 }
 
 func splitUrlAndFragment(s string) (string, string) {

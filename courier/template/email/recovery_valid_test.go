@@ -1,13 +1,12 @@
-package template_test
+package email_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/courier/template/testhelpers"
-
-	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/internal"
 )
 
@@ -17,12 +16,12 @@ func TestRecoverValid(t *testing.T) {
 
 	t.Run("test=with courier templates directory", func(t *testing.T) {
 		_, reg := internal.NewFastRegistryWithMocks(t)
-		tpl := template.NewRecoveryValid(reg, &template.RecoveryValidModel{})
+		tpl := email.NewRecoveryValid(reg, &email.RecoveryValidModel{})
 
 		testhelpers.TestRendered(t, ctx, tpl)
 	})
 
 	t.Run("test=with remote resources", func(t *testing.T) {
-		testhelpers.TestRemoteTemplates(t, "courier/builtin/templates/recovery/valid", courier.TypeRecoveryValid)
+		testhelpers.TestRemoteTemplates(t, "../courier/builtin/templates/recovery/valid", courier.TypeRecoveryValid)
 	})
 }

@@ -1445,6 +1445,79 @@
             "connection_uri"
           ],
           "additionalProperties": false
+        },
+        "sms": {
+          "title": "SMS sender configuration",
+          "description": "Configures outgoing sms messages using HTTP protocol with generic SMS provider",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "description": "Determines if SMS functionality is enabled",
+              "type": "boolean",
+              "default": false
+            },
+            "from": {
+              "title": "SMS Sender Address",
+              "description": "The recipient of a sms will see this as the sender address.",
+              "type": "string",
+              "default": "Ory Kratos"
+            },
+            "request_config": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "title": "HTTP address of API endpoint",
+                  "description": "This URL will be used to connect to the SMS provider.",
+                  "examples": [
+                    "https://api.twillio.com/sms/send"
+                  ],
+                  "type": "string",
+                  "pattern": "^https?:\\/\\/.*"
+                },
+                "method": {
+                  "type": "string",
+                  "description": "The HTTP method to use (GET, POST, etc)."
+                },
+                "body": {
+                  "type": "string",
+                  "oneOf": [
+                    {
+                      "format": "uri",
+                      "pattern": "^(http|https|file|base64)://",
+                      "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
+                      "examples": [
+                        "file:///path/to/body.jsonnet",
+                        "file://./body.jsonnet",
+                        "base64://ZnVuY3Rpb24oY3R4KSB7CiAgaWRlbnRpdHlfaWQ6IGlmIGN0eFsiaWRlbnRpdHkiXSAhPSBudWxsIHRoZW4gY3R4LmlkZW50aXR5LmlkLAp9=",
+                        "https://oryapis.com/default_body.jsonnet"
+                      ]
+                    },
+                    {
+                      "description": "DEPRECATED: please use a URI instead (i.e. prefix your filepath with 'file://')",
+                      "not": {
+                        "pattern": "^(http|https|file|base64)://"
+                      }
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "object",
+                  "title": "Auth mechanisms",
+                  "description": "Define which auth mechanism to use for auth with the SMS provider",
+                  "oneOf": [
+                    {
+                      "$ref": "#/definitions/webHookAuthApiKeyProperties"
+                    },
+                    {
+                      "$ref": "#/definitions/webHookAuthBasicAuthProperties"
+                    }
+                  ]
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "required": [

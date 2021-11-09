@@ -10,14 +10,15 @@ import (
 )
 
 type (
-	TemplateConfig interface {
+	Config interface {
 		CourierTemplatesRoot() string
 		CourierTemplatesVerificationInvalid() *config.CourierEmailTemplate
 		CourierTemplatesVerificationValid() *config.CourierEmailTemplate
 		CourierTemplatesRecoveryInvalid() *config.CourierEmailTemplate
 		CourierTemplatesRecoveryValid() *config.CourierEmailTemplate
 	}
-	TemplateDependencies interface {
+
+	Dependencies interface {
 		CourierConfig(ctx context.Context) config.CourierConfigs
 		HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 	}

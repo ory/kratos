@@ -149,7 +149,7 @@ func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, 
 	return tpl, nil
 }
 
-func LoadTextTemplate(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL string) (string, error) {
+func LoadText(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL string) (string, error) {
 	var t Template
 	var err error
 	if remoteURL != "" {
@@ -171,7 +171,7 @@ func LoadTextTemplate(ctx context.Context, d templateDependencies, filesystem fs
 	return b.String(), nil
 }
 
-func LoadHTMLTemplate(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL string) (string, error) {
+func LoadHTML(ctx context.Context, d templateDependencies, filesystem fs.FS, name, pattern string, model interface{}, remoteURL string) (string, error) {
 	var t Template
 	var err error
 	if remoteURL != "" {
