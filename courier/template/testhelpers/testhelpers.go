@@ -9,6 +9,8 @@ import (
 	"path"
 	"testing"
 
+	"github.com/ory/kratos/courier/template/email"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -55,21 +57,21 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 		return base64.StdEncoding.EncodeToString(f)
 	}
 
-	getTemplate := func(tmpl courier.TemplateType, d template.TemplateDependencies) interface {
+	getTemplate := func(tmpl courier.TemplateType, d template.Dependencies) interface {
 		EmailBody(context.Context) (string, error)
 		EmailSubject(context.Context) (string, error)
 	} {
 		switch tmpl {
 		case courier.TypeRecoveryInvalid:
-			return template.NewRecoveryInvalid(d, &template.RecoveryInvalidModel{})
+			return email.NewRecoveryInvalid(d, &email.RecoveryInvalidModel{})
 		case courier.TypeRecoveryValid:
-			return template.NewRecoveryValid(d, &template.RecoveryValidModel{})
+			return email.NewRecoveryValid(d, &email.RecoveryValidModel{})
 		case courier.TypeTestStub:
-			return template.NewTestStub(d, &template.TestStubModel{})
+			return email.NewTestStub(d, &email.TestStubModel{})
 		case courier.TypeVerificationInvalid:
-			return template.NewVerificationInvalid(d, &template.VerificationInvalidModel{})
+			return email.NewVerificationInvalid(d, &email.VerificationInvalidModel{})
 		case courier.TypeVerificationValid:
-			return template.NewVerificationValid(d, &template.VerificationValidModel{})
+			return email.NewVerificationValid(d, &email.VerificationValidModel{})
 		default:
 			return nil
 		}

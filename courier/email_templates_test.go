@@ -9,25 +9,23 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/courier/template"
+	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/internal"
 )
 
 func TestGetTemplateType(t *testing.T) {
 	for expectedType, tmpl := range map[courier.TemplateType]courier.EmailTemplate{
-		courier.TypeRecoveryInvalid:     &template.RecoveryInvalid{},
-		courier.TypeRecoveryValid:       &template.RecoveryValid{},
-		courier.TypeVerificationInvalid: &template.VerificationInvalid{},
-		courier.TypeVerificationValid:   &template.VerificationValid{},
-		courier.TypeTestStub:            &template.TestStub{},
+		courier.TypeRecoveryInvalid:     &email.RecoveryInvalid{},
+		courier.TypeRecoveryValid:       &email.RecoveryValid{},
+		courier.TypeVerificationInvalid: &email.VerificationInvalid{},
+		courier.TypeVerificationValid:   &email.VerificationValid{},
+		courier.TypeTestStub:            &email.TestStub{},
 	} {
 		t.Run(fmt.Sprintf("case=%s", expectedType), func(t *testing.T) {
-			actualType, err := courier.GetTemplateType(tmpl)
+			actualType, err := courier.GetEmailTemplateType(tmpl)
 			require.NoError(t, err)
 			require.Equal(t, expectedType, actualType)
-
 		})
-
 	}
 }
 
@@ -36,11 +34,11 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 	ctx := context.Background()
 
 	for tmplType, expectedTmpl := range map[courier.TemplateType]courier.EmailTemplate{
-		courier.TypeRecoveryInvalid:     template.NewRecoveryInvalid(reg, &template.RecoveryInvalidModel{To: "foo"}),
-		courier.TypeRecoveryValid:       template.NewRecoveryValid(reg, &template.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
-		courier.TypeVerificationInvalid: template.NewVerificationInvalid(reg, &template.VerificationInvalidModel{To: "baz"}),
-		courier.TypeVerificationValid:   template.NewVerificationValid(reg, &template.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
-		courier.TypeTestStub:            template.NewTestStub(reg, &template.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
+		courier.TypeRecoveryInvalid:     email.NewRecoveryInvalid(reg, &email.RecoveryInvalidModel{To: "foo"}),
+		courier.TypeRecoveryValid:       email.NewRecoveryValid(reg, &email.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
+		courier.TypeVerificationInvalid: email.NewVerificationInvalid(reg, &email.VerificationInvalidModel{To: "baz"}),
+		courier.TypeVerificationValid:   email.NewVerificationValid(reg, &email.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
+		courier.TypeTestStub:            email.NewTestStub(reg, &email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {
 			tmplData, err := json.Marshal(expectedTmpl)

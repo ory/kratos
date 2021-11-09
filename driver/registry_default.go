@@ -588,8 +588,8 @@ func (m *RegistryDefault) SetPersister(p persistence.Persister) {
 	m.persister = p
 }
 
-func (m *RegistryDefault) Courier(ctx context.Context) *courier.Courier {
-	return courier.NewSMTP(ctx, m)
+func (m *RegistryDefault) Courier(ctx context.Context) courier.Courier {
+	return courier.NewCourier(ctx, m)
 }
 
 func (m *RegistryDefault) ContinuityManager() continuity.Manager {
