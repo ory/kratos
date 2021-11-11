@@ -60,3 +60,17 @@ func UntypedMapToJSON(m map[string]string) (json.RawMessage, error) {
 
 	return b.Bytes(), nil
 }
+
+func StructToMap(s interface{}) (map[string]interface{}, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+
+	mapData := make(map[string]interface{})
+	err = json.Unmarshal(b, &mapData)
+	if err != nil {
+		return nil, err
+	}
+	return mapData, nil
+}

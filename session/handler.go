@@ -9,8 +9,6 @@ import (
 
 	"github.com/ory/x/decoderx"
 
-	"github.com/ory/x/errorsx"
-
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/config"
@@ -234,7 +232,7 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 				return
 			}
 
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("This endpoint can only be accessed with a valid session. Please log in and try again.")))
+			h.r.Writer().WriteError(w, r, errors.WithStack(NewErrNoActiveSessionFound().WithReason("This endpoint can only be accessed with a valid session. Please log in and try again.")))
 			return
 		}
 
@@ -245,7 +243,7 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-			if errorsx.Cause(err).Error() == ErrNoActiveSessionFound.Error() {
+			if e := new(ErrNoActiveSessionFound); errors.As(err, &e) {
 				wrap(w, r, ps)
 				return
 			}

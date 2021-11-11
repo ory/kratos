@@ -1350,6 +1350,18 @@
         "admin": {
           "type": "object",
           "properties": {
+            "request_log": {
+              "type": "object",
+              "properties": {
+                "disable_for_health": {
+                  "title": "Disable health endpoints request logging",
+                  "description": "Disable request logging for /health/alive and /health/ready endpoints",
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "additionalProperties": false
+            },
             "base_url": {
               "title": "Admin Base URL",
               "description": "The URL where the admin endpoint is exposed at.",
@@ -1388,6 +1400,18 @@
         "public": {
           "type": "object",
           "properties": {
+            "request_log": {
+              "type": "object",
+              "properties": {
+                "disable_for_health": {
+                  "title": "Disable health endpoints request logging",
+                  "description": "Disable request logging for /health/alive and /health/ready endpoints",
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "additionalProperties": false
+            },
             "cors": {
               "type": "object",
               "additionalProperties": false,

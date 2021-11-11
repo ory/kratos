@@ -69,12 +69,9 @@ ciphers:
   algorithm: xchacha20-poly1305
 
 hashers:
-  argon2:
-    parallelism: 1
-    memory: 128MB
-    iterations: 2
-    salt_length: 16
-    key_length: 16
+  algorithm: bcrypt
+  bcrypt:
+    cost: 8
 
 identity:
   default_schema_url: file:///etc/config/kratos/identity.schema.json
