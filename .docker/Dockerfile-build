@@ -1,4 +1,5 @@
-FROM golang:1.16-alpine AS builder
+# syntax = docker/dockerfile:1-experimental
+FROM golang:1.16-alpine AS base
 
 RUN apk -U --no-cache add build-base git gcc bash
 
@@ -13,13 +14,15 @@ ENV CGO_ENABLED 1
 
 RUN go mod download
 
+FROM base as builder
+
 ADD . .
 
 ARG VERSION
 ARG COMMIT
 ARG BUILD_DATE
 
-RUN go build -tags sqlite \
+RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite \
     -ldflags="-X 'github.com/ory/kratos/driver/config.Version=${VERSION}' -X 'github.com/ory/kratos/driver/config.Date=${BUILD_DATE}' -X 'github.com/ory/kratos/driver/config.Commit=${COMMIT}'" \
     -o /usr/bin/kratos
 
