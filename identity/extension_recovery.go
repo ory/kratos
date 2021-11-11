@@ -24,25 +24,24 @@ func (r *SchemaExtensionRecovery) Run(ctx jsonschema.ValidationContext, s schema
 	defer r.l.Unlock()
 
 	switch s.Recovery.Via {
-	case "email":
+	case AddressTypeEmail:
 		if !jsonschema.Formats["email"](value) {
 			return ctx.Error("format", "%q is not valid %q", value, "email")
 		}
 
 		address := NewRecoveryEmailAddress(fmt.Sprintf("%s", value), r.i.ID)
-
-		if has := r.has(r.i.RecoveryAddresses, address); has != nil {
-			if r.has(r.v, address) == nil {
-				r.v = append(r.v, *has)
-			}
-			return nil
-		}
-
-		if has := r.has(r.v, address); has == nil {
-			r.v = append(r.v, *address)
-		}
-
+		r.appendAddress(address)
 		return nil
+
+	case AddressTypePhone:
+		if !jsonschema.Formats["tel"](value) {
+			return ctx.Error("format", "%q is not valid %q", value, "phone")
+		}
+
+		address := NewRecoveryPhoneAddress(fmt.Sprintf("%s", value), r.i.ID)
+		r.appendAddress(address)
+		return nil
+
 	case "":
 		return nil
 	}
@@ -57,6 +56,21 @@ func (r *SchemaExtensionRecovery) has(haystack []RecoveryAddress, needle *Recove
 		}
 	}
 	return nil
+}
+
+func (r *SchemaExtensionRecovery) appendAddress(address *RecoveryAddress) {
+	if has := r.has(r.i.RecoveryAddresses, address); has != nil {
+		if r.has(r.v, address) == nil {
+			r.v = append(r.v, *has)
+		}
+		return
+	}
+
+	if has := r.has(r.v, address); has == nil {
+		r.v = append(r.v, *address)
+	}
+
+	return
 }
 
 func (r *SchemaExtensionRecovery) Finish() error {

@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "phone": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "ory.sh/kratos": {
+          "recovery": {
+            "via": "phone"
+          }
+        }
+      }
+    },
+    "username": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "recovery": {
+          "via": "phone"
+        }
+      }
+    }
+  }
+}

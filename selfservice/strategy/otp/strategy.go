@@ -1,4 +1,4 @@
-package link
+package otp
 
 import (
 	"github.com/ory/kratos/courier"
@@ -62,7 +62,6 @@ type (
 		verification.FlowPersistenceProvider
 		verification.StrategyProvider
 		verification.HookExecutorProvider
-		verification.HandlerProvider
 
 		token.RecoveryTokenPersistenceProvider
 		token.VerificationTokenPersistenceProvider
@@ -81,10 +80,10 @@ func NewStrategy(d strategyDependencies) *Strategy {
 	return &Strategy{d: d, dx: decoderx.NewHTTP()}
 }
 
-func (s *Strategy) RecoveryNodeGroup() node.UiNodeGroup {
-	return node.LinkGroup
+func (s *Strategy) RecoveryNodeGroup() node.Group {
+	return node.RecoveryOTPGroup
 }
 
-func (s *Strategy) VerificationNodeGroup() node.UiNodeGroup {
-	return node.LinkGroup
+func (s *Strategy) VerificationNodeGroup() node.Group {
+	return node.VerificationOTPGroup
 }

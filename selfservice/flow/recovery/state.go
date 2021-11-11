@@ -14,10 +14,11 @@ type State string
 const (
 	StateChooseMethod    State = "choose_method"
 	StateEmailSent       State = "sent_email"
+	StateSmsSent         State = "sent_sms"
 	StatePassedChallenge State = "passed_challenge"
 )
 
-var states = []State{StateChooseMethod, StateEmailSent, StatePassedChallenge}
+var states = []State{StateChooseMethod, StateEmailSent, StateSmsSent, StatePassedChallenge}
 
 func indexOf(current State) int {
 	for k, s := range states {

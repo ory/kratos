@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/token"
+
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
-	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/bxcodec/faker/v3"
@@ -35,7 +36,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 		t.Run("token=recovery", func(t *testing.T) {
 
-			newRecoveryToken := func(t *testing.T, email string) (*link.RecoveryToken, *recovery.Flow) {
+			newRecoveryToken := func(t *testing.T, email string) (*token.RecoveryToken, *recovery.Flow) {
 				var req recovery.Flow
 				require.NoError(t, faker.FakeData(&req))
 				require.NoError(t, p.CreateRecoveryFlow(ctx, &req))
@@ -48,7 +49,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
 
-				return &link.RecoveryToken{
+				return &token.RecoveryToken{
 					Token:           x.NewUUID().String(),
 					FlowID:          uuid.NullUUID{UUID: req.ID, Valid: true},
 					RecoveryAddress: &i.RecoveryAddresses[0],
@@ -123,7 +124,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 		})
 
 		t.Run("token=verification", func(t *testing.T) {
-			newVerificationToken := func(t *testing.T, email string) (*verification.Flow, *link.VerificationToken) {
+			newVerificationToken := func(t *testing.T, email string) (*verification.Flow, *token.VerificationToken) {
 				var f verification.Flow
 				require.NoError(t, faker.FakeData(&f))
 				require.NoError(t, p.CreateVerificationFlow(ctx, &f))
@@ -135,7 +136,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 
 				require.NoError(t, p.CreateIdentity(ctx, &i))
-				return &f, &link.VerificationToken{
+				return &f, &token.VerificationToken{
 					Token:             x.NewUUID().String(),
 					FlowID:            f.ID,
 					VerifiableAddress: &i.VerifiableAddresses[0],

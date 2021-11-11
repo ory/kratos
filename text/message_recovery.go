@@ -37,6 +37,15 @@ func NewRecoveryEmailSent() *Message {
 	}
 }
 
+func NewRecoveryPhoneSent() *Message {
+	return &Message{
+		ID:      InfoSelfServiceRecoverySMSSent,
+		Type:    Info,
+		Text:    "An phone containing a recovery OTP has been sent to the phone number you provided.",
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed() *Message {
 	return &Message{
 		ID:      ErrorValidationRecoveryTokenInvalidOrAlreadyUsed,

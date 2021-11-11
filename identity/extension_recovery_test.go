@@ -28,7 +28,7 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 	}{
 		{
 			doc:    `{"username":"foo@ory.sh"}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			schema: "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -39,7 +39,7 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 		},
 		{
 			doc:    `{"username":"foo@ory.sh"}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			schema: "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -57,7 +57,7 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 		},
 		{
 			doc:    `{"emails":["baz@ory.sh","foo@ory.sh"]}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			schema: "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -85,7 +85,7 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 		},
 		{
 			doc:    `{"emails":["foo@ory.sh","foo@ory.sh","baz@ory.sh"]}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			schema: "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -113,12 +113,12 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 		},
 		{
 			doc:       `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
-			schema:    "file://./stub/extension/recovery/schema.json",
+			schema:    "file://./stub/extension/recovery/email.schema.json",
 			expectErr: errors.New("I[#/username] S[#/properties/username/format] \"foobar\" is not valid \"email\""),
 		},
 		{
 			doc:    `{"emails":["foo@ory.sh","bar@ory.sh","bar@ory.sh"], "username": "foobar@ory.sh"}`,
-			schema: "file://./stub/extension/recovery/schema.json",
+			schema: "file://./stub/extension/recovery/email.schema.json",
 			expect: []RecoveryAddress{
 				{
 					Value:      "foo@ory.sh",
@@ -133,6 +133,117 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 				{
 					Value:      "foobar@ory.sh",
 					Via:        RecoveryAddressTypeEmail,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			doc:    `{"username":"+3807712576348"}`,
+			schema: "file://./stub/extension/recovery/phone.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+3807712576348",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			doc:    `{"username":"+3807712576348"}`,
+			schema: "file://./stub/extension/recovery/phone.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+3807712576348",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+			},
+			existing: []RecoveryAddress{
+				{
+					Value:      "+3807712576348",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			doc:    `{"phone":["+3807712576348","+3807712576390"]}`,
+			schema: "file://./stub/extension/recovery/phone.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+3807712576348",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+				{
+					Value:      "+3807712576390",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+			},
+			existing: []RecoveryAddress{
+				{
+					Value:      "+3807712576348",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+				{
+					Value:      "+3807712576390",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			doc:    `{"phone":["+3807712576348","+3807712576349"]}`,
+			schema: "file://./stub/extension/recovery/phone.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+3807712576348",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+				{
+					Value:      "+3807712576349",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+			},
+			existing: []RecoveryAddress{
+				{
+					Value:      "+3807712576348",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+				{
+					Value:      "+3807712576349",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			doc:       `{"phone":["+38077125763","+380771257636"], "username": "foobar"}`,
+			schema:    "file://./stub/extension/recovery/phone.schema.json",
+			expectErr: errors.New("I[#/username] S[#/properties/username/format] \"foobar\" is not valid \"phone\""),
+		},
+		{
+			doc:    `{"phone":["+3807712576348","+3807712576349","+3807712576370"], "username": "foobar"}`,
+			schema: "file://./stub/extension/recovery/phone.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+3807712576348",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+				{
+					Value:      "+3807712576349",
+					Via:        RecoveryAddressTypePhone,
+					IdentityID: iid,
+				},
+				{
+					Value:      "+3807712576370",
+					Via:        RecoveryAddressTypePhone,
 					IdentityID: iid,
 				},
 			},

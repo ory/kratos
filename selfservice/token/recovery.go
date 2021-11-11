@@ -1,19 +1,17 @@
-package link
+package token
 
 import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
 
-	"github.com/ory/x/randx"
-
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/randx"
 )
 
 type RecoveryTokenType int
@@ -64,7 +62,7 @@ func (RecoveryToken) TableName(ctx context.Context) string {
 	return "identity_recovery_tokens"
 }
 
-func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryToken {
+func NewLinkRecovery(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryToken {
 	now := time.Now().UTC()
 	var identityID = uuid.UUID{}
 	var recoveryAddressID = uuid.UUID{}
@@ -82,6 +80,26 @@ func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.
 		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true},
 		RecoveryAddressID: &recoveryAddressID,
 		TokenType:         RecoveryTokenTypeSelfService,
+	}
+}
+
+func NewOTPRecovery(address *identity.RecoveryAddress, f *recovery.Flow, expiresIn time.Duration) *RecoveryToken {
+	now := time.Now().UTC()
+	var identityID = uuid.UUID{}
+	var recoveryAddressID = uuid.UUID{}
+	if address != nil {
+		identityID = address.IdentityID
+		recoveryAddressID = address.ID
+	}
+	return &RecoveryToken{
+		ID:                x.NewUUID(),
+		Token:             randx.MustString(6, randx.Numeric),
+		RecoveryAddress:   address,
+		ExpiresAt:         now.Add(expiresIn),
+		IssuedAt:          now,
+		IdentityID:        identityID,
+		FlowID:            uuid.NullUUID{UUID: f.ID, Valid: true},
+		RecoveryAddressID: &recoveryAddressID,
 	}
 }
 

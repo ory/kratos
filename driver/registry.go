@@ -4,16 +4,13 @@ import (
 	"context"
 
 	"github.com/ory/x/contextx"
-	"github.com/ory/x/otelx"
 	prometheus "github.com/ory/x/prometheusx"
-
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
-
 	"github.com/ory/nosurf"
-
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/logrusx"
-
+	"github.com/ory/kratos/selfservice/token"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/hash"
@@ -130,8 +127,8 @@ type Registry interface {
 	verification.StrategyProvider
 
 	link.SenderProvider
-	link.VerificationTokenPersistenceProvider
-	link.RecoveryTokenPersistenceProvider
+	token.VerificationTokenPersistenceProvider
+	token.RecoveryTokenPersistenceProvider
 
 	recovery.FlowPersistenceProvider
 	recovery.ErrorHandlerProvider

@@ -33,6 +33,15 @@ func NewVerificationEmailSent() *Message {
 	}
 }
 
+func NewVerificationOTPSent() *Message {
+	return &Message{
+		ID:      InfoSelfServiceVerificationOTPSent,
+		Type:    Info,
+		Text:    "An one-time password has been sent to the phone address you provided.",
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationVerificationTokenInvalidOrAlreadyUsed() *Message {
 	return &Message{
 		ID:      ErrorValidationVerificationTokenInvalidOrAlreadyUsed,

@@ -9,13 +9,9 @@
     "token": {
       "type": "string"
     },
-    "email": {
-      "type": "string",
-      "format": "email"
-    },
     "phone": {
       "type": "string",
-      "format": "phone"
+      "format": "tel"
     },
     "flow": {
       "type": "string",

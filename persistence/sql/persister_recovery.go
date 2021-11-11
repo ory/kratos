@@ -11,12 +11,12 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/token"
 	"github.com/ory/x/sqlcon"
 )
 
 var _ recovery.FlowPersister = new(Persister)
-var _ link.RecoveryTokenPersister = new(Persister)
+var _ token.RecoveryTokenPersister = new(Persister)
 
 func (p *Persister) CreateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryFlow")
@@ -47,34 +47,34 @@ func (p *Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) er
 	return p.update(ctx, cp)
 }
 
-func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.RecoveryToken) error {
+func (p *Persister) CreateRecoveryToken(ctx context.Context, tkn *token.RecoveryToken) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateRecoveryToken")
 	defer span.End()
 
-	t := token.Token
-	token.Token = p.hmacValue(ctx, t)
-	token.NID = p.NetworkID(ctx)
+	t := tkn.Token
+	tkn.Token = p.hmacValue(ctx, t)
+	tkn.NID = p.NetworkID(ctx)
 
 	// This should not create the request eagerly because otherwise we might accidentally create an address that isn't
 	// supposed to be in the database.
-	if err := p.GetConnection(ctx).Create(token); err != nil {
+	if err := p.GetConnection(ctx).Create(tkn); err != nil {
 		return err
 	}
 
-	token.Token = t
+	tkn.Token = t
 	return nil
 }
 
-func (p *Persister) UseRecoveryToken(ctx context.Context, fID uuid.UUID, token string) (*link.RecoveryToken, error) {
+func (p *Persister) UseRecoveryToken(ctx context.Context, fID uuid.UUID, tkn string) (*token.RecoveryToken, error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseRecoveryToken")
 	defer span.End()
 
-	var rt link.RecoveryToken
+	var rt token.RecoveryToken
 
 	nid := p.NetworkID(ctx)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.r.Config().SecretsSession(ctx) {
-			if err = tx.Where("token = ? AND nid = ? AND NOT used AND selfservice_recovery_flow_id = ?", p.hmacValueWithSecret(ctx, token, secret), nid, fID).First(&rt); err != nil {
+			if err = tx.Where("token = ? AND nid = ? AND NOT used AND selfservice_recovery_flow_id = ?", p.hmacValueWithSecret(ctx, tkn, secret), nid, fID).First(&rt); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err
 				}
@@ -103,12 +103,11 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, fID uuid.UUID, token s
 	return &rt, nil
 }
 
-func (p *Persister) DeleteRecoveryToken(ctx context.Context, token string) error {
+func (p *Persister) DeleteRecoveryToken(ctx context.Context, tkn string) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryToken")
 	defer span.End()
-
 	/* #nosec G201 TableName is static */
-	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(link.RecoveryToken).TableName(ctx)), token, p.NetworkID(ctx)).Exec()
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=? AND nid = ?", new(token.RecoveryToken).TableName(ctx)), tkn, p.NetworkID(ctx)).Exec()
 }
 
 func (p *Persister) DeleteExpiredRecoveryFlows(ctx context.Context, expiresAt time.Time, limit int) error {

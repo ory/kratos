@@ -12,9 +12,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/token"
+
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/stretchr/testify/assert"
@@ -342,7 +343,7 @@ func TestVerification(t *testing.T) {
 		check(t, expectSuccess(t, nil, false, false, values))
 	})
 
-	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *link.VerificationToken) {
+	newValidFlow := func(t *testing.T, requestURL string) (*verification.Flow, *token.VerificationToken) {
 		f, err := verification.NewFlow(conf, time.Hour, x.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		f.State = verification.StateEmailSent
@@ -351,9 +352,9 @@ func TestVerification(t *testing.T) {
 		identityToVerify.VerifiableAddresses = append(identityToVerify.VerifiableAddresses, *email)
 		require.NoError(t, reg.IdentityManager().Update(context.Background(), identityToVerify, identity.ManagerAllowWriteProtectedTraits))
 
-		token := link.NewSelfServiceVerificationToken(&identityToVerify.VerifiableAddresses[0], f, time.Hour)
-		require.NoError(t, reg.VerificationTokenPersister().CreateVerificationToken(context.Background(), token))
-		return f, token
+		tkn := token.NewLinkVerification(&identityToVerify.VerifiableAddresses[0], f, time.Hour)
+		require.NoError(t, reg.VerificationTokenPersister().CreateVerificationToken(context.Background(), tkn))
+		return f, tkn
 	}
 
 	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
@@ -370,13 +371,13 @@ func TestVerification(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
-		flow, token := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
+		flow, tkn := newValidFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
 
 		body := fmt.Sprintf(
 			`{"csrf_token":"%s","email":"%s"}`, flow.CSRFToken, verificationEmail,
 		)
 
-		res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}, "token": {token.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
+		res, err := client.Post(public.URL+verification.RouteSubmitFlow+"?"+url.Values{"flow": {flow.ID.String()}, "token": {tkn.Token}}.Encode(), "application/json", bytes.NewBuffer([]byte(body)))
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusSeeOther, res.StatusCode)
 		redirectURL, err := res.Location()

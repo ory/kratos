@@ -72,6 +72,7 @@ const (
 	// CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).
 	// It is not used within the credentials object itself.
 	CredentialsTypeRecoveryLink CredentialsType = "link_recovery"
+	CredentialsTypeRecoveryOTP  CredentialsType = "otp_recovery"
 )
 
 // Credentials represents a specific credential type

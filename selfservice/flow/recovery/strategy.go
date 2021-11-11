@@ -4,15 +4,15 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
 const (
 	StrategyRecoveryLinkName = "link"
+	StrategyRecoveryOTPName  = "otp"
 )
 
 type (

@@ -1,4 +1,4 @@
-package link
+package token
 
 import (
 	"context"
@@ -52,11 +52,23 @@ func (VerificationToken) TableName(ctx context.Context) string {
 	return "identity_verification_tokens"
 }
 
-func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *verification.Flow, expiresIn time.Duration) *VerificationToken {
+func NewLinkVerification(address *identity.VerifiableAddress, f *verification.Flow, expiresIn time.Duration) *VerificationToken {
 	now := time.Now().UTC()
 	return &VerificationToken{
 		ID:                x.NewUUID(),
 		Token:             randx.MustString(32, randx.AlphaNum),
+		VerifiableAddress: address,
+		ExpiresAt:         now.Add(expiresIn),
+		IssuedAt:          now,
+		FlowID:            f.ID,
+	}
+}
+
+func NewOTPVerification(address *identity.VerifiableAddress, f *verification.Flow, expiresIn time.Duration) *VerificationToken {
+	now := time.Now().UTC()
+	return &VerificationToken{
+		ID:                x.NewUUID(),
+		Token:             randx.MustString(6, randx.Numeric),
 		VerifiableAddress: address,
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,

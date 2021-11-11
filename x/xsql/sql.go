@@ -16,7 +16,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/token"
 	"github.com/ory/kratos/session"
 )
 
@@ -31,8 +31,8 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(registration.Flow).TableName(ctx),
 		new(settings.Flow).TableName(ctx),
 
-		new(link.RecoveryToken).TableName(ctx),
-		new(link.VerificationToken).TableName(ctx),
+		new(token.RecoveryToken).TableName(ctx),
+		new(token.VerificationToken).TableName(ctx),
 
 		new(recovery.Flow).TableName(ctx),
 

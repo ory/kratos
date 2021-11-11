@@ -23,6 +23,22 @@
             }
           }
         },
+        "phone": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            },
+            "verification": {
+              "via": "phone"
+            },
+            "recovery": {
+              "via": "phone"
+            }
+          }
+        },
         "stringy": {
           "type": "string"
         },

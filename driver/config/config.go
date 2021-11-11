@@ -712,6 +712,8 @@ func (p *Config) SelfServiceStrategy(ctx context.Context, strategy string) *Self
 		case "profile":
 			fallthrough
 		case "link":
+			fallthrough
+		case "otp":
 			s.Enabled = true
 		}
 	}

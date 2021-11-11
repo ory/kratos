@@ -3,6 +3,8 @@ package hook
 import (
 	"net/http"
 
+	"github.com/ory/kratos/selfservice/strategy/otp"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
@@ -10,6 +12,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/token"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -20,7 +23,8 @@ var _ settings.PostHookPostPersistExecutor = new(Verifier)
 type (
 	verifierDependencies interface {
 		link.SenderProvider
-		link.VerificationTokenPersistenceProvider
+		otp.SenderProvider
+		token.VerificationTokenPersistenceProvider
 		config.Provider
 		x.CSRFTokenGeneratorProvider
 		verification.StrategyProvider
@@ -44,7 +48,7 @@ func (e *Verifier) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http
 }
 
 func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error {
-	// Ths is called after the identity has been created so we can safely assume that all addresses are available
+	// Ths is called after the identity has been created, so we can safely assume that all addresses are available
 	// already.
 
 	for k := range i.VerifiableAddresses {
@@ -63,14 +67,29 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity, f flow.Flow) error 
 			return err
 		}
 
-		token := link.NewSelfServiceVerificationToken(address, verificationFlow, e.r.Config().SelfServiceLinkMethodLifespan(r.Context()))
-		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
-			return err
+		switch address.Via {
+		case "email":
+			tkn := token.NewLinkVerification(address, verificationFlow, e.r.Config().SelfServiceLinkMethodLifespan(r.Context()))
+
+			if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), tkn); err != nil {
+				return err
+			}
+
+			if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, i, address, tkn); err != nil {
+				return err
+			}
+		case "phone":
+			tkn := token.NewOTPVerification(address, verificationFlow, e.r.Config(r.Context()).SelfServiceLinkMethodLifespan())
+
+			if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), tkn); err != nil {
+				return err
+			}
+
+			if err := e.r.OTPSender().SendVerificationTokenTo(r.Context(), address, tkn); err != nil {
+				return err
+			}
 		}
 
-		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), verificationFlow, i, address, token); err != nil {
-			return err
-		}
 	}
 	return nil
 }

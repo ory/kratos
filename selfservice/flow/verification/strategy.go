@@ -13,6 +13,7 @@ import (
 
 const (
 	StrategyVerificationLinkName = "link"
+	StrategyVerificationOTPName  = "otp"
 )
 
 type (

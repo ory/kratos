@@ -61,7 +61,8 @@
                 "via": {
                   "type": "string",
                   "enum": [
-                    "email"
+                    "email",
+                    "phone"
                   ]
                 }
               }
