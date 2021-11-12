@@ -175,6 +175,19 @@ Affects Continuous Integration (CI).
 
 _This milestone does not have a description._
 
+### [Bug](https://github.com/ory/kratos/labels/bug)
+
+Something is not working.
+
+#### Issues
+
+- [ ] WebAuth docs are missing
+      ([kratos#1951](https://github.com/ory/kratos/issues/1951)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Add missing cloud docs
+      ([kratos#1952](https://github.com/ory/kratos/issues/1952)) -
+      [@hackerman](https://github.com/aeneasr)
+
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
 New feature or request.
@@ -185,6 +198,19 @@ New feature or request.
       ([kratos#596](https://github.com/ory/kratos/issues/596))
 - [ ] Add ability to import user credentials
       ([kratos#605](https://github.com/ory/kratos/issues/605)) -
+      [@hackerman](https://github.com/aeneasr)
+
+### [Docs](https://github.com/ory/kratos/labels/docs)
+
+Affects documentation.
+
+#### Issues
+
+- [ ] WebAuth docs are missing
+      ([kratos#1951](https://github.com/ory/kratos/issues/1951)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Add missing cloud docs
+      ([kratos#1952](https://github.com/ory/kratos/issues/1952)) -
       [@hackerman](https://github.com/aeneasr)
 
 ## [v0.7.x](https://github.com/ory/kratos/milestone/12)
