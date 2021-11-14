@@ -82,7 +82,14 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL(nil).String()))
+	publicLogger := reqlog.NewMiddlewareFromLogger(
+		l,
+		"public#"+c.SelfPublicURL(nil).String(),
+	)
+	if r.Config(ctx).DisablePublicHealthRequestLog() {
+		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
+	}
+	n.Use(publicLogger)
 	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 
@@ -92,6 +99,12 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
+
+	// Disable CSRF for these endpoints
+	csrf.DisablePath(healthx.AliveCheckPath)
+	csrf.DisablePath(healthx.ReadyCheckPath)
+	csrf.DisablePath(healthx.VersionPath)
+	csrf.DisablePath(prometheus.MetricsPrometheusPath)
 
 	r.RegisterPublicRoutes(ctx, router)
 	r.PrometheusManager().RegisterRouter(router.Router)
@@ -141,7 +154,14 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	for _, mw := range modifiers.mwf {
 		n.UseFunc(mw)
 	}
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL(nil).String()))
+	adminLogger := reqlog.NewMiddlewareFromLogger(
+		l,
+		"admin#"+c.SelfPublicURL(nil).String(),
+	)
+	if r.Config(ctx).DisableAdminHealthRequestLog() {
+		adminLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
+	}
+	n.Use(adminLogger)
 	n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 

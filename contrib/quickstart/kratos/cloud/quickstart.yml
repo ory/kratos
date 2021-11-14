@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  kratos:
+    volumes:
+      - type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      - type: bind
+        source: ./contrib/quickstart/kratos/cloud
+        target: /etc/config/kratos
+  kratos-migrate:
+    volumes:
+      - type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      - type: bind
+        source: ./contrib/quickstart/kratos/cloud
+        target: /etc/config/kratos
+
+  kratos-selfservice-ui-node:
+    ports:
+      - "4438:4438"
+    environment:
+      - PORT=4438
+      - KRATOS_BROWSER_URL=http://localhost:4455/
+
+  kratos-caddy:
+    image: caddy:2.4.5-alpine
+    ports:
+      - "4455:4455"
+    volumes:
+      - type: bind
+        source: ./contrib/quickstart/kratos/cloud/Caddyfile
+        target: /etc/caddy/Caddyfile
+    command: caddy run -watch -config /etc/caddy/Caddyfile
+    restart: on-failure
+    networks:
+      - intranet
+

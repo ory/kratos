@@ -12,15 +12,15 @@ export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://localhost:4433/
 export KRATOS_BROWSER_URL=http://localhost:4433/
 export KRATOS_ADMIN_URL=http://localhost:4434/
-export KRATOS_UI_URL=http://localhost:4456/
-export KRATOS_UI_REACT_URL=http://localhost:4458/
-export KRATOS_UI_REACT_NATIVE_URL=http://localhost:4457/
+export KRATOS_UI_URL=http://127.0.0.1:4456/
+export KRATOS_UI_REACT_URL=http://127.0.0.1:4458/
+export KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
 if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
-  docker run --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
+  docker run --platform linux/amd64 --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
   docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
   docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
 
@@ -33,7 +33,7 @@ base=$(pwd)
 
 if [ -z ${NODE_UI_PATH+x} ]; then
   node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
-  git clone https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
+  git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
   (cd "$node_ui_dir" && npm i && npm run build)
 else
   node_ui_dir="${NODE_UI_PATH}"
@@ -41,15 +41,15 @@ fi
 
 if [ -z ${RN_UI_PATH+x} ]; then
   rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
-  git clone https://github.com/ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
+  git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
   (cd "$rn_ui_dir" && npm i)
 else
   rn_ui_dir="${RN_UI_PATH}"
 fi
 
 if [ -z ${REACT_UI_PATH+x} ]; then
-  react_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/ory/react-nextjs-example"
-  git clone https://github.com/ory/react-nextjs-example.git "$react_ui_dir"
+  react_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/ory/kratos-selfservice-ui-react-nextjs"
+  git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-react-nextjs.git "$react_ui_dir"
   (cd "$react_ui_dir" && npm i)
 else
   react_ui_dir="${REACT_UI_PATH}"
@@ -95,6 +95,7 @@ run() {
 
   (
     cd "$rn_ui_dir"
+    npm i -g expo-cli
     WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
@@ -155,14 +156,14 @@ run() {
   if [ -z ${REACT_UI_PATH+x} ]; then
     (
       cd "$react_ui_dir"
-      NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run build
-      NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run start -- --port 4458 \
+      ORY_KRATOS_URL=http://localhost:4433 npm run build
+      ORY_KRATOS_URL=http://localhost:4433 npm run start -- --hostname 0.0.0.0 --port 4458 \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   else
     (
       cd "$react_ui_dir"
-      PORT=4458 NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run dev \
+      PORT=4458 ORY_KRATOS_URL=http://localhost:4433 npm run dev \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   fi

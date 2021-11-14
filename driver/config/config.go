@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/publicsuffix"
+
 	"github.com/duo-labs/webauthn/protocol"
 
 	"github.com/duo-labs/webauthn/webauthn"
@@ -64,6 +66,7 @@ const (
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
+	ViperKeyDisablePublicHealthRequestLog                    = "serve.public.request_log.disable_for_health"
 	ViperKeyPublicBaseURL                                    = "serve.public.base_url"
 	ViperKeyPublicDomainAliases                              = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                       = "serve.public.port"
@@ -75,6 +78,7 @@ const (
 	ViperKeyPublicTLSKeyBase64                               = "serve.public.tls.key.base64"
 	ViperKeyPublicTLSCertPath                                = "serve.public.tls.cert.path"
 	ViperKeyPublicTLSKeyPath                                 = "serve.public.tls.key.path"
+	ViperKeyDisableAdminHealthRequestLog                     = "serve.admin.request_log.disable_for_health"
 	ViperKeyAdminBaseURL                                     = "serve.admin.base_url"
 	ViperKeyAdminPort                                        = "serve.admin.port"
 	ViperKeyAdminHost                                        = "serve.admin.host"
@@ -697,6 +701,10 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 	return p.guessBaseURL(keyHost, keyPort, defaultPort)
 }
 
+func (p *Config) DisablePublicHealthRequestLog() bool {
+	return p.p.Bool(ViperKeyDisablePublicHealthRequestLog)
+}
+
 type DomainAlias struct {
 	BasePath    string `json:"base_path"`
 	Scheme      string `json:"scheme"`
@@ -749,6 +757,10 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 	return primary
 }
 
+func (p *Config) DisableAdminHealthRequestLog() bool {
+	return p.p.Bool(ViperKeyDisableAdminHealthRequestLog)
+}
+
 func (p *Config) SelfAdminURL() *url.URL {
 	return p.baseURL(ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
 }
@@ -796,6 +808,18 @@ func (p *Config) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {
 		parsed, err := url.ParseRequestURI(u)
 		if err != nil {
 			p.l.WithError(err).Warnf("Ignoring URL \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			continue
+		}
+		if parsed.Host == "*" {
+			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			continue
+		}
+		eTLD, icann := publicsuffix.PublicSuffix(parsed.Host)
+		if len(parsed.Host) > 0 &&
+			parsed.Host[:1] == "*" &&
+			icann &&
+			parsed.Host == fmt.Sprintf("*.%s", eTLD) {
+			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
 			continue
 		}
 

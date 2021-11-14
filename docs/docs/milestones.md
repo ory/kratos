@@ -33,20 +33,20 @@ Something is not working.
 - [ ] Fetching a settings request after error is missing identity data
       ([kratos#689](https://github.com/ory/kratos/issues/689)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Feature Request: Have access to username in email templates
-      ([kratos#925](https://github.com/ory/kratos/issues/925))
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] /schemas/default does not work with base64 identity schemas
-      ([kratos#1529](https://github.com/ory/kratos/issues/1529))
 - [ ] Courier Watcher should start a (tracing-) span
       ([kratos#1886](https://github.com/ory/kratos/issues/1886))
+- [x] Feature Request: Have access to username in email templates
+      ([kratos#925](https://github.com/ory/kratos/issues/925))
 - [x] panic: a handle is already registered for path
       '/self-service/recovery/methods/link'
       ([kratos#1068](https://github.com/ory/kratos/issues/1068))
 - [x] Relative path in ui_url or default_browser_return_url cause runtime crash
       ([kratos#1446](https://github.com/ory/kratos/issues/1446))
+- [x] /schemas/default does not work with base64 identity schemas
+      ([kratos#1529](https://github.com/ory/kratos/issues/1529))
 - [x] Auto-Login on Registration flow does not return `session`, only `identity`
       for SPA requests
       ([kratos#1604](https://github.com/ory/kratos/issues/1604))
@@ -81,8 +81,6 @@ New feature or request.
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
-- [ ] Add i18n support to mail templates
-      ([kratos#834](https://github.com/ory/kratos/issues/834))
 - [ ] Add option for disabling registration
       ([kratos#882](https://github.com/ory/kratos/issues/882)) -
       [@hackerman](https://github.com/aeneasr)
@@ -112,6 +110,8 @@ New feature or request.
 - [x] Validate identity schema on load
       ([kratos#701](https://github.com/ory/kratos/issues/701)) -
       [@Alano Terblanche](https://github.com/Benehiko)
+- [x] Add i18n support to mail templates
+      ([kratos#834](https://github.com/ory/kratos/issues/834))
 - [x] Allow account recovery for identities without email address
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [x] Field validation answer status code 422 instead of 400
@@ -175,6 +175,19 @@ Affects Continuous Integration (CI).
 
 _This milestone does not have a description._
 
+### [Bug](https://github.com/ory/kratos/labels/bug)
+
+Something is not working.
+
+#### Issues
+
+- [ ] WebAuth docs are missing
+      ([kratos#1951](https://github.com/ory/kratos/issues/1951)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Add missing cloud docs
+      ([kratos#1952](https://github.com/ory/kratos/issues/1952)) -
+      [@hackerman](https://github.com/aeneasr)
+
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
 New feature or request.
@@ -185,6 +198,19 @@ New feature or request.
       ([kratos#596](https://github.com/ory/kratos/issues/596))
 - [ ] Add ability to import user credentials
       ([kratos#605](https://github.com/ory/kratos/issues/605)) -
+      [@hackerman](https://github.com/aeneasr)
+
+### [Docs](https://github.com/ory/kratos/labels/docs)
+
+Affects documentation.
+
+#### Issues
+
+- [ ] WebAuth docs are missing
+      ([kratos#1951](https://github.com/ory/kratos/issues/1951)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Add missing cloud docs
+      ([kratos#1952](https://github.com/ory/kratos/issues/1952)) -
       [@hackerman](https://github.com/aeneasr)
 
 ## [v0.7.x](https://github.com/ory/kratos/milestone/12)
@@ -250,6 +276,8 @@ Something is not working.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Dotenv files are respected and incorrectly override environment variables
       ([kratos#1856](https://github.com/ory/kratos/issues/1856))
+- [ ] Ask to re-authenticate despite only updating non-privileged fields.
+      ([kratos#1889](https://github.com/ory/kratos/issues/1889))
 - [x] recovery link is open by email app
       ([kratos#1142](https://github.com/ory/kratos/issues/1142))
 

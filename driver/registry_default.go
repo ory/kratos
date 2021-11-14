@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/nosurf"
+
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 
 	"github.com/ory/kratos/selfservice/strategy/lookup"
@@ -71,7 +73,7 @@ type RegistryDefault struct {
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 
-	nosurf         x.CSRFHandler
+	nosurf         nosurf.Handler
 	trc            *tracing.Tracer
 	pmm            *prometheus.MetricsManager
 	writer         herodot.Writer
@@ -241,11 +243,11 @@ func (m *RegistryDefault) MetricsHandler() *prometheus.Handler {
 	return m.metricsHandler
 }
 
-func (m *RegistryDefault) WithCSRFHandler(c x.CSRFHandler) {
+func (m *RegistryDefault) WithCSRFHandler(c nosurf.Handler) {
 	m.nosurf = c
 }
 
-func (m *RegistryDefault) CSRFHandler() x.CSRFHandler {
+func (m *RegistryDefault) CSRFHandler() nosurf.Handler {
 	if m.nosurf == nil {
 		panic("csrf handler is not set")
 	}

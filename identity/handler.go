@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/x"
+
 	"github.com/ory/kratos/cipher"
 
 	"github.com/ory/herodot"
@@ -18,7 +20,6 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/x"
 )
 
 const RouteCollection = "/identities"

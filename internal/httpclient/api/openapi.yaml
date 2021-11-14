@@ -11,7 +11,6 @@ info:
   license:
     name: Apache 2.0
   title: Ory Kratos API
-  version: v0.8.0-alpha.3
 servers:
 - url: /
 paths:
@@ -3691,6 +3690,7 @@ components:
           - password
           - totp
           - oidc
+          - webauthn
           title: The method used
           type: string
       title: AuthenticationMethod identifies an authentication method
