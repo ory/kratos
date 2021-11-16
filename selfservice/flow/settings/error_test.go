@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/pkg/errors"
 
 	"github.com/gofrs/uuid"
@@ -30,7 +32,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
@@ -166,7 +167,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				settingsFlow = newFlow(t, time.Minute, tc.t)
-				flowError = schema.NewInvalidCredentialsError()
+				flowError = errors2.NewInvalidCredentialsError()
 				flowMethod = settings.StrategyProfile
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -343,7 +344,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
-			flowError = schema.NewInvalidCredentialsError()
+			flowError = errors2.NewInvalidCredentialsError()
 			flowMethod = settings.StrategyProfile
 
 			lf, _ := expectSettingsUI(t)
@@ -360,7 +361,7 @@ func TestHandleError(t *testing.T) {
 			id.SchemaURL = "http://some.random.url"
 
 			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
-			flowError = schema.NewInvalidCredentialsError()
+			flowError = errors2.NewInvalidCredentialsError()
 			flowMethod = settings.StrategyProfile
 
 			lf, _ := expectSettingsUI(t)

@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/ory/kratos/hash"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -76,7 +78,7 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Unable to initialize the config provider: %s\n", err)
 		return nil, cmdx.FailSilently(cmd)
 	}
-	conf.localConfig = *conf.config.HasherArgon2()
+	conf.localConfig = (config.Argon2)(*conf.config.HasherArgon2())
 
 	if cmd.Flags().Changed(FlagIterations) {
 		conf.localConfig.Iterations = flagConf.localConfig.Iterations
@@ -160,6 +162,10 @@ func (c *argon2Config) Config(_ context.Context) *config.Config {
 		_ = c.config.Set(k, v)
 	}
 	return c.config
+}
+
+func (c *argon2Config) HashConfig(ctx context.Context) hash.HashConfigProvider {
+	return c.Config(ctx)
 }
 
 func (c *argon2Config) HasherArgon2() (*config.Argon2, error) {

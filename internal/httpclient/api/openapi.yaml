@@ -147,9 +147,10 @@ paths:
       - v0alpha2
     post:
       description: |-
-        This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-        using this method! A way to achieve that will be introduced in the future.
-
+        This endpoint creates an identity. Optionally a password can be set for the newly created identity. Do to so
+        a password field must be included on the creation request. The password field can be in cleartext or hashed with
+        any of the supported hashing algorithms. Using already hashed values can be useful when moving from another user
+        authentication mechanism to Kratos.
         Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
       operationId: adminCreateIdentity
       requestBody:
@@ -2641,6 +2642,8 @@ components:
       type: string
     adminCreateIdentityBody:
       properties:
+        password:
+          $ref: '#/components/schemas/passwordCredential'
         schema_id:
           description: SchemaID is the ID of the JSON Schema to be used for validating
             the identity's traits.
@@ -2653,6 +2656,12 @@ components:
             in a self-service manner. The input will always be validated against the JSON Schema defined
             in `schema_url`.
           type: object
+        verifiable_addresses:
+          description: VerifiableAddresses contains all the addresses that can be
+            verified by the user.
+          items:
+            $ref: '#/components/schemas/verifiableIdentityAddress'
+          type: array
       required:
       - schema_id
       - traits
@@ -3091,6 +3100,24 @@ components:
           maximum: 1000
           minimum: 1
           type: integer
+      type: object
+    passwordCredential:
+      description: The password of the user. It represents a cleartext or hashed user
+        password.
+      properties:
+        is_hashed:
+          description: |-
+            This field must be true if the value represents a hashed password. Otherwise the value is assumed to be a
+            cleartext password and it will be hashed before storing.
+          type: boolean
+        value:
+          description: Value represents the value of the password in clear text or
+            hashed
+          type: string
+      required:
+      - is_hashed
+      - value
+      title: User's password
       type: object
     revokedSessions:
       example:

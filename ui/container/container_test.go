@@ -9,6 +9,8 @@ import (
 	"sort"
 	"testing"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
@@ -21,7 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
 )
 
@@ -214,7 +215,7 @@ func TestContainer(t *testing.T) {
 			{err: errors.New("foo"), expectErr: true},
 			{err: &herodot.ErrNotFound, expectErr: true},
 			{err: herodot.ErrBadRequest.WithReason("tests"), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("tests")}}},
-			{err: schema.NewInvalidCredentialsError(), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewErrorValidationInvalidCredentials()}}},
+			{err: errors2.NewInvalidCredentialsError(), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewErrorValidationInvalidCredentials()}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: Container{Nodes: node.Nodes{
 				&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "foo.bar.baz", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}, Meta: new(node.Meta)},
 			}}},

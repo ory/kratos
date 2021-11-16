@@ -38,7 +38,7 @@ type registrationStrategyDependencies interface {
 
 	errorx.ManagementProvider
 	ValidationProvider
-	hash.HashProvider
+	hash.Generator
 
 	registration.HandlerProvider
 	registration.HooksProvider
@@ -81,7 +81,7 @@ func NewStrategy(d registrationStrategyDependencies) *Strategy {
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
 		if c.Type == s.ID() && len(c.Config) > 0 {
-			var conf CredentialsConfig
+			var conf identity.CredentialsConfig
 			if err = json.Unmarshal(c.Config, &conf); err != nil {
 				return 0, errors.WithStack(err)
 			}

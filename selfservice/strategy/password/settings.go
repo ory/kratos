@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/ui/node"
@@ -16,7 +18,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
@@ -116,7 +117,7 @@ func (s *Strategy) continueSettingsFlow(
 	}
 
 	if len(p.Password) == 0 {
-		return schema.NewRequiredError("#/password", "password")
+		return errors2.NewRequiredError("#/password", "password")
 	}
 
 	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))
@@ -124,7 +125,7 @@ func (s *Strategy) continueSettingsFlow(
 		return err
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
+	co, err := json.Marshal(&identity.CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
 	}

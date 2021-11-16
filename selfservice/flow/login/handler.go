@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
@@ -13,7 +15,6 @@ import (
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/decoderx"
 
@@ -594,13 +595,13 @@ continueLogin:
 	}
 
 	if i == nil {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(errors2.NewNoLoginStrategyResponsible()))
 		return
 	}
 
 	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, f, i, sess); err != nil {
 		if errors.Is(err, ErrAddressNotVerified) {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(errors2.NewAddressNotVerifiedError()))
 			return
 		}
 

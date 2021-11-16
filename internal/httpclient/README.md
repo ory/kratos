@@ -148,6 +148,7 @@ Class | Method | HTTP request | Description
  - [JsonError](docs/JsonError.md)
  - [NeedsPrivilegedSessionError](docs/NeedsPrivilegedSessionError.md)
  - [Pagination](docs/Pagination.md)
+ - [PasswordCredential](docs/PasswordCredential.md)
  - [RecoveryAddress](docs/RecoveryAddress.md)
  - [RevokedSessions](docs/RevokedSessions.md)
  - [SelfServiceBrowserLocationChangeRequiredError](docs/SelfServiceBrowserLocationChangeRequiredError.md)

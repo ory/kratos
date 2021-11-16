@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/ui/node"
@@ -533,7 +535,7 @@ func (h *Handler) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps 
 
 	if updateContext == nil {
 		c := &UpdateContext{Session: ss, Flow: f}
-		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, c.GetIdentityToUpdate(), errors.WithStack(schema.NewNoSettingsStrategyResponsible()))
+		h.d.SettingsFlowErrorHandler().WriteFlowError(w, r, node.DefaultGroup, f, c.GetIdentityToUpdate(), errors.WithStack(errors2.NewNoSettingsStrategyResponsible()))
 		return
 	}
 

@@ -79,7 +79,7 @@ type Registry interface {
 	errorx.HandlerProvider
 	errorx.PersistenceProvider
 
-	hash.HashProvider
+	hash.Generator
 
 	identity.HandlerProvider
 	identity.ValidationProvider

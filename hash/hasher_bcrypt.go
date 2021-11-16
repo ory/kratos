@@ -3,11 +3,9 @@ package hash
 import (
 	"context"
 
-	"github.com/ory/kratos/schema"
-
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/schema/errors"
 )
 
 type Bcrypt struct {
@@ -15,7 +13,7 @@ type Bcrypt struct {
 }
 
 type BcryptConfiguration interface {
-	config.Provider
+	ConfigProvider
 }
 
 func NewHasherBcrypt(c BcryptConfiguration) *Bcrypt {
@@ -27,7 +25,7 @@ func (h *Bcrypt) Generate(ctx context.Context, password []byte) ([]byte, error) 
 		return nil, err
 	}
 
-	hash, err := bcrypt.GenerateFromPassword(password, int(h.c.Config(ctx).HasherBcrypt().Cost))
+	hash, err := bcrypt.GenerateFromPassword(password, int(h.c.HashConfig(ctx).HasherBcrypt().Cost))
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +38,7 @@ func validateBcryptPasswordLength(password []byte) error {
 	// so if password is longer than 72 bytes, function returns an error
 	// See https://en.wikipedia.org/wiki/Bcrypt#User_input
 	if len(password) > 72 {
-		return schema.NewPasswordPolicyViolationError(
+		return errors.NewPasswordPolicyViolationError(
 			"#/password",
 			"passwords are limited to a maximum length of 72 characters",
 		)

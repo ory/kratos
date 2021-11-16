@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -120,7 +121,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError()
+			return errors2.NewDuplicateCredentialsError()
 		}
 		return err
 	}

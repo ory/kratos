@@ -159,7 +159,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "This endpoint creates an identity. Optionally a password can be set for the newly created identity. Do to so\na password field must be included on the creation request. The password field can be in cleartext or hashed with\nany of the supported hashing algorithms. Using already hashed values can be useful when moving from another user\nauthentication mechanism to Kratos.\nLearn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "consumes": [
           "application/json"
         ],
@@ -2333,6 +2333,9 @@
         "traits"
       ],
       "properties": {
+        "password": {
+          "$ref": "#/definitions/passwordCredential"
+        },
         "schema_id": {
           "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
           "type": "string"
@@ -2343,6 +2346,13 @@
         "traits": {
           "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
           "type": "object"
+        },
+        "verifiable_addresses": {
+          "description": "VerifiableAddresses contains all the addresses that can be verified by the user.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/verifiableIdentityAddress"
+          }
         }
       }
     },
@@ -2725,6 +2735,25 @@
           "default": 250,
           "maximum": 1000,
           "minimum": 1
+        }
+      }
+    },
+    "passwordCredential": {
+      "description": "The password of the user. It represents a cleartext or hashed user password.",
+      "type": "object",
+      "title": "User's password",
+      "required": [
+        "value",
+        "is_hashed"
+      ],
+      "properties": {
+        "is_hashed": {
+          "description": "This field must be true if the value represents a hashed password. Otherwise the value is assumed to be a\ncleartext password and it will be hashed before storing.",
+          "type": "boolean"
+        },
+        "value": {
+          "description": "Value represents the value of the password in clear text or hashed",
+          "type": "string"
         }
       }
     },

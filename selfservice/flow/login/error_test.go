@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/schema/errors"
+
 	"github.com/ory/kratos/identity"
 
 	"github.com/gofrs/uuid"
@@ -28,7 +30,6 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
@@ -160,7 +161,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				loginFlow = newFlow(t, time.Minute, tc.t)
-				flowError = schema.NewInvalidCredentialsError()
+				flowError = errors.NewInvalidCredentialsError()
 				ct = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -221,7 +222,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
-			flowError = schema.NewInvalidCredentialsError()
+			flowError = errors.NewInvalidCredentialsError()
 			ct = node.PasswordGroup
 
 			lf, _ := expectLoginUI(t)

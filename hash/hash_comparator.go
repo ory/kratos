@@ -12,8 +12,6 @@ import (
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/pbkdf2"
-
-	"github.com/ory/kratos/driver/config"
 )
 
 var ErrUnknownHashAlgorithm = errors.New("unknown hash algorithm")
@@ -102,7 +100,7 @@ func IsPbkdf2Hash(hash []byte) bool {
 	return isPbkdf2Hash.Match(hash)
 }
 
-func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
+func decodeArgon2idHash(encodedHash string) (p *Argon2Config, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 6 {
 		return nil, nil, nil, ErrInvalidHash
@@ -117,7 +115,7 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 		return nil, nil, nil, ErrIncompatibleVersion
 	}
 
-	p = new(config.Argon2)
+	p = new(Argon2Config)
 	_, err = fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
 	if err != nil {
 		return nil, nil, nil, err

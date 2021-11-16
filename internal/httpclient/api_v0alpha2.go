@@ -30,9 +30,10 @@ type V0alpha2Api interface {
 
 	/*
 			 * AdminCreateIdentity Create an Identity
-			 * This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-		using this method! A way to achieve that will be introduced in the future.
-
+			 * This endpoint creates an identity. Optionally a password can be set for the newly created identity. Do to so
+		a password field must be included on the creation request. The password field can be in cleartext or hashed with
+		any of the supported hashing algorithms. Using already hashed values can be useful when moving from another user
+		authentication mechanism to Kratos.
 		Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @return V0alpha2ApiApiAdminCreateIdentityRequest
@@ -1101,9 +1102,10 @@ func (r V0alpha2ApiApiAdminCreateIdentityRequest) Execute() (*Identity, *http.Re
 
 /*
  * AdminCreateIdentity Create an Identity
- * This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-using this method! A way to achieve that will be introduced in the future.
-
+ * This endpoint creates an identity. Optionally a password can be set for the newly created identity. Do to so
+a password field must be included on the creation request. The password field can be in cleartext or hashed with
+any of the supported hashing algorithms. Using already hashed values can be useful when moving from another user
+authentication mechanism to Kratos.
 Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return V0alpha2ApiApiAdminCreateIdentityRequest

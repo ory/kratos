@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/session"
@@ -18,7 +20,6 @@ import (
 
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
@@ -65,17 +66,17 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
 		time.Sleep(x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation))
-		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
+		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(errors2.NewInvalidCredentialsError()))
 	}
 
-	var o CredentialsConfig
+	var o identity.CredentialsConfig
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
 		return nil, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)
 	}
 
 	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
-		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
+		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(errors2.NewInvalidCredentialsError()))
 	}
 
 	if !s.d.Hasher().Understands([]byte(o.HashedPassword)) {
@@ -101,7 +102,7 @@ func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID
 	if err != nil {
 		return err
 	}
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
+	co, err := json.Marshal(&identity.CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
 		return errors.Wrap(err, "unable to encode password configuration to JSON")
 	}

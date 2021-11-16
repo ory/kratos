@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
-	"github.com/ory/kratos/schema"
-
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/kratos/ui/node"
@@ -174,11 +174,11 @@ func (s *Strategy) continueSettingsFlowAddTOTP(w http.ResponseWriter, r *http.Re
 	}
 
 	if p.ValidationTOTP == "" {
-		return nil, schema.NewRequiredError("#/totp_code", "totp_code")
+		return nil, errors2.NewRequiredError("#/totp_code", "totp_code")
 	}
 
 	if !totp.Validate(p.ValidationTOTP, key.Secret()) {
-		return nil, schema.NewTOTPVerifierWrongError("#/totp_code")
+		return nil, errors2.NewTOTPVerifierWrongError("#/totp_code")
 	}
 
 	co, err := json.Marshal(&CredentialsConfig{TOTPURL: key.URL()})

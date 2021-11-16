@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/schema/errors"
+
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/gofrs/uuid"
@@ -35,7 +37,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -427,7 +428,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			ensureFieldsExist(t, []byte(body))
 			assert.Equal(t,
-				errorsx.Cause(schema.NewInvalidCredentialsError()).(*schema.ValidationError).Messages[0].Text,
+				errorsx.Cause(errors.NewInvalidCredentialsError()).(*errors.ValidationError).Messages[0].Text,
 				gjson.Get(body, "ui.messages.0.text").String(),
 				"%s", body,
 			)
@@ -709,7 +710,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			ensureFieldsExist(t, []byte(body))
 			assert.Equal(t,
-				errorsx.Cause(schema.NewAddressNotVerifiedError()).(*schema.ValidationError).Messages[0].Text,
+				errorsx.Cause(errors.NewAddressNotVerifiedError()).(*errors.ValidationError).Messages[0].Text,
 				gjson.Get(body, "ui.messages.0.text").String(),
 				"%s", body,
 			)

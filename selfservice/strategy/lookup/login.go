@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/x/sqlxx"
@@ -13,7 +15,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
@@ -108,7 +109,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), ss.IdentityID.String())
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoLookupDefined()))
+		return nil, s.handleLoginError(r, f, errors.WithStack(errors2.NewNoLookupDefined()))
 	} else if err != nil {
 		return nil, s.handleLoginError(r, f, err)
 	}
@@ -125,13 +126,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 				o.RecoveryCodes[k].UsedAt = sqlxx.NullTime(time.Now().UTC().Round(time.Second))
 				found = true
 			} else {
-				return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewLookupAlreadyUsed()))
+				return nil, s.handleLoginError(r, f, errors.WithStack(errors2.NewLookupAlreadyUsed()))
 			}
 		}
 	}
 
 	if !found {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewErrorValidationLookupInvalid()))
+		return nil, s.handleLoginError(r, f, errors.WithStack(errors2.NewErrorValidationLookupInvalid()))
 	}
 
 	toUpdate, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ss.IdentityID)

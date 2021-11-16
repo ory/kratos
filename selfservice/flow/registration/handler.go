@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/nosurf"
-
-	"github.com/ory/kratos/schema"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
@@ -453,7 +453,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	if s == nil {
-		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(errors2.NewNoRegistrationStrategyResponsible()))
 		return
 	}
 

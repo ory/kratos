@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/schema/errors"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/jsonx"
@@ -27,7 +29,6 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/text"
@@ -145,7 +146,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				recoveryFlow = newFlow(t, time.Minute, tc.t)
-				flowError = schema.NewInvalidCredentialsError()
+				flowError = errors.NewInvalidCredentialsError()
 				methodName = recovery.StrategyRecoveryLinkName
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -206,7 +207,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = newFlow(t, time.Minute, flow.TypeBrowser)
-			flowError = schema.NewInvalidCredentialsError()
+			flowError = errors.NewInvalidCredentialsError()
 			methodName = node.RecoveryLinkGroup
 
 			lf, _ := expectRecoveryUI(t)

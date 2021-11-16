@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/hash"
+
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/duo-labs/webauthn/protocol"
@@ -172,19 +174,9 @@ const (
 const DefaultSessionCookieName = "ory_kratos_session"
 
 type (
-	Argon2 struct {
-		Memory            bytesize.ByteSize `json:"memory"`
-		Iterations        uint32            `json:"iterations"`
-		Parallelism       uint8             `json:"parallelism"`
-		SaltLength        uint32            `json:"salt_length"`
-		KeyLength         uint32            `json:"key_length"`
-		ExpectedDuration  time.Duration     `json:"expected_duration"`
-		ExpectedDeviation time.Duration     `json:"expected_deviation"`
-		DedicatedMemory   bytesize.ByteSize `json:"dedicated_memory"`
-	}
-	Bcrypt struct {
-		Cost uint32 `json:"cost"`
-	}
+	Argon2 hash.Argon2Config
+	Bcrypt hash.BcryptConfig
+
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
 		Config json.RawMessage `json:"config"`
@@ -215,6 +207,7 @@ type (
 
 	Provider interface {
 		Config(ctx context.Context) *Config
+		hash.ConfigProvider
 	}
 )
 
@@ -394,10 +387,10 @@ func (p *Config) SessionName() string {
 	return stringsx.Coalesce(p.p.String(ViperKeySessionName), DefaultSessionCookieName)
 }
 
-func (p *Config) HasherArgon2() *Argon2 {
+func (p *Config) HasherArgon2() *hash.Argon2Config {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
-	return &Argon2{
+	return &hash.Argon2Config{
 		Memory:            p.p.ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
 		Iterations:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
 		Parallelism:       uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
@@ -409,7 +402,7 @@ func (p *Config) HasherArgon2() *Argon2 {
 	}
 }
 
-func (p *Config) HasherBcrypt() *Bcrypt {
+func (p *Config) HasherBcrypt() *hash.BcryptConfig {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
 	cost := uint32(p.p.IntF(ViperKeyHasherBcryptCost, int(BcryptDefaultCost)))
@@ -417,7 +410,7 @@ func (p *Config) HasherBcrypt() *Bcrypt {
 		cost = BcryptDefaultCost
 	}
 
-	return &Bcrypt{Cost: cost}
+	return &hash.BcryptConfig{Cost: cost}
 }
 
 func (p *Config) listenOn(key string) string {
@@ -1038,6 +1031,10 @@ func (p *Config) HasherPasswordHashingAlgorithm() string {
 	default:
 		return configValue
 	}
+}
+
+func (p *Config) Hasher(provider hash.ConfigProvider) hash.Hasher {
+	return hash.NewHasher(p.HasherPasswordHashingAlgorithm(), provider)
 }
 
 func (p *Config) CipherAlgorithm() string {

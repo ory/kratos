@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
@@ -105,7 +106,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), ss.IdentityID.String())
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoTOTPDeviceRegistered()))
+		return nil, s.handleLoginError(r, f, errors.WithStack(errors2.NewNoTOTPDeviceRegistered()))
 	}
 
 	var o CredentialsConfig
@@ -119,7 +120,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if !totp.Validate(p.TOTPCode, key.Secret()) {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewTOTPVerifierWrongError("#/")))
+		return nil, s.handleLoginError(r, f, errors.WithStack(errors2.NewTOTPVerifierWrongError("#/")))
 	}
 
 	f.Active = s.ID()

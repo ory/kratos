@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -16,7 +18,6 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy"
@@ -407,7 +408,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	}
 
 	if len(body.Email) == 0 {
-		return s.HandleRecoveryError(w, r, f, body, schema.NewRequiredError("#/email", "email"))
+		return s.HandleRecoveryError(w, r, f, body, errors2.NewRequiredError("#/email", "email"))
 	}
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.CSRFToken); err != nil {

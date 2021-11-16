@@ -22,8 +22,11 @@ import (
 	"github.com/ory/kratos/driver/config"
 )
 
-const RouteCollection = "/identities"
-const RouteItem = RouteCollection + "/:id"
+const (
+	RouteCollection = "/identities"
+	RouteItem       = RouteCollection + "/:id"
+	Bcrypt          = "bcrypt"
+)
 
 type (
 	handlerDependencies interface {
@@ -188,6 +191,30 @@ type adminCreateIdentity struct {
 	Body AdminCreateIdentityBody
 }
 
+// CredentialsConfig is the struct that is being used as part of the identity credentials.
+type CredentialsConfig struct {
+	// HashedPassword is a hash-representation of the password.
+	HashedPassword string `json:"hashed_password"`
+}
+
+// User's password
+//
+// The password of the user. It represents a cleartext or hashed user password.
+//
+// swagger:model passwordCredential
+type PasswordCredential struct {
+	// Value represents the value of the password in clear text or hashed
+	//
+	// required: true
+	Value string `json:"value"`
+
+	// This field must be true if the value represents a hashed password. Otherwise the value is assumed to be a
+	// cleartext password and it will be hashed before storing.
+	//
+	// required: true
+	IsHashed bool `json:"is_hashed"`
+}
+
 // swagger:model adminCreateIdentityBody
 type AdminCreateIdentityBody struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
@@ -202,19 +229,61 @@ type AdminCreateIdentityBody struct {
 	// required: true
 	Traits json.RawMessage `json:"traits"`
 
+	// Password for the user. This will only be used if the json schema actually defines the
+	// password as a valid type.
+	//
+	// required: false
+	Password *PasswordCredential `json:"password"`
+
 	// State is the identity's state.
 	//
 	// required: false
 	State State `json:"state"`
+
+	// VerifiableAddresses contains all the addresses that can be verified by the user.
+	//
+	// required: false
+	VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses"`
+}
+
+func (h *Handler) parsePwdCredential(i *Identity, cr AdminCreateIdentityBody, ctx context.Context) error {
+	if cr.Password != nil {
+		// Create the credentials
+		hpw := []byte(cr.Password.Value)
+		if !cr.Password.IsHashed {
+			var err error
+
+			if hpw, err = h.r.Config(ctx).Hasher(h.r).Generate(ctx, hpw); err != nil {
+				return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+			}
+		}
+
+		config, err := json.Marshal(&CredentialsConfig{
+			HashedPassword: string(hpw),
+		})
+		if err != nil {
+			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to encode password options to JSON: %s", err).WithWrap(err))
+		}
+
+		i.Credentials = map[CredentialsType]Credentials{
+			CredentialsTypePassword: {
+				Type:        CredentialsTypePassword,
+				Identifiers: []string{},
+				Config:      config,
+			},
+		}
+	}
+	return nil
 }
 
 // swagger:route POST /identities v0alpha2 adminCreateIdentity
 //
 // Create an Identity
 //
-// This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-// using this method! A way to achieve that will be introduced in the future.
-//
+// This endpoint creates an identity. Optionally a password can be set for the newly created identity. Do to so
+// a password field must be included on the creation request. The password field can be in cleartext or hashed with
+// any of the supported hashing algorithms. Using already hashed values can be useful when moving from another user
+// authentication mechanism to Kratos.
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
 //     Consumes:
@@ -249,7 +318,20 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		}
 		state = cr.State
 	}
-	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits), State: state, StateChangedAt: &stateChangedAt}
+
+	i := &Identity{
+		SchemaID:            cr.SchemaID,
+		Traits:              []byte(cr.Traits),
+		State:               state,
+		StateChangedAt:      &stateChangedAt,
+		VerifiableAddresses: cr.VerifiableAddresses,
+	}
+
+	if err := h.parsePwdCredential(i, cr, r.Context()); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
 	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

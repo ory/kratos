@@ -5,10 +5,10 @@ import (
 )
 
 // CredentialsConfig is the struct that is being used as part of the identity credentials.
-type CredentialsConfig struct {
-	// HashedPassword is a hash-representation of the password.
-	HashedPassword string `json:"hashed_password"`
-}
+//type CredentialsConfig struct {
+//	// HashedPassword is a hash-representation of the password.
+//	HashedPassword string `json:"hashed_password"`
+//}
 
 // submitSelfServiceLoginFlowWithPasswordMethodBody is used to decode the login form payload.
 //

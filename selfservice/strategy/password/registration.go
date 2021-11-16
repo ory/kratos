@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	errors2 "github.com/ory/kratos/schema/errors"
+
 	"github.com/ory/kratos/text"
 
 	"github.com/pkg/errors"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/ui/container"
@@ -98,7 +99,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if len(p.Password) == 0 {
-		return s.handleRegistrationError(w, r, f, &p, schema.NewRequiredError("#/password", "password"))
+		return s.handleRegistrationError(w, r, f, &p, errors2.NewRequiredError("#/password", "password"))
 	}
 
 	if len(p.Traits) == 0 {
@@ -110,7 +111,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
+	co, err := json.Marshal(&identity.CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
 		return s.handleRegistrationError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
 	}
@@ -135,7 +136,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 		// This should never happen
 		return errors.WithStack(x.PseudoPanic.WithReasonf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
 	} else if len(c.Identifiers) == 0 {
-		return schema.NewMissingIdentifierError()
+		return errors2.NewMissingIdentifierError()
 	}
 
 	for _, id := range c.Identifiers {
@@ -143,7 +144,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
-			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
+			return errors2.NewPasswordPolicyViolationError("#/password", err.Error())
 		}
 	}
 
