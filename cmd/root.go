@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/ory/x/cloudx"
 	"os"
 
 	"github.com/ory/kratos/driver/config"
@@ -17,7 +18,6 @@ import (
 	"github.com/ory/kratos/cmd/migrate"
 	"github.com/ory/kratos/cmd/serve"
 	"github.com/ory/x/cmdx"
-
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +35,7 @@ func NewRootCmd() (cmd *cobra.Command) {
 	hashers.RegisterCommandRecursive(cmd)
 	courier.RegisterCommandRecursive(cmd)
 
+	cmd.AddCommand(cloudx.NewRootCommand("kratos", config.Version))
 	cmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
 
 	return cmd

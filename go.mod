@@ -18,6 +18,8 @@ replace (
 	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 )
 
+replace github.com/ory/x => ../x
+
 require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
@@ -73,7 +75,7 @@ require (
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.9.12
 	github.com/ory/jsonschema/v3 v3.0.4
-	github.com/ory/kratos-client-go v0.6.3-alpha.1
+	github.com/ory/kratos-client-go v0.8.0-alpha.2
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.6
 	github.com/ory/x v0.0.310
