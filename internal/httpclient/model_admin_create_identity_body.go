@@ -17,11 +17,14 @@ import (
 
 // AdminCreateIdentityBody struct for AdminCreateIdentityBody
 type AdminCreateIdentityBody struct {
+	Password *PasswordCredential `json:"password,omitempty"`
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	SchemaId string         `json:"schema_id"`
 	State    *IdentityState `json:"state,omitempty"`
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits in a self-service manner. The input will always be validated against the JSON Schema defined in `schema_url`.
 	Traits map[string]interface{} `json:"traits"`
+	// VerifiableAddresses contains all the addresses that can be verified by the user.
+	VerifiableAddresses []VerifiableIdentityAddress `json:"verifiable_addresses,omitempty"`
 }
 
 // NewAdminCreateIdentityBody instantiates a new AdminCreateIdentityBody object
@@ -41,6 +44,38 @@ func NewAdminCreateIdentityBody(schemaId string, traits map[string]interface{}) 
 func NewAdminCreateIdentityBodyWithDefaults() *AdminCreateIdentityBody {
 	this := AdminCreateIdentityBody{}
 	return &this
+}
+
+// GetPassword returns the Password field value if set, zero value otherwise.
+func (o *AdminCreateIdentityBody) GetPassword() PasswordCredential {
+	if o == nil || o.Password == nil {
+		var ret PasswordCredential
+		return ret
+	}
+	return *o.Password
+}
+
+// GetPasswordOk returns a tuple with the Password field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AdminCreateIdentityBody) GetPasswordOk() (*PasswordCredential, bool) {
+	if o == nil || o.Password == nil {
+		return nil, false
+	}
+	return o.Password, true
+}
+
+// HasPassword returns a boolean if a field has been set.
+func (o *AdminCreateIdentityBody) HasPassword() bool {
+	if o != nil && o.Password != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetPassword gets a reference to the given PasswordCredential and assigns it to the Password field.
+func (o *AdminCreateIdentityBody) SetPassword(v PasswordCredential) {
+	o.Password = &v
 }
 
 // GetSchemaId returns the SchemaId field value
@@ -123,8 +158,43 @@ func (o *AdminCreateIdentityBody) SetTraits(v map[string]interface{}) {
 	o.Traits = v
 }
 
+// GetVerifiableAddresses returns the VerifiableAddresses field value if set, zero value otherwise.
+func (o *AdminCreateIdentityBody) GetVerifiableAddresses() []VerifiableIdentityAddress {
+	if o == nil || o.VerifiableAddresses == nil {
+		var ret []VerifiableIdentityAddress
+		return ret
+	}
+	return o.VerifiableAddresses
+}
+
+// GetVerifiableAddressesOk returns a tuple with the VerifiableAddresses field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AdminCreateIdentityBody) GetVerifiableAddressesOk() ([]VerifiableIdentityAddress, bool) {
+	if o == nil || o.VerifiableAddresses == nil {
+		return nil, false
+	}
+	return o.VerifiableAddresses, true
+}
+
+// HasVerifiableAddresses returns a boolean if a field has been set.
+func (o *AdminCreateIdentityBody) HasVerifiableAddresses() bool {
+	if o != nil && o.VerifiableAddresses != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetVerifiableAddresses gets a reference to the given []VerifiableIdentityAddress and assigns it to the VerifiableAddresses field.
+func (o *AdminCreateIdentityBody) SetVerifiableAddresses(v []VerifiableIdentityAddress) {
+	o.VerifiableAddresses = v
+}
+
 func (o AdminCreateIdentityBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
+	if o.Password != nil {
+		toSerialize["password"] = o.Password
+	}
 	if true {
 		toSerialize["schema_id"] = o.SchemaId
 	}
@@ -133,6 +203,9 @@ func (o AdminCreateIdentityBody) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["traits"] = o.Traits
+	}
+	if o.VerifiableAddresses != nil {
+		toSerialize["verifiable_addresses"] = o.VerifiableAddresses
 	}
 	return json.Marshal(toSerialize)
 }

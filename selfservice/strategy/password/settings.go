@@ -124,7 +124,7 @@ func (s *Strategy) continueSettingsFlow(
 		return err
 	}
 
-	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
+	co, err := json.Marshal(&identity.CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
 	}

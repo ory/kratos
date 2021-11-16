@@ -143,6 +143,7 @@ Class | Method | HTTP request | Description
  - [InlineResponse503](docs/InlineResponse503.md)
  - [JsonError](docs/JsonError.md)
  - [NeedsPrivilegedSessionError](docs/NeedsPrivilegedSessionError.md)
+ - [PasswordCredential](docs/PasswordCredential.md)
  - [RecoveryAddress](docs/RecoveryAddress.md)
  - [SelfServiceBrowserLocationChangeRequiredError](docs/SelfServiceBrowserLocationChangeRequiredError.md)
  - [SelfServiceError](docs/SelfServiceError.md)
