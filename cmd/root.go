@@ -35,7 +35,7 @@ func NewRootCmd() (cmd *cobra.Command) {
 	hashers.RegisterCommandRecursive(cmd)
 	courier.RegisterCommandRecursive(cmd)
 
-	cmd.AddCommand(cloudx.NewRootCommand("kratos", config.Version))
+	cmd.AddCommand(cloudx.NewRootCommand("Kratos", config.Version))
 	cmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
 
 	return cmd
