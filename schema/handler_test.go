@@ -11,8 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ory/kratos/internal/testhelpers"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -118,7 +116,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
-	testhelpers.SetDefaultIdentitySchema(conf, getSchemaById(config.DefaultIdentityTraitsSchemaID).RawURL)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, config.DefaultIdentityTraitsSchemaID)
 	setSchemas(schemas)
 
 	t.Run("case=get default schema", func(t *testing.T) {

@@ -160,13 +160,13 @@ type listIdentitySchemas struct {
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
 
-	schemas, err := h.r.IdentityTraitsSchemas(r.Context())
+	allSchemas, err := h.r.IdentityTraitsSchemas(r.Context())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to load identity schemas").WithWrap(err)))
 		return
 	}
-	total := schemas.Total()
-	schemas = schemas.List(page, itemsPerPage)
+	total := allSchemas.Total()
+	schemas := allSchemas.List(page, itemsPerPage)
 
 	var ss IdentitySchemas
 	for k := range schemas {
