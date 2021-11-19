@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/driver/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/ory/kratos/internal/testhelpers"
 
