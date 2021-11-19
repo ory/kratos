@@ -8,7 +8,7 @@ import (
 const (
 	InfoSelfServiceVerification           ID = 1070000 + iota // 1070000
 	InfoSelfServiceVerificationEmailSent                      // 1070001
-	InfoSelfServiceVerificationSuccessful                     // 1060002
+	InfoSelfServiceVerificationSuccessful                     // 1070002
 )
 
 const (
@@ -33,7 +33,7 @@ func NewErrorValidationVerificationFlowExpired(ago time.Duration) *Message {
 
 func NewInfoSelfServiceVerificationSuccessful() *Message {
 	return &Message{
-		ID:   InfoSelfServiceRecoverySuccessful,
+		ID:   InfoSelfServiceVerificationSuccessful,
 		Type: Info,
 		Text: "You successfully verified your email address.",
 	}
