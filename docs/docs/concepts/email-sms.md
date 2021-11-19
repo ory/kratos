@@ -144,6 +144,9 @@ Hi, please verify your account by clicking the following link:
 Hi, please verify your account by clicking the following link: {{ .VerificationURL }}
 ```
 
+If you're running multiple instances of Kratos and separate courier job,
+make sure to provide templates to all instances (both Kratos and courier).
+
 ### The Identity attribute
 
 To be able to customize the content of templates based on the identity of the
