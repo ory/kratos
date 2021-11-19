@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/driver/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,6 +43,7 @@ func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://../test/stub/identity/empty.schema.json")
+	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh")
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
