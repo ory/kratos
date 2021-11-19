@@ -877,7 +877,8 @@ func splitUrlAndFragment(s string) (string, string) {
 func (p *Config) ParseAbsoluteOrRelativeURIOrFail(key string) *url.URL {
 	parsed, err := p.ParseAbsoluteOrRelativeURI(p.p.String(key))
 	if err != nil {
-		p.l.WithField("reason", "expected scheme to be set").WithError(err).Fatalf("Unable to parse URI")
+		p.l.WithError(errors.WithStack(err)).
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
 	return parsed
 }
@@ -885,7 +886,8 @@ func (p *Config) ParseAbsoluteOrRelativeURIOrFail(key string) *url.URL {
 func (p *Config) ParseURIOrFail(key string) *url.URL {
 	parsed, err := p.ParseURI(p.p.String(key))
 	if err != nil {
-		p.l.WithField("reason", "expected scheme to be set").WithError(err).Fatalf("Unable to parse URI")
+		p.l.WithField("reason", "expected scheme to be set").
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
 	return parsed
 }

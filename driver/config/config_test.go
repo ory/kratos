@@ -898,8 +898,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
 
 	type identity struct {
-		DefaultSchemaUrl string   `json:"default_schema_id"`
-		Schemas          []string `json:"schemas"`
+		Schemas         []map[string]string `json:"schemas"`
 	}
 
 	type configFile struct {
@@ -925,8 +924,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 			},
 			DSN: "memory",
 			Identity: &identity{
-				DefaultSchemaUrl: "base64://" + base64.StdEncoding.EncodeToString(identityTest),
-				Schemas:          []string{},
+				Schemas:          []map[string]string{{"id": "default", "url": "base64://" + base64.StdEncoding.EncodeToString(identityTest)}},
 			},
 		}
 	}
@@ -1024,7 +1022,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 				_, hook, tmpConfig, i, c := testWatch(t, ctx, &cobra.Command{}, i)
 				// Change the identity config to an invalid file
-				i.Identity.DefaultSchemaUrl = invalidIdentity.Identity.DefaultSchemaUrl
+				i.Identity.Schemas = invalidIdentity.Identity.Schemas
 
 				t.Cleanup(func() {
 					cancel()

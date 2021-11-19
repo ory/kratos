@@ -1,5 +1,3 @@
-version: v0.7.1-alpha.1
-
 dsn: memory
 
 serve:
@@ -72,10 +70,9 @@ hashers:
     key_length: 16
 
 identity:
-  default_schema_id: default
   schemas:
     - id: default
-      url:  file://stub/identity.schema.json
+      url: file://stub/identity.schema.json
 
 courier:
   smtp:
