@@ -103,7 +103,12 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		}
 	}
 
-	if err := SortNodes(f.UI.Nodes, h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+	ds, err := h.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := SortNodes(f.UI.Nodes, ds.String()); err != nil {
 		return nil, err
 	}
 

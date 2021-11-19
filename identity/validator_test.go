@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
@@ -56,7 +58,7 @@ func TestSchemaValidator(t *testing.T) {
 	defer ts.Close()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, ts.URL+"/schema/firstName")
+	testhelpers.SetDefaultIdentitySchema(conf, ts.URL+"/schema/firstName")
 	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
 		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},

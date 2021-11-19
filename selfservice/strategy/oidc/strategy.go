@@ -442,8 +442,12 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, f flow.Fl
 		AddProvider(rf.UI, provider, text.NewInfoRegistrationContinue())
 
 		if traits != nil {
-			traitNodes, err := container.NodesFromJSONSchema(node.OpenIDConnectGroup,
-				s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
+			ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+			if err != nil {
+				return err
+			}
+
+			traitNodes, err := container.NodesFromJSONSchema(node.OpenIDConnectGroup, ds.String(), "", nil)
 			if err != nil {
 				return err
 			}

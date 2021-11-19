@@ -31,7 +31,7 @@ var migrations embed.FS
 
 type (
 	persisterDependencies interface {
-		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
 		identity.ValidationProvider
 		x.LoggingProvider
 		config.Provider

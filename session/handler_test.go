@@ -363,7 +363,7 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
-	testhelpers.SetDefaultIdentitySchema(t, conf, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
 
 	t.Run("case=should return 202 after invalidating all sessions", func(t *testing.T) {

@@ -4,7 +4,7 @@ selfservice:
   default_browser_return_url: http://return-to-3-test.ory.sh/
 
 identity:
-  default_schema_url: http://test.kratos.ory.sh/default-identity.schema.json
+  default_schema_id: other
   schemas:
     - id: other
       url: http://test.kratos.ory.sh/other-identity.schema.json

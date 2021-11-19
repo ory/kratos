@@ -37,7 +37,7 @@ type (
 
 		HandlerProvider
 		FlowPersistenceProvider
-		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
 	}
 
 	ErrorHandlerProvider interface{ SettingsFlowErrorHandler() *ErrorHandler }
@@ -194,7 +194,13 @@ func (s *ErrorHandler) WriteFlowError(
 
 	// Lookup the schema from the loaded configuration. This local schema
 	// URL is needed for sorting the UI nodes, instead of the public URL.
-	schema, err := s.d.IdentityTraitsSchemas(r.Context()).GetByID(id.SchemaID)
+	schemas, err := s.d.IdentityTraitsSchemas(r.Context())
+	if err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	schema, err := schemas.GetByID(id.SchemaID)
 	if err != nil {
 		s.forward(w, r, f, err)
 		return

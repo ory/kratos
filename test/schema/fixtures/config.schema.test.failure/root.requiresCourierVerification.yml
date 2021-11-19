@@ -7,4 +7,6 @@ selfservice:
 dsn: foo
 
 identity:
-  default_schema_url: https://example.com
+  schemas:
+    - id: default
+      url: https://example.com

@@ -103,7 +103,6 @@ func TestViperProvider(t *testing.T) {
 				"#/login",
 				"test.kratos.ory.sh/login",
 			} {
-
 				logger := logrusx.New("", "")
 				logger.Logger.ExitFunc = func(code int) { panic("") }
 				hook := new(test.Hook)
@@ -145,9 +144,12 @@ func TestViperProvider(t *testing.T) {
 				configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"),
 				configx.SkipValidation())
 
-			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", c.DefaultIdentityTraitsSchemaURL().String())
+			ds, err := c.DefaultIdentityTraitsSchemaURL()
+			require.NoError(t, err)
+			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", ds.String())
 
-			ss := c.IdentityTraitsSchemas()
+			ss, err := c.IdentityTraitsSchemas()
+			require.NoError(t, err)
 			assert.Equal(t, 2, len(ss))
 
 			assert.Contains(t, ss, config.Schema{
@@ -896,7 +898,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
 
 	type identity struct {
-		DefaultSchemaUrl string   `json:"default_schema_url"`
+		DefaultSchemaUrl string   `json:"default_schema_id"`
 		Schemas          []string `json:"schemas"`
 	}
 

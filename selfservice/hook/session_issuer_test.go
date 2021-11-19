@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -26,7 +28,7 @@ import (
 func TestSessionIssuer(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyPublicBaseURL, "http://localhost/")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/stub.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/stub.schema.json")
 
 	var r http.Request
 	h := hook.NewSessionIssuer(reg)

@@ -27,7 +27,7 @@ func TestLogout(t *testing.T) {
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	public, _, publicRouter, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
 	publicRouter.GET("/session/browser/set", testhelpers.MockSetSession(t, reg, conf))

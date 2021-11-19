@@ -4,6 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/driver/config"
@@ -25,10 +29,11 @@ func TestRegistryDefault_IdentityTraitsSchemas(t *testing.T) {
 		RawURL: "file://other.schema.json",
 	}
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+	testhelpers.SetDefaultIdentitySchema(conf, defaultSchema.RawURL)
 	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{{ID: altSchema.ID, URL: altSchema.RawURL}})
 
-	ss := reg.IdentityTraitsSchemas(context.Background())
+	ss, err := reg.IdentityTraitsSchemas(context.Background())
+	require.NoError(t, err)
 	assert.Equal(t, 2, len(ss))
 	assert.Contains(t, ss, defaultSchema)
 	assert.Contains(t, ss, altSchema)

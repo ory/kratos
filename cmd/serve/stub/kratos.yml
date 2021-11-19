@@ -72,7 +72,10 @@ hashers:
     key_length: 16
 
 identity:
-  default_schema_url: file://stub/identity.schema.json
+  default_schema_id: default
+  schemas:
+    - id: default
+      url:  file://stub/identity.schema.json
 
 courier:
   smtp:

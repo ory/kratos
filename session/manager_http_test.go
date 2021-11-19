@@ -149,7 +149,7 @@ func TestManagerHTTP(t *testing.T) {
 
 	t.Run("suite=SessionAddAuthenticationMethod", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 		i := &identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
@@ -171,7 +171,7 @@ func TestManagerHTTP(t *testing.T) {
 	t.Run("suite=lifecycle", func(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 		conf.MustSet(config.ViperKeySelfServiceLoginUI, "https://www.ory.sh")
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/fake-session.schema.json")
 
 		var s *session.Session
 		rp := x.NewRouterPublic()

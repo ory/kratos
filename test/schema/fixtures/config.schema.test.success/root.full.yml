@@ -79,7 +79,7 @@ log:
   format: json
 
 identity:
-  default_schema_url: https://example.com
+  default_schema_id: foo
   schemas:
     - id: foo
       url: https://example.com

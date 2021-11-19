@@ -76,15 +76,15 @@ func TestRegistration(t *testing.T) {
 		// Overwrite these two to ensure that they run
 		conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/default-return-to")
 		conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, redirTS.URL+"/registration-return-ts")
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 
 		apiClient := testhelpers.NewDebugClient(t)
 
 		t.Run("description=can call endpoints only without session", func(t *testing.T) {
 			// Needed to set up the mock IDs...
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/profile.schema.json")
 			t.Cleanup(func() {
-				conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 			})
 
 			values := url.Values{}
@@ -109,9 +109,9 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/profile.schema.json")
 			t.Cleanup(func() {
-				conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -142,9 +142,9 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should show the error ui because the method is missing in payload", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/profile.schema.json")
 			t.Cleanup(func() {
-				conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 			})
 
 			t.Run("type=api", func(t *testing.T) {
@@ -384,7 +384,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/missing-identifier.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/missing-identifier.schema.json")
 
 			values := func(values url.Values) {
 				values.Set("method", "password")
@@ -432,9 +432,9 @@ func TestRegistration(t *testing.T) {
 			t.Run("type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
 
-				conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
+				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
 				t.Cleanup(func() {
-					conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 				})
 
 				body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, apiClient, values.Encode())
@@ -446,9 +446,9 @@ func TestRegistration(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true)
 
-				conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
+				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
 				t.Cleanup(func() {
-					conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 				})
 
 				body, res := testhelpers.RegistrationMakeRequest(t, false, true, f, apiClient, values.Encode())
@@ -460,9 +460,9 @@ func TestRegistration(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
 
-				conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
+				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/i-do-not-exist.schema.json")
 				t.Cleanup(func() {
-					conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+					testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 				})
 				body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, apiClient, values.Encode())
 				assert.Contains(t, res.Request.URL.String(), errTS.URL)
@@ -491,7 +491,7 @@ func TestRegistration(t *testing.T) {
 		}
 
 		t.Run("case=should pass and set up a session", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
 				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
@@ -531,7 +531,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should fail to register the same user again", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
 				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
@@ -578,7 +578,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 
 			var check = func(t *testing.T, actual string) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
@@ -647,7 +647,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/registration.schema.json")
 			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
 				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
@@ -682,7 +682,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should work with regular JSON", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/registration.schema.json")
 			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []config.SelfServiceHook{{Name: "session"}})
 			t.Cleanup(func() {
 				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
@@ -713,7 +713,7 @@ func TestRegistration(t *testing.T) {
 		conf, reg := internal.NewFastRegistryWithMocks(t)
 
 		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/sort.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://stub/sort.schema.json")
 		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
 
 		router := x.NewRouterPublic()

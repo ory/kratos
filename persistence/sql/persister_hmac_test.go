@@ -26,7 +26,7 @@ type logRegistryOnly struct {
 	c *config.Config
 }
 
-func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) schema.Schemas {
+func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error) {
 	panic("implement me")
 }
 

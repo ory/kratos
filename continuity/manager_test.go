@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/ory/x/ioutilx"
 
 	"github.com/julienschmidt/httprouter"
@@ -20,7 +22,6 @@ import (
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
@@ -40,8 +41,7 @@ type persisterTestPayload struct {
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://../test/stub/identity/empty.schema.json")
-	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://../test/stub/identity/empty.schema.json")
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 

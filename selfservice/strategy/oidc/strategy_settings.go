@@ -45,8 +45,12 @@ func (s *Strategy) SettingsStrategyID() string {
 }
 
 func (s *Strategy) decoderSettings(p *submitSelfServiceSettingsFlowWithOidcMethodBody, r *http.Request) error {
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return err
+	}
 	raw, err := sjson.SetBytes(settingsSchema,
-		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+		"properties.traits.$ref", ds.String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}
