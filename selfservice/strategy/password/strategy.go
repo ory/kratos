@@ -38,7 +38,7 @@ type registrationStrategyDependencies interface {
 
 	errorx.ManagementProvider
 	ValidationProvider
-	hash.HashProvider
+	hash.Generator
 
 	registration.HandlerProvider
 	registration.HooksProvider

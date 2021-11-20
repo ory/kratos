@@ -3,13 +3,13 @@ package settings
 import (
 	"context"
 	"fmt"
+	errors2 "github.com/ory/kratos/schema/errors"
 	"net/http"
 	"time"
 
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 
-	"github.com/ory/kratos/schema"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/pkg/errors"
@@ -153,7 +153,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 			return errors.WithStack(NewFlowNeedsReAuth())
 		}
 		if errors.Is(err, sqlcon.ErrUniqueViolation) {
-			return schema.NewDuplicateCredentialsError()
+			return errors2.NewDuplicateCredentialsError()
 		}
 		return err
 	}

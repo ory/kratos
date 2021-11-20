@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	errors2 "github.com/ory/kratos/schema/errors"
 	"net/http"
 	"time"
 
@@ -18,7 +19,6 @@ import (
 
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
@@ -65,7 +65,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
 		time.Sleep(x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation))
-		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
+		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(errors2.NewInvalidCredentialsError()))
 	}
 
 	var o identity.CredentialsConfig
@@ -75,7 +75,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
-		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
+		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(errors2.NewInvalidCredentialsError()))
 	}
 
 	if !s.d.Hasher().Understands([]byte(o.HashedPassword)) {

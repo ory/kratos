@@ -1,4 +1,4 @@
-package schema
+package errors
 
 import (
 	"fmt"

@@ -3,6 +3,7 @@ package password
 import (
 	"context"
 	"encoding/json"
+	errors2 "github.com/ory/kratos/schema/errors"
 	"net/http"
 
 	"github.com/ory/kratos/text"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/ui/container"
@@ -98,7 +98,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	if len(p.Password) == 0 {
-		return s.handleRegistrationError(w, r, f, &p, schema.NewRequiredError("#/password", "password"))
+		return s.handleRegistrationError(w, r, f, &p, errors2.NewRequiredError("#/password", "password"))
 	}
 
 	if len(p.Traits) == 0 {
@@ -136,7 +136,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 		// This should never happen
 		return errors.WithStack(x.PseudoPanic.WithReasonf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
 	} else if len(c.Identifiers) == 0 {
-		return schema.NewMissingIdentifierError()
+		return errors2.NewMissingIdentifierError()
 	}
 
 	for _, id := range c.Identifiers {
@@ -144,7 +144,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
-			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
+			return errors2.NewPasswordPolicyViolationError("#/password", err.Error())
 		}
 	}
 

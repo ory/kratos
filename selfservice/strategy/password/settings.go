@@ -2,6 +2,7 @@ package password
 
 import (
 	"encoding/json"
+	errors2 "github.com/ory/kratos/schema/errors"
 	"net/http"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
@@ -116,7 +116,7 @@ func (s *Strategy) continueSettingsFlow(
 	}
 
 	if len(p.Password) == 0 {
-		return schema.NewRequiredError("#/password", "password")
+		return errors2.NewRequiredError("#/password", "password")
 	}
 
 	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))

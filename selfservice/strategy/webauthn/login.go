@@ -2,6 +2,7 @@ package webauthn
 
 import (
 	"encoding/json"
+	errors2 "github.com/ory/kratos/schema/errors"
 	"net/http"
 	"strings"
 
@@ -16,7 +17,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
@@ -147,7 +147,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), ss.IdentityID.String())
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
+		return nil, s.handleLoginError(r, f, errors.WithStack(errors2.NewNoWebAuthnRegistered()))
 	}
 
 	var o CredentialsConfig
@@ -171,7 +171,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if _, err := web.ValidateLogin(&wrappedUser{id: i.ID, c: o.Credentials.ToWebAuthn()}, webAuthnSess, webAuthnResponse); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")))
+		return nil, s.handleLoginError(r, f, errors.WithStack(errors2.NewWebAuthnVerifierWrongError("#/")))
 	}
 
 	// Remove the WebAuthn URL from the internal context now that it is set!

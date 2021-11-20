@@ -1,12 +1,12 @@
 package verification
 
 import (
+	errors2 "github.com/ory/kratos/schema/errors"
 	"net/http"
 	"time"
 
 	"github.com/ory/nosurf"
 
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlcon"
 
@@ -367,7 +367,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	if !found {
-		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoVerificationStrategyResponsible()))
+		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(errors2.NewNoVerificationStrategyResponsible()))
 		return
 	}
 

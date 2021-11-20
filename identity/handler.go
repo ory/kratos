@@ -3,11 +3,9 @@ package identity
 import (
 	"context"
 	"encoding/json"
-
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/x"
 
 	"github.com/ory/kratos/cipher"
@@ -271,14 +269,8 @@ func (h *Handler) parsePwdCredential(i *Identity, cr AdminCreateIdentityBody, ct
 		hpw := []byte(cr.Password.Value)
 		if !cr.Password.IsHashed {
 			var err error
-			var hasher hash.Hasher
-			if h.r.Config(ctx).HasherPasswordHashingAlgorithm() == Bcrypt {
-				hasher = hash.NewHasherBcrypt(h)
-			} else {
-				hasher = hash.NewHasherArgon2(h)
-			}
-			hpw, err = hasher.Generate(ctx, hpw)
-			if err != nil {
+
+			if hpw, err = h.r.Config(ctx).Hasher(h.r).Generate(ctx, hpw); err != nil {
 				return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
 			}
 		}

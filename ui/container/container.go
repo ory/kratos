@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	errors2 "github.com/ory/kratos/schema/errors"
 	"net/http"
 	"strings"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/stringslice"
 
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
 )
 
@@ -156,7 +156,7 @@ func (c *Container) ParseError(group node.Group, err error) error {
 			return nil
 		}
 		return err
-	} else if e := new(schema.ValidationError); errors.As(err, &e) {
+	} else if e := new(errors2.ValidationError); errors.As(err, &e) {
 		pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
 		for i := range e.Messages {
 			c.AddMessage(group, &e.Messages[i], pointer)

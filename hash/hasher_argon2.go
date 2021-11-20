@@ -11,8 +11,6 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
-
-	"github.com/ory/kratos/driver/config"
 )
 
 var (
@@ -26,7 +24,7 @@ type Argon2 struct {
 }
 
 type Argon2Configuration interface {
-	config.Provider
+	ConfigProvider
 }
 
 func NewHasherArgon2(c Argon2Configuration) *Argon2 {
@@ -38,7 +36,7 @@ func toKB(mem bytesize.ByteSize) uint32 {
 }
 
 func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	p := h.c.Config(ctx).HasherArgon2()
+	p := h.c.HashConfig(ctx).HasherArgon2()
 
 	salt := make([]byte, p.SaltLength)
 	if _, err := rand.Read(salt); err != nil {

@@ -34,7 +34,7 @@ type registrationStrategyDependencies interface {
 	continuity.ManagementProvider
 
 	errorx.ManagementProvider
-	hash.HashProvider
+	hash.Generator
 
 	registration.HandlerProvider
 	registration.HooksProvider

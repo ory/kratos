@@ -259,6 +259,10 @@ func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
 	return corp.ContextualizeConfig(ctx, m.c)
 }
 
+func (m *RegistryDefault) HashConfig(ctx context.Context) hash.HashConfigProvider {
+	return m.Config(ctx)
+}
+
 func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 	if len(m.selfserviceStrategies) == 0 {
 		m.selfserviceStrategies = []interface{}{
@@ -392,11 +396,7 @@ func (m *RegistryDefault) Cipher() cipher.Cipher {
 
 func (m *RegistryDefault) Hasher() hash.Hasher {
 	if m.passwordHasher == nil {
-		if m.c.HasherPasswordHashingAlgorithm() == "bcrypt" {
-			m.passwordHasher = hash.NewHasherBcrypt(m)
-		} else {
-			m.passwordHasher = hash.NewHasherArgon2(m)
-		}
+		m.passwordHasher = m.c.Hasher(m)
 	}
 	return m.passwordHasher
 }

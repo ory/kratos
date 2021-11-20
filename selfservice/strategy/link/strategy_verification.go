@@ -1,6 +1,7 @@
 package link
 
 import (
+	errors2 "github.com/ory/kratos/schema/errors"
 	"net/http"
 	"net/url"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/text"
@@ -149,7 +149,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	}
 
 	if len(body.Email) == 0 {
-		return s.handleVerificationError(w, r, f, body, schema.NewRequiredError("#/email", "email"))
+		return s.handleVerificationError(w, r, f, body, errors2.NewRequiredError("#/email", "email"))
 	}
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.CSRFToken); err != nil {
