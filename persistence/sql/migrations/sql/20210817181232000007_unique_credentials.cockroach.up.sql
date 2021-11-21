@@ -1,1 +1,1 @@
-UPDATE "identity_credential_identifiers" SET "identity_credential_type_id" = "_identity_credential_type_id_tmp";
+ALTER TABLE "identity_credential_identifiers" DROP COLUMN "_identity_credential_type_id_tmp";

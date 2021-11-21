@@ -1,1 +1,1 @@
-ALTER TABLE `identity_credential_identifiers` ADD CONSTRAINT `identity_credential_identifiers_type_id_fk_idx` FOREIGN KEY (`identity_credential_type_id`) REFERENCES `identity_credential_types` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE;
+UPDATE identity_credential_identifiers SET identity_credential_type_id = (SELECT  ict.id FROM identity_credential_types as ict JOIN identity_credentials AS ic ON (ic.identity_credential_type_id = ict.id) WHERE ic.id = identity_credential_id);
