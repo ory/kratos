@@ -105,7 +105,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		p.Traits = json.RawMessage("{}")
 	}
 
-	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))
+	hpw, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
 	if err != nil {
 		return s.handleRegistrationError(w, r, f, &p, err)
 	}

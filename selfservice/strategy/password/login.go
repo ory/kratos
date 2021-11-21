@@ -78,7 +78,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
-	if !s.d.Hasher().Understands([]byte(o.HashedPassword)) {
+	if !s.d.Hasher(r.Context()).Understands([]byte(o.HashedPassword)) {
 		// Migrate password hash if not configured hasher.
 		// But Kratos doesn't have ability to import credentials now.
 		// see https://github.com/ory/kratos/issues/605
@@ -97,7 +97,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 }
 
 func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID, password []byte) error {
-	hpw, err := s.d.Hasher().Generate(ctx, password)
+	hpw, err := s.d.Hasher(ctx).Generate(ctx, password)
 	if err != nil {
 		return err
 	}

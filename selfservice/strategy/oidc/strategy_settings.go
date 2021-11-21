@@ -375,17 +375,17 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 
 	var it string
 	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
+		if it, err = s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(idToken)); err != nil {
 			return s.handleSettingsError(w, r, ctxUpdate, p, err)
 		}
 	}
 
-	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
+	cat, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.AccessToken))
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
+	crt, err := s.d.Cipher(r.Context()).Encrypt(r.Context(), []byte(token.RefreshToken))
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}

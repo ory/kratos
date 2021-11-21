@@ -119,7 +119,7 @@ func (s *Strategy) continueSettingsFlow(
 		return schema.NewRequiredError("#/password", "password")
 	}
 
-	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))
+	hpw, err := s.d.Hasher(r.Context()).Generate(r.Context(), []byte(p.Password))
 	if err != nil {
 		return err
 	}

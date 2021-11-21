@@ -167,7 +167,7 @@ func TestHandler(t *testing.T) {
 				if !encrypt {
 					return token
 				}
-				c, err := reg.Cipher().Encrypt(context.Background(), []byte(token))
+				c, err := reg.Cipher(context.Background()).Encrypt(context.Background(), []byte(token))
 				require.NoError(t, err)
 				return c
 			}
@@ -311,7 +311,7 @@ func TestHandler(t *testing.T) {
 					assert.Contains(t, res.Raw, "Internal Server Error", res.Raw)
 				})
 			}
-			e, _ := reg.Cipher().Encrypt(context.Background(), []byte("foo_token"))
+			e, _ := reg.Cipher(context.Background()).Encrypt(context.Background(), []byte("foo_token"))
 			id = createOidcIdentity(t, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {

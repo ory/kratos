@@ -49,7 +49,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, *otp
 	password := x.NewUUID().String()
 	key, err := totp.NewKey(context.Background(), "foo", reg)
 	require.NoError(t, err)
-	p, err := reg.Hasher().Generate(context.Background(), []byte(password))
+	p, err := reg.Hasher(context.Background()).Generate(context.Background(), []byte(password))
 	require.NoError(t, err)
 	i := &identity.Identity{
 		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),

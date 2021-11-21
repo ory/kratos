@@ -340,7 +340,7 @@ func (i *Identity) WithDeclassifiedCredentialsOIDC(ctx context.Context, c cipher
 				ciphertext := v.Get(token).String()
 
 				var plaintext []byte
-				plaintext, err = c.Cipher().Decrypt(ctx, ciphertext)
+				plaintext, err = c.Cipher(ctx).Decrypt(ctx, ciphertext)
 				if err != nil {
 					return false
 				}

@@ -21,7 +21,7 @@ func TestCountActiveCredentials(t *testing.T) {
 
 	h1, err := hash2.NewHasherBcrypt(reg).Generate(context.Background(), []byte("a password"))
 	require.NoError(t, err)
-	h2, err := reg.Hasher().Generate(context.Background(), []byte("a password"))
+	h2, err := reg.Hasher(context.Background()).Generate(context.Background(), []byte("a password"))
 	require.NoError(t, err)
 
 	for k, tc := range []struct {

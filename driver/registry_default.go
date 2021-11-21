@@ -66,9 +66,9 @@ import (
 )
 
 type RegistryDefault struct {
-	rwl sync.RWMutex
-	l   *logrusx.Logger
-	c   *config.Config
+	rwl                                         sync.RWMutex
+	l                                           *logrusx.Logger
+	alwaysUseTheConfigFunctionWithContextConfig *config.Config
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 
@@ -97,10 +97,7 @@ type RegistryDefault struct {
 	sessionHandler *session.Handler
 	sessionManager session.Manager
 
-	passwordHasher    hash.Hasher
 	passwordValidator password2.Validator
-
-	crypter cipher.Cipher
 
 	errorHandler *errorx.Handler
 	errorManager *errorx.Manager
@@ -253,10 +250,10 @@ func (m *RegistryDefault) CSRFHandler() nosurf.Handler {
 }
 
 func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
-	if m.c == nil {
+	if m.alwaysUseTheConfigFunctionWithContextConfig == nil {
 		panic("configuration not set")
 	}
-	return corp.ContextualizeConfig(ctx, m.c)
+	return corp.ContextualizeConfig(ctx, m.alwaysUseTheConfigFunctionWithContextConfig)
 }
 
 func (m *RegistryDefault) selfServiceStrategies() []interface{} {
@@ -335,7 +332,7 @@ func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 }
 
 func (m *RegistryDefault) WithConfig(c *config.Config) Registry {
-	m.c = c
+	m.alwaysUseTheConfigFunctionWithContextConfig = c
 	return m
 }
 
@@ -375,30 +372,23 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 	return m.sessionHandler
 }
 
-func (m *RegistryDefault) Cipher() cipher.Cipher {
-	if m.crypter == nil {
-		switch m.c.CipherAlgorithm() {
-		case "xchacha20-poly1305":
-			m.crypter = cipher.NewCryptChaCha20(m)
-		case "aes":
-			m.crypter = cipher.NewCryptAES(m)
-		default:
-			m.crypter = cipher.NewNoop(m)
-			m.l.Logger.Warning("No encryption configuration found. Default algorithm (noop) will be use that mean sensitive data will be recorded in plaintext")
-		}
+func (m *RegistryDefault) Cipher(ctx context.Context) cipher.Cipher {
+	switch m.Config(ctx).CipherAlgorithm() {
+	case "xchacha20-poly1305":
+		return cipher.NewCryptChaCha20(m)
+	case "aes":
+		return cipher.NewCryptAES(m)
+	default:
+		m.l.Logger.Warning("No encryption configuration found. Default algorithm (noop) will be use that mean sensitive data will be recorded in plaintext")
+		return cipher.NewNoop(m)
 	}
-	return m.crypter
 }
 
-func (m *RegistryDefault) Hasher() hash.Hasher {
-	if m.passwordHasher == nil {
-		if m.c.HasherPasswordHashingAlgorithm() == "bcrypt" {
-			m.passwordHasher = hash.NewHasherBcrypt(m)
-		} else {
-			m.passwordHasher = hash.NewHasherArgon2(m)
-		}
+func (m *RegistryDefault) Hasher(ctx context.Context) hash.Hasher {
+	if m.Config(ctx).HasherPasswordHashingAlgorithm() == "bcrypt" {
+		return hash.NewHasherBcrypt(m)
 	}
-	return m.passwordHasher
+	return hash.NewHasherArgon2(m)
 }
 
 func (m *RegistryDefault) PasswordValidator() password2.Validator {

@@ -53,7 +53,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []lo
 	}
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
-	p, err := reg.Hasher().Generate(context.Background(), []byte(password))
+	p, err := reg.Hasher(context.Background()).Generate(context.Background(), []byte(password))
 	require.NoError(t, err)
 	i := &identity.Identity{
 		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
