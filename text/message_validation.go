@@ -4,24 +4,6 @@ import (
 	"fmt"
 )
 
-const (
-	ErrorValidation ID = 4000000 + iota
-	ErrorValidationGeneric
-	ErrorValidationRequired
-	ErrorValidationMinLength
-	ErrorValidationInvalidFormat
-	ErrorValidationPasswordPolicyViolation
-	ErrorValidationInvalidCredentials
-	ErrorValidationDuplicateCredentials
-	ErrorValidationTOTPVerifierWrong
-	ErrorValidationIdentifierMissing
-	ErrorValidationAddressNotVerified
-	ErrorValidationNoTOTPDevice
-	ErrorValidationLookupAlreadyUsed
-	ErrorValidationNoWebAuthnDevice
-	ErrorValidationNoLookup
-)
-
 func NewValidationErrorGeneric(reason string) *Message {
 	return &Message{
 		ID:      ErrorValidationGeneric,

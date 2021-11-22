@@ -5,18 +5,6 @@ import (
 	"time"
 )
 
-const (
-	InfoSelfServiceRegistrationRoot ID = 1040000 + iota // 1040000
-	InfoSelfServiceRegistration                         // 1040001
-	InfoSelfServiceRegistrationWith                     // 1040002
-	InfoRegistrationContinue                            // 1040003
-)
-
-const (
-	ErrorValidationRegistration ID = 4040000 + iota
-	ErrorValidationRegistrationFlowExpired
-)
-
 func NewInfoRegistration() *Message {
 	return &Message{
 		ID:      InfoSelfServiceRegistration,
