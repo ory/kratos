@@ -6,31 +6,6 @@ import (
 	"time"
 )
 
-const (
-	InfoSelfServiceSettings ID = 1050000 + iota
-	InfoSelfServiceSettingsUpdateSuccess
-	InfoSelfServiceSettingsUpdateLinkOidc
-	InfoSelfServiceSettingsUpdateUnlinkOidc
-	InfoSelfServiceSettingsUpdateUnlinkTOTP
-	InfoSelfServiceSettingsTOTPQRCode
-	InfoSelfServiceSettingsTOTPSecret
-	InfoSelfServiceSettingsRevealLookup
-	InfoSelfServiceSettingsRegenerateLookup
-	InfoSelfServiceSettingsLookupSecret
-	InfoSelfServiceSettingsLookupSecretLabel
-	InfoSelfServiceSettingsLookupConfirm
-	InfoSelfServiceSettingsRegisterWebAuthn
-	InfoSelfServiceSettingsRegisterWebAuthnDisplayName
-	InfoSelfServiceSettingsLookupSecretUsed
-	InfoSelfServiceSettingsLookupSecretList
-	InfoSelfServiceSettingsDisableLookup
-)
-
-const (
-	ErrorValidationSettings ID = 4050000 + iota
-	ErrorValidationSettingsFlowExpired
-)
-
 func NewErrorValidationSettingsFlowExpired(ago time.Duration) *Message {
 	return &Message{
 		ID:   ErrorValidationSettingsFlowExpired,

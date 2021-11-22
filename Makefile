@@ -28,11 +28,9 @@ endef
 $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
-.bin/clidoc:
-		go build -o .bin/clidoc ./cmd/clidoc/.
-
+.PHONY: docs/cli
 docs/cli: .bin/clidoc
-		clidoc .
+		go run ./cmd/clidoc/. .
 
 .bin/ory: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.0
