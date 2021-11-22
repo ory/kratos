@@ -1,4 +1,4 @@
-FROM golang:1.16-alpine AS builder
+FROM golang:1.16.10-alpine3.14 AS builder
 
 RUN apk -U --no-cache add build-base git gcc bash
 
@@ -23,7 +23,7 @@ RUN go build -tags sqlite \
     -ldflags="-X 'github.com/ory/kratos/driver/config.Version=${VERSION}' -X 'github.com/ory/kratos/driver/config.Date=${BUILD_DATE}' -X 'github.com/ory/kratos/driver/config.Commit=${COMMIT}'" \
     -o /usr/bin/kratos
 
-FROM alpine:3.14.2
+FROM alpine:3.14.3
 
 RUN addgroup -S ory; \
     adduser -S ory -G ory -D -u 10000 -h /home/ory -s /bin/nologin; \
