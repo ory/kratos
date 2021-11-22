@@ -1412,16 +1412,6 @@ will be overwritten!
 }
 ```
 
-###### You successfully verified your email address. (1070002)
-
-```json
-{
-  "id": 1070002,
-  "text": "You successfully verified your email address.",
-  "type": "info"
-}
-```
-
 ###### An email containing a recovery link has been sent to the email address you provided. (1060002)
 
 ```json
@@ -1450,6 +1440,16 @@ will be overwritten!
 {
   "id": 1070001,
   "text": "Password",
+  "type": "info"
+}
+```
+
+###### You successfully verified your email address. (1070002)
+
+```json
+{
+  "id": 1070002,
+  "text": "You successfully verified your email address.",
   "type": "info"
 }
 ```
@@ -1545,8 +1545,8 @@ will be overwritten!
   "text": "Length must be \u003e= 1, but got 2.",
   "type": "error",
   "context": {
-    "expected_length": 1,
-    "actual_length": 2
+    "actual_length": 2,
+    "expected_length": 1
   }
 }
 ```
