@@ -29,7 +29,7 @@ $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
 .PHONY: docs/cli
-docs/cli: .bin/clidoc
+docs/cli:
 		go run ./cmd/clidoc/. .
 
 .bin/ory: Makefile
