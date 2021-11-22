@@ -28,6 +28,10 @@ endef
 $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
+.bin/clidoc:
+		echo "deprecated usage, use docs/cli instead"
+		go build -o .bin/clidoc ./cmd/clidoc/.
+
 .PHONY: docs/cli
 docs/cli:
 		go run ./cmd/clidoc/. .
