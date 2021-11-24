@@ -303,6 +303,9 @@ New feature or request.
 - [ ] Documentation refactoring
       ([kratos#1904](https://github.com/ory/kratos/issues/1904)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Update config key neames
+      ([kratos#1979](https://github.com/ory/kratos/issues/1979)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
