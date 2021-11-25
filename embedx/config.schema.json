@@ -94,11 +94,11 @@
           "properties": {
             "user": {
               "type": "string",
-              "description": "user name for basic auth"
+              "description": "The username to be sent in the HTTP Basic Auth Header"
             },
             "password": {
               "type": "string",
-              "description": "password for basic auth"
+              "description": "The password to be sent in the HTTP Basic Auth Header"
             }
           },
           "additionalProperties": false,
@@ -124,15 +124,17 @@
           "properties": {
             "name": {
               "type": "string",
-              "description": "The name of the api key"
+              "description": "The name of the api key",
+              "examples": ["X-Api-Key"]
             },
             "value": {
               "type": "string",
-              "description": "The value of the api key"
+              "description": "The value of the api key",
+              "examples": ["eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"]
             },
             "in": {
               "type": "string",
-              "description": "How the api key should be transferred",
+              "description": "Whether to send the API Key in the HTTP Header or as a HTTP Cookie",
               "enum": [
                 "header",
                 "cookie"
@@ -167,11 +169,17 @@
             "url": {
               "type": "string",
               "description": "The URL the Web-Hook should call",
-              "format": "uri"
+              "format": "uri",
+              "examples": ["https://www.example.org/web-hook-listener"]
             },
             "method": {
               "type": "string",
-              "description": "The HTTP method to use (GET, POST, etc)."
+              "description": "The HTTP method to use (GET, POST, etc).",
+              "examples": [
+                "GET",
+                "POST",
+                "PUT"
+              ]
             },
             "body": {
               "type": "string",

@@ -96,8 +96,8 @@ func (c *noopAuthStrategy) apply(_ *http.Request) {}
 
 func newBasicAuthStrategy(raw json.RawMessage) (AuthStrategy, error) {
 	type config struct {
-		User     string
-		Password string
+		User     string `json:"user"`
+		Password string `json:"password"`
 	}
 
 	var c config
@@ -117,9 +117,9 @@ func (c *basicAuthStrategy) apply(req *http.Request) {
 
 func newApiKeyStrategy(raw json.RawMessage) (AuthStrategy, error) {
 	type config struct {
-		In    string
-		Name  string
-		Value string
+		In    string `json:"in"`
+		Name  string `json:"name"`
+		Value string `json:"value"`
 	}
 
 	var c config
@@ -145,12 +145,12 @@ func (c *apiKeyStrategy) apply(req *http.Request) {
 
 func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 	type rawWebHookConfig struct {
-		Method string
-		Url    string
-		Body   string
+		Method string `json:"method"`
+		Url    string `json:"url"`
+		Body   string `json:"body"`
 		Auth   struct {
-			Type   string
-			Config json.RawMessage
+			Type   string `json:"type"`
+			Config json.RawMessage `json:"config"`
 		}
 	}
 
