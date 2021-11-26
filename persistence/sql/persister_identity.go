@@ -566,12 +566,12 @@ func (p *Persister) buildIdentitySearchScope(ctx context.Context, filters map[st
 				continue
 			}
 
-			if strings.HasPrefix(field, "filter_traits.") {
+			if strings.HasPrefix(field, "traits.") {
 				q = q.Scope(p.getJSONSearchQuery(ctx, field, values))
 				continue
 			}
 
-			if strings.HasPrefix(field, "filter_credentials") {
+			if strings.HasPrefix(field, "credentials") {
 				q = q.Scope(p.searchCredentialQuery(field, values))
 				continue
 			}
