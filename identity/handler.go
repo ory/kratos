@@ -95,19 +95,6 @@ type adminListIdentities struct {
 	// default: 0
 	// min: 0
 	Page int `json:"page"`
-
-	// Toggle for search in credential
-	//
-	// required: false
-	// in: query
-	// allowEmptyValue: true
-	WithCredentials bool `json:"with_credentials"`
-
-	// Filter by credentials
-	//
-	// required: false
-	// in: query
-	Credentials string `json:"credentials"`
 }
 
 // swagger:route GET /identities v0alpha2 adminListIdentities
@@ -116,9 +103,12 @@ type adminListIdentities struct {
 //
 // Lists all identities.
 //
-// Filter can be done by adding URL parameters
-// Filter can be done by any field from identityList
-// To filter by credential this flag `with_credential` as to be set
+// This endpoint can filter identities using URL Query parameters. You can filter by traits and by credentials, for example:
+//
+// - `?traits.email=bar@example.org&with_traits.name=foo`: Returns only identities with the email `bar@example.org` and name `foo`.
+// - `?traits.consent=true`: Returns identities whose `consent` property is `true`.
+// - `?credentials.type=oidc`: Returns identities who have an `oidc` credential attached.
+// - `?credentials.type=password&credentials.identifier=bar@example.org`: Returns identities who use `bar@example.org` to sign in.
 //
 // Learn how identities work in [Ory Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //

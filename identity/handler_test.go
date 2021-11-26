@@ -94,24 +94,20 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should return 404 on a non-existing resource", func(t *testing.T) {
-
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				_ = get(t, ts, "/identities/does-not-exist", http.StatusNotFound)
-
 			})
 		}
 	})
 
 	t.Run("case=should fail to create an identity because schema id does not exist", func(t *testing.T) {
-
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				var i identity.AdminCreateIdentityBody
 				i.SchemaID = "does-not-exist"
 				res := send(t, ts, "POST", "/identities", http.StatusBadRequest, &i)
 				assert.Contains(t, res.Get("error.reason").String(), "does-not-exist", "%s", res)
-
 			})
 		}
 	})
@@ -123,7 +119,6 @@ func TestHandler(t *testing.T) {
 				i.Traits = []byte(`{"bar":123}`)
 				res := send(t, ts, "POST", "/identities", http.StatusBadRequest, &i)
 				assert.Contains(t, res.Get("error.reason").String(), "I[#/traits/bar] S[#/properties/traits/properties/bar/type] expected string, but got number")
-
 			})
 		}
 	})
@@ -133,7 +128,6 @@ func TestHandler(t *testing.T) {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				res := send(t, ts, "POST", "/identities", http.StatusBadRequest, json.RawMessage(`{"schema_url":"12345","traits":{}}`))
 				assert.Contains(t, res.Get("error.message").String(), "schema_url")
-
 			})
 		}
 	})
@@ -219,6 +213,7 @@ func TestHandler(t *testing.T) {
 			}))
 			return iId.String()
 		}
+
 		t.Run("case=should create an identity with an ID which is ignored", func(t *testing.T) {
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {

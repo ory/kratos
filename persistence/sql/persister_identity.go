@@ -4,12 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/ory/x/stringslice"
 
 	"github.com/ory/kratos/corp"
 
@@ -253,8 +250,32 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	})
 }
 
+func (p *Persister) setIdentitySchemas(ctx context.Context, is []identity.Identity) error {
+	var schemaCache = make(map[string]string)
+
+	for k := range is {
+		i := &is[k]
+		if err := i.ValidateNID(); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		if u, ok := schemaCache[i.SchemaID]; ok {
+			i.SchemaURL = u
+		} else {
+			if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
+				return err
+			}
+			schemaCache[i.SchemaID] = i.SchemaURL
+		}
+
+		is[k] = *i
+	}
+
+	return nil
+}
+
 func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]identity.Identity, error) {
-	is := make([]identity.Identity, 0)
+	is := []identity.Identity{}
 
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("nid = ?", corp.ContextualizeNID(ctx, p.nid)).
@@ -264,62 +285,30 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 		return nil, err
 	}
 
-	schemaCache := map[string]string{}
-
-	for k := range is {
-		i := &is[k]
-		if err := i.ValidateNID(); err != nil {
-			return nil, sqlcon.HandleError(err)
-		}
-
-		if u, ok := schemaCache[i.SchemaID]; ok {
-			i.SchemaURL = u
-		} else {
-			if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
-				return nil, err
-			}
-			schemaCache[i.SchemaID] = i.SchemaURL
-		}
-
-		is[k] = *i
+	if err := p.setIdentitySchemas(ctx, is); err != nil {
+		return nil, err
 	}
 
 	return is, nil
 }
 
-func (p *Persister) ListIdentitiesFiltered(ctx context.Context, values url.Values, page, perPage int) ([]identity.Identity, error) {
-	is := make([]identity.Identity, 0, perPage)
+func (p *Persister) ListIdentitiesFiltered(ctx context.Context, filters map[string][]string, page, perPage int) ([]identity.Identity, error) {
+	is := []identity.Identity{}
 
-//`[a-zA-Z0-9\.]+`
-	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("identities.nid = ?", corp.ContextualizeNID(ctx, p.nid)).
-		LeftJoin("identity_verifiable_addresses verifiable_addresses", "verifiable_addresses.identity_id=identities.id").
-		LeftJoin("identity_recovery_addresses recovery_addresses", "recovery_addresses.identity_id=identities.id").
+		LeftJoin("identity_credentials ic", "identities.id=ic.identity_id").
+		LeftJoin("identity_credential_types credential_types", "credential_types.id=ic.identity_credential_type_id").
+		LeftJoin("identity_credential_identifiers credential_identifiers", "credential_identifiers.identity_credential_id=ic.id").
 		EagerPreload("VerifiableAddresses", "RecoveryAddresses").
-		Scope(p.buildScope(ctx, values)).
-		Paginate(page, perPage).Order("identities.id DESC").
+		Paginate(page, perPage).
+		Order("identities.id DESC").
+		Scope(p.buildIdentitySearchScope(ctx, filters)).
 		All(&is)); err != nil {
 		return nil, err
 	}
 
-	schemaCache := map[string]string{}
-
-	for k := range is {
-		i := &is[k]
-		if err := i.ValidateNID(); err != nil {
-			return nil, sqlcon.HandleError(err)
-		}
-
-		if u, ok := schemaCache[i.SchemaID]; ok {
-			i.SchemaURL = u
-		} else {
-			if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
-				return nil, err
-			}
-			schemaCache[i.SchemaID] = i.SchemaURL
-		}
-
-		is[k] = *i
+	if err := p.setIdentitySchemas(ctx, is); err != nil {
+		return nil, err
 	}
 
 	return is, nil
@@ -432,6 +421,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 	if err := p.findRecoveryAddresses(ctx, &i); err != nil {
 		return nil, err
 	}
+
 	if err := p.findVerifiableAddresses(ctx, &i); err != nil {
 		return nil, err
 	}
@@ -517,31 +507,36 @@ func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Ident
 	return nil
 }
 
-func (p *Persister) getJsonSearchQuery(ctx context.Context, field string, values []string) pop.ScopeFunc {
+func (p *Persister) getJSONSearchQuery(ctx context.Context, field string, values []string) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
+		// Removing this would allow SQL Injection. Never remove this.
+		if !validFields.MatchString(field) {
+			return q
+		}
+
+		prefix, key := extractFieldAndInnerFields(field)
+
 		switch p.Connection(ctx).Dialect.Name() {
 		case "sqlite3", "mysql", "mariadb":
-			field, innerField := extractFieldAndInnerFields(field)
 			for _, value := range values {
-				if innerField == "" {
-					q = q.Where(fmt.Sprintf(`json_extract(%s, '$') = ?`, field), value)
+				if key == "" {
+					q = q.Where(fmt.Sprintf(`json_extract(%s, '$') = ?`, prefix), value)
 				} else {
-					stmt := fmt.Sprintf(`json_extract(%s, '$.%s') = ?`, field, innerField)
-					q = q.Where(stmt, value)
+					q = q.Where(fmt.Sprintf(`json_extract(%s, '$.%s') = ?`, prefix, key), value)
 				}
 			}
 			return q
 		case "postgres", "cockroach":
-			field, innerField := extractFieldAndInnerFields(field)
 			for _, value := range values {
-				if innerField == "" {
-					q = q.Where(fmt.Sprintf(`%s @> '"%s"'`, field, value))
-				} else {
-					q = q.Where(fmt.Sprintf(`%s @> '{"%s":"%s"}'`, field, innerField, value))
+				param := fmt.Sprintf(`%s`, value)
+				if key != "" {
+					param = fmt.Sprintf(`{"%s":"%s"}`, key, value)
 				}
+				q = q.Where(fmt.Sprintf(`%s @> ?`, prefix), param)
 			}
 			return q
 		}
+
 		return q
 	}
 }
@@ -559,66 +554,28 @@ func (p *Persister) searchCredentialQuery(field string, values []string) pop.Sco
 	}
 }
 
-var quoteChar = map[string]uint8{
-	"cockroach": '"',
-	"mariadb":   '`',
-	"mysql":     '`',
-	"postgres":  '"',
-	"sqlite3":   '"',
-}
-
-func (p *Persister) Quote(ctx context.Context, key string) string {
-	n := p.Connection(ctx).Dialect.Name()
-	c, ok := quoteChar[n]
-	if !ok {
-		// guess panic is OK here as the error is not fixable without a new release of Kratos
-		panic("DSN is of unknown dialect " + n)
-	}
-
-	parts := strings.Split(key, ".")
-
-	for i, part := range parts {
-		part = strings.Trim(part, `"`)
-		part = strings.Trim(part, "`")
-		part = strings.TrimSpace(part)
-
-		parts[i] = fmt.Sprintf(`%c%v%c`, c, part, c)
-	}
-
-	return strings.Join(parts, ".")
-}
-func (p *Persister) buildScope(ctx context.Context, queryValues url.Values) pop.ScopeFunc {
+func (p *Persister) buildIdentitySearchScope(ctx context.Context, filters map[string][]string) pop.ScopeFunc {
 	return func(q *pop.Query) *pop.Query {
+		for field, values := range filters {
+			// Removing this would allow SQL Injection. Never remove this.
+			if !validFields.MatchString(field) {
+				return q
+			}
 
-		for field, values := range queryValues {
-			if stringslice.Has([]string{"page", "per_page"}, field) {
+			if !p.validateFields(field) {
 				continue
 			}
-			if ! p.validateFields(field) {
-				p.r.Logger().Warning(`field ignored. does not respect this patterns [a-zA-Z0-9\._]+`)
+
+			if strings.HasPrefix(field, "filter_traits.") {
+				q = q.Scope(p.getJSONSearchQuery(ctx, field, values))
 				continue
 			}
-			if ! p.validateValues(values) {
-				p.r.Logger().Warning(`values ignored. does not respect this patterns [%]+`)
-				continue
-			}
-			if stringslice.Has([]string{"with_credentials"}, field) {
-				q = q.LeftJoin("identity_credentials ic", "identities.id=ic.identity_id")
-				q = q.LeftJoin("identity_credential_types credential_types", "credential_types.id=ic.identity_credential_type_id")
-				q = q.LeftJoin("identity_credential_identifiers credential_identifiers", "credential_identifiers.identity_credential_id=ic.id")
-				//q = q.LeftJoin("identity_credentials credentials", "credentials.identity_id=identities.id")
-				continue
-			}
-			if strings.HasPrefix(field, "traits") {
-				q = q.Scope(p.getJsonSearchQuery(ctx, field, values))
-				continue
-			}
-			if strings.HasPrefix(field, "credentials") {
+
+			if strings.HasPrefix(field, "filter_credentials") {
 				q = q.Scope(p.searchCredentialQuery(field, values))
 				continue
 			}
-			//q = q.Where("? = ?", field, values[0])
-			field = p.Quote(ctx, field)
+
 			q = q.Where(fmt.Sprintf("%s IN (?)", field), values)
 		}
 		return q
@@ -633,24 +590,17 @@ func extractFieldAndInnerFields(field string) (string, string) {
 	return field[:dotIndex], field[dotIndex+1:]
 }
 
+var validFields = regexp.MustCompile(`[a-zA-Z0-9._]+`)
+
 func (p *Persister) validateFields(field string) bool {
-	res, err := regexp.MatchString(`[a-zA-Z0-9\._]+`, field)
-	if err != nil {
-		p.r.Logger().Errorf("validation field failed : %s",err.Error())
-		return false
-	}
-	return res
+	return validFields.MatchString(field)
 }
 
+var validValues = regexp.MustCompile(`[%]+`)
+
 func (p *Persister) validateValues(values []string) bool {
-	prohibited := `[%]+`
 	for _, value := range values {
-		ok, err := regexp.MatchString(prohibited, value)
-		if err != nil {
-			p.r.Logger().Errorf("unable to check values parameter : %s", err.Error())
-			return false
-		}
-		if ok {
+		if validValues.MatchString(value) {
 			return false
 		}
 	}

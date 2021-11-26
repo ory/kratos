@@ -2,8 +2,6 @@ package identity
 
 import (
 	"context"
-	"net/url"
-
 	"github.com/gofrs/uuid"
 )
 
@@ -13,7 +11,7 @@ type (
 		ListIdentities(ctx context.Context, page, itemsPerPage int) ([]Identity, error)
 
 		// ListIdentitiesFiltered lists all identities in the store given the page and itemsPerPage.
-		ListIdentitiesFiltered(ctx context.Context, values url.Values, page, itemsPerPage int) ([]Identity, error)
+		ListIdentitiesFiltered(ctx context.Context, filters map[string][]string, page, itemsPerPage int) ([]Identity, error)
 
 		// CountIdentities counts the number of identities in the store.
 		CountIdentities(ctx context.Context) (int64, error)
