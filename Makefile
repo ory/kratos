@@ -29,10 +29,12 @@ $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
 .bin/clidoc:
+		echo "deprecated usage, use docs/cli instead"
 		go build -o .bin/clidoc ./cmd/clidoc/.
 
-docs/cli: .bin/clidoc
-		clidoc .
+.PHONY: docs/cli
+docs/cli:
+		go run ./cmd/clidoc/. .
 
 .bin/ory: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.0

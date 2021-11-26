@@ -5,21 +5,6 @@ import (
 	"time"
 )
 
-const (
-	InfoSelfServiceVerification           ID = 1070000 + iota // 1070000
-	InfoSelfServiceVerificationEmailSent                      // 1070001
-	InfoSelfServiceVerificationSuccessful                     // 1060002
-)
-
-const (
-	ErrorValidationVerification                          ID = 4070000 + iota // 4070000
-	ErrorValidationVerificationTokenInvalidOrAlreadyUsed                     // 4070001
-	ErrorValidationVerificationRetrySuccess                                  // 4070002
-	ErrorValidationVerificationStateFailure                                  // 4070003
-	ErrorValidationVerificationMissingVerificationToken                      // 4070004
-	ErrorValidationVerificationFlowExpired                                   // 4070005
-)
-
 func NewErrorValidationVerificationFlowExpired(ago time.Duration) *Message {
 	return &Message{
 		ID:   ErrorValidationVerificationFlowExpired,
@@ -33,7 +18,7 @@ func NewErrorValidationVerificationFlowExpired(ago time.Duration) *Message {
 
 func NewInfoSelfServiceVerificationSuccessful() *Message {
 	return &Message{
-		ID:   InfoSelfServiceRecoverySuccessful,
+		ID:   InfoSelfServiceVerificationSuccessful,
 		Type: Info,
 		Text: "You successfully verified your email address.",
 	}
