@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ory/kratos/x"
@@ -125,7 +126,15 @@ type adminListIdentities struct {
 //       500: jsonError
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	page, itemsPerPage := x.ParsePagination(r)
-	is, err := h.r.IdentityPool().ListIdentitiesFiltered(r.Context(), r.URL.Query(), page, itemsPerPage)
+
+	filters := map[string][]string{}
+	for k, v := range r.URL.Query() {
+		if strings.HasPrefix(k, "traits.") || strings.HasPrefix(k,"credentials.") {
+			filters[k] = v
+		}
+	}
+
+	is, err := h.r.IdentityPool().ListIdentitiesFiltered(r.Context(), filters, page, itemsPerPage)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
