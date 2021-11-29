@@ -332,13 +332,21 @@ func TestStrategy(t *testing.T) {
 				[]string{"providers.0.initial_id_token", "providers.0.initial_access_token", "providers.0.initial_refresh_token"},
 			)
 		}
+		getAccessToken := func(t *testing.T, provider string, body []byte) string {
+			i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(body, "identity.id").String()))
+			require.NoError(t, err)
+			c := i.Credentials[identity.CredentialsTypeOIDC].Config
+			return gjson.GetBytes(c, "providers.0.initial_access_token").String()
+		}
 
+		var accessToken string
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := newRegistrationFlow(t, returnTS.URL, time.Minute)
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
 			expectTokens(t, "valid", body)
+			accessToken = getAccessToken(t, "valid", body)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
@@ -347,6 +355,14 @@ func TestStrategy(t *testing.T) {
 			res, body := makeRequest(t, "valid", action, url.Values{})
 			ai(t, res, body)
 			expectTokens(t, "valid", body)
+		})
+
+		t.Run("case=token from login should not the same", func(t *testing.T) {
+			r := newLoginFlow(t, returnTS.URL, time.Minute)
+			action := afv(t, r.ID, "valid")
+			res, body := makeRequest(t, "valid", action, url.Values{})
+			ai(t, res, body)
+			assert.NotEqual(t, getAccessToken(t, "valid", body), accessToken)
 		})
 	})
 
