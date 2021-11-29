@@ -343,8 +343,7 @@ Cypress.Commands.add('recoverApi', ({ email, returnTo }) => {
   if (returnTo) {
     url += '?return_to=' + returnTo
   }
-  cy
-    .request({url})
+  cy.request({ url })
     .then(({ body }) => {
       const form = body.ui
       return cy.request({

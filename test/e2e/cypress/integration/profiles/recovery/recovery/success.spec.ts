@@ -8,13 +8,13 @@ context('Account Recovery Success', () => {
       recovery: react.recovery,
       base: react.base,
       app: 'react' as 'react',
-      profile: 'spa',
+      profile: 'spa'
     },
     {
       recovery: express.recovery,
       base: express.base,
       app: 'express' as 'express',
-      profile: 'recovery',
+      profile: 'recovery'
     }
   ].forEach(({ recovery, profile, base, app }) => {
     describe(`for app ${app}`, () => {
