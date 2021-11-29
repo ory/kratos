@@ -228,6 +228,7 @@ func newHydra(t *testing.T, subject, website *string, scope *[]string) (remoteAd
 		require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
 
 		remotePublic = "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
+		remotePublic = "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
 		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
 	}
 
