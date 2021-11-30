@@ -63,11 +63,14 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{id: "asdflasdflasdf", pw: "asdflasdflpiuhefnciluaksdzuföfhg", pass: true},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				err := s.Validate(context.Background(), tc.id, tc.pw)
-				if tc.pass {
-					require.NoError(t, err, "err: %+v, id: %s, pw: %s", err, tc.id, tc.pw)
+				c := tc
+				t.Parallel()
+
+				err := s.Validate(context.Background(), c.id, c.pw)
+				if c.pass {
+					require.NoError(t, err, "err: %+v, id: %s, pw: %s", err, c.id, c.pw)
 				} else {
-					require.Error(t, err, "id: %s, pw: %s", tc.id, tc.pw)
+					require.Error(t, err, "id: %s, pw: %s", c.id, c.pw)
 				}
 			})
 		}
