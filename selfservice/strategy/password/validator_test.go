@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/ory/x/httpx"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
@@ -42,6 +41,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{pw: "password", pass: false},
 			{pw: "1234567890", pass: false},
 			{pw: "qwertyui", pass: false},
+			{pw: "l3f9to", pass: false},
 			{pw: "l3f9toh1uaf81n21", pass: true},
 			{pw: "l3f9toh1uaf81n21", id: "l3f9toh1uaf81n21", pass: false},
 			{pw: "l3f9toh1", pass: true},
@@ -63,7 +63,6 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{id: "asdflasdflasdf", pw: "asdflasdflpiuhefnciluaksdzuföfhg", pass: true},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				t.Parallel()
 				err := s.Validate(context.Background(), tc.id, tc.pw)
 				if tc.pass {
 					require.NoError(t, err, "err: %+v, id: %s, pw: %s", err, tc.id, tc.pw)
