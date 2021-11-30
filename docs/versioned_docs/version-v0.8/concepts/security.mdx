@@ -385,7 +385,7 @@ Allow the user to show the secret in the UI:
 :::warning
 
 This feature is a work in progress and is tracked as
-[kratos#133](https://github.com/ory/kratos/issues/138).
+[kratos#138](https://github.com/ory/kratos/issues/138).
 
 :::
 
@@ -395,16 +395,12 @@ systems. The goal of such an attack is to send out so many emails or SMS, that
 your reputation worsens (spam filters) or you're faced with massive costs
 (carrier fees).
 
-CAPTCHA renders these attacks either very difficult or impossible. Ory Kratos
-has CAPTCHA support built-in. Ory Kratos will prompt the user to complete a
-CAPTCHA in the following scenarios:
+CAPTCHA renders these attacks either very difficult or impossible.
+CAPTCHA will be required in the following scenarios:
 
 - The user tries to register more than one account within 72 hours.
 - The user failed provide valid credentials for the third time within 12 hours.
 - The user tries to recover their account for the second time within 72 hours.
-
-For integration guidelines, please check the individual flow's (registration,
-login, account recovery) integration documentation.
 
 ## Bruteforce Attacks
 
