@@ -43,10 +43,12 @@ func NewHandler(
 }
 
 const (
-	RouteCollection    = "/sessions"
-	RouteWhoami        = RouteCollection + "/whoami"
-	RouteIdentity      = "/identities"
-	RouteDeleteSession = RouteIdentity + "/:id/sessions"
+	RouteCollection     = "/sessions"
+	RouteWhoami         = RouteCollection + "/whoami"
+	RouteOthers         = RouteCollection + "/others"
+	RouteOthersSpecific = RouteCollection + "/others/:id"
+	RouteIdentity       = "/identities"
+	RouteDeleteSession  = RouteIdentity + "/:id/sessions"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -55,6 +57,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 		// Redirect to public endpoint
 		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
 	}
+	admin.DELETE(RouteOthers, x.RedirectToPublicRoute(h.r))
+	admin.DELETE(RouteOthersSpecific, x.RedirectToPublicRoute(h.r))
+	admin.GET(RouteOthers, x.RedirectToPublicRoute(h.r))
 
 	admin.DELETE(RouteDeleteSession, h.deleteIdentitySessions)
 }
@@ -63,17 +68,23 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	// We need to completely ignore the whoami/logout path so that we do not accidentally set
 	// some cookie.
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
+	h.r.CSRFHandler().IgnorePath(RouteOthers)        // TODO: Remove
+	h.r.CSRFHandler().IgnoreGlob(RouteOthers + "/*") // TODO: Remove
 	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
 	}
+	public.DELETE(RouteOthers, h.revokeMySessions)
+	public.DELETE(RouteOthersSpecific, h.revokeSession)
+	public.GET(RouteOthers, h.listOtherSessions)
+
 	public.DELETE(RouteDeleteSession, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
-// swagger:parameters toSession
+// swagger:parameters toSession publicRevokeOtherSessions publicListOtherSessions
 type toSession struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -222,6 +233,143 @@ func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request,
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// swagger:model publicRevokeMySessionsResponse
+type revokeMySessionsResponse struct {
+	// The number of sessions that were revoked.
+	NumberRevokedSessions int `json:"number_revoked_sessions"`
+}
+
+// swagger:route DELETE /sessions/others v0alpha2 publicRevokeOtherSessions
+//
+// Calling this endpoint invalidates all except the current session that belong to the logged-in user.
+// Session data are not deleted.
+//
+// This endpoint is useful for:
+//
+// - To forcefully logout the current user from all other devices and sessions
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: publicRevokeMySessionsResponse
+//       400: jsonError
+//       401: jsonError
+//       404: jsonError
+//       500: jsonError
+func (h *Handler) revokeMySessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+	if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		return
+	}
+
+	n, err := h.r.SessionPersister().RevokeSessionsIdentityExcept(r.Context(), s.IdentityID, s.ID)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().WriteCode(w, r, http.StatusOK, &revokeMySessionsResponse{NumberRevokedSessions: n})
+}
+
+// swagger:parameters publicRevokeSession
+// nolint:deadcode,unused
+type publicRevokeSession struct {
+	// ID is the session's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route DELETE /sessions/others/{id} v0alpha2 publicRevokeSession
+//
+// Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+// Session data are not deleted.
+//
+// This endpoint is useful for:
+//
+// - To forcefully logout the current user from another device or session
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       204: emptyResponse
+//       400: jsonError
+//       401: jsonError
+//       500: jsonError
+func (h *Handler) revokeSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+	if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		return
+	}
+
+	sessionID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+	if sessionID == s.ID {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("cannot revoke current session").WithDebug("use the logout flow instead"))
+		return
+	}
+
+	if err := h.r.SessionPersister().RevokeSession(r.Context(), s.Identity.ID, sessionID); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().WriteCode(w, r, http.StatusNoContent, nil)
+}
+
+// swagger:parameters publicListOtherSessions
+// nolint:deadcode,unused
+type publicListOtherSessions struct {
+	x.PaginationParams
+}
+
+// swagger:model sessionList
+// nolint:deadcode,unused
+type sessionList []*Session
+
+// swagger:route GET /sessions/others v0alpha2 publicListOtherSessions
+//
+// This endpoints returns all other active sessions that belong to the logged-in user.
+// The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+//
+// This endpoint is useful for:
+//
+// - Displaying all other sessions that belong to the logged-in user
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: sessionList
+//       400: jsonError
+//       401: jsonError
+//       404: jsonError
+//       500: jsonError
+func (h *Handler) listOtherSessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+	if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		return
+	}
+
+	page, perPage := x.ParsePagination(r)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, true, page, perPage, s.ID)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, sess)
 }
 
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {

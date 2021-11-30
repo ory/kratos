@@ -113,6 +113,9 @@ Class | Method | HTTP request | Description
 *V0alpha2Api* | [**InitializeSelfServiceVerificationFlowForBrowsers**](docs/V0alpha2Api.md#initializeselfserviceverificationflowforbrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 *V0alpha2Api* | [**InitializeSelfServiceVerificationFlowWithoutBrowser**](docs/V0alpha2Api.md#initializeselfserviceverificationflowwithoutbrowser) | **Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
 *V0alpha2Api* | [**ListIdentitySchemas**](docs/V0alpha2Api.md#listidentityschemas) | **Get** /schemas | 
+*V0alpha2Api* | [**PublicListOtherSessions**](docs/V0alpha2Api.md#publiclistothersessions) | **Get** /sessions/others | This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the &#x60;/sessions/whoami&#x60; endpoint.
+*V0alpha2Api* | [**PublicRevokeOtherSessions**](docs/V0alpha2Api.md#publicrevokeothersessions) | **Delete** /sessions/others | Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
+*V0alpha2Api* | [**PublicRevokeSession**](docs/V0alpha2Api.md#publicrevokesession) | **Delete** /sessions/others/{id} | Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
 *V0alpha2Api* | [**SubmitSelfServiceLoginFlow**](docs/V0alpha2Api.md#submitselfserviceloginflow) | **Post** /self-service/login | Submit a Login Flow
 *V0alpha2Api* | [**SubmitSelfServiceLogoutFlow**](docs/V0alpha2Api.md#submitselfservicelogoutflow) | **Get** /self-service/logout | Complete Self-Service Logout
 *V0alpha2Api* | [**SubmitSelfServiceLogoutFlowWithoutBrowser**](docs/V0alpha2Api.md#submitselfservicelogoutflowwithoutbrowser) | **Delete** /self-service/logout/api | Perform Logout for APIs, Services, Apps, ...
@@ -143,6 +146,8 @@ Class | Method | HTTP request | Description
  - [InlineResponse503](docs/InlineResponse503.md)
  - [JsonError](docs/JsonError.md)
  - [NeedsPrivilegedSessionError](docs/NeedsPrivilegedSessionError.md)
+ - [Pagination](docs/Pagination.md)
+ - [PublicRevokeMySessionsResponse](docs/PublicRevokeMySessionsResponse.md)
  - [RecoveryAddress](docs/RecoveryAddress.md)
  - [SelfServiceBrowserLocationChangeRequiredError](docs/SelfServiceBrowserLocationChangeRequiredError.md)
  - [SelfServiceError](docs/SelfServiceError.md)

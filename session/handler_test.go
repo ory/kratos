@@ -3,10 +3,13 @@ package session_test
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/bxcodec/faker/v3"
 
 	"github.com/tidwall/gjson"
 
@@ -397,5 +400,118 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNotFound, res.StatusCode)
+	})
+}
+
+func TestHandlerSelfServiceSessionManagement(t *testing.T) {
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	ts, _, r, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
+
+	// set this intermediate because kratos needs some valid url for CRUDE operations
+	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
+	testhelpers.SetDefaultIdentitySchema(t, conf, "file://./stub/identity.schema.json")
+	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+
+	var setup func(t *testing.T) (*http.Client, *identity.Identity, *Session)
+	{
+		// we limit the scope of the channels, so you cannot accidentally mess up a test case
+		ident := make(chan *identity.Identity, 1)
+		sess := make(chan *Session, 1)
+		r.GET("/set", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			h, s := testhelpers.MockSessionCreateHandlerWithIdentity(t, reg, <-ident)
+			h(w, r, ps)
+			sess <- s
+		})
+
+		setup = func(t *testing.T) (*http.Client, *identity.Identity, *Session) {
+			client := testhelpers.NewClientWithCookies(t)
+			i := identity.NewIdentity("") // the identity is created by the handler
+
+			ident <- i
+			testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set")
+			return client, i, <-sess
+		}
+	}
+
+	t.Run("case=should return 200 and number after invalidating all other sessions", func(t *testing.T) {
+		client, i, currSess := setup(t)
+
+		otherSess := Session{}
+		require.NoError(t, faker.FakeData(&otherSess))
+		otherSess.Identity = i
+		otherSess.Active = true
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &otherSess))
+
+		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/others", nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), gjson.GetBytes(body, "number_revoked_sessions").Int(), "%s", body)
+
+		actualOther, err := reg.SessionPersister().GetSession(ctx, otherSess.ID)
+		require.NoError(t, err)
+		assert.False(t, actualOther.Active)
+
+		actualCurr, err := reg.SessionPersister().GetSession(ctx, currSess.ID)
+		require.NoError(t, err)
+		assert.True(t, actualCurr.Active)
+	})
+
+	t.Run("case=should revoke specific other session", func(t *testing.T) {
+		client, i, _ := setup(t)
+
+		others := make([]Session, 2)
+		for j := range others {
+			require.NoError(t, faker.FakeData(&others[j]))
+			others[j].Identity = i
+			others[j].Active = true
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &others[j]))
+		}
+
+		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/others/"+others[0].ID.String(), nil)
+		res, err := client.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+		actualOthers, err := reg.SessionPersister().ListSessionsByIdentity(ctx, i.ID, false, 1, 10, uuid.Nil)
+		require.NoError(t, err)
+		require.Len(t, actualOthers, 3)
+
+		for _, s := range actualOthers {
+			if s.ID == others[0].ID {
+				assert.False(t, s.Active)
+			} else {
+				assert.True(t, s.Active)
+			}
+		}
+	})
+
+	t.Run("case=should not revoke current session", func(t *testing.T) {
+		client, _, currSess := setup(t)
+
+		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/others/"+currSess.ID.String(), nil)
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
+
+	t.Run("case=should not error on unknown or revoked session", func(t *testing.T) {
+		client, i, _ := setup(t)
+
+		otherSess := Session{}
+		require.NoError(t, faker.FakeData(&otherSess))
+		otherSess.Identity = i
+		otherSess.Active = false
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &otherSess))
+
+		for j, id := range []uuid.UUID{otherSess.ID, uuid.Must(uuid.NewV4())} {
+			req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/others/"+id.String(), nil)
+			resp, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "case=%d", j)
+		}
 	})
 }
