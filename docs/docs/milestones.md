@@ -294,7 +294,7 @@ New feature or request.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Admin/Selfservice session management
       ([kratos#655](https://github.com/ory/kratos/issues/655)) -
-      [@Alano Terblanche](https://github.com/Benehiko)
+      [@Patrik](https://github.com/zepatrik)
 - [ ] Write new recovery and verification strategy that does not rely on links
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [ ] Delete self-service flows after completion
