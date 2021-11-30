@@ -36,8 +36,8 @@ describe('Registration failures with email profile', () => {
           .type(identity)
           .should('have.value', identity)
         cy.get('input[name="password"]')
-          .type('123456')
-          .should('have.value', '123456')
+          .type('12345678')
+          .should('have.value', '12345678')
 
         cy.shouldHaveCsrfError({ app })
       })
@@ -56,8 +56,8 @@ describe('Registration failures with email profile', () => {
             .type(identity)
             .should('have.value', identity)
           cy.get('input[name="password"]')
-            .type('123456')
-            .should('have.value', '123456')
+            .type('12345678')
+            .should('have.value', '12345678')
 
           cy.submitPasswordForm()
           cy.get('*[data-testid^="ui/message"]').should(

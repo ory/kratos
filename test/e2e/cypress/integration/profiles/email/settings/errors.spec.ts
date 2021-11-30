@@ -149,7 +149,7 @@ context('Settings failures with email profile', () => {
         })
 
         it('fails if password policy is violated', () => {
-          cy.get('input[name="password"]').clear().type('123456')
+          cy.get('input[name="password"]').clear().type('12345678')
           cy.get('button[value="password"]').click()
           cy.get('*[data-testid^="ui/message"]').should(
             'contain.text',
@@ -282,7 +282,7 @@ context('Settings failures with email profile', () => {
 
       describe('global errors', () => {
         it('fails when CSRF is incorrect', () => {
-          cy.get(appPrefix(app) + 'input[name="password"]').type('123456')
+          cy.get(appPrefix(app) + 'input[name="password"]').type('12345678')
           cy.shouldHaveCsrfError({ app })
         })
 
