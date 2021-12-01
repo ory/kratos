@@ -407,7 +407,7 @@ import (
 )
 
 func main() {
-    perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 100)
+    perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
     page := int64(789) // int64 | Pagination Page (optional) (default to 0)
 
     configuration := openapiclient.NewConfiguration()
@@ -433,7 +433,7 @@ Other parameters are passed through a pointer to a apiAdminListIdentitiesRequest
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
+ **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
  **page** | **int64** | Pagination Page | [default to 0]
 
 ### Return type
@@ -476,7 +476,7 @@ import (
 
 func main() {
     id := "id_example" // string | ID is the identity's ID.
-    perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 100)
+    perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
     page := int64(789) // int64 | Pagination Page (optional) (default to 0)
     activeOnly := true // bool | ActiveOnly is a boolean flag that filters out inactive sessions. (optional) (default to false)
 
@@ -508,7 +508,7 @@ Other parameters are passed through a pointer to a apiAdminListIdentitySessionsR
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
+ **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
  **page** | **int64** | Pagination Page | [default to 0]
  **activeOnly** | **bool** | ActiveOnly is a boolean flag that filters out inactive sessions. | [default to false]
 
@@ -1881,7 +1881,7 @@ import (
 )
 
 func main() {
-    perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 100)
+    perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
     page := int64(789) // int64 | Pagination Page (optional) (default to 0)
 
     configuration := openapiclient.NewConfiguration()
@@ -1907,7 +1907,7 @@ Other parameters are passed through a pointer to a apiListIdentitySchemasRequest
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
+ **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
  **page** | **int64** | Pagination Page | [default to 0]
 
 ### Return type
@@ -1951,7 +1951,7 @@ import (
 func main() {
     xSessionToken := "xSessionToken_example" // string | Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`. (optional)
     cookie := "cookie_example" // string | Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that scenario you must include the HTTP Cookie Header which originally was included in the request to your server. An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.  It is ok if more than one cookie are included here as all other cookies will be ignored. (optional)
-    perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 100)
+    perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
     page := int64(789) // int64 | Pagination Page (optional) (default to 0)
 
     configuration := openapiclient.NewConfiguration()
@@ -1979,7 +1979,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **xSessionToken** | **string** | Set the Session Token when calling from non-browser clients. A session token has a format of &#x60;MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj&#x60;. | 
  **cookie** | **string** | Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that scenario you must include the HTTP Cookie Header which originally was included in the request to your server. An example of a session in the HTTP Cookie Header is: &#x60;ory_kratos_session&#x3D;a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f&#x3D;&#x3D;&#x60;.  It is ok if more than one cookie are included here as all other cookies will be ignored. | 
- **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 100]
+ **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
  **page** | **int64** | Pagination Page | [default to 0]
 
 ### Return type

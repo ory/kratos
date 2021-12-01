@@ -31,7 +31,7 @@ func NewPagination() *Pagination {
 	this := Pagination{}
 	var page int64 = 0
 	this.Page = &page
-	var perPage int64 = 100
+	var perPage int64 = 250
 	this.PerPage = &perPage
 	return &this
 }
@@ -43,7 +43,7 @@ func NewPaginationWithDefaults() *Pagination {
 	this := Pagination{}
 	var page int64 = 0
 	this.Page = &page
-	var perPage int64 = 100
+	var perPage int64 = 250
 	this.PerPage = &perPage
 	return &this
 }

@@ -110,9 +110,9 @@ paths:
         name: per_page
         required: false
         schema:
-          default: 100
+          default: 250
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
         style: form
@@ -412,9 +412,9 @@ paths:
         name: per_page
         required: false
         schema:
-          default: 100
+          default: 250
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
         style: form
@@ -528,9 +528,9 @@ paths:
         name: per_page
         required: false
         schema:
-          default: 100
+          default: 250
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
         style: form
@@ -2342,9 +2342,9 @@ paths:
         name: per_page
         required: false
         schema:
-          default: 100
+          default: 250
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
         style: form
@@ -3082,13 +3082,13 @@ components:
           minimum: 0
           type: integer
         per_page:
-          default: 100
+          default: 250
           description: |-
             Items per Page
 
             This is the number of items per page.
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
       type: object

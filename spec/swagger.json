@@ -119,11 +119,11 @@
         "operationId": "adminListIdentities",
         "parameters": [
           {
-            "maximum": 500,
+            "maximum": 1000,
             "minimum": 1,
             "type": "integer",
             "format": "int64",
-            "default": 100,
+            "default": 250,
             "description": "Items per Page\n\nThis is the number of items per page.",
             "name": "per_page",
             "in": "query"
@@ -418,11 +418,11 @@
             "required": true
           },
           {
-            "maximum": 500,
+            "maximum": 1000,
             "minimum": 1,
             "type": "integer",
             "format": "int64",
-            "default": 100,
+            "default": 250,
             "description": "Items per Page\n\nThis is the number of items per page.",
             "name": "per_page",
             "in": "query"
@@ -604,11 +604,11 @@
         "operationId": "listIdentitySchemas",
         "parameters": [
           {
-            "maximum": 500,
+            "maximum": 1000,
             "minimum": 1,
             "type": "integer",
             "format": "int64",
-            "default": 100,
+            "default": 250,
             "description": "Items per Page\n\nThis is the number of items per page.",
             "name": "per_page",
             "in": "query"
@@ -2024,11 +2024,11 @@
             "in": "header"
           },
           {
-            "maximum": 500,
+            "maximum": 1000,
             "minimum": 1,
             "type": "integer",
             "format": "int64",
-            "default": 100,
+            "default": 250,
             "description": "Items per Page\n\nThis is the number of items per page.",
             "name": "per_page",
             "in": "query"
@@ -2723,8 +2723,8 @@
           "description": "Items per Page\n\nThis is the number of items per page.",
           "type": "integer",
           "format": "int64",
-          "default": 100,
-          "maximum": 500,
+          "default": 250,
+          "maximum": 1000,
           "minimum": 1
         }
       }

@@ -15,9 +15,9 @@ type PaginationParams struct {
 	//
 	// required: false
 	// in: query
-	// default: 100
+	// default: 250
 	// min: 1
-	// max: 500
+	// max: 1000
 	PerPage int `json:"per_page"`
 
 	// Pagination Page
