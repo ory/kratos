@@ -2417,8 +2417,8 @@
     },
     "/identities/{id}/sessions": {
       "delete": {
-        "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
-        "operationId": "adminDeleteIdentitySessions",
+        "description": "This endpoint is useful for:\n\nListing all sessions that belong to an Identity in an administrative context.",
+        "operationId": "adminListIdentitySessions",
         "parameters": [
           {
             "description": "ID is the identity's ID.",
@@ -2428,11 +2428,50 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "default": 100,
+              "format": "int64",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Pagination Page",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "ActiveOnly is a boolean flag that filters out inactive sessions.",
+            "in": "query",
+            "name": "active_only",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
-          "204": {
-            "$ref": "#/components/responses/emptyResponse"
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sessionList"
+                }
+              }
+            },
+            "description": "sessionList"
           },
           "400": {
             "content": {
@@ -2480,7 +2519,7 @@
             "oryAccessToken": []
           }
         ],
-        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
+        "summary": "This endpoint returns all sessions that belong to the given Identity.",
         "tags": [
           "v0alpha2"
         ]

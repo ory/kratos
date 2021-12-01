@@ -2,6 +2,7 @@ package session_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -360,7 +361,8 @@ func TestIsAuthenticated(t *testing.T) {
 	}
 }
 
-func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
+func TestHandlerAdminSessionManagement(t *testing.T) {
+	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	_, ts, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 
@@ -372,34 +374,119 @@ func TestHandlerDeleteSessionByIdentityID(t *testing.T) {
 	t.Run("case=should return 202 after invalidating all sessions", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		i := identity.NewIdentity("")
-		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+		require.NoError(t, reg.IdentityManager().Create(ctx, i))
 		s := &Session{Identity: i}
-		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+
+		t.Run("should list session", func(t *testing.T) {
+			req, _ := http.NewRequest("GET", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			var sessions []Session
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
+			require.Len(t, sessions, 1)
+			assert.Equal(t, s.ID, sessions[0].ID)
+		})
 
 		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-		_, err = reg.SessionPersister().GetSession(context.Background(), s.ID)
+		_, err = reg.SessionPersister().GetSession(ctx, s.ID)
 		require.True(t, errors.Is(err, sqlcon.ErrNoRows))
+
+		t.Run("should not list session", func(t *testing.T) {
+			req, _ := http.NewRequest("GET", ts.URL+"/identities/"+i.ID.String()+"/sessions", nil)
+			res, err := client.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			var sessions []Session
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
+			assert.Len(t, sessions, 0)
+		})
 	})
 
 	t.Run("case=should return 400 when bad UUID is sent", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
-		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/BADUUID/sessions", nil)
-		res, err := client.Do(req)
-		require.NoError(t, err)
-		require.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+		for _, method := range []string{http.MethodGet, http.MethodDelete} {
+			t.Run("http method="+method, func(t *testing.T) {
+				req, _ := http.NewRequest(method, ts.URL+"/identities/BADUUID/sessions", nil)
+				res, err := client.Do(req)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusBadRequest, res.StatusCode)
+			})
+		}
 	})
 
-	t.Run("case=should return 404 when calling with missing UUID", func(t *testing.T) {
+	t.Run("case=should return 404 when deleting with unknown UUID", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		someID, _ := uuid.NewV4()
 		req, _ := http.NewRequest("DELETE", ts.URL+"/identities/"+someID.String()+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNotFound, res.StatusCode)
+	})
+
+	t.Run("case=should respect active_only on list", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		i := identity.NewIdentity("")
+		require.NoError(t, reg.IdentityManager().Create(ctx, i))
+
+		sess := make([]Session, 2)
+		for j := range sess {
+			require.NoError(t, faker.FakeData(&sess[j]))
+			sess[j].Identity = i
+			sess[j].Active = j%2 == 0
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &sess[j]))
+		}
+
+		for _, tc := range []struct {
+			activeOnly  string
+			expectedIDs []uuid.UUID
+		}{
+			{
+				activeOnly: "true",
+				expectedIDs: []uuid.UUID{
+					sess[0].ID,
+				},
+			},
+			{
+				activeOnly:  "false",
+				expectedIDs: []uuid.UUID{sess[0].ID, sess[1].ID},
+			},
+			{
+				activeOnly:  "",
+				expectedIDs: []uuid.UUID{sess[0].ID, sess[1].ID},
+			},
+		} {
+			t.Run(fmt.Sprintf("active_only=%#v", tc.activeOnly), func(t *testing.T) {
+				reqURL := ts.URL + "/identities/" + i.ID.String() + "/sessions"
+				if tc.activeOnly != "" {
+					reqURL += "?active_only=" + tc.activeOnly
+				}
+				req, _ := http.NewRequest("GET", reqURL, nil)
+				res, err := client.Do(req)
+				require.NoError(t, err)
+				require.Equal(t, http.StatusOK, res.StatusCode)
+
+				var sessions []Session
+				require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
+				require.Equal(t, len(sessions), len(tc.expectedIDs))
+
+				for _, id := range tc.expectedIDs {
+					found := false
+					for _, s := range sessions {
+						found = found || s.ID == id
+					}
+					assert.True(t, found)
+				}
+			})
+		}
 	})
 }
 

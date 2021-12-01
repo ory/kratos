@@ -2,6 +2,7 @@ package session
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -43,12 +44,12 @@ func NewHandler(
 }
 
 const (
-	RouteCollection     = "/sessions"
-	RouteWhoami         = RouteCollection + "/whoami"
-	RouteOthers         = RouteCollection + "/others"
-	RouteOthersSpecific = RouteCollection + "/others/:id"
-	RouteIdentity       = "/identities"
-	RouteDeleteSession  = RouteIdentity + "/:id/sessions"
+	RouteCollection         = "/sessions"
+	RouteWhoami             = RouteCollection + "/whoami"
+	RouteOthers             = RouteCollection + "/others"
+	RouteOthersSpecific     = RouteCollection + "/others/:id"
+	RouteIdentity           = "/identities"
+	RouteIdentitiesSessions = RouteIdentity + "/:id/sessions"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -61,15 +62,16 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.DELETE(RouteOthersSpecific, x.RedirectToPublicRoute(h.r))
 	admin.GET(RouteOthers, x.RedirectToPublicRoute(h.r))
 
-	admin.DELETE(RouteDeleteSession, h.deleteIdentitySessions)
+	admin.GET(RouteIdentitiesSessions, h.listIdentitySessions)
+	admin.DELETE(RouteIdentitiesSessions, h.deleteIdentitySessions)
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	// We need to completely ignore the whoami/logout path so that we do not accidentally set
 	// some cookie.
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
-	h.r.CSRFHandler().IgnorePath(RouteOthers)        // TODO: Remove
-	h.r.CSRFHandler().IgnoreGlob(RouteOthers + "/*") // TODO: Remove
+	h.r.CSRFHandler().IgnorePath(RouteOthers)
+	h.r.CSRFHandler().IgnoreGlob(RouteOthers + "/*")
 	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*/sessions")
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
@@ -80,7 +82,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.DELETE(RouteOthersSpecific, h.revokeSession)
 	public.GET(RouteOthers, h.listOtherSessions)
 
-	public.DELETE(RouteDeleteSession, x.RedirectToAdminRoute(h.r))
+	public.DELETE(RouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
@@ -233,6 +235,63 @@ func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request,
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// swagger:parameters adminListIdentitySessions
+// nolint:deadcode,unused
+type adminListIdentitySessions struct {
+	// ActiveOnly is a boolean flag that filters out inactive sessions.
+	//
+	// default: false
+	// required: false
+	// in: query
+	ActiveOnly bool `json:"active_only"`
+
+	adminDeleteIdentitySessions
+	x.PaginationParams
+}
+
+// swagger:route DELETE /identities/{id}/sessions v0alpha2 adminListIdentitySessions
+//
+// This endpoint returns all sessions that belong to the given Identity.
+//
+// This endpoint is useful for:
+//
+// - Listing all sessions that belong to an Identity in an administrative context.
+//
+//     Schemes: http, https
+//
+//     Security:
+//       oryAccessToken:
+//
+//     Responses:
+//       200: sessionList
+//       400: jsonError
+//       401: jsonError
+//       404: jsonError
+//       500: jsonError
+func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	iID, err := uuid.FromString(ps.ByName("id"))
+	if err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		return
+	}
+
+	aoRaw := r.URL.Query().Get("active_only")
+	activeOnly, err := strconv.ParseBool(aoRaw)
+	if aoRaw != "" && err != nil {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active_only"))
+		return
+	}
+
+	page, perPage := x.ParsePagination(r)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, activeOnly, page, perPage, uuid.Nil)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, sess)
 }
 
 // swagger:model publicRevokeMySessionsResponse

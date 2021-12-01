@@ -343,8 +343,8 @@ paths:
       description: |-
         This endpoint is useful for:
 
-        To forcefully logout Identity from all devices and sessions
-      operationId: adminDeleteIdentitySessions
+        Listing all sessions that belong to an Identity in an administrative context.
+      operationId: adminListIdentitySessions
       parameters:
       - description: ID is the identity's ID.
         explode: false
@@ -354,10 +354,48 @@ paths:
         schema:
           type: string
         style: simple
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 100
+          format: int64
+          maximum: 500
+          minimum: 1
+          type: integer
+        style: form
+      - description: Pagination Page
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          format: int64
+          minimum: 0
+          type: integer
+        style: form
+      - description: ActiveOnly is a boolean flag that filters out inactive sessions.
+        explode: true
+        in: query
+        name: active_only
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
       responses:
-        "204":
-          description: Empty responses are sent when, for example, resources are deleted.
-            The HTTP status code for empty responses is typically 201.
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sessionList'
+          description: sessionList
         "400":
           content:
             application/json:
@@ -384,8 +422,7 @@ paths:
           description: jsonError
       security:
       - oryAccessToken: []
-      summary: Calling this endpoint irrecoverably and permanently deletes and invalidates
-        all sessions that belong to the given Identity.
+      summary: This endpoint returns all sessions that belong to the given Identity.
       tags:
       - v0alpha2
   /recovery/link:

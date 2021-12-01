@@ -399,7 +399,7 @@
             "oryAccessToken": []
           }
         ],
-        "description": "This endpoint is useful for:\n\nTo forcefully logout Identity from all devices and sessions",
+        "description": "This endpoint is useful for:\n\nListing all sessions that belong to an Identity in an administrative context.",
         "schemes": [
           "http",
           "https"
@@ -407,8 +407,8 @@
         "tags": [
           "v0alpha2"
         ],
-        "summary": "Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.",
-        "operationId": "adminDeleteIdentitySessions",
+        "summary": "This endpoint returns all sessions that belong to the given Identity.",
+        "operationId": "adminListIdentitySessions",
         "parameters": [
           {
             "type": "string",
@@ -416,11 +416,40 @@
             "name": "id",
             "in": "path",
             "required": true
+          },
+          {
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 100,
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "name": "per_page",
+            "in": "query"
+          },
+          {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "description": "Pagination Page",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "ActiveOnly is a boolean flag that filters out inactive sessions.",
+            "name": "active_only",
+            "in": "query"
           }
         ],
         "responses": {
-          "204": {
-            "$ref": "#/responses/emptyResponse"
+          "200": {
+            "description": "sessionList",
+            "schema": {
+              "$ref": "#/definitions/sessionList"
+            }
           },
           "400": {
             "description": "jsonError",
