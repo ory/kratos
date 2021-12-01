@@ -251,7 +251,7 @@ type adminListIdentitySessions struct {
 	x.PaginationParams
 }
 
-// swagger:route DELETE /identities/{id}/sessions v0alpha2 adminListIdentitySessions
+// swagger:route GET /identities/{id}/sessions v0alpha2 adminListIdentitySessions
 //
 // This endpoint returns all sessions that belong to the given Identity.
 //
