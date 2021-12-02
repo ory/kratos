@@ -21,7 +21,7 @@ describe('Basic email profile with succeeding login flows', () => {
       profile: 'spa'
     }
   ].forEach(({ route, profile, app }) => {
-    describe(`for app ${app}`, () => {
+    describe.skip(`for app ${app}`, () => {
       before(() => {
         cy.proxy(app)
       })
@@ -82,23 +82,25 @@ describe('Basic email profile with succeeding login flows', () => {
       cy.proxy('express')
       cy.useConfigProfile('email')
 
-      cy.shortLoginLifespan()
       cy.browserReturnUrlOry()
     })
 
     beforeEach(() => {
       cy.clearAllCookies()
-      cy.visit(express.login + '?return_to=https://www.ory.sh/')
     })
 
     it('should redirect to return_to when retrying expired flow', () => {
+      cy.shortLoginLifespan()
+      cy.wait(500)
+
+      cy.visit(express.login + '?return_to=https://www.ory.sh/')
+
+      cy.longLoginLifespan()
+
       cy.get(appPrefix('express') + 'input[name="password_identifier"]').type(
         email.toUpperCase()
       )
       cy.get('input[name="password"]').type(password)
-
-      // set login lifespan to long, before creating the new flow
-      cy.longLoginLifespan()
 
       cy.submitPasswordForm()
       cy.get('[data-testid="ui/message/4010001"]').should(
