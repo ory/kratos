@@ -91,7 +91,7 @@ describe('Basic email profile with succeeding login flows', () => {
 
     it('should redirect to return_to when retrying expired flow', () => {
       cy.shortLoginLifespan()
-      // cy.wait(500)
+      cy.wait(500)
 
       cy.visit(express.login + '?return_to=https://www.ory.sh/')
 
