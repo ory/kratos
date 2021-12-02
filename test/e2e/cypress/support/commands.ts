@@ -30,10 +30,7 @@ const mergeFields = (form, fields) => {
 
 const updateConfigFile = (cb: (arg: any) => any) => {
   cy.readFile(configFile).then((contents) => {
-    cy.writeFile(configFile, YAML.stringify(
-      cb(
-        YAML.parse(contents)
-      )))
+    cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
     cy.wait(200)
   })
 }
