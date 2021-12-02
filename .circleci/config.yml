@@ -101,6 +101,7 @@ jobs:
             - v3-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
       - run: npm ci
       - run: cd test/e2e; npm ci
+      - run: sudo npm i -g expo-cli
       - save_cache:
           key: v3-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
           paths:
