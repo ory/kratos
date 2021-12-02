@@ -97,13 +97,14 @@ describe('Basic email profile with succeeding login flows', () => {
       )
       cy.get('input[name="password"]').type(password)
 
+      // set login lifespan to long, before creating the new flow
+      cy.longLoginLifespan()
+
       cy.submitPasswordForm()
       cy.get('[data-testid="ui/message/4010001"]').should(
         'contain.text',
         'The login flow expired'
       )
-
-      cy.longLoginLifespan()
 
       // try again with long lifespan set
       cy.get('input[name="password_identifier"]').type(email.toUpperCase())
