@@ -2,13 +2,11 @@ package template
 
 import (
 	"encoding/json"
-
-	"github.com/ory/kratos/driver/config"
 )
 
 type (
 	VerificationValid struct {
-		c *config.Config
+		c TemplateConfig
 		m *VerificationValidModel
 	}
 	VerificationValidModel struct {
@@ -18,7 +16,7 @@ type (
 	}
 )
 
-func NewVerificationValid(c *config.Config, m *VerificationValidModel) *VerificationValid {
+func NewVerificationValid(c TemplateConfig, m *VerificationValidModel) *VerificationValid {
 	return &VerificationValid{c: c, m: m}
 }
 

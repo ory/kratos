@@ -19,7 +19,6 @@ type (
 
 		LatestQueuedMessage(ctx context.Context) (*Message, error)
 	}
-
 	PersistenceProvider interface {
 		CourierPersister() Persister
 	}

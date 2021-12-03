@@ -259,6 +259,17 @@ func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
 	return corp.ContextualizeConfig(ctx, m.c)
 }
 
+func (m *RegistryDefault) CourierConfig(ctx context.Context) courier.SMTPConfig {
+	if m.c == nil {
+		panic("configuration not set")
+	}
+	return corp.ContextualizeConfig(ctx, m.c)
+}
+
+func (m *RegistryDefault) SMTPConfig(ctx context.Context) courier.SMTPConfig {
+	return m.Config(ctx)
+}
+
 func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 	if len(m.selfserviceStrategies) == 0 {
 		m.selfserviceStrategies = []interface{}{
@@ -579,7 +590,7 @@ func (m *RegistryDefault) SetPersister(p persistence.Persister) {
 }
 
 func (m *RegistryDefault) Courier(ctx context.Context) *courier.Courier {
-	return courier.NewSMTP(m, m.Config(ctx))
+	return courier.NewSMTP(ctx, m)
 }
 
 func (m *RegistryDefault) ContinuityManager() continuity.Manager {

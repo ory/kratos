@@ -78,6 +78,6 @@ func TestExtensionRunner(t *testing.T) {
 
 		_, err = c.Compile("file://./stub/extension/invalid.schema.json")
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "expected boolean, but got number")
+		assert.Contains(t, err.Error(), "json: cannot unmarshal number into Go struct field .credentials.password.identifier of type bool")
 	})
 }
