@@ -23,6 +23,9 @@ services:
     environment:
       - KRATOS_PUBLIC_URL=http://kratos:4433/
       - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
+      - PORT=4455
+    ports:
+      - '4455:4455'
     networks:
       - intranet
     restart: on-failure
