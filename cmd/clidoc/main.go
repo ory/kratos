@@ -269,7 +269,3 @@ func validateAllMessages(path string) error {
 
 	return nil
 }
-
-type importerFunc func(path string) (*types.Package, error)
-
-func (f importerFunc) Import(path string) (*types.Package, error) { return f(path) }
