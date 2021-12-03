@@ -2,14 +2,16 @@ package courier
 
 import (
 	cx "context"
+	"net/http"
+
+	"github.com/spf13/cobra"
+	"github.com/urfave/negroni"
+
 	"github.com/ory/graceful"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/reqlog"
-	"github.com/spf13/cobra"
-	"github.com/urfave/negroni"
-	"net/http"
 )
 
 func NewWatchCmd() *cobra.Command {

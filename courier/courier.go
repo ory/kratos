@@ -31,7 +31,7 @@ type (
 	SMTPDependencies interface {
 		PersistenceProvider
 		x.LoggingProvider
-		CourierConfig(ctx context.Context) SMTPConfig
+		ConfigProvider
 	}
 	TemplateTyper            func(t EmailTemplate) (TemplateType, error)
 	EmailTemplateFromMessage func(c SMTPConfig, msg Message) (EmailTemplate, error)
@@ -43,6 +43,9 @@ type (
 	}
 	Provider interface {
 		Courier(ctx context.Context) *Courier
+	}
+	ConfigProvider interface {
+		CourierConfig(ctx context.Context) SMTPConfig
 	}
 )
 
