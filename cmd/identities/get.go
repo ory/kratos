@@ -42,7 +42,7 @@ func NewGetCmd() *cobra.Command {
 				e := stringsx.SwitchExact(opt)
 				if !e.AddCase("oidc") {
 					cmd.PrintErrln(`You have to put a valid value of credentials type to be included, try --help for details.`)
-					return nil
+					return cmdx.FailSilently(cmd)
 				}
 			}
 
