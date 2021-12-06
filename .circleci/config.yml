@@ -108,9 +108,9 @@ jobs:
           paths:
             - node_modules
             - ~/.cache # cypress
-            - ~/.npm/node_modules # global npm
+            - ~/.npm # global npm
             - test/e2e/node_modules # e2e npm
-            - ~/.npm-global # e2e npm
+            - ~/.npm-global # global npm
 
       - go/load-cache
       - go/mod-download
