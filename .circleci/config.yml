@@ -157,28 +157,28 @@ jobs:
           background: true
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh --only-setup
+            ./test/e2e/run.sh --no-kill --only-setup
 
       - run:
           description: Run sqlite e2e test
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh --no-setup sqlite
+            ./test/e2e/run.sh --no-setup --no-kill sqlite
       - run:
           description: Run postrgres e2e test
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh --no-setup postgres
+            ./test/e2e/run.sh --no-setup --no-kill postgres
       - run:
           description: Run mysql e2e test
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh --no-setup mysql
+            ./test/e2e/run.sh --no-setup --no-kill mysql
       - run:
           description: Run cockroach e2e test
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh --no-setup cockroach
+            ./test/e2e/run.sh --no-setup --no-kill cockroach
 
 workflows:
   tbr:
