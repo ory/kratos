@@ -129,15 +129,16 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginFor(s.ID(), identity.AuthenticatorAssuranceLevel1)
-	for k, c := range o.Providers {
-		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
+	for _, p := range o.Providers {
+		if p.Subject == claims.Subject && p.Provider == provider.Config().ID {
 			i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), i.ID)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
-			o.Providers[k].InitialIDToken = it
-			o.Providers[k].InitialAccessToken = cat
-			o.Providers[k].InitialRefreshToken = crt
+
+			p.InitialIDToken = it
+			p.InitialAccessToken = cat
+			p.InitialRefreshToken = crt
 			creds := i.Credentials[s.ID()]
 			creds.Config, err = json.Marshal(o)
 			if err != nil {
