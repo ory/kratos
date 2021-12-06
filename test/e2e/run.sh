@@ -18,6 +18,8 @@ export KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
+base=$(pwd)
+
 setup=yes
 dev=no
 nokill=no
@@ -60,8 +62,6 @@ prepare() {
     export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@localhost:3445/postgres?sslmode=disable"
     export TEST_DATABASE_COCKROACHDB="cockroach://root@localhost:3446/defaultdb?sslmode=disable"
   fi
-
-  base=$(pwd)
 
   if [ -z ${NODE_UI_PATH+x} ]; then
     node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
