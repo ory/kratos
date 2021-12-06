@@ -96,25 +96,25 @@ jobs:
       - browser-tools/install-browser-tools
       - checkout
 
+      - run: npm config set prefix ~/.npm/node_modules
       - restore_cache:
           keys:
-            - v3-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
+            - v4-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
       - run: npm ci
       - run: cd test/e2e; npm ci
       - run: sudo npm i -g expo-cli
       - save_cache:
-          key: v3-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
+          key: v4-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
           paths:
             - node_modules
             - ~/.cache # cypress
             - ~/.npm/node_modules # global npm
             - test/e2e/node_modules # e2e npm
+            - ~/.npm-global # e2e npm
 
       - go/load-cache
       - go/mod-download
       - go/save-cache
-
-      - run: npm config set prefix ~/.npm/node_modules
 
       - run:
           description: "Install selfservice-ui-node"
@@ -135,6 +135,16 @@ jobs:
 
             git clone https://github.com/ory/kratos-selfservice-ui-react-native.git --depth 1 --branch master "$rn_ui_dir"
             cd "$rn_ui_dir"
+            npm i
+
+      - run:
+          description: "Install kratos-selfservice-ui-react-nextjs"
+          command: |
+            react_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-nextjs"
+            echo "export REACT_UI_PATH=$react_ui_dir" >> $BASH_ENV
+
+            git clone https://github.com/ory/kratos-selfservice-ui-react-nextjs.git  --depth 1 --branch master "$react_ui_dir"
+            cd "$react_ui_dir"
             npm i
 
       - run:
