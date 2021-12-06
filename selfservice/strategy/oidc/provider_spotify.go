@@ -7,10 +7,11 @@ import (
 
 	"golang.org/x/oauth2/spotify"
 
-	"github.com/ory/x/stringslice"
-	"github.com/ory/x/stringsx"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/x/stringslice"
+	"github.com/ory/x/stringsx"
 
 	spotifyapi "github.com/zmb3/spotify/v2"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
@@ -93,4 +94,3 @@ func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token) (*
 
 	return claims, nil
 }
-

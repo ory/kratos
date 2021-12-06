@@ -1097,9 +1097,11 @@ http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callbac
 
 :::note
 
-While Spotify [provides an OIDC discovery URL](https://accounts.spotify.com/.well-known/openid-configuration),
-Spotify does not actually support the `openid` claim and only returns an access token. Therefore, Ory Kratos
-makes a request to [Spotify's /me API](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile)
+While Spotify
+[provides an OIDC discovery URL](https://accounts.spotify.com/.well-known/openid-configuration),
+Spotify does not actually support the `openid` claim and only returns an access
+token. Therefore, Ory Kratos makes a request to
+[Spotify's /me API](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile)
 and adds the user info to `std.extVar('claims')`.
 
 :::
