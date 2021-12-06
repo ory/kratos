@@ -2,6 +2,7 @@ package identities
 
 import (
 	"fmt"
+
 	kratos "github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/cmdx"
