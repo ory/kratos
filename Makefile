@@ -135,7 +135,7 @@ format: .bin/goimports docs/node_modules node_modules
 # Build local docker image
 .PHONY: docker
 docker:
-		docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .
+		DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .
 
 # Runs the documentation tests
 .PHONY: test-docs
