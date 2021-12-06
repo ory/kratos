@@ -12,8 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/httpx"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"

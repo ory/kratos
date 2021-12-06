@@ -15,10 +15,11 @@ import (
 
 	"github.com/arbovm/levenshtein"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringsx"
-	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
 )
