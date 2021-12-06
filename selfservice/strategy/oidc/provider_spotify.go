@@ -60,7 +60,6 @@ func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token) (*
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
 	for _, check := range g.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
-			fmt.Println("SCOPE MISSING", check, fmt.Sprintf("%#v", exchange.Extra("scope")))
 			return nil, errors.WithStack(ErrScopeMissing)
 		}
 	}
