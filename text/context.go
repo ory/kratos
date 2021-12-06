@@ -1,15 +1,16 @@
 package text
 
-import "github.com/tidwall/sjson"
+import (
+	"encoding/json"
+)
 
 func context(ctx map[string]interface{}) []byte {
-	json := `{}`
-	var err error
-	for key, value := range ctx {
-		json, err = sjson.Set(json, key, value)
-		if err != nil {
-			panic(err)
-		}
+	if len(ctx) == 0 {
+		return []byte("{}")
 	}
-	return []byte(json)
+	res, err := json.Marshal(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }

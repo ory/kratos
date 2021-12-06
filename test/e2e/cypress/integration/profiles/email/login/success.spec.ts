@@ -82,17 +82,21 @@ describe('Basic email profile with succeeding login flows', () => {
       cy.proxy('express')
       cy.useConfigProfile('email')
 
-      cy.shortLoginLifespan()
       cy.browserReturnUrlOry()
     })
 
     beforeEach(() => {
       cy.clearAllCookies()
-      cy.visit(express.login + '?return_to=https://www.ory.sh/')
     })
 
     it('should redirect to return_to when retrying expired flow', () => {
+      cy.shortLoginLifespan()
+      cy.wait(500)
+
+      cy.visit(express.login + '?return_to=https://www.ory.sh/')
+
       cy.longLoginLifespan()
+
       cy.get(appPrefix('express') + 'input[name="password_identifier"]').type(
         email.toUpperCase()
       )

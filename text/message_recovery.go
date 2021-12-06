@@ -5,21 +5,6 @@ import (
 	"time"
 )
 
-const (
-	InfoSelfServiceRecovery           ID = 1060000 + iota // 1060000
-	InfoSelfServiceRecoverySuccessful                     // 1060001
-	InfoSelfServiceRecoveryEmailSent                      // 1060002
-)
-
-const (
-	ErrorValidationRecovery                          ID = 4060000 + iota // 4060000
-	ErrorValidationRecoveryRetrySuccess                                  // 4060001
-	ErrorValidationRecoveryStateFailure                                  // 4060002
-	ErrorValidationRecoveryMissingRecoveryToken                          // 4060003
-	ErrorValidationRecoveryTokenInvalidOrAlreadyUsed                     // 4060004
-	ErrorValidationRecoveryFlowExpired                                   // 4060005
-)
-
 func NewErrorValidationRecoveryFlowExpired(ago time.Duration) *Message {
 	return &Message{
 		ID:   ErrorValidationRecoveryFlowExpired,

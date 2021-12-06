@@ -294,7 +294,7 @@ New feature or request.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Admin/Selfservice session management
       ([kratos#655](https://github.com/ory/kratos/issues/655)) -
-      [@Alano Terblanche](https://github.com/Benehiko)
+      [@Patrik](https://github.com/zepatrik)
 - [ ] Write new recovery and verification strategy that does not rely on links
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [ ] Delete self-service flows after completion
@@ -302,6 +302,9 @@ New feature or request.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Documentation refactoring
       ([kratos#1904](https://github.com/ory/kratos/issues/1904)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Update config key neames
+      ([kratos#1979](https://github.com/ory/kratos/issues/1979)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
@@ -331,6 +334,9 @@ Something is not working.
 
 #### Issues
 
+- [ ] Resumable session is not cleared up on error
+      ([kratos#2016](https://github.com/ory/kratos/issues/2016)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect

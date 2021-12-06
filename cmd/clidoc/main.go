@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/ast"
+	"go/importer"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -123,12 +125,12 @@ func main() {
 	}
 
 	if err := validateAllMessages(filepath.Join(os.Args[1], "text")); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Unable to validate messages: %+v", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Unable to validate messages: %+v\n", err)
 		os.Exit(1)
 	}
 
 	if err := writeMessages(filepath.Join(os.Args[1], "docs/docs/concepts/ui-user-interface.mdx")); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate message table: %+v", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate message table: %+v\n", err)
 		os.Exit(1)
 	}
 
@@ -192,23 +194,76 @@ func writeMessages(path string) error {
 }
 
 func validateAllMessages(path string) error {
+	type message struct {
+		ID, Name string
+	}
+
+	usedIDs := make([]message, 0, len(messages))
 	set := token.NewFileSet()
 	packs, err := parser.ParseDir(set, path, nil, 0)
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse text directory")
 	}
+	info := &types.Info{
+		Defs: make(map[*ast.Ident]types.Object),
+	}
+	var pack *ast.Package
+	for _, p := range packs {
+		if p.Name == "text" {
+			pack = p
+			break
+		}
+	}
+	allFiles := make([]*ast.File, 0)
+	for fn, f := range pack.Files {
+		if strings.HasSuffix(fn, "/id.go") {
+			allFiles = append(allFiles, f)
+		}
+	}
+	_, err = (&types.Config{Importer: importer.Default()}).Check("text", set, allFiles, info)
+	if err != nil {
+		return err // type error
+	}
 
-	for _, pack := range packs {
-		for _, f := range pack.Files {
-			for _, d := range f.Decls {
-				if fn, isFn := d.(*ast.FuncDecl); isFn {
-					if name := fn.Name.String(); fn.Name.IsExported() && strings.HasPrefix(name, "New") {
-						if _, ok := messages[name]; !ok {
-							return errors.Errorf("expected to find message %s in the list for the documentation generation but could not", name)
+	for _, f := range pack.Files {
+		for _, d := range f.Decls {
+			switch decl := d.(type) {
+			case *ast.FuncDecl:
+				if name := decl.Name.String(); decl.Name.IsExported() && strings.HasPrefix(name, "New") {
+					if _, ok := messages[name]; !ok {
+						return errors.Errorf("expected to find message %s in the list for the documentation generation but could not", name)
+					}
+				}
+			case *ast.GenDecl:
+				if decl.Tok == token.CONST {
+					for _, spec := range decl.Specs {
+						value := spec.(*ast.ValueSpec) // safe because decl.Tok is token.CONST
+						if t, ok := value.Type.(*ast.Ident); ok {
+							if t.Name == "ID" {
+								for _, name := range value.Names {
+									c := info.ObjectOf(name)
+									if c == nil {
+										return errors.Errorf("expected to find const %s in text/id.go", name.Name)
+									}
+									usedIDs = append(usedIDs, message{
+										ID:   c.(*types.Const).Val().ExactString(),
+										Name: name.Name,
+									})
+								}
+							}
 						}
 					}
 				}
 			}
+		}
+	}
+
+	sort.Slice(usedIDs, func(i, j int) bool {
+		return usedIDs[i].ID < usedIDs[j].ID
+	})
+	for i := 1; i < len(usedIDs); i++ {
+		if usedIDs[i].ID == usedIDs[i-1].ID {
+			return errors.Errorf("message ID %s is used more than once: %s %s", usedIDs[i].ID, usedIDs[i].Name, usedIDs[i-1].Name)
 		}
 	}
 
