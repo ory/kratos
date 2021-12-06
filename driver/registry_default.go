@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gobuffalo/pop/v5"
+
 	"github.com/ory/nosurf"
 
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
@@ -21,8 +23,6 @@ import (
 	"github.com/ory/kratos/corp"
 
 	prometheus "github.com/ory/x/prometheusx"
-
-	"github.com/gobuffalo/pop/v5"
 
 	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/continuity"
@@ -257,6 +257,14 @@ func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
 		panic("configuration not set")
 	}
 	return corp.ContextualizeConfig(ctx, m.c)
+}
+
+func (m *RegistryDefault) CourierConfig(ctx context.Context) courier.SMTPConfig {
+	return m.Config(ctx)
+}
+
+func (m *RegistryDefault) SMTPConfig(ctx context.Context) courier.SMTPConfig {
+	return m.Config(ctx)
 }
 
 func (m *RegistryDefault) selfServiceStrategies() []interface{} {
@@ -579,7 +587,7 @@ func (m *RegistryDefault) SetPersister(p persistence.Persister) {
 }
 
 func (m *RegistryDefault) Courier(ctx context.Context) *courier.Courier {
-	return courier.NewSMTP(m, m.Config(ctx))
+	return courier.NewSMTP(ctx, m)
 }
 
 func (m *RegistryDefault) ContinuityManager() continuity.Manager {

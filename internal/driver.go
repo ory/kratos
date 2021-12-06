@@ -80,7 +80,7 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *drive
 	require.NoError(t, err)
 	reg.Config(context.Background()).MustSet("dev", true)
 	require.NoError(t, reg.Init(context.Background(), driver.SkipNetworkInit))
-	require.NoError(t, reg.Persister().NetworkMigrateUp(context.Background()))
+	require.NoError(t, reg.Persister().MigrateUp(context.Background())) // always migrate up
 
 	actual, err := reg.Persister().DetermineNetwork(context.Background())
 	require.NoError(t, err)
