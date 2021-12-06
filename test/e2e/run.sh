@@ -277,7 +277,7 @@ the path where the kratos-selfservice-ui-node project is checked out:
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 export TEST_DATABASE_MEMORY="memory"
 
-case "$1" in
+case "${1:-default}" in
 sqlite)
   echo "Database set up at: $TEST_DATABASE_SQLITE"
   db="${TEST_DATABASE_SQLITE}"
@@ -306,4 +306,7 @@ cockroach)
   ;;
 esac
 
+if [[ "${setup}" == "yes" ]]; then
+  prepare
+fi
 run "${db}"
