@@ -39,7 +39,8 @@ To get the identities with the recovery email address at the domain &#34;ory.sh&
 ### Options
 
 ```
-  -h, --help   help for get
+  -h, --help                              help for get
+  -i, --include-credentials stringArray   Include third party tokens (only &#34;oidc&#34; supported)
 ```
 
 ### Options inherited from parent commands

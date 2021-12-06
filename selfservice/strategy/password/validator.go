@@ -3,11 +3,6 @@ package password
 import (
 	"bufio"
 	"context"
-	"time"
-
-	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/ory/kratos/driver/config"
 
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
@@ -16,15 +11,17 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/arbovm/levenshtein"
-
-	"github.com/ory/x/httpx"
-
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringsx"
+
+	"github.com/ory/kratos/driver/config"
 )
 
 // Validator implements a validation strategy for passwords. One example is that the password
@@ -145,8 +142,8 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 }
 
 func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, password string) error {
-	if len(password) < 6 {
-		return errors.Errorf("password length must be at least 6 characters but only got %d", len(password))
+	if len(password) < 8 {
+		return errors.Errorf("password length must be at least 8 characters but only got %d", len(password))
 	}
 
 	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)

@@ -35,11 +35,13 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewSMTP(t *testing.T) {
+	ctx := context.Background()
+
 	setupConfig := func(stringURL string) *courier.Courier {
-		conf, _ := internal.NewFastRegistryWithMocks(t)
+		conf, reg := internal.NewFastRegistryWithMocks(t)
 		conf.MustSet(config.ViperKeyCourierSMTPURL, stringURL)
 		t.Logf("SMTP URL: %s", conf.CourierSMTPURL().String())
-		return courier.NewSMTP(nil, conf)
+		return courier.NewSMTP(ctx, reg)
 	}
 
 	if testing.Short() {

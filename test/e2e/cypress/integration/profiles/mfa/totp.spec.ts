@@ -222,7 +222,7 @@ context('2FA lookup secrets', () => {
 
       it('should fail to set up totp if verify code is wrong', () => {
         cy.visit(settings)
-        cy.get('input[name="totp_code"]').type('123456')
+        cy.get('input[name="totp_code"]').type('12345678')
         cy.get('*[name="method"][value="totp"]').click()
         cy.get('[data-testid="ui/message/4000008"]').should(
           'contain.text',
