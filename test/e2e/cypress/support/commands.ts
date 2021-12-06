@@ -30,11 +30,9 @@ const mergeFields = (form, fields) => {
 
 const updateConfigFile = (cb: (arg: any) => any) => {
   cy.readFile(configFile).then((contents) => {
-    let config = YAML.parse(contents)
-    config = cb(config)
-    cy.writeFile(configFile, YAML.stringify(config))
+    cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
+    cy.wait(200)
   })
-  cy.wait(200)
 }
 
 Cypress.Commands.add('useConfigProfile', (profile: string) => {

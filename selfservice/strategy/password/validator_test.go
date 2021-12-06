@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/httpx"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
@@ -42,6 +42,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{pw: "password", pass: false},
 			{pw: "1234567890", pass: false},
 			{pw: "qwertyui", pass: false},
+			{pw: "l3f9to", pass: false},
 			{pw: "l3f9toh1uaf81n21", pass: true},
 			{pw: "l3f9toh1uaf81n21", id: "l3f9toh1uaf81n21", pass: false},
 			{pw: "l3f9toh1", pass: true},
@@ -56,19 +57,21 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{id: "hello@example.com", pw: "h3ll0@example", pass: false},
 			{pw: "hello@example.com", id: "hello@exam", pass: false},
 			{id: "abcd", pw: "9d3c8a1b", pass: true},
-			{id: "a", pw: "kjOkla", pass: true},
+			{id: "a", pw: "kjOklafe", pass: true},
 			{id: "ab", pw: "0000ab0000", pass: true},
 			// longest common substring with long password
 			{id: "d4f6090b-5a84", pw: "d4f6090b-5a84-2184-4404-8d1b-8da3eb00ebbe", pass: true},
 			{id: "asdflasdflasdf", pw: "asdflasdflpiuhefnciluaksdzuföfhg", pass: true},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				c := tc
 				t.Parallel()
-				err := s.Validate(context.Background(), tc.id, tc.pw)
-				if tc.pass {
-					require.NoError(t, err, "err: %+v, id: %s, pw: %s", err, tc.id, tc.pw)
+
+				err := s.Validate(context.Background(), c.id, c.pw)
+				if c.pass {
+					require.NoError(t, err, "err: %+v, id: %s, pw: %s", err, c.id, c.pw)
 				} else {
-					require.Error(t, err, "id: %s, pw: %s", tc.id, tc.pw)
+					require.Error(t, err, "id: %s, pw: %s", c.id, c.pw)
 				}
 			})
 		}
