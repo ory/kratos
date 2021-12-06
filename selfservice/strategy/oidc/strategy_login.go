@@ -109,7 +109,6 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 	}
 
-
 	// UPDATE TOKEN
 	var it string
 	if idToken, ok := token.Extra("id_token").(string); ok {
@@ -128,24 +127,25 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginFor(s.ID())
-	for k, c := range o.Providers {
-		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-			i, err  := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), i.ID)
+	for _, p := range o.Providers {
+		if p.Subject == claims.Subject && p.Provider == provider.Config().ID {
+			i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), i.ID)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
-			o.Providers[k].InitialIDToken = it
-			o.Providers[k].InitialAccessToken = cat
-			o.Providers[k].InitialRefreshToken = crt
-			creds := i.Credentials[s.ID()]
-			creds.Config, err = json.Marshal(o)
+
+			p.InitialIDToken = it
+			p.InitialAccessToken = cat
+			p.InitialRefreshToken = crt
+
+			c.Config, err = json.Marshal(o)
 			if err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
-			i.Credentials[s.ID()] = creds
+
+			i.Credentials[s.ID()] = *c
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, a, i, sess); err != nil {
 				return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 			}
