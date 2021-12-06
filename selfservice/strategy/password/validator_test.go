@@ -57,7 +57,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{id: "hello@example.com", pw: "h3ll0@example", pass: false},
 			{pw: "hello@example.com", id: "hello@exam", pass: false},
 			{id: "abcd", pw: "9d3c8a1b", pass: true},
-			{id: "a", pw: "kjOkla", pass: true},
+			{id: "a", pw: "kjOklafe", pass: true},
 			{id: "ab", pw: "0000ab0000", pass: true},
 			// longest common substring with long password
 			{id: "d4f6090b-5a84", pw: "d4f6090b-5a84-2184-4404-8d1b-8da3eb00ebbe", pass: true},
