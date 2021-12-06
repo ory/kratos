@@ -1,5 +1,4 @@
-# syntax = docker/dockerfile:1-experimental
-FROM golang:1.16-alpine AS base
+FROM golang:1.17-alpine AS base
 
 RUN apk -U --no-cache add build-base git gcc bash
 
@@ -26,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite \
     -ldflags="-X 'github.com/ory/kratos/driver/config.Version=${VERSION}' -X 'github.com/ory/kratos/driver/config.Date=${BUILD_DATE}' -X 'github.com/ory/kratos/driver/config.Commit=${COMMIT}'" \
     -o /usr/bin/kratos
 
-FROM alpine:3.14.2
+FROM alpine:3.15.0
 
 RUN addgroup -S ory; \
     adduser -S ory -G ory -D -u 10000 -h /home/ory -s /bin/nologin; \
