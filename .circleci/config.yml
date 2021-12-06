@@ -153,25 +153,32 @@ jobs:
             echo "unset DISPLAY" >> $BASH_ENV
 
       - run:
+          description: Set up depdenencies
+          background: true
+          command: |
+            source $BASH_ENV
+            ./test/e2e/run.sh --only-setup
+
+      - run:
           description: Run sqlite e2e test
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh sqlite
+            ./test/e2e/run.sh --no-setup sqlite
       - run:
           description: Run postrgres e2e test
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh postgres
+            ./test/e2e/run.sh --no-setup postgres
       - run:
           description: Run mysql e2e test
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh mysql
+            ./test/e2e/run.sh --no-setup mysql
       - run:
           description: Run cockroach e2e test
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh cockroach
+            ./test/e2e/run.sh --no-setup cockroach
 
 workflows:
   tbr:

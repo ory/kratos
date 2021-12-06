@@ -67,9 +67,18 @@ if [ -z ${CI+x} ]; then
   docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
 fi
 
+setup=yes
 dev=no
 for i in "$@"; do
   case $i in
+  --only-setup)
+    setup=only
+    shift # past argument=value
+    ;;
+  --no-setup)
+    setup=no
+    shift # past argument=value
+    ;;
   --dev)
     dev=yes
     shift # past argument=value
@@ -77,16 +86,13 @@ for i in "$@"; do
   esac
 done
 
-run() {
-  killall kratos || true
+prepare() {
   killall node || true
   killall modd || true
   killall hydra || true
   killall hydra-login-consent || true
 
   # Check if any ports that we need are open already
-  ! nc -zv localhost 4434
-  ! nc -zv localhost 4433
   ! nc -zv localhost 4446
   ! nc -zv localhost 4455
   ! nc -zv localhost 4456
@@ -179,8 +185,15 @@ run() {
     go build . &&
       PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
   )
+}
+
+run() {
+  killall kratos || true
 
   export DSN=${1}
+
+  ! nc -zv localhost 4434
+  ! nc -zv localhost 4433
 
   for profile in email mobile oidc recovery verification mfa spa; do
     yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" >test/e2e/kratos.${profile}.yml
@@ -243,12 +256,21 @@ To run e2e tests in dev mode (useful for writing them), run:
 
   $0 --dev <database>
 
+To set up all the services without running the tests, use:
+
+  $0 --only-setup
+
+To then run the tests without the set up steps, use:
+
+  $0 --no-setup <database>
+
 If you are making changes to the kratos-selfservice-ui-node
 project as well, point the 'NODE_UI_PATH' environment variable to
 the path where the kratos-selfservice-ui-node project is checked out:
 
   export NODE_UI_PATH=$HOME/workspace/kratos-selfservice-ui-node
   export RN_UI_PATH=$HOME/workspace/kratos-selfservice-ui-react-native
+  export REACT_UI_PATH=$HOME/workspace/kratos-selfservice-ui-react-nextjs
   $0 ..."
 }
 
@@ -275,7 +297,12 @@ cockroach)
 
 *)
   usage
-  exit 1
+  if [[ "${setup}" == "only" ]]; then
+    prepare
+    exit 0
+  else
+    exit 1
+  fi
   ;;
 esac
 
