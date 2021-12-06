@@ -1330,8 +1330,8 @@ will be overwritten!
   "text": "Remove security key \"{name}\"",
   "type": "info",
   "context": {
-    "display_name": "{name}",
-    "added_at": "2020-01-01T00:59:59Z"
+    "added_at": "2020-01-01T00:59:59Z",
+    "display_name": "{name}"
   }
 }
 ```
@@ -1412,33 +1412,12 @@ will be overwritten!
 }
 ```
 
-###### You successfully verified your email address. (1060001)
-
-```json
-{
-  "id": 1060001,
-  "text": "You successfully verified your email address.",
-  "type": "info"
-}
-```
-
 ###### An email containing a recovery link has been sent to the email address you provided. (1060002)
 
 ```json
 {
   "id": 1060002,
   "text": "An email containing a recovery link has been sent to the email address you provided.",
-  "type": "info",
-  "context": {}
-}
-```
-
-###### An email containing a verification link has been sent to the email address you provided. (1070001)
-
-```json
-{
-  "id": 1070001,
-  "text": "An email containing a verification link has been sent to the email address you provided.",
   "type": "info",
   "context": {}
 }
@@ -1514,6 +1493,27 @@ will be overwritten!
 }
 ```
 
+###### An email containing a verification link has been sent to the email address you provided. (1080001)
+
+```json
+{
+  "id": 1080001,
+  "text": "An email containing a verification link has been sent to the email address you provided.",
+  "type": "info",
+  "context": {}
+}
+```
+
+###### You successfully verified your email address. (1080002)
+
+```json
+{
+  "id": 1080002,
+  "text": "You successfully verified your email address.",
+  "type": "info"
+}
+```
+
 ###### {reason} (4000001)
 
 ```json
@@ -1545,8 +1545,8 @@ will be overwritten!
   "text": "Length must be \u003e= 1, but got 2.",
   "type": "error",
   "context": {
-    "expected_length": 1,
-    "actual_length": 2
+    "actual_length": 2,
+    "expected_length": 1
   }
 }
 ```
@@ -1559,8 +1559,8 @@ will be overwritten!
   "text": "\"{value}\" is not valid \"{format}\"",
   "type": "error",
   "context": {
-    "expected_format": "{format}",
-    "actual_value": "{value}"
+    "actual_value": "{value}",
+    "expected_format": "{format}"
   }
 }
 ```
