@@ -99,12 +99,12 @@ jobs:
       - run: npm config set prefix ~/.npm/node_modules
       - restore_cache:
           keys:
-            - v4-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
+            - v5-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
       - run: npm ci
       - run: cd test/e2e; npm ci
       - run: sudo npm i -g expo-cli
       - save_cache:
-          key: v4-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
+          key: v5-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
           paths:
             - node_modules
             - ~/.cache # cypress
