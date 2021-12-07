@@ -155,7 +155,7 @@ jobs:
       - run:
           description: "Clean up .bin dir"
           command: |
-            rm .bin
+            rm -rf .bin || true
             mkdir .bin
 
       - run:
