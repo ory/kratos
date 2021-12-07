@@ -88,8 +88,6 @@ New feature or request.
       ([kratos#969](https://github.com/ory/kratos/issues/969))
 - [ ] Access identity schema information (e.g. usernames) within the jsonnet
       mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
-- [ ] login ui returned without flowid
-      ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
       ([kratos#1589](https://github.com/ory/kratos/issues/1589))
 - [ ] Deprecate webhook loader without URI scheme
@@ -112,6 +110,8 @@ New feature or request.
       [@Alano Terblanche](https://github.com/Benehiko)
 - [x] Add i18n support to mail templates
       ([kratos#834](https://github.com/ory/kratos/issues/834))
+- [x] login ui returned without flowid
+      ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [x] Allow account recovery for identities without email address
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [x] Field validation answer status code 422 instead of 400
