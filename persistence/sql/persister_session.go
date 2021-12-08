@@ -39,7 +39,7 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 }
 
 // ListSessionsByIdentity retrieves sessions for an identity from the store.
-func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, activeOnly bool, page, perPage int, except uuid.UUID) ([]*session.Session, error) {
+func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID) ([]*session.Session, error) {
 	var s []*session.Session
 	nid := corp.ContextualizeNID(ctx, p.nid)
 
@@ -48,8 +48,8 @@ func (p *Persister) ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, a
 		if except != uuid.Nil {
 			q = q.Where("id != ?", except)
 		}
-		if activeOnly {
-			q = q.Where("active = true")
+		if active != nil {
+			q = q.Where("active = ?", *active)
 		}
 		if err := q.All(&s); err != nil {
 			return sqlcon.HandleError(err)

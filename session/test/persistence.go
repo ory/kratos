@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pointerx"
+
 	"github.com/ory/kratos/identity"
 
 	"github.com/bxcodec/faker/v3"
@@ -86,7 +88,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			t.Run("method=list by identity", func(t *testing.T) {
 				i := identity.NewIdentity("")
 				require.NoError(t, p.CreateIdentity(ctx, i))
-				sess := make([]session.Session, 3)
+				sess := make([]session.Session, 4)
 				for j := range sess {
 					require.NoError(t, faker.FakeData(&sess[j]))
 					sess[j].Identity = i
@@ -95,10 +97,10 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				}
 
 				for _, tc := range []struct {
-					desc       string
-					except     uuid.UUID
-					expected   []session.Session
-					activeOnly bool
+					desc     string
+					except   uuid.UUID
+					expected []session.Session
+					active   *bool
 				}{
 					{
 						desc:     "all",
@@ -110,30 +112,47 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 						expected: []session.Session{
 							sess[1],
 							sess[2],
+							sess[3],
 						},
 					},
 					{
-						desc:       "active only",
-						activeOnly: true,
+						desc:   "active only",
+						active: pointerx.Bool(true),
 						expected: []session.Session{
 							sess[0],
 							sess[2],
 						},
 					},
 					{
-						desc:       "active only and except",
-						activeOnly: true,
-						except:     sess[0].ID,
+						desc:   "active only and except",
+						active: pointerx.Bool(true),
+						except: sess[0].ID,
 						expected: []session.Session{
 							sess[2],
 						},
 					},
+					{
+						desc:   "inactive only",
+						active: pointerx.Bool(false),
+						expected: []session.Session{
+							sess[1],
+							sess[3],
+						},
+					},
+					{
+						desc:   "inactive only and except",
+						active: pointerx.Bool(false),
+						except: sess[3].ID,
+						expected: []session.Session{
+							sess[1],
+						},
+					},
 				} {
 					t.Run("case="+tc.desc, func(t *testing.T) {
-						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.activeOnly, 1, 10, tc.except)
+						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except)
 						require.NoError(t, err)
 
-						assert.Equal(t, len(tc.expected), len(actual))
+						require.Equal(t, len(tc.expected), len(actual))
 						for _, es := range tc.expected {
 							found := false
 							for _, as := range actual {
@@ -148,7 +167,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 				t.Run("other network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)
-					actual, err := other.ListSessionsByIdentity(ctx, i.ID, false, 1, 10, uuid.Nil)
+					actual, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil)
 					require.NoError(t, err)
 					assert.Len(t, actual, 0)
 				})
@@ -273,7 +292,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			require.NoError(t, err)
 			assert.Equal(t, 1, n)
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, false, 1, 10, uuid.Nil)
+			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 
@@ -286,7 +305,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				assert.False(t, actual[0].Active)
 			}
 
-			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, false, 1, 10, uuid.Nil)
+			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 
@@ -320,7 +339,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			require.NoError(t, p.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
 
-			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, false, 1, 10, uuid.Nil)
+			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil)
 			require.NoError(t, err)
 			require.Len(t, actual, 2)
 

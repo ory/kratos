@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ory/x/pointerx"
+
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -240,9 +242,8 @@ func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request,
 // swagger:parameters adminListIdentitySessions
 // nolint:deadcode,unused
 type adminListIdentitySessions struct {
-	// ActiveOnly is a boolean flag that filters out inactive sessions.
+	// ActiveOnly is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
 	//
-	// default: false
 	// required: false
 	// in: query
 	ActiveOnly bool `json:"active_only"`
@@ -277,15 +278,20 @@ func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request, p
 		return
 	}
 
-	aoRaw := r.URL.Query().Get("active_only")
-	activeOnly, err := strconv.ParseBool(aoRaw)
-	if aoRaw != "" && err != nil {
+	activeRaw := r.URL.Query().Get("active_only")
+	activeBool, err := strconv.ParseBool(activeRaw)
+	if activeRaw != "" && err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active_only"))
 		return
 	}
 
+	var active *bool
+	if activeRaw != "" {
+		active = &activeBool
+	}
+
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, activeOnly, page, perPage, uuid.Nil)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), iID, active, page, perPage, uuid.Nil)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -422,7 +428,7 @@ func (h *Handler) listOtherSessions(w http.ResponseWriter, r *http.Request, _ ht
 	}
 
 	page, perPage := x.ParsePagination(r)
-	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, true, page, perPage, s.ID)
+	sess, err := h.r.SessionPersister().ListSessionsByIdentity(r.Context(), s.IdentityID, pointerx.Bool(true), page, perPage, s.ID)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
