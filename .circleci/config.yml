@@ -121,7 +121,6 @@ jobs:
       - run:
           description: "Install hydra-login-consent"
           command: |
-            source $BASH_ENV
             cd test/e2e/hydra-login-consent
             go build .
 
