@@ -478,7 +478,7 @@ func main() {
     id := "id_example" // string | ID is the identity's ID.
     perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
     page := int64(789) // int64 | Pagination Page (optional) (default to 0)
-    activeOnly := true // bool | ActiveOnly is a boolean flag that filters out inactive sessions. (optional) (default to false)
+    activeOnly := true // bool | ActiveOnly is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -510,7 +510,7 @@ Name | Type | Description  | Notes
 
  **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
  **page** | **int64** | Pagination Page | [default to 0]
- **activeOnly** | **bool** | ActiveOnly is a boolean flag that filters out inactive sessions. | [default to false]
+ **activeOnly** | **bool** | ActiveOnly is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. | 
 
 ### Return type
 

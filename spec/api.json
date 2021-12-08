@@ -2522,11 +2522,10 @@
             }
           },
           {
-            "description": "ActiveOnly is a boolean flag that filters out inactive sessions.",
+            "description": "ActiveOnly is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.",
             "in": "query",
             "name": "active_only",
             "schema": {
-              "default": false,
               "type": "boolean"
             }
           }
