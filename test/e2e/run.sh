@@ -204,6 +204,7 @@ prepare() {
 }
 
 run() {
+  killall modd || true
   killall kratos || true
 
   export DSN=${1}
