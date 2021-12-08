@@ -163,7 +163,7 @@ jobs:
           background: true
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh --no-kill --only-setup
+            ./test/e2e/run.sh --only-setup
 
       - run:
           description: Run sqlite e2e test
