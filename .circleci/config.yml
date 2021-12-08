@@ -99,17 +99,19 @@ jobs:
       - run: npm config set prefix ~/.npm/node_modules
       - restore_cache:
           keys:
-            - v5-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
+            - v6-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
       - run: npm ci
       - run: cd test/e2e; npm ci
+      - run: cd test/e2e/proxy; npm ci
       - run: sudo npm i -g expo-cli
       - save_cache:
-          key: v5-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
+          key: v6-e2e-deps-{{ checksum "package-lock.json" }}-{{ checksum "test/e2e/package-lock.json" }}
           paths:
             - node_modules
             - ~/.cache # cypress
             - ~/.npm # global npm
             - test/e2e/node_modules # e2e npm
+            - test/e2e/proxy/node_modules # e2e npm
             - ~/.npm-global # global npm
 
       - go/load-cache
@@ -117,8 +119,16 @@ jobs:
       - go/save-cache
 
       - run:
+          description: "Install hydra-login-consent"
+          command: |
+            source $BASH_ENV
+            cd test/e2e/hydra-login-consent
+            go build .
+
+      - run:
           description: "Install selfservice-ui-node"
           command: |
+            source $BASH_ENV
             node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
             echo "export NODE_UI_PATH=$node_ui_dir" >> $BASH_ENV
 
@@ -130,6 +140,7 @@ jobs:
       - run:
           description: "Install selfservice-ui-react-native"
           command: |
+            source $BASH_ENV
             rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
             echo "export RN_UI_PATH=$rn_ui_dir" >> $BASH_ENV
 
@@ -140,21 +151,25 @@ jobs:
       - run:
           description: "Install kratos-selfservice-ui-react-nextjs"
           command: |
+            source $BASH_ENV
             react_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-nextjs"
             echo "export REACT_UI_PATH=$react_ui_dir" >> $BASH_ENV
 
             git clone https://github.com/ory/kratos-selfservice-ui-react-nextjs.git  --depth 1 --branch master "$react_ui_dir"
             cd "$react_ui_dir"
             npm i
+            ORY_KRATOS_URL=http://localhost:4433 npm run build
 
       - run:
           description: "Unset DISPLAY - see https://github.com/cypress-io/cypress/issues/4034"
           command: |
+            source $BASH_ENV
             echo "unset DISPLAY" >> $BASH_ENV
 
       - run:
           description: "Clean up .bin dir"
           command: |
+            source $BASH_ENV
             rm -rf .bin || true
             mkdir .bin
 
@@ -162,7 +177,93 @@ jobs:
           description: Set up depdenencies
           command: |
             source $BASH_ENV
-            ./test/e2e/run.sh --only-setup
+
+            rm test/e2e/proxy.json || true
+            echo '"express"' > test/e2e/proxy.json
+
+      - run:
+          description: Run React Native UI
+          background: true
+          command: |
+            source $BASH_ENV
+
+            cd "$RN_UI_PATH"
+            WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive
+
+      - run:
+          description: Run Ory Hydra
+          background: true
+          command: |
+            source $BASH_ENV
+
+            DSN=memory URLS_SELF_ISSUER=http://localhost:4444 \
+              LOG_LEVEL=trace \
+              URLS_LOGIN=http://localhost:4446/login \
+              URLS_CONSENT=http://localhost:4446/consent \
+              hydra serve all --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
+
+            (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive)
+
+            hydra clients delete \
+              --endpoint http://localhost:4445 \
+              kratos-client google-client github-client || true
+
+            hydra clients create \
+              --endpoint http://localhost:4445 \
+              --id kratos-client \
+              --secret kratos-secret \
+              --grant-types authorization_code,refresh_token \
+              --response-types code,id_token \
+              --scope openid,offline \
+              --callbacks http://localhost:4455/self-service/methods/oidc/callback/hydra
+
+            hydra clients create \
+              --endpoint http://localhost:4445 \
+              --id google-client \
+              --secret kratos-secret \
+              --grant-types authorization_code,refresh_token \
+              --response-types code,id_token \
+              --scope openid,offline \
+              --callbacks http://localhost:4455/self-service/methods/oidc/callback/google
+
+            hydra clients create \
+              --endpoint http://localhost:4445 \
+              --id github-client \
+              --secret kratos-secret \
+              --grant-types authorization_code,refresh_token \
+              --response-types code,id_token \
+              --scope openid,offline \
+              --callbacks http://localhost:4455/self-service/methods/oidc/callback/github
+
+      - run:
+          description: Run Node UI
+          background: true
+          command: |
+            source $BASH_ENV
+            cd "$NODE_UI_PATH"
+            PORT=4456 SECURITY_MODE=cookie npm run serve
+
+      - run:
+          description: Run React UI
+          background: true
+          command: |
+            source $BASH_ENV
+            cd "$REACT_UI_PATH"
+            ORY_KRATOS_URL=http://localhost:4433 npm run start -- --hostname 0.0.0.0 --port 4458
+
+      - run:
+          description: Run Reverse Proxy
+          background: true
+          command: |
+            source $BASH_ENV
+            cd test/e2e/proxy
+            PORT=4455 npm run start
+
+      - run:
+          description: Run Consent App Proxy
+          background: true
+          command: |
+            PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log"
 
       - run:
           description: Run sqlite e2e test
