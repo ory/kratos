@@ -160,7 +160,6 @@ jobs:
 
       - run:
           description: Set up depdenencies
-          background: true
           command: |
             source $BASH_ENV
             ./test/e2e/run.sh --only-setup

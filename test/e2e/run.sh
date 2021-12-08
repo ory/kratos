@@ -187,20 +187,9 @@ prepare() {
       >"${base}/test/e2e/proxy.e2e.log" 2>&1 &
   )
 
-
-  if [[ "${1}" == "block" ]]; then
-    (
-      cd test/e2e/hydra-login-consent
-      go build . &&
-        PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent
-    )
-  else
-    (
-      cd test/e2e/hydra-login-consent
-      go build . &&
-        PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
-    )
-  fi
+  cd test/e2e/hydra-login-consent
+  go build . &&
+    PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
 }
 
 run() {
@@ -318,7 +307,7 @@ cockroach)
 *)
   usage
   if [[ "${setup}" == "only" ]]; then
-    prepare "block"
+    prepare
     exit 0
   else
     exit 1
@@ -327,6 +316,6 @@ cockroach)
 esac
 
 if [[ "${setup}" == "yes" ]]; then
-  prepare "background"
+  prepare
 fi
 run "${db}"
