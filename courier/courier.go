@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -16,27 +17,41 @@ import (
 
 	gomail "github.com/ory/mail/v3"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
 
 type (
-	smtpDependencies interface {
+	SMTPConfig interface {
+		CourierSMTPURL() *url.URL
+		CourierSMTPFrom() string
+		CourierSMTPFromName() string
+		CourierSMTPHeaders() map[string]string
+		CourierTemplatesRoot() string
+	}
+	SMTPDependencies interface {
 		PersistenceProvider
 		x.LoggingProvider
-		config.Provider
+		ConfigProvider
 	}
-	Courier struct {
-		Dialer *gomail.Dialer
-		d      smtpDependencies
+	TemplateTyper            func(t EmailTemplate) (TemplateType, error)
+	EmailTemplateFromMessage func(c SMTPConfig, msg Message) (EmailTemplate, error)
+	Courier                  struct {
+		Dialer                      *gomail.Dialer
+		d                           SMTPDependencies
+		GetTemplateType             TemplateTyper
+		NewEmailTemplateFromMessage EmailTemplateFromMessage
 	}
 	Provider interface {
 		Courier(ctx context.Context) *Courier
 	}
+	ConfigProvider interface {
+		CourierConfig(ctx context.Context) SMTPConfig
+	}
 )
 
-func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
-	uri := c.CourierSMTPURL()
+func NewSMTP(ctx context.Context, d SMTPDependencies) *Courier {
+	uri := d.CourierConfig(ctx).CourierSMTPURL()
+
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
@@ -73,8 +88,10 @@ func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 	}
 
 	return &Courier{
-		d:      d,
-		Dialer: dialer,
+		d:                           d,
+		Dialer:                      dialer,
+		GetTemplateType:             GetTemplateType,
+		NewEmailTemplateFromMessage: NewEmailTemplateFromMessage,
 	}
 }
 
@@ -94,7 +111,7 @@ func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 		return uuid.Nil, err
 	}
 
-	templateType, err := GetTemplateType(t)
+	templateType, err := m.GetTemplateType(t)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -113,6 +130,7 @@ func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 		TemplateType: templateType,
 		TemplateData: templateData,
 	}
+
 	if err := m.d.CourierPersister().AddMessage(ctx, message); err != nil {
 		return uuid.Nil, err
 	}
@@ -151,8 +169,8 @@ func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {
 func (m *Courier) DispatchMessage(ctx context.Context, msg Message) error {
 	switch msg.Type {
 	case MessageTypeEmail:
-		from := m.d.Config(ctx).CourierSMTPFrom()
-		fromName := m.d.Config(ctx).CourierSMTPFromName()
+		from := m.d.CourierConfig(ctx).CourierSMTPFrom()
+		fromName := m.d.CourierConfig(ctx).CourierSMTPFromName()
 		gm := gomail.NewMessage()
 		if fromName == "" {
 			gm.SetHeader("From", from)
@@ -163,14 +181,14 @@ func (m *Courier) DispatchMessage(ctx context.Context, msg Message) error {
 		gm.SetHeader("To", msg.Recipient)
 		gm.SetHeader("Subject", msg.Subject)
 
-		headers := m.d.Config(ctx).CourierSMTPHeaders()
+		headers := m.d.CourierConfig(ctx).CourierSMTPHeaders()
 		for k, v := range headers {
 			gm.SetHeader(k, v)
 		}
 
 		gm.SetBody("text/plain", msg.Body)
 
-		tmpl, err := NewEmailTemplateFromMessage(m.d.Config(ctx), msg)
+		tmpl, err := m.NewEmailTemplateFromMessage(m.d.CourierConfig(ctx), msg)
 		if err != nil {
 			m.d.Logger().
 				WithError(err).

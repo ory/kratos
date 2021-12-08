@@ -2,13 +2,11 @@ package template
 
 import (
 	"encoding/json"
-
-	"github.com/ory/kratos/driver/config"
 )
 
 type (
 	RecoveryInvalid struct {
-		c *config.Config
+		c TemplateConfig
 		m *RecoveryInvalidModel
 	}
 	RecoveryInvalidModel struct {
@@ -16,7 +14,7 @@ type (
 	}
 )
 
-func NewRecoveryInvalid(c *config.Config, m *RecoveryInvalidModel) *RecoveryInvalid {
+func NewRecoveryInvalid(c TemplateConfig, m *RecoveryInvalidModel) *RecoveryInvalid {
 	return &RecoveryInvalid{c: c, m: m}
 }
 
