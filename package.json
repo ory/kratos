@@ -18,7 +18,7 @@
     "@types/node": "^16.9.6",
     "@types/yamljs": "^0.2.31",
     "chrome-remote-interface": "^0.31.0",
-    "cypress": "^8.5.0",
+    "cypress": "^9.1.1",
     "dayjs": "^1.10.4",
     "got": "^11.8.2",
     "ory-prettier-styles": "1.1.1",
