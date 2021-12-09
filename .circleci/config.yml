@@ -285,7 +285,12 @@ jobs:
           command: |
             source $BASH_ENV
             PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./test/e2e/hydra-login-consent/hydra-login-consent
-
+      #      Disabled because of CircleCI build time limits
+      #      - run:
+      #          description: Run sqlite e2e test
+      #          command: |
+      #            source $BASH_ENV
+      #            ./test/e2e/run.sh --no-setup --no-kill sqlite
       - run:
           description: Run postrgres e2e test
           command: |
