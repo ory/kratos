@@ -141,12 +141,13 @@ jobs:
           description: "Unset DISPLAY - see https://github.com/cypress-io/cypress/issues/4034"
           command: |
             echo "unset DISPLAY" >> $BASH_ENV
-
-      - run:
-          description: Run sqlite e2e test
-          command: |
-            source $BASH_ENV
-            ./test/e2e/run.sh sqlite
+      # Deactivated because this is the least important test run, it takes the longest, and it causes
+      # CircleCI to cancel the build due to their new policy.
+      #      - run:
+      #          description: Run sqlite e2e test
+      #          command: |
+      #            source $BASH_ENV
+      #            ./test/e2e/run.sh sqlite
       - run:
           description: Run postrgres e2e test
           command: |
