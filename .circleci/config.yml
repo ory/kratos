@@ -127,7 +127,6 @@ jobs:
       - run:
           description: "Install selfservice-ui-node"
           command: |
-            source $BASH_ENV
             node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
             echo "export NODE_UI_PATH=$node_ui_dir" >> $BASH_ENV
 
@@ -139,7 +138,6 @@ jobs:
       - run:
           description: "Install selfservice-ui-react-native"
           command: |
-            source $BASH_ENV
             rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
             echo "export RN_UI_PATH=$rn_ui_dir" >> $BASH_ENV
 
