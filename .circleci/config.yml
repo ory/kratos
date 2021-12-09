@@ -125,15 +125,15 @@ jobs:
             make .bin/yq
             make .bin/modd
 
-            export PATH=.bin:$PATH >> $BASH_ENV
-            export KRATOS_PUBLIC_URL=http://localhost:4433/ >> $BASH_ENV
-            export KRATOS_BROWSER_URL=http://localhost:4433/ >> $BASH_ENV
-            export KRATOS_ADMIN_URL=http://localhost:4434/ >> $BASH_ENV
-            export KRATOS_UI_URL=http://127.0.0.1:4456/ >> $BASH_ENV
-            export KRATOS_UI_REACT_URL=http://127.0.0.1:4458/ >> $BASH_ENV
-            export KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/ >> $BASH_ENV
-            export LOG_LEAK_SENSITIVE_VALUES=true >> $BASH_ENV
-            export DEV_DISABLE_API_FLOW_ENFORCEMENT=true >> $BASH_ENV
+            export "PATH=.bin:$PATH" >> $BASH_ENV
+            export "KRATOS_PUBLIC_URL=http://localhost:4433/" >> $BASH_ENV
+            export "KRATOS_BROWSER_URL=http://localhost:4433/" >> $BASH_ENV
+            export "KRATOS_ADMIN_URL=http://localhost:4434/" >> $BASH_ENV
+            export "KRATOS_UI_URL=http://127.0.0.1:4456/" >> $BASH_ENV
+            export "KRATOS_UI_REACT_URL=http://127.0.0.1:4458/" >> $BASH_ENV
+            export "KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/" >> $BASH_ENV
+            export "LOG_LEAK_SENSITIVE_VALUES=true" >> $BASH_ENV
+            export "DEV_DISABLE_API_FLOW_ENFORCEMENT=true" >> $BASH_ENV
 
       - run:
           description: "Install hydra-login-consent"
