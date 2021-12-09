@@ -119,6 +119,23 @@ jobs:
       - go/save-cache
 
       - run:
+          description: "Prepare tests"
+          command: |
+            make .bin/hydra
+            make .bin/yq
+            make .bin/modd
+
+            export PATH=.bin:$PATH >> $BASH_ENV
+            export KRATOS_PUBLIC_URL=http://localhost:4433/ >> $BASH_ENV
+            export KRATOS_BROWSER_URL=http://localhost:4433/ >> $BASH_ENV
+            export KRATOS_ADMIN_URL=http://localhost:4434/ >> $BASH_ENV
+            export KRATOS_UI_URL=http://127.0.0.1:4456/ >> $BASH_ENV
+            export KRATOS_UI_REACT_URL=http://127.0.0.1:4458/ >> $BASH_ENV
+            export KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/ >> $BASH_ENV
+            export LOG_LEAK_SENSITIVE_VALUES=true >> $BASH_ENV
+            export DEV_DISABLE_API_FLOW_ENFORCEMENT=true >> $BASH_ENV
+
+      - run:
           description: "Install hydra-login-consent"
           command: |
             cd test/e2e/hydra-login-consent
@@ -188,6 +205,17 @@ jobs:
             WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive
 
       - run:
+          description: Start Ory Hydra
+          background: true
+          command: |
+            source $BASH_ENV
+
+            DSN=memory URLS_SELF_ISSUER=http://localhost:4444 \
+              LOG_LEVEL=trace \
+              URLS_LOGIN=http://localhost:4446/login \
+              URLS_CONSENT=http://localhost:4446/consent \
+              hydra serve all --dangerous-force-http
+      - run:
           description: Run Ory Hydra
           background: true
           command: |
@@ -197,7 +225,7 @@ jobs:
               LOG_LEVEL=trace \
               URLS_LOGIN=http://localhost:4446/login \
               URLS_CONSENT=http://localhost:4446/consent \
-              hydra serve all --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" 2>&1 &
+              hydra serve all --dangerous-force-http >"${base}/test/e2e/hydra.e2e.log" &
 
             (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive)
 
