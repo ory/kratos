@@ -139,7 +139,7 @@ jobs:
           description: "Install hydra-login-consent"
           command: |
             cd test/e2e/hydra-login-consent
-            go build .
+            go build -o hydra-login-consent .
 
       - run:
           description: "Install selfservice-ui-node"
@@ -275,7 +275,7 @@ jobs:
           description: Run Consent App Proxy
           background: true
           command: |
-            PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./test/e2e/hydra-login-consent
+            PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./test/e2e/hydra-login-consent/hydra-login-consent
 
       - run:
           description: Run sqlite e2e test
