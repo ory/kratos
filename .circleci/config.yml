@@ -214,7 +214,7 @@ jobs:
               LOG_LEVEL=trace \
               URLS_LOGIN=http://localhost:4446/login \
               URLS_CONSENT=http://localhost:4446/consent \
-              hydra serve all --dangerous-force-http
+              .bin/hydra serve all --dangerous-force-http
       - run:
           description: Run Ory Hydra
           background: true
@@ -223,11 +223,11 @@ jobs:
 
             (cd test/e2e; npm run wait-on -- -l -t 300000 http-get://127.0.0.1:4445/health/alive)
 
-            hydra clients delete \
+            .bin/hydra clients delete \
               --endpoint http://localhost:4445 \
               kratos-client google-client github-client || true
 
-            hydra clients create \
+            .bin/hydra clients create \
               --endpoint http://localhost:4445 \
               --id kratos-client \
               --secret kratos-secret \
@@ -236,7 +236,7 @@ jobs:
               --scope openid,offline \
               --callbacks http://localhost:4455/self-service/methods/oidc/callback/hydra
 
-            hydra clients create \
+            .bin/hydra clients create \
               --endpoint http://localhost:4445 \
               --id google-client \
               --secret kratos-secret \
@@ -245,7 +245,7 @@ jobs:
               --scope openid,offline \
               --callbacks http://localhost:4455/self-service/methods/oidc/callback/google
 
-            hydra clients create \
+            .bin/hydra clients create \
               --endpoint http://localhost:4445 \
               --id github-client \
               --secret kratos-secret \
