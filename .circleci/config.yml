@@ -81,6 +81,14 @@ jobs:
           TEST_DATABASE_MYSQL: mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true
           TEST_DATABASE_COCKROACHDB: cockroach://root@localhost:26257/defaultdb?sslmode=disable
           TEST_DATABASE_POSTGRESQL: postgres://test:test@localhost:5432/kratos?sslmode=disable
+          KRATOS_PUBLIC_URL: http://localhost:4433/
+          KRATOS_BROWSER_URL: http://localhost:4433/
+          KRATOS_ADMIN_URL: http://localhost:4434/
+          KRATOS_UI_URL: http://127.0.0.1:4456/
+          KRATOS_UI_REACT_URL: http://127.0.0.1:4458/
+          KRATOS_UI_REACT_NATIVE_URL: http://127.0.0.1:4457/
+          LOG_LEAK_SENSITIVE_VALUES: true
+          DEV_DISABLE_API_FLOW_ENFORCEMENT: true
       - image: postgres:9.6
         environment:
           POSTGRES_USER: test
@@ -275,6 +283,7 @@ jobs:
           description: Run Consent App Proxy
           background: true
           command: |
+            source $BASH_ENV
             PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./test/e2e/hydra-login-consent/hydra-login-consent
 
       - run:
