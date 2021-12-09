@@ -181,13 +181,6 @@ jobs:
             echo "unset DISPLAY" >> $BASH_ENV
 
       - run:
-          description: "Clean up .bin dir"
-          command: |
-            source $BASH_ENV
-            rm -rf .bin || true
-            mkdir .bin
-
-      - run:
           description: Set up depdenencies
           command: |
             source $BASH_ENV
