@@ -4,7 +4,7 @@ set -euxo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
-make .bin/hydra
+# make .bin/hydra
 make .bin/yq
 make .bin/modd
 
@@ -187,9 +187,11 @@ prepare() {
       >"${base}/test/e2e/proxy.e2e.log" 2>&1 &
   )
 
-  cd test/e2e/hydra-login-consent
-  go build . &&
-    PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
+  (
+    cd test/e2e/hydra-login-consent
+    go build . &&
+      PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
+  )
 }
 
 run() {
@@ -201,8 +203,9 @@ run() {
   ! nc -zv localhost 4434
   ! nc -zv localhost 4433
 
+  ls -la .
   for profile in email mobile oidc recovery verification mfa spa; do
-    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" >test/e2e/kratos.${profile}.yml
+    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
 
