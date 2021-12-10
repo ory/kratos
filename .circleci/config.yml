@@ -298,7 +298,8 @@ workflows:
       - goreleaser/release:
           requires:
             - test
-            - test-e2e
+            - test-e2e-1
+            - test-e2e-2
           filters:
             branches:
               ignore: /.*/
