@@ -29,10 +29,12 @@ $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
 .bin/clidoc:
+		echo "deprecated usage, use docs/cli instead"
 		go build -o .bin/clidoc ./cmd/clidoc/.
 
-docs/cli: .bin/clidoc
-		clidoc .
+.PHONY: docs/cli
+docs/cli:
+		go run ./cmd/clidoc/. .
 
 .bin/ory: Makefile
 		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.0
@@ -133,7 +135,7 @@ format: .bin/goimports docs/node_modules node_modules
 # Build local docker image
 .PHONY: docker
 docker:
-		docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .
+		DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest-sqlite .
 
 # Runs the documentation tests
 .PHONY: test-docs

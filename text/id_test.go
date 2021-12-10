@@ -23,7 +23,8 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 1060001, int(InfoSelfServiceRecoverySuccessful))
 	assert.Equal(t, 1060002, int(InfoSelfServiceRecoveryEmailSent))
 
-	assert.Equal(t, 1070000, int(InfoSelfServiceVerification))
+	assert.Equal(t, 1070000, int(InfoNodeLabel))
+	assert.Equal(t, 1080000, int(InfoSelfServiceVerification))
 
 	assert.Equal(t, 4000000, int(ErrorValidation))
 	assert.Equal(t, 4000001, int(ErrorValidationGeneric))

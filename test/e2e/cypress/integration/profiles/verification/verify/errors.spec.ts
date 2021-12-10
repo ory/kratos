@@ -54,7 +54,7 @@ context('Account Verification Error', () => {
         cy.get('input[name="email"]').type(identity.email)
         cy.get('button[value="link"]').click()
 
-        cy.get('[data-testid="ui/message/1070001"]').should(
+        cy.get('[data-testid="ui/message/1080001"]').should(
           'contain.text',
           'An email containing a verification'
         )
@@ -66,7 +66,7 @@ context('Account Verification Error', () => {
         cy.get('input[name="email"]').type(identity.email)
         cy.get('button[value="link"]').click()
 
-        cy.get('[data-testid="ui/message/1070001"]').should(
+        cy.get('[data-testid="ui/message/1080001"]').should(
           'contain.text',
           'An email containing a verification'
         )
