@@ -21,18 +21,23 @@ after:
     - cmd: |
         node "./docs/scripts/docker-tag.js" "docs/config.js" "{{.Tag}}"
     - cmd: |
-        node "./docs/scripts/rerelease.js" "v{{ .Major }}{{ .Minor }}"
+        node "./docs/scripts/rerelease.js" "v{{ .Major }}.{{ .Minor }}"
     - cmd: |
-        rm -rf "./docs/versioned_docs/version-v{{ .Major }}{{ .Minor }}"
+        rm -rf "./docs/versioned_docs/version-v{{ .Major }}.{{ .Minor }}"
     - cmd: |
-        rm -rf "./docs/versioned_sidebars/version-v{{ .Major }}{{ .Minor }}-sidebars.json"
+        rm -rf "./docs/versioned_sidebars/version-v{{ .Major }}.{{ .Minor }}-sidebars.json"
     - cmd: |
-        npm run docusaurus docs:version "v{{ .Major }}{{ .Minor }}"
+        npm run docusaurus docs:version "v{{ .Major }}.{{ .Minor }}"
       dir: docs
     - cmd: |
         npm run format
       dir: docs
     - cmd: |
+        if [[ $(git describe --tags) == *"pre"* ]]; then
+          echo "This is a pre-release, skipping docs publishing."
+          exit 0
+        fi
+
         bash <(curl -s https://raw.githubusercontent.com/ory/ci/master/src/scripts/install/git.sh)
         git add -A
         git stash || true
