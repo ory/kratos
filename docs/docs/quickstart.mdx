@@ -14,7 +14,6 @@ Please be aware that this guide is not a replacement for studying the docs. You
 must understand core concepts and APIs to use Ory Kratos productively. This is
 merely a guide to get you set up with some examples.
 
-
 <iframe
   width="560"
   height="315"
@@ -36,10 +35,9 @@ need for that. You will also learn about the network set up we picked for this
 guide.
 
 This quickstart guide operates on the assumption that we are writing a NodeJS
-app. This app is using nothing fancy - some ExpressJS and a
-bit of HTML Templating using Handlebars. We do want to use TypeScript, but only
-because it's more readable - not because we're doing anything out of the
-ordinary!
+app. This app is using nothing fancy - some ExpressJS and a bit of HTML
+Templating using Handlebars. We do want to use TypeScript, but only because it's
+more readable - not because we're doing anything out of the ordinary!
 
 You could pick any technology here, of course. This works with Swift, ReactJS,
 or Angular (client side) as well as with PHP, Ruby, Python, Java (server side) -
@@ -47,8 +45,8 @@ you name it! We picked NodeJS + TypeScript because we believe it is the easiest
 to understand, and because JavaScript and NodeJS are universally understood and
 easy to install.
 
-We know our app will need to have some type of dashboard and that it
-needs users. Therefore, we need:
+We know our app will need to have some type of dashboard and that it needs
+users. Therefore, we need:
 
 - Login
 - Logout
@@ -87,9 +85,9 @@ and more so you don't have to.
 
 :::
 
-The NodeJS app and Ory Kratos need to share cookies in order for anti-CSRF tokens
-and login sessions to work. Because the quickstart runs on different ports on
-`127.0.0.1` there is nothing we need to do to get this all working. In
+The NodeJS app and Ory Kratos need to share cookies in order for anti-CSRF
+tokens and login sessions to work. Because the quickstart runs on different
+ports on `127.0.0.1` there is nothing we need to do to get this all working. In
 environments where you have multiple sub-domains or reverse proxies, the set up
 will be a bit more sophisticated. You can find more information about the
 different set up possibilities in the
@@ -161,10 +159,9 @@ There are two important factors to get a fully functional system:
 
 :::
 
-There is no database being used in this example. Ory Kratos
-supports SQLite, PostgreSQL, MySQL, and CockroachDB as database backends. For
-the quickstart, we're mounting a persistent volume to store the SQLite database
-in.
+There is no database being used in this example. Ory Kratos supports SQLite,
+PostgreSQL, MySQL, and CockroachDB as database backends. For the quickstart,
+we're mounting a persistent volume to store the SQLite database in.
 
 Future guides will explain how to set up a production system.
 
@@ -222,17 +219,21 @@ You should end up at the dashboard:
 
 ![Dashboard screen of your secured app](images/quickstart/ui-unverified-dashboard.png)
 
-Under the section `Session Information` you can find the Ory Session details, as there is no active session this is empty for now.  
+Under the section `Session Information` you can find the Ory Session details, as
+there is no active session this is empty for now.
 
 :::note
 
-The rendered login form should be a standard HTML `<form>`. AJAX requests require `credentials: 'include'`.
-This flow also works with Single Page Apps (SPA) and frameworks like Angular or
-ReactJS. For more details about the specific flows for SPAs head over to the [concept](concepts/index.md) chapter.
+The rendered login form should be a standard HTML `<form>`. AJAX requests
+require `credentials: 'include'`. This flow also works with Single Page Apps
+(SPA) and frameworks like Angular or ReactJS. For more details about the
+specific flows for SPAs head over to the [concept](concepts/index.md) chapter.
 
 :::
 
-Click `Sign In` to start a login flow. On the Sign In Screen you can see the unique login  `<flow_id>` e.g. `?flow=78e374d2-f36b-40ae-922d-e81f812ea897` appended to the /login route in the URL.
+Click `Sign In` to start a login flow. On the Sign In Screen you can see the
+unique login `<flow_id>` e.g. `?flow=78e374d2-f36b-40ae-922d-e81f812ea897`
+appended to the /login route in the URL.
 
 Looking at the network stack, you can see two redirects happening:
 
@@ -257,7 +258,8 @@ Here's a play-by-play of what happened:
    form.
 
 We can use `curl` to get an example of the payload that Ory Kratos responds
-with. `GET` a valid `<flow_id>` or copy it from your browser and make a request to `/self-service/login/`:
+with. `GET` a valid `<flow_id>` or copy it from your browser and make a request
+to `/self-service/login/`:
 
 ```shell-session
 $ flowId=$(curl -s -X GET \
@@ -590,6 +592,7 @@ response):
   }
 }
 ```
+
 To re-request the verification email, fill out the form at
 [127.0.0.1:4455/verification](http://127.0.0.1:4455/verification).
 
