@@ -17,4 +17,7 @@ project_name: kratos
 after:
   hooks:
     - cmd: |
-        TAG_VERSION="{{ .Tag }}" DOCS_VERSION="{{ .Major }}.{{ .Minor }}" bash <(curl -s https://raw.githubusercontent.com/ory/xgoreleaser/master/docs.sh)
+        bash <(curl -s https://raw.githubusercontent.com/ory/xgoreleaser/master/docs.sh)
+      env:
+        TAG_VERSION: "{{ .Tag }}"
+        DOCS_VERSION: "{{ .Major }}.{{ .Minor }}"
