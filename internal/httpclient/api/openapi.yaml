@@ -11,6 +11,7 @@ info:
   license:
     name: Apache 2.0
   title: Ory Kratos API
+  version: v0.8.1-alpha.2.pre.0
 servers:
 - url: /
 paths:
