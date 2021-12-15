@@ -295,7 +295,7 @@ New feature or request.
 - [ ] Admin/Selfservice session management
       ([kratos#655](https://github.com/ory/kratos/issues/655)) -
       [@Patrik](https://github.com/zepatrik)
-- [ ] Write new recovery and verification strategy that does not rely on links
+- [ ] Replace magic links with TOTP OOB codes
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [ ] Delete self-service flows after completion
       ([kratos#952](https://github.com/ory/kratos/issues/952)) -
