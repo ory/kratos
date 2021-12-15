@@ -295,7 +295,7 @@ New feature or request.
 - [ ] Admin/Selfservice session management
       ([kratos#655](https://github.com/ory/kratos/issues/655)) -
       [@Patrik](https://github.com/zepatrik)
-- [ ] Write new recovery and verification strategy that does not rely on links
+- [ ] Replace magic links with TOTP OOB codes
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [ ] Delete self-service flows after completion
       ([kratos#952](https://github.com/ory/kratos/issues/952)) -
@@ -336,6 +336,9 @@ Something is not working.
 
 - [ ] Resumable session is not cleared up on error
       ([kratos#2016](https://github.com/ory/kratos/issues/2016)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Recovery link answers with JSON payload for API flows
+      ([kratos#2049](https://github.com/ory/kratos/issues/2049)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))

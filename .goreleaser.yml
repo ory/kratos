@@ -16,19 +16,7 @@ project_name: kratos
 
 after:
   hooks:
-    - cmd: npm i
-      dir: docs
-    - cmd: |
-        node "./docs/scripts/docker-tag.js" "docs/config.js" "{{.Tag}}"
-    - cmd: |
-        node "./docs/scripts/rerelease.js" "v{{ .Major }}{{ .Minor }}"
-    - cmd: |
-        rm -rf "./docs/versioned_docs/version-v{{ .Major }}{{ .Minor }}"
-    - cmd: |
-        rm -rf "./docs/versioned_sidebars/version-v{{ .Major }}{{ .Minor }}-sidebars.json"
-    - cmd: |
-        npm run docusaurus docs:version "v{{ .Major }}{{ .Minor }}"
-      dir: docs
-    - cmd: |
-        npm run format
-      dir: docs
+  - cmd: "bash <(curl -s https://raw.githubusercontent.com/ory/xgoreleaser/master/docs.sh)"
+    env:
+      TAG_VERSION: "{{ .Tag }}"
+      DOCS_VERSION: "{{ .Major }}.{{ .Minor }}"
