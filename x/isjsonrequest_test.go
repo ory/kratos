@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/golang/gddo/httputil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,12 +25,8 @@ func TestIsBrowserOrAPIRequest(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d/ua=%s", k, tc.ua), func(t *testing.T) {
 			r := &http.Request{Header: map[string][]string{"Accept": {tc.h}}}
-			t.Logf("isBrowser: %s", httputil.NegotiateContentType(r, offers, defaultOffer))
-
-			t.Logf("isJSON: %s", httputil.NegotiateContentType(r,
-				[]string{"application/json"},
-				"text/html",
-			))
+			t.Logf("isBrowser: %t", IsBrowserRequest(r))
+			t.Logf("isJSON: %t", IsJSONRequest(r))
 
 			assert.Equal(t, tc.e, IsBrowserRequest(r))
 			assert.Equal(t, !tc.e, IsJSONRequest(r))

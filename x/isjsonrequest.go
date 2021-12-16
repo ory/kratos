@@ -2,18 +2,16 @@ package x
 
 import (
 	"net/http"
-
-	"github.com/golang/gddo/httputil"
 )
 
-var offers = []string{"text/html", "text/*", "*/*", "application/json"}
-var defaultOffer = "text/html"
-
 func IsJSONRequest(r *http.Request) bool {
-	return httputil.NegotiateContentType(r, offers, defaultOffer) == "application/json" ||
+	return AcceptsJSON(r) ||
 		r.Header.Get("Content-Type") == "application/json"
 }
 
 func IsBrowserRequest(r *http.Request) bool {
-	return httputil.NegotiateContentType(r, offers, defaultOffer) == "text/html"
+	return AcceptsContentType(r, "text/html") ||
+		AcceptsContentType(r, "text/*") ||
+		AcceptsContentType(r, "*/*") ||
+		!AcceptsJSON(r)
 }

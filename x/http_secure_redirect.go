@@ -7,7 +7,6 @@ import (
 
 	"github.com/ory/kratos/text"
 
-	"github.com/golang/gddo/httputil"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -120,15 +119,14 @@ func SecureContentNegotiationRedirection(
 	requestURL string, writer herodot.Writer, c *config.Config,
 	opts ...SecureRedirectOption,
 ) error {
-	switch httputil.NegotiateContentType(r, []string{
-		"text/html",
-		"application/json",
-	}, "text/html") {
-	case "application/json":
+	if AcceptsJSON(r) {
+		if err, ok := out.(error); ok {
+			writer.WriteError(w, r, err)
+			return err
+		}
+
 		writer.Write(w, r, out)
-	case "text/html":
-		fallthrough
-	default:
+	} else {
 		ret, err := SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(),
 			append([]SecureRedirectOption{
 				SecureRedirectUseSourceURL(requestURL),
@@ -146,18 +144,18 @@ func SecureContentNegotiationRedirection(
 	return nil
 }
 
+
 func ContentNegotiationRedirection(
-	w http.ResponseWriter, r *http.Request, out interface{}, writer herodot.Writer, returnTo string,
+	w http.ResponseWriter, r *http.Request, out interface{}, writer herodot.Writer, redirectTo string,
 ) {
-	switch httputil.NegotiateContentType(r, []string{
-		"text/html",
-		"application/json",
-	}, "text/html") {
-	case "application/json":
+	if AcceptsJSON(r) {
+		if err, ok := out.(error); ok {
+			writer.WriteError(w, r, err)
+			return
+		}
+
 		writer.Write(w, r, out)
-	case "text/html":
-		fallthrough
-	default:
-		http.Redirect(w, r, returnTo, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 	}
 }

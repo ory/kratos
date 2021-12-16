@@ -3,14 +3,12 @@ package x
 import (
 	"io"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"testing"
-
-	"github.com/golang/gddo/httputil"
-
-	"github.com/ory/herodot"
 
 	"github.com/stretchr/testify/require"
 
@@ -104,30 +102,19 @@ func (ct *TransportWithHost) RoundTrip(req *http.Request) (*http.Response, error
 	return ct.RoundTripper.RoundTrip(req)
 }
 
-func AcceptToRedirectOrJSON(
-	w http.ResponseWriter, r *http.Request, writer herodot.Writer, out interface{}, redirectTo string,
-) {
-	switch httputil.NegotiateContentType(r, []string{
-		"text/html",
-		"application/json",
-	}, "text/html") {
-	case "application/json":
-		if err, ok := out.(error); ok {
-			writer.WriteError(w, r, err)
-			return
+func AcceptsContentType(r *http.Request, mimetype string) bool {
+	for _, q := range strings.Split(r.Header.Get("Accept"), ",") {
+		t, _, err := mime.ParseMediaType(q)
+		if err != nil {
+			continue
 		}
-
-		writer.Write(w, r, out)
-	case "text/html":
-		fallthrough
-	default:
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		if t == mimetype {
+			return true
+		}
 	}
+	return false
 }
 
 func AcceptsJSON(r *http.Request) bool {
-	return httputil.NegotiateContentType(r, []string{
-		"text/html",
-		"application/json",
-	}, "text/html") == "application/json"
+	return AcceptsContentType(r, "application/json")
 }

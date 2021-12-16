@@ -334,14 +334,14 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 			return
 		}
 
-		x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+		x.ContentNegotiationRedirection(w, r, err, h.d.Writer(), returnTo.String())
 		return
 	} else if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	x.AcceptToRedirectOrJSON(w, r, h.d.Writer(), a, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
+	x.ContentNegotiationRedirection(w, r, a, h.d.Writer(), a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String())
 }
 
 // nolint:deadcode,unused
