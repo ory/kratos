@@ -1,7 +1,7 @@
 version: '3.7'
 
 services:
-  kratos-selfservice-ui-node:
+  kratos-selfservice-ui-node:v0.8.0-alpha.3
     ports:
       - "4455:4455"
     environment:
