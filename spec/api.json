@@ -1928,7 +1928,7 @@
       "name": "Apache 2.0"
     },
     "title": "Ory Kratos API",
-    "version": "v0.8.0-alpha.2.pre.5"
+    "version": ""
   },
   "openapi": "3.0.3",
   "paths": {
