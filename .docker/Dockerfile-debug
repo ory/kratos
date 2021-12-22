@@ -1,4 +1,4 @@
-FROM golang:1.16-buster
+FROM golang:1.17.3-buster
 ENV CGO_ENABLED 1
 
 RUN apt-get update && apt-get install -y --no-install-recommends inotify-tools psmisc

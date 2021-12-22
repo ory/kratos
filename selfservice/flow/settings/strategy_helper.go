@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
@@ -70,7 +69,7 @@ func PrepareUpdate(d interface {
 		}
 		d.Logger().
 			WithField("package", pkgName).
-			WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
+			WithField("stack_trace", string(debug.Stack())).
 			WithField("expected_request_id", payload.GetFlowID()).
 			WithField("actual_request_id", f.ID).
 			Debug("Flow ID from continuity manager does not match Flow ID from request.")

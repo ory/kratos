@@ -1,12 +1,14 @@
 package schema
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/urlx"
@@ -193,6 +195,12 @@ func ReadSchema(schema *Schema) (src io.ReadCloser, err error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+	} else if schema.URL.Scheme == "base64" {
+		data, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(schema.RawURL, "base64://"))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		src = io.NopCloser(strings.NewReader(string(data)))
 	} else {
 		resp, err := http.Get(schema.URL.String())
 		if err != nil {

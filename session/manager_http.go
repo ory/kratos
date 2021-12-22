@@ -132,19 +132,19 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
 	token := s.extractToken(r)
 	if token == "" {
-		return nil, errors.WithStack(ErrNoActiveSessionFound)
+		return nil, errors.WithStack(NewErrNoActiveSessionFound())
 	}
 
 	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
-			return nil, errors.WithStack(ErrNoActiveSessionFound)
+			return nil, errors.WithStack(NewErrNoActiveSessionFound())
 		}
 		return nil, err
 	}
 
 	if !se.IsActive() {
-		return nil, errors.WithStack(ErrNoActiveSessionFound)
+		return nil, errors.WithStack(NewErrNoActiveSessionFound())
 	}
 
 	se.Identity = se.Identity.CopyWithoutCredentials()

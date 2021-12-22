@@ -269,7 +269,7 @@ To complete the process, the Ory Session must be
 [privileged](../concepts/session.mdx#privileged-session). Once set up, the
 end-user can unlink the TOTP device if e.g. it is lost:
 
-![Google Authenticator App](../images/totp/1.png)
+![Google Authenticator App](../images/totp/2.png)
 
 ### Writing E2E Tests for TOTP
 
@@ -333,12 +333,6 @@ cryptography instead of a password. Common use cases for WebAuthn are
 - using an Operating System "platform module" (e.g. TouchID, FaceID, Windows
   Hello Face, Android Biometric Authentication, ...)
 
-:::info
-
-WebAuthN is a Browser standard. It does not work on native mobile apps!
-
-:::
-
 Configuring WebAuthn correctly is imperative, because the authentication will
 fail if something is not configured correctly.
 
@@ -365,15 +359,6 @@ WebAuthn prompt:
 
 ![WebAuthn Prompt](../images/webauthn/1.png)
 
-:::info
-
-Please be aware that implementing WebAuthN in your own UI can be challenging,
-depending on which framework to use. Please check our
-[reference implementations](./custom-ui.mdx) to see how we solved it for
-different app types (web, single page app).
-
-:::
-
 ### Writing E2E Tests
 
 You will need a browser to run E2E tests using WebAuthn. Take a look at our
@@ -381,6 +366,24 @@ You will need a browser to run E2E tests using WebAuthn. Take a look at our
 for [Cypress](https://www.cypress.io). You can find more information about the
 approach for Cypress in
 [cypress#6991](https://github.com/cypress-io/cypress/issues/6991#issuecomment-612888645).
+
+### WebAuthN Constraints
+
+There are some limitations to WebAuthN to be considered in development:
+
+- WebAuthN is a Browser standard. It does not work on native mobile apps.
+
+- WebAuthN is limited to one domain and does not work in a local environment
+  when using CNAME / Ory Proxy.  
+  WebAuthN uses an `https://origin` URL as part of the client<->server
+  challenge/response mechanism. This mechanism allows for only one URL as the
+  origin. Read more in the [WebAuthN guide](https://webauthn.guide/) and on
+  [GitHub](https://github.com/w3c/webauthn/issues/1372).
+
+- Implementing WebAuthN in your own UI can be challenging, depending on which
+  framework to use. Please check our
+  [reference implementations](./custom-ui.mdx) to see how we solved it for
+  different app types (web, single page app).
 
 ## Build Your Own UI
 

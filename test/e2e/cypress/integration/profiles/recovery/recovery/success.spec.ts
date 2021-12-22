@@ -68,4 +68,34 @@ context('Account Recovery Success', () => {
       })
     })
   })
+
+  it('should recover, set password and be redirected', () => {
+    const app = 'express' as 'express'
+
+    cy.deleteMail()
+    cy.useConfigProfile('recovery')
+    cy.proxy(app)
+
+    cy.deleteMail()
+    cy.longRecoveryLifespan()
+    cy.longLinkLifespan()
+    cy.disableVerification()
+    cy.enableRecovery()
+
+    const identity = gen.identityWithWebsite()
+    cy.registerApi(identity)
+
+    cy.recoverApi({ email: identity.email, returnTo: 'https://www.ory.sh/' })
+
+    cy.recoverEmail({ expect: identity })
+
+    cy.getSession()
+    cy.location('pathname').should('eq', '/settings')
+
+    cy.get(appPrefix(app) + 'input[name="password"]')
+      .clear()
+      .type(gen.password())
+    cy.get('button[value="password"]').click()
+    cy.url().should('eq', 'https://www.ory.sh/')
+  })
 })

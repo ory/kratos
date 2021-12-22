@@ -1,0 +1,1 @@
+UPDATE "identity_recovery_tokens" SET "identity_recovery_address_id" = "_identity_recovery_address_id_tmp";

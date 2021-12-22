@@ -25,6 +25,7 @@ import (
 
 	"github.com/ory/herodot"
 
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
@@ -96,6 +97,19 @@ func TestHandleError(t *testing.T) {
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, flowError, sse)
+	})
+
+	t.Run("case=relative error", func(t *testing.T) {
+		t.Cleanup(reset)
+		reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceErrorUI, "/login-ts")
+		flowError = herodot.ErrInternalServerError.WithReason("system error")
+		ct = node.PasswordGroup
+		assert.Regexp(
+			t,
+			"^/login-ts.*$",
+			testhelpers.GetSelfServiceRedirectLocation(t, ts.URL+"/error"),
+		)
+
 	})
 
 	t.Run("case=error with nil flow detects application/json", func(t *testing.T) {

@@ -2,4 +2,3 @@ project: kratos
 
 pre_release_hooks:
   - make sdk
-

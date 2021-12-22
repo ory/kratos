@@ -900,7 +900,7 @@
             "type": "string"
           },
           "method": {
-            "enum": ["link_recovery", "password", "totp", "oidc"],
+            "enum": ["link_recovery", "password", "totp", "oidc", "webauthn"],
             "title": "The method used",
             "type": "string"
           }
@@ -1758,7 +1758,7 @@
       "name": "Apache 2.0"
     },
     "title": "Ory Kratos API",
-    "version": "v0.8.0-alpha.2"
+    "version": ""
   },
   "openapi": "3.0.3",
   "paths": {

@@ -2,13 +2,11 @@ package template
 
 import (
 	"encoding/json"
-
-	"github.com/ory/kratos/driver/config"
 )
 
 type (
 	RecoveryInvalid struct {
-		c *config.Config
+		c TemplateConfig
 		m *RecoveryInvalidModel
 	}
 	RecoveryInvalidModel struct {
@@ -16,7 +14,7 @@ type (
 	}
 )
 
-func NewRecoveryInvalid(c *config.Config, m *RecoveryInvalidModel) *RecoveryInvalid {
+func NewRecoveryInvalid(c TemplateConfig, m *RecoveryInvalidModel) *RecoveryInvalid {
 	return &RecoveryInvalid{c: c, m: m}
 }
 
@@ -25,15 +23,15 @@ func (t *RecoveryInvalid) EmailRecipient() (string, error) {
 }
 
 func (t *RecoveryInvalid) EmailSubject() (string, error) {
-	return loadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.subject.gotmpl", t.m)
+	return loadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.subject.gotmpl", "recovery/invalid/email.subject*", t.m)
 }
 
 func (t *RecoveryInvalid) EmailBody() (string, error) {
-	return loadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.body.gotmpl", t.m)
+	return loadHTMLTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.body.gotmpl", "recovery/invalid/email.body*", t.m)
 }
 
 func (t *RecoveryInvalid) EmailBodyPlaintext() (string, error) {
-	return loadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.body.plaintext.gotmpl", t.m)
+	return loadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.body.plaintext.gotmpl", "recovery/invalid/email.body.plaintext*", t.m)
 }
 
 func (t *RecoveryInvalid) MarshalJSON() ([]byte, error) {

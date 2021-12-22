@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/publicsuffix"
+
 	"github.com/duo-labs/webauthn/protocol"
 
 	"github.com/duo-labs/webauthn/webauthn"
@@ -64,6 +66,7 @@ const (
 	ViperKeySecretsDefault                                   = "secrets.default"
 	ViperKeySecretsCookie                                    = "secrets.cookie"
 	ViperKeySecretsCipher                                    = "secrets.cipher"
+	ViperKeyDisablePublicHealthRequestLog                    = "serve.public.request_log.disable_for_health"
 	ViperKeyPublicBaseURL                                    = "serve.public.base_url"
 	ViperKeyPublicDomainAliases                              = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                       = "serve.public.port"
@@ -75,6 +78,7 @@ const (
 	ViperKeyPublicTLSKeyBase64                               = "serve.public.tls.key.base64"
 	ViperKeyPublicTLSCertPath                                = "serve.public.tls.cert.path"
 	ViperKeyPublicTLSKeyPath                                 = "serve.public.tls.key.path"
+	ViperKeyDisableAdminHealthRequestLog                     = "serve.admin.request_log.disable_for_health"
 	ViperKeyAdminBaseURL                                     = "serve.admin.base_url"
 	ViperKeyAdminPort                                        = "serve.admin.port"
 	ViperKeyAdminHost                                        = "serve.admin.host"
@@ -654,7 +658,7 @@ func (p *Config) SecretsCipher() [][32]byte {
 }
 
 func (p *Config) SelfServiceBrowserDefaultReturnTo() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceBrowserDefaultReturnTo)
 }
 
 func (p *Config) guessBaseURL(keyHost, keyPort string, defaultPort int) *url.URL {
@@ -695,6 +699,10 @@ func (p *Config) baseURL(keyURL, keyHost, keyPort string, defaultPort int) *url.
 
 	p.l.Warnf("Configuration key %s was left empty. Optimistically guessing the server's base URL. Please set a value to avoid problems with redirects and cookies.", keyURL)
 	return p.guessBaseURL(keyHost, keyPort, defaultPort)
+}
+
+func (p *Config) DisablePublicHealthRequestLog() bool {
+	return p.p.Bool(ViperKeyDisablePublicHealthRequestLog)
 }
 
 type DomainAlias struct {
@@ -749,6 +757,10 @@ func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
 	return primary
 }
 
+func (p *Config) DisableAdminHealthRequestLog() bool {
+	return p.p.Bool(ViperKeyDisableAdminHealthRequestLog)
+}
+
 func (p *Config) SelfAdminURL() *url.URL {
 	return p.baseURL(ViperKeyAdminBaseURL, ViperKeyAdminHost, ViperKeyAdminPort, 4434)
 }
@@ -758,23 +770,23 @@ func (p *Config) CourierSMTPURL() *url.URL {
 }
 
 func (p *Config) SelfServiceFlowLoginUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceLoginUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceLoginUI)
 }
 
 func (p *Config) SelfServiceFlowSettingsUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceSettingsURL)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceSettingsURL)
 }
 
 func (p *Config) SelfServiceFlowErrorURL() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceErrorUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceErrorUI)
 }
 
 func (p *Config) SelfServiceFlowRegistrationUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceRegistrationUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceRegistrationUI)
 }
 
 func (p *Config) SelfServiceFlowRecoveryUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceRecoveryUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceRecoveryUI)
 }
 
 // SessionLifespan returns nil when the value is not set.
@@ -796,6 +808,18 @@ func (p *Config) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {
 		parsed, err := url.ParseRequestURI(u)
 		if err != nil {
 			p.l.WithError(err).Warnf("Ignoring URL \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			continue
+		}
+		if parsed.Host == "*" {
+			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
+			continue
+		}
+		eTLD, icann := publicsuffix.PublicSuffix(parsed.Host)
+		if len(parsed.Host) > 0 &&
+			parsed.Host[:1] == "*" &&
+			icann &&
+			parsed.Host == fmt.Sprintf("*.%s", eTLD) {
+			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsWhitelistedReturnToDomains, k)
 			continue
 		}
 
@@ -845,20 +869,25 @@ func splitUrlAndFragment(s string) (string, string) {
 	return s[:i], s[i+1:]
 }
 
-func (p *Config) ParseURIOrFail(key string) *url.URL {
+func (p *Config) ParseAbsoluteOrRelativeURIOrFail(key string) *url.URL {
 	u, frag := splitUrlAndFragment(p.p.String(key))
 	parsed, err := url.ParseRequestURI(u)
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
-	if parsed.Scheme == "" {
-		p.l.WithField("reason", "expected scheme to be set").
-			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
-	}
 
 	if frag != "" {
 		parsed.Fragment = frag
+	}
+	return parsed
+}
+
+func (p *Config) ParseURIOrFail(key string) *url.URL {
+	parsed := p.ParseAbsoluteOrRelativeURIOrFail(key)
+	if parsed.Scheme == "" {
+		p.l.WithField("reason", "expected scheme to be set").
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
 	return parsed
 }
@@ -884,7 +913,7 @@ func (p *Config) MetricsListenOn() string {
 }
 
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
-	return p.ParseURIOrFail(ViperKeySelfServiceVerificationUI)
+	return p.ParseAbsoluteOrRelativeURIOrFail(ViperKeySelfServiceVerificationUI)
 }
 
 func (p *Config) SelfServiceFlowVerificationRequestLifespan() time.Duration {

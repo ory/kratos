@@ -1,0 +1,20 @@
+change_column("identity_recovery_tokens", "identity_recovery_address_id", "uuid", {"size": 36,"null": true})
+
+{{ if .IsSQLite }}
+  sql("ALTER TABLE identity_recovery_tokens ADD COLUMN identity_id CHAR(36) NULL REFERENCES identities(id) ON DELETE CASCADE ON UPDATE RESTRICT")
+{{ else }}
+  add_column("identity_recovery_tokens", "identity_id", "uuid", {"size": 36,"null": true})
+{{ end }}
+{{ if or .IsPostgreSQL .IsCockroach }}
+  sql("UPDATE identity_recovery_tokens SET identity_id=(SELECT identity_id FROM identity_recovery_addresses WHERE id=identity_recovery_address_id) WHERE identity_id = '00000000-0000-0000-0000-000000000000'")
+{{ else }}
+  sql("UPDATE identity_recovery_tokens SET identity_id=(SELECT identity_id FROM identity_recovery_addresses WHERE id=identity_recovery_address_id) WHERE identity_id = ''")
+{{ end }}
+{{ if not .IsSQLite  }}
+  change_column("identity_recovery_tokens", "identity_id", "uuid", {"size": 36})
+  add_foreign_key("identity_recovery_tokens", "identity_id", {"identities": ["id"]}, {
+        "name": "identity_recovery_tokens_identity_id_fk_idx",
+        "on_delete": "CASCADE",
+        "on_update": "RESTRICT",
+    })
+{{ end }}

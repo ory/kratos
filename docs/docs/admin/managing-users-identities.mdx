@@ -61,7 +61,10 @@ to use for this user. Similarly, the trait key/values depend on your schema as
 well. The command shown does not create a password for the identity or any other
 type of credential. Instead, we will use another REST call to create a recovery
 link (here "invite link" is probably more appropriate, but the flow uses an
-account recovery link).
+account recovery link). It's possible to generate a link for an account without
+a recovery address via the admin API, but if the recovery link expires the user
+won't be able to reinitiate the flow by himself as long as the recovery address
+has been added.
 
 To create the account recovery link, use:
 

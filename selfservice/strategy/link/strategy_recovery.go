@@ -10,6 +10,11 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -19,10 +24,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 const (
@@ -48,7 +49,7 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, f *recovery.Flow) err
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.UI.GetNodes().Upsert(
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true},
-		node.NewInputField("email", nil, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+		node.NewInputField("email", nil, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
 	)
 	f.UI.GetNodes().Append(node.NewInputField("method", s.RecoveryStrategyID(), node.RecoveryLinkGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoNodeLabelSubmit()))
 
@@ -162,23 +163,14 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
-
-	if len(id.RecoveryAddresses) == 0 {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The identity does not have any recovery addresses set.")))
-		return
-	}
-
-	address := id.RecoveryAddresses[0]
-	token := NewRecoveryToken(&address, expiresIn)
+	token := NewRecoveryToken(id.ID, expiresIn)
 	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), token); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
 	s.d.Audit().
-		WithField("via", address.Via).
-		WithField("identity_id", address.IdentityID).
-		WithSensitiveField("email_address", address.Value).
+		WithField("identity_id", id.ID).
 		WithSensitiveField("recovery_link_token", token).
 		Info("A recovery link has been created.")
 
@@ -281,6 +273,20 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
+	// Take over `return_to` parameter from recovery flow
+	sfRequestURL, err := url.Parse(sf.RequestURL)
+	if err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+	fRequestURL, err := url.Parse(f.RequestURL)
+	if err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+	sfQuery := sfRequestURL.Query()
+	sfQuery.Set("return_to", fRequestURL.Query().Get("return_to"))
+	sfRequestURL.RawQuery = sfQuery.Encode()
+	sf.RequestURL = sfRequestURL.String()
+
 	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -326,7 +332,7 @@ func (s *Strategy) recoveryUseToken(w http.ResponseWriter, r *http.Request, body
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.RecoveryAddress.IdentityID)
+	recovered, err := s.d.IdentityPool().GetIdentity(r.Context(), token.IdentityID)
 	if err != nil {
 		return s.HandleRecoveryError(w, r, f, nil, err)
 	}

@@ -96,16 +96,27 @@ func TestAdminStrategy(t *testing.T) {
 		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "404 Not Found")
 	})
 
-	t.Run("description=should not be able to recover an account that does not have a recovery email", func(t *testing.T) {
+	t.Run("description=should create a valid recovery link without email", func(t *testing.T) {
 		id := identity.Identity{Traits: identity.Traits(`{}`)}
+
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		_, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
+		rl, _, err := adminSDK.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(context.Background()).AdminCreateSelfServiceRecoveryLinkBody(kratos.AdminCreateSelfServiceRecoveryLinkBody{
 			IdentityId: id.ID.String(),
+			ExpiresIn:  pointerx.String("100ms"),
 		}).Execute()
-		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
-		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
+		require.NoError(t, err)
+
+		time.Sleep(time.Millisecond * 100)
+		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()))
+		res, err := publicTS.Client().Get(rl.RecoveryLink)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		// We end up here because the link is expired.
+		assert.Contains(t, res.Request.URL.Path, "/recover", rl.RecoveryLink)
 	})
 
 	t.Run("description=should create a valid recovery link and set the expiry time and not be able to recover the account", func(t *testing.T) {
@@ -371,7 +382,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should recover an account", func(t *testing.T) {
-		var check = func(t *testing.T, recoverySubmissionResponse, recoveryEmail string) {
+		var check = func(t *testing.T, recoverySubmissionResponse, recoveryEmail, returnTo string) {
 			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
 			assert.False(t, addr.Verified)
@@ -402,6 +413,7 @@ func TestRecovery(t *testing.T) {
 			body := ioutilx.MustReadAll(res.Body)
 			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
 				gjson.GetBytes(body, "ui.messages.0.text").String())
+			assert.Equal(t, returnTo, gjson.GetBytes(body, "return_to").String())
 
 			addr, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, recoveryEmail)
 			assert.NoError(t, err)
@@ -422,23 +434,46 @@ func TestRecovery(t *testing.T) {
 			createIdentityToRecover(email)
 			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
 				v.Set("email", email)
-			}), email)
+			}), email, "")
+		})
+
+		t.Run("type=browser set return_to", func(t *testing.T) {
+			email := "recoverme2@ory.sh"
+			returnTo := "https://www.ory.sh"
+			createIdentityToRecover(email)
+
+			hc := testhelpers.NewClientWithCookies(t)
+			hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+
+			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, hc, false, public, url.Values{"return_to": []string{returnTo}})
+
+			time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
+
+			formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			formPayload.Set("email", email)
+
+			b, res := testhelpers.RecoveryMakeRequest(t, false, f, hc, testhelpers.EncodeFormAsJSON(t, false, formPayload))
+			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", b)
+			expectedURL := testhelpers.ExpectURL(false, public.URL+recovery.RouteSubmitFlow, conf.SelfServiceFlowRecoveryUI().String())
+			assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
+
+			check(t, b, email, returnTo)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			email := "recoverme2@ory.sh"
+			email := "recoverme3@ory.sh"
 			createIdentityToRecover(email)
 			check(t, expectSuccess(t, nil, true, true, func(v url.Values) {
 				v.Set("email", email)
-			}), email)
+			}), email, "")
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			email := "recoverme3@ory.sh"
+			email := "recoverme4@ory.sh"
 			createIdentityToRecover(email)
 			check(t, expectSuccess(t, nil, true, false, func(v url.Values) {
 				v.Set("email", email)
-			}), email)
+			}), email, "")
 		})
 	})
 
@@ -479,7 +514,7 @@ func TestRecovery(t *testing.T) {
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, public)
+		f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, public, nil)
 		res, err := c.Get(f.Ui.Action + "&token=i-do-not-exist")
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -493,7 +528,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
-		recoveryEmail := "recoverme4@ory.sh"
+		recoveryEmail := "recoverme5@ory.sh"
 		createIdentityToRecover(recoveryEmail)
 		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
@@ -519,7 +554,7 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
-		recoveryEmail := "recoverme5@ory.sh"
+		recoveryEmail := "recoverme6@ory.sh"
 		createIdentityToRecover(recoveryEmail)
 		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
@@ -590,7 +625,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 
 		t.Run("description=can not recover an account by get request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS)
+			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
 			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id + "&token=endpoint-disabled"
 			res, err := c.Get(u)
 			require.NoError(t, err)
@@ -601,7 +636,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		})
 
 		t.Run("description=can not recover an account by post request when link method is disabled", func(t *testing.T) {
-			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS)
+			f := testhelpers.InitializeRecoveryFlowViaBrowser(t, c, false, publicTS, nil)
 			u := publicTS.URL + recovery.RouteSubmitFlow + "?flow=" + f.Id
 			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}, "method": {"link"}})
 			require.NoError(t, err)

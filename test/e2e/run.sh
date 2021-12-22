@@ -12,64 +12,31 @@ export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://localhost:4433/
 export KRATOS_BROWSER_URL=http://localhost:4433/
 export KRATOS_ADMIN_URL=http://localhost:4434/
-export KRATOS_UI_URL=http://localhost:4456/
-export KRATOS_UI_REACT_URL=http://localhost:4458/
-export KRATOS_UI_REACT_NATIVE_URL=http://localhost:4457/
+export KRATOS_UI_URL=http://127.0.0.1:4456/
+export KRATOS_UI_REACT_URL=http://127.0.0.1:4458/
+export KRATOS_UI_REACT_NATIVE_URL=http://127.0.0.1:4457/
 export LOG_LEAK_SENSITIVE_VALUES=true
 export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
-if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
-  docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
-  docker run --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
-  docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
-  docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
-
-  export TEST_DATABASE_MYSQL="mysql://root:secret@(localhost:3444)/mysql?parseTime=true&multiStatements=true"
-  export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@localhost:3445/postgres?sslmode=disable"
-  export TEST_DATABASE_COCKROACHDB="cockroach://root@localhost:3446/defaultdb?sslmode=disable"
-fi
-
 base=$(pwd)
 
-if [ -z ${NODE_UI_PATH+x} ]; then
-  node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
-  git clone https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
-  (cd "$node_ui_dir" && npm i && npm run build)
-else
-  node_ui_dir="${NODE_UI_PATH}"
-fi
-
-if [ -z ${RN_UI_PATH+x} ]; then
-  rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
-  git clone https://github.com/ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
-  (cd "$rn_ui_dir" && npm i)
-else
-  rn_ui_dir="${RN_UI_PATH}"
-fi
-
-if [ -z ${REACT_UI_PATH+x} ]; then
-  react_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/ory/react-nextjs-example"
-  git clone https://github.com/ory/react-nextjs-example.git "$react_ui_dir"
-  (cd "$react_ui_dir" && npm i)
-else
-  react_ui_dir="${REACT_UI_PATH}"
-fi
-
-(
-  rm test/e2e/proxy.json || true
-  echo '"express"' > test/e2e/proxy.json
-  cd test/e2e/proxy
-  npm i
-)
-
-if [ -z ${CI+x} ]; then
-  docker rm mailslurper hydra hydra-ui -f || true
-  docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
-fi
-
+setup=yes
 dev=no
+nokill=no
 for i in "$@"; do
   case $i in
+  --no-kill)
+    nokill=yes
+    shift # past argument=value
+    ;;
+  --only-setup)
+    setup=only
+    shift # past argument=value
+    ;;
+  --no-setup)
+    setup=no
+    shift # past argument=value
+    ;;
   --dev)
     dev=yes
     shift # past argument=value
@@ -77,16 +44,62 @@ for i in "$@"; do
   esac
 done
 
-run() {
-  killall kratos || true
-  killall node || true
-  killall modd || true
-  killall hydra || true
-  killall hydra-login-consent || true
+prepare() {
+  if [[ "${nokill}" == "no" ]]; then
+    killall node || true
+    killall modd || true
+    killall hydra || true
+    killall hydra-login-consent || true
+  fi
+
+  if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
+    docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
+    docker run --platform linux/amd64 --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
+    docker run --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6 postgres -c log_statement=all
+    docker run --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v20.2.4 start-single-node --insecure
+
+    export TEST_DATABASE_MYSQL="mysql://root:secret@(localhost:3444)/mysql?parseTime=true&multiStatements=true"
+    export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@localhost:3445/postgres?sslmode=disable"
+    export TEST_DATABASE_COCKROACHDB="cockroach://root@localhost:3446/defaultdb?sslmode=disable"
+  fi
+
+  if [ -z ${NODE_UI_PATH+x} ]; then
+    node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
+    git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-node.git "$node_ui_dir"
+    (cd "$node_ui_dir" && npm i && npm run build)
+  else
+    node_ui_dir="${NODE_UI_PATH}"
+  fi
+
+  if [ -z ${RN_UI_PATH+x} ]; then
+    rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
+    git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
+    (cd "$rn_ui_dir" && npm i)
+  else
+    rn_ui_dir="${RN_UI_PATH}"
+  fi
+
+  if [ -z ${REACT_UI_PATH+x} ]; then
+    react_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/ory/kratos-selfservice-ui-react-nextjs"
+    git clone --depth 1 --branch master https://github.com/ory/kratos-selfservice-ui-react-nextjs.git "$react_ui_dir"
+    (cd "$react_ui_dir" && npm i)
+  else
+    react_ui_dir="${REACT_UI_PATH}"
+  fi
+
+  (
+    rm test/e2e/proxy.json || true
+    echo '"express"' > test/e2e/proxy.json
+    cd test/e2e/proxy
+    npm i
+  )
+
+  if [ -z ${CI+x} ]; then
+    docker rm mailslurper hydra hydra-ui -f || true
+    docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
+  fi
 
   # Check if any ports that we need are open already
-  ! nc -zv localhost 4434
-  ! nc -zv localhost 4433
   ! nc -zv localhost 4446
   ! nc -zv localhost 4455
   ! nc -zv localhost 4456
@@ -95,6 +108,7 @@ run() {
 
   (
     cd "$rn_ui_dir"
+    npm i -g expo-cli
     WEB_PORT=4457 KRATOS_URL=http://localhost:4433 npm run web -- --non-interactive \
       >"${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &
   )
@@ -155,14 +169,14 @@ run() {
   if [ -z ${REACT_UI_PATH+x} ]; then
     (
       cd "$react_ui_dir"
-      NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run build
-      NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run start -- --port 4458 \
+      ORY_KRATOS_URL=http://localhost:4433 npm run build
+      ORY_KRATOS_URL=http://localhost:4433 npm run start -- --hostname 0.0.0.0 --port 4458 \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   else
     (
       cd "$react_ui_dir"
-      PORT=4458 NEXT_PUBLIC_ORY_KRATOS_PUBLIC=http://localhost:4433 npm run dev \
+      PORT=4458 ORY_KRATOS_URL=http://localhost:4433 npm run dev \
         >"${base}/test/e2e/react-iu.e2e.log" 2>&1 &
     )
   fi
@@ -178,11 +192,20 @@ run() {
     go build . &&
       PORT=4446 HYDRA_ADMIN_URL=http://localhost:4445 ./hydra-login-consent >"${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &
   )
+}
+
+run() {
+  killall modd || true
+  killall kratos || true
 
   export DSN=${1}
 
+  ! nc -zv localhost 4434
+  ! nc -zv localhost 4433
+
+  ls -la .
   for profile in email mobile oidc recovery verification mfa spa; do
-    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" >test/e2e/kratos.${profile}.yml
+    yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done
 
@@ -242,19 +265,31 @@ To run e2e tests in dev mode (useful for writing them), run:
 
   $0 --dev <database>
 
+To set up all the services without running the tests, use:
+
+  $0 --only-setup
+
+To then run the tests without the set up steps, use:
+
+  $0 --no-setup <database>
+
+To prevent processes from being killed during set up phase, use:
+  $0 --no-kill
+
 If you are making changes to the kratos-selfservice-ui-node
 project as well, point the 'NODE_UI_PATH' environment variable to
 the path where the kratos-selfservice-ui-node project is checked out:
 
   export NODE_UI_PATH=$HOME/workspace/kratos-selfservice-ui-node
   export RN_UI_PATH=$HOME/workspace/kratos-selfservice-ui-react-native
+  export REACT_UI_PATH=$HOME/workspace/kratos-selfservice-ui-react-nextjs
   $0 ..."
 }
 
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 export TEST_DATABASE_MEMORY="memory"
 
-case "$1" in
+case "${1:-default}" in
 sqlite)
   echo "Database set up at: $TEST_DATABASE_SQLITE"
   db="${TEST_DATABASE_SQLITE}"
@@ -274,8 +309,16 @@ cockroach)
 
 *)
   usage
-  exit 1
+  if [[ "${setup}" == "only" ]]; then
+    prepare
+    exit 0
+  else
+    exit 1
+  fi
   ;;
 esac
 
+if [[ "${setup}" == "yes" ]]; then
+  prepare
+fi
 run "${db}"
