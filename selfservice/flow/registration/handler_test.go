@@ -39,6 +39,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
@@ -63,6 +64,7 @@ func TestInitFlow(t *testing.T) {
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	registrationTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
@@ -169,6 +171,7 @@ func TestInitFlow(t *testing.T) {
 
 func TestGetFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
