@@ -8,8 +8,9 @@ import (
 
 	"github.com/ory/kratos/schema"
 
-	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlcon"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/herodot"
 
