@@ -14,13 +14,13 @@ import (
 
 func TestLoadTextTemplate(t *testing.T) {
 	var executeTextTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		tp, err := loadTextTemplate(dir, name, pattern, model)
+		tp, err := LoadTextTemplate(dir, name, pattern, model)
 		require.NoError(t, err)
 		return tp
 	}
 
 	var executeHTMLTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		tp, err := loadHTMLTemplate(dir, name, pattern, model)
+		tp, err := LoadHTMLTemplate(dir, name, pattern, model)
 		require.NoError(t, err)
 		return tp
 	}
