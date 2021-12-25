@@ -432,7 +432,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		require.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 
-	t.Run("case=should respect active_only on list", func(t *testing.T) {
+	t.Run("case=should respect active on list", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
 		i := identity.NewIdentity("")
 		require.NoError(t, reg.IdentityManager().Create(ctx, i))
@@ -462,10 +462,10 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 				expectedIDs: []uuid.UUID{sess[0].ID, sess[1].ID},
 			},
 		} {
-			t.Run(fmt.Sprintf("active_only=%#v", tc.activeOnly), func(t *testing.T) {
+			t.Run(fmt.Sprintf("active=%#v", tc.activeOnly), func(t *testing.T) {
 				reqURL := ts.URL + "/identities/" + i.ID.String() + "/sessions"
 				if tc.activeOnly != "" {
-					reqURL += "?active_only=" + tc.activeOnly
+					reqURL += "?active=" + tc.activeOnly
 				}
 				req, _ := http.NewRequest("GET", reqURL, nil)
 				res, err := client.Do(req)

@@ -242,11 +242,11 @@ func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request,
 // swagger:parameters adminListIdentitySessions
 // nolint:deadcode,unused
 type adminListIdentitySessions struct {
-	// ActiveOnly is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
+	// Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.
 	//
 	// required: false
 	// in: query
-	ActiveOnly bool `json:"active_only"`
+	Active bool `json:"active"`
 
 	adminDeleteIdentitySessions
 	x.PaginationParams
@@ -278,10 +278,10 @@ func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request, p
 		return
 	}
 
-	activeRaw := r.URL.Query().Get("active_only")
+	activeRaw := r.URL.Query().Get("active")
 	activeBool, err := strconv.ParseBool(activeRaw)
 	if activeRaw != "" && err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active_only"))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active"))
 		return
 	}
 
