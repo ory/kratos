@@ -1078,6 +1078,70 @@ selfservice:
 Next, open the login endpoint of the SecureApp and you should see the Apple
 Login option!
 
+## Spotify
+
+To set up "Sign in with Spotify" you must create an
+[Spotify Application](https://developer.spotify.com/dashboard/applications).
+
+Set the "Redirect URI" to:
+
+```
+https://playground.projects.oryapis.com/api/kratos/public/self-service/methods/oidc/callback/spotify
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+:::note
+
+While Spotify
+[provides an OIDC discovery URL](https://accounts.spotify.com/.well-known/openid-configuration),
+Spotify does not actually support the `openid` claim and only returns an access
+token. Therefore, Ory Kratos makes a request to
+[Spotify's /me API](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile)
+and adds the user info to `std.extVar('claims')`.
+
+:::
+
+```json title="contrib/quickstart/kratos/email-password/oidc.spotify.jsonnet"
+# claims contains all the data sent by the upstream.
+local claims = std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      email: claims.email
+    },
+  },
+}
+```
+
+Now, enable the Spotify provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: spotify # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: spotify
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Spotify
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Spotify
+            mapper_url: file:///etc/config/kratos/oidc.spotify.jsonnet
+            scope:
+              - user-read-email
+              - user-read-private
+```
+
+Spotify is now an option to log in via Kratos.
+
 ## LinkedIn
 
 Connecting with other Social Sign In providers will be very similar to the
