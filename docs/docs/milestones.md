@@ -88,8 +88,6 @@ New feature or request.
       ([kratos#969](https://github.com/ory/kratos/issues/969))
 - [ ] Access identity schema information (e.g. usernames) within the jsonnet
       mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
-- [ ] login ui returned without flowid
-      ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [ ] [Feature] LOG_LEVEL to allow stacktrace in error for /api endpoint
       ([kratos#1589](https://github.com/ory/kratos/issues/1589))
 - [ ] Deprecate webhook loader without URI scheme
@@ -112,6 +110,8 @@ New feature or request.
       [@Alano Terblanche](https://github.com/Benehiko)
 - [x] Add i18n support to mail templates
       ([kratos#834](https://github.com/ory/kratos/issues/834))
+- [x] login ui returned without flowid
+      ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [x] Allow account recovery for identities without email address
       ([kratos#1419](https://github.com/ory/kratos/issues/1419))
 - [x] Field validation answer status code 422 instead of 400
@@ -294,8 +294,8 @@ New feature or request.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Admin/Selfservice session management
       ([kratos#655](https://github.com/ory/kratos/issues/655)) -
-      [@Alano Terblanche](https://github.com/Benehiko)
-- [ ] Write new recovery and verification strategy that does not rely on links
+      [@Patrik](https://github.com/zepatrik)
+- [ ] Replace magic links with TOTP OOB codes
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [ ] Delete self-service flows after completion
       ([kratos#952](https://github.com/ory/kratos/issues/952)) -
@@ -334,6 +334,12 @@ Something is not working.
 
 #### Issues
 
+- [ ] Resumable session is not cleared up on error
+      ([kratos#2016](https://github.com/ory/kratos/issues/2016)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Recovery link answers with JSON payload for API flows
+      ([kratos#2049](https://github.com/ory/kratos/issues/2049)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect

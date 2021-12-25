@@ -2,12 +2,10 @@ package template
 
 import (
 	"encoding/json"
-
-	"github.com/ory/kratos/driver/config"
 )
 
 type TestStub struct {
-	c *config.Config
+	c TemplateConfig
 	m *TestStubModel
 }
 
@@ -17,7 +15,7 @@ type TestStubModel struct {
 	Body    string
 }
 
-func NewTestStub(c *config.Config, m *TestStubModel) *TestStub {
+func NewTestStub(c TemplateConfig, m *TestStubModel) *TestStub {
 	return &TestStub{c: c, m: m}
 }
 

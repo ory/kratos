@@ -267,8 +267,7 @@ Ory Kratos implements a password policy that:
 
 - Checks if a password has previously been leaked using the
   [HIBP API](https://haveibeenpwned.com/API/v2),
-- Checks if a password is too similar to one of the identifiers (in a future
-  release [kratos#184](https://github.com/ory/kratos/issues/184)),
+- Checks if a password is too similar to one of the identifiers,
 - Does not expire passwords.
 
 This is a rundown of all the practices Ory Kratos implements and why. **Some
@@ -316,15 +315,6 @@ Passwords must be checked against a database of compromised secrets such as
 > the subscriber that they need to select a different secret, SHALL provide the
 > reason for rejection, and SHALL require the subscriber to choose a different
 > value.
-
-Show the user a password-strength meter (to be implemented, see
-[#136](https://github.com/ory/kratos/issues/136)):
-
-> Verifiers SHOULD offer guidance to the subscriber, such as a password-strength
-> meter [Meters], to assist the user in choosing a strong memorized secret. This
-> is particularly important following the rejection of a memorized secret on the
-> above list as it discourages trivial modification of listed (and likely very
-> weak) memorized secrets
 
 Do not require mixtures of characters types or prohibiting repeated characters:
 
@@ -385,7 +375,7 @@ Allow the user to show the secret in the UI:
 :::warning
 
 This feature is a work in progress and is tracked as
-[kratos#133](https://github.com/ory/kratos/issues/138).
+[kratos#138](https://github.com/ory/kratos/issues/138).
 
 :::
 
@@ -395,9 +385,8 @@ systems. The goal of such an attack is to send out so many emails or SMS, that
 your reputation worsens (spam filters) or you're faced with massive costs
 (carrier fees).
 
-CAPTCHA renders these attacks either very difficult or impossible. Ory Kratos
-has CAPTCHA support built-in. Ory Kratos will prompt the user to complete a
-CAPTCHA in the following scenarios:
+CAPTCHA renders these attacks either very difficult or impossible. CAPTCHA will
+be required in the following scenarios:
 
 - The user tries to register more than one account within 72 hours.
 - The user failed provide valid credentials for the third time within 12 hours.

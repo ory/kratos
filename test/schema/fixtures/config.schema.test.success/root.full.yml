@@ -8,7 +8,7 @@ selfservice:
   flows:
     settings:
       ui_url: /settings
-      lifespan: 1h
+      lifespan: 1h5s
       privileged_session_max_age: 1h
       after: "#/definitions/selfServiceAfterSettings"
 

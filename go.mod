@@ -67,7 +67,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/ory/analytics-go/v4 v4.0.2
-	github.com/ory/dockertest/v3 v3.8.0
+	github.com/ory/dockertest/v3 v3.8.1
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
@@ -90,9 +90,10 @@ require (
 	github.com/tidwall/gjson v1.9.4
 	github.com/tidwall/sjson v1.2.2
 	github.com/urfave/negroni v1.0.0
+	github.com/zmb3/spotify/v2 v2.0.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
-	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
+	golang.org/x/oauth2 v0.0.0-20210810183815-faf39c7919d5
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/tools v0.1.7
 )
