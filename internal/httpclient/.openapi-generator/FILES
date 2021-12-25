@@ -27,8 +27,8 @@ docs/JsonError.md
 docs/MetadataApi.md
 docs/NeedsPrivilegedSessionError.md
 docs/Pagination.md
-docs/PublicRevokeMySessionsResponse.md
 docs/RecoveryAddress.md
+docs/RevokedSessions.md
 docs/SelfServiceBrowserLocationChangeRequiredError.md
 docs/SelfServiceError.md
 docs/SelfServiceFlowExpiredError.md
@@ -104,8 +104,8 @@ model_inline_response_503.go
 model_json_error.go
 model_needs_privileged_session_error.go
 model_pagination.go
-model_public_revoke_my_sessions_response.go
 model_recovery_address.go
+model_revoked_sessions.go
 model_self_service_browser_location_change_required_error.go
 model_self_service_error.go
 model_self_service_flow_expired_error.go

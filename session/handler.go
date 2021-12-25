@@ -48,47 +48,46 @@ func NewHandler(
 const (
 	RouteCollection         = "/sessions"
 	RouteWhoami             = RouteCollection + "/whoami"
-	RouteOthers             = RouteCollection + "/others"
-	RouteOthersSpecific     = RouteCollection + "/others/:id"
+	RouteSession            = RouteCollection + "/:id"
 	RouteIdentity           = "/identities"
 	RouteIdentitiesSessions = RouteIdentity + "/:id/sessions"
 )
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
-		http.MethodDelete} {
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch} {
 		// Redirect to public endpoint
 		admin.Handle(m, RouteWhoami, x.RedirectToPublicRoute(h.r))
 	}
-	admin.DELETE(RouteOthers, x.RedirectToPublicRoute(h.r))
-	admin.DELETE(RouteOthersSpecific, x.RedirectToPublicRoute(h.r))
-	admin.GET(RouteOthers, x.RedirectToPublicRoute(h.r))
 
-	admin.GET(RouteIdentitiesSessions, h.listIdentitySessions)
-	admin.DELETE(RouteIdentitiesSessions, h.deleteIdentitySessions)
+	admin.DELETE(RouteCollection, x.RedirectToPublicRoute(h.r))
+	admin.DELETE(RouteSession, x.RedirectToPublicRoute(h.r))
+	admin.GET(RouteCollection, x.RedirectToPublicRoute(h.r))
+
+	admin.GET(RouteIdentitiesSessions, h.adminListIdentitySessions)
+	admin.DELETE(RouteIdentitiesSessions, h.adminDeleteIdentitySessions)
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	// We need to completely ignore the whoami/logout path so that we do not accidentally set
 	// some cookie.
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)
-	h.r.CSRFHandler().IgnorePath(RouteOthers)
-	h.r.CSRFHandler().IgnoreGlob(RouteOthers + "/*")
+	h.r.CSRFHandler().IgnorePath(RouteCollection)
+	h.r.CSRFHandler().IgnoreGlob(RouteCollection + "/*")
 	h.r.CSRFHandler().IgnoreGlob(RouteIdentity + "/*/sessions")
 
-	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
-		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)
 	}
-	public.DELETE(RouteOthers, h.revokeMySessions)
-	public.DELETE(RouteOthersSpecific, h.revokeSession)
-	public.GET(RouteOthers, h.listOtherSessions)
+
+	public.DELETE(RouteCollection, h.revokeSessions)
+	public.DELETE(RouteSession, h.revokeSession)
+	public.GET(RouteCollection, h.listSessions)
 
 	public.DELETE(RouteIdentitiesSessions, x.RedirectToAdminRoute(h.r))
 }
 
 // nolint:deadcode,unused
-// swagger:parameters toSession publicRevokeOtherSessions publicListOtherSessions
+// swagger:parameters toSession revokeSessions listSessions
 type toSession struct {
 	// Set the Session Token when calling from non-browser clients. A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
 	//
@@ -225,7 +224,7 @@ type adminDeleteIdentitySessions struct {
 //       401: jsonError
 //       404: jsonError
 //       500: jsonError
-func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) adminDeleteIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
@@ -271,7 +270,7 @@ type adminListIdentitySessions struct {
 //       401: jsonError
 //       404: jsonError
 //       500: jsonError
-func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) adminListIdentitySessions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	iID, err := uuid.FromString(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
@@ -300,13 +299,13 @@ func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request, p
 	h.r.Writer().Write(w, r, sess)
 }
 
-// swagger:model publicRevokeMySessionsResponse
-type revokeMySessionsResponse struct {
+// swagger:model revokedSessions
+type revokeSessions struct {
 	// The number of sessions that were revoked.
-	NumberRevokedSessions int `json:"number_revoked_sessions"`
+	Count int `json:"count"`
 }
 
-// swagger:route DELETE /sessions/others v0alpha2 publicRevokeOtherSessions
+// swagger:route DELETE /sessions v0alpha2 revokeSessions
 //
 // Calling this endpoint invalidates all except the current session that belong to the logged-in user.
 // Session data are not deleted.
@@ -318,12 +317,12 @@ type revokeMySessionsResponse struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: publicRevokeMySessionsResponse
+//       200: revokedSessions
 //       400: jsonError
 //       401: jsonError
 //       404: jsonError
 //       500: jsonError
-func (h *Handler) revokeMySessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) revokeSessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
@@ -337,12 +336,12 @@ func (h *Handler) revokeMySessions(w http.ResponseWriter, r *http.Request, _ htt
 		return
 	}
 
-	h.r.Writer().WriteCode(w, r, http.StatusOK, &revokeMySessionsResponse{NumberRevokedSessions: n})
+	h.r.Writer().WriteCode(w, r, http.StatusOK, &revokeSessions{Count: n})
 }
 
-// swagger:parameters publicRevokeSession
+// swagger:parameters revokeSession
 // nolint:deadcode,unused
-type publicRevokeSession struct {
+type revokeSession struct {
 	// ID is the session's ID.
 	//
 	// required: true
@@ -350,7 +349,7 @@ type publicRevokeSession struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /sessions/others/{id} v0alpha2 publicRevokeSession
+// swagger:route DELETE /sessions/{id} v0alpha2 revokeSession
 //
 // Calling this endpoint invalidates the specified session. The current session cannot be revoked.
 // Session data are not deleted.
@@ -367,6 +366,13 @@ type publicRevokeSession struct {
 //       401: jsonError
 //       500: jsonError
 func (h *Handler) revokeSession(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sid := ps.ByName("id")
+	if sid == "whoami" {
+		// Special case where we actually want to handle the whomai endpoint.
+		h.whoami(w, r, ps)
+		return
+	}
+
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
@@ -374,7 +380,7 @@ func (h *Handler) revokeSession(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	sessionID, err := uuid.FromString(ps.ByName("id"))
+	sessionID, err := uuid.FromString(sid)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
 		return
@@ -392,9 +398,9 @@ func (h *Handler) revokeSession(w http.ResponseWriter, r *http.Request, ps httpr
 	h.r.Writer().WriteCode(w, r, http.StatusNoContent, nil)
 }
 
-// swagger:parameters publicListOtherSessions
+// swagger:parameters listSessions
 // nolint:deadcode,unused
-type publicListOtherSessions struct {
+type listSessions struct {
 	x.PaginationParams
 }
 
@@ -402,7 +408,7 @@ type publicListOtherSessions struct {
 // nolint:deadcode,unused
 type sessionList []*Session
 
-// swagger:route GET /sessions/others v0alpha2 publicListOtherSessions
+// swagger:route GET /sessions v0alpha2 listSessions
 //
 // This endpoints returns all other active sessions that belong to the logged-in user.
 // The current session can be retrieved by calling the `/sessions/whoami` endpoint.
@@ -419,7 +425,7 @@ type sessionList []*Session
 //       401: jsonError
 //       404: jsonError
 //       500: jsonError
-func (h *Handler) listOtherSessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")

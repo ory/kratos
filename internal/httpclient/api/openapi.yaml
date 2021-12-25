@@ -2238,13 +2238,13 @@ paths:
       summary: Get Verification Flow
       tags:
       - v0alpha2
-  /sessions/others:
+  /sessions:
     delete:
       description: |-
         This endpoint is useful for:
 
         To forcefully logout the current user from all other devices and sessions
-      operationId: publicRevokeOtherSessions
+      operationId: revokeSessions
       parameters:
       - description: Set the Session Token when calling from non-browser clients.
           A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
@@ -2273,8 +2273,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/publicRevokeMySessionsResponse'
-          description: publicRevokeMySessionsResponse
+                $ref: '#/components/schemas/revokedSessions'
+          description: revokedSessions
         "400":
           content:
             application/json:
@@ -2309,7 +2309,7 @@ paths:
         This endpoint is useful for:
 
         Displaying all other sessions that belong to the logged-in user
-      operationId: publicListOtherSessions
+      operationId: listSessions
       parameters:
       - description: Set the Session Token when calling from non-browser clients.
           A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
@@ -2393,49 +2393,6 @@ paths:
       summary: |-
         This endpoints returns all other active sessions that belong to the logged-in user.
         The current session can be retrieved by calling the `/sessions/whoami` endpoint.
-      tags:
-      - v0alpha2
-  /sessions/others/{id}:
-    delete:
-      description: |-
-        This endpoint is useful for:
-
-        To forcefully logout the current user from another device or session
-      operationId: publicRevokeSession
-      parameters:
-      - description: ID is the session's ID.
-        explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "204":
-          description: Empty responses are sent when, for example, resources are deleted.
-            The HTTP status code for empty responses is typically 201.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/jsonError'
-          description: jsonError
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/jsonError'
-          description: jsonError
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/jsonError'
-          description: jsonError
-      summary: |-
-        Calling this endpoint invalidates the specified session. The current session cannot be revoked.
-        Session data are not deleted.
       tags:
       - v0alpha2
   /sessions/whoami:
@@ -2541,6 +2498,49 @@ paths:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
       summary: Check Who the Current HTTP Session Belongs To
+      tags:
+      - v0alpha2
+  /sessions/{id}:
+    delete:
+      description: |-
+        This endpoint is useful for:
+
+        To forcefully logout the current user from another device or session
+      operationId: revokeSession
+      parameters:
+      - description: ID is the session's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: |-
+        Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+        Session data are not deleted.
       tags:
       - v0alpha2
   /version:
@@ -3092,11 +3092,11 @@ components:
           minimum: 1
           type: integer
       type: object
-    publicRevokeMySessionsResponse:
+    revokedSessions:
       example:
-        number_revoked_sessions: 0
+        count: 0
       properties:
-        number_revoked_sessions:
+        count:
           description: The number of sessions that were revoked.
           format: int64
           type: integer

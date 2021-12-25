@@ -726,52 +726,52 @@ type V0alpha2Api interface {
 	ListIdentitySchemasExecute(r V0alpha2ApiApiListIdentitySchemasRequest) ([]IdentitySchema, *http.Response, error)
 
 	/*
-			 * PublicListOtherSessions This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+			 * ListSessions This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
 			 * This endpoint is useful for:
 
 		Displaying all other sessions that belong to the logged-in user
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha2ApiApiPublicListOtherSessionsRequest
+			 * @return V0alpha2ApiApiListSessionsRequest
 	*/
-	PublicListOtherSessions(ctx context.Context) V0alpha2ApiApiPublicListOtherSessionsRequest
+	ListSessions(ctx context.Context) V0alpha2ApiApiListSessionsRequest
 
 	/*
-	 * PublicListOtherSessionsExecute executes the request
+	 * ListSessionsExecute executes the request
 	 * @return []Session
 	 */
-	PublicListOtherSessionsExecute(r V0alpha2ApiApiPublicListOtherSessionsRequest) ([]Session, *http.Response, error)
+	ListSessionsExecute(r V0alpha2ApiApiListSessionsRequest) ([]Session, *http.Response, error)
 
 	/*
-			 * PublicRevokeOtherSessions Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
-			 * This endpoint is useful for:
-
-		To forcefully logout the current user from all other devices and sessions
-			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-			 * @return V0alpha2ApiApiPublicRevokeOtherSessionsRequest
-	*/
-	PublicRevokeOtherSessions(ctx context.Context) V0alpha2ApiApiPublicRevokeOtherSessionsRequest
-
-	/*
-	 * PublicRevokeOtherSessionsExecute executes the request
-	 * @return PublicRevokeMySessionsResponse
-	 */
-	PublicRevokeOtherSessionsExecute(r V0alpha2ApiApiPublicRevokeOtherSessionsRequest) (*PublicRevokeMySessionsResponse, *http.Response, error)
-
-	/*
-			 * PublicRevokeSession Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
+			 * RevokeSession Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
 			 * This endpoint is useful for:
 
 		To forcefully logout the current user from another device or session
 			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			 * @param id ID is the session's ID.
-			 * @return V0alpha2ApiApiPublicRevokeSessionRequest
+			 * @return V0alpha2ApiApiRevokeSessionRequest
 	*/
-	PublicRevokeSession(ctx context.Context, id string) V0alpha2ApiApiPublicRevokeSessionRequest
+	RevokeSession(ctx context.Context, id string) V0alpha2ApiApiRevokeSessionRequest
 
 	/*
-	 * PublicRevokeSessionExecute executes the request
+	 * RevokeSessionExecute executes the request
 	 */
-	PublicRevokeSessionExecute(r V0alpha2ApiApiPublicRevokeSessionRequest) (*http.Response, error)
+	RevokeSessionExecute(r V0alpha2ApiApiRevokeSessionRequest) (*http.Response, error)
+
+	/*
+			 * RevokeSessions Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
+			 * This endpoint is useful for:
+
+		To forcefully logout the current user from all other devices and sessions
+			 * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+			 * @return V0alpha2ApiApiRevokeSessionsRequest
+	*/
+	RevokeSessions(ctx context.Context) V0alpha2ApiApiRevokeSessionsRequest
+
+	/*
+	 * RevokeSessionsExecute executes the request
+	 * @return RevokedSessions
+	 */
+	RevokeSessionsExecute(r V0alpha2ApiApiRevokeSessionsRequest) (*RevokedSessions, *http.Response, error)
 
 	/*
 			 * SubmitSelfServiceLoginFlow Submit a Login Flow
@@ -5298,7 +5298,7 @@ func (a *V0alpha2ApiService) ListIdentitySchemasExecute(r V0alpha2ApiApiListIden
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha2ApiApiPublicListOtherSessionsRequest struct {
+type V0alpha2ApiApiListSessionsRequest struct {
 	ctx           context.Context
 	ApiService    V0alpha2Api
 	xSessionToken *string
@@ -5307,37 +5307,37 @@ type V0alpha2ApiApiPublicListOtherSessionsRequest struct {
 	page          *int64
 }
 
-func (r V0alpha2ApiApiPublicListOtherSessionsRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiPublicListOtherSessionsRequest {
+func (r V0alpha2ApiApiListSessionsRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiListSessionsRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r V0alpha2ApiApiPublicListOtherSessionsRequest) Cookie(cookie string) V0alpha2ApiApiPublicListOtherSessionsRequest {
+func (r V0alpha2ApiApiListSessionsRequest) Cookie(cookie string) V0alpha2ApiApiListSessionsRequest {
 	r.cookie = &cookie
 	return r
 }
-func (r V0alpha2ApiApiPublicListOtherSessionsRequest) PerPage(perPage int64) V0alpha2ApiApiPublicListOtherSessionsRequest {
+func (r V0alpha2ApiApiListSessionsRequest) PerPage(perPage int64) V0alpha2ApiApiListSessionsRequest {
 	r.perPage = &perPage
 	return r
 }
-func (r V0alpha2ApiApiPublicListOtherSessionsRequest) Page(page int64) V0alpha2ApiApiPublicListOtherSessionsRequest {
+func (r V0alpha2ApiApiListSessionsRequest) Page(page int64) V0alpha2ApiApiListSessionsRequest {
 	r.page = &page
 	return r
 }
 
-func (r V0alpha2ApiApiPublicListOtherSessionsRequest) Execute() ([]Session, *http.Response, error) {
-	return r.ApiService.PublicListOtherSessionsExecute(r)
+func (r V0alpha2ApiApiListSessionsRequest) Execute() ([]Session, *http.Response, error) {
+	return r.ApiService.ListSessionsExecute(r)
 }
 
 /*
- * PublicListOtherSessions This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+ * ListSessions This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the `/sessions/whoami` endpoint.
  * This endpoint is useful for:
 
 Displaying all other sessions that belong to the logged-in user
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha2ApiApiPublicListOtherSessionsRequest
+ * @return V0alpha2ApiApiListSessionsRequest
 */
-func (a *V0alpha2ApiService) PublicListOtherSessions(ctx context.Context) V0alpha2ApiApiPublicListOtherSessionsRequest {
-	return V0alpha2ApiApiPublicListOtherSessionsRequest{
+func (a *V0alpha2ApiService) ListSessions(ctx context.Context) V0alpha2ApiApiListSessionsRequest {
+	return V0alpha2ApiApiListSessionsRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -5347,7 +5347,7 @@ func (a *V0alpha2ApiService) PublicListOtherSessions(ctx context.Context) V0alph
  * Execute executes the request
  * @return []Session
  */
-func (a *V0alpha2ApiService) PublicListOtherSessionsExecute(r V0alpha2ApiApiPublicListOtherSessionsRequest) ([]Session, *http.Response, error) {
+func (a *V0alpha2ApiService) ListSessionsExecute(r V0alpha2ApiApiListSessionsRequest) ([]Session, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
@@ -5357,12 +5357,12 @@ func (a *V0alpha2ApiService) PublicListOtherSessionsExecute(r V0alpha2ApiApiPubl
 		localVarReturnValue  []Session
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.PublicListOtherSessions")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.ListSessions")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/sessions/others"
+	localVarPath := localBasePath + "/sessions"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -5473,36 +5473,161 @@ func (a *V0alpha2ApiService) PublicListOtherSessionsExecute(r V0alpha2ApiApiPubl
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type V0alpha2ApiApiPublicRevokeOtherSessionsRequest struct {
+type V0alpha2ApiApiRevokeSessionRequest struct {
+	ctx        context.Context
+	ApiService V0alpha2Api
+	id         string
+}
+
+func (r V0alpha2ApiApiRevokeSessionRequest) Execute() (*http.Response, error) {
+	return r.ApiService.RevokeSessionExecute(r)
+}
+
+/*
+ * RevokeSession Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
+ * This endpoint is useful for:
+
+To forcefully logout the current user from another device or session
+ * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+ * @param id ID is the session's ID.
+ * @return V0alpha2ApiApiRevokeSessionRequest
+*/
+func (a *V0alpha2ApiService) RevokeSession(ctx context.Context, id string) V0alpha2ApiApiRevokeSessionRequest {
+	return V0alpha2ApiApiRevokeSessionRequest{
+		ApiService: a,
+		ctx:        ctx,
+		id:         id,
+	}
+}
+
+/*
+ * Execute executes the request
+ */
+func (a *V0alpha2ApiService) RevokeSessionExecute(r V0alpha2ApiApiRevokeSessionRequest) (*http.Response, error) {
+	var (
+		localVarHTTPMethod   = http.MethodDelete
+		localVarPostBody     interface{}
+		localVarFormFileName string
+		localVarFileName     string
+		localVarFileBytes    []byte
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.RevokeSession")
+	if err != nil {
+		return nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/sessions/{id}"
+	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarHTTPResponse, err
+	}
+
+	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+			return localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v JsonError
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.model = v
+		}
+		return localVarHTTPResponse, newErr
+	}
+
+	return localVarHTTPResponse, nil
+}
+
+type V0alpha2ApiApiRevokeSessionsRequest struct {
 	ctx           context.Context
 	ApiService    V0alpha2Api
 	xSessionToken *string
 	cookie        *string
 }
 
-func (r V0alpha2ApiApiPublicRevokeOtherSessionsRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiPublicRevokeOtherSessionsRequest {
+func (r V0alpha2ApiApiRevokeSessionsRequest) XSessionToken(xSessionToken string) V0alpha2ApiApiRevokeSessionsRequest {
 	r.xSessionToken = &xSessionToken
 	return r
 }
-func (r V0alpha2ApiApiPublicRevokeOtherSessionsRequest) Cookie(cookie string) V0alpha2ApiApiPublicRevokeOtherSessionsRequest {
+func (r V0alpha2ApiApiRevokeSessionsRequest) Cookie(cookie string) V0alpha2ApiApiRevokeSessionsRequest {
 	r.cookie = &cookie
 	return r
 }
 
-func (r V0alpha2ApiApiPublicRevokeOtherSessionsRequest) Execute() (*PublicRevokeMySessionsResponse, *http.Response, error) {
-	return r.ApiService.PublicRevokeOtherSessionsExecute(r)
+func (r V0alpha2ApiApiRevokeSessionsRequest) Execute() (*RevokedSessions, *http.Response, error) {
+	return r.ApiService.RevokeSessionsExecute(r)
 }
 
 /*
- * PublicRevokeOtherSessions Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
+ * RevokeSessions Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
  * This endpoint is useful for:
 
 To forcefully logout the current user from all other devices and sessions
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return V0alpha2ApiApiPublicRevokeOtherSessionsRequest
+ * @return V0alpha2ApiApiRevokeSessionsRequest
 */
-func (a *V0alpha2ApiService) PublicRevokeOtherSessions(ctx context.Context) V0alpha2ApiApiPublicRevokeOtherSessionsRequest {
-	return V0alpha2ApiApiPublicRevokeOtherSessionsRequest{
+func (a *V0alpha2ApiService) RevokeSessions(ctx context.Context) V0alpha2ApiApiRevokeSessionsRequest {
+	return V0alpha2ApiApiRevokeSessionsRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -5510,24 +5635,24 @@ func (a *V0alpha2ApiService) PublicRevokeOtherSessions(ctx context.Context) V0al
 
 /*
  * Execute executes the request
- * @return PublicRevokeMySessionsResponse
+ * @return RevokedSessions
  */
-func (a *V0alpha2ApiService) PublicRevokeOtherSessionsExecute(r V0alpha2ApiApiPublicRevokeOtherSessionsRequest) (*PublicRevokeMySessionsResponse, *http.Response, error) {
+func (a *V0alpha2ApiService) RevokeSessionsExecute(r V0alpha2ApiApiRevokeSessionsRequest) (*RevokedSessions, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodDelete
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  *PublicRevokeMySessionsResponse
+		localVarReturnValue  *RevokedSessions
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.PublicRevokeOtherSessions")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.RevokeSessions")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/sessions/others"
+	localVarPath := localBasePath + "/sessions"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -5630,131 +5755,6 @@ func (a *V0alpha2ApiService) PublicRevokeOtherSessionsExecute(r V0alpha2ApiApiPu
 	}
 
 	return localVarReturnValue, localVarHTTPResponse, nil
-}
-
-type V0alpha2ApiApiPublicRevokeSessionRequest struct {
-	ctx        context.Context
-	ApiService V0alpha2Api
-	id         string
-}
-
-func (r V0alpha2ApiApiPublicRevokeSessionRequest) Execute() (*http.Response, error) {
-	return r.ApiService.PublicRevokeSessionExecute(r)
-}
-
-/*
- * PublicRevokeSession Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
- * This endpoint is useful for:
-
-To forcefully logout the current user from another device or session
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param id ID is the session's ID.
- * @return V0alpha2ApiApiPublicRevokeSessionRequest
-*/
-func (a *V0alpha2ApiService) PublicRevokeSession(ctx context.Context, id string) V0alpha2ApiApiPublicRevokeSessionRequest {
-	return V0alpha2ApiApiPublicRevokeSessionRequest{
-		ApiService: a,
-		ctx:        ctx,
-		id:         id,
-	}
-}
-
-/*
- * Execute executes the request
- */
-func (a *V0alpha2ApiService) PublicRevokeSessionExecute(r V0alpha2ApiApiPublicRevokeSessionRequest) (*http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		localVarFormFileName string
-		localVarFileName     string
-		localVarFileBytes    []byte
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "V0alpha2ApiService.PublicRevokeSession")
-	if err != nil {
-		return nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/sessions/others/{id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"id"+"}", url.PathEscape(parameterToString(r.id, "")), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFormFileName, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 401 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 500 {
-			var v JsonError
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarHTTPResponse, newErr
-	}
-
-	return localVarHTTPResponse, nil
 }
 
 type V0alpha2ApiApiSubmitSelfServiceLoginFlowRequest struct {

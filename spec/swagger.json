@@ -1997,7 +1997,7 @@
         }
       }
     },
-    "/sessions/others": {
+    "/sessions": {
       "get": {
         "description": "This endpoint is useful for:\n\nDisplaying all other sessions that belong to the logged-in user",
         "schemes": [
@@ -2008,7 +2008,7 @@
           "v0alpha2"
         ],
         "summary": "This endpoints returns all other active sessions that belong to the logged-in user.\nThe current session can be retrieved by calling the `/sessions/whoami` endpoint.",
-        "operationId": "publicListOtherSessions",
+        "operationId": "listSessions",
         "parameters": [
           {
             "type": "string",
@@ -2085,7 +2085,7 @@
           "v0alpha2"
         ],
         "summary": "Calling this endpoint invalidates all except the current session that belong to the logged-in user.\nSession data are not deleted.",
-        "operationId": "publicRevokeOtherSessions",
+        "operationId": "revokeSessions",
         "parameters": [
           {
             "type": "string",
@@ -2102,9 +2102,9 @@
         ],
         "responses": {
           "200": {
-            "description": "publicRevokeMySessionsResponse",
+            "description": "revokedSessions",
             "schema": {
-              "$ref": "#/definitions/publicRevokeMySessionsResponse"
+              "$ref": "#/definitions/revokedSessions"
             }
           },
           "400": {
@@ -2120,52 +2120,6 @@
             }
           },
           "404": {
-            "description": "jsonError",
-            "schema": {
-              "$ref": "#/definitions/jsonError"
-            }
-          },
-          "500": {
-            "description": "jsonError",
-            "schema": {
-              "$ref": "#/definitions/jsonError"
-            }
-          }
-        }
-      }
-    },
-    "/sessions/others/{id}": {
-      "delete": {
-        "description": "This endpoint is useful for:\n\nTo forcefully logout the current user from another device or session",
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "v0alpha2"
-        ],
-        "summary": "Calling this endpoint invalidates the specified session. The current session cannot be revoked.\nSession data are not deleted.",
-        "operationId": "publicRevokeSession",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "ID is the session's ID.",
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "$ref": "#/responses/emptyResponse"
-          },
-          "400": {
-            "description": "jsonError",
-            "schema": {
-              "$ref": "#/definitions/jsonError"
-            }
-          },
-          "401": {
             "description": "jsonError",
             "schema": {
               "$ref": "#/definitions/jsonError"
@@ -2223,6 +2177,52 @@
             }
           },
           "403": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "500": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{id}": {
+      "delete": {
+        "description": "This endpoint is useful for:\n\nTo forcefully logout the current user from another device or session",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "v0alpha2"
+        ],
+        "summary": "Calling this endpoint invalidates the specified session. The current session cannot be revoked.\nSession data are not deleted.",
+        "operationId": "revokeSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID is the session's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "jsonError",
+            "schema": {
+              "$ref": "#/definitions/jsonError"
+            }
+          },
+          "401": {
             "description": "jsonError",
             "schema": {
               "$ref": "#/definitions/jsonError"
@@ -2728,10 +2728,10 @@
         }
       }
     },
-    "publicRevokeMySessionsResponse": {
+    "revokedSessions": {
       "type": "object",
       "properties": {
-        "number_revoked_sessions": {
+        "count": {
           "description": "The number of sessions that were revoked.",
           "type": "integer",
           "format": "int64"

@@ -528,13 +528,13 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		otherSess.Active = true
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &otherSess))
 
-		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/others", nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions", nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
-		assert.Equal(t, int64(1), gjson.GetBytes(body, "number_revoked_sessions").Int(), "%s", body)
+		assert.Equal(t, int64(1), gjson.GetBytes(body, "count").Int(), "%s", body)
 
 		actualOther, err := reg.SessionPersister().GetSession(ctx, otherSess.ID)
 		require.NoError(t, err)
@@ -556,7 +556,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &others[j]))
 		}
 
-		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/others/"+others[0].ID.String(), nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/"+others[0].ID.String(), nil)
 		res, err := client.Do(req)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -577,7 +577,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 	t.Run("case=should not revoke current session", func(t *testing.T) {
 		client, _, currSess := setup(t)
 
-		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/others/"+currSess.ID.String(), nil)
+		req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/"+currSess.ID.String(), nil)
 		resp, err := client.Do(req)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -593,7 +593,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, &otherSess))
 
 		for j, id := range []uuid.UUID{otherSess.ID, uuid.Must(uuid.NewV4())} {
-			req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/others/"+id.String(), nil)
+			req, _ := http.NewRequest("DELETE", ts.URL+"/sessions/"+id.String(), nil)
 			resp, err := client.Do(req)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "case=%d", j)
