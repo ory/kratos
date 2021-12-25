@@ -438,8 +438,8 @@
           },
           {
             "type": "boolean",
-            "description": "ActiveOnly is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.",
-            "name": "active_only",
+            "description": "Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned.",
+            "name": "active",
             "in": "query"
           }
         ],

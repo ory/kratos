@@ -456,7 +456,7 @@ Name | Type | Description  | Notes
 
 ## AdminListIdentitySessions
 
-> []Session AdminListIdentitySessions(ctx, id).PerPage(perPage).Page(page).ActiveOnly(activeOnly).Execute()
+> []Session AdminListIdentitySessions(ctx, id).PerPage(perPage).Page(page).Active(active).Execute()
 
 This endpoint returns all sessions that belong to the given Identity.
 
@@ -478,11 +478,11 @@ func main() {
     id := "id_example" // string | ID is the identity's ID.
     perPage := int64(789) // int64 | Items per Page  This is the number of items per page. (optional) (default to 250)
     page := int64(789) // int64 | Pagination Page (optional) (default to 0)
-    activeOnly := true // bool | ActiveOnly is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. (optional)
+    active := true // bool | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.V0alpha2Api.AdminListIdentitySessions(context.Background(), id).PerPage(perPage).Page(page).ActiveOnly(activeOnly).Execute()
+    resp, r, err := apiClient.V0alpha2Api.AdminListIdentitySessions(context.Background(), id).PerPage(perPage).Page(page).Active(active).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `V0alpha2Api.AdminListIdentitySessions``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -510,7 +510,7 @@ Name | Type | Description  | Notes
 
  **perPage** | **int64** | Items per Page  This is the number of items per page. | [default to 250]
  **page** | **int64** | Pagination Page | [default to 0]
- **activeOnly** | **bool** | ActiveOnly is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. | 
+ **active** | **bool** | Active is a boolean flag that filters out sessions based on the state. If no value is provided, all sessions are returned. | 
 
 ### Return type
 

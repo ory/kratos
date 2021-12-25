@@ -429,11 +429,11 @@ paths:
           minimum: 0
           type: integer
         style: form
-      - description: ActiveOnly is a boolean flag that filters out sessions based
-          on the state. If no value is provided, all sessions are returned.
+      - description: Active is a boolean flag that filters out sessions based on the
+          state. If no value is provided, all sessions are returned.
         explode: true
         in: query
-        name: active_only
+        name: active
         required: false
         schema:
           type: boolean

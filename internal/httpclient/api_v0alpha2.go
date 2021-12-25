@@ -1962,7 +1962,7 @@ type V0alpha2ApiApiAdminListIdentitySessionsRequest struct {
 	id         string
 	perPage    *int64
 	page       *int64
-	activeOnly *bool
+	active     *bool
 }
 
 func (r V0alpha2ApiApiAdminListIdentitySessionsRequest) PerPage(perPage int64) V0alpha2ApiApiAdminListIdentitySessionsRequest {
@@ -1973,8 +1973,8 @@ func (r V0alpha2ApiApiAdminListIdentitySessionsRequest) Page(page int64) V0alpha
 	r.page = &page
 	return r
 }
-func (r V0alpha2ApiApiAdminListIdentitySessionsRequest) ActiveOnly(activeOnly bool) V0alpha2ApiApiAdminListIdentitySessionsRequest {
-	r.activeOnly = &activeOnly
+func (r V0alpha2ApiApiAdminListIdentitySessionsRequest) Active(active bool) V0alpha2ApiApiAdminListIdentitySessionsRequest {
+	r.active = &active
 	return r
 }
 
@@ -2031,8 +2031,8 @@ func (a *V0alpha2ApiService) AdminListIdentitySessionsExecute(r V0alpha2ApiApiAd
 	if r.page != nil {
 		localVarQueryParams.Add("page", parameterToString(*r.page, ""))
 	}
-	if r.activeOnly != nil {
-		localVarQueryParams.Add("active_only", parameterToString(*r.activeOnly, ""))
+	if r.active != nil {
+		localVarQueryParams.Add("active", parameterToString(*r.active, ""))
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
