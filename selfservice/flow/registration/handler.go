@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/herodot"
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/nosurf"
@@ -95,7 +94,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
 
 	if !h.d.Config(r.Context()).SelfServiceFlowRegistrationEnabled() {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Registration is not allowed because it was disabled."))
+		return nil, errors.WithStack(ErrRegistrationDisabled)
 	}
 
 	f, err := NewFlow(h.d.Config(r.Context()), h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
@@ -307,7 +306,7 @@ type getSelfServiceRegistrationFlow struct {
 func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	if !h.d.Config(r.Context()).SelfServiceFlowRegistrationEnabled() {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Registration is not allowed because it was disabled.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled))
 		return
 	}
 

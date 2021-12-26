@@ -369,6 +369,16 @@ declare global {
       disableRecovery(): Chainable<void>
 
       /**
+       * Disables registration
+       */
+      disableRegistration(): Chainable<void>
+
+      /**
+       * Enables registration
+       */
+      enableRegistration(): Chainable<void>
+
+      /**
        * Expect a recovery email which is valid.
        *
        * @param opts

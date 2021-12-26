@@ -158,6 +158,7 @@ func TestInitFlow(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
+
 		t.Run("case=relative redirect when self-service registration ui is a relative URL", func(t *testing.T) {
 			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, "/registration-ts")
 			assert.Regexp(
@@ -165,6 +166,63 @@ func TestInitFlow(t *testing.T) {
 				"^/registration-ts.*$",
 				testhelpers.GetSelfServiceRedirectLocation(t, publicTS.URL+registration.RouteInitBrowserFlow),
 			)
+		})
+	})
+}
+
+func TestDisabledFlow(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, false)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+		map[string]interface{}{"enabled": true})
+
+	publicTS, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	errTS := testhelpers.NewErrorTestServer(t, reg)
+
+	makeRequest := func(t *testing.T, route string, isSPA bool) (*http.Response, []byte) {
+		c := publicTS.Client()
+		req, err := http.NewRequest("GET", publicTS.URL+route, nil)
+		require.NoError(t, err)
+
+		if isSPA {
+			req.Header.Set("Accept", "application/json")
+		}
+
+		res, err := c.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		return res, body
+	}
+
+	t.Run("flow=api", func(t *testing.T) {
+		t.Run("case=init fails when flow disabled", func(t *testing.T) {
+			res, body := makeRequest(t, registration.RouteInitAPIFlow, false)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+
+		t.Run("case=get flow fails when flow disabled", func(t *testing.T) {
+			res, body := makeRequest(t, registration.RouteGetFlow+"?id="+x.NewUUID().String(), false)
+			require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
+			assert.EqualValues(t, registration.ErrRegistrationDisabled.ReasonField, gjson.GetBytes(body, "reason").String(), "%s", body)
+		})
+	})
+
+	t.Run("flow=browser", func(t *testing.T) {
+		t.Run("case=init responds with error if flow disabled and SPA", func(t *testing.T) {
+			res, body := makeRequest(t, registration.RouteInitBrowserFlow, true)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+
+		t.Run("case=get flow responds with error if flow disabled and SPA", func(t *testing.T) {
+			res, body := makeRequest(t, registration.RouteGetFlow+"?id="+x.NewUUID().String(), true)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 	})
 }
