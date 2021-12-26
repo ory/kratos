@@ -7,7 +7,8 @@
     <a href="https://www.ory.sh/kratos/docs/">Guide</a> |
     <a href="https://www.ory.sh/kratos/docs/sdk/api">API Docs</a> |
     <a href="https://godoc.org/github.com/ory/kratos">Code Docs</a><br/><br/>
-    <a href="https://opencollective.com/ory">Support this project!</a>
+    <a href="https://opencollective.com/ory">Support this project!</a><br/><br/>
+    <a href="https://www.ory.sh/jobs/">Work in Open Source, Ory is hiring!</a>
 </h4>
 
 ---
@@ -198,14 +199,26 @@ that your company deserves a spot here, reach out to
         <tr>
             <td>Adopter *</td>
             <td>Cloudbear</td>
-            <td align="center"><img height="32px" src="../../../static/adopters/cloudbear.svg" alt="Cloudbear"></td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/cloudbear.svg" alt="Cloudbear"></td>
             <td><a href="https://cloudbear.eu/">cloudbear.eu</a></td>
         </tr>
         <tr>
             <td>Adopter *</td>
             <td>Security Onion Solutions</td>
-            <td align="center"><img height="32px" src="../../../static/adopters/securityonion.svg" alt="Security Onion Solutions"></td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/securityonion.svg" alt="Security Onion Solutions"></td>
             <td><a href="https://securityonionsolutions.com/">securityonionsolutions.com</a></td>
+        </tr>        
+        <tr>
+            <td>Adopter *</td>
+            <td>Factly</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/factly.svg" alt="Factly"></td>
+            <td><a href="https://factlylabs.com/">factlylabs.com</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>Nortal</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/nortal.svg" alt="Nortal"></td>
+            <td><a href="https://nortal.com/">nortal.com</a></td>
         </tr>
         <tr>
             <td>Sponsor</td>

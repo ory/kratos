@@ -315,7 +315,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, spotify.",
           "type": "string",
           "enum": [
             "github",
@@ -330,7 +330,8 @@
             "auth0",
             "vk",
             "yandex",
-            "apple"
+            "apple",
+            "spotify"
           ],
           "examples": [
             "google"
@@ -837,7 +838,7 @@
                 },
                 "lifespan": {
                   "type": "string",
-                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
                   "examples": [
                     "1h",
@@ -847,7 +848,7 @@
                 },
                 "privileged_session_max_age": {
                   "type": "string",
-                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
                   "examples": [
                     "1h",
@@ -894,7 +895,7 @@
                 },
                 "lifespan": {
                   "type": "string",
-                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
                   "examples": [
                     "1h",
@@ -926,7 +927,7 @@
                 },
                 "lifespan": {
                   "type": "string",
-                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
                   "examples": [
                     "1h",
@@ -970,7 +971,7 @@
                   "title": "Self-Service Verification Request Lifespan",
                   "description": "Sets how long the verification request (for the UI interaction) is valid.",
                   "type": "string",
-                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
                   "examples": [
                     "1h",
@@ -1008,7 +1009,7 @@
                   "title": "Self-Service Recovery Request Lifespan",
                   "description": "Sets how long the recovery request is valid. If expired, the user has to redo the flow.",
                   "type": "string",
-                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                   "default": "1h",
                   "examples": [
                     "1h",
@@ -1068,7 +1069,7 @@
                     "lifespan": {
                       "title": "How long a link is valid for",
                       "type": "string",
-                      "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                      "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
                       "default": "1h",
                       "examples": [
                         "1h",
@@ -1960,13 +1961,13 @@
             "expected_duration": {
               "description": "The time a hashing operation (~login latency) should take.",
               "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
               "default": "500ms"
             },
             "expected_deviation": {
               "description": "The standard deviation expected for hashing operations. If this value is exceeded you will be warned in the logs to adjust the parameters.",
               "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+              "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
               "default": "500ms"
             },
             "dedicated_memory": {
@@ -2063,7 +2064,7 @@
           "title": "Session Lifespan",
           "description": "Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.",
           "type": "string",
-          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+          "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
           "default": "24h",
           "examples": [
             "1h",

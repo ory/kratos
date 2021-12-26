@@ -336,11 +336,12 @@ Cypress.Commands.add('loginApiWithoutCookies', ({ email, password } = {}) => {
   })
 })
 
-Cypress.Commands.add('recoverApi', ({ email }) =>
-  cy
-    .request({
-      url: APP_URL + '/self-service/recovery/api'
-    })
+Cypress.Commands.add('recoverApi', ({ email, returnTo }) => {
+  let url = APP_URL + '/self-service/recovery/api'
+  if (returnTo) {
+    url += '?return_to=' + returnTo
+  }
+  cy.request({ url })
     .then(({ body }) => {
       const form = body.ui
       return cy.request({
@@ -352,7 +353,7 @@ Cypress.Commands.add('recoverApi', ({ email }) =>
     .then(({ body }) => {
       expect(body.state).to.contain('sent_email')
     })
-)
+})
 
 Cypress.Commands.add(
   'registerOidc',

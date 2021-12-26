@@ -16,7 +16,7 @@ context('Mobile Profile', () => {
     describe('show errors when invalid signup data is used', () => {
       it('should show an error when the password has leaked before', () => {
         cy.get('input[data-testid="traits.email"]').type(email)
-        cy.get('input[data-testid="password"]').type('123456')
+        cy.get('input[data-testid="password"]').type('12345678')
         cy.get('input[data-testid="traits.website"]').type(website)
         cy.get('div[data-testid="submit-form"]').click()
 
