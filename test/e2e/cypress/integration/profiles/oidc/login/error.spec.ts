@@ -64,6 +64,28 @@ context('Social Sign In Errors', () => {
           'no id_token'
         )
       })
+
+      it('should fail to convert a sign in flow to a sign up flow when registration is disabled', () => {
+        cy.disableRegistration()
+
+        const email = gen.email()
+        cy.visit(login)
+        cy.triggerOidc()
+
+        cy.get('#username').clear().type(email)
+        cy.get('#remember').click()
+        cy.get('#accept').click()
+        cy.get('[name="scope"]').each(($el) => cy.wrap($el).click())
+        cy.get('#remember').click()
+        cy.get('#accept').click()
+
+        cy.get('[data-testid="ui/message/4000001"]').should(
+          'contain.text',
+          'Registration is not allowed because it was disabled'
+        )
+
+        cy.noSession()
+      })
     })
   })
 })
