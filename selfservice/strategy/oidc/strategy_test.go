@@ -79,6 +79,8 @@ func TestStrategy(t *testing.T) {
 			Mapper:       "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
+
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})

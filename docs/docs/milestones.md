@@ -81,9 +81,6 @@ New feature or request.
       ([kratos#707](https://github.com/ory/kratos/issues/707))
 - [ ] improve multi schema handling in different auth flows
       ([kratos#765](https://github.com/ory/kratos/issues/765))
-- [ ] Add option for disabling registration
-      ([kratos#882](https://github.com/ory/kratos/issues/882)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Password policies: make api.pwnedpasswords.com configurable
       ([kratos#969](https://github.com/ory/kratos/issues/969))
 - [ ] Access identity schema information (e.g. usernames) within the jsonnet
@@ -110,6 +107,9 @@ New feature or request.
       [@Alano Terblanche](https://github.com/Benehiko)
 - [x] Add i18n support to mail templates
       ([kratos#834](https://github.com/ory/kratos/issues/834))
+- [x] Add option for disabling registration
+      ([kratos#882](https://github.com/ory/kratos/issues/882)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] login ui returned without flowid
       ([kratos#1055](https://github.com/ory/kratos/issues/1055))
 - [x] Allow account recovery for identities without email address

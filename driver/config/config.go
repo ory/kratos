@@ -102,6 +102,7 @@ const (
 	ViperKeySelfServiceStrategyConfig                        = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsWhitelistedReturnToDomains                   = "selfservice.whitelisted_return_urls"
+	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
@@ -512,6 +513,10 @@ func (p *Config) DisableAPIFlowEnforcement() bool {
 		return true
 	}
 	return false
+}
+
+func (p *Config) SelfServiceFlowRegistrationEnabled() bool {
+	return p.p.Bool(ViperKeySelfServiceRegistrationEnabled)
 }
 
 func (p *Config) SelfServiceFlowVerificationEnabled() bool {

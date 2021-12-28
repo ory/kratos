@@ -200,6 +200,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("method=registration", func(t *testing.T) {
+			assert.Equal(t, true, p.SelfServiceFlowRegistrationEnabled())
 			assert.Equal(t, time.Minute*98, p.SelfServiceFlowRegistrationRequestLifespan())
 
 			t.Run("hook=before", func(t *testing.T) {
@@ -516,6 +517,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 			expect: func(t *testing.T, p *config.Config) {
 				assert.True(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.False(t, p.SelfServiceFlowVerificationEnabled())
+				assert.True(t, p.SelfServiceFlowRegistrationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
 				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy("link").Enabled)
@@ -529,6 +531,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.True(t, p.SelfServiceFlowVerificationEnabled())
+				assert.True(t, p.SelfServiceFlowRegistrationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
 				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
 				assert.True(t, p.SelfServiceStrategy("link").Enabled)
