@@ -139,7 +139,7 @@ type RegistryDefault struct {
 	buildDate    string
 
 	csrfTokenGenerator x.CSRFToken
-	httpClientProvider x.HttpClientProvider
+	httpClientProvider x.HTTPClientProvider
 }
 
 func (m *RegistryDefault) Audit() *logrusx.Logger {
@@ -254,11 +254,11 @@ func (m *RegistryDefault) CSRFHandler() nosurf.Handler {
 	return m.nosurf
 }
 
-func (m *RegistryDefault) HttpClient() *retryablehttp.Client {
+func (m *RegistryDefault) HTTPClient() *retryablehttp.Client {
 	if m.httpClientProvider == nil {
 		m.httpClientProvider = x.NewResilientHttpClient(m.Logger())
 	}
-	return m.httpClientProvider.HttpClient()
+	return m.httpClientProvider.HTTPClient()
 }
 
 func (m *RegistryDefault) Config(ctx context.Context) *config.Config {

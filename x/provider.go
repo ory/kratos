@@ -44,22 +44,22 @@ func (s *SimpleLoggerWithClient) Audit() *logrusx.Logger {
 	return s.L
 }
 
-func (s *SimpleLoggerWithClient) HttpClient() *retryablehttp.Client {
+func (s *SimpleLoggerWithClient) HTTPClient() *retryablehttp.Client {
 	return s.C
 }
 
 var _ LoggingProvider = (*SimpleLoggerWithClient)(nil)
-var _ HttpClientProvider = (*SimpleLoggerWithClient)(nil)
+var _ HTTPClientProvider = (*SimpleLoggerWithClient)(nil)
 
-type HttpClientProvider interface {
-	HttpClient() *retryablehttp.Client
+type HTTPClientProvider interface {
+	HTTPClient() *retryablehttp.Client
 }
 
 type ResilientHttpClient struct {
 	client *retryablehttp.Client
 }
 
-func (r *ResilientHttpClient) HttpClient() *retryablehttp.Client {
+func (r *ResilientHttpClient) HTTPClient() *retryablehttp.Client {
 	return r.client
 }
 

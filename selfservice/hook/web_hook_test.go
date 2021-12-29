@@ -224,7 +224,7 @@ func TestWebHookConfig(t *testing.T) {
 				"url": "https://test.kratos.ory.sh/my_hook1",
 				"method": "POST",
 				"body": "/path/to/my/jsonnet1.file",
-				"canInterrupt": true
+				"can_interrupt": true
 			}`,
 			canInterrupt: true,
 			authStrategy: &noopAuthStrategy{},
@@ -784,7 +784,7 @@ func TestWebHooks(t *testing.T) {
 								"url": "%s",
 								"method": "%s",
 								"body": "%s",
-								"canInterrupt": true
+								"can_interrupt": true
 							}`, ts.URL+path, method, "file://./stub/test_body.jsonnet"))
 
 					wh := NewWebHook(&x.SimpleLoggerWithClient{L: logrusx.New("kratos", "test"), C: httpx.NewResilientClient()}, conf)

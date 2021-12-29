@@ -64,7 +64,7 @@ type (
 
 	webHookDependencies interface {
 		x.LoggingProvider
-		x.HttpClientProvider
+		x.HTTPClientProvider
 	}
 
 	templateContext struct {
@@ -177,7 +177,7 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 			Type   string
 			Config json.RawMessage
 		}
-		CanInterrupt bool
+		CanInterrupt bool `json:"can_interrupt"`
 	}
 
 	var rc rawWebHookConfig
@@ -303,7 +303,7 @@ func (e *WebHook) execute(data *templateContext) error {
 	if body == nil {
 		body = bytes.NewReader(make([]byte, 0))
 	}
-	if err = doHttpCall(e.r.HttpClient(), conf.method, conf.url, conf.auth, conf.canInterrupt, body); err != nil {
+	if err = doHttpCall(e.r.HTTPClient(), conf.method, conf.url, conf.auth, conf.canInterrupt, body); err != nil {
 		return fmt.Errorf("failed to call web hook %w", err)
 	}
 
