@@ -74,7 +74,7 @@ func (e *HookExecutor) handleLoginError(_ http.ResponseWriter, r *http.Request, 
 		if i != nil {
 			cont, err := container.NewFromStruct("", g, i.Traits, "traits")
 			if err != nil {
-				e.d.Logger().WithField("error", err).Warn("could not update flow UI")
+				e.d.Logger().WithError(err).Warn("could not update flow UI")
 				return err
 			}
 

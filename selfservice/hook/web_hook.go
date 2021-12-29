@@ -81,20 +81,20 @@ type (
 	}
 
 	detailedMessage struct {
-		ID      int
-		Text    string
-		Type    string
+		ID      int             `json:"id"`
+		Text    string          `json:"text"`
+		Type    string          `json:"type"`
 		Context json.RawMessage `json:"context,omitempty"`
 	}
 
 	errorMessage struct {
-		InstancePtr      string
-		Message          string
-		DetailedMessages []detailedMessage
+		InstancePtr      string            `json:"instance_ptr"`
+		Message          string            `json:"message"`
+		DetailedMessages []detailedMessage `json:"detailed_messages"`
 	}
 
 	rawHookResponse struct {
-		Messages []errorMessage
+		Messages []errorMessage `json:"messages"`
 	}
 )
 
@@ -353,11 +353,14 @@ func doHttpCall(client *retryablehttp.Client, method string, url string, as Auth
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
 
+	req.Header.Set("Content-Type", "application/json")
 	as.apply(req.Request)
 
 	resp, err := client.Do(req)
+	if err == nil {
+		defer resp.Body.Close()
+	}
 
 	if err != nil {
 		return err
@@ -367,7 +370,7 @@ func doHttpCall(client *retryablehttp.Client, method string, url string, as Auth
 				return err
 			}
 		}
-		return fmt.Errorf("web hook failed with status code %v", resp.StatusCode)
+		return errors.Errorf("web hook failed with status code %v", resp.StatusCode)
 	}
 
 	return nil
@@ -375,13 +378,10 @@ func doHttpCall(client *retryablehttp.Client, method string, url string, as Auth
 
 func parseResponse(resp *http.Response) (err error) {
 	if resp == nil {
-		return fmt.Errorf("empty response provided from the webhook")
+		return errors.Errorf("empty response provided from the webhook")
 	}
 
-	hookResponse := &rawHookResponse{
-		Messages: []errorMessage{},
-	}
-
+	var hookResponse rawHookResponse
 	if err := json.NewDecoder(resp.Body).Decode(&hookResponse); err != nil {
 		return errors.Wrap(err, "hook response could not be unmarshalled properly from JSON")
 	}
@@ -393,7 +393,7 @@ func parseResponse(resp *http.Response) (err error) {
 			messages.Add(&text.Message{
 				ID:      text.ID(detail.ID),
 				Text:    detail.Text,
-				Type:    text.Type(detail.Type),
+				Type:    detail.Type,
 				Context: detail.Context,
 			})
 		}

@@ -109,7 +109,7 @@ func (e *HookExecutor) handleSettingsError(_ http.ResponseWriter, r *http.Reques
 
 			cont, err := container.NewFromStruct("", group, i.Traits, "traits")
 			if err != nil {
-				e.d.Logger().WithField("error", err).Warn("could not update flow UI")
+				e.d.Logger().WithError(err)("could not update flow UI")
 				return err
 			}
 

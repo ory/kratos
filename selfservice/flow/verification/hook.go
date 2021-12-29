@@ -69,7 +69,7 @@ func (e *HookExecutor) handleVerificationError(_ http.ResponseWriter, r *http.Re
 		if i != nil {
 			cont, err := container.NewFromStruct("", node.RecoveryLinkGroup, i.Traits, "traits")
 			if err != nil {
-				e.d.Logger().WithField("error", err).Warn("could not update flow UI")
+				e.d.Logger().WithError(err)("could not update flow UI")
 				return err
 			}
 

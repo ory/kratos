@@ -98,7 +98,7 @@ func (e *HookExecutor) handleRegistrationError(_ http.ResponseWriter, r *http.Re
 
 			cont, err := container.NewFromStruct("", group, i.Traits, "traits")
 			if err != nil {
-				e.d.Logger().WithField("error", err).Warn("could not update flow UI")
+				e.d.Logger().WithError(err)("could not update flow UI")
 				return err
 			}
 
