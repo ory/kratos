@@ -12,8 +12,8 @@ import (
 	"github.com/ory/kratos/x/xsql"
 
 	"github.com/go-errors/errors"
-	"github.com/gobuffalo/pop/v5"
-	"github.com/gobuffalo/pop/v5/logging"
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gobuffalo/pop/v6/logging"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
