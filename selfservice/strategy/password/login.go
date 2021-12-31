@@ -69,11 +69,12 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewPasswordRateLimitError()))
 	}
 
-	increaseRateLimitWait(s.d.Config(r.Context()), r, p)
+
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
 		notFoundLoginDelay := x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation)
 		time.Sleep(notFoundLoginDelay)
+		increasePasswordAttemptWait(s.d.Config(r.Context()), r, p)
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
@@ -84,7 +85,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
-		// increase backoff for this visitor?
+		increasePasswordAttemptWait(s.d.Config(r.Context()), r, p)
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
@@ -102,7 +103,8 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), f); err != nil {
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
-
+	// success, clear the rate limit for this user+ip
+	resetRateLimit(r, p)
 	return i, nil
 }
 

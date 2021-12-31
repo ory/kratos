@@ -46,8 +46,7 @@ func getVisitor(r *http.Request, p submitSelfServiceLoginFlowWithPasswordMethodB
 
 	visitorKey := getVisitorKey(r, p)
 	v, exists := visitors[visitorKey]
-	// reset the clock after some reasonable amount of time, if it hasn't been cleaned up otherwise
-	if !exists || time.Now().Sub(v.lastSeen) > time.Minute*10 {
+	if !exists {
 		backoff, _ := time.ParseDuration("1s")
 		l := rate.NewLimiter(rate.Every(backoff), 2)
 		visitors[visitorKey] = &visitor{l, backoff, time.Now()}
@@ -58,7 +57,7 @@ func getVisitor(r *http.Request, p submitSelfServiceLoginFlowWithPasswordMethodB
 	return v.limiter
 }
 
-func increaseRateLimitWait(config *config.Config, r *http.Request, p submitSelfServiceLoginFlowWithPasswordMethodBody) *rate.Limiter {
+func increasePasswordAttemptWait(config *config.Config, r *http.Request, p submitSelfServiceLoginFlowWithPasswordMethodBody) *rate.Limiter {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -76,13 +75,20 @@ func increaseRateLimitWait(config *config.Config, r *http.Request, p submitSelfS
 	return nil
 }
 
+func resetRateLimit(r *http.Request, p submitSelfServiceLoginFlowWithPasswordMethodBody){
+	mu.Lock()
+	visitorKey := getVisitorKey(r, p)
+	delete(visitors, visitorKey)
+	mu.Unlock()
+}
+
 func CleanupRateLimits() {
 	for {
 		time.Sleep(time.Minute)
 
 		mu.Lock()
 		for ip, v := range visitors {
-			if time.Since(v.lastSeen) > 5*time.Minute {
+			if time.Since(v.lastSeen) > 10*time.Minute {
 				delete(visitors, ip)
 			}
 		}
