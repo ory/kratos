@@ -397,7 +397,10 @@ login, account recovery) integration documentation.
 
 ## Bruteforce Attacks
 
-Will be addressed in a future release.
+### Rate Limiting
+Repeatedly trying to login with the wrong password (or for a non-existent user)
+will result in increasingly slower responses to the attempting client, up to
+the configured `selfservice.methods.password.config.rate_limit_max_duration` (Default 30s)
 
 ## Phishing Attacks
 
