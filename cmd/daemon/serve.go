@@ -2,11 +2,8 @@ package daemon
 
 import (
 	"crypto/tls"
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"net/http"
 	"sync"
-
-	"github.com/ory/kratos/selfservice/flow/recovery"
 
 	"github.com/ory/x/reqlog"
 
@@ -35,11 +32,13 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
