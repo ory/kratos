@@ -1,15 +1,17 @@
 package password
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
-	"github.com/ory/kratos/driver/config"
-	"golang.org/x/time/rate"
 	"math"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/time/rate"
+
+	"github.com/ory/kratos/driver/config"
 )
 
 var visitors = make(map[string]*visitor)
@@ -36,7 +38,7 @@ func getRequestIp(r *http.Request) string {
 
 func getVisitorKey(r *http.Request, p submitSelfServiceLoginFlowWithPasswordMethodBody) string {
 	keyString := fmt.Sprintf("%s-%s", p.Identifier, getRequestIp(r))
-	hash := sha1.Sum([]byte(keyString))
+	hash := sha256.Sum256([]byte(keyString))
 	return fmt.Sprintf("%x", hash)
 }
 
@@ -75,7 +77,7 @@ func increasePasswordAttemptWait(config *config.Config, r *http.Request, p submi
 	return nil
 }
 
-func resetRateLimit(r *http.Request, p submitSelfServiceLoginFlowWithPasswordMethodBody){
+func resetRateLimit(r *http.Request, p submitSelfServiceLoginFlowWithPasswordMethodBody) {
 	mu.Lock()
 	visitorKey := getVisitorKey(r, p)
 	delete(visitors, visitorKey)
