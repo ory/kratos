@@ -94,6 +94,7 @@ const (
 	ErrorValidationLookupAlreadyUsed
 	ErrorValidationNoWebAuthnDevice
 	ErrorValidationNoLookup
+	ErrorValidationPasswordRateLimit
 )
 
 const (

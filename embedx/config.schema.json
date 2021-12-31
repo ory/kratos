@@ -1121,6 +1121,12 @@
                       "description": "If set to false the password validation fails when the network or the Have I Been Pwnd API is down.",
                       "type": "boolean",
                       "default": true
+                    },
+                    "rate_limit_max_duration": {
+                      "title": "Rate Limit Max Duration",
+                      "description": "When a user is being increasingly rate-limited because they're entering incorrect passwords too rapidly, this is the max time they'll be delayed.",
+                      "type": "string",
+                      "default": "30s"
                     }
                   },
                   "additionalProperties": false

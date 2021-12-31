@@ -1572,7 +1572,6 @@ github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c h1
 github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c/go.mod h1:61Z4zNpOoshtEmLmp6T13G9adSk66/dYTfTBEnCLwVQ=
 github.com/ory/jsonschema/v3 v3.0.1/go.mod h1:jgLHekkFk0uiGdEWGleC+tOm6JSSP8cbf17PnBuGXlw=
 github.com/ory/jsonschema/v3 v3.0.3/go.mod h1:JvXwbx7IxAkIAo7Qo5OSC1lea+w12DtYGV8h+MTAfnA=
-github.com/ory/jsonschema/v3 v3.0.4 h1:xI5eEjhl7p8aU2568esHv1t5jpKIHvaEII+hlBt7dnQ=
 github.com/ory/jsonschema/v3 v3.0.4/go.mod h1:lC4vfZfOalFjz1P1bSHcXbCQXbLjrKvTfX83SmyU6BU=
 github.com/ory/jsonschema/v3 v3.0.5-0.20211222152031-b530fb44a010 h1:EAoq3pyp2tfTHJpfHTruF7mfGDtpiOiLgMTM/oG4dyA=
 github.com/ory/jsonschema/v3 v3.0.5-0.20211222152031-b530fb44a010/go.mod h1:BYoDlVglsc+iEG4x+dH3GGz850bOI5ZnokRF6xorA9w=

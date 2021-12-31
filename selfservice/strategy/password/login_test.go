@@ -58,6 +58,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(config.ViperKeyMaxPasswordRateLimitMaxDuration, "10s")
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
 		checkFormContent(t, body, "password_identifier",
@@ -454,6 +455,56 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("type=spa", func(t *testing.T) {
 			check(t, expectValidationError(t, true, false, true, values))
 		})
+	})
+
+	t.Run("should fail for rate limiting", func(t *testing.T) {
+		var check = func(t *testing.T, body string) {
+			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+			assert.Contains(t, gjson.Get(body, "ui.action").String(), publicTS.URL+login.RouteSubmitFlow, "%s", body)
+
+			ensureFieldsExist(t, []byte(body))
+			assert.Equal(t,
+				errorsx.Cause(schema.NewInvalidCredentialsError()).(*schema.ValidationError).Messages[0].Text,
+				gjson.Get(body, "ui.messages.0.text").String(),
+				"%s", body,
+			)
+
+			// This must not include the password!
+			assert.Empty(t, gjson.Get(body, "ui.nodes.#(attributes.name==password).attributes.value").String())
+		}
+
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(identifier, pwd)
+
+		var values = func(v url.Values) {
+			v.Set("password_identifier", identifier)
+			v.Set("password", "not-password")
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			start := time.Now()
+			for i := 1; i < 8; i++ {
+				cycleStart := time.Now()
+				check(t, expectValidationError(t, false, false, false, values))
+				cycleEnd := time.Now()
+				t.Logf("failed attempt %d, waited %s", i, cycleEnd.Sub(cycleStart))
+			}
+			end := time.Now()
+			assert.GreaterOrEqual(t, end.Sub(start), time.Second*30, "should take at least 30 seconds to have 6 failed passwords at a max of 10s backoff")
+		})
+
+		// this user+ip is already at the max timeout, so should have trouble via API and SPA flows too
+		apiStart := time.Now()
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectValidationError(t, true, false, false, values))
+		})
+		assert.GreaterOrEqual(t, time.Now().Sub(apiStart), time.Second*9)
+
+		spaStart := time.Now()
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectValidationError(t, true, false, true, values))
+		})
+		assert.GreaterOrEqual(t, time.Now().Sub(spaStart), time.Second*9)
 	})
 
 	t.Run("should pass with real request", func(t *testing.T) {

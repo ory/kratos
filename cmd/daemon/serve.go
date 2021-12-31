@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"crypto/tls"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"net/http"
 	"sync"
 
@@ -273,6 +274,7 @@ func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []s
 	if d.Config(ctx).IsBackgroundCourierEnabled() {
 		go courier.Watch(ctx, d)
 	}
+	go password.CleanupRateLimits()
 }
 
 func ServeAll(d driver.Registry, opts ...Option) func(cmd *cobra.Command, args []string) {

@@ -63,6 +63,8 @@ selfservice:
         issuer: issuer.ory.sh
     password:
       enabled: true
+      config:
+        rate_limit_max_duration: 10s
     oidc:
       enabled: true
       config:

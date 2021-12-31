@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/gofrs/uuid"
 	"net/http"
 	"time"
-
-	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/session"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
+
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
@@ -62,9 +62,18 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleLoginError(w, r, f, &p, err)
 	}
 
+
+	visitorLimiter := getVisitor(r, p)
+	waitErr := visitorLimiter.Wait(r.Context())
+	if waitErr != nil {
+		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewPasswordRateLimitError()))
+	}
+
+	increaseRateLimitWait(s.d.Config(r.Context()), r, p)
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
-		time.Sleep(x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation))
+		notFoundLoginDelay := x.RandomDelay(s.d.Config(r.Context()).HasherArgon2().ExpectedDuration, s.d.Config(r.Context()).HasherArgon2().ExpectedDeviation)
+		time.Sleep(notFoundLoginDelay)
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
@@ -75,6 +84,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	if err := hash.Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
+		// increase backoff for this visitor?
 		return nil, s.handleLoginError(w, r, f, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 

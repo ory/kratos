@@ -87,6 +87,7 @@ func init() {
 		"NewErrorValidationAddressNotVerified":                    text.NewErrorValidationAddressNotVerified(),
 		"NewErrorValidationNoTOTPDevice":                          text.NewErrorValidationNoTOTPDevice(),
 		"NewErrorValidationNoLookup":                              text.NewErrorValidationNoLookup(),
+		"NewErrorPasswordRateLimit":                               text.NewErrorPasswordRateLimit(),
 		"NewErrorValidationNoWebAuthnDevice":                      text.NewErrorValidationNoWebAuthnDevice(),
 		"NewInfoLoginReAuth":                                      text.NewInfoLoginReAuth(),
 		"NewInfoLoginMFA":                                         text.NewInfoLoginMFA(),

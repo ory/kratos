@@ -246,3 +246,14 @@ func NewNoWebAuthnRegistered() error {
 		Messages: new(text.Messages).Add(text.NewErrorValidationNoWebAuthnDevice()),
 	})
 }
+
+func NewPasswordRateLimitError() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `You have entered too many incorrect passwords too quickly`,
+			InstancePtr: "#/",
+			Context:     &ValidationErrorContextPasswordPolicyViolation{},
+		},
+		Messages: new(text.Messages).Add(text.NewErrorPasswordRateLimit()),
+	})
+}

@@ -146,3 +146,12 @@ func NewErrorValidationNoWebAuthnDevice() *Message {
 		Context: context(nil),
 	}
 }
+
+func NewErrorPasswordRateLimit() *Message {
+	return &Message{
+		ID:      ErrorValidationPasswordRateLimit,
+		Text:    "Too many failures too quickly, please wait and try again.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}

@@ -146,6 +146,7 @@ const (
 	ViperKeyPasswordHaveIBeenPwnedEnabled                    = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                              = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
+	ViperKeyMaxPasswordRateLimitMaxDuration                  = "selfservice.methods.password.config.rate_limit_max_duration"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
 	ViperKeyWebAuthnRPDisplayName                            = "selfservice.methods.webauthn.config.rp.display_name"
 	ViperKeyWebAuthnRPID                                     = "selfservice.methods.webauthn.config.rp.id"
@@ -200,6 +201,7 @@ type (
 		HaveIBeenPwnedEnabled bool   `json:"haveibeenpwned_enabled"`
 		MaxBreaches           uint   `json:"max_breaches"`
 		IgnoreNetworkErrors   bool   `json:"ignore_network_errors"`
+		RateLimitMaxDuration  string `json:"rate_limit_max_duration"`
 	}
 	Schemas []Schema
 	Config  struct {
@@ -1047,6 +1049,7 @@ func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 		HaveIBeenPwnedEnabled: p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
 		MaxBreaches:           uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
 		IgnoreNetworkErrors:   p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+		RateLimitMaxDuration:  p.p.StringF(ViperKeyMaxPasswordRateLimitMaxDuration, "30s"),
 	}
 }
 
