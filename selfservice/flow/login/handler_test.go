@@ -228,7 +228,7 @@ func TestFlowLifecycle(t *testing.T) {
 					assert.NotEqual(t, gjson.Get(a, "session_token").String(), gjson.Get(b, "session_token").String())
 
 					assert.NotEmpty(t, gjson.Get(b, "session.id").String())
-					assert.NotEqual(t, gjson.Get(b, "session.id").String(), gjson.Get(a, "id").String())
+					assert.NotEqual(t, gjson.Get(b, "session.id").String(), gjson.Get(a, "session.id").String())
 				})
 			})
 		})
