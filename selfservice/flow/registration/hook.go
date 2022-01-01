@@ -184,15 +184,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		body := APIFlowResponse{Identity: i}
-		// only include the session if it is actually persisted
-		for _, afterHook := range c.SelfServiceFlowRegistrationAfterHooks(ct.String()) {
-			if afterHook.Name == "session" {
-				body.Session = s
-				break
-			}
-		}
-		e.d.Writer().Write(w, r, &body)
+		e.d.Writer().Write(w, r, &APIFlowResponse{Identity: i})
 		return nil
 	}
 

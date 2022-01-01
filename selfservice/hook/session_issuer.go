@@ -42,7 +42,8 @@ func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWr
 
 	if a.Type == flow.TypeAPI {
 		e.r.Writer().Write(w, r, &registration.APIFlowResponse{
-			Session: s, Token: s.Token,
+			Session:  s,
+			Token:    s.Token,
 			Identity: s.Identity,
 		})
 		return errors.WithStack(registration.ErrHookAbortFlow)
