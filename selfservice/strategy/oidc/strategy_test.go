@@ -360,7 +360,7 @@ func TestStrategy(t *testing.T) {
 			expectTokens(t, "valid", body)
 		})
 
-		t.Run("case=token from login should not the same", func(t *testing.T) {
+		t.Run("case=token from login should not be the same", func(t *testing.T) {
 			r := newLoginFlow(t, returnTS.URL, time.Minute)
 			action := afv(t, r.ID, "valid")
 			res, body := makeRequest(t, "valid", action, url.Values{})
