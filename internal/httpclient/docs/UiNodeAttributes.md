@@ -23,13 +23,14 @@ Name | Type | Description | Notes
 **Async** | **bool** | The script async type | 
 **Crossorigin** | **string** | The script cross origin policy | 
 **Integrity** | **string** | The script&#39;s integrity hash | 
+**Nonce** | **string** | Nonce for CSP  A nonce you may want to use to improve your Content Security Policy. You do not have to use this value but if you want to improve your CSP policies you may use it. You can also choose to use your own nonce value! | 
 **Referrerpolicy** | **string** | The script referrer policy | 
 
 ## Methods
 
 ### NewUiNodeAttributes
 
-`func NewUiNodeAttributes(disabled bool, name string, nodeType string, type_ string, id string, text UiText, src string, href string, title UiText, async bool, crossorigin string, integrity string, referrerpolicy string, ) *UiNodeAttributes`
+`func NewUiNodeAttributes(disabled bool, name string, nodeType string, type_ string, id string, text UiText, src string, href string, title UiText, async bool, crossorigin string, integrity string, nonce string, referrerpolicy string, ) *UiNodeAttributes`
 
 NewUiNodeAttributes instantiates a new UiNodeAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -467,6 +468,26 @@ and a boolean to check if the value has been set.
 `func (o *UiNodeAttributes) SetIntegrity(v string)`
 
 SetIntegrity sets Integrity field to given value.
+
+
+### GetNonce
+
+`func (o *UiNodeAttributes) GetNonce() string`
+
+GetNonce returns the Nonce field if non-nil, zero value otherwise.
+
+### GetNonceOk
+
+`func (o *UiNodeAttributes) GetNonceOk() (*string, bool)`
+
+GetNonceOk returns a tuple with the Nonce field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetNonce
+
+`func (o *UiNodeAttributes) SetNonce(v string)`
+
+SetNonce sets Nonce field to given value.
 
 
 ### GetReferrerpolicy

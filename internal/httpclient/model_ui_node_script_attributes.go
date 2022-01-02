@@ -26,6 +26,8 @@ type UiNodeScriptAttributes struct {
 	// The script's integrity hash
 	Integrity string `json:"integrity"`
 	NodeType  string `json:"node_type"`
+	// Nonce for CSP  A nonce you may want to use to improve your Content Security Policy. You do not have to use this value but if you want to improve your CSP policies you may use it. You can also choose to use your own nonce value!
+	Nonce string `json:"nonce"`
 	// The script referrer policy
 	Referrerpolicy string `json:"referrerpolicy"`
 	// The script source
@@ -38,13 +40,14 @@ type UiNodeScriptAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeScriptAttributes(async bool, crossorigin string, id string, integrity string, nodeType string, referrerpolicy string, src string, type_ string) *UiNodeScriptAttributes {
+func NewUiNodeScriptAttributes(async bool, crossorigin string, id string, integrity string, nodeType string, nonce string, referrerpolicy string, src string, type_ string) *UiNodeScriptAttributes {
 	this := UiNodeScriptAttributes{}
 	this.Async = async
 	this.Crossorigin = crossorigin
 	this.Id = id
 	this.Integrity = integrity
 	this.NodeType = nodeType
+	this.Nonce = nonce
 	this.Referrerpolicy = referrerpolicy
 	this.Src = src
 	this.Type = type_
@@ -179,6 +182,30 @@ func (o *UiNodeScriptAttributes) SetNodeType(v string) {
 	o.NodeType = v
 }
 
+// GetNonce returns the Nonce field value
+func (o *UiNodeScriptAttributes) GetNonce() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Nonce
+}
+
+// GetNonceOk returns a tuple with the Nonce field value
+// and a boolean to check if the value has been set.
+func (o *UiNodeScriptAttributes) GetNonceOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Nonce, true
+}
+
+// SetNonce sets field value
+func (o *UiNodeScriptAttributes) SetNonce(v string) {
+	o.Nonce = v
+}
+
 // GetReferrerpolicy returns the Referrerpolicy field value
 func (o *UiNodeScriptAttributes) GetReferrerpolicy() string {
 	if o == nil {
@@ -267,6 +294,9 @@ func (o UiNodeScriptAttributes) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["node_type"] = o.NodeType
+	}
+	if true {
+		toSerialize["nonce"] = o.Nonce
 	}
 	if true {
 		toSerialize["referrerpolicy"] = o.Referrerpolicy
