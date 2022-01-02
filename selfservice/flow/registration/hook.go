@@ -184,7 +184,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Post registration execution hooks completed successfully.")
 
 	if a.Type == flow.TypeAPI || x.IsJSONRequest(r) {
-		e.d.Writer().Write(w, r, &APIFlowResponse{Identity: i, Session: s})
+		e.d.Writer().Write(w, r, &APIFlowResponse{Identity: i})
 		return nil
 	}
 
