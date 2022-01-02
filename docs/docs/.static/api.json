@@ -1607,6 +1607,10 @@
           "node_type": {
             "$ref": "#/components/schemas/uiNodeType"
           },
+          "nonce": {
+            "description": "Nonce for CSP\n\nA nonce you may want to use to improve your Content Security Policy.\nYou do not have to use this value but if you want to improve your CSP\npolicies you may use it. You can also choose to use your own nonce value!",
+            "type": "string"
+          },
           "referrerpolicy": {
             "description": "The script referrer policy",
             "type": "string"
@@ -1628,6 +1632,7 @@
           "integrity",
           "type",
           "id",
+          "nonce",
           "node_type"
         ],
         "title": "ScriptAttributes represent script nodes which load javascript.",
