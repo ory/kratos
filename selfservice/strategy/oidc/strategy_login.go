@@ -129,7 +129,8 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 
 	sess := session.NewInactiveSession()
 	sess.CompletedLoginFor(s.ID())
-	for _, p := range o.Providers {
+	for k := range o.Providers {
+		p := &o.Providers[k]
 		if p.Subject == claims.Subject && p.Provider == provider.Config().ID {
 			i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), i.ID)
 			if err != nil {
