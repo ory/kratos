@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -75,7 +75,7 @@ func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, 
 		).
 		Order("created_at DESC").
 		First(&m); err != nil {
-		if errors.Cause(err) == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.WithStack(courier.ErrQueueEmpty)
 		}
 		return nil, sqlcon.HandleError(err)

@@ -108,7 +108,7 @@ declare global {
        *
        * @param opts
        */
-      recoverApi(opts: { email: string }): Chainable<void>
+      recoverApi(opts: { email: string; returnTo?: string }): Chainable<void>
 
       /**
        * Changes the config so that the login flow lifespan is very short.
@@ -367,6 +367,16 @@ declare global {
        * Disabled recovery
        */
       disableRecovery(): Chainable<void>
+
+      /**
+       * Disables registration
+       */
+      disableRegistration(): Chainable<void>
+
+      /**
+       * Enables registration
+       */
+      enableRegistration(): Chainable<void>
 
       /**
        * Expect a recovery email which is valid.

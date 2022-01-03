@@ -49,10 +49,14 @@ func GetRecoveryFlow(t *testing.T, client *http.Client, ts *httptest.Server) *kr
 	return rs
 }
 
-func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server) *kratos.SelfServiceRecoveryFlow {
+func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, isSPA bool, ts *httptest.Server, values url.Values) *kratos.SelfServiceRecoveryFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
-	req, err := http.NewRequest("GET", ts.URL+recovery.RouteInitBrowserFlow, nil)
+	u := ts.URL + recovery.RouteInitBrowserFlow
+	if values != nil {
+		u += "?" + values.Encode()
+	}
+	req, err := http.NewRequest("GET", u, nil)
 	require.NoError(t, err)
 
 	if isSPA {
@@ -120,7 +124,7 @@ func SubmitRecoveryForm(
 	if isAPI {
 		f = InitializeRecoveryFlowViaAPI(t, hc, publicTS)
 	} else {
-		f = InitializeRecoveryFlowViaBrowser(t, hc, isSPA, publicTS)
+		f = InitializeRecoveryFlowViaBrowser(t, hc, isSPA, publicTS, nil)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.

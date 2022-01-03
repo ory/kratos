@@ -9,7 +9,7 @@ import (
 	"github.com/ory/kratos/corp"
 	"github.com/ory/kratos/identity"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/sqlcon"

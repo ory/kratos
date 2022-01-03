@@ -176,6 +176,7 @@ selfservice:
               body: /path/to/template.jsonnet
 
     registration:
+      enabled: true
       ui_url: http://test.kratos.ory.sh/register
       lifespan: 98m
       before:

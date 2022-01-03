@@ -16,7 +16,7 @@ import (
 	"github.com/ory/kratos/otp"
 	"github.com/ory/kratos/x"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 

@@ -24,11 +24,11 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)
-			require.EqualError(t, err, courier.ErrQueueEmpty.Error())
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 			assert.Len(t, m, 0)
 
 			_, err = p.LatestQueuedMessage(ctx)
-			require.EqualError(t, err, courier.ErrQueueEmpty.Error())
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
 		messages := make([]courier.Message, 5)
@@ -68,7 +68,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 			}
 
 			_, err := p.NextMessages(ctx, 10)
-			require.EqualError(t, err, courier.ErrQueueEmpty.Error())
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
 		t.Run("case=setting message status", func(t *testing.T) {
@@ -80,7 +80,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 
 			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, courier.MessageStatusSent))
 			_, err = p.NextMessages(ctx, 1)
-			require.EqualError(t, err, courier.ErrQueueEmpty.Error())
+			require.ErrorIs(t, err, courier.ErrQueueEmpty)
 		})
 
 		t.Run("case=network", func(t *testing.T) {

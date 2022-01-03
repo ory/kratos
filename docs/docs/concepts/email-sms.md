@@ -3,8 +3,8 @@ id: email-sms
 title: Out-of-band communication via E-Mail and SMS
 ---
 
-Ory Kratos sends out-of-band messages via SMS or E-Mail. These messages are
-required for The following exemplary use cases require these messages:
+Ory Kratos sends out-of-band messages via SMS or E-Mail. The following exemplary
+use cases require these messages:
 
 - Send an account activation email
 - Verify an E-Mail address or mobile phone number using SMS

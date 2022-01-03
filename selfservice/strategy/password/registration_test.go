@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -72,10 +73,16 @@ func TestRegistration(t *testing.T) {
 		errTS := testhelpers.NewErrorTestServer(t, reg)
 		uiTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 		redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
+		redirNoSessionTS := testhelpers.NewRedirNoSessionTS(t, reg)
 
-		// Overwrite these two to ensure that they run
-		conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/default-return-to")
-		conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, redirTS.URL+"/registration-return-ts")
+		// set the "return to" server, which will assert the session state
+		// (redirTS: enforce that a session exists, redirNoSessionTS: enforce that no session exists)
+		var useReturnToFromTS = func(ts *httptest.Server) {
+			conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/default-return-to")
+			conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, ts.URL+"/registration-return-ts")
+		}
+
+		useReturnToFromTS(redirTS)
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 
 		apiClient := testhelpers.NewDebugClient(t)
@@ -470,7 +477,7 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
-		var expectSuccessfulLogin = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+		var expectLoginBody = func(t *testing.T, browserRedirTS *httptest.Server, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
 			if isAPI {
 				return testhelpers.SubmitRegistrationForm(t, isAPI, hc, publicTS, values,
 					isSPA, http.StatusOK,
@@ -481,13 +488,26 @@ func TestRegistration(t *testing.T) {
 				hc = testhelpers.NewClientWithCookies(t)
 			}
 
-			expectReturnTo := redirTS.URL + "/registration-return-ts"
+			expectReturnTo := browserRedirTS.URL + "/registration-return-ts"
 			if isSPA {
 				expectReturnTo = publicTS.URL
 			}
 
 			return testhelpers.SubmitRegistrationForm(t, isAPI, hc, publicTS, values,
 				isSPA, http.StatusOK, expectReturnTo)
+		}
+
+		var expectSuccessfulLogin = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+			useReturnToFromTS(redirTS)
+			return expectLoginBody(t, redirTS, isAPI, isSPA, hc, values)
+		}
+
+		var expectNoLogin = func(t *testing.T, isAPI, isSPA bool, hc *http.Client, values func(url.Values)) string {
+			useReturnToFromTS(redirNoSessionTS)
+			t.Cleanup(func() {
+				useReturnToFromTS(redirTS)
+			})
+			return expectLoginBody(t, redirNoSessionTS, isAPI, isSPA, hc, values)
 		}
 
 		t.Run("case=should pass and set up a session", func(t *testing.T) {
@@ -509,8 +529,7 @@ func TestRegistration(t *testing.T) {
 			})
 
 			t.Run("type=spa", func(t *testing.T) {
-				hc := testhelpers.NewClientWithCookies(t)
-				body := expectSuccessfulLogin(t, false, true, hc, func(v url.Values) {
+				body := expectSuccessfulLogin(t, false, true, nil, func(v url.Values) {
 					v.Set("traits.username", "registration-identifier-8-spa")
 					v.Set("password", x.NewUUID().String())
 					v.Set("traits.foobar", "bar")
@@ -527,6 +546,38 @@ func TestRegistration(t *testing.T) {
 					v.Set("traits.foobar", "bar")
 				})
 				assert.Equal(t, `registration-identifier-8-browser`, gjson.Get(body, "identity.traits.username").String(), "%s", body)
+			})
+		})
+
+		t.Run("case=should not set up a session if hook is not configured", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+
+			t.Run("type=api", func(t *testing.T) {
+				body := expectNoLogin(t, true, false, nil, func(v url.Values) {
+					v.Set("traits.username", "registration-identifier-8-api-nosession")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
+				})
+				assert.Equal(t, `registration-identifier-8-api-nosession`, gjson.Get(body, "identity.traits.username").String(), "%s", body)
+				assert.Empty(t, gjson.Get(body, "session_token").String(), "%s", body)
+				assert.Empty(t, gjson.Get(body, "session.id").String(), "%s", body)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				expectNoLogin(t, false, true, nil, func(v url.Values) {
+					v.Set("traits.username", "registration-identifier-8-spa-nosession")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
+				})
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				expectNoLogin(t, false, false, nil, func(v url.Values) {
+					v.Set("traits.username", "registration-identifier-8-browser-nosession")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
+				})
 			})
 		})
 

@@ -1,3 +1,6 @@
 package identity
 
-const AddressTypeEmail = "email"
+const (
+	AddressTypeEmail = "email"
+	AddressTypePhone = "phone"
+)

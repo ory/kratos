@@ -7,7 +7,8 @@
     <a href="https://www.ory.sh/kratos/docs/">Guide</a> |
     <a href="https://www.ory.sh/kratos/docs/sdk/api">API Docs</a> |
     <a href="https://godoc.org/github.com/ory/kratos">Code Docs</a><br/><br/>
-    <a href="https://opencollective.com/ory">Support this project!</a>
+    <a href="https://opencollective.com/ory">Support this project!</a><br/><br/>
+    <a href="https://www.ory.sh/jobs/">Work in Open Source, Ory is hiring!</a>
 </h4>
 
 ---
