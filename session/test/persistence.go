@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pointerx"
+
 	"github.com/ory/kratos/identity"
 
 	"github.com/bxcodec/faker/v3"
@@ -80,6 +82,94 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.GetSessionByToken(ctx, expected.Token)
 					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				})
+			})
+
+			t.Run("method=list by identity", func(t *testing.T) {
+				i := identity.NewIdentity("")
+				require.NoError(t, p.CreateIdentity(ctx, i))
+				sess := make([]session.Session, 4)
+				for j := range sess {
+					require.NoError(t, faker.FakeData(&sess[j]))
+					sess[j].Identity = i
+					sess[j].Active = j%2 == 0
+					require.NoError(t, p.UpsertSession(ctx, &sess[j]))
+				}
+
+				for _, tc := range []struct {
+					desc     string
+					except   uuid.UUID
+					expected []session.Session
+					active   *bool
+				}{
+					{
+						desc:     "all",
+						expected: sess,
+					},
+					{
+						desc:   "except one",
+						except: sess[0].ID,
+						expected: []session.Session{
+							sess[1],
+							sess[2],
+							sess[3],
+						},
+					},
+					{
+						desc:   "active only",
+						active: pointerx.Bool(true),
+						expected: []session.Session{
+							sess[0],
+							sess[2],
+						},
+					},
+					{
+						desc:   "active only and except",
+						active: pointerx.Bool(true),
+						except: sess[0].ID,
+						expected: []session.Session{
+							sess[2],
+						},
+					},
+					{
+						desc:   "inactive only",
+						active: pointerx.Bool(false),
+						expected: []session.Session{
+							sess[1],
+							sess[3],
+						},
+					},
+					{
+						desc:   "inactive only and except",
+						active: pointerx.Bool(false),
+						except: sess[3].ID,
+						expected: []session.Session{
+							sess[1],
+						},
+					},
+				} {
+					t.Run("case="+tc.desc, func(t *testing.T) {
+						actual, err := p.ListSessionsByIdentity(ctx, i.ID, tc.active, 1, 10, tc.except)
+						require.NoError(t, err)
+
+						require.Equal(t, len(tc.expected), len(actual))
+						for _, es := range tc.expected {
+							found := false
+							for _, as := range actual {
+								if as.ID == es.ID {
+									found = true
+								}
+							}
+							assert.True(t, found)
+						}
+					})
+				}
+
+				t.Run("other network", func(t *testing.T) {
+					_, other := testhelpers.NewNetwork(t, ctx, p)
+					actual, err := other.ListSessionsByIdentity(ctx, i.ID, nil, 1, 10, uuid.Nil)
+					require.NoError(t, err)
+					assert.Len(t, actual, 0)
 				})
 			})
 
@@ -168,6 +258,99 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			actual, err = p.GetSession(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.False(t, actual.Active)
+		})
+
+		t.Run("method=revoke other sessions for identity", func(t *testing.T) {
+			// here we set up 2 identities with each having 2 sessions
+			sessions := make([]session.Session, 4)
+			for i := range sessions {
+				require.NoError(t, faker.FakeData(&sessions[i]))
+			}
+			require.NoError(t, p.CreateIdentity(ctx, sessions[0].Identity))
+			require.NoError(t, p.CreateIdentity(ctx, sessions[2].Identity))
+			sessions[1].IdentityID, sessions[1].Identity = sessions[0].IdentityID, sessions[0].Identity
+			sessions[3].IdentityID, sessions[3].Identity = sessions[2].IdentityID, sessions[2].Identity
+			for i := range sessions {
+				sessions[i].Active = true
+				require.NoError(t, p.UpsertSession(ctx, &sessions[i]))
+			}
+
+			t.Run("on another network", func(t *testing.T) {
+				_, other := testhelpers.NewNetwork(t, ctx, p)
+				n, err := other.RevokeSessionsIdentityExcept(ctx, sessions[0].IdentityID, sessions[0].ID)
+				require.NoError(t, err)
+				assert.Equal(t, 0, n)
+
+				for _, s := range sessions {
+					actual, err := p.GetSession(ctx, s.ID)
+					require.NoError(t, err)
+					assert.True(t, actual.Active)
+				}
+			})
+
+			n, err := p.RevokeSessionsIdentityExcept(ctx, sessions[0].IdentityID, sessions[0].ID)
+			require.NoError(t, err)
+			assert.Equal(t, 1, n)
+
+			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil)
+			require.NoError(t, err)
+			require.Len(t, actual, 2)
+
+			if actual[0].ID == sessions[0].ID {
+				assert.True(t, actual[0].Active)
+				assert.False(t, actual[1].Active)
+			} else {
+				assert.Equal(t, actual[0].ID, sessions[1].ID)
+				assert.True(t, actual[1].Active)
+				assert.False(t, actual[0].Active)
+			}
+
+			otherIdentitiesSessions, err := p.ListSessionsByIdentity(ctx, sessions[2].IdentityID, nil, 1, 10, uuid.Nil)
+			require.NoError(t, err)
+			require.Len(t, actual, 2)
+
+			for _, s := range otherIdentitiesSessions {
+				assert.True(t, s.Active)
+			}
+		})
+
+		t.Run("method=revoke specific session for identity", func(t *testing.T) {
+			sessions := make([]session.Session, 2)
+			for i := range sessions {
+				require.NoError(t, faker.FakeData(&sessions[i]))
+			}
+			require.NoError(t, p.CreateIdentity(ctx, sessions[0].Identity))
+			sessions[1].IdentityID, sessions[1].Identity = sessions[0].IdentityID, sessions[0].Identity
+			for i := range sessions {
+				sessions[i].Active = true
+				require.NoError(t, p.UpsertSession(ctx, &sessions[i]))
+			}
+
+			t.Run("on another network", func(t *testing.T) {
+				_, other := testhelpers.NewNetwork(t, ctx, p)
+				require.NoError(t, other.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
+
+				for _, s := range sessions {
+					actual, err := p.GetSession(ctx, s.ID)
+					require.NoError(t, err)
+					assert.True(t, actual.Active)
+				}
+			})
+
+			require.NoError(t, p.RevokeSession(ctx, sessions[0].IdentityID, sessions[0].ID))
+
+			actual, err := p.ListSessionsByIdentity(ctx, sessions[0].IdentityID, nil, 1, 10, uuid.Nil)
+			require.NoError(t, err)
+			require.Len(t, actual, 2)
+
+			if actual[0].ID == sessions[0].ID {
+				assert.False(t, actual[0].Active)
+				assert.True(t, actual[1].Active)
+			} else {
+				assert.Equal(t, actual[0].ID, sessions[1].ID)
+				assert.False(t, actual[1].Active)
+				assert.True(t, actual[0].Active)
+			}
 		})
 
 		t.Run("case=delete session for", func(t *testing.T) {

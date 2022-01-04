@@ -92,6 +92,7 @@ Class | Method | HTTP request | Description
 *V0alpha2Api* | [**AdminDeleteIdentitySessions**](docs/V0alpha2Api.md#admindeleteidentitysessions) | **Delete** /identities/{id}/sessions | Calling this endpoint irrecoverably and permanently deletes and invalidates all sessions that belong to the given Identity.
 *V0alpha2Api* | [**AdminGetIdentity**](docs/V0alpha2Api.md#admingetidentity) | **Get** /identities/{id} | Get an Identity
 *V0alpha2Api* | [**AdminListIdentities**](docs/V0alpha2Api.md#adminlistidentities) | **Get** /identities | List Identities
+*V0alpha2Api* | [**AdminListIdentitySessions**](docs/V0alpha2Api.md#adminlistidentitysessions) | **Get** /identities/{id}/sessions | This endpoint returns all sessions that belong to the given Identity.
 *V0alpha2Api* | [**AdminUpdateIdentity**](docs/V0alpha2Api.md#adminupdateidentity) | **Put** /identities/{id} | Update an Identity
 *V0alpha2Api* | [**CreateSelfServiceLogoutFlowUrlForBrowsers**](docs/V0alpha2Api.md#createselfservicelogoutflowurlforbrowsers) | **Get** /self-service/logout/browser | Create a Logout URL for Browsers
 *V0alpha2Api* | [**GetJsonSchema**](docs/V0alpha2Api.md#getjsonschema) | **Get** /schemas/{id} | 
@@ -113,6 +114,9 @@ Class | Method | HTTP request | Description
 *V0alpha2Api* | [**InitializeSelfServiceVerificationFlowForBrowsers**](docs/V0alpha2Api.md#initializeselfserviceverificationflowforbrowsers) | **Get** /self-service/verification/browser | Initialize Verification Flow for Browser Clients
 *V0alpha2Api* | [**InitializeSelfServiceVerificationFlowWithoutBrowser**](docs/V0alpha2Api.md#initializeselfserviceverificationflowwithoutbrowser) | **Get** /self-service/verification/api | Initialize Verification Flow for APIs, Services, Apps, ...
 *V0alpha2Api* | [**ListIdentitySchemas**](docs/V0alpha2Api.md#listidentityschemas) | **Get** /schemas | 
+*V0alpha2Api* | [**ListSessions**](docs/V0alpha2Api.md#listsessions) | **Get** /sessions | This endpoints returns all other active sessions that belong to the logged-in user. The current session can be retrieved by calling the &#x60;/sessions/whoami&#x60; endpoint.
+*V0alpha2Api* | [**RevokeSession**](docs/V0alpha2Api.md#revokesession) | **Delete** /sessions/{id} | Calling this endpoint invalidates the specified session. The current session cannot be revoked. Session data are not deleted.
+*V0alpha2Api* | [**RevokeSessions**](docs/V0alpha2Api.md#revokesessions) | **Delete** /sessions | Calling this endpoint invalidates all except the current session that belong to the logged-in user. Session data are not deleted.
 *V0alpha2Api* | [**SubmitSelfServiceLoginFlow**](docs/V0alpha2Api.md#submitselfserviceloginflow) | **Post** /self-service/login | Submit a Login Flow
 *V0alpha2Api* | [**SubmitSelfServiceLogoutFlow**](docs/V0alpha2Api.md#submitselfservicelogoutflow) | **Get** /self-service/logout | Complete Self-Service Logout
 *V0alpha2Api* | [**SubmitSelfServiceLogoutFlowWithoutBrowser**](docs/V0alpha2Api.md#submitselfservicelogoutflowwithoutbrowser) | **Delete** /self-service/logout/api | Perform Logout for APIs, Services, Apps, ...
@@ -143,7 +147,9 @@ Class | Method | HTTP request | Description
  - [InlineResponse503](docs/InlineResponse503.md)
  - [JsonError](docs/JsonError.md)
  - [NeedsPrivilegedSessionError](docs/NeedsPrivilegedSessionError.md)
+ - [Pagination](docs/Pagination.md)
  - [RecoveryAddress](docs/RecoveryAddress.md)
+ - [RevokedSessions](docs/RevokedSessions.md)
  - [SelfServiceBrowserLocationChangeRequiredError](docs/SelfServiceBrowserLocationChangeRequiredError.md)
  - [SelfServiceError](docs/SelfServiceError.md)
  - [SelfServiceFlowExpiredError](docs/SelfServiceFlowExpiredError.md)
