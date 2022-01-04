@@ -1,6 +1,6 @@
 ---
 id: login-session
-title: Configuring And Checking for Login Sessions
+title: Configuring and Managing Login Sessions
 ---
 
 import CodeFromRemote from '@theme/CodeFromRemote'
@@ -15,7 +15,7 @@ cookie or as a token, depending on the interaction type.
 A session is valid for the session lifespan you specify in the Ory Kratos
 config:
 
-```yaml title="path/to/kratos/config.yml
+```yaml title=path/to/kratos/config.yml
 session:
   lifespan: 720h # 30 days
 ```
@@ -23,7 +23,7 @@ session:
 Per default the session cookie has the `max-age` parameter set to the specified
 session lifespan. You may disable this behavior by setting:
 
-```yaml title="path/to/kratos/config.yml
+```yaml title=path/to/kratos/config.yml
 session:
   cookie:
     persistent: false
@@ -110,8 +110,6 @@ A typical session payload will look like this:
   ]}>
 <TabItem value="nodejs">
 
-{' '}
-
 <CodeFromRemote
   lang="js"
   title="https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/pkg/middleware.ts"
@@ -192,3 +190,56 @@ $ curl -s -X POST -H  "Accept: application/json" \
   }
 }
 ```
+
+## List Sessions using Self-Service
+
+A user can list all sessions using the
+[GET `/sessions` endpoint](../reference/api.mdx#operation/listSessions). It
+returns a list of all sessions that are active and have not expired, except the
+current session. This can be used to show a UI with all other sessions that are
+currently active.
+
+:::note
+
+Make sure to include the Ory Kratos Session Cookie when calling this endpoint.
+If you are calling this endpoint from a proxy or middleware, make sure to
+forward the cookies sent to the proxy/middleware. If you are calling this
+endpoint as an AJAX call, make sure to include credentials and configure CORS
+properly.
+
+:::
+
+## Revoke Sessions using Self-Service
+
+A user can revoke a specific session by calling the
+[DELETE `/sessions/{id}` endpoint](../reference/api.mdx#operation/revokeSession).
+This endpoint can only be used for sessions other than the current session. For
+revoking the current session, use the
+[self-service logout](../self-service/flows/user-logout.mdx).
+
+A user can also revoke all other sessions using the
+[DELETE `/sessions` endpoint](../reference/api.mdx#operation/revokeSessions).
+This essentially loges the user out of all other sessions on any device.
+
+Sessions that were revoked through self-service are not deleted. Instead, they
+are marked as inactive. Inactive sessions are retrievable and deletable through
+the administrative API.
+
+:::note
+
+Make sure to include the Ory Kratos Session Cookie when calling this endpoint.
+If you are calling this endpoint from a proxy or middleware, make sure to
+forward the cookies sent to the proxy/middleware. If you are calling this
+endpoint as an AJAX call, make sure to include credentials and configure CORS
+properly.
+
+:::
+
+## List and Revoke Sessions as an Administrator
+
+All sessions for a specific identity can be listed using the administrative
+[GET `/identities/{id}/sessions` endpoint](../reference/api.mdx#operation/adminListIdentitySessions).
+There is also the administrative
+[DELETE `/identities/{id}/sessions` endpoint](../reference/api.mdx#operation/adminDeleteIdentitySessions)
+to delete all sessions for a specific identity. This forcefully logs the user
+out of all sessions, and also deletes all session data.

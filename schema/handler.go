@@ -119,24 +119,7 @@ type identitySchema struct {
 // nolint:deadcode,unused
 // swagger:parameters listIdentitySchemas
 type listIdentitySchemas struct {
-	// Items per Page
-	//
-	// This is the number of items per page.
-	//
-	// required: false
-	// in: query
-	// default: 100
-	// min: 1
-	// max: 500
-	PerPage int `json:"per_page"`
-
-	// Pagination Page
-	//
-	// required: false
-	// in: query
-	// default: 0
-	// min: 0
-	Page int `json:"page"`
+	x.PaginationParams
 }
 
 // swagger:route GET /schemas v0alpha2 listIdentitySchemas

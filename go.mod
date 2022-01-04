@@ -4,7 +4,6 @@ go 1.16
 
 replace (
 	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
-	github.com/gobuffalo/pop/v5 => github.com/gobuffalo/pop/v5 v5.3.4-0.20210608105745-bb07a373cc0e
 	github.com/jackc/pgconn => github.com/jackc/pgconn v1.10.1-0.20211002123621-290ee79d1e8d
 	github.com/knadh/koanf => github.com/aeneasr/koanf v0.14.1-0.20211230115640-aa3902b3267a
 	github.com/luna-duclos/instrumentedsql => github.com/ory/instrumentedsql v1.2.0
@@ -42,7 +41,6 @@ require (
 	github.com/go-swagger/go-swagger v0.26.1
 	github.com/gobuffalo/fizz v1.14.0
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/pop/v5 v5.3.4
 	github.com/gobuffalo/pop/v6 v6.0.1
 	github.com/gofrs/uuid v4.1.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.1.0
