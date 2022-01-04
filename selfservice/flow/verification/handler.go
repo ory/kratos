@@ -234,7 +234,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	req, err := h.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), rid)
 	if err != nil {
-		h.d.Writer().Write(w, r, req)
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
