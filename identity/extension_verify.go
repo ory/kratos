@@ -62,6 +62,8 @@ func (r *SchemaExtensionVerification) has(haystack []VerifiableAddress, needle *
 }
 
 func (r *SchemaExtensionVerification) Finish() error {
-	r.i.VerifiableAddresses = r.v
+	if r.v != nil {
+		r.i.VerifiableAddresses = r.v
+	}
 	return nil
 }
