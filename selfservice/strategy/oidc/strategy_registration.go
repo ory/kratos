@@ -10,8 +10,6 @@ import (
 
 	"github.com/ory/x/decoderx"
 
-	"golang.org/x/oauth2"
-
 	"github.com/ory/kratos/selfservice/flow/login"
 
 	"github.com/ory/kratos/text"
@@ -114,11 +112,6 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
-	c, err := provider.OAuth2(r.Context())
-	if err != nil {
-		return s.handleError(w, r, f, pid, nil, err)
-	}
-
 	req, err := s.validateFlow(r.Context(), r, f.ID)
 	if err != nil {
 		return s.handleError(w, r, f, pid, nil, err)
@@ -139,7 +132,11 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.handleError(w, r, f, pid, nil, err)
 	}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	codeURL, err := provider.RedirectURL(r.Context(), state, req)
+	if err != nil {
+		return s.handleError(w, r, f, pid, nil, err)
+	}
+
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
@@ -149,7 +146,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, token Token, claims *Claims, provider Provider, container *authCodeContainer) (*login.Flow, error) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -232,22 +229,14 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	var it string
-	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
-			return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
-		}
-	}
-
-	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
+	credConfig, err := token.CredentialsConfig(r.Context(), s.d.Cipher())
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
 	}
 
-	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
-	if err != nil {
-		return nil, s.handleError(w, r, a, provider.Config().ID, i.Traits, err)
-	}
+	it := credConfig.InitialIDToken
+	cat := credConfig.InitialAccessToken
+	crt := credConfig.InitialRefreshToken
 
 	creds, err := NewCredentials(it, cat, crt, provider.Config().ID, claims.Subject)
 	if err != nil {

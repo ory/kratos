@@ -100,3 +100,11 @@ func (g *ProviderGitLab) endpoint() (*url.URL, error) {
 	}
 	return url.Parse(e)
 }
+
+func (g *ProviderGitLab) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderGitLab) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
+}

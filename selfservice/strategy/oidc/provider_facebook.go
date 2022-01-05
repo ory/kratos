@@ -112,3 +112,11 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token) (
 		Birthdate:         user.BirthDay,
 	}, nil
 }
+
+func (g *ProviderFacebook) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderFacebook) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
+}

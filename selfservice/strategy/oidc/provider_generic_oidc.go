@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -115,4 +116,12 @@ func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token
 	}
 
 	return g.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+}
+
+func (g *ProviderGenericOIDC) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderGenericOIDC) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
 }

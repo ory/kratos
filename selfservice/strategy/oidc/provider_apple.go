@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -103,4 +104,12 @@ func (a *ProviderApple) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	}
 
 	return options
+}
+
+func (g *ProviderApple) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderApple) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
 }

@@ -2,17 +2,23 @@ package oidc
 
 import (
 	"context"
+	"net/http"
 
-	"golang.org/x/oauth2"
-
+	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/x"
 )
 
+// Token returned by providers
+type Token interface {
+	Claims(ctx context.Context) (*Claims, error)
+	CredentialsConfig(ctx context.Context, c cipher.Cipher) (*ProviderCredentialsConfig, error)
+}
+
+// Provider for implementations of identity providers
 type Provider interface {
 	Config() *Configuration
-	OAuth2(ctx context.Context) (*oauth2.Config, error)
-	Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error)
-	AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
+	Token(ctx context.Context, req *http.Request) (Token, error)
+	RedirectURL(ctx context.Context, state string, r ider) (string, error)
 }
 
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.

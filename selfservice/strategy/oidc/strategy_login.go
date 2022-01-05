@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/ory/kratos/session"
 
 	"github.com/ory/x/sqlcon"
@@ -71,7 +69,7 @@ type SubmitSelfServiceLoginFlowWithOidcMethodBody struct {
 	Traits json.RawMessage `json:"traits"`
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token *oauth2.Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, token Token, claims *Claims, provider Provider, container *authCodeContainer) (*registration.Flow, error) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -147,11 +145,6 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, err)
 	}
 
-	c, err := provider.OAuth2(r.Context())
-	if err != nil {
-		return nil, s.handleError(w, r, f, pid, nil, err)
-	}
-
 	req, err := s.validateFlow(r.Context(), r, f.ID)
 	if err != nil {
 		return nil, s.handleError(w, r, f, pid, nil, err)
@@ -177,7 +170,11 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.handleError(w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	codeURL, err := provider.RedirectURL(r.Context(), state, req)
+	if err != nil {
+		return nil, s.handleError(w, r, f, pid, nil, err)
+	}
+
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {

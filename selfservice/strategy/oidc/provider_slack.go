@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/ory/herodot"
@@ -85,4 +86,12 @@ func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 	}
 
 	return claims, nil
+}
+
+func (g *ProviderSlack) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderSlack) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
 }

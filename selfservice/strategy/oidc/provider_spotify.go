@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"golang.org/x/oauth2/spotify"
@@ -92,4 +93,12 @@ func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token) (*
 	}
 
 	return claims, nil
+}
+
+func (g *ProviderSpotify) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderSpotify) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
 }

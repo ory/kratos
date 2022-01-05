@@ -9,8 +9,6 @@ import (
 
 	"github.com/tidwall/sjson"
 
-	"golang.org/x/oauth2"
-
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/x/decoderx"
@@ -330,11 +328,6 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	c, err := provider.OAuth2(r.Context())
-	if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, p, err)
-	}
-
 	req, err := s.validateFlow(r.Context(), r, ctxUpdate.Flow.ID)
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
@@ -351,7 +344,11 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	codeURL := c.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...)
+	codeURL, err := provider.RedirectURL(r.Context(), state, req)
+	if err != nil {
+		return s.handleSettingsError(w, r, ctxUpdate, p, err)
+	}
+
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
@@ -361,7 +358,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token *oauth2.Token, claims *Claims, provider Provider) error {
+func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, token Token, claims *Claims, provider Provider) error {
 	p := &submitSelfServiceSettingsFlowWithOidcMethodBody{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
@@ -373,22 +370,14 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request, ctxUpdat
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	var it string
-	if idToken, ok := token.Extra("id_token").(string); ok {
-		if it, err = s.d.Cipher().Encrypt(r.Context(), []byte(idToken)); err != nil {
-			return s.handleSettingsError(w, r, ctxUpdate, p, err)
-		}
-	}
-
-	cat, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.AccessToken))
+	credConfig, err := token.CredentialsConfig(r.Context(), s.d.Cipher())
 	if err != nil {
 		return s.handleSettingsError(w, r, ctxUpdate, p, err)
 	}
 
-	crt, err := s.d.Cipher().Encrypt(r.Context(), []byte(token.RefreshToken))
-	if err != nil {
-		return s.handleSettingsError(w, r, ctxUpdate, p, err)
-	}
+	it := credConfig.InitialIDToken
+	cat := credConfig.InitialAccessToken
+	crt := credConfig.InitialRefreshToken
 
 	var conf CredentialsConfig
 	creds, err := i.ParseCredentials(s.ID(), &conf)

@@ -290,8 +290,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var (
-		code = r.URL.Query().Get("code")
-		pid  = ps.ByName("provider")
+		pid = ps.ByName("provider")
 	)
 
 	req, cntnr, err := s.validateCallback(w, r)
@@ -314,19 +313,13 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	conf, err := provider.OAuth2(context.Background())
+	token, err := provider.Token(r.Context(), r)
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 
-	token, err := conf.Exchange(r.Context(), code)
-	if err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
-		return
-	}
-
-	claims, err := provider.Claims(r.Context(), token)
+	claims, err := token.Claims(r.Context())
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return

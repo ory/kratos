@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -76,4 +77,12 @@ type microsoftUnverifiedClaims struct {
 
 func (c *microsoftUnverifiedClaims) Valid() error {
 	return nil
+}
+
+func (g *ProviderMicrosoft) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderMicrosoft) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
 }

@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/ory/kratos/x"
@@ -89,4 +90,12 @@ func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token) 
 	}
 
 	return claims, nil
+}
+
+func (g *ProviderGitHubApp) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderGitHubApp) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
 }

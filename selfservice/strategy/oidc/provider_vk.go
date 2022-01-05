@@ -123,3 +123,11 @@ func (g *ProviderVK) Claims(ctx context.Context, exchange *oauth2.Token) (*Claim
 		Birthdate:  user.BirthDay,
 	}, nil
 }
+
+func (g *ProviderVK) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderVK) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
+}

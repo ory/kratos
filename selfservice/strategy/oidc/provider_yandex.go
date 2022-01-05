@@ -107,3 +107,11 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		Birthdate:  user.BirthDay,
 	}, nil
 }
+
+func (g *ProviderYandex) RedirectURL(ctx context.Context, state string, r ider) (string, error) {
+	return oAuth2CodeURL(ctx, state, g, g.AuthCodeURLOptions(r)...)
+}
+
+func (g *ProviderYandex) Token(ctx context.Context, req *http.Request) (Token, error) {
+	return parseOAuth2Token(ctx, g, req)
+}
