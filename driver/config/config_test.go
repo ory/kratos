@@ -423,6 +423,19 @@ func TestProviderBaseURLs(t *testing.T) {
 	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL().String())
 }
 
+func TestProviderSelfServiceLinkMethodBaseURL(t *testing.T) {
+	machineHostname, err := os.Hostname()
+	if err != nil {
+		machineHostname = "127.0.0.1"
+	}
+
+	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
+	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfServiceLinkMethodBaseURL().String())
+
+	p.MustSet(config.ViperKeyLinkBaseURL, "https://example.org/bar")
+	assert.Equal(t, "https://example.org/bar", p.SelfServiceLinkMethodBaseURL().String())
+}
+
 func TestViperProvider_Secrets(t *testing.T) {
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
 
