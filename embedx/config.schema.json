@@ -1067,6 +1067,13 @@
                   "title": "Link Configuration",
                   "description": "Additional configuration for the link strategy.",
                   "properties": {
+                    "base_url": {
+                      "title": "Override the base URL which should be used as the base for recovery and verification links.",
+                      "type": "string",
+                      "examples": [
+                        "https://my-app.com"
+                      ]
+                    },
                     "lifespan": {
                       "title": "How long a link is valid for",
                       "type": "string",

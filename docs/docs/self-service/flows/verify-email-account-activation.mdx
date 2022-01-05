@@ -91,6 +91,10 @@ selfservice:
         # Defines how long the verification or the recovery link is valid for (default 1h)
         lifespan: 15m
 
+        # If the link should point to a domain (and path) that differs from the configured public base URL,
+        # set this value to the base URL you want:
+        base_url: https://my-example-domain.com
+
   flows:
     verification:
       enabled: true
