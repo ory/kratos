@@ -292,9 +292,6 @@ New feature or request.
 - [ ] Prevent account enumeration for profile updates
       ([kratos#292](https://github.com/ory/kratos/issues/292)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Admin/Selfservice session management
-      ([kratos#655](https://github.com/ory/kratos/issues/655)) -
-      [@Patrik](https://github.com/zepatrik)
 - [ ] Replace magic links with TOTP OOB codes
       ([kratos#1451](https://github.com/ory/kratos/issues/1451))
 - [ ] Delete self-service flows after completion
@@ -306,6 +303,9 @@ New feature or request.
 - [ ] Update config key neames
       ([kratos#1979](https://github.com/ory/kratos/issues/1979)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Admin/Selfservice session management
+      ([kratos#655](https://github.com/ory/kratos/issues/655)) -
+      [@Patrik](https://github.com/zepatrik)
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
