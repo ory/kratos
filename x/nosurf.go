@@ -23,7 +23,7 @@ var (
 				WithID(text.ErrIDCSRF).
 				WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
 				WithDetail("docs", "https://www.ory.sh/kratos/docs/debug/csrf").
-				WithReason("The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
+				WithReason("Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
 	ErrGone = herodot.DefaultError{
 		CodeField:    http.StatusGone,
 		StatusField:  http.StatusText(http.StatusGone),

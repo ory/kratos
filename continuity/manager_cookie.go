@@ -17,7 +17,7 @@ import (
 )
 
 var _ Manager = new(ManagerCookie)
-var ErrNotResumable = *herodot.ErrBadRequest.WithError("session is not resumable").WithReasonf("No resumable session could be found in the HTTP Header.")
+var ErrNotResumable = *herodot.ErrBadRequest.WithError("no resumable session found").WithReasonf("The browser does not contain the neccesary cookie to resume the session. This is a security violation and was thus blocked. Please clear your browser's cookies and cache and try again!")
 
 const cookieName = "ory_kratos_continuity"
 
