@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -68,7 +67,6 @@ const (
 	ViperKeySecretsCipher                                    = "secrets.cipher"
 	ViperKeyDisablePublicHealthRequestLog                    = "serve.public.request_log.disable_for_health"
 	ViperKeyPublicBaseURL                                    = "serve.public.base_url"
-	ViperKeyPublicDomainAliases                              = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                       = "serve.public.port"
 	ViperKeyPublicHost                                       = "serve.public.host"
 	ViperKeyPublicSocketOwner                                = "serve.public.socket.owner"
@@ -435,7 +433,7 @@ func (p *Config) DefaultIdentityTraitsSchemaURL() *url.URL {
 }
 
 func (p *Config) TOTPIssuer() string {
-	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL(nil).Hostname())
+	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL().Hostname())
 }
 
 func (p *Config) IdentityTraitsSchemas() Schemas {
@@ -710,56 +708,8 @@ func (p *Config) DisablePublicHealthRequestLog() bool {
 	return p.p.Bool(ViperKeyDisablePublicHealthRequestLog)
 }
 
-type DomainAlias struct {
-	BasePath    string `json:"base_path"`
-	Scheme      string `json:"scheme"`
-	MatchDomain string `json:"match_domain"`
-}
-
-func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
-	primary := p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
-	if r == nil {
-		return primary
-	}
-
-	out, err := p.p.Marshal(kjson.Parser())
-	if err != nil {
-		p.l.WithError(err).Errorf("Unable to marshal configuration.")
-		return primary
-	}
-
-	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
-	if len(raw) == 0 {
-		return primary
-	}
-
-	var aliases []DomainAlias
-	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
-		p.l.WithError(err).WithField("config", raw).Warnf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
-		return primary
-	}
-
-	host := r.URL.Query().Get("alias")
-	if len(host) == 0 {
-		host = r.Host
-	}
-
-	hostname, _, _ := net.SplitHostPort(host)
-	if hostname == "" {
-		hostname = host
-	}
-	for _, a := range aliases {
-		if strings.EqualFold(a.MatchDomain, hostname) || strings.EqualFold(a.MatchDomain, host) {
-			parsed := &url.URL{
-				Scheme: a.Scheme,
-				Host:   host,
-				Path:   a.BasePath,
-			}
-			return parsed
-		}
-	}
-
-	return primary
+func (p *Config) SelfPublicURL() *url.URL {
+	return p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
 }
 
 func (p *Config) DisableAdminHealthRequestLog() bool {

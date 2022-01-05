@@ -124,7 +124,7 @@ func (h *Handler) createSelfServiceLogoutUrlForBrowsers(w http.ResponseWriter, r
 
 	h.d.Writer().Write(w, r, &selfServiceLogoutUrl{
 		LogoutToken: sess.LogoutToken,
-		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(r), RouteSubmitFlow),
+		LogoutURL: urlx.CopyWithQuery(urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteSubmitFlow),
 			url.Values{"token": {sess.LogoutToken}}).String(),
 	})
 }
@@ -274,7 +274,7 @@ func (h *Handler) completeLogout(w http.ResponseWriter, r *http.Request) {
 	ret, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceFlowLogoutRedirectURL(),
 		x.SecureRedirectUseSourceURL(r.RequestURI),
 		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL(r)),
+		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL()),
 	)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

@@ -53,7 +53,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/error", p.SelfServiceFlowErrorURL().String())
 
 			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL().String())
-			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL(nil).String())
+			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL().String())
 
 			var ds []string
 			for _, v := range p.SelfServiceBrowserWhitelistedReturnToDomains() {
@@ -404,73 +404,23 @@ func TestProviderBaseURLs(t *testing.T) {
 	}
 
 	p := config.MustNew(t, logrusx.New("", ""), os.Stderr, configx.SkipValidation())
-	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL().String())
 
 	p.MustSet(config.ViperKeyPublicPort, 4444)
 	p.MustSet(config.ViperKeyAdminPort, 4445)
-	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://"+machineHostname+":4445/", p.SelfAdminURL().String())
 
 	p.MustSet(config.ViperKeyPublicHost, "public.ory.sh")
 	p.MustSet(config.ViperKeyAdminHost, "admin.ory.sh")
-	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://admin.ory.sh:4445/", p.SelfAdminURL().String())
 
 	// Set to dev mode
 	p.MustSet("dev", true)
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
+	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL().String())
-
-	// Check domain aliases
-	p.MustSet(config.ViperKeyPublicDomainAliases, []config.DomainAlias{
-		{
-			MatchDomain: "www.google.com",
-			BasePath:    "/.ory/",
-			Scheme:      "https",
-		},
-		{
-			MatchDomain: "www.amazon.com",
-			BasePath:    "/",
-			Scheme:      "http",
-		},
-		{
-			MatchDomain: "ory.sh:1234",
-			BasePath:    "/",
-			Scheme:      "https",
-		},
-	})
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(nil).String())
-	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL(&http.Request{
-		URL:  new(url.URL),
-		Host: "www.not-google.com",
-	}).String())
-	assert.Equal(t, "https://www.GooGle.com:312/.ory/", p.SelfPublicURL(&http.Request{
-		URL:  new(url.URL),
-		Host: "www.GooGle.com:312",
-	}).String())
-	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
-		URL:  new(url.URL),
-		Host: "www.amazon.com",
-	}).String())
-
-	// Check domain aliases with alias query param
-	assert.Equal(t, "http://www.amazon.com/", p.SelfPublicURL(&http.Request{
-		URL:  &url.URL{RawQuery: url.Values{"alias": {"www.amazon.com"}}.Encode()},
-		Host: "www.GooGle.com:312",
-	}).String())
-	assert.Equal(t, "https://ory.sh:1234/", p.SelfPublicURL(&http.Request{
-		URL:  &url.URL{RawQuery: url.Values{"alias": {"ory.sh:1234"}}.Encode()},
-		Host: "www.amazon.com",
-	}).String())
-	assert.Equal(t, "http://www.amazon.com:8181/", p.SelfPublicURL(&http.Request{
-		URL:  new(url.URL),
-		Host: "www.amazon.com:8181",
-	}).String())
-	assert.Equal(t, "http://www.amazon.com:8181/", p.SelfPublicURL(&http.Request{
-		URL:  &url.URL{RawQuery: url.Values{"alias": {"www.amazon.com:8181"}}.Encode()},
-		Host: "www.GooGle.com:312",
-	}).String())
 }
 
 func TestViperProvider_Secrets(t *testing.T) {

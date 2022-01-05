@@ -104,7 +104,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		conf.SelfServiceBrowserDefaultReturnTo(),
 		x.SecureRedirectUseSourceURL(requestURL),
 		x.SecureRedirectAllowURLs(conf.SelfServiceBrowserWhitelistedReturnToDomains()),
-		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL(r)),
+		x.SecureRedirectAllowSelfServiceURLs(conf.SelfPublicURL()),
 	)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		RequestURL: requestURL,
 		UI: &container.Container{
 			Method: "POST",
-			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r), RouteSubmitFlow), id).String(),
+			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(), RouteSubmitFlow), id).String(),
 		},
 		CSRFToken: csrf,
 		State:     StateChooseMethod,

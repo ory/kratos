@@ -168,7 +168,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		})
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(r), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
 	h.r.Writer().Write(w, r, ss)
 }
 

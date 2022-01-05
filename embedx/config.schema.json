@@ -1534,55 +1534,6 @@
             "base_url": {
               "$ref": "#/definitions/baseUrl"
             },
-            "domain_aliases": {
-              "title": "Domain Aliases",
-              "description": "Adds an alias domain. If a request with the hostname (FQDN) matching the hostname in the alias is found, that URL is used as the base URL.",
-              "type": "array",
-              "items": [
-                {
-                  "additionalProperties": false,
-                  "type": "object",
-                  "required": [
-                    "match_domain",
-                    "base_path",
-                    "scheme"
-                  ],
-                  "properties": {
-                    "match_domain": {
-                      "minLength": 1,
-                      "title": "Matching Domain",
-                      "description": "Sets the matching domain. If the domain matches with this entry, the accompanying base_url will be used.",
-                      "type": "string",
-                      "examples": [
-                        "localhost",
-                        "my-domain.com"
-                      ]
-                    },
-                    "scheme": {
-                      "title": "Scheme",
-                      "description": "Sets the scheme, for example https or http.",
-                      "type": "string",
-                      "enum": [
-                        "http",
-                        "https"
-                      ]
-                    },
-                    "base_path": {
-                      "minLength": 1,
-                      "title": "Base Path",
-                      "description": "Sets the base path for the matched domain.",
-                      "type": "string",
-                      "default": "/",
-                      "pattern": "^/.*$",
-                      "examples": [
-                        "/",
-                        "/.ory/kratos"
-                      ]
-                    }
-                  }
-                }
-              ]
-            },
             "host": {
               "title": "Public Host",
               "description": "The host (interface) kratos' public endpoint listens on.",
@@ -1999,7 +1950,7 @@
       },
       "additionalProperties": false
     },
-    "ciphers" : {
+    "ciphers": {
       "title": "Cipher Algorithm Configuration",
       "type": "object",
       "properties": {
@@ -2220,7 +2171,7 @@
     {
       "if": {
         "properties": {
-          "ciphers" : {
+          "ciphers": {
             "properties": {
               "algorithm": {
                 "oneOf": [
@@ -2233,16 +2184,24 @@
                 ]
               }
             },
-            "required": ["algorithm"]
+            "required": [
+              "algorithm"
+            ]
           }
         },
-        "required": ["ciphers"]
+        "required": [
+          "ciphers"
+        ]
       },
       "then": {
-        "required": ["secrets"],
+        "required": [
+          "secrets"
+        ],
         "properties": {
           "secrets": {
-            "required": ["cipher"]
+            "required": [
+              "cipher"
+            ]
           }
         }
       }

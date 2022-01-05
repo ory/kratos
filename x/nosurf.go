@@ -128,7 +128,7 @@ type CSRFProvider interface {
 func CSRFCookieName(reg interface {
 	config.Provider
 }, r *http.Request) string {
-	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(reg.Config(r.Context()).SelfPublicURL(r).String())))
+	return "csrf_token_" + fmt.Sprintf("%x", sha256.Sum256([]byte(reg.Config(r.Context()).SelfPublicURL().String())))
 }
 
 func NosurfBaseCookieHandler(reg interface {
@@ -158,7 +158,7 @@ func NosurfBaseCookieHandler(reg interface {
 			SameSite: sameSite,
 		}
 
-		if alias := reg.Config(r.Context()).SelfPublicURL(r); reg.Config(r.Context()).SelfPublicURL(nil).String() != alias.String() {
+		if alias := reg.Config(r.Context()).SelfPublicURL(); reg.Config(r.Context()).SelfPublicURL().String() != alias.String() {
 			// If a domain alias is detected use that instead.
 			cookie.Domain = alias.Hostname()
 			cookie.Path = alias.Path
