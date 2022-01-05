@@ -32,6 +32,7 @@ require (
 	github.com/cortesi/modd v0.0.0-20210323234521-b35eddab86cc
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
+	github.com/dghubble/oauth1 v0.7.0
 	github.com/duo-labs/webauthn v0.0.0-20210727191636-9f1b88ef44cc
 	github.com/fatih/color v1.13.0
 	github.com/form3tech-oss/jwt-go v3.2.2+incompatible

@@ -310,7 +310,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, spotify.",
+          "description": "Can be one of github, github-app, gitlab, generic, google, microsoft, discord, slack, facebook, auth0, vk, yandex, spotify, twitter.",
           "type": "string",
           "enum": [
             "github",
@@ -326,7 +326,8 @@
             "vk",
             "yandex",
             "apple",
-            "spotify"
+            "spotify",
+            "twitter"
           ],
           "examples": [
             "google"
