@@ -326,7 +326,7 @@ func TestHandleError(t *testing.T) {
 		})
 
 		t.Run("case=session old error", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(nil), "/error").String()})
+			conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{urlx.AppendPaths(conf.SelfPublicURL(), "/error").String()})
 			t.Cleanup(reset)
 
 			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}

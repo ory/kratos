@@ -11,14 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/ory/kratos/text"
-
-	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 
+	"github.com/ory/kratos/selfservice/flow"
+
 	kratos "github.com/ory/kratos-client-go"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
@@ -775,7 +774,7 @@ func TestRegistration(t *testing.T) {
 		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false)
 
 		assertx.EqualAsJSON(t, container.Container{
-			Action: conf.SelfPublicURL(nil).String() + registration.RouteSubmitFlow + "?flow=" + f.Id,
+			Action: conf.SelfPublicURL().String() + registration.RouteSubmitFlow + "?flow=" + f.Id,
 			Method: "POST",
 			Nodes: node.Nodes{
 				node.NewCSRFNode(x.FakeCSRFToken),
