@@ -111,3 +111,7 @@ func (g *ProviderGitHub) RedirectURL(ctx context.Context, state string, r ider) 
 func (g *ProviderGitHub) Token(ctx context.Context, req *http.Request) (Token, error) {
 	return parseOAuth2Token(ctx, g, req)
 }
+
+func (g *ProviderGitHub) CheckError(ctx context.Context, req *http.Request) error {
+	return checkOAuth2Error(ctx, req)
+}

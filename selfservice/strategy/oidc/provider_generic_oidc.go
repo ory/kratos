@@ -125,3 +125,7 @@ func (g *ProviderGenericOIDC) RedirectURL(ctx context.Context, state string, r i
 func (g *ProviderGenericOIDC) Token(ctx context.Context, req *http.Request) (Token, error) {
 	return parseOAuth2Token(ctx, g, req)
 }
+
+func (g *ProviderGenericOIDC) CheckError(ctx context.Context, req *http.Request) error {
+	return checkOAuth2Error(ctx, req)
+}

@@ -131,3 +131,7 @@ func (g *ProviderVK) RedirectURL(ctx context.Context, state string, r ider) (str
 func (g *ProviderVK) Token(ctx context.Context, req *http.Request) (Token, error) {
 	return parseOAuth2Token(ctx, g, req)
 }
+
+func (g *ProviderVK) CheckError(ctx context.Context, req *http.Request) error {
+	return checkOAuth2Error(ctx, req)
+}

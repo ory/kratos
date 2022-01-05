@@ -115,3 +115,7 @@ func (g *ProviderYandex) RedirectURL(ctx context.Context, state string, r ider) 
 func (g *ProviderYandex) Token(ctx context.Context, req *http.Request) (Token, error) {
 	return parseOAuth2Token(ctx, g, req)
 }
+
+func (g *ProviderYandex) CheckError(ctx context.Context, req *http.Request) error {
+	return checkOAuth2Error(ctx, req)
+}

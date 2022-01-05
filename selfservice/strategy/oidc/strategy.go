@@ -239,7 +239,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *authCodeContainer, error) {
+func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request, p Provider) (flow.Flow, *authCodeContainer, error) {
 	var (
 		code  = r.URL.Query().Get("code")
 		state = r.URL.Query().Get("state")
@@ -263,8 +263,8 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (flo
 		return nil, &cntnr, err
 	}
 
-	if r.URL.Query().Get("error") != "" {
-		return req, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+	if err := p.CheckError(r.Context(), r); err != nil {
+		return req, &cntnr, err
 	}
 
 	if code == "" {
@@ -293,7 +293,13 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		pid = ps.ByName("provider")
 	)
 
-	req, cntnr, err := s.validateCallback(w, r)
+	provider, err := s.provider(r.Context(), r, pid)
+	if err != nil {
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, s.handleError(w, r, nil, pid, nil, err))
+		return
+	}
+
+	req, cntnr, err := s.validateCallback(w, r, provider)
 	if err != nil {
 		if req != nil {
 			s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
@@ -304,12 +310,6 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	if s.alreadyAuthenticated(w, r, req) {
-		return
-	}
-
-	provider, err := s.provider(r.Context(), r, pid)
-	if err != nil {
-		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return
 	}
 

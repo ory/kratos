@@ -95,3 +95,7 @@ func (g *ProviderSlack) RedirectURL(ctx context.Context, state string, r ider) (
 func (g *ProviderSlack) Token(ctx context.Context, req *http.Request) (Token, error) {
 	return parseOAuth2Token(ctx, g, req)
 }
+
+func (g *ProviderSlack) CheckError(ctx context.Context, req *http.Request) error {
+	return checkOAuth2Error(ctx, req)
+}

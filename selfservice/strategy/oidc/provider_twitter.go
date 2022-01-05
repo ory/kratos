@@ -68,6 +68,14 @@ func (p *ProviderTwitter) Config() *Configuration {
 	return p.config
 }
 
+func (p *ProviderTwitter) CheckError(ctx context.Context, r *http.Request) error {
+	if r.URL.Query().Get("denied") == "" {
+		return nil
+	}
+
+	return errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider denied the request`))
+}
+
 func (p *ProviderTwitter) OAuth1(ctx context.Context) *oauth1.Config {
 	return &oauth1.Config{
 		ConsumerKey:    p.config.ClientID,

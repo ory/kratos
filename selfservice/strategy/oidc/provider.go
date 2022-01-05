@@ -19,6 +19,7 @@ type Provider interface {
 	Config() *Configuration
 	Token(ctx context.Context, req *http.Request) (Token, error)
 	RedirectURL(ctx context.Context, state string, r ider) (string, error)
+	CheckError(ctx context.Context, req *http.Request) error
 }
 
 // ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.

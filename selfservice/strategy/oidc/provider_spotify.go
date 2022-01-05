@@ -102,3 +102,7 @@ func (g *ProviderSpotify) RedirectURL(ctx context.Context, state string, r ider)
 func (g *ProviderSpotify) Token(ctx context.Context, req *http.Request) (Token, error) {
 	return parseOAuth2Token(ctx, g, req)
 }
+
+func (g *ProviderSpotify) CheckError(ctx context.Context, req *http.Request) error {
+	return checkOAuth2Error(ctx, req)
+}

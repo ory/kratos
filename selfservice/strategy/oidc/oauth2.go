@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/cipher"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
@@ -94,4 +96,12 @@ func parseOAuth2Token(ctx context.Context, op oAuth2Provider, req *http.Request)
 		op:    op,
 		token: token,
 	}, nil
+}
+
+func checkOAuth2Error(ctx context.Context, r *http.Request) error {
+	if r.URL.Query().Get("error") == "" {
+		return nil
+	}
+
+	return errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
 }
