@@ -8,10 +8,11 @@ import (
 	"net/http"
 
 	"github.com/google/go-jsonnet"
+	"github.com/pkg/errors"
+
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/fetcher"
 	"github.com/ory/x/logrusx"
-	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"

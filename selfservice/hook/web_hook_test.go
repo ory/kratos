@@ -14,8 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ory/jsonschema/v3"
 	"github.com/sirupsen/logrus/hooks/test"
+
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/x/logrusx"
 
