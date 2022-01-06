@@ -1017,9 +1017,9 @@ selfservice:
         #
         # Set this value using environment variables on
         # - Linux/macOS:
-        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
         # - Windows Command Line (CMD):
-        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
         #
         identifier_similarity_check_enabled: false
 
