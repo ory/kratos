@@ -3,5 +3,6 @@ function(ctx) {
   identity_id: if ctx["identity"] != null then ctx.identity.id,
   headers: ctx.request_headers,
   url: ctx.request_url,
-  method: ctx.request_method
+  method: ctx.request_method,
+  body: ctx.request_body
 }

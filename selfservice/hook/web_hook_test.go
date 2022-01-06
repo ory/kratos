@@ -9,9 +9,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/ory/jsonschema/v3"
 	"github.com/sirupsen/logrus/hooks/test"
 
 	"github.com/ory/x/logrusx"
@@ -118,6 +121,7 @@ func TestJsonNetSupport(t *testing.T) {
 				},
 				RequestMethod: "POST",
 				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
+				RequestBody:   map[string]string{"foo": "bar"},
 				Identity:      i,
 			},
 		},
@@ -132,6 +136,7 @@ func TestJsonNetSupport(t *testing.T) {
 				},
 				RequestMethod: "POST",
 				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
+				RequestBody:   map[string]string{"foo": "bar"},
 				Identity:      i,
 			},
 		},
@@ -146,6 +151,7 @@ func TestJsonNetSupport(t *testing.T) {
 				},
 				RequestMethod: "PUT",
 				RequestUrl:    "https://test.kratos.ory.sh/other-test-path",
+				RequestBody:   map[string]string{"foo": "bar"},
 				Identity:      i,
 			},
 		},
@@ -162,6 +168,7 @@ func TestJsonNetSupport(t *testing.T) {
 				"headers":     tc.data.RequestHeaders,
 				"method":      tc.data.RequestMethod,
 				"url":         tc.data.RequestUrl,
+				"body":        tc.data.RequestBody,
 			})
 			require.NoError(t, err)
 
@@ -186,32 +193,98 @@ func TestJsonNetSupport(t *testing.T) {
 	})
 }
 
-func TestWebHookConfig(t *testing.T) {
+func TestExtractRequestBody(t *testing.T) {
+	resource, err := jsonschema.LoadURL("./stub/stub.schema.json")
+	assert.Nil(t, err)
+	defer resource.Close()
+
+	schema, err := io.ReadAll(resource)
+
 	for _, tc := range []struct {
-		strategy     string
-		method       string
-		url          string
-		body         string
-		rawConfig    string
-		authStrategy AuthStrategy
+		desc            string
+		body            func() string
+		contentType     string
+		schema          []byte
+		expectedContent map[string]string
 	}{
 		{
-			strategy: "empty",
-			method:   "POST",
-			url:      "https://test.kratos.ory.sh/my_hook1",
-			body:     "/path/to/my/jsonnet1.file",
+			desc: "Extract application/x-www-form-urlencoded body",
+			body: func() string {
+				return url.Values{
+					"method":              {"password"},
+					"password_identifier": {"foo"},
+					"password":            {"Test1234"},
+					"csrf_token":          {"ABCD"},
+					"bar":                 {"some data"},
+				}.Encode()
+			},
+			contentType: "application/x-www-form-urlencoded",
+			schema:      schema,
+			expectedContent: map[string]string{
+				"method":              "password",
+				"password_identifier": "foo",
+				"bar":                 "some data",
+			},
+		},
+		{
+			desc: "Extract application/json body",
+			body: func() string {
+				val := map[string]string{
+					"method":              "password",
+					"password_identifier": "foo",
+					"password":            "Test1234",
+					"csrf_token":          "ABCD",
+					"bar":                 "some data",
+				}
+				data, _ := json.Marshal(val)
+				return string(data)
+			},
+			contentType: "application/json",
+			schema:      schema,
+			expectedContent: map[string]string{
+				"method":              "password",
+				"password_identifier": "foo",
+				"bar":                 "some data",
+			},
+		},
+	} {
+		t.Run("case="+tc.desc, func(t *testing.T) {
+			req, _ := http.NewRequest(http.MethodPost, "https://www.ory.sh/some_end_point", strings.NewReader(tc.body()))
+			req.Header.Set("Content-Type", tc.contentType)
+
+			body, err := extractRequestBody(req, tc.schema)
+			assert.Nil(t, err)
+			assert.Equal(t, tc.expectedContent, body)
+		})
+	}
+}
+
+func TestWebHookConfig(t *testing.T) {
+	for _, tc := range []struct {
+		rawConfig                          string
+		useCase                            string
+		expectedMethod                     string
+		expectedUrl                        string
+		expectedTemplateUri                string
+		expectedRequestBodySchemaIsPresent bool
+		expectedAuthStrategy               AuthStrategy
+	}{
+		{
+			useCase: "no auth, but with request body schema",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_hook1",
 				"method": "POST",
-				"body": "/path/to/my/jsonnet1.file"
+				"body": "/path/to/my/jsonnet1.file",
+				"request_body_schema": "file://./stub/stub.schema.json"
 			}`,
-			authStrategy: &noopAuthStrategy{},
+			expectedMethod:                     "POST",
+			expectedUrl:                        "https://test.kratos.ory.sh/my_hook1",
+			expectedTemplateUri:                "/path/to/my/jsonnet1.file",
+			expectedAuthStrategy:               &noopAuthStrategy{},
+			expectedRequestBodySchemaIsPresent: true,
 		},
 		{
-			strategy: "basic_auth",
-			method:   "GET",
-			url:      "https://test.kratos.ory.sh/my_hook2",
-			body:     "/path/to/my/jsonnet2.file",
+			useCase: "basic_auth auth schema",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_hook2",
 				"method": "GET",
@@ -224,13 +297,14 @@ func TestWebHookConfig(t *testing.T) {
 					}
 				}
 			}`,
-			authStrategy: &basicAuthStrategy{},
+			expectedMethod:                     "GET",
+			expectedUrl:                        "https://test.kratos.ory.sh/my_hook2",
+			expectedTemplateUri:                "/path/to/my/jsonnet2.file",
+			expectedAuthStrategy:               &basicAuthStrategy{},
+			expectedRequestBodySchemaIsPresent: false,
 		},
 		{
-			strategy: "api-key/header",
-			method:   "DELETE",
-			url:      "https://test.kratos.ory.sh/my_hook3",
-			body:     "/path/to/my/jsonnet3.file",
+			useCase: "api-key/header auth schema",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_hook3",
 				"method": "DELETE",
@@ -244,13 +318,14 @@ func TestWebHookConfig(t *testing.T) {
 					}
 				}
 			}`,
-			authStrategy: &apiKeyStrategy{},
+			expectedMethod:                     "DELETE",
+			expectedUrl:                        "https://test.kratos.ory.sh/my_hook3",
+			expectedTemplateUri:                "/path/to/my/jsonnet3.file",
+			expectedAuthStrategy:               &apiKeyStrategy{},
+			expectedRequestBodySchemaIsPresent: false,
 		},
 		{
-			strategy: "api-key/cookie",
-			method:   "POST",
-			url:      "https://test.kratos.ory.sh/my_hook4",
-			body:     "/path/to/my/jsonnet4.file",
+			useCase: "api-key/cookie auth schema",
 			rawConfig: `{
 				"url": "https://test.kratos.ory.sh/my_hook4",
 				"method": "POST",
@@ -264,18 +339,23 @@ func TestWebHookConfig(t *testing.T) {
 					}
 				}
 			}`,
-			authStrategy: &apiKeyStrategy{},
+			expectedMethod:                     "POST",
+			expectedUrl:                        "https://test.kratos.ory.sh/my_hook4",
+			expectedTemplateUri:                "/path/to/my/jsonnet4.file",
+			expectedAuthStrategy:               &apiKeyStrategy{},
+			expectedRequestBodySchemaIsPresent: false,
 		},
 	} {
-		t.Run("auth-strategy="+tc.strategy, func(t *testing.T) {
+		t.Run("use-case="+tc.useCase, func(t *testing.T) {
 			conf, err := newWebHookConfig([]byte(tc.rawConfig))
 			assert.Nil(t, err)
 
-			assert.Equal(t, tc.url, conf.url)
-			assert.Equal(t, tc.method, conf.method)
-			assert.Equal(t, tc.body, conf.templateURI)
+			assert.Equal(t, tc.expectedUrl, conf.url)
+			assert.Equal(t, tc.expectedMethod, conf.method)
+			assert.Equal(t, tc.expectedTemplateUri, conf.templateURI)
+			assert.Equal(t, tc.expectedRequestBodySchemaIsPresent, len(conf.requestBodySchema) != 0)
 			assert.NotNil(t, conf.auth)
-			assert.IsTypef(t, tc.authStrategy, conf.auth, "Auth should be of the expected type")
+			assert.IsTypef(t, tc.expectedAuthStrategy, conf.auth, "Auth should be of the expected type")
 		})
 	}
 }
@@ -331,7 +411,8 @@ func TestWebHooks(t *testing.T) {
 					"identity_id": null,
    					"headers": %s,
 					"method": "%s",
-					"url": "%s"
+					"url": "%s",
+					"body": {"method": "password", "password_identifier":"foo"}
 				}`, f.GetID(), string(h), req.Method, req.RequestURI)
 	}
 
@@ -342,7 +423,8 @@ func TestWebHooks(t *testing.T) {
 					"identity_id": "%s",
    					"headers": %s,
 					"method": "%s",
-					"url": "%s"
+					"url": "%s",
+					"body": {"method": "password", "password_identifier":"foo"}
 				}`, f.GetID(), s.Identity.ID, string(h), req.Method, req.RequestURI)
 	}
 
@@ -486,20 +568,23 @@ func TestWebHooks(t *testing.T) {
 					for _, method := range []string{"CONNECT", "DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT", "TRACE", "GARBAGE"} {
 						t.Run("method="+method, func(t *testing.T) {
 							f := tc.createFlow()
-							req := &http.Request{
-								Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-								RequestURI: "https://www.ory.sh/some_end_point",
-								Method:     http.MethodPost,
-							}
+							req, _ := http.NewRequest(
+								http.MethodPost,
+								"https://www.ory.sh/some_end_point",
+								strings.NewReader(`method=password&password_identifier=foo&password=Test1234`))
+							req.Header.Set("Some-Header", "Some-Value")
+							req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+							req.ParseForm()
 							s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 							whr := &WebHookRequest{}
 							ts := newServer(webHookEndPoint(whr))
 							conf := json.RawMessage(fmt.Sprintf(`{
 								"url": "%s",
 								"method": "%s",
-								"body": "%s",
-								"auth": %s
-							}`, ts.URL+path, method, "./stub/test_body.jsonnet", auth.createAuthConfig()))
+								"body": "file://./stub/test_body.jsonnet",
+								"auth": %s,
+								"request_body_schema": "file://./stub/stub.schema.json"
+							}`, ts.URL+path, method, auth.createAuthConfig()))
 
 							wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 

@@ -49,10 +49,11 @@ type (
 	}
 
 	webHookConfig struct {
-		method      string
-		url         string
-		templateURI string
-		auth        AuthStrategy
+		method            string
+		url               string
+		templateURI       string
+		requestBodySchema []byte
+		auth              AuthStrategy
 	}
 
 	webHookDependencies interface {
@@ -146,13 +147,14 @@ func (c *apiKeyStrategy) apply(req *http.Request) {
 
 func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 	type rawWebHookConfig struct {
-		Method string
-		Url    string
-		Body   string
-		Auth   struct {
-			Type   string
-			Config json.RawMessage
-		}
+		Method            string `json:"method"`
+		Url               string `json:"url"`
+		Body              string `json:"body"`
+		RequestBodySchema string `json:"request_body_schema"`
+		Auth              struct {
+			Type   string          `json:"type"`
+			Config json.RawMessage `json:"config"`
+		} `json:"auth"`
 	}
 
 	var rc rawWebHookConfig
@@ -166,11 +168,21 @@ func newWebHookConfig(r json.RawMessage) (*webHookConfig, error) {
 		return nil, fmt.Errorf("failed to create web hook auth strategy: %w", err)
 	}
 
+	var bodySchema []byte
+	if rc.RequestBodySchema != "" {
+		if schemaBuffer, err := fetcher.NewFetcher().Fetch(rc.RequestBodySchema); err != nil {
+			return nil, err
+		} else {
+			bodySchema = schemaBuffer.Bytes()
+		}
+	}
+
 	return &webHookConfig{
-		method:      rc.Method,
-		url:         rc.Url,
-		templateURI: rc.Body,
-		auth:        as,
+		method:            rc.Method,
+		url:               rc.Url,
+		templateURI:       rc.Body,
+		requestBodySchema: bodySchema,
+		auth:              as,
 	}, nil
 }
 
@@ -179,21 +191,45 @@ func NewWebHook(r webHookDependencies, c json.RawMessage) *WebHook {
 }
 
 func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow) error {
-	return e.execute(&templateContext{
+	// TODO: reminder for the future: move parsing of config to the web hook initialization
+	conf, err := newWebHookConfig(e.c)
+	if err != nil {
+		return fmt.Errorf("failed to parse web hook config: %w", err)
+	}
+
+	var body map[string]string
+	if len(conf.requestBodySchema) != 0 {
+		body, err = extractRequestBody(req, conf.requestBodySchema)
+		if err != nil {
+			return err
+		}
+	}
+
+	return e.execute(conf, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 	})
 }
 
 func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request, flow *login.Flow, session *session.Session) error {
-	body, err := extractRequestBody(req, loginSchema)
+	// TODO: reminder for the future: move parsing of config to the web hook initialization
+	conf, err := newWebHookConfig(e.c)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	return e.execute(&templateContext{
+	var body map[string]string
+	if len(conf.requestBodySchema) != 0 {
+		body, err = extractRequestBody(req, conf.requestBodySchema)
+		if err != nil {
+			return err
+		}
+	}
+
+	return e.execute(conf, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -204,32 +240,71 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 }
 
 func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.Request, flow *verification.Flow, identity *identity.Identity) error {
-	return e.execute(&templateContext{
+	// TODO: reminder for the future: move parsing of config to the web hook initialization
+	conf, err := newWebHookConfig(e.c)
+	if err != nil {
+		return fmt.Errorf("failed to parse web hook config: %w", err)
+	}
+
+	var body map[string]string
+	if len(conf.requestBodySchema) != 0 {
+		body, err = extractRequestBody(req, conf.requestBodySchema)
+		if err != nil {
+			return err
+		}
+	}
+
+	return e.execute(conf, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 		Identity:       identity,
 	})
 }
 
 func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Request, flow *recovery.Flow, session *session.Session) error {
-	return e.execute(&templateContext{
+	// TODO: reminder for the future: move parsing of config to the web hook initialization
+	conf, err := newWebHookConfig(e.c)
+	if err != nil {
+		return fmt.Errorf("failed to parse web hook config: %w", err)
+	}
+
+	var body map[string]string
+	if len(conf.requestBodySchema) != 0 {
+		body, err = extractRequestBody(req, conf.requestBodySchema)
+		if err != nil {
+			return err
+		}
+	}
+
+	return e.execute(conf, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
 		RequestUrl:     req.RequestURI,
+		RequestBody:    body,
 		Identity:       session.Identity,
 	})
 }
 
 func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow) error {
-	body, err := extractRequestBody(req, registrationSchema)
+	// TODO: reminder for the future: move parsing of config to the web hook initialization
+	conf, err := newWebHookConfig(e.c)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	return e.execute(&templateContext{
+	var body map[string]string
+	if len(conf.requestBodySchema) != 0 {
+		body, err = extractRequestBody(req, conf.requestBodySchema)
+		if err != nil {
+			return err
+		}
+	}
+
+	return e.execute(conf, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -239,12 +314,21 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 }
 
 func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *registration.Flow, session *session.Session) error {
-	body, err := extractRequestBody(req, registrationSchema)
+	// TODO: reminder for the future: move parsing of config to the web hook initialization
+	conf, err := newWebHookConfig(e.c)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	return e.execute(&templateContext{
+	var body map[string]string
+	if len(conf.requestBodySchema) != 0 {
+		body, err = extractRequestBody(req, conf.requestBodySchema)
+		if err != nil {
+			return err
+		}
+	}
+
+	return e.execute(conf, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -255,12 +339,21 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 }
 
 func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *http.Request, flow *settings.Flow, identity *identity.Identity) error {
-	body, err := extractRequestBody(req, settingsSchema)
+	// TODO: reminder for the future: move parsing of config to the web hook initialization
+	conf, err := newWebHookConfig(e.c)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	return e.execute(&templateContext{
+	var body map[string]string
+	if len(conf.requestBodySchema) != 0 {
+		body, err = extractRequestBody(req, conf.requestBodySchema)
+		if err != nil {
+			return err
+		}
+	}
+
+	return e.execute(conf, &templateContext{
 		Flow:           flow,
 		RequestHeaders: req.Header,
 		RequestMethod:  req.Method,
@@ -270,14 +363,9 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 	})
 }
 
-func (e *WebHook) execute(data *templateContext) error {
-	// TODO: reminder for the future: move parsing of config to the web hook initialization
-	conf, err := newWebHookConfig(e.c)
-	if err != nil {
-		return fmt.Errorf("failed to parse web hook config: %w", err)
-	}
-
+func (e *WebHook) execute(conf *webHookConfig, data *templateContext) error {
 	var body io.Reader
+	var err error
 	if conf.method != "TRACE" {
 		// According to the HTTP spec any request method, but TRACE is allowed to
 		// have a body. Even this is a really bad practice for some of them, like for
@@ -313,6 +401,7 @@ func extractRequestBody(req *http.Request, rawSchema []byte) (map[string]string,
 	}
 
 	delete(values, "password")
+	delete(values, "csrf_token")
 
 	return values, nil
 }
