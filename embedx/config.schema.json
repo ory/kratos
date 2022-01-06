@@ -195,6 +195,17 @@
                 }
               ]
             },
+            "request_body_schema": {
+              "format": "uri",
+              "pattern": "^(http|https|file|base64)://",
+              "description": "URI pointing to a json schema file describing the expected properties in the flow request",
+              "examples": [
+                "file:///path/to/schema.json",
+                "file://./schema.json",
+                "base64://ewogICIkaWQiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9zdHViLnNjaGVtYS5qc29uIiwKICAiJHNjaGVtYSI6ICJodHRwOi8vanNvbi1zY2hlbWEub3JnL2RyYWZ0LTA3L3NjaGVtYSMiLAogICJ0eXBlIjogIm9iamVjdCIsCiAgInByb3BlcnRpZXMiOiB7CiAgICAic29tZV9wcm9wZXJ0eSI6IHsKICAgICAgInR5cGUiOiAic3RyaW5nIgogICAgfQogIH0KfQ==",
+                "https://oryapis.com/schema.json"
+              ]
+            },
             "auth": {
               "type": "object",
               "title": "Auth mechanisms",
