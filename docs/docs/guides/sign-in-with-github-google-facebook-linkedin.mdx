@@ -1153,7 +1153,7 @@ and making a PR! :)
 Sometimes the username returned by a provider is already taken in your
 application. To prevent this you can add a random suffix (e.g. a number) to the
 OIDC username. You can use the md5 function built in the
-[jsonnet standart library](https://jsonnet.org/ref/stdlib.html). See the
+[jsonnet standard library](https://jsonnet.org/ref/stdlib.html). See the
 following issue as well:
 [Add random function to the jsonnet library](https://github.com/ory/kratos/issues/988).
 
@@ -1181,11 +1181,26 @@ exchanges it for a session. For example:
 - Google sends back the OIDC `id_token` (if successfully authenticated).
 - Ory Kratos gets the user information from the `id_token` (specified in claims,
   default email or username).
-- Ory Kratos checks the database if the identity exists; 
+- Ory Kratos checks the database if the identity exists;
 
---> if yes, Ory Kratos
-  returns an session token to the user;
-  
- -->if no, the identity is created and it
-  returns a session token. 
+--> if yes, Ory Kratos returns an session token to the user;
+
+-->if no, the identity is created and it returns a session token.
+
 - The `id_token` from Google is discarded upon completion of the flow.
+
+## Log in through social providers if the identifiers match?
+
+A user creates an account with the identifier `user@example.com`. When the same
+user has an account at e.g. Google using the same identifier `user@example.com`,
+some providers offer the option to have the user log in through Google, even
+though the user has not created an account. Right now there's an explicit extra
+step to link them as default configuration. Is there a way to login through them
+without linking if e.g. emails match. There are security considerations to think
+about, but it's a flow that's currently being used; e.g Atlassian.
+
+:::warn We strongly discourage this practice, consider the following scenario:
+
+> You have signed up using david@company.org to myapp.com. I, the hacker, know
+> this. I create an google account with email david@company.org and sign in. Now
+> I am in your account.

@@ -41,26 +41,6 @@ You can not right now. It would allow account enumeration attacks. See also the
 An alternative to callback and custom code is fronting the legacy system with
 Ory Hydra (OAuth2/OIDC Server) and then using that as an upstream in Ory Kratos.
 
-### Is the code audited by an independent entity and is there a bug bounty program?
-
-We will do an audit when the APIs and core are stable, so when 1.0 is released .
-A bug bounty program is in the making. If you are a security researcher and
-interested in working on Kratos, please reach out to
-[security@ory.sh](mailto:security@ory.sh).
-
-### Is it possible to login through social providers if the identifiers match even if user did not signup through the provider?
-
-> Right now there's an explicit extra step to link them as default
-> configuration. Is there a way to login through them without linking if e.g.
-> emails match. There are security considerations to think about, but it's a
-> flow that's currently being used; e.g Atlassian.
-
-We strongly discourage this practice, consider the following scenario:
-
-> You have signed up using david@company.org to myapp.com. I, the hacker, know
-> this. I create an google account with email david@company.org and sign in. Now
-> I am in your account.
-
 ### Why are both plain text and HTML templates required?
 
 The courier uses them as
