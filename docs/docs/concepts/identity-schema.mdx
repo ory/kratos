@@ -319,3 +319,14 @@ contains more information and examples.
 
 There are currently no other extensions supported for Identity Traits. Further
 fields will be added in future releases!
+
+### Sanitize Usernames/Traits
+
+To make sure usernames (or traits) satisfy a specific regex (for example only alphanumeric
+characters), they can be sanitized. To sanitize usernames add
+[Regular Expressions](https://json-schema.org/understanding-json-schema/reference/string.html#regular-expressions).
+to the Ory Kratos Identity Schema. To sanitize usernames coming from third-party
+OIDC providers like Google or GitHub you write
+[jsonnet code](https://jsonnet.org). Please visit to the
+[Social Login Guide](https://www.ory.sh/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin)
+to learn more about Ory Kratos use of jsonnet.

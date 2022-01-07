@@ -1,6 +1,6 @@
 ---
 id: troubleshooting
-title: FAQ & Troubleshooting
+title: Tips & Troubleshooting
 ---
 
 :::info
@@ -26,13 +26,6 @@ of the Kratos configurations. You may need to tell your login/registration UI
 which Kratos it is supposed to talk to. The instances are cheap to deploy and
 the databases are completely isolated from each other. For example something
 like `/login/customer` and `/login/employee`.
-
-### What is the correct flow to sanitize the username and make sure it satisfies a specific regex (e.g. only alphanumeric characters)?
-
-In the Identity Schema using
-[Regular Expressions](https://json-schema.org/understanding-json-schema/reference/string.html#regular-expressions).
-To sanitize usernames coming from third-party OIDC providers like Google or
-GitHub you write [jsonnet code](https://jsonnet.org).
 
 ### Can I freeze certain identity fields after registration?
 
