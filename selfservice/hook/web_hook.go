@@ -66,7 +66,7 @@ type (
 		RequestHeaders http.Header        `json:"request_headers"`
 		RequestMethod  string             `json:"request_method"`
 		RequestUrl     string             `json:"request_url"`
-		RequestBody    map[string]string  `json:"request_body"`
+		RequestBody    map[string]string  `json:"request_body,omitempty"`
 		Identity       *identity.Identity `json:"identity"`
 	}
 

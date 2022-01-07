@@ -648,7 +648,7 @@ func TestWebHooks(t *testing.T) {
 					"url": "%s",
 					"method": "%s",
 					"body": "%s"
-				}`, ts.URL+path, "POST", "./stub/bad_template.jsonnet"))
+				}`, ts.URL+path, "POST", "file://./stub/bad_template.jsonnet"))
 		wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 		err := wh.ExecuteLoginPreHook(nil, req, f)
@@ -678,17 +678,19 @@ func TestWebHooks(t *testing.T) {
 	} {
 		t.Run("Must"+boolToString(tc.mustSuccess)+" error when end point is returning "+strconv.Itoa(tc.code), func(t *testing.T) {
 			ts := newServer(webHookHttpCodeEndPoint(tc.code))
-			req := &http.Request{
-				Header:     map[string][]string{"Some-Header": {"Some-Value"}},
-				RequestURI: "https://www.ory.sh/some_end_point",
-				Method:     http.MethodPost,
-			}
+			req, _ := http.NewRequest(http.MethodPost,
+				"https://www.ory.sh/some_end_point",
+				strings.NewReader(`foo=bar`))
+			req.Header.Set("Some-Header", "Some-Value")
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req.ParseForm()
 			f := &login.Flow{ID: x.NewUUID()}
 			conf := json.RawMessage(fmt.Sprintf(`{
 					"url": "%s",
-					"method": "%s",
-					"body": "%s"
-				}`, ts.URL+path, "POST", "./stub/test_body.jsonnet"))
+					"method": "POST",
+					"body": "file://./stub/test_body.jsonnet",
+					"request_body_schema": "file://./stub/stub.schema.json"
+				}`, ts.URL+path))
 			wh := NewWebHook(&x.SimpleLogger{L: logrusx.New("kratos", "test")}, conf)
 
 			err := wh.ExecuteLoginPreHook(nil, req, f)

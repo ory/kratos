@@ -4,5 +4,5 @@ function(ctx) {
   headers: ctx.request_headers,
   url: ctx.request_url,
   method: ctx.request_method,
-  body: ctx.request_body
+  body: if std.objectHas(ctx, "request_body")  then ctx.request_body
 }
