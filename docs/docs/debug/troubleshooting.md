@@ -5,9 +5,10 @@ title: Tips & Troubleshooting
 
 :::info
 
-If your question is not covered here, please open a
-[discussion](https://github.com/ory/kratos/discussions) and ping
-`@ory/documenters`
+Please add your troubleshooting tricks and other tips to this document, You can
+either open a [discussion](https://github.com/ory/kratos/discussions) and ping
+`@ory/documenters` or
+[edit the page directly](https://github.com/ory/kratos/edit/master/docs/docs/debug/troubleshooting.md).
 
 :::
 
