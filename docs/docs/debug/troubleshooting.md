@@ -40,18 +40,3 @@ You can not right now. It would allow account enumeration attacks. See also the
 
 An alternative to callback and custom code is fronting the legacy system with
 Ory Hydra (OAuth2/OIDC Server) and then using that as an upstream in Ory Kratos.
-
-### Why are both plain text and HTML templates required?
-
-The courier uses them as
-[alternatives](https://github.com/ory/kratos/blob/master/courier/courier.go#L205)
-for fallback.
-
-```
-// AddAlternative adds an alternative part to the message.
-//
-// It is commonly used to send HTML emails that default to the plain text
-// version for backward compatibility. AddAlternative appends the new part to
-// the end of the message. So the plain text part should be added before the
-// HTML part. See http://en.wikipedia.org/wiki/MIME#Alternative
-```

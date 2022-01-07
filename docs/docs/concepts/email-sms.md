@@ -102,7 +102,10 @@ indicate where your custom templates are located. This will become the
 `email.subject.gotmpl`, `email.body.gotmpl` and `email.body.plaintext.gotmpl`
 are common template file names expected in the sub directories of the root
 directory, corresponding to the respective methods for filling e-mail subject
-and body.
+and body. Both plain text and HTML templates are required. The courier uses them
+as
+[alternatives](https://github.com/ory/kratos/blob/master/courier/courier.go#L205)
+for fallback.
 
 > Templates use the golang template engine in the `text/template` package for
 > rendering the `email.subject.gotmpl` and `email.body.plaintext.gotmpl`
