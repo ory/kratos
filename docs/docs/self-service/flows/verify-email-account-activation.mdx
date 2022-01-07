@@ -68,13 +68,13 @@ stateDiagram
 <Tabs
   defaultValue="oss"
   values={[
-    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Cloud', value: 'ocp'},
     {label: 'Ory Kratos', value: 'oss'}
   ]}>
   <TabItem value="ocp">
 
-Currently, account verification is enabled. In the future, disabling account
-verification will become an option.
+Account verification can be configured in the `Customize/Email Verification`
+screen of Ory Cloud.
 
   </TabItem>
   <TabItem value="oss">
@@ -90,6 +90,10 @@ selfservice:
       config:
         # Defines how long the verification or the recovery link is valid for (default 1h)
         lifespan: 15m
+
+        # If the link should point to a domain (and path) that differs from the configured public base URL,
+        # set this value to the base URL you want:
+        base_url: https://my-example-domain.com
 
   flows:
     verification:
@@ -271,13 +275,14 @@ configured here:
 <Tabs
   defaultValue="oss"
   values={[
-    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Cloud', value: 'oc'},
     {label: 'Ory Kratos', value: 'oss'}
   ]}>
-  <TabItem value="ocp">
+  <TabItem value="oc">
 
-    The Ory Cloud Platform offers a default UI implementation. Pointing to
-    another UI endpoint will be supported in the future.
+Ory Cloud offers a default UI implementation. Visit
+[Bring Your Own UI](https://www.ory.sh/docs/guides/bring-your-user-interface) to
+learn how to implement a custom UI.
 
   </TabItem>
   <TabItem value="oss">

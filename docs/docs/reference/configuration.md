@@ -906,6 +906,19 @@ selfservice:
         #
         lifespan: 1h
 
+        ## Override the base URL which should be used as the base for recovery and verification links. ##
+        #
+        # Examples:
+        # - https://my-app.com
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_LINK_CONFIG_BASE_URL=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_LINK_CONFIG_BASE_URL=<value>
+        #
+        base_url: https://my-app.com
+
       ## Enables Link Method ##
       #
       # Default value: true
@@ -1380,21 +1393,6 @@ serve:
     #    > set SERVE_PUBLIC_BASE_URL=<value>
     #
     base_url: https://my-app.com/
-
-    ## Domain Aliases ##
-    #
-    # Adds an alias domain. If a request with the hostname (FQDN) matching the hostname in the alias is found, that URL is used as the base URL.
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export SERVE_PUBLIC_DOMAIN_ALIASES=<value>
-    # - Windows Command Line (CMD):
-    #    > set SERVE_PUBLIC_DOMAIN_ALIASES=<value>
-    #
-    domain_aliases:
-      - match_domain: localhost
-        base_path: /
-        scheme: http
 
     ## Public Host ##
     #

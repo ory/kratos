@@ -17,7 +17,7 @@ import (
 )
 
 var _ Manager = new(ManagerCookie)
-var ErrNotResumable = *herodot.ErrBadRequest.WithError("session is not resumable").WithReasonf("No resumable session could be found in the HTTP Header.")
+var ErrNotResumable = *herodot.ErrBadRequest.WithError("no resumable session found").WithReasonf("The browser does not contain the neccesary cookie to resume the session. This is a security violation and was thus blocked. Please clear your browser's cookies and cache and try again!")
 
 const cookieName = "ory_kratos_continuity"
 
@@ -61,10 +61,8 @@ func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (*Container, error) {
-	container, err := m.container(ctx, r, name)
+	container, err := m.container(ctx, w, r, name)
 	if err != nil {
-		// We do not care about an error here
-		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
 		return nil, err
 	}
 
@@ -94,25 +92,28 @@ func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *
 	return container, nil
 }
 
-func (m *ManagerCookie) sid(ctx context.Context, r *http.Request, name string) (uuid.UUID, error) {
+func (m *ManagerCookie) sid(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) (uuid.UUID, error) {
 	var sid uuid.UUID
 	if s, err := x.SessionGetString(r, m.d.ContinuityCookieManager(ctx), cookieName, name); err != nil {
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
 		return sid, errors.WithStack(ErrNotResumable.WithDebugf("%+v", err))
 	} else if sid = x.ParseUUID(s); sid == uuid.Nil {
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
 		return sid, errors.WithStack(ErrNotResumable.WithDebug("session id is not a valid uuid"))
 	}
 
 	return sid, nil
 }
 
-func (m *ManagerCookie) container(ctx context.Context, r *http.Request, name string) (*Container, error) {
-	sid, err := m.sid(ctx, r, name)
+func (m *ManagerCookie) container(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) (*Container, error) {
+	sid, err := m.sid(ctx, w, r, name)
 	if err != nil {
 		return nil, err
 	}
 
 	container, err := m.d.ContinuityPersister().GetContinuitySession(ctx, sid)
 	if errors.Is(err, sqlcon.ErrNoRows) {
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
 		return nil, errors.WithStack(ErrNotResumable.WithDebugf("Resumable ID from cookie could not be found in the datastore: %+v", err))
 	} else if err != nil {
 		return nil, err
@@ -122,10 +123,9 @@ func (m *ManagerCookie) container(ctx context.Context, r *http.Request, name str
 }
 
 func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) error {
-	sid, err := m.sid(ctx, r, name)
+	sid, err := m.sid(ctx, w, r, name)
 	if errors.Is(err, &ErrNotResumable) {
 		// We do not care about an error here
-		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
 		return nil
 	} else if err != nil {
 		return err

@@ -130,7 +130,7 @@ func TestManager(t *testing.T) {
 
 						body := ioutilx.MustReadAll(res.Body)
 						require.Equal(t, http.StatusBadRequest, res.StatusCode)
-						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "resumable session")
+						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
 					})
 
 					t.Run("case=pause and resume session", func(t *testing.T) {
@@ -174,7 +174,7 @@ func TestManager(t *testing.T) {
 						require.Equal(t, http.StatusBadRequest, res.StatusCode)
 						body := ioutilx.MustReadAll(res.Body)
 						t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
-						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "resumable session")
+						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
 					})
 
 					t.Run("case=pause and resume session in the same request", func(t *testing.T) {
@@ -210,7 +210,7 @@ func TestManager(t *testing.T) {
 
 						require.Equal(t, http.StatusBadRequest, res.StatusCode)
 						body := ioutilx.MustReadAll(res.Body)
-						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "resumable session")
+						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
 					})
 				})
 			}

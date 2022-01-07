@@ -9,40 +9,7 @@ other scenarios.
 ## Base URL
 
 The public base URL (`serve.public.base_url`) is used to compute redirect URLs,
-form action URLs, and more. If you host Ory Kratos on more than one domain you
-might want to enable the domain aliasing feature. This allows to register
-additional base URLs. On incoming HTTP Requests, Ory Kratos checks the HTTP
-`Host` Header and compares that to the list of domain aliases.
-
-```yaml title="path/to/kratos/config.yml
-serve:
-  public:
-    base_url: https://this-is-the-default/base-url
-    domain_aliases:
-      - match_domain: www.another-domain.com
-        base_path: /kratos
-        scheme: https
-      - match_domain: that-domain.com
-        base_path: /
-        scheme: http
-```
-
-If a match is found, the value `serve.public.base_url` will be ignored and
-instead the base URL is computed:
-
-```
-<config.protocol>://<request.host + request.port><config.base_path>
-```
-
-Values `<request.host>`, `<request.port>` are set by the incoming HTTP request
-and `<config.base_path>`, `<config.protocol>`, by the config:
-
-- Incoming request is to `https://www.another-domain.com:123/kratos/identities/`
-  so the result is `https://www.another-domain.com:123/kratos`
-- Incoming request is to `http://www.another-domain.com/kratos/sessions/` so the
-  result is `http://www.another-domain.com/kratos`
-- Incoming request is to `https://that-domain.com/identities/` so the result is
-  `https://that-domain.com/identities`
+form action URLs, and more.
 
 ## Cookies
 
@@ -77,26 +44,6 @@ session:
 
     # Overrides cookies.samesite for session cookies
     same_site: Strict
-
-serve:
-  public:
-    domain_aliases:
-      # When a request is coming from www.another-domain.com or that-domain.com, these these override:
-      #
-      # - session.cookie.domain and session.cookie.path for sessions
-      # - cookies.domain and cookies.path for anti-CSRF cookies
-
-      - match_domain: www.another-domain.com
-        base_path: /kratos
-
-        # The scheme has NO effect on the cookie `secure` flag!
-        # scheme: https
-
-      - match_domain: that-domain.com
-        base_path: /
-
-        # The scheme has NO effect on the cookie `secure` flag!
-        # scheme: http
 ```
 
 What **is not** currently possible is to set up Ory Kratos in a way where you

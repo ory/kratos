@@ -84,7 +84,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 	publicLogger := reqlog.NewMiddlewareFromLogger(
 		l,
-		"public#"+c.SelfPublicURL(nil).String(),
+		"public#"+c.SelfPublicURL().String(),
 	)
 	if r.Config(ctx).DisablePublicHealthRequestLog() {
 		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
@@ -156,7 +156,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	}
 	adminLogger := reqlog.NewMiddlewareFromLogger(
 		l,
-		"admin#"+c.SelfPublicURL(nil).String(),
+		"admin#"+c.SelfPublicURL().String(),
 	)
 	if r.Config(ctx).DisableAdminHealthRequestLog() {
 		adminLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)

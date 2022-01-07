@@ -79,10 +79,10 @@ Currently, three settings methods are supported:
 <Tabs
   defaultValue="oss"
   values={[
-    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Cloud', value: 'oc'},
     {label: 'Ory Kratos', value: 'oss'}
   ]}>
-  <TabItem value="ocp">
+  <TabItem value="oc">
 
 Currently, only the password and profile method are enabled.
 
@@ -132,15 +132,13 @@ selfservice:
 <Tabs
   defaultValue="oss"
   values={[
-    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Cloud', value: 'oc'},
     {label: 'Ory Kratos', value: 'oss'}
   ]}>
-  <TabItem value="ocp">
+  <TabItem value="oc">
 
 If any of these fields are changed, the Ory Kratos Login Session must not be
 older than the configured `privileged_session_max_age` value.
-
-An option to configure this value is on the roadmap for OCP.
 
   </TabItem>
   <TabItem value="oss">
@@ -284,13 +282,14 @@ settings URL.
 <Tabs
   defaultValue="oss"
   values={[
-    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Cloud', value: 'oc'},
     {label: 'Ory Kratos', value: 'oss'}
   ]}>
-  <TabItem value="ocp">
+  <TabItem value="oc">
 
-The Ory Cloud Platform offers a default UI implementation. Pointing to another
-UI endpoint will be supported in the future.
+Ory Cloud offers a default UI implementation. Visit
+[Bring Your Own UI](https://www.ory.sh/docs/guides/bring-your-user-interface) to
+learn how to implement a custom UI.
 
   </TabItem>
   <TabItem value="oss">

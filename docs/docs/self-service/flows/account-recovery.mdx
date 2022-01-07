@@ -69,13 +69,13 @@ stateDiagram
 <Tabs
   defaultValue="oss"
   values={[
-    {label: 'Ory Cloud Platform', value: 'ocp'},
+    {label: 'Ory Cloud', value: 'oc'},
     {label: 'Ory Kratos', value: 'oss'}
   ]}>
-  <TabItem value="ocp">
+  <TabItem value="oc">
 
-Currently, account recovery is enabled. In the future, disabling account
-recovery will become an option.
+Account recovery can be configured in the "Customize/Account Recovery" screen of
+Ory Cloud.
 
   </TabItem>
   <TabItem value="oss">
@@ -90,6 +90,10 @@ selfservice:
       config:
         # Defines how long a recovery link is valid for (default 1h)
         lifespan: 15m
+
+        # If the link should point to a domain (and path) that differs from the configured public base URL,
+        # set this value to the base URL you want:
+        base_url: https://my-example-domain.com
 
   flows:
     recovery:
