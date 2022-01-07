@@ -123,18 +123,6 @@ New feature or request.
 - [x] Email Courier SMTP Header Configuration
       ([kratos#1725](https://github.com/ory/kratos/issues/1725))
 
-### [Docs](https://github.com/ory/kratos/labels/docs)
-
-Affects documentation.
-
-#### Issues
-
-- [ ] Config JSON Schema needs example values
-      ([kratos#179](https://github.com/ory/kratos/issues/179)) -
-      [@hackerman](https://github.com/aeneasr)
-- [x] Tag version in docker-compose before commit&tag push
-      ([kratos#1738](https://github.com/ory/kratos/issues/1738))
-
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
 A request for comments to discuss and share ideas.
@@ -161,15 +149,6 @@ Blocks milestones or other issues or pulls.
 
 - [ ] Implement Hydra integration
       ([kratos#273](https://github.com/ory/kratos/issues/273))
-
-### [Ci](https://github.com/ory/kratos/labels/ci)
-
-Affects Continuous Integration (CI).
-
-#### Issues
-
-- [x] Tag version in docker-compose before commit&tag push
-      ([kratos#1738](https://github.com/ory/kratos/issues/1738))
 
 ## [v0.10.0-alpha.1](https://github.com/ory/kratos/milestone/13)
 
@@ -198,19 +177,6 @@ New feature or request.
       ([kratos#596](https://github.com/ory/kratos/issues/596))
 - [ ] Add ability to import user credentials
       ([kratos#605](https://github.com/ory/kratos/issues/605)) -
-      [@hackerman](https://github.com/aeneasr)
-
-### [Docs](https://github.com/ory/kratos/labels/docs)
-
-Affects documentation.
-
-#### Issues
-
-- [ ] WebAuth docs are missing
-      ([kratos#1951](https://github.com/ory/kratos/issues/1951)) -
-      [@hackerman](https://github.com/aeneasr)
-- [ ] Add missing cloud docs
-      ([kratos#1952](https://github.com/ory/kratos/issues/1952)) -
       [@hackerman](https://github.com/aeneasr)
 
 ## [v0.7.x](https://github.com/ory/kratos/milestone/12)
@@ -243,18 +209,6 @@ Something is not working.
 - [x] fix(sdk): use proper annotation for genericError
       ([kratos#1611](https://github.com/ory/kratos/pull/1611)) -
       [@hackerman](https://github.com/aeneasr)
-
-### [Docs](https://github.com/ory/kratos/labels/docs)
-
-Affects documentation.
-
-#### Issues
-
-- [x] Update CSRF pitfall section for admin endpoints
-      ([kratos#1557](https://github.com/ory/kratos/issues/1557)) -
-      [@hackerman](https://github.com/aeneasr)
-- [x] Different payload for stub:500
-      ([kratos#1568](https://github.com/ory/kratos/issues/1568))
 
 ## [v0.9.0-alpha.1](https://github.com/ory/kratos/milestone/11)
 
@@ -306,23 +260,6 @@ New feature or request.
 - [x] Admin/Selfservice session management
       ([kratos#655](https://github.com/ory/kratos/issues/655)) -
       [@Patrik](https://github.com/zepatrik)
-
-### [Docs](https://github.com/ory/kratos/labels/docs)
-
-Affects documentation.
-
-#### Issues
-
-- [ ] Documentation refactoring
-      ([kratos#1904](https://github.com/ory/kratos/issues/1904)) -
-      [@hackerman](https://github.com/aeneasr)
-- [x] Document that identity information (traits, etc) are available to token
-      holders and backend systems
-      ([kratos#43](https://github.com/ory/kratos/issues/43)) -
-      [@hackerman](https://github.com/aeneasr)
-- [x] doc page for ui error messages
-      ([kratos#1784](https://github.com/ory/kratos/issues/1784)) -
-      [@hackerman](https://github.com/aeneasr)
 
 ## [v0.8.0-alpha.1](https://github.com/ory/kratos/milestone/10)
 
@@ -381,22 +318,6 @@ New feature or request.
       [@hackerman](https://github.com/aeneasr)
 - [x] fix: slow CLI start up time
       ([kratos#1878](https://github.com/ory/kratos/pull/1878))
-
-### [Docs](https://github.com/ory/kratos/labels/docs)
-
-Affects documentation.
-
-#### Issues
-
-- [x] Include release notes in CHANGELOG.md
-      ([kratos#1442](https://github.com/ory/kratos/issues/1442)) -
-      [@hackerman](https://github.com/aeneasr)
-- [x] Include changelog in docs navigation
-      ([kratos#1443](https://github.com/ory/kratos/issues/1443)) -
-      [@hackerman](https://github.com/aeneasr)
-- [x] Config reference has not been updated since 0.5.0
-      ([kratos#1597](https://github.com/ory/kratos/issues/1597)) -
-      [@hackerman](https://github.com/aeneasr)
 
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
 
