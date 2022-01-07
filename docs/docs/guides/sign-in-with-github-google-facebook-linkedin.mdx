@@ -1147,3 +1147,45 @@ Spotify is now an option to log in via Kratos.
 Connecting with other Social Sign In providers will be very similar to the
 GitHub flow. If you've managed to do it, add to this document by writing it down
 and making a PR! :)
+
+## How to prevent `username already taken`
+
+Sometimes the username returned by a provider is already taken in your
+application. To prevent this you can add a random suffix (e.g. a number) to the
+OIDC username. You can use the md5 function built in the
+[jsonnet standart library](https://jsonnet.org/ref/stdlib.html). See the
+following issue as well:
+[Add random function to the jsonnet library](https://github.com/ory/kratos/issues/988).
+
+## How to skip Social Login Link-Up
+
+If multiple
+[registration methods](../docs/self-service/flows/user-registration.mdx) are
+configured, it can happen that users are redirected to a social login provider
+to link the accounts after the email verification. To skip this link-up add the
+session hook after the registration method (e.g. `password`):
+
+```
+      after:
+        password:
+          hooks:
+            - hook: session
+```
+
+## How Ory Kratos handles OIDC token
+
+The OIDC token is not being saved in the Ory Kratos database, Ory Kratos
+exchanges it for a session. For example:
+
+- Ory Kratos starts the OIDC flow with Google.
+- Google sends back the OIDC `id_token` (if successfully authenticated).
+- Ory Kratos gets the user information from the `id_token` (specified in claims,
+  default email or username).
+- Ory Kratos checks the database if the identity exists; 
+
+--> if yes, Ory Kratos
+  returns an session token to the user;
+  
+ -->if no, the identity is created and it
+  returns a session token. 
+- The `id_token` from Google is discarded upon completion of the flow.
