@@ -19,7 +19,7 @@ import (
 var _ Manager = new(ManagerCookie)
 var ErrNotResumable = *herodot.ErrBadRequest.WithError("no resumable session found").WithReasonf("The browser does not contain the neccesary cookie to resume the session. This is a security violation and was thus blocked. Please clear your browser's cookies and cache and try again!")
 
-const cookieName = "ory_kratos_continuity"
+const CookieName = "ory_kratos_continuity"
 
 type (
 	managerCookieDependencies interface {
@@ -47,7 +47,7 @@ func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 	c := NewContainer(name, *o)
 
-	if err := x.SessionPersistValues(w, r, m.d.ContinuityCookieManager(ctx), cookieName, map[string]interface{}{
+	if err := x.SessionPersistValues(w, r, m.d.ContinuityCookieManager(ctx), CookieName, map[string]interface{}{
 		name: c.ID.String(),
 	}); err != nil {
 		return err
@@ -85,7 +85,7 @@ func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *
 		return nil, err
 	}
 
-	if err := x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name); err != nil {
+	if err := x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name); err != nil {
 		return nil, err
 	}
 
@@ -94,11 +94,11 @@ func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *
 
 func (m *ManagerCookie) sid(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) (uuid.UUID, error) {
 	var sid uuid.UUID
-	if s, err := x.SessionGetString(r, m.d.ContinuityCookieManager(ctx), cookieName, name); err != nil {
-		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
+	if s, err := x.SessionGetString(r, m.d.ContinuityCookieManager(ctx), CookieName, name); err != nil {
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name)
 		return sid, errors.WithStack(ErrNotResumable.WithDebugf("%+v", err))
 	} else if sid = x.ParseUUID(s); sid == uuid.Nil {
-		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name)
 		return sid, errors.WithStack(ErrNotResumable.WithDebug("session id is not a valid uuid"))
 	}
 
@@ -112,8 +112,12 @@ func (m *ManagerCookie) container(ctx context.Context, w http.ResponseWriter, r 
 	}
 
 	container, err := m.d.ContinuityPersister().GetContinuitySession(ctx, sid)
+	// If an error happens, we need to clean up the cookie.
+	if err != nil {
+		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name)
+	}
+
 	if errors.Is(err, sqlcon.ErrNoRows) {
-		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name)
 		return nil, errors.WithStack(ErrNotResumable.WithDebugf("Resumable ID from cookie could not be found in the datastore: %+v", err))
 	} else if err != nil {
 		return nil, err
@@ -131,7 +135,7 @@ func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http
 		return err
 	}
 
-	if err := x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), cookieName, name); err != nil {
+	if err := x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name); err != nil {
 		return err
 	}
 
