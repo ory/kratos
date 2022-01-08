@@ -51,19 +51,20 @@ func SessionGetStringOr(r *http.Request, s sessions.Store, id, key, fallback str
 
 func SessionUnset(w http.ResponseWriter, r *http.Request, s sessions.Store, id string) error {
 	cookie, err := s.Get(r, id)
-	if err != nil {
+	if err == nil && cookie.IsNew {
+		// No cookie was sent in the request. We have nothing to do.
 		return nil
 	}
 
 	cookie.Options.MaxAge = -1
+	cookie.Values = make(map[interface{}]interface{})
 	return errors.WithStack(cookie.Save(r, w))
 }
 
 func SessionUnsetKey(w http.ResponseWriter, r *http.Request, s sessions.Store, id, key string) error {
 	cookie, err := s.Get(r, id)
-	if err != nil {
-		return nil
-	} else if cookie.IsNew {
+	if err == nil && cookie.IsNew {
+		// No cookie was sent in the request. We have nothing to do.
 		return nil
 	}
 
