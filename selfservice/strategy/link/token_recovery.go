@@ -67,7 +67,7 @@ func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.
 	}
 	return &RecoveryToken{
 		ID:                x.NewUUID(),
-		Token:             randx.MustString(32, randx.AlphaNum),
+		Token:             randx.MustString(8, randx.Numeric),
 		RecoveryAddress:   address,
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,

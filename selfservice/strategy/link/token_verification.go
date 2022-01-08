@@ -60,7 +60,7 @@ func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *ver
 	now := time.Now().UTC()
 	return &VerificationToken{
 		ID:                x.NewUUID(),
-		Token:             randx.MustString(32, randx.AlphaNum),
+		Token:             randx.MustString(8, randx.Numeric),
 		VerifiableAddress: address,
 		ExpiresAt:         now.Add(expiresIn),
 		IssuedAt:          now,
