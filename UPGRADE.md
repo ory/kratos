@@ -10,9 +10,27 @@ before finalizing the upgrade process.
 These changes have not yet been released and this area's purpose is to keep
 track of future changes.
 
-## v0.4.4-alpha.1
+## v0.8.0-alpha.1
 
-Please head over to the [CHANGELOG](https://github.com/ory/kratos/blob/master/CHANGELOG.md#040-alpha1-2020-07-08)
+This version includes a lot of new features, but includes few breaking changes, mostly around the SDKs.
+For a full list of breaking changes please visit the [CHANGELOG](https://github.com/ory/kratos/blob/master/CHANGELOG.md#080-alpha1-2021-10-27).
+
+## v0.7.0-alpha.1
+
+A new SDK has been introduced in this version, please visit the [CHANGELOG](https://github.com/ory/kratos/blob/master/CHANGELOG.md#070-alpha1-2021-07-13) to get a full overview of the SDK and other breaking changes.
+
+## v0.6.0-alpha.1
+
+BCrypt is now the default hashing algorithm. You must apply SQL migrations for this upgrade, this will invalidate all ongoing self-service flows and purge existing self-service forms. If you wish to keep these records, make a back up of your database prior!
+For a full list of breaking changes please visit the [CHANGELOG](https://github.com/ory/kratos/blob/master/CHANGELOG.md#060-alpha1-2021-05-05).
+
+## v0.5.0-alpha.1
+
+For a full list of breaking changes please visit the [CHANGELOG](https://github.com/ory/kratos/blob/master/CHANGELOG.md#050-alpha1-2020-10-15).
+
+## v0.4.0-alpha.1
+
+Please visit the [CHANGELOG](https://github.com/ory/kratos/blob/master/CHANGELOG.md#040-alpha1-2020-07-08).
 
 ## v0.3.0-alpha.1
 
