@@ -3,10 +3,11 @@ package test
 import (
 	"context"
 	"fmt"
-	"github.com/gobuffalo/pop/v6"
-	"github.com/gofrs/uuid"
 	"testing"
 	"time"
+
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gofrs/uuid"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"

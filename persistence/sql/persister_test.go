@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "github.com/gofrs/uuid"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	db "github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/x/xsql"
 
