@@ -104,7 +104,7 @@ are common template file names expected in the sub directories of the root
 directory, corresponding to the respective methods for filling e-mail subject
 and body. Both plain text and HTML templates are required. The courier uses them
 as
-[alternatives](https://github.com/ory/kratos/blob/master/courier/courier.go#L205)
+[alternatives](https://github.com/ory/kratos/blob/871ee0475a27771dd6395aad617f41a22ccc3b9a/courier/courier.go#L205)
 for fallback.
 
 > Templates use the golang template engine in the `text/template` package for
