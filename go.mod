@@ -16,6 +16,7 @@ replace (
 	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 	golang.org/x/sys => golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
 	gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
+	github.com/gorilla/sessions => ../../gorilla/sessions
 )
 
 require (
