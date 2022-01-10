@@ -271,9 +271,6 @@ Something is not working.
 
 #### Issues
 
-- [ ] Resumable session is not cleared up on error
-      ([kratos#2016](https://github.com/ory/kratos/issues/2016)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Recovery link answers with JSON payload for API flows
       ([kratos#2049](https://github.com/ory/kratos/issues/2049)) -
       [@hackerman](https://github.com/aeneasr)
@@ -289,6 +286,9 @@ Something is not working.
       [@hackerman](https://github.com/aeneasr)
 - [x] Hide SQLite migration message
       ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Resumable session is not cleared up on error
+      ([kratos#2016](https://github.com/ory/kratos/issues/2016)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
