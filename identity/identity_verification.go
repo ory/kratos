@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/corp"
-
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/kratos/corp"
 	"github.com/ory/x/sqlxx"
 )
 
 const (
 	VerifiableAddressTypeEmail VerifiableAddressType = AddressTypeEmail
+	VerifiableAddressTypePhone VerifiableAddressType = AddressTypePhone
 
 	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
 	VerifiableAddressStatusSent      VerifiableAddressStatus = "sent"
@@ -90,6 +90,8 @@ func (v VerifiableAddressType) HTMLFormInputType() string {
 	switch v {
 	case VerifiableAddressTypeEmail:
 		return "email"
+	case VerifiableAddressTypePhone:
+		return "phone"
 	}
 	return ""
 }
@@ -104,6 +106,16 @@ func NewVerifiableEmailAddress(value string, identity uuid.UUID) *VerifiableAddr
 		Verified:   false,
 		Status:     VerifiableAddressStatusPending,
 		Via:        VerifiableAddressTypeEmail,
+		IdentityID: identity,
+	}
+}
+
+func NewVerifiablePhoneAddress(value string, identity uuid.UUID) *VerifiableAddress {
+	return &VerifiableAddress{
+		Value:      value,
+		Verified:   false,
+		Status:     VerifiableAddressStatusPending,
+		Via:        VerifiableAddressTypePhone,
 		IdentityID: identity,
 	}
 }

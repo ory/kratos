@@ -162,7 +162,7 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 
 // Redirect POST request to GET rewriting form fields to query params.
 func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	publicUrl := s.d.Config(r.Context()).SelfPublicURL(r)
+	publicUrl := s.d.Config(r.Context()).SelfPublicURL()
 	dest := *r.URL
 	dest.Host = publicUrl.Host
 	dest.Scheme = publicUrl.Scheme
@@ -403,7 +403,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 func (s *Strategy) provider(ctx context.Context, r *http.Request, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
-	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL(r)); err != nil {
+	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL()); err != nil {
 		return nil, err
 	} else {
 		return provider, nil

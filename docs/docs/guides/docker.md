@@ -5,21 +5,12 @@ title: Docker Images
 
 ## Supported tags and respective `Dockerfile` links
 
-- [`latest`, `v0.4.3-alpha.1`, `v0.4.3`, `v0.4`, `v0`](https://github.com/ory/kratos/blob/v0.4.3-alpha.1/.docker/Dockerfile)
-- [`latest-sqlite`, `v0.4.3-alpha.1-sqlite`, `v0.4.3-sqlite`, `v0.4-sqlite`, `v0-sqlite`](https://github.com/ory/kratos/blob/v0.4.3-alpha.1/.docker/Dockerfile-sqlite)
+- [`latest`, `v0.8.0-alpha.1`, `v0.8.0`, `v0.8`, `v0`](https://github.com/ory/kratos/blob/master/.docker/Dockerfile-alpine)
 
 ## Image Variants
 
-The `Kratos` Docker images come in two different flavors, one with and one
-without SQLite support. All Docker images with the postfix
-`kratos:<version>-sqlite` in the tag are compiled with embed SQLite support and
-uses libmusl. All Docker images (`kratos:<version>`) without the postfix
-`-sqlite` are compiled without SQLite support and therefore also don't include
-libmusl.
-
-If you don't make use of the embedded SQLite support we recommend to use the
-Docker images without SQLite support as they are smaller in size, include fewer
-libraries and therefore have a smaller attack surface.
+The `Kratos` Docker images use Alpine Linux as their base image and come with
+SQLite support build in.
 
 ## How to use these images
 
@@ -27,6 +18,21 @@ In order to make the provided Docker images as useful as possible they can be
 configured through a set of supported Environment variables. In addition the
 default configuration directory can be bound to a directory of choice to make it
 simple to pass in your own configuration files.
+
+## Do Not Use `latest`
+
+Please, always use a tagged version and never use `latest` Docker images. This
+ensures that your deployment does not unexpectedly update with an incompatible
+version!
+
+## Running Migrations
+
+To run SQL Migrations, which are required for new installations and when
+upgrading, run:
+
+```shell
+docker -e DSN="<your database URL>" run oryd/kratos:<version> migrate sql -e
+```
 
 ### Environment Variables
 
@@ -39,7 +45,9 @@ variable.
 
 **Example:**
 
-`docker run -e DSN="memory" oryd/kratos:latest`
+```
+docker run -e DSN="memory" oryd/kratos:<version>
+```
 
 #### `SECRETS_DEFAULT`
 
@@ -48,7 +56,7 @@ verify signatures and encrypt things:
 
 **Example:**
 
-`docker run -e SECRETS_DEFAULT="CHANGE-ME" oryd/kratos:v0.4.3-alpha.1`
+`docker run -e SECRETS_DEFAULT="CHANGE-ME" oryd/kratos:<version>`
 
 ### Volumes
 
@@ -66,8 +74,8 @@ Kratos Git repo and execute the Docker command in the Kratos Git repo directory:
 
 ```
 docker run -it -e DSN="memory" \
-       --mount type=bind,source="$(pwd)"/contrib/quickstart/kratos/email-password,target=/home/ory \
-       oryd/kratos:latest-sqlite
+   --mount type=bind,source="$(pwd)"/contrib/quickstart/kratos/email-password,target=/home/ory \
+   oryd/kratos:<version>
 ```
 
 In general we only recommend this approach for local development.
@@ -87,8 +95,6 @@ COPY contrib/quickstart/kratos/email-password/kratos.yml /home/ory
 **Note that in both cases**, you must supply the location of the configuration
 file using the `--config` flag when running the container.
 
-`$ docker run <theimage> --config /home/ory/kratos.yml`
-
-### Examples
-
-Below you find different examples how to use the official Kratos Docker images.
+```
+$ docker run <theimage> --config /home/ory/kratos.yml
+```

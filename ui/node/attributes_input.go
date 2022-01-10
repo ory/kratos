@@ -137,6 +137,7 @@ func NewScriptField(name string, src string, group Group, integrity string, opts
 			ReferrerPolicy: "no-referrer",
 			CrossOrigin:    "anonymous",
 			Integrity:      integrity,
+			Nonce:          x.NewUUID().String(),
 		}),
 		Meta: &Meta{},
 	}

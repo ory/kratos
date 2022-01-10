@@ -83,7 +83,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 	}
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, err); inner != nil {
-		s.WriteFlowError(w, r, f, group, err)
+		s.WriteFlowError(w, r, f, group, inner)
 		return
 	} else if expired != nil {
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {

@@ -110,9 +110,9 @@ paths:
         name: per_page
         required: false
         schema:
-          default: 100
+          default: 250
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
         style: form
@@ -388,6 +388,92 @@ paths:
         all sessions that belong to the given Identity.
       tags:
       - v0alpha2
+    get:
+      description: |-
+        This endpoint is useful for:
+
+        Listing all sessions that belong to an Identity in an administrative context.
+      operationId: adminListIdentitySessions
+      parameters:
+      - description: ID is the identity's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 250
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: Pagination Page
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          format: int64
+          minimum: 0
+          type: integer
+        style: form
+      - description: Active is a boolean flag that filters out sessions based on the
+          state. If no value is provided, all sessions are returned.
+        explode: true
+        in: query
+        name: active
+        required: false
+        schema:
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sessionList'
+          description: sessionList
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      security:
+      - oryAccessToken: []
+      summary: This endpoint returns all sessions that belong to the given Identity.
+      tags:
+      - v0alpha2
   /recovery/link:
     post:
       description: |-
@@ -442,9 +528,9 @@ paths:
         name: per_page
         required: false
         schema:
-          default: 100
+          default: 250
           format: int64
-          maximum: 500
+          maximum: 1000
           minimum: 1
           type: integer
         style: form
@@ -2152,6 +2238,163 @@ paths:
       summary: Get Verification Flow
       tags:
       - v0alpha2
+  /sessions:
+    delete:
+      description: |-
+        This endpoint is useful for:
+
+        To forcefully logout the current user from all other devices and sessions
+      operationId: revokeSessions
+      parameters:
+      - description: Set the Session Token when calling from non-browser clients.
+          A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+          scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+          An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+
+          It is ok if more than one cookie are included here as all other cookies will be ignored.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/revokedSessions'
+          description: revokedSessions
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: |-
+        Calling this endpoint invalidates all except the current session that belong to the logged-in user.
+        Session data are not deleted.
+      tags:
+      - v0alpha2
+    get:
+      description: |-
+        This endpoint is useful for:
+
+        Displaying all other sessions that belong to the logged-in user
+      operationId: listSessions
+      parameters:
+      - description: Set the Session Token when calling from non-browser clients.
+          A session token has a format of `MP2YWEMeM8MxjkGKpH4dqOQ4Q4DlSPaj`.
+        explode: false
+        in: header
+        name: X-Session-Token
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Set the Cookie Header. This is especially useful when calling this endpoint from a server-side application. In that
+          scenario you must include the HTTP Cookie Header which originally was included in the request to your server.
+          An example of a session in the HTTP Cookie Header is: `ory_kratos_session=a19iOVAbdzdgl70Rq1QZmrKmcjDtdsviCTZx7m9a9yHIUS8Wa9T7hvqyGTsLHi6Qifn2WUfpAKx9DWp0SJGleIn9vh2YF4A16id93kXFTgIgmwIOvbVAScyrx7yVl6bPZnCx27ec4WQDtaTewC1CpgudeDV2jQQnSaCP6ny3xa8qLH-QUgYqdQuoA_LF1phxgRCUfIrCLQOkolX5nv3ze_f==`.
+
+          It is ok if more than one cookie are included here as all other cookies will be ignored.
+        explode: false
+        in: header
+        name: Cookie
+        required: false
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Items per Page
+
+          This is the number of items per page.
+        explode: true
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 250
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: Pagination Page
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          format: int64
+          minimum: 0
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sessionList'
+          description: sessionList
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: |-
+        This endpoints returns all other active sessions that belong to the logged-in user.
+        The current session can be retrieved by calling the `/sessions/whoami` endpoint.
+      tags:
+      - v0alpha2
   /sessions/whoami:
     get:
       description: |-
@@ -2255,6 +2498,49 @@ paths:
                 $ref: '#/components/schemas/jsonError'
           description: jsonError
       summary: Check Who the Current HTTP Session Belongs To
+      tags:
+      - v0alpha2
+  /sessions/{id}:
+    delete:
+      description: |-
+        This endpoint is useful for:
+
+        To forcefully logout the current user from another device or session
+      operationId: revokeSession
+      parameters:
+      - description: ID is the session's ID.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Empty responses are sent when, for example, resources are deleted.
+            The HTTP status code for empty responses is typically 201.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/jsonError'
+          description: jsonError
+      summary: |-
+        Calling this endpoint invalidates the specified session. The current session cannot be revoked.
+        Session data are not deleted.
       tags:
       - v0alpha2
   /version:
@@ -2787,6 +3073,34 @@ components:
       format: date-time
       title: NullTime implements sql.NullTime functionality.
       type: string
+    pagination:
+      properties:
+        page:
+          default: 0
+          description: Pagination Page
+          format: int64
+          minimum: 0
+          type: integer
+        per_page:
+          default: 250
+          description: |-
+            Items per Page
+
+            This is the number of items per page.
+          format: int64
+          maximum: 1000
+          minimum: 1
+          type: integer
+      type: object
+    revokedSessions:
+      example:
+        count: 0
+      properties:
+        count:
+          description: The number of sessions that were revoked.
+          format: int64
+          type: integer
+      type: object
     selfServiceBrowserLocationChangeRequiredError:
       properties:
         code:
@@ -3707,6 +4021,10 @@ components:
           description: UserAgent of this device
           type: string
       type: object
+    sessionList:
+      items:
+        $ref: '#/components/schemas/session'
+      type: array
     settingsProfileFormConfig:
       properties:
         action:
@@ -4606,6 +4924,14 @@ components:
           type: string
         node_type:
           type: string
+        nonce:
+          description: |-
+            Nonce for CSP
+
+            A nonce you may want to use to improve your Content Security Policy.
+            You do not have to use this value but if you want to improve your CSP
+            policies you may use it. You can also choose to use your own nonce value!
+          type: string
         referrerpolicy:
           description: The script referrer policy
           type: string
@@ -4621,6 +4947,7 @@ components:
       - id
       - integrity
       - node_type
+      - nonce
       - referrerpolicy
       - src
       - type

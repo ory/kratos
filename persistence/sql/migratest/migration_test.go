@@ -19,7 +19,7 @@ import (
 
 	"github.com/ory/x/migratest"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 

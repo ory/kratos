@@ -557,4 +557,12 @@ func TestGetFlow(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, public.URL+login.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
 	})
+
+	t.Run("case=not found", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupLoginUI(t, client)
+
+		res, _ := x.EasyGet(t, client, public.URL+login.RouteGetFlow+"?id="+x.NewUUID().String())
+		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
+	})
 }

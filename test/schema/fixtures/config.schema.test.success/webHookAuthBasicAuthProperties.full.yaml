@@ -1,0 +1,4 @@
+type: basic_auth
+config:
+  user: foo
+  password: bar

@@ -3,6 +3,7 @@ package registration_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/driver/config"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -34,6 +35,8 @@ import (
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
 	_, admin := testhelpers.NewKratosServer(t, reg)

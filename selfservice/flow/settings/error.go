@@ -79,8 +79,8 @@ func (s *ErrorHandler) reauthenticate(
 	f *Flow,
 	err *FlowNeedsReAuth,
 ) {
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), r.URL.Path), r.URL.Query())
-	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(r),
+	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), r.URL.Path), r.URL.Query())
+	redirectTo := urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(),
 		url.Values{"refresh": {"true"}, "return_to": {returnTo.String()}}),
 		login.RouteInitBrowserFlow).String()
 	err.RedirectBrowserTo = redirectTo
@@ -135,7 +135,7 @@ func (s *ErrorHandler) WriteFlowError(
 		if shouldRespondWithJSON {
 			s.d.Writer().WriteError(w, r, err)
 		} else {
-			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
+			http.Redirect(w, r, urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), login.RouteInitBrowserFlow).String(), http.StatusSeeOther)
 		}
 		return
 	}
@@ -145,7 +145,7 @@ func (s *ErrorHandler) WriteFlowError(
 			s.d.Writer().WriteError(w, r, aalErr)
 		} else {
 			http.Redirect(w, r, urlx.CopyWithQuery(
-				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), login.RouteInitBrowserFlow),
+				urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), login.RouteInitBrowserFlow),
 				url.Values{"aal": {string(identity.AuthenticatorAssuranceLevel2)}}).String(), http.StatusSeeOther)
 		}
 		return

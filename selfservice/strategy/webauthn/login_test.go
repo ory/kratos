@@ -67,6 +67,7 @@ func TestCompleteLogin(t *testing.T) {
 			"1.attributes.onclick",
 			"1.attributes.onload",
 			"3.attributes.src",
+			"3.attributes.nonce",
 		})
 		ensureReplacement(t, "1", f.Ui, "allowCredentials")
 	})

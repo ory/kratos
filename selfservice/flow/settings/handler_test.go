@@ -186,7 +186,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("endpoint=fetch", func(t *testing.T) {
-		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
+		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
 			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).V0alpha2Api.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 

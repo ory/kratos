@@ -133,7 +133,7 @@ func SecureContentNegotiationRedirection(
 			append([]SecureRedirectOption{
 				SecureRedirectUseSourceURL(requestURL),
 				SecureRedirectAllowURLs(c.SelfServiceBrowserWhitelistedReturnToDomains()),
-				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL(r)),
+				SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()),
 			}, opts...)...,
 		)
 		if err != nil {

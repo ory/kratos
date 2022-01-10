@@ -133,6 +133,7 @@ func TestCompleteSettings(t *testing.T) {
 			"0.attributes.value",
 			"4.attributes.onclick",
 			"6.attributes.src",
+			"6.attributes.nonce",
 		})
 		ensureReplacement(t, "4", f.Ui, "Ory Corp")
 	})
@@ -149,6 +150,7 @@ func TestCompleteSettings(t *testing.T) {
 			"2.attributes.onload",
 			"2.attributes.onclick",
 			"4.attributes.src",
+			"4.attributes.nonce",
 		})
 		ensureReplacement(t, "2", f.Ui, "Ory Corp")
 	})

@@ -10,6 +10,11 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/decoderx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -19,10 +24,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/decoderx"
-	"github.com/ory/x/sqlcon"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
 )
 
 const (
@@ -176,7 +177,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 	s.d.Writer().Write(w, r, &selfServiceRecoveryLink{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), recovery.RouteSubmitFlow),
+			urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), recovery.RouteSubmitFlow),
 			url.Values{
 				"token": {token.Token},
 				"flow":  {req.ID.String()},
@@ -272,6 +273,20 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
+	// Take over `return_to` parameter from recovery flow
+	sfRequestURL, err := url.Parse(sf.RequestURL)
+	if err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+	fRequestURL, err := url.Parse(f.RequestURL)
+	if err != nil {
+		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
+	}
+	sfQuery := sfRequestURL.Query()
+	sfQuery.Set("return_to", fRequestURL.Query().Get("return_to"))
+	sfRequestURL.RawQuery = sfQuery.Encode()
+	sf.RequestURL = sfRequestURL.String()
+
 	if err := s.d.RecoveryExecutor().PostRecoveryHook(w, r, f, sess); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -348,7 +363,7 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 	if ft == flow.TypeBrowser {
 		http.Redirect(w, r, req.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
+		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
@@ -378,7 +393,7 @@ func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Req
 	if ft == flow.TypeBrowser {
 		http.Redirect(w, r, req.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r),
+		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusSeeOther)
 	}
 

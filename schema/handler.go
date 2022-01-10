@@ -125,24 +125,7 @@ type identitySchema struct {
 // nolint:deadcode,unused
 // swagger:parameters listIdentitySchemas
 type listIdentitySchemas struct {
-	// Items per Page
-	//
-	// This is the number of items per page.
-	//
-	// required: false
-	// in: query
-	// default: 100
-	// min: 1
-	// max: 500
-	PerPage int `json:"per_page"`
-
-	// Pagination Page
-	//
-	// required: false
-	// in: query
-	// default: 0
-	// min: 0
-	Page int `json:"page"`
+	x.PaginationParams
 }
 
 // swagger:route GET /schemas v0alpha2 listIdentitySchemas
@@ -190,7 +173,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		})
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(r), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfPublicURL(), fmt.Sprintf("/%s", SchemasPath)), int64(total), page, itemsPerPage)
 	h.r.Writer().Write(w, r, ss)
 }
 

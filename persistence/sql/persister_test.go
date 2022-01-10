@@ -9,11 +9,13 @@ import (
 	"sync"
 	"testing"
 
+	db "github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/x/xsql"
 
 	"github.com/go-errors/errors"
-	"github.com/gobuffalo/pop/v5"
-	"github.com/gobuffalo/pop/v5/logging"
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gobuffalo/pop/v6/logging"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -179,7 +181,12 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				courier.TestPersister(ctx, p)(t)
+				courier.TestPersister(ctx,
+					func() (db.UUID, courier.PersisterWrapper) {
+						return testhelpers.NewNetworkUnlessExisting(t, ctx, p)
+					}, func() (db.UUID, courier.PersisterWrapper) {
+						return testhelpers.NewNetwork(t, ctx, p)
+					})(t)
 			})
 			t.Run("contract=verification.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

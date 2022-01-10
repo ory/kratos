@@ -147,6 +147,23 @@ selfservice:
     ## registration ##
     #
     registration:
+      ## Registration UI URL ##
+      #
+      # URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+      #
+      # Default value: https://www.ory.sh/kratos/docs/fallback/registration
+      #
+      # Examples:
+      # - https://my-app.com/signup
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
+      #
+      ui_url: https://my-app.com/signup
+
       ## lifespan ##
       #
       # Default value: 1h
@@ -288,22 +305,19 @@ selfservice:
         #
         default_browser_return_url: https://my-app.com/dashboard
 
-      ## Registration UI URL ##
+      ## Enable User Registration ##
       #
-      # URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+      # If set to true will enable [User Registration](https://www.ory.sh/kratos/docs/self-service/flows/user-registration/).
       #
-      # Default value: https://www.ory.sh/kratos/docs/fallback/registration
-      #
-      # Examples:
-      # - https://my-app.com/signup
+      # Default value: true
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
+      #    $ export SELFSERVICE_FLOWS_REGISTRATION_ENABLED=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
+      #    > set SELFSERVICE_FLOWS_REGISTRATION_ENABLED=<value>
       #
-      ui_url: https://my-app.com/signup
+      enabled: false
 
     ## login ##
     #
@@ -892,6 +906,19 @@ selfservice:
         #
         lifespan: 1h
 
+        ## Override the base URL which should be used as the base for recovery and verification links. ##
+        #
+        # Examples:
+        # - https://my-app.com
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_LINK_CONFIG_BASE_URL=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_LINK_CONFIG_BASE_URL=<value>
+        #
+        base_url: https://my-app.com
+
       ## Enables Link Method ##
       #
       # Default value: true
@@ -1366,21 +1393,6 @@ serve:
     #    > set SERVE_PUBLIC_BASE_URL=<value>
     #
     base_url: https://my-app.com/
-
-    ## Domain Aliases ##
-    #
-    # Adds an alias domain. If a request with the hostname (FQDN) matching the hostname in the alias is found, that URL is used as the base URL.
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export SERVE_PUBLIC_DOMAIN_ALIASES=<value>
-    # - Windows Command Line (CMD):
-    #    > set SERVE_PUBLIC_DOMAIN_ALIASES=<value>
-    #
-    domain_aliases:
-      - match_domain: localhost
-        base_path: /
-        scheme: http
 
     ## Public Host ##
     #

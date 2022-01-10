@@ -105,7 +105,7 @@ func loadTemplate(osdir, name, pattern string, html bool) (Template, error) {
 	return tpl, nil
 }
 
-func loadTextTemplate(osdir, name, pattern string, model interface{}) (string, error) {
+func LoadTextTemplate(osdir, name, pattern string, model interface{}) (string, error) {
 	t, err := loadTemplate(osdir, name, pattern, false)
 	if err != nil {
 		return "", err
@@ -117,7 +117,7 @@ func loadTextTemplate(osdir, name, pattern string, model interface{}) (string, e
 	return b.String(), nil
 }
 
-func loadHTMLTemplate(osdir, name, pattern string, model interface{}) (string, error) {
+func LoadHTMLTemplate(osdir, name, pattern string, model interface{}) (string, error) {
 	t, err := loadTemplate(osdir, name, pattern, true)
 	if err != nil {
 		return "", err
