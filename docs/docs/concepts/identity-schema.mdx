@@ -172,15 +172,21 @@ switch (session.Identity.SchemaID) {
 }
 ```
 
+### Sensitive Data in Identity Schema
+
 :::warning
 
-Please keep in mind that the Identity Schema is not a place to store sensitive
-information that should not be visible to the end-user! Users can see traits and
-other data - except credentials - using the `sessions/whoami` endpoint. The
-Identity Schema is not the right place to store data that should be obfuscated
-from the user!
+The Identity Schema is not a place to store sensitive information that should
+not be visible to the end-user!
 
 :::
+
+The Identity Schema is not the right place to store data that should be
+obfuscated from the user! Users can see traits and other data - except
+credentials - using the `sessions/whoami` endpoint. Users are also able to edit
+identity traits. Visit [this issue](https://github.com/ory/kratos/issues/47) for
+information on a feature that can be configured to prevent the end-user from
+viewing/editing identity traits.
 
 ## Identity Schema Vocabulary Extensions
 
@@ -319,3 +325,14 @@ contains more information and examples.
 
 There are currently no other extensions supported for Identity Traits. Further
 fields will be added in future releases!
+
+### Sanitize Usernames/Traits
+
+To make sure usernames (or traits) satisfy a specific regex (for example only
+alphanumeric characters), they can be sanitized. To sanitize usernames add
+[Regular Expressions](https://json-schema.org/understanding-json-schema/reference/string.html#regular-expressions)
+to the Ory Kratos Identity Schema. To sanitize usernames coming from third-party
+OIDC providers like
+[Google or GitHub](../guides/sign-in-with-github-google-facebook-linkedin) write
+[Jsonnet](https://jsonnet.org). Learn more about
+[Data Mapping with Jsonnet](../reference/jsonnet/).

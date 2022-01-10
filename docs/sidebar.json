@@ -5,8 +5,7 @@
       "quickstart",
       "install",
       "configuring",
-      "contributing",
-      "faq"
+      "contributing"
     ]
   },
   {
@@ -117,6 +116,7 @@
   },
   {
     "Debug & Help": [
+      "debug/troubleshooting",
       "debug/csrf",
       "debug/performance-out-of-memory-password-hashing-argon2",
       "debug/debug-docker-delve-ory-kratos"
