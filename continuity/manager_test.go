@@ -131,6 +131,49 @@ func TestManager(t *testing.T) {
 		assert.EqualValues(t, res.Cookies()[0].Name, continuity.CookieName)
 	})
 
+	t.Run("case=can deal with duplicate cookies", func(t *testing.T) {
+		tc := &persisterTestCase{expected: &persisterTestPayload{"bar"}}
+		ts := newServer(t, p, tc)
+		href := ts.URL + "/" + x.NewUUID().String()
+
+		res, err := http.DefaultClient.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+		// We change the key to another one
+		href = ts.URL + "/" + x.NewUUID().String()
+		req := x.NewTestHTTPRequest(t, "GET", href, nil)
+		require.Len(t, res.Cookies(), 1)
+		for _, c := range res.Cookies() {
+			req.AddCookie(c)
+		}
+
+		tc.ro = []continuity.ManagerOption{continuity.WithPayload(&persisterTestPayload{"bar"})}
+		res, err = http.DefaultClient.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+		require.Len(t, res.Cookies(), 1)
+		for _, c := range res.Cookies() {
+			req.AddCookie(c)
+		}
+
+		res, err = http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
+
+		require.Len(t, res.Cookies(), 1, "continuing the flow with a broken cookie should instruct the browser to forget it")
+		assert.EqualValues(t, res.Cookies()[0].Name, continuity.CookieName)
+
+		var b bytes.Buffer
+		require.NoError(t, json.NewEncoder(&b).Encode(tc.expected))
+		body := ioutilx.MustReadAll(res.Body)
+		assert.JSONEq(t, b.String(), gjson.GetBytes(body, "payload").Raw, "%s", body)
+		assert.Contains(t, href, gjson.GetBytes(body, "name").String(), "%s", body)
+	})
+
 	for k, tc := range []persisterTestCase{
 		{},
 		{
