@@ -3,24 +3,31 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/gobuffalo/pop/v6"
+	"github.com/gofrs/uuid"
 	"testing"
 	"time"
-
-	"github.com/ory/kratos/internal/testhelpers"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 )
 
-func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing.T) {
+type PersisterWrapper interface {
+	GetConnection(ctx context.Context) *pop.Connection
+	NetworkID() uuid.UUID
+	courier.Persister
+}
+
+type NetworkWrapper func() (uuid.UUID, PersisterWrapper)
+
+func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper, newNetwork NetworkWrapper) func(t *testing.T) {
 	return func(t *testing.T) {
-		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
+		nid, p := newNetworkUnlessExisting()
 
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)
@@ -108,7 +115,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, p := newNetwork()
 
 				_, err := p.LatestQueuedMessage(ctx)
 				require.ErrorIs(t, err, courier.ErrQueueEmpty)
@@ -118,7 +125,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 			})
 
 			t.Run("can not update on another network", func(t *testing.T) {
-				_, p := testhelpers.NewNetwork(t, ctx, p)
+				_, p := newNetwork()
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})

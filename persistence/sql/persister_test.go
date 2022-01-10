@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	db "github.com/gofrs/uuid"
 	"os"
 	"path/filepath"
 	"sync"
@@ -179,7 +180,12 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				courier.TestPersister(ctx, p)(t)
+				courier.TestPersister(ctx,
+					func() (db.UUID, courier.PersisterWrapper) {
+						return testhelpers.NewNetworkUnlessExisting(t, ctx, p)
+					}, func() (db.UUID, courier.PersisterWrapper) {
+						return testhelpers.NewNetwork(t, ctx, p)
+					})(t)
 			})
 			t.Run("contract=verification.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
