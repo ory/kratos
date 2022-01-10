@@ -18,8 +18,9 @@ $ make quickstart
 
 :::info
 
-It is very important to add the "session" hook to the after OIDC registration hooks. Otherwise, your users need to use the login flow again to be able to get a
-session.
+It is very important to add the "session" hook to the after OIDC registration
+hooks. Otherwise, your users need to use the login flow again to be able to get
+a session.
 
 ```yaml title="path/to/my/kratos/config.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
@@ -470,8 +471,9 @@ Now, enable the Auth0 provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`. Note
 that the `issuer_url` needs to be the top-level domain for your Auth0
 application. This can be found by going to the Auth0 application page and
-choosing `Settings` then `Advanced Settings` then `Endpoints`. In general, the endpoint is of the form `myAuth0Tenant.auth0.com` (where `myAuth0Tenant` is
-the name of your tenant).
+choosing `Settings` then `Advanced Settings` then `Endpoints`. In general, the
+endpoint is of the form `myAuth0Tenant.auth0.com` (where `myAuth0Tenant` is the
+name of your tenant).
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
@@ -1097,8 +1099,8 @@ http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callbac
 
 While Spotify
 [provides an OIDC discovery URL](https://accounts.spotify.com/.well-known/openid-configuration),
-Spotify does not support the `openid` claim and only returns an access
-token. Therefore, Ory Kratos makes a request to
+Spotify does not support the `openid` claim and only returns an access token.
+Therefore, Ory Kratos makes a request to
 [Spotify's /me API](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile)
 and adds the user info to `std.extVar('claims')`.
 
@@ -1159,9 +1161,9 @@ following issue as well:
 
 If multiple
 [registration methods](../docs/self-service/flows/user-registration.mdx) are
-configured, users may be redirected to a social login provider
-to link the accounts after the email verification. To skip this link-up add the
-session hook after the registration method (e.g. `password`):
+configured, users may be redirected to a social login provider to link the
+accounts after the email verification. To skip this link-up add the session hook
+after the registration method (e.g. `password`):
 
 ```
       after:
@@ -1191,8 +1193,8 @@ exchanges it for a session. For example:
 
 A user creates an account with the identifier `user@example.com`. When the same
 user has an account at e.g. ACME using the same identifier `user@example.com`,
-some providers offer the option to have the user login through ACME, even
-though the user has not created the account using `Login with ACME`.
+some providers offer the option to have the user login through ACME, even though
+the user has not created the account using `Login with ACME`.
 
 > Right now there's an explicit extra step to link them as default
 > configuration. There is no way to login through them without linking if e.g.
@@ -1206,5 +1208,6 @@ We strongly discourage this practice, consider the following scenario:
 
 - You have signed up using `user@example.com` to acme.com.
 - The hacker knows this.
-- The hacker creates a social login account (e.g. Google) with the email `user@example.com` and signs in on acme.com.
+- The hacker creates a social login account (e.g. Google) with the email
+  `user@example.com` and signs in on acme.com.
 - Now the hacker is in your account.
