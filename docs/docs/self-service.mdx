@@ -118,6 +118,13 @@ Ory Kratos as well.
 
 <SelfServiceBrowserFlow flows={['login', 'settings', '...']} />
 
+:::info
+
+Self-service browser flows need to be executed in the same browser from start to finish!  
+Starting the flow in e.g. Safari and completing it in Chrome won't work.
+
+:::
+
 ### Initialization and Redirect to UI
 
 First, the Browser opens the flow's initialization endpoint
