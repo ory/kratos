@@ -120,7 +120,8 @@
       "debug/troubleshooting",
       "debug/csrf",
       "debug/performance-out-of-memory-password-hashing-argon2",
-      "debug/debug-docker-delve-ory-kratos"    ]
+      "debug/debug-docker-delve-ory-kratos"
+    ]
   },
   {
     "SDKs": ["sdk"]
