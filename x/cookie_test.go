@@ -73,7 +73,48 @@ func TestSession(t *testing.T) {
 
 			w.WriteHeader(http.StatusNoContent)
 		})
-		mr(t, id)
+	})
+
+	t.Run("case=GetStringMultipleCookies", func(t *testing.T) {
+		id := "get-string-multiple"
+
+		router.GET("/set/"+id, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			require.NoError(t, SessionPersistValues(w, r, s, sid, map[string]interface{}{
+				"multiple-string-1": "foo",
+			}))
+			require.NoError(t, SessionPersistValues(w, r, s, sid, map[string]interface{}{
+				"multiple-string-2": "bar",
+			}))
+			isExpiryCorrect(t, r)
+			w.WriteHeader(http.StatusNoContent)
+		})
+
+		router.GET("/get/"+id, func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			got, err := SessionGetString(r, s, sid, "multiple-string-1")
+			require.NoError(t, err)
+			assert.EqualValues(t, "foo", got)
+
+			got, err = SessionGetString(r, s, sid, "multiple-string-2")
+			require.NoError(t, err)
+			assert.EqualValues(t, "bar", got)
+
+			w.WriteHeader(http.StatusNoContent)
+		})
+
+		res, err := http.DefaultClient.Get(ts.URL + "/set/" + id)
+		require.NoError(t, err)
+		require.EqualValues(t, http.StatusNoContent, res.StatusCode)
+		require.NoError(t, res.Body.Close())
+
+		req, _ := http.NewRequest("GET", ts.URL+"/get/"+id, nil)
+		for _, c := range res.Cookies() {
+			req.AddCookie(c)
+		}
+
+		res, err = http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		require.EqualValues(t, http.StatusNoContent, res.StatusCode)
+		require.NoError(t, res.Body.Close())
 	})
 
 	t.Run("case=GetStringOr", func(t *testing.T) {

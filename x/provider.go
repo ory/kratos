@@ -21,8 +21,8 @@ type WriterProvider interface {
 }
 
 type CookieProvider interface {
-	CookieManager(ctx context.Context) sessions.Store
-	ContinuityCookieManager(ctx context.Context) sessions.Store
+	CookieManager(ctx context.Context) sessions.StoreExact
+	ContinuityCookieManager(ctx context.Context) sessions.StoreExact
 }
 
 type TracingProvider interface {

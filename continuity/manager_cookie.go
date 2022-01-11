@@ -81,11 +81,11 @@ func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *
 		}
 	}
 
-	if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, container.ID); err != nil {
+	if err := x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name); err != nil {
 		return nil, err
 	}
 
-	if err := x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name); err != nil {
+	if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, container.ID); err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
 		return nil, err
 	}
 
@@ -139,5 +139,9 @@ func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http
 		return err
 	}
 
-	return errors.WithStack(m.d.ContinuityPersister().DeleteContinuitySession(ctx, sid))
+	if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, sid); err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
