@@ -38,14 +38,18 @@ We recommend taking the following steps to ensure that no data is lost:
 > process may vary with different setups, tech stacks, and environments.
 
 1. Write down a high-level upgrade plan
-  - Who will perform the upgrade?
-  - How will the upgrade be performed?
-  - What components are affected?
+
+   - Who will perform the upgrade?
+   - How will the upgrade be performed?
+   - What components are affected?
+
 2. Devise roll-out plan
-  - When will the upgrade be performed?
-  - Will there be an outage?
-  - How long will it be?
-  - What is your rollback plan?
+
+   - When will the upgrade be performed?
+   - Will there be an outage?
+   - How long will it be?
+   - What is your rollback plan?
+
 3. Back up everything!
 4. Run a trial upgrade on a local environment.
 5. Run an upgrade on a staging environment.
