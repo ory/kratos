@@ -3,7 +3,7 @@ id: sign-in-with-github-google-facebook-linkedin
 title: Sign in with GitHub, GitLab, Google, Facebook, LinkedIn, Microsoft ...
 ---
 
-In this document we will take a look at setting up "Social Sign In" with
+In this document, we will take a look at setting up "Social Sign In" with
 different providers using Ory Kratos.
 
 Run the [Quickstart](../quickstart.mdx) with Docker Compose:
@@ -18,9 +18,9 @@ $ make quickstart
 
 :::info
 
-It is very important to add the "session" hook to the after oidc registration
-hooks. Otherwise your users need to use the login flow again to be able to get a
-session.
+It is very important to add the "session" hook to the after OIDC registration
+hooks. Otherwise, your users need to use the login flow again to be able to get
+a session.
 
 ```yaml title="path/to/my/kratos/config.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
@@ -158,7 +158,7 @@ that data to `std.extVar('claims')`. However, not all fields are supported.
 Check the list of supported fields
 [in Kratos' source code](https://github.com/ory/kratos/blob/master/selfservice/strategy/oidc/provider_slack.go).
 
-The `identity.basic` scope will add following fields:
+The `identity.basic` scope will add the following fields:
 
 ```text
 iss                 # always https://slack.com/oauth/
@@ -265,7 +265,7 @@ to
 and adds that data to `std.extVar('claims')`. Check out what data is available
 at
 [GitHub's Scope Docs](https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/).
-Not all GitHub fields are supported however. Check the list of supported fields
+However, not all GitHub fields are supported. Check the list of supported fields
 [in Kratos' source code](https://github.com/ory/kratos/blob/v0.2.1-alpha.1/selfservice/strategy/oidc/provider_github.go#L72-L98).
 
 Only for `Github Oauth2` as `GitHub App` does not have scope. See the
@@ -419,9 +419,9 @@ GitLab is now an option to log in via Kratos.
 
 To set up "Sign in with Auth0" you must create an
 [Auth0 Application for your Auth0 Tenant](https://auth0.com/docs/applications).
-Note that the endpoint for the application starts with your Tenant name. e.g.
+Note that the endpoint for the application starts with your Tenant's name. e.g.
 `myAuth0Tenant.auth0.com`. This will be the `IssuerURL` you will use when
-configuring the the OIDC connection.
+configuring the OIDC connection.
 
 Set the "Redirect URI" to:
 
@@ -471,9 +471,9 @@ Now, enable the Auth0 provider in the Ory Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`. Note
 that the `issuer_url` needs to be the top-level domain for your Auth0
 application. This can be found by going to the Auth0 application page and
-choosing `Settings` then `Advanced Settings` then `Endpoints`. In general though
-the endpoint is of the form `myAuth0Tenant.auth0.com` (where `myAuth0Tenant` is
-the name of your tenant).
+choosing `Settings` then `Advanced Settings` then `Endpoints`. In general, the
+endpoint is of the form `myAuth0Tenant.auth0.com` (where `myAuth0Tenant` is the
+name of your tenant).
 
 ```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
@@ -566,15 +566,15 @@ selfservice:
               - email
 ```
 
-Azure AD is now an option to log in to kratos.
+Azure AD is now an option to log in to Ory Kratos.
 
 ##### Choosing Tenant
 
 There are two ways to use the `microsoft` provider for authentication:
 
-1. For authenticating users in a single Azure AD Directory (organisation), set
+1. For authenticating users in a single Azure AD Directory (organization), set
    the `tenant` value to either the `Directory ID` from the "App Registration"
-   page, or the organisation domain. E.g. `8eaef023-2b34-4da1-9baa-8bc8c9d6a490`
+   page, or the organization domain. E.g. `8eaef023-2b34-4da1-9baa-8bc8c9d6a490`
    or `contoso.onmicrosoft.com`.
 2. For authenticating any user in the Microsoft identity platform, set the
    `tenant` value to either:
@@ -818,10 +818,10 @@ selfservice:
                 hd: null # If you want the G Suite domain
 ```
 
-**Google specific claims**
+**Google-specific claims**
 
 - `hd`: The hosted G Suite domain of the user. Provided only if the user belongs
-  to a hosted domain. For a given email account with custom domain
+  to a hosted domain. For a given email account with a custom domain
   `example.com` - `user1@example.com` would produce `example.com` in the `hd`
   claim.
 
@@ -1004,7 +1004,7 @@ Login option!
 ## Apple
 
 To set up "Sign in with Apple" you must
-[create an app, a service and a private key](https://developer.okta.com/blog/2019/06/04/what-the-heck-is-sign-in-with-apple#create-an-app-id).
+[create an app, a service, and a private key](https://developer.okta.com/blog/2019/06/04/what-the-heck-is-sign-in-with-apple#create-an-app-id).
 
 Set the "Redirect URI" to:
 
@@ -1068,7 +1068,7 @@ selfservice:
             private_key_id: .... # Replace this with the private key identifier generated by Apple
             private_key: |
               -----BEGIN PRIVATE KEY-----
-              .... # Replace this by the content of the private key downloaded from Apple
+              .... # Replace this with the content of the private key downloaded from Apple
               -----END PRIVATE KEY-----
             mapper_url: file:///etc/config/kratos/oidc.apple.jsonnet
             scope:
@@ -1099,8 +1099,8 @@ http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callbac
 
 While Spotify
 [provides an OIDC discovery URL](https://accounts.spotify.com/.well-known/openid-configuration),
-Spotify does not actually support the `openid` claim and only returns an access
-token. Therefore, Ory Kratos makes a request to
+Spotify does not support the `openid` claim and only returns an access token.
+Therefore, Ory Kratos makes a request to
 [Spotify's /me API](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile)
 and adds the user info to `std.extVar('claims')`.
 
@@ -1147,3 +1147,64 @@ Spotify is now an option to log in via Kratos.
 Connecting with other Social Sign In providers will be very similar to the
 GitHub flow. If you've managed to do it, add to this document by writing it down
 and making a PR! :)
+
+## How to prevent `username already taken`
+
+Sometimes the username returned by a provider is already taken in your
+application. To prevent this you can add a random suffix (e.g. a number) to the
+OIDC username. You can use the md5 function built in the
+[jsonnet standard library](https://jsonnet.org/ref/stdlib.html). See the
+following issue as well:
+[Add random function to the jsonnet library](https://github.com/ory/kratos/issues/988).
+
+## How to skip Social Login Link-Up
+
+If multiple
+[registration methods](../docs/self-service/flows/user-registration.mdx) are
+configured, users may be redirected to a social login provider to link the
+accounts after the email verification. To skip this link-up add the session hook
+after the registration method (e.g. `password`):
+
+```
+      after:
+        password:
+          hooks:
+            - hook: session
+```
+
+## How Ory Kratos handles OIDC token
+
+The OIDC token is not being saved in the Ory Kratos database, Ory Kratos
+exchanges it for a session. For example:
+
+- Ory Kratos starts the OIDC flow with Google.
+- Google sends back the OIDC `id_token` (if successfully authenticated).
+- Ory Kratos gets the user information from the `id_token` (specified in claims,
+  default email, or username).
+- Ory Kratos checks the database if the identity exists:  
+  :arrow_right: if yes, Ory Kratos returns a session token to the user.  
+  :arrow_right: if no, the identity is created and it returns a session token.
+- The `id_token` from Google is discarded upon completion of the flow.
+
+## Log in through social providers if the identifiers match
+
+A user creates an account with the identifier `user@example.com`. When the same
+user has an account at e.g. ACME using the same identifier `user@example.com`,
+some providers offer the option to have the user login through ACME, even though
+the user has not created the account using `Login with ACME`.
+
+> Right now there's an explicit extra step to link them as default
+> configuration. There is no way to login through them without linking if e.g.
+> emails match.
+
+:::warning
+
+We strongly discourage this practice, consider the following scenario:
+
+:::
+
+- You have signed up using `user@example.com` to acme.com.
+- The hacker knows this.
+- The hacker creates a social login account (e.g. Google) with the email
+  `user@example.com` and signs in on acme.com.
+- Now the hacker is in your account.
