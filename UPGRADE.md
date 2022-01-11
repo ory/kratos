@@ -5,11 +5,6 @@ possible. Please note that not all breaking changes might be included here.
 Please check the [CHANGELOG.md](./CHANGELOG.md) for a full list of changes
 before finalizing the upgrade process.
 
-## unreleased
-
-These changes have not yet been released and this area's purpose is to keep
-track of future changes.
-
 ## v0.8.0-alpha.1
 
 This version includes a lot of new features, but includes few breaking changes, mostly around the SDKs.
