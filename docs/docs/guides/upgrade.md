@@ -4,7 +4,7 @@ title: Applying Upgrades
 ---
 
 This guide covers basics to consider when upgrading Ory Kratos, please also
-visit [UPGRADE.md](https://github.com/ory/kratos/blob/master/UPGRADE.md) for
+visit [CHANGELOG.md](https://github.com/ory/kratos/blob/master/CHANGELOG.md) for
 more technical details.
 
 Generally upgrading Ory Kratos can be split into three main steps:
@@ -58,9 +58,6 @@ We recommend taking the following steps to ensure that no data is lost:
 - **[Ory Kratos v0.7 Breaking changes](https://github.com/ory/kratos/blob/v0.7.0-alpha.1/CHANGELOG.md#breaking-changes)**
 - **[Ory Kratos v0.6 Breaking changes](https://github.com/ory/kratos/blob/v0.6.0-alpha.1/CHANGELOG.md#breaking-changes)**
 - **[Ory Kratos v0.5 Breaking changes](https://github.com/ory/kratos/blob/v0.5.0-alpha.1/CHANGELOG.md#breaking-changes)**
-
-For older Ory Kratos versions, visit
-[UPGRADE.md](https://github.com/ory/kratos/blob/master/UPGRADE.md)
 
 :::note
 
