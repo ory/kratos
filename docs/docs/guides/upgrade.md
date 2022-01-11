@@ -38,18 +38,14 @@ We recommend taking the following steps to ensure that no data is lost:
 > process may vary with different setups, tech stacks, and environments.
 
 1. Write down a high-level upgrade plan
-
-- Who will perform the upgrade?
-- How will the upgrade be performed?
-- What components are affected?
-
+  - Who will perform the upgrade?
+  - How will the upgrade be performed?
+  - What components are affected?
 2. Devise roll-out plan
-
-- When will the upgrade be performed?
-- Will there be an outage?
-- How long will it be?
-- What is your rollback plan?
-
+  - When will the upgrade be performed?
+  - Will there be an outage?
+  - How long will it be?
+  - What is your rollback plan?
 3. Back up everything!
 4. Run a trial upgrade on a local environment.
 5. Run an upgrade on a staging environment.
@@ -59,11 +55,8 @@ We recommend taking the following steps to ensure that no data is lost:
 ### Breaking changes overview
 
 - **[Ory Kratos v0.8 Breaking changes](https://github.com/ory/kratos/blob/v0.8.0-alpha.1/CHANGELOG.md#breaking-changes)**
-
 - **[Ory Kratos v0.7 Breaking changes](https://github.com/ory/kratos/blob/v0.7.0-alpha.1/CHANGELOG.md#breaking-changes)**
-
 - **[Ory Kratos v0.6 Breaking changes](https://github.com/ory/kratos/blob/v0.6.0-alpha.1/CHANGELOG.md#breaking-changes)**
-
 - **[Ory Kratos v0.5 Breaking changes](https://github.com/ory/kratos/blob/v0.5.0-alpha.1/CHANGELOG.md#breaking-changes)**
 
 For older Ory Kratos versions, visit
@@ -72,6 +65,6 @@ For older Ory Kratos versions, visit
 :::note
 
 Skip the hassle of applying upgrades to Ory Kratos? Take a look at
-[Ory Cloud](https://www.ory.sh/docs/#ory-cloud).
+[Ory Cloud](https://www.ory.sh/docs).
 
 :::
