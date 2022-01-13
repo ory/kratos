@@ -449,6 +449,10 @@ func (p *Config) DefaultIdentityTraitsSchemaURL() (*url.URL, error) {
 	return p.ParseURI(found.URL)
 }
 
+func (p *Config) DefaultIdentityTraitsSchemaID() string {
+	return p.p.String(ViperKeyDefaultIdentitySchemaID)
+}
+
 func (p *Config) TOTPIssuer() string {
 	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL().Hostname())
 }

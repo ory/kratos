@@ -3,11 +3,12 @@ package registration_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/driver/config"
 	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/gofrs/uuid"
 

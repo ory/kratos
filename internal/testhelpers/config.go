@@ -19,6 +19,7 @@ func UseConfigFile(t *testing.T, path string) *pflag.FlagSet {
 }
 
 func SetDefaultIdentitySchema(conf *config.Config, url string) {
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, "default")
 	conf.MustSet(config.ViperKeyIdentitySchemas, config.Schemas{
 		{ID: "default", URL: url},
 	})

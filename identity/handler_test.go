@@ -40,7 +40,7 @@ func TestHandler(t *testing.T) {
 
 	conf.MustSet(config.ViperKeyAdminBaseURL, adminTS.URL)
 	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
-		"default": "file://./stub/identity.schema.json",
+		"default":  "file://./stub/identity.schema.json",
 		"customer": "file://./stub/handler/customer.schema.json",
 		"employee": "file://./stub/handler/employee.schema.json",
 	})

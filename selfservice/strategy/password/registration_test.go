@@ -549,7 +549,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should not set up a session if hook is not configured", func(t *testing.T) {
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
 			t.Run("type=api", func(t *testing.T) {
@@ -756,6 +756,43 @@ func TestRegistration(t *testing.T) {
 }`, values.Get("csrf_token"), x.NewUUID(), username))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, assertx.PrettifyJSONPayload(t, actual))
 			assert.Equal(t, username.String(), gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
+		})
+
+		t.Run("case=should choose the correct identity schema", func(t *testing.T) {
+			conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, "advanced-user")
+			conf.MustSet(config.ViperKeyIdentitySchemas, config.Schemas{
+				{ID: "does-not-exist", URL: "file://./stub/not-exists.schema.json"},
+				{ID: "advanced-user", URL: "file://./stub/registration.secondary.schema.json"},
+			})
+			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+
+			username := "registration-custom-schema"
+			t.Run("type=api", func(t *testing.T) {
+				body := expectNoLogin(t, true, false, nil, func(v url.Values) {
+					v.Set("traits.username", username+"-api")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.baz", "bar")
+				})
+				assert.Equal(t, username+"-api", gjson.Get(body, "identity.traits.username").String(), "%s", body)
+				assert.Empty(t, gjson.Get(body, "session_token").String(), "%s", body)
+				assert.Empty(t, gjson.Get(body, "session.id").String(), "%s", body)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				expectNoLogin(t, false, true, nil, func(v url.Values) {
+					v.Set("traits.username", username+"-spa")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.baz", "bar")
+				})
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				expectNoLogin(t, false, false, nil, func(v url.Values) {
+					v.Set("traits.username", username+"-browser")
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.baz", "bar")
+				})
+			})
 		})
 	})
 

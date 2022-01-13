@@ -864,7 +864,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
 
 	type identity struct {
-		Schemas         []map[string]string `json:"schemas"`
+		Schemas []map[string]string `json:"schemas"`
 	}
 
 	type configFile struct {
@@ -890,7 +890,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 			},
 			DSN: "memory",
 			Identity: &identity{
-				Schemas:          []map[string]string{{"id": "default", "url": "base64://" + base64.StdEncoding.EncodeToString(identityTest)}},
+				Schemas: []map[string]string{{"id": "default", "url": "base64://" + base64.StdEncoding.EncodeToString(identityTest)}},
 			},
 		}
 	}

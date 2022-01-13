@@ -441,7 +441,7 @@ func (h *Handler) submitFlow(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i := identity.NewIdentity(h.d.Config(r.Context()).DefaultIdentityTraitsSchemaID())
 	var s Strategy
 	for _, ss := range h.d.AllRegistrationStrategies() {
 		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {

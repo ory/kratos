@@ -10,15 +10,16 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/corp"
-	"github.com/ory/kratos/driver"
-	"github.com/ory/x/dbal"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/corp"
+	"github.com/ory/kratos/driver"
+	"github.com/ory/x/dbal"
 
 	"golang.org/x/sync/errgroup"
 
