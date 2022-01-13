@@ -87,7 +87,7 @@ func NewFromJSON(action string, group node.Group, raw json.RawMessage, prefix st
 	return c
 }
 
-//NewFromStruct creates a UI Container based on serialized contents of the provided struct.
+// NewFromStruct creates a UI Container based on serialized contents of the provided struct.
 func NewFromStruct(action string, group node.Group, v interface{}, prefix string) (*Container, error) {
 	c := New(action)
 	data, err := json.Marshal(v)
