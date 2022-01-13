@@ -1,5 +1,11 @@
 SHELL=/bin/bash -o pipefail
 
+ifdef image_tag
+	IMAGE_TAG := $(image_tag)
+else
+	IMAGE_TAG := latest
+endif
+
 #  EXECUTABLES = docker-compose docker node npm go
 #  K := $(foreach exec,$(EXECUTABLES),\
 #          $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
@@ -135,7 +141,8 @@ format: .bin/goimports docs/node_modules node_modules
 # Build local docker image
 .PHONY: docker
 docker:
-		DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:latest .
+		@echo "Building Image 'oryd/kratos:$(IMAGE_TAG)'"
+		DOCKER_BUILDKIT=1 docker build -f .docker/Dockerfile-build --build-arg=COMMIT=$(VCS_REF) --build-arg=BUILD_DATE=$(BUILD_DATE) -t oryd/kratos:$(IMAGE_TAG) .
 
 # Runs the documentation tests
 .PHONY: test-docs
