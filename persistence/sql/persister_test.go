@@ -180,7 +180,7 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				upsert, insert := sqltesthelpers.DefaultNetworkWrapper(t, ctx, p)
+				upsert, insert := sqltesthelpers.DefaultNetworkWrapper(p)
 				courier.TestPersister(ctx, upsert, insert)(t)
 			})
 			t.Run("contract=verification.TestPersister", func(t *testing.T) {
