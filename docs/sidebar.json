@@ -74,7 +74,8 @@
       "guides/https-tls",
       "guides/setting-up-password-hashing-parameters",
       "guides/integration-with-other-systems-using-web-hooks",
-      "guides/tracing"
+      "guides/tracing",
+      "guides/upgrade"
     ]
   },
   "reference/api",
