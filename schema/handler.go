@@ -51,6 +51,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), x.RedirectToPublicRoute(h.r))
+	admin.GET(fmt.Sprintf("/%s", SchemasPath), x.RedirectToPublicRoute(h.r))
 }
 
 // Raw JSON Schema
