@@ -2290,6 +2290,23 @@ session:
     #    > set SESSION_WHOAMI_REQUIRED_AAL=<value>
     #
     required_aal: aal1
+    ## Allow session renew for this endpint ##
+    #
+    # Enables session renew capabilities for the whoami endpoint
+    #
+    # Default value: false
+    #
+    # One of:
+    # - true
+    # - false
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SESSION_WHOAMI_REFRESH=<value>
+    # - Windows Command Line (CMD):
+    #    > set SESSION_WHOAMI_REFRESH=<value>
+    #
+    refresh: false
 
 ## The kratos version this config is written for. ##
 #
