@@ -24,11 +24,11 @@ type PersisterWrapper interface {
 	courier.Persister
 }
 
-type NetworkWrapper func() (uuid.UUID, PersisterWrapper)
+type NetworkWrapper func(t *testing.T, ctx context.Context) (uuid.UUID, PersisterWrapper)
 
 func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper, newNetwork NetworkWrapper) func(t *testing.T) {
 	return func(t *testing.T) {
-		nid, p := newNetworkUnlessExisting()
+		nid, p := newNetworkUnlessExisting(t, ctx)
 
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)
@@ -116,7 +116,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			})
 
 			t.Run("can not get on another network", func(t *testing.T) {
-				_, p := newNetwork()
+				_, p := newNetwork(t, ctx)
 
 				_, err := p.LatestQueuedMessage(ctx)
 				require.ErrorIs(t, err, courier.ErrQueueEmpty)
@@ -126,7 +126,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			})
 
 			t.Run("can not update on another network", func(t *testing.T) {
-				_, p := newNetwork()
+				_, p := newNetwork(t, ctx)
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
 				require.ErrorIs(t, err, sqlcon.ErrNoRows)
 			})

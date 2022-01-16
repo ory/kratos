@@ -75,6 +75,7 @@
       "guides/setting-up-password-hashing-parameters",
       "guides/integration-with-other-systems-using-web-hooks",
       "guides/tracing",
+      "guides/upgrade",
       "guides/password-policy"
     ]
   },

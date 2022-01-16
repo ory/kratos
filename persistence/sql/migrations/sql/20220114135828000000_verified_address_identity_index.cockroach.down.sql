@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "identity_verifiable_addresses_nid_identity_id_idx";
