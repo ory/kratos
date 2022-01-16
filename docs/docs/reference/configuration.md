@@ -999,7 +999,7 @@ selfservice:
 
         ## Minimum Password Length ##
         #
-        # Default value: 8
+        # Default value: 6
         #
         # Set this value using environment variables on
         # - Linux/macOS:

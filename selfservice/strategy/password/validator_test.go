@@ -42,7 +42,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			{pw: "password", pass: false},
 			{pw: "1234567890", pass: false},
 			{pw: "qwertyui", pass: false},
-			{pw: "l3f9to", pass: false},
+			{pw: "l3f9to", pass: true},
 			{pw: "l3f9toh1uaf81n21", pass: true},
 			{pw: "l3f9toh1uaf81n21", id: "l3f9toh1uaf81n21", pass: false},
 			{pw: "l3f9toh1", pass: true},
