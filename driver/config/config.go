@@ -1006,7 +1006,7 @@ func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 		HaveIBeenPwnedEnabled:            p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
 		MaxBreaches:                      uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
 		IgnoreNetworkErrors:              p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
-		MinPasswordLength:                uint(p.p.IntF(ViperKeyPasswordMinLength, 6)),
+		MinPasswordLength:                uint(p.p.IntF(ViperKeyPasswordMinLength, 8)),
 		IdentifierSimilarityCheckEnabled: p.p.BoolF(ViperKeyPasswordIdentifierSimilarityCheckEnabled, true),
 	}
 }

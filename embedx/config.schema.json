@@ -1133,7 +1133,8 @@
                       "title": "Minimum Password Length",
                       "description": "Defines the minimum length of the password.",
                       "type": "integer",
-                      "default": 6
+                      "default": 8,
+                      "minimum": 6
                     },
                     "identifier_similarity_check_enabled": {
                       "title": "Enable password-identifier similarity check",
