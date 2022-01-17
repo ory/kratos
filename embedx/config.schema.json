@@ -409,6 +409,19 @@
             "contoso.onmicrosoft.com"
           ]
         },
+        "subject_source": {
+          "title": "Microsoft subject source",
+          "description": "Controls from which endpoint the subject identifier is taken by microsoft provider",
+          "type": "string",
+          "enum": [
+            "userinfo",
+            "me"
+          ],
+          "default": "userinfo",
+          "examples": [
+            "userinfo"
+          ]
+        },
         "apple_team_id": {
           "title": "Apple Developer Team ID",
           "description": "Apple Developer Team ID needed for generating a JWT token for client secret",

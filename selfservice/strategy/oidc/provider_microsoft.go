@@ -2,6 +2,8 @@ package oidc
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 	"strings"
 
 	"github.com/gofrs/uuid"
@@ -66,7 +68,49 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) 
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 	}
 
-	return m.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	claims, err := m.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
+	if err != nil {
+		return nil, err
+	}
+
+	return m.updateSubject(ctx, claims, exchange)
+}
+
+func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, exchange *oauth2.Token) (*Claims, error) {
+	if m.config.SubjectSource == "me" {
+		o, err := m.OAuth2(ctx)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+
+		client := o.Client(ctx, exchange)
+
+		u, err := url.Parse("https://graph.microsoft.com/v1.0/me")
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+		req, err := http.NewRequest("GET", u.String(), nil)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+		defer resp.Body.Close()
+
+		var user struct {
+			Id string `json:"id"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		}
+
+		claims.Subject = user.Id
+	}
+
+	return claims, nil
 }
 
 type microsoftUnverifiedClaims struct {
