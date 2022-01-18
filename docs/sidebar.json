@@ -60,6 +60,7 @@
       "guides/configuring-cookies",
       "guides/multi-domain-cookies",
       "guides/setting-up-cors",
+      "guides/password-policy",
       "guides/account-recovery-password-reset",
       "guides/account-activation-email-verification",
       "guides/zero-trust-iap-proxy-identity-access-proxy",
