@@ -1,0 +1,201 @@
+---
+id: refreshing-user-sessions
+title: Managing User Session Life
+---
+
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
+
+This document walks you through managing user session expiration time.
+
+## Setting the session refresh time
+
+Since session refresh causes db writes it's possible to set a config value to allow session refresh only for a specific
+time before the session expires. If we set the `refresh_min_time_left` equal to `lifespan`,
+it's possible to refresh even new sessions.
+
+```yaml title="path/to/config/kratos.yml"
+session:
+  lifespan: 1h
+  refresh_min_time_left: 1h
+```
+
+## Extend user session using the whoami endpoint
+
+By default refresh isn't possible on this endpoint and needs to be enabled through the config.
+
+### Enable session refresh in the public whoami endpoint
+
+```yaml title="path/to/config/kratos.yml"
+session:
+  whoami:
+    refresh_allowed: true
+```
+
+### Refresh the current session via whoami
+
+<Tabs
+  defaultValue="curl"
+  values={[
+    {label: 'curl', value: 'curl'},
+  ]}>
+<TabItem value="curl">
+
+```shell script
+$ curl 'https://your-project-slug.projects.oryapis.com/sessions/whoami?refresh=true' \
+    -H 'Accept: application/json' \
+    -H 'Cookie: ory_kratos_session=MTYzNDIyNzEzN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJRTFDYWtvME5VNVlaVWxvYVZWeWJrUnZhSEF4YmxSV2VVRlhNMWwxVlVGenxXpsk2cL21Dclk3nCoXV41N6bFxvVJSt7CeICy_815Aw==' | jq
+
+{
+  "id": "ede90ce6-2420-435a-a745-3d8ab1a9636c",
+  "active": true,
+  "expires_at": "2020-09-04T21:32:47.5642404Z",
+  "authenticated_at": "2020-09-03T21:32:47.5881038Z",
+  "issued_at": "2020-09-03T21:32:47.5642688Z",
+  "identity": {
+    "id": "d96e86d9-bc33-4aa5-b865-4ade8a3974b3",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "foouser@ory.sh",
+      "name": {
+        "first": "foo",
+        "last": "user"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "81bbdeae-6333-42f2-877e-26c78acb6ea5",
+        "value": "foouser@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "596c1db4-ccaa-4f4e-9623-cb7e768026ad",
+        "value": "foouser@ory.sh",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Extend user session using the admin endpoints
+
+If we don't want to use the public whoami endpoint for session refresh, we can do it via the admin endpoints.
+
+### Refresh the current session via the admin endpoint
+
+<Tabs
+  defaultValue="curl"
+  values={[
+    {label: 'curl', value: 'curl'},
+  ]}>
+<TabItem value="curl">
+
+```shell script
+$ curl 'https://your-project-slug.projects.oryapis.com/sessions/refresh' \
+    -H 'Accept: application/json' \
+    -H 'Cookie: ory_kratos_session=MTYzNDIyNzEzN3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJRTFDYWtvME5VNVlaVWxvYVZWeWJrUnZhSEF4YmxSV2VVRlhNMWwxVlVGenxXpsk2cL21Dclk3nCoXV41N6bFxvVJSt7CeICy_815Aw==' | jq
+
+{
+  "id": "ede90ce6-2420-435a-a745-3d8ab1a9636c",
+  "active": true,
+  "expires_at": "2020-09-04T21:32:47.5642404Z",
+  "authenticated_at": "2020-09-03T21:32:47.5881038Z",
+  "issued_at": "2020-09-03T21:32:47.5642688Z",
+  "identity": {
+    "id": "d96e86d9-bc33-4aa5-b865-4ade8a3974b3",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "foouser@ory.sh",
+      "name": {
+        "first": "foo",
+        "last": "user"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "81bbdeae-6333-42f2-877e-26c78acb6ea5",
+        "value": "foouser@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "596c1db4-ccaa-4f4e-9623-cb7e768026ad",
+        "value": "foouser@ory.sh",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Refresh the current session via the admin endpoint
+
+<Tabs
+  defaultValue="curl"
+  values={[
+    {label: 'curl', value: 'curl'},
+  ]}>
+<TabItem value="curl">
+
+```shell script
+$ curl 'https://your-project-slug.projects.oryapis.com/sessions/refresh/ede90ce6-2420-435a-a745-3d8ab1a9636c' \
+    -H 'Accept: application/json' | jq
+
+{
+  "id": "ede90ce6-2420-435a-a745-3d8ab1a9636c",
+  "active": true,
+  "expires_at": "2020-09-04T21:32:47.5642404Z",
+  "authenticated_at": "2020-09-03T21:32:47.5881038Z",
+  "issued_at": "2020-09-03T21:32:47.5642688Z",
+  "identity": {
+    "id": "d96e86d9-bc33-4aa5-b865-4ade8a3974b3",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "foouser@ory.sh",
+      "name": {
+        "first": "foo",
+        "last": "user"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "81bbdeae-6333-42f2-877e-26c78acb6ea5",
+        "value": "foouser@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "596c1db4-ccaa-4f4e-9623-cb7e768026ad",
+        "value": "foouser@ory.sh",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>

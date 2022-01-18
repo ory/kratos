@@ -941,11 +941,11 @@ func (p *Config) SessionWhoAmIAAL() string {
 	return p.p.String(ViperKeySessionWhoAmIAAL)
 }
 
-func (p *Config) SessionWhoAmIRefresh() bool {
+func (p *Config) SessionWhoAmIRefreshAllowed() bool {
 	return p.p.Bool(ViperKeySessionWhoAmIRefreshAllowed)
 }
 
-func (p *Config) SessionRefreshTimeWindow() time.Duration {
+func (p *Config) SessionRefreshMinTimeLeft() time.Duration {
 	return p.p.DurationF(ViperKeySessionRefreshMinTimeLeft, p.SessionLifespan())
 }
 

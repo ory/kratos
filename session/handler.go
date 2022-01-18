@@ -201,7 +201,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	// Refresh session if param was true
 	refresh := r.URL.Query().Get("refresh")
-	if c.SessionWhoAmIRefresh() && refresh == "true" && s.CanBeRefreshed(c) {
+	if c.SessionWhoAmIRefreshAllowed() && refresh == "true" && s.CanBeRefreshed(c) {
 		s = s.Refresh(c)
 		if err := h.r.SessionPersister().UpsertSession(r.Context(), s); err != nil {
 			h.r.Writer().WriteError(w, r, err)

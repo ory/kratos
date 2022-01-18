@@ -25,7 +25,7 @@ type lifespanProvider interface {
 }
 
 type refreshWindowProvider interface {
-	SessionRefreshTimeWindow() time.Duration
+	SessionRefreshMinTimeLeft() time.Duration
 }
 
 // A Session
@@ -166,12 +166,11 @@ func (s *Session) IsActive() bool {
 
 func (s *Session) Refresh(c lifespanProvider) *Session {
 	s.ExpiresAt = time.Now().Add(c.SessionLifespan())
-	s.UpdatedAt = time.Now()
 	return s
 }
 
 func (s *Session) CanBeRefreshed(c refreshWindowProvider) bool {
-	return s.ExpiresAt.Add(-c.SessionRefreshTimeWindow()).Before(time.Now())
+	return s.ExpiresAt.Add(-c.SessionRefreshMinTimeLeft()).Before(time.Now())
 }
 
 // List of (Used) AuthenticationMethods
