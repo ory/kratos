@@ -1024,7 +1024,7 @@ func TestChangeMinPasswordLength(t *testing.T) {
 
 		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.yaml"),
-			configx.WithValue("selfservice.methods.password.config.min_password_length", 5))
+			configx.WithValue(config.ViperKeyPasswordMinLength, 5))
 
 		assert.Error(t, err)
 	})
@@ -1034,7 +1034,7 @@ func TestChangeMinPasswordLength(t *testing.T) {
 
 		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.yaml"),
-			configx.WithValue("selfservice.methods.password.config.min_password_length", 9))
+			configx.WithValue(config.ViperKeyPasswordMinLength, 9))
 
 		assert.NoError(t, err)
 	})
