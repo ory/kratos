@@ -248,6 +248,7 @@ This patch removes the ability to use domain aliases, an obscure feature rarely 
 * Add ability to resume continuity sessions from several cookies ([#2131](https://github.com/ory/kratos/issues/2131)) ([8b87bdb](https://github.com/ory/kratos/commit/8b87bdb1967654b5fbfbf9799948485b2a9a6af0)), closes [#2016](https://github.com/ory/kratos/issues/2016) [#1786](https://github.com/ory/kratos/issues/1786)
 * Add hiring notice to README ([#2074](https://github.com/ory/kratos/issues/2074)) ([0c1e816](https://github.com/ory/kratos/commit/0c1e816693ad4a6c3fdb7206bbc95c81cdfdf3c0))
 * Add missing version tag in quickstart.yml ([#2110](https://github.com/ory/kratos/issues/2110)) ([1d281ea](https://github.com/ory/kratos/commit/1d281ea69e551cc3d40415f5405690f445891bb6))
+* Adjust scan configuration ([#2140](https://github.com/ory/kratos/issues/2140)) ([8506fcf](https://github.com/ory/kratos/commit/8506fcf59d572851b24041b48af6a04b31520a32)), closes [#2083](https://github.com/ory/kratos/issues/2083)
 * Admin endpoint `/schemas` not redirecting to public endpoint ([#2133](https://github.com/ory/kratos/issues/2133)) ([413833f](https://github.com/ory/kratos/commit/413833f128c0674f4e8dbb9e73698a9df04cfc1a)), closes [#2084](https://github.com/ory/kratos/issues/2084)
 * Choose correct CSRF cookie when multiple are set ([633076b](https://github.com/ory/kratos/commit/633076be008104afd50186ebe60722ef21999d5d)), closes [ory/kratos#2121](https://github.com/ory/kratos/issues/2121) [ory-corp/cloud#1786](https://github.com/ory-corp/cloud/issues/1786):
 
