@@ -100,10 +100,10 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) *http.Cooki
 	assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
 	var found bool
-	for _, c := range res.Cookies() {
-		if c.Name == config.DefaultSessionCookieName {
+	for _, rc := range res.Cookies() {
+		if rc.Name == config.DefaultSessionCookieName {
 			found = true
-			sessionCookie = c
+			sessionCookie = rc
 		}
 	}
 	require.True(t, found)

@@ -162,7 +162,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 	t.Run("case=whoami refresh", func(t *testing.T) {
 		client := testhelpers.NewClientWithCookies(t)
-		conf.MustSet(config.ViperKeySessionWhoAmIRefresh, "true")
+		conf.MustSet(config.ViperKeySessionWhoAmIRefreshAllowed, "true")
 
 		// No cookie yet -> 401
 		res, err := client.Get(ts.URL + RouteWhoami)

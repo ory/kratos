@@ -2196,6 +2196,25 @@ session:
   #
   lifespan: 1h
 
+  ## Session Lifespan ##
+  #
+  # Defines how long before a session expires we are able to refresh it.
+  #
+  # Default value: 24h
+  #
+  # Examples:
+  # - 1h
+  # - 1m
+  # - 1s
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export SESSION_REFRESH_MIN_TIME_LEFT=<value>
+  # - Windows Command Line (CMD):
+  #    > set SESSION_REFRESH_MIN_TIME_LEFT=<value>
+  #
+  refresh_min_time_left: 1h
+
   ## cookie ##
   #
   cookie:
@@ -2302,11 +2321,11 @@ session:
     #
     # Set this value using environment variables on
     # - Linux/macOS:
-    #    $ export SESSION_WHOAMI_REFRESH=<value>
+    #    $ export SESSION_WHOAMI_REFRESH_ALLOWED=<value>
     # - Windows Command Line (CMD):
-    #    > set SESSION_WHOAMI_REFRESH=<value>
+    #    > set SESSION_WHOAMI_REFRESH_ALLOWED=<value>
     #
-    refresh: false
+    refresh_allowed: false
 
 ## The kratos version this config is written for. ##
 #
