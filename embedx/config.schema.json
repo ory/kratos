@@ -1128,6 +1128,19 @@
                       "description": "If set to false the password validation fails when the network or the Have I Been Pwnd API is down.",
                       "type": "boolean",
                       "default": true
+                    },
+                    "min_password_length": {
+                      "title": "Minimum Password Length",
+                      "description": "Defines the minimum length of the password.",
+                      "type": "integer",
+                      "default": 8,
+                      "minimum": 6
+                    },
+                    "identifier_similarity_check_enabled": {
+                      "title": "Enable password-identifier similarity check",
+                      "description": "If set to false the password validation does not check for similarity between the password and the user identifier.",
+                      "type": "boolean",
+                      "default": true
                     }
                   },
                   "additionalProperties": false

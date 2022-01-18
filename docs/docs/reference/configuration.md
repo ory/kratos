@@ -997,6 +997,33 @@ selfservice:
         #
         haveibeenpwned_host: ''
 
+        ## Minimum Password Length ##
+        #
+        # Default value: 8
+        # Minimum value: 6
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
+        #
+        min_password_length: 0
+
+        ## Enables Password User Identifier Similarity Check ##
+        #
+        # If set to false the password validation does not check whether passwords and user identifiers are similar
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
+        #
+        identifier_similarity_check_enabled: false
+
       ## Enables Username/Email and Password Method ##
       #
       # Default value: true

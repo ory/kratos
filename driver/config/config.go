@@ -144,6 +144,8 @@ const (
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                    = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                              = "selfservice.methods.password.config.max_breaches"
+	ViperKeyPasswordMinLength                                = "selfservice.methods.password.config.min_password_length"
+	ViperKeyPasswordIdentifierSimilarityCheckEnabled         = "selfservice.methods.password.config.identifier_similarity_check_enabled"
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
 	ViperKeyWebAuthnRPDisplayName                            = "selfservice.methods.webauthn.config.rp.display_name"
@@ -195,10 +197,12 @@ type (
 		URL string `json:"url"`
 	}
 	PasswordPolicy struct {
-		HaveIBeenPwnedHost    string `json:"haveibeenpwned_host"`
-		HaveIBeenPwnedEnabled bool   `json:"haveibeenpwned_enabled"`
-		MaxBreaches           uint   `json:"max_breaches"`
-		IgnoreNetworkErrors   bool   `json:"ignore_network_errors"`
+		HaveIBeenPwnedHost               string `json:"haveibeenpwned_host"`
+		HaveIBeenPwnedEnabled            bool   `json:"haveibeenpwned_enabled"`
+		MaxBreaches                      uint   `json:"max_breaches"`
+		IgnoreNetworkErrors              bool   `json:"ignore_network_errors"`
+		MinPasswordLength                uint   `json:"min_password_length"`
+		IdentifierSimilarityCheckEnabled bool   `json:"identifier_similarity_check_enabled"`
 	}
 	Schemas []Schema
 	Config  struct {
@@ -998,10 +1002,12 @@ func (p *Config) ConfigVersion() string {
 
 func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 	return &PasswordPolicy{
-		HaveIBeenPwnedHost:    p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
-		HaveIBeenPwnedEnabled: p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
-		MaxBreaches:           uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
-		IgnoreNetworkErrors:   p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+		HaveIBeenPwnedHost:               p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
+		HaveIBeenPwnedEnabled:            p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
+		MaxBreaches:                      uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
+		IgnoreNetworkErrors:              p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+		MinPasswordLength:                uint(p.p.IntF(ViperKeyPasswordMinLength, 8)),
+		IdentifierSimilarityCheckEnabled: p.p.BoolF(ViperKeyPasswordIdentifierSimilarityCheckEnabled, true),
 	}
 }
 
