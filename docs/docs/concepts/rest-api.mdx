@@ -20,10 +20,8 @@ pages (where applicable):
 - Previous (prev)
 - Last
 
-Pages are created based on the values of `per_page` and `page` provided in the
+Pagination is done based on `per_page` and `page` parameters provided in the
 querystring, where `per_page` is the page size, and `page` is the current page.
-
-In most scenarios, the `per_page` should be a multiple of the `page`.
 
 Example:
 
@@ -35,7 +33,7 @@ Example:
 >
 < HTTP/1.1 200 OK
 < Content-Type: application/json
-< Link: </resources?per_page=5&page=0>; rel="first",</resources?per_page=5&page=15>; rel="next",</resources?per_page=5&page=5>; rel="prev",</resources?per_page=5&page=20>; rel="last"
+< Link: </resources?per_page=5&page=0>; rel="first",</resources?per_page=5&page=11>; rel="next",</resources?per_page=5&page=9>; rel="prev",</resources?per_page=5&page=20>; rel="last"
 < Date: Mon, 22 Apr 2019 23:34:29 GMT
 < Transfer-Encoding: chunked
 <

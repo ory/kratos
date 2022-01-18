@@ -23,15 +23,15 @@ func (t *VerificationInvalid) EmailRecipient() (string, error) {
 }
 
 func (t *VerificationInvalid) EmailSubject() (string, error) {
-	return loadTextTemplate(t.c.CourierTemplatesRoot(), "verification/invalid/email.subject.gotmpl", "verification/invalid/email.subject*", t.m)
+	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "verification/invalid/email.subject.gotmpl", "verification/invalid/email.subject*", t.m)
 }
 
 func (t *VerificationInvalid) EmailBody() (string, error) {
-	return loadHTMLTemplate(t.c.CourierTemplatesRoot(), "verification/invalid/email.body.gotmpl", "verification/invalid/email.body*", t.m)
+	return LoadHTMLTemplate(t.c.CourierTemplatesRoot(), "verification/invalid/email.body.gotmpl", "verification/invalid/email.body*", t.m)
 }
 
 func (t *VerificationInvalid) EmailBodyPlaintext() (string, error) {
-	return loadTextTemplate(t.c.CourierTemplatesRoot(), "verification/invalid/email.body.plaintext.gotmpl", "verification/invalid/email.body.plaintext*", t.m)
+	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "verification/invalid/email.body.plaintext.gotmpl", "verification/invalid/email.body.plaintext*", t.m)
 }
 
 func (t *VerificationInvalid) MarshalJSON() ([]byte, error) {

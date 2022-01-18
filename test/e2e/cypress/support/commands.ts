@@ -191,6 +191,20 @@ Cypress.Commands.add('disableRecovery', ({} = {}) => {
   })
 })
 
+Cypress.Commands.add('disableRegistration', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration.enabled = false
+    return config
+  })
+})
+
+Cypress.Commands.add('enableRegistration', ({} = {}) => {
+  updateConfigFile((config) => {
+    config.selfservice.flows.registration.enabled = true
+    return config
+  })
+})
+
 Cypress.Commands.add('useLaxAal', ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.settings.required_aal = 'aal1'

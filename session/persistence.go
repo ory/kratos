@@ -22,6 +22,9 @@ type Persister interface {
 	// GetSession retrieves a session from the store.
 	GetSession(ctx context.Context, sid uuid.UUID) (*Session, error)
 
+	// ListSessionsByIdentity retrieves sessions for an identity from the store.
+	ListSessionsByIdentity(ctx context.Context, iID uuid.UUID, active *bool, page, perPage int, except uuid.UUID) ([]*Session, error)
+
 	// UpsertSession inserts or updates a session into / in the store.
 	UpsertSession(ctx context.Context, s *Session) error
 
@@ -45,6 +48,12 @@ type Persister interface {
 
 	// RevokeSessionByToken marks a session inactive with the given token.
 	RevokeSessionByToken(ctx context.Context, token string) error
+
+	// RevokeSession marks a given session inactive.
+	RevokeSession(ctx context.Context, iID, sID uuid.UUID) error
+
+	// RevokeSessionsIdentityExcept marks all except the given session of an identity inactive. It returns the number of sessions that were revoked.
+	RevokeSessionsIdentityExcept(ctx context.Context, iID, sID uuid.UUID) (int, error)
 }
 
 func TestPersister(ctx context.Context, conf *config.Config, p interface {

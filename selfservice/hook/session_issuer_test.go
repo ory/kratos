@@ -57,7 +57,7 @@ func TestSessionIssuer(t *testing.T) {
 			f := &registration.Flow{Type: flow.TypeAPI}
 
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-			err := h.ExecutePostRegistrationPostPersistHook(w, &r, f, s)
+			err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
 			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
 
 			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID)
@@ -70,6 +70,29 @@ func TestSessionIssuer(t *testing.T) {
 			assert.Equal(t, i.ID.String(), gjson.GetBytes(body, "identity.id").String())
 			assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "session.id").String())
 			assert.Equal(t, got.Token, gjson.GetBytes(body, "session_token").String())
+		})
+
+		t.Run("flow=spa", func(t *testing.T) {
+			w := httptest.NewRecorder()
+
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			s := &session.Session{ID: x.NewUUID(), Identity: i, Token: randx.MustString(12, randx.AlphaLowerNum), LogoutToken: randx.MustString(12, randx.AlphaLowerNum)}
+			f := &registration.Flow{Type: flow.TypeBrowser}
+
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+			err := h.ExecutePostRegistrationPostPersistHook(w, &http.Request{Header: http.Header{"Accept": {"application/json"}}}, f, s)
+			require.True(t, errors.Is(err, registration.ErrHookAbortFlow), "%+v", err)
+
+			got, err := reg.SessionPersister().GetSession(context.Background(), s.ID)
+			require.NoError(t, err)
+			assert.Equal(t, s.ID.String(), got.ID.String())
+			assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
+
+			assert.NotEmpty(t, w.Header().Get("Set-Cookie"))
+			body := w.Body.Bytes()
+			assert.Equal(t, i.ID.String(), gjson.GetBytes(body, "identity.id").String())
+			assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "session.id").String())
+			assert.Empty(t, gjson.GetBytes(body, "session_token").String())
 		})
 	})
 }

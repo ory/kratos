@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v6"
 
 	"github.com/ory/nosurf"
 
@@ -432,7 +432,7 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 	return m.errorHandler
 }
 
-func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.Store {
+func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact {
 	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
 	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
 	cs.Options.HttpOnly = true
@@ -456,7 +456,7 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.Store {
 	return cs
 }
 
-func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.Store {
+func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.StoreExact {
 	// To support hot reloading, this can not be instantiated only once.
 	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
 	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()

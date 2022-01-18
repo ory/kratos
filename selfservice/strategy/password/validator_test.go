@@ -217,6 +217,35 @@ func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	})
 }
 
+func TestChangeMinPasswordLength(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s := password.NewDefaultPasswordValidatorStrategy(reg)
+	conf.MustSet(config.ViperKeyPasswordMinLength, 10)
+
+	t.Run("case=should not fail if password is longer than min length", func(t *testing.T) {
+		require.NoError(t, s.Validate(context.Background(), "", "kuobahcaas"))
+	})
+
+	t.Run("case=should fail if password is shorter than min length", func(t *testing.T) {
+		require.Error(t, s.Validate(context.Background(), "", "rfqyfjied"))
+	})
+}
+
+func TestChangeIdentifierSimilarityCheckEnabled(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s := password.NewDefaultPasswordValidatorStrategy(reg)
+
+	t.Run("case=should not fail if password is similar to identifier", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, false)
+		require.NoError(t, s.Validate(context.Background(), "bosqwfaxee", "bosqwfaxee"))
+	})
+
+	t.Run("case=should fail if password is similar to identifier", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, true)
+		require.Error(t, s.Validate(context.Background(), "bosqwfaxee", "bosqwfaxee"))
+	})
+}
+
 type fakeValidatorAPI struct{}
 
 func (api *fakeValidatorAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {

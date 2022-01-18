@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -68,7 +67,6 @@ const (
 	ViperKeySecretsCipher                                    = "secrets.cipher"
 	ViperKeyDisablePublicHealthRequestLog                    = "serve.public.request_log.disable_for_health"
 	ViperKeyPublicBaseURL                                    = "serve.public.base_url"
-	ViperKeyPublicDomainAliases                              = "serve.public.domain_aliases"
 	ViperKeyPublicPort                                       = "serve.public.port"
 	ViperKeyPublicHost                                       = "serve.public.host"
 	ViperKeyPublicSocketOwner                                = "serve.public.socket.owner"
@@ -102,6 +100,7 @@ const (
 	ViperKeySelfServiceStrategyConfig                        = "selfservice.methods"
 	ViperKeySelfServiceBrowserDefaultReturnTo                = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsWhitelistedReturnToDomains                   = "selfservice.whitelisted_return_urls"
+	ViperKeySelfServiceRegistrationEnabled                   = "selfservice.flows.registration.enabled"
 	ViperKeySelfServiceRegistrationUI                        = "selfservice.flows.registration.ui_url"
 	ViperKeySelfServiceRegistrationRequestLifespan           = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter                     = "selfservice.flows.registration.after"
@@ -141,9 +140,12 @@ const (
 	ViperKeyHasherBcryptCost                                 = "hashers.bcrypt.cost"
 	ViperKeyCipherAlgorithm                                  = "ciphers.algorithm"
 	ViperKeyLinkLifespan                                     = "selfservice.methods.link.config.lifespan"
+	ViperKeyLinkBaseURL                                      = "selfservice.methods.link.config.base_url"
 	ViperKeyPasswordHaveIBeenPwnedHost                       = "selfservice.methods.password.config.haveibeenpwned_host"
 	ViperKeyPasswordHaveIBeenPwnedEnabled                    = "selfservice.methods.password.config.haveibeenpwned_enabled"
 	ViperKeyPasswordMaxBreaches                              = "selfservice.methods.password.config.max_breaches"
+	ViperKeyPasswordMinLength                                = "selfservice.methods.password.config.min_password_length"
+	ViperKeyPasswordIdentifierSimilarityCheckEnabled         = "selfservice.methods.password.config.identifier_similarity_check_enabled"
 	ViperKeyIgnoreNetworkErrors                              = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyTOTPIssuer                                       = "selfservice.methods.totp.config.issuer"
 	ViperKeyWebAuthnRPDisplayName                            = "selfservice.methods.webauthn.config.rp.display_name"
@@ -195,10 +197,12 @@ type (
 		URL string `json:"url"`
 	}
 	PasswordPolicy struct {
-		HaveIBeenPwnedHost    string `json:"haveibeenpwned_host"`
-		HaveIBeenPwnedEnabled bool   `json:"haveibeenpwned_enabled"`
-		MaxBreaches           uint   `json:"max_breaches"`
-		IgnoreNetworkErrors   bool   `json:"ignore_network_errors"`
+		HaveIBeenPwnedHost               string `json:"haveibeenpwned_host"`
+		HaveIBeenPwnedEnabled            bool   `json:"haveibeenpwned_enabled"`
+		MaxBreaches                      uint   `json:"max_breaches"`
+		IgnoreNetworkErrors              bool   `json:"ignore_network_errors"`
+		MinPasswordLength                uint   `json:"min_password_length"`
+		IdentifierSimilarityCheckEnabled bool   `json:"identifier_similarity_check_enabled"`
 	}
 	Schemas []Schema
 	Config  struct {
@@ -434,7 +438,7 @@ func (p *Config) DefaultIdentityTraitsSchemaURL() *url.URL {
 }
 
 func (p *Config) TOTPIssuer() string {
-	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL(nil).Hostname())
+	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL().Hostname())
 }
 
 func (p *Config) IdentityTraitsSchemas() Schemas {
@@ -512,6 +516,10 @@ func (p *Config) DisableAPIFlowEnforcement() bool {
 		return true
 	}
 	return false
+}
+
+func (p *Config) SelfServiceFlowRegistrationEnabled() bool {
+	return p.p.Bool(ViperKeySelfServiceRegistrationEnabled)
 }
 
 func (p *Config) SelfServiceFlowVerificationEnabled() bool {
@@ -705,56 +713,8 @@ func (p *Config) DisablePublicHealthRequestLog() bool {
 	return p.p.Bool(ViperKeyDisablePublicHealthRequestLog)
 }
 
-type DomainAlias struct {
-	BasePath    string `json:"base_path"`
-	Scheme      string `json:"scheme"`
-	MatchDomain string `json:"match_domain"`
-}
-
-func (p *Config) SelfPublicURL(r *http.Request) *url.URL {
-	primary := p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
-	if r == nil {
-		return primary
-	}
-
-	out, err := p.p.Marshal(kjson.Parser())
-	if err != nil {
-		p.l.WithError(err).Errorf("Unable to marshal configuration.")
-		return primary
-	}
-
-	raw := gjson.GetBytes(out, ViperKeyPublicDomainAliases).String()
-	if len(raw) == 0 {
-		return primary
-	}
-
-	var aliases []DomainAlias
-	if err := json.NewDecoder(bytes.NewBufferString(raw)).Decode(&aliases); err != nil {
-		p.l.WithError(err).WithField("config", raw).Warnf("Unable to unmarshal domain alias configuration, falling back to primary domain.")
-		return primary
-	}
-
-	host := r.URL.Query().Get("alias")
-	if len(host) == 0 {
-		host = r.Host
-	}
-
-	hostname, _, _ := net.SplitHostPort(host)
-	if hostname == "" {
-		hostname = host
-	}
-	for _, a := range aliases {
-		if strings.EqualFold(a.MatchDomain, hostname) || strings.EqualFold(a.MatchDomain, host) {
-			parsed := &url.URL{
-				Scheme: a.Scheme,
-				Host:   host,
-				Path:   a.BasePath,
-			}
-			return parsed
-		}
-	}
-
-	return primary
+func (p *Config) SelfPublicURL() *url.URL {
+	return p.baseURL(ViperKeyPublicBaseURL, ViperKeyPublicHost, ViperKeyPublicPort, 4433)
 }
 
 func (p *Config) DisableAdminHealthRequestLog() bool {
@@ -940,6 +900,10 @@ func (p *Config) SelfServiceLinkMethodLifespan() time.Duration {
 	return p.p.DurationF(ViperKeyLinkLifespan, time.Hour)
 }
 
+func (p *Config) SelfServiceLinkMethodBaseURL() *url.URL {
+	return p.p.RequestURIF(ViperKeyLinkBaseURL, p.SelfPublicURL())
+}
+
 func (p *Config) SelfServiceFlowRecoveryAfterHooks(strategy string) []SelfServiceHook {
 	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRecoveryAfter, strategy))
 }
@@ -1038,10 +1002,12 @@ func (p *Config) ConfigVersion() string {
 
 func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 	return &PasswordPolicy{
-		HaveIBeenPwnedHost:    p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
-		HaveIBeenPwnedEnabled: p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
-		MaxBreaches:           uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
-		IgnoreNetworkErrors:   p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+		HaveIBeenPwnedHost:               p.p.StringF(ViperKeyPasswordHaveIBeenPwnedHost, "api.pwnedpasswords.com"),
+		HaveIBeenPwnedEnabled:            p.p.BoolF(ViperKeyPasswordHaveIBeenPwnedEnabled, true),
+		MaxBreaches:                      uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
+		IgnoreNetworkErrors:              p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
+		MinPasswordLength:                uint(p.p.IntF(ViperKeyPasswordMinLength, 8)),
+		IdentifierSimilarityCheckEnabled: p.p.BoolF(ViperKeyPasswordIdentifierSimilarityCheckEnabled, true),
 	}
 }
 

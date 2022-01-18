@@ -242,7 +242,7 @@ Looking at the network stack, you can see two redirects happening:
 Here's a play-by-play of what happened:
 
 1. `/login` redirected you to
-   `http://127.0.0.1:4434/self-service/login/browser`, which is one of Ory
+   `http://127.0.0.1:4433/self-service/login/browser`, which is one of Ory
    Kratos' APIs used for logging in browser-based applications.
 2. Kratos handled `/self-service/login/browser` which created and persisted a
    new flow with `csrf_token`. Kratos would check no session exists, redirected

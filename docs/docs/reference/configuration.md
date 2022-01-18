@@ -147,6 +147,23 @@ selfservice:
     ## registration ##
     #
     registration:
+      ## Registration UI URL ##
+      #
+      # URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+      #
+      # Default value: https://www.ory.sh/kratos/docs/fallback/registration
+      #
+      # Examples:
+      # - https://my-app.com/signup
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
+      #
+      ui_url: https://my-app.com/signup
+
       ## lifespan ##
       #
       # Default value: 1h
@@ -288,22 +305,19 @@ selfservice:
         #
         default_browser_return_url: https://my-app.com/dashboard
 
-      ## Registration UI URL ##
+      ## Enable User Registration ##
       #
-      # URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+      # If set to true will enable [User Registration](https://www.ory.sh/kratos/docs/self-service/flows/user-registration/).
       #
-      # Default value: https://www.ory.sh/kratos/docs/fallback/registration
-      #
-      # Examples:
-      # - https://my-app.com/signup
+      # Default value: true
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
+      #    $ export SELFSERVICE_FLOWS_REGISTRATION_ENABLED=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
+      #    > set SELFSERVICE_FLOWS_REGISTRATION_ENABLED=<value>
       #
-      ui_url: https://my-app.com/signup
+      enabled: false
 
     ## login ##
     #
@@ -892,6 +906,19 @@ selfservice:
         #
         lifespan: 1h
 
+        ## Override the base URL which should be used as the base for recovery and verification links. ##
+        #
+        # Examples:
+        # - https://my-app.com
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_LINK_CONFIG_BASE_URL=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_LINK_CONFIG_BASE_URL=<value>
+        #
+        base_url: https://my-app.com
+
       ## Enables Link Method ##
       #
       # Default value: true
@@ -969,6 +996,33 @@ selfservice:
         #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_HOST=<value>
         #
         haveibeenpwned_host: ''
+
+        ## Minimum Password Length ##
+        #
+        # Default value: 8
+        # Minimum value: 6
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
+        #
+        min_password_length: 0
+
+        ## Enables Password User Identifier Similarity Check ##
+        #
+        # If set to false the password validation does not check whether passwords and user identifiers are similar
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
+        #
+        identifier_similarity_check_enabled: false
 
       ## Enables Username/Email and Password Method ##
       #
@@ -1366,21 +1420,6 @@ serve:
     #    > set SERVE_PUBLIC_BASE_URL=<value>
     #
     base_url: https://my-app.com/
-
-    ## Domain Aliases ##
-    #
-    # Adds an alias domain. If a request with the hostname (FQDN) matching the hostname in the alias is found, that URL is used as the base URL.
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export SERVE_PUBLIC_DOMAIN_ALIASES=<value>
-    # - Windows Command Line (CMD):
-    #    > set SERVE_PUBLIC_DOMAIN_ALIASES=<value>
-    #
-    domain_aliases:
-      - match_domain: localhost
-        base_path: /
-        scheme: http
 
     ## Public Host ##
     #

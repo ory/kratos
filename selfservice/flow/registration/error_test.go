@@ -35,6 +35,8 @@ import (
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
 	_, admin := testhelpers.NewKratosServer(t, reg)

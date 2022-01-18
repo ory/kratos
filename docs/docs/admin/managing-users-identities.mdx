@@ -163,6 +163,12 @@ selfservice:
   methods:
     link:
       enabled: true
+
+      config:
+        # If the link should point to a domain (and path) that differs from the configured public base URL,
+        # set this value to the base URL you want:
+        base_url: https://my-example-domain.com
+
   flows:
     recovery:
       enabled: true

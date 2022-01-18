@@ -39,6 +39,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
@@ -63,6 +64,7 @@ func TestInitFlow(t *testing.T) {
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	registrationTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
@@ -156,6 +158,7 @@ func TestInitFlow(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
+
 		t.Run("case=relative redirect when self-service registration ui is a relative URL", func(t *testing.T) {
 			reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, "/registration-ts")
 			assert.Regexp(
@@ -167,8 +170,66 @@ func TestInitFlow(t *testing.T) {
 	})
 }
 
+func TestDisabledFlow(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, false)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+		map[string]interface{}{"enabled": true})
+
+	publicTS, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	errTS := testhelpers.NewErrorTestServer(t, reg)
+
+	makeRequest := func(t *testing.T, route string, isSPA bool) (*http.Response, []byte) {
+		c := publicTS.Client()
+		req, err := http.NewRequest("GET", publicTS.URL+route, nil)
+		require.NoError(t, err)
+
+		if isSPA {
+			req.Header.Set("Accept", "application/json")
+		}
+
+		res, err := c.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		return res, body
+	}
+
+	t.Run("flow=api", func(t *testing.T) {
+		t.Run("case=init fails when flow disabled", func(t *testing.T) {
+			res, body := makeRequest(t, registration.RouteInitAPIFlow, false)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+
+		t.Run("case=get flow fails when flow disabled", func(t *testing.T) {
+			res, body := makeRequest(t, registration.RouteGetFlow+"?id="+x.NewUUID().String(), false)
+			require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
+			assert.EqualValues(t, registration.ErrRegistrationDisabled.ReasonField, gjson.GetBytes(body, "reason").String(), "%s", body)
+		})
+	})
+
+	t.Run("flow=browser", func(t *testing.T) {
+		t.Run("case=init responds with error if flow disabled and SPA", func(t *testing.T) {
+			res, body := makeRequest(t, registration.RouteInitBrowserFlow, true)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+
+		t.Run("case=get flow responds with error if flow disabled and SPA", func(t *testing.T) {
+			res, body := makeRequest(t, registration.RouteGetFlow+"?id="+x.NewUUID().String(), true)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+	})
+}
+
 func TestGetFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
@@ -245,5 +306,13 @@ func TestGetFlow(t *testing.T) {
 		f, err = reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), uuid.FromStringOrNil(gjson.GetBytes(resBody, "id").String()))
 		require.NoError(t, err)
 		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow+"?return_to=https://www.ory.sh", f.RequestURL)
+	})
+
+	t.Run("case=not found", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		setupRegistrationUI(t, client)
+
+		res, _ := x.EasyGet(t, client, public.URL+registration.RouteGetFlow+"?id="+x.NewUUID().String())
+		assert.EqualValues(t, http.StatusNotFound, res.StatusCode)
 	})
 }
