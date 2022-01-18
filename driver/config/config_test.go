@@ -577,7 +577,7 @@ func TestSession(t *testing.T) {
 	assert.Equal(t, false, p.SessionPersistentCookie())
 
 	assert.Equal(t, false, p.SessionWhoAmIRefreshAllowed())
-	p.MustSet(config.ViperKeySessionWhoAmIRefreshAllowed, false)
+	p.MustSet(config.ViperKeySessionWhoAmIRefreshAllowed, true)
 	assert.Equal(t, true, p.SessionWhoAmIRefreshAllowed())
 }
 
