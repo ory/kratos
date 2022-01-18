@@ -10,9 +10,10 @@ This document walks you through managing user session expiration time.
 
 ## Setting the session refresh time
 
-Since session refresh causes db writes it's possible to set a config value to allow session refresh only for a specific
-time before the session expires. If we set the `refresh_min_time_left` equal to `lifespan`,
-it's possible to refresh even new sessions.
+Since session refresh causes db writes it's possible to set a config value to
+allow session refresh only for a specific time before the session expires. If we
+set the `refresh_min_time_left` equal to `lifespan`, it's possible to refresh
+even new sessions.
 
 ```yaml title="path/to/config/kratos.yml"
 session:
@@ -22,7 +23,8 @@ session:
 
 ## Extend user session using the whoami endpoint
 
-By default refresh isn't possible on this endpoint and needs to be enabled through the config.
+By default refresh isn't possible on this endpoint and needs to be enabled
+through the config.
 
 ### Enable session refresh in the public whoami endpoint
 
@@ -89,7 +91,8 @@ $ curl 'https://your-project-slug.projects.oryapis.com/sessions/whoami?refresh=t
 
 ## Extend user session using the admin endpoints
 
-If we don't want to use the public whoami endpoint for session refresh, we can do it via the admin endpoints.
+If we don't want to use the public whoami endpoint for session refresh, we can
+do it via the admin endpoints.
 
 ### Refresh the current session via the admin endpoint
 
