@@ -1305,6 +1305,19 @@
       "title": "Courier configuration",
       "description": "The courier is responsible for sending and delivering messages over email, sms, and other means.",
       "properties": {
+        "templates": {
+          "type": "object",
+          "properties": {
+            "recovery": {
+              "type": "object",
+              "$ref": "#/$defs/courier"
+            },
+            "verification": {
+              "type": "object",
+              "$ref": "#/$defs/courier"
+            }
+          }
+        },
         "template_override_path": {
           "type": "string",
           "title": "Override message templates",
@@ -2235,6 +2248,42 @@
       }
     }
   ],
+  "$defs": {
+    "courier": {
+      "invalid": {
+        "type": "object",
+        "$ref": "#/$defs/email-courier"
+      },
+      "valid": {
+        "type": "object",
+        "$ref": "#/$defs/email-courier"
+      },
+      "required": ["invalid", "valid"]
+    },
+    "email-courier": {
+      "email": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "plaintext": {
+                "type": "string"
+              },
+              "html": {
+                "type": "string"
+              }
+            },
+            "require": ["plaintext", "html"]
+          },
+          "subject": {
+            "type": "string"
+          }
+        },
+        "required": ["body", "subject"]
+      }
+    }
+  },
   "required": [
     "identity",
     "dsn",
