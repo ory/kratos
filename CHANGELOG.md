@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [ (2022-01-08)](#2022-01-08)
+- [ (2022-01-18)](#2022-01-18)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -232,7 +232,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [](https://github.com/ory/kratos/compare/v0.8.2-alpha.1...v) (2022-01-08)
+# [](https://github.com/ory/kratos/compare/v0.8.2-alpha.1...v) (2022-01-18)
 ## Breaking Changes
 
 This patch removes the ability to use domain aliases, an obscure feature rarely used that had several issues and inconsistencies.
@@ -241,8 +241,14 @@ This patch removes the ability to use domain aliases, an obscure feature rarely 
 
 ### Bug Fixes
 
+* Add `identity_id` index to `identity_verifiable_addresses` table ([#2147](https://github.com/ory/kratos/issues/2147)) ([86fd942](https://github.com/ory/kratos/commit/86fd942e9a80e36dd65ef4ac57c5a5546f94995a)):
+
+    The verifiable addresses are loaded eagerly into the identity. When that happens, the `identity_verifiable_addresses` table is queried by `nid` and `identity_id`. This index should greatly improve performance, especially of the `/sessions/whoami` endpoint.
+
+* Add ability to resume continuity sessions from several cookies ([#2131](https://github.com/ory/kratos/issues/2131)) ([8b87bdb](https://github.com/ory/kratos/commit/8b87bdb1967654b5fbfbf9799948485b2a9a6af0)), closes [#2016](https://github.com/ory/kratos/issues/2016) [#1786](https://github.com/ory/kratos/issues/1786)
 * Add hiring notice to README ([#2074](https://github.com/ory/kratos/issues/2074)) ([0c1e816](https://github.com/ory/kratos/commit/0c1e816693ad4a6c3fdb7206bbc95c81cdfdf3c0))
 * Add missing version tag in quickstart.yml ([#2110](https://github.com/ory/kratos/issues/2110)) ([1d281ea](https://github.com/ory/kratos/commit/1d281ea69e551cc3d40415f5405690f445891bb6))
+* Admin endpoint `/schemas` not redirecting to public endpoint ([#2133](https://github.com/ory/kratos/issues/2133)) ([413833f](https://github.com/ory/kratos/commit/413833f128c0674f4e8dbb9e73698a9df04cfc1a)), closes [#2084](https://github.com/ory/kratos/issues/2084)
 * Choose correct CSRF cookie when multiple are set ([633076b](https://github.com/ory/kratos/commit/633076be008104afd50186ebe60722ef21999d5d)), closes [ory/kratos#2121](https://github.com/ory/kratos/issues/2121) [ory-corp/cloud#1786](https://github.com/ory-corp/cloud/issues/1786):
 
     Resolves an issue where, when multiple CSRF cookies are set, a random one would be used to verify the CSRF token. Now, regardless of how many conflicting CSRF cookies exist, if one of them is valid, the request will pass and clean up the cookie store.
@@ -253,7 +259,27 @@ This patch removes the ability to use domain aliases, an obscure feature rarely 
 
 * **continuity:** Remove cookie on any error ([428ac03](https://github.com/ory/kratos/commit/428ac03b582184dbbbc0c9c3ffd399273fd8e1a5))
 * Do not send session after registration without hook ([#2094](https://github.com/ory/kratos/issues/2094)) ([3044229](https://github.com/ory/kratos/commit/3044229227229e81a4ba770eec241a748dd0945c)), closes [#2093](https://github.com/ory/kratos/issues/2093)
+* Docker-compose standalone definition ([3c7065a](https://github.com/ory/kratos/commit/3c7065ad32ff314c8cbdad8ed89fd9a9f5928f72))
 * Explain mitigations in cookie error messages ([ef4b01a](https://github.com/ory/kratos/commit/ef4b01a80ea91114b182ff26759d98cd5ba2cd02))
+* Expose network wrapper ([a570607](https://github.com/ory/kratos/commit/a570607d460e7c5f9d49ce38ba7a4e06ae172359))
+* Faq ([#2101](https://github.com/ory/kratos/issues/2101)) ([311f906](https://github.com/ory/kratos/commit/311f9066a524308b970afc81d98d1a14b78bf63d)):
+
+    This patch 
+    - moves the FAQ to the Debug & Help section
+    - renames it to Tips & Troubleshooting
+    - moves many of the questions to documents where they fit better, reformatted and with added information where needed.
+    - also some other spelling/format fixes
+    
+    See also https://github.com/ory/docusaurus-template/pull/87
+
+* Improve courier test signature ([b8888e3](https://github.com/ory/kratos/commit/b8888e3c93a602635b396503b7301396ce740ff8))
+* Include missing type string in config schema ([#2142](https://github.com/ory/kratos/issues/2142)) ([ec2c88a](https://github.com/ory/kratos/commit/ec2c88ac2d65ea1db1146101519cdbb709ebdbbb)):
+
+    Inside the config.schema.json under the CORS setting, add the missing type (string) for the items of the allowed_origins array
+
+* **login:** Error handling when failed to prepare for an expired flow ([#2120](https://github.com/ory/kratos/issues/2120)) ([fdad834](https://github.com/ory/kratos/commit/fdad834e7577e298887b83b693ddf20632cd7c43))
+* Minor fixes in FAQ update ([#2130](https://github.com/ory/kratos/issues/2130)) ([b53eec7](https://github.com/ory/kratos/commit/b53eec721489514a80719b73bc5c758dc2adedfd))
+* Quickstart standalone service definition ([#2149](https://github.com/ory/kratos/issues/2149)) ([872b06e](https://github.com/ory/kratos/commit/872b06e1f798deacfef101edc3ab33fd75af9b29))
 * Resolve configx regression ([672c0ff](https://github.com/ory/kratos/commit/672c0ffc7f5edd1fd238dcdd0c5d0430b30966c6))
 * **selfservice:** Recovery self service flow passes on return_to URL ([#1920](https://github.com/ory/kratos/issues/1920)) ([b925d35](https://github.com/ory/kratos/commit/b925d351dd0ce48cb6aed046dcf2698796453751)), closes [#914](https://github.com/ory/kratos/issues/914)
 * Send 404 instead of null response for unknown verification flows ([#2102](https://github.com/ory/kratos/issues/2102)) ([c9490c8](https://github.com/ory/kratos/commit/c9490c8927209b686aafe54b8a16207a8ef47ebe)), closes [#2099](https://github.com/ory/kratos/issues/2099):
@@ -280,9 +306,14 @@ This patch removes the ability to use domain aliases, an obscure feature rarely 
     Closes https://github.com/ory/kratos-selfservice-ui-node/issues/164
 
 * Ory cloud mentions + spelling ([#2100](https://github.com/ory/kratos/issues/2100)) ([0c2fa5b](https://github.com/ory/kratos/commit/0c2fa5bdb98b95877ef740297b6d96a931a3430f))
+* Pagination ([#2143](https://github.com/ory/kratos/issues/2143)) ([0807a03](https://github.com/ory/kratos/commit/0807a03fba8ff9a3123cd038a472e90895502e82)), closes [#2039](https://github.com/ory/kratos/issues/2039)
 * Typo ([#2073](https://github.com/ory/kratos/issues/2073)) ([e1a54f9](https://github.com/ory/kratos/commit/e1a54f9129d41b34cc8864c8ac38d1448e1f9372))
 * Typo ([#2114](https://github.com/ory/kratos/issues/2114)) ([a7a16d7](https://github.com/ory/kratos/commit/a7a16d7c91d89e274ea5fd79787cd4671d825532))
 * Update docker guide ([072ca4d](https://github.com/ory/kratos/commit/072ca4d990cf4060555c8b2626f39ff18172d064)), closes [#2086](https://github.com/ory/kratos/issues/2086)
+* Upgrade guide ([#2132](https://github.com/ory/kratos/issues/2132)) ([4a4ab05](https://github.com/ory/kratos/commit/4a4ab05573ebb20f82f62bfd38767de68d7708e9)):
+
+    Closes https://github.com/ory/kratos/discussions/2104
+
 
 ### Features
 
@@ -298,11 +329,14 @@ This patch removes the ability to use domain aliases, an obscure feature rarely 
     
     See https://github.com/ory-corp/cloud/issues/1766
 
+* **docker:** Add jaeger ([27ec2b7](https://github.com/ory/kratos/commit/27ec2b74ee42697102c6a9a79bc5ca3c09756d94))
 * Enable Buildkit ([#2079](https://github.com/ory/kratos/issues/2079)) ([f40df5c](https://github.com/ory/kratos/commit/f40df5cd932aa3185b2155368db51a49b7f05991)):
 
     Looks like this was attempted before but the magic comment was not on the first line.
 
 * Expose courier template load ([#2082](https://github.com/ory/kratos/issues/2082)) ([790716e](https://github.com/ory/kratos/commit/790716e58a4be06f04f3cbc5b974f16d873ae0d8))
+* Generalise courier tests ([#2125](https://github.com/ory/kratos/issues/2125)) ([75c6053](https://github.com/ory/kratos/commit/75c60537e366760fe87b7b8978e9854873b7f702))
+* Make the password policy more configurable ([#2118](https://github.com/ory/kratos/issues/2118)) ([70c627b](https://github.com/ory/kratos/commit/70c627b9feb3ec55765070b7c6c3fd64f2640e59)), closes [#970](https://github.com/ory/kratos/issues/970)
 * Selfservice and administrative session management ([#2011](https://github.com/ory/kratos/issues/2011)) ([0fe4155](https://github.com/ory/kratos/commit/0fe4155b878102b77f7f13de5f0754ff75961498)), closes [#655](https://github.com/ory/kratos/issues/655) [#2007](https://github.com/ory/kratos/issues/2007)
 
 ### Tests
