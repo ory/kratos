@@ -113,6 +113,7 @@ flow before/after, or the method level and has the following structure:
     url: https://test.kratos.ory.sh/after_verification_hook
     method: POST # GET, DELETE, etc
     body: file:///path/of/my/jsonnet/file
+    can_interrupt: true
     auth:
       type: <some-type>
       config: <type-specific-config>
@@ -129,6 +130,12 @@ The configuration section of a web-hook consists of
   sending of HTTP body payloads.
 - `auth` - configuration of authentication and authorization mechanisms to be
   used by the web-hook
+- `can_interrupt` - specifies if a given web hook can interrupt the flow by
+  returning a predefined JSON message with validation errors or just stop flow
+  without user facing errors. This is useful when integrating Kratos self-service
+  flows with external systems that can do some extra input validation (i.e. user
+  identity, username availability in other systems etc.). See below for an example
+  response.
 
 Web-Hooks bind the `flow`, as well as request headers (`request_headers`),
 request method (`request_method`), and the request url (`request_url`) of the
@@ -164,6 +171,48 @@ password: My-Pass-Value
 ```
 
 All properties are mandatory.
+
+### Interruptable Web-Hooks
+
+Sometimes notification-like web hooks are not enough and one need to integrate some external
+business logic into user's self-service flows. Here interruptable web-hooks comes with help.
+Basic flow is to pass self-service flow to an external service that will decide if the process
+should continue or user should be notified about an error (or fail silently). To achieve that
+interruptable web-hook can be defined by specifying `can_interrupt` flag and pointing it to a
+web service that will process the payload from the webhook and will return a predefined JSON
+that will instruct Kratos to forward this information to the front end. When hook service
+returns status code that is equal or lower than 399 the self-service flow continues normally
+but if web hook returns 400 or higher Kratos parses the returned JSON and looks for a messages
+that can be forwarded to the front end. Sample payload may look like this:
+
+```json
+{
+    "messages":
+    [
+        {
+            "instance_ptr": "#/traits/foo/bar",
+            "message": "bar field is violating our policies",
+            "detailed_meesages":
+            [
+                {
+                    "id": 123,
+                    "text": "field must be longer than 12 characters",
+                    "type": "validation",
+                    "context":
+                    {
+                        "value": "short value"
+                    }
+                }
+            ]
+        }
+    ]
+}
+```
+
+Some clarifications about meaning of some fields:
+* `instance_ptr` points to the field in the payload/schema that this error refers to and will be used by the frontend to display
+  an error next to the correct form field (check documentation for the given self-service flow)
+* `id` is the numeric error ID that can be used to translate messages in the front end.
 
 ## Login
 
