@@ -14,8 +14,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sirupsen/logrus/hooks/test"
-
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/x/logrusx"
@@ -127,21 +125,6 @@ func TestJsonNetSupport(t *testing.T) {
 			},
 		},
 		{
-			desc:     "legacy filepath without scheme",
-			template: "./stub/test_body.jsonnet",
-			data: &templateContext{
-				Flow: f,
-				RequestHeaders: http.Header{
-					"Cookie":      []string{"c1=v1", "c2=v2"},
-					"Some-Header": []string{"Some-Value"},
-				},
-				RequestMethod: "POST",
-				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
-				RequestBody:   map[string]interface{}{"foo": "bar", "moo": 11},
-				Identity:      i,
-			},
-		},
-		{
 			desc:     "base64 encoded template URI",
 			template: "base64://" + base64.StdEncoding.EncodeToString(testBodyJSONNet),
 			data: &templateContext{
@@ -177,14 +160,10 @@ func TestJsonNetSupport(t *testing.T) {
 		})
 	}
 
-	t.Run("case=warns about legacy usage", func(t *testing.T) {
-		hook := test.Hook{}
-		l := logrusx.New("kratos", "test", logrusx.WithHook(&hook))
-
-		_, _ = createUpstreamPayload(l, "./foo", nil)
-
-		require.Len(t, hook.Entries, 1)
-		assert.Contains(t, hook.LastEntry().Message, "support for filepaths without a 'file://' scheme will be dropped")
+	t.Run("case=fails on legacy usage", func(t *testing.T) {
+		_, err := createUpstreamPayload(l, "./foo", nil)
+		assert.NotNil(t, err)
+		assert.Contains(t, err.Error(), "one of the prefixes [http://, https://, file://, base64://]")
 	})
 
 	t.Run("case=return non nil body reader on empty templateURI", func(t *testing.T) {
