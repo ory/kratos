@@ -15,7 +15,8 @@ import (
 
 var _ Provider = (*ProviderTwitter)(nil)
 
-const twitterUserInfoEndpoint = "https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true"
+const twitterUserInfoBase = "https://api.twitter.com/1.1/account/verify_credentials.json"
+const twitterUserInfoWithEmail = twitterUserInfoBase + "?include_email=true"
 
 type ProviderTwitter struct {
 	config *Configuration
@@ -85,13 +86,26 @@ func (p *ProviderTwitter) OAuth1(ctx context.Context) *oauth1.Config {
 	}
 }
 
+func (p *ProviderTwitter) userInfoEndpoint() string {
+
+	for _, scope := range p.config.Scope {
+		if scope == "email" {
+			return twitterUserInfoWithEmail
+		}
+	}
+
+	return twitterUserInfoBase
+}
+
 func (p *ProviderTwitter) Claims(ctx context.Context, token *oauth1.Token) (*Claims, error) {
 
 	c := p.OAuth1(ctx)
 
 	client := c.Client(ctx, token)
 
-	resp, err := client.Get(twitterUserInfoEndpoint)
+	endpoint := p.userInfoEndpoint()
+
+	resp, err := client.Get(endpoint)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -110,7 +124,7 @@ func (p *ProviderTwitter) Claims(ctx context.Context, token *oauth1.Token) (*Cla
 	}
 
 	return &Claims{
-		Issuer:            twitterUserInfoEndpoint,
+		Issuer:            endpoint,
 		Subject:           user.IDStr,
 		Name:              user.Name,
 		Picture:           user.ProfileImageURLHTTPS,
