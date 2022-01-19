@@ -271,12 +271,8 @@ Something is not working.
 
 #### Issues
 
-- [ ] Resumable session is not cleared up on error
-      ([kratos#2016](https://github.com/ory/kratos/issues/2016)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Recovery link answers with JSON payload for API flows
-      ([kratos#2049](https://github.com/ory/kratos/issues/2049)) -
-      [@hackerman](https://github.com/aeneasr)
+      ([kratos#2049](https://github.com/ory/kratos/issues/2049))
 - [x] Unmable to use Auth0 as a generic OIDC provider
       ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [x] Typescript ErrorContainer type is incorrect
@@ -289,6 +285,9 @@ Something is not working.
       [@hackerman](https://github.com/aeneasr)
 - [x] Hide SQLite migration message
       ([kratos#1791](https://github.com/ory/kratos/issues/1791)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] Resumable session is not cleared up on error
+      ([kratos#2016](https://github.com/ory/kratos/issues/2016)) -
       [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)

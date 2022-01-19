@@ -189,7 +189,7 @@ func TestViperProvider(t *testing.T) {
 				config  string
 				enabled bool
 			}{
-				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","haveibeenpwned_enabled":true,"ignore_network_errors":true,"max_breaches":0}`},
+				{id: "password", enabled: true, config: `{"haveibeenpwned_host":"api.pwnedpasswords.com","haveibeenpwned_enabled":true,"ignore_network_errors":true,"max_breaches":0,"min_password_length":8,"identifier_similarity_check_enabled":true}`},
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 				{id: "totp", enabled: true, config: `{"issuer":"issuer.ory.sh"}`},
 			} {
@@ -1015,5 +1015,27 @@ func TestIdentitySchemaValidation(t *testing.T) {
 				wg.Wait()
 			})
 		}
+	})
+}
+
+func TestChangeMinPasswordLength(t *testing.T) {
+	t.Run("case=must fail on minimum password length below enforced minimum", func(t *testing.T) {
+		ctx := context.Background()
+
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.yaml"),
+			configx.WithValue(config.ViperKeyPasswordMinLength, 5))
+
+		assert.Error(t, err)
+	})
+
+	t.Run("case=must not fail on minimum password length above enforced minimum", func(t *testing.T) {
+		ctx := context.Background()
+
+		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr,
+			configx.WithConfigFiles("stub/.kratos.yaml"),
+			configx.WithValue(config.ViperKeyPasswordMinLength, 9))
+
+		assert.NoError(t, err)
 	})
 }

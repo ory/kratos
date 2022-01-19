@@ -4,6 +4,7 @@ go 1.16
 
 replace (
 	github.com/bradleyjkemp/cupaloy/v2 => github.com/aeneasr/cupaloy/v2 v2.6.1-0.20210924214125-3dfdd01210a3
+	github.com/gorilla/sessions => github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2
 	github.com/jackc/pgconn => github.com/jackc/pgconn v1.10.1-0.20211002123621-290ee79d1e8d
 	github.com/knadh/koanf => github.com/aeneasr/koanf v0.14.1-0.20211230115640-aa3902b3267a
 	github.com/luna-duclos/instrumentedsql => github.com/ory/instrumentedsql v1.2.0
@@ -75,7 +76,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.5-0.20211222152031-b530fb44a010
 	github.com/ory/kratos-client-go v0.6.3-alpha.1
 	github.com/ory/mail/v3 v3.0.0
-	github.com/ory/nosurf v1.2.6
+	github.com/ory/nosurf v1.2.7
 	github.com/ory/x v0.0.330
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1

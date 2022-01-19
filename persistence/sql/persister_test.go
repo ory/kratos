@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence/sql"
+	sqltesthelpers "github.com/ory/kratos/persistence/sql/testhelpers"
 	errorx "github.com/ory/kratos/selfservice/errorx/test"
 	lf "github.com/ory/kratos/selfservice/flow/login"
 	login "github.com/ory/kratos/selfservice/flow/login/test"
@@ -179,7 +180,8 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				courier.TestPersister(ctx, p)(t)
+				upsert, insert := sqltesthelpers.DefaultNetworkWrapper(p)
+				courier.TestPersister(ctx, upsert, insert)(t)
 			})
 			t.Run("contract=verification.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

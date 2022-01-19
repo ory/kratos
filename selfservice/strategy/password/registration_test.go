@@ -587,43 +587,77 @@ func TestRegistration(t *testing.T) {
 				conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 			})
 
-			t.Run("type=api", func(t *testing.T) {
-				values := func(v url.Values) {
-					v.Set("traits.username", "registration-identifier-8-api-duplicate")
-					v.Set("password", x.NewUUID().String())
-					v.Set("traits.foobar", "bar")
+			var applyTransform = func(values, transform func(v url.Values)) func(v url.Values) {
+				return func(v url.Values) {
+					values(v)
+					transform(v)
 				}
+			}
 
-				_ = expectSuccessfulLogin(t, true, false, apiClient, values)
-				body := testhelpers.SubmitRegistrationForm(t, true, apiClient, publicTS, values,
-					false, http.StatusBadRequest,
-					publicTS.URL+registration.RouteSubmitFlow)
+			// test duplicate registration on all client types, where the values can be transformed before
+			// they are sent the second time
+			var testWithTransform = func(t *testing.T, suffix string, transform func(v url.Values)) {
+				t.Run("type=api", func(t *testing.T) {
+					values := func(v url.Values) {
+						v.Set("traits.username", "registration-identifier-8-api-duplicate-"+suffix)
+						v.Set("password", x.NewUUID().String())
+						v.Set("traits.foobar", "bar")
+					}
 
-				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+					_ = expectSuccessfulLogin(t, true, false, apiClient, values)
+					body := testhelpers.SubmitRegistrationForm(t, true, apiClient, publicTS,
+						applyTransform(values, transform), false, http.StatusBadRequest,
+						publicTS.URL+registration.RouteSubmitFlow)
+					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+				})
+
+				t.Run("type=spa", func(t *testing.T) {
+					values := func(v url.Values) {
+						v.Set("traits.username", "registration-identifier-8-spa-duplicate-"+suffix)
+						v.Set("password", x.NewUUID().String())
+						v.Set("traits.foobar", "bar")
+					}
+
+					_ = expectSuccessfulLogin(t, false, true, nil, values)
+					body := expectValidationError(t, false, true, applyTransform(values, transform))
+					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+				})
+
+				t.Run("type=browser", func(t *testing.T) {
+					values := func(v url.Values) {
+						v.Set("traits.username", "registration-identifier-8-browser-duplicate-"+suffix)
+						v.Set("password", x.NewUUID().String())
+						v.Set("traits.foobar", "bar")
+					}
+
+					_ = expectSuccessfulLogin(t, false, false, nil, values)
+					body := expectValidationError(t, false, false, applyTransform(values, transform))
+					assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+				})
+			}
+
+			t.Run("case=identical input", func(t *testing.T) {
+				testWithTransform(t, "identical", func(v url.Values) {
+					// base case
+				})
 			})
 
-			t.Run("type=spa", func(t *testing.T) {
-				values := func(v url.Values) {
-					v.Set("traits.username", "registration-identifier-8-spa-duplicate")
-					v.Set("password", x.NewUUID().String())
-					v.Set("traits.foobar", "bar")
-				}
-
-				_ = expectSuccessfulLogin(t, false, true, nil, values)
-				body := expectValidationError(t, false, true, values)
-				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+			t.Run("case=different capitalization", func(t *testing.T) {
+				testWithTransform(t, "caps", func(v url.Values) {
+					v.Set("traits.username", strings.ToUpper(v.Get("traits.username")))
+				})
 			})
 
-			t.Run("type=browser", func(t *testing.T) {
-				values := func(v url.Values) {
-					v.Set("traits.username", "registration-identifier-8-browser-duplicate")
-					v.Set("password", x.NewUUID().String())
-					v.Set("traits.foobar", "bar")
-				}
+			t.Run("case=leading whitespace", func(t *testing.T) {
+				testWithTransform(t, "leading", func(v url.Values) {
+					v.Set("traits.username", "  "+v.Get("traits.username"))
+				})
+			})
 
-				_ = expectSuccessfulLogin(t, false, false, nil, values)
-				body := expectValidationError(t, false, false, values)
-				assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+			t.Run("case=trailing whitespace", func(t *testing.T) {
+				testWithTransform(t, "trailing", func(v url.Values) {
+					v.Set("traits.username", v.Get("traits.username")+"  ")
+				})
 			})
 		})
 

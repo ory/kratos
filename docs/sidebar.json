@@ -5,8 +5,7 @@
       "quickstart",
       "install",
       "configuring",
-      "contributing",
-      "faq"
+      "contributing"
     ]
   },
   {
@@ -61,6 +60,7 @@
       "guides/configuring-cookies",
       "guides/multi-domain-cookies",
       "guides/setting-up-cors",
+      "guides/password-policy",
       "guides/account-recovery-password-reset",
       "guides/account-activation-email-verification",
       "guides/zero-trust-iap-proxy-identity-access-proxy",
@@ -75,7 +75,9 @@
       "guides/https-tls",
       "guides/setting-up-password-hashing-parameters",
       "guides/integration-with-other-systems-using-web-hooks",
-      "guides/tracing"
+      "guides/tracing",
+      "guides/upgrade",
+      "guides/password-policy"
     ]
   },
   "reference/api",
@@ -117,6 +119,7 @@
   },
   {
     "Debug & Help": [
+      "debug/troubleshooting",
       "debug/csrf",
       "debug/performance-out-of-memory-password-hashing-argon2",
       "debug/debug-docker-delve-ory-kratos"
