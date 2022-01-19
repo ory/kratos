@@ -1142,6 +1142,55 @@ selfservice:
 
 Spotify is now an option to log in via Kratos.
 
+## Twitter
+
+To setup Twitter you first have to create an App in [Developer Portal](https://developer.twitter.com/). There are two ways
+to create an App as of now. Either by:
+1. [Creating a Project](https://developer.twitter.com/en/portal/projects/new)  and an Application in the project
+2. [Creating a Standalone-App](https://developer.twitter.com/en/portal/apps/new)
+
+The quickest option is to create a [Standalone-App](https://developer.twitter.com/en/portal/apps/new). You'll get an `API Key` and `API Key Secret` as the last 
+step. Note them down as they will not be shown completely from then on and are required for configuration.
+
+Once you have the App created, enable OAuth 1.0a in Settings -> User authentication settings.
+
+Next set the `Callback URI / Redirect URL` to:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/twitter
+```
+
+Now, enable the Twitter provider in the Ory Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: twitter # this is `<provider-id>` in the Authorization callback URL. It should be "twitter"
+            provider: twitter
+            client_id: .... # Replace this with the `API Key` provided during the app creation
+            client_secret: .... # Replace this with the `API Key Secret` provided during the app creation
+            mapper_url: file:///etc/config/kratos/oidc.twitter.jsonnet
+            scope:
+              - email
+```
+
+:::note 
+
+Twitter uses OAuth1 and does not support fine-grained scopes. However, user information
+endpoint does not provide email by default unless explicitly specified. We take this 
+detail into account and retrieve email optionally if specified in `scope` configuration. 
+
+If `email` scope is not included in `scope` 
+configuration, the email address will not be retrieved and therefore not included in claims data.
+
+:::
+
 ## LinkedIn
 
 Connecting with other Social Sign In providers will be very similar to the
