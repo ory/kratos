@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 
 	"github.com/gofrs/uuid"
@@ -85,4 +88,27 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 			ErrorField:  "browser location change required",
 		},
 	}
+}
+
+func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits identity.Traits, group node.Group, flowError error, logger x.LoggingProvider, csrf x.CSRFTokenGeneratorProvider) error {
+	if f != nil {
+		if traits != nil {
+			cont, err := container.NewFromStruct("", group, traits, "traits")
+			if err != nil {
+				logger.Logger().WithError(err).Error("could not update flow UI")
+				return err
+			}
+
+			for _, n := range cont.Nodes {
+				// we only set the value and not the whole field because we want to keep types from the initial form generation
+				f.GetUI().Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
+			}
+		}
+
+		if f.GetType() == TypeBrowser {
+			f.GetUI().SetCSRF(csrf.GenerateCSRFToken(r))
+		}
+	}
+
+	return flowError
 }

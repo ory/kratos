@@ -15,7 +15,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
@@ -85,37 +84,6 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) handleRegistrationError(_ http.ResponseWriter, r *http.Request, ct identity.CredentialsType, f *Flow, i *identity.Identity, flowError error) error {
-	if f != nil {
-		if i != nil {
-			var group node.Group
-			switch ct {
-			case identity.CredentialsTypePassword:
-				group = node.PasswordGroup
-			case identity.CredentialsTypeOIDC:
-				group = node.OpenIDConnectGroup
-			}
-
-			cont, err := container.NewFromStruct("", group, i.Traits, "traits")
-			if err != nil {
-				e.d.Logger().WithError(err)("could not update flow UI")
-				return err
-			}
-
-			for _, n := range cont.Nodes {
-				// we only set the value and not the whole field because we want to keep types from the initial form generation
-				f.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
-			}
-		}
-
-		if f.Type == flow.TypeBrowser {
-			f.UI.SetCSRF(e.d.GenerateCSRFToken(r))
-		}
-	}
-
-	return flowError
-}
-
 func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
 	e.d.Logger().
 		WithRequest(r).
@@ -135,7 +103,18 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					Debug("A ExecutePostRegistrationPrePersistHook hook aborted early.")
 				return nil
 			}
-			return e.handleRegistrationError(w, r, ct, a, i, err)
+			var group node.Group
+			switch ct {
+			case identity.CredentialsTypePassword:
+				group = node.PasswordGroup
+			case identity.CredentialsTypeOIDC:
+				group = node.OpenIDConnectGroup
+			}
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, group, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
@@ -199,7 +178,18 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
 				return nil
 			}
-			return e.handleRegistrationError(w, r, ct, a, i, err)
+			var group node.Group
+			switch ct {
+			case identity.CredentialsTypePassword:
+				group = node.PasswordGroup
+			case identity.CredentialsTypeOIDC:
+				group = node.OpenIDConnectGroup
+			}
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, group, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).

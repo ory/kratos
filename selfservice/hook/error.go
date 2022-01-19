@@ -5,11 +5,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/kratos/selfservice/flow/recovery"
-
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/identity"

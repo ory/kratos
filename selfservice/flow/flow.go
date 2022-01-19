@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/ui/container"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -31,4 +32,5 @@ type Flow interface {
 	GetType() Type
 	GetRequestURL() string
 	AppendTo(*url.URL) *url.URL
+	GetUI() *container.Container
 }

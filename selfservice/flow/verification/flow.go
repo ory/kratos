@@ -190,3 +190,7 @@ func (f Flow) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(local(f))
 }
+
+func (f *Flow) GetUI() *container.Container {
+	return f.UI
+}

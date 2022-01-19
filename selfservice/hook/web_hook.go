@@ -390,10 +390,16 @@ func parseResponse(resp *http.Response) (err error) {
 	for _, msg := range hookResponse.Messages {
 		messages := text.Messages{}
 		for _, detail := range msg.DetailedMessages {
+			var msgType text.Type
+			if detail.Type == "error" {
+				msgType = text.Error
+			} else {
+				msgType = text.Info
+			}
 			messages.Add(&text.Message{
 				ID:      text.ID(detail.ID),
 				Text:    detail.Text,
-				Type:    detail.Type,
+				Type:    msgType,
 				Context: detail.Context,
 			})
 		}

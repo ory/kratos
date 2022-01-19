@@ -109,7 +109,7 @@ func (e *HookExecutor) handleSettingsError(_ http.ResponseWriter, r *http.Reques
 
 			cont, err := container.NewFromStruct("", group, i.Traits, "traits")
 			if err != nil {
-				e.d.Logger().WithError(err)("could not update flow UI")
+				e.d.Logger().WithError(err).Error("could not update flow UI")
 				return err
 			}
 
@@ -168,7 +168,18 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 					Debug("A ExecuteSettingsPrePersistHook hook aborted early.")
 				return nil
 			}
-			return e.handleSettingsError(w, r, settingsType, ctxUpdate.Flow, i, err)
+			var group node.Group
+			switch settingsType {
+			case "password":
+				group = node.PasswordGroup
+			case "oidc":
+				group = node.OpenIDConnectGroup
+			}
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, ctxUpdate.Flow, traits, group, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).WithFields(logFields).Debug("ExecuteSettingsPrePersistHook completed successfully.")

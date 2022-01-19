@@ -69,7 +69,7 @@ func (e *HookExecutor) handleVerificationError(_ http.ResponseWriter, r *http.Re
 		if i != nil {
 			cont, err := container.NewFromStruct("", node.RecoveryLinkGroup, i.Traits, "traits")
 			if err != nil {
-				e.d.Logger().WithError(err)("could not update flow UI")
+				e.d.Logger().WithError(err).Error("could not update flow UI")
 				return err
 			}
 
@@ -94,7 +94,11 @@ func (e *HookExecutor) PostVerificationHook(w http.ResponseWriter, r *http.Reque
 		Debug("Running ExecutePostVerificationHooks.")
 	for k, executor := range e.d.PostVerificationHooks(r.Context()) {
 		if err := executor.ExecutePostVerificationHook(w, r, a, i); err != nil {
-			return e.handleVerificationError(w, r, a, i, err)
+			var traits identity.Traits
+			if i != nil {
+				traits = i.Traits
+			}
+			return flow.HandleHookError(w, r, a, traits, node.RecoveryLinkGroup, err, e.d, e.d)
 		}
 
 		e.d.Logger().WithRequest(r).
