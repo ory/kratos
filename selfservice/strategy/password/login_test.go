@@ -668,13 +668,10 @@ func TestCompleteLogin(t *testing.T) {
 
 		values := url.Values{"method": {"password"}, "password_identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
-		_, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+		body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-
-		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true, false)
-		body2, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
-
-		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 	})
 
 	t.Run("should login same identity regardless of leading or trailing whitespace", func(t *testing.T) {
@@ -686,13 +683,10 @@ func TestCompleteLogin(t *testing.T) {
 
 		values := url.Values{"method": {"password"}, "password_identifier": {"  " + identifier + "  "}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
 
-		_, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+		body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-
-		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true, false)
-		body2, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
-
-		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
+		assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 	})
 
 	t.Run("should fail as email is not yet verified", func(t *testing.T) {
