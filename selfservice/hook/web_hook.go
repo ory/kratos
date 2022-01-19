@@ -200,7 +200,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 
 	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
-		body, err = extractRequestBody(req, conf.requestBodySchema)
+		body, err = extractDownstreamPayload(req, conf.requestBodySchema)
 		if err != nil {
 			return err
 		}
@@ -224,7 +224,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 
 	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
-		body, err = extractRequestBody(req, conf.requestBodySchema)
+		body, err = extractDownstreamPayload(req, conf.requestBodySchema)
 		if err != nil {
 			return err
 		}
@@ -249,7 +249,7 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 
 	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
-		body, err = extractRequestBody(req, conf.requestBodySchema)
+		body, err = extractDownstreamPayload(req, conf.requestBodySchema)
 		if err != nil {
 			return err
 		}
@@ -274,7 +274,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 
 	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
-		body, err = extractRequestBody(req, conf.requestBodySchema)
+		body, err = extractDownstreamPayload(req, conf.requestBodySchema)
 		if err != nil {
 			return err
 		}
@@ -299,7 +299,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 
 	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
-		body, err = extractRequestBody(req, conf.requestBodySchema)
+		body, err = extractDownstreamPayload(req, conf.requestBodySchema)
 		if err != nil {
 			return err
 		}
@@ -323,7 +323,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 
 	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
-		body, err = extractRequestBody(req, conf.requestBodySchema)
+		body, err = extractDownstreamPayload(req, conf.requestBodySchema)
 		if err != nil {
 			return err
 		}
@@ -348,7 +348,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 
 	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
-		body, err = extractRequestBody(req, conf.requestBodySchema)
+		body, err = extractDownstreamPayload(req, conf.requestBodySchema)
 		if err != nil {
 			return err
 		}
@@ -371,7 +371,7 @@ func (e *WebHook) execute(conf *webHookConfig, data *templateContext) error {
 		// According to the HTTP spec any request method, but TRACE is allowed to
 		// have a body. Even this is a really bad practice for some of them, like for
 		// GET
-		body, err = createBody(e.r.Logger(), conf.templateURI, data)
+		body, err = createUpstreamPayload(e.r.Logger(), conf.templateURI, data)
 		if err != nil {
 			return fmt.Errorf("failed to create web hook body: %w", err)
 		}
@@ -386,7 +386,7 @@ func (e *WebHook) execute(conf *webHookConfig, data *templateContext) error {
 	return nil
 }
 
-func extractRequestBody(req *http.Request, rawSchema []byte) (interface{}, error) {
+func extractDownstreamPayload(req *http.Request, rawSchema []byte) (interface{}, error) {
 	var values map[string]interface{}
 	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(rawSchema)
 	if err != nil {
@@ -407,21 +407,13 @@ func extractRequestBody(req *http.Request, rawSchema []byte) (interface{}, error
 	return values, nil
 }
 
-func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*bytes.Reader, error) {
+func createUpstreamPayload(l *logrusx.Logger, templateURI string, data *templateContext) (*bytes.Reader, error) {
 	if len(templateURI) == 0 {
 		return bytes.NewReader(make([]byte, 0)), nil
 	}
 
-	f := fetcher.NewFetcher()
-
-	template, err := f.Fetch(templateURI)
-	if errors.Is(err, fetcher.ErrUnknownScheme) {
-		// legacy filepath
-		templateURI = "file://" + templateURI
-		l.WithError(err).Warnf("support for filepaths without a 'file://' scheme will be dropped in the next release, please use %s instead in your config", templateURI)
-		template, err = f.Fetch(templateURI)
-	}
-	// this handles the first error if it is a known scheme error, or the second fetch error
+	l.Debugf("Using %s template to create the body", templateURI)
+	template, err := fetcher.NewFetcher().Fetch(templateURI)
 	if err != nil {
 		return nil, err
 	}
@@ -441,6 +433,7 @@ func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*
 	if res, err := vm.EvaluateAnonymousSnippet(templateURI, template.String()); err != nil {
 		return nil, err
 	} else {
+		l.Debugf("web-hook body: %s", string(res))
 		return bytes.NewReader([]byte(res)), nil
 	}
 }
