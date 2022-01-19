@@ -122,7 +122,7 @@ func TestJsonNetSupport(t *testing.T) {
 				},
 				RequestMethod: "POST",
 				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
-				RequestBody:   map[string]string{"foo": "bar"},
+				RequestBody:   map[string]interface{}{"foo": "bar", "moo": 10},
 				Identity:      i,
 			},
 		},
@@ -137,7 +137,7 @@ func TestJsonNetSupport(t *testing.T) {
 				},
 				RequestMethod: "POST",
 				RequestUrl:    "https://test.kratos.ory.sh/some-test-path",
-				RequestBody:   map[string]string{"foo": "bar"},
+				RequestBody:   map[string]interface{}{"foo": "bar", "moo": 11},
 				Identity:      i,
 			},
 		},
@@ -152,7 +152,7 @@ func TestJsonNetSupport(t *testing.T) {
 				},
 				RequestMethod: "PUT",
 				RequestUrl:    "https://test.kratos.ory.sh/other-test-path",
-				RequestBody:   map[string]string{"foo": "bar"},
+				RequestBody:   map[string]interface{}{"foo": "bar", "moo": 12},
 				Identity:      i,
 			},
 		},
@@ -206,7 +206,7 @@ func TestExtractRequestBody(t *testing.T) {
 		body            func() string
 		contentType     string
 		schema          []byte
-		expectedContent map[string]string
+		expectedContent map[string]interface{}
 	}{
 		{
 			desc: "Extract application/x-www-form-urlencoded body",
@@ -221,7 +221,7 @@ func TestExtractRequestBody(t *testing.T) {
 			},
 			contentType: "application/x-www-form-urlencoded",
 			schema:      schema,
-			expectedContent: map[string]string{
+			expectedContent: map[string]interface{}{
 				"method":              "password",
 				"password_identifier": "foo",
 				"bar":                 "some data",
@@ -230,7 +230,7 @@ func TestExtractRequestBody(t *testing.T) {
 		{
 			desc: "Extract application/json body",
 			body: func() string {
-				val := map[string]string{
+				val := map[string]interface{}{
 					"method":              "password",
 					"password_identifier": "foo",
 					"password":            "Test1234",
@@ -242,7 +242,7 @@ func TestExtractRequestBody(t *testing.T) {
 			},
 			contentType: "application/json",
 			schema:      schema,
-			expectedContent: map[string]string{
+			expectedContent: map[string]interface{}{
 				"method":              "password",
 				"password_identifier": "foo",
 				"bar":                 "some data",

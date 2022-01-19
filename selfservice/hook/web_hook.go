@@ -66,7 +66,7 @@ type (
 		RequestHeaders http.Header        `json:"request_headers"`
 		RequestMethod  string             `json:"request_method"`
 		RequestUrl     string             `json:"request_url"`
-		RequestBody    map[string]string  `json:"request_body,omitempty"`
+		RequestBody    interface{}        `json:"request_body,omitempty"`
 		Identity       *identity.Identity `json:"identity"`
 	}
 
@@ -198,7 +198,7 @@ func (e *WebHook) ExecuteLoginPreHook(_ http.ResponseWriter, req *http.Request, 
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body map[string]string
+	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
 		body, err = extractRequestBody(req, conf.requestBodySchema)
 		if err != nil {
@@ -222,7 +222,7 @@ func (e *WebHook) ExecuteLoginPostHook(_ http.ResponseWriter, req *http.Request,
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body map[string]string
+	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
 		body, err = extractRequestBody(req, conf.requestBodySchema)
 		if err != nil {
@@ -247,7 +247,7 @@ func (e *WebHook) ExecutePostVerificationHook(_ http.ResponseWriter, req *http.R
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body map[string]string
+	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
 		body, err = extractRequestBody(req, conf.requestBodySchema)
 		if err != nil {
@@ -272,7 +272,7 @@ func (e *WebHook) ExecutePostRecoveryHook(_ http.ResponseWriter, req *http.Reque
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body map[string]string
+	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
 		body, err = extractRequestBody(req, conf.requestBodySchema)
 		if err != nil {
@@ -297,7 +297,7 @@ func (e *WebHook) ExecuteRegistrationPreHook(_ http.ResponseWriter, req *http.Re
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body map[string]string
+	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
 		body, err = extractRequestBody(req, conf.requestBodySchema)
 		if err != nil {
@@ -321,7 +321,7 @@ func (e *WebHook) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, 
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body map[string]string
+	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
 		body, err = extractRequestBody(req, conf.requestBodySchema)
 		if err != nil {
@@ -346,7 +346,7 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 		return fmt.Errorf("failed to parse web hook config: %w", err)
 	}
 
-	var body map[string]string
+	var body interface{}
 	if len(conf.requestBodySchema) != 0 {
 		body, err = extractRequestBody(req, conf.requestBodySchema)
 		if err != nil {
@@ -386,8 +386,8 @@ func (e *WebHook) execute(conf *webHookConfig, data *templateContext) error {
 	return nil
 }
 
-func extractRequestBody(req *http.Request, rawSchema []byte) (map[string]string, error) {
-	var values map[string]string
+func extractRequestBody(req *http.Request, rawSchema []byte) (interface{}, error) {
+	var values map[string]interface{}
 	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(rawSchema)
 	if err != nil {
 		return nil, errors.WithStack(err)
