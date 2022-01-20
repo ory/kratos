@@ -2,6 +2,7 @@ package template
 
 import (
 	"encoding/json"
+	"os"
 )
 
 type TestStub struct {
@@ -24,15 +25,15 @@ func (t *TestStub) EmailRecipient() (string, error) {
 }
 
 func (t *TestStub) EmailSubject() (string, error) {
-	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "test_stub/email.subject.gotmpl", "test_stub/email.subject*", t.m)
+	return LoadTextTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "test_stub/email.subject.gotmpl", "test_stub/email.subject*", t.m)
 }
 
 func (t *TestStub) EmailBody() (string, error) {
-	return LoadHTMLTemplate(t.c.CourierTemplatesRoot(), "test_stub/email.body.gotmpl", "test_stub/email.body*", t.m)
+	return LoadHTMLTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "test_stub/email.body.gotmpl", "test_stub/email.body*", t.m)
 }
 
 func (t *TestStub) EmailBodyPlaintext() (string, error) {
-	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "test_stub/email.body.plaintext.gotmpl", "test_stub/email.body.plaintext*", t.m)
+	return LoadTextTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "test_stub/email.body.plaintext.gotmpl", "test_stub/email.body.plaintext*", t.m)
 }
 
 func (t *TestStub) MarshalJSON() ([]byte, error) {
