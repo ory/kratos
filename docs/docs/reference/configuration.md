@@ -983,6 +983,36 @@ selfservice:
         #
         ignore_network_errors: false
 
+        ## Minimum Password Length ##
+        #
+        # Defines the minimum length of the password.
+        #
+        # Default value: 8
+        #
+        # Minimum value: 6
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
+        #
+        min_password_length: 6
+
+        ## Enable password-identifier similarity check ##
+        #
+        # If set to false the password validation does not check for similarity between the password and the user identifier.
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
+        #
+        identifier_similarity_check_enabled: false
+
         ## Custom haveibeenpwned host ##
         #
         # Allows changing the default HIBP host to a self hosted version.
@@ -996,33 +1026,6 @@ selfservice:
         #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_HOST=<value>
         #
         haveibeenpwned_host: ''
-
-        ## Minimum Password Length ##
-        #
-        # Default value: 8
-        # Minimum value: 6
-        #
-        # Set this value using environment variables on
-        # - Linux/macOS:
-        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
-        # - Windows Command Line (CMD):
-        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MIN_PASSWORD_LENGTH=<value>
-        #
-        min_password_length: 0
-
-        ## Enables Password User Identifier Similarity Check ##
-        #
-        # If set to false the password validation does not check whether passwords and user identifiers are similar
-        #
-        # Default value: true
-        #
-        # Set this value using environment variables on
-        # - Linux/macOS:
-        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
-        # - Windows Command Line (CMD):
-        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_SELFSERVICE_METHODS_PASSWORD_CONFIG_IDENTIFIER_SIMILARITY_CHECK_ENABLED=<value>
-        #
-        identifier_similarity_check_enabled: false
 
       ## Enables Username/Email and Password Method ##
       #
@@ -2412,6 +2415,30 @@ expose-metrics-port: 4434
 #
 config:
   - ''
+
+## Global outgoing network settings ##
+#
+# Configure how outgoing network calls behave.
+#
+clients:
+  ## Global HTTP client configuration ##
+  #
+  # Configure how outgoing HTTP calls behave.
+  #
+  http:
+    ## Disallow private IP ranges ##
+    #
+    # Disallow all outgoing HTTP calls to private IP ranges. This feature can help protect against SSRF attacks.
+    #
+    # Default value: false
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export CLIENTS_HTTP_DISALLOW_PRIVATE_IP_RANGES=<value>
+    # - Windows Command Line (CMD):
+    #    > set CLIENTS_HTTP_DISALLOW_PRIVATE_IP_RANGES=<value>
+    #
+    disallow_private_ip_ranges: false
 
 ## Courier configuration ##
 #
