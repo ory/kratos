@@ -250,6 +250,8 @@ func (e *WebHook) ExecuteSettingsPostPersistHook(_ http.ResponseWriter, req *htt
 }
 
 func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
+	httpClient := e.r.HTTPClient(ctx)
+
 	// TODO: reminder for the future: move parsing of config to the web hook initialization
 	conf, err := newWebHookConfig(e.c)
 	if err != nil {
@@ -261,7 +263,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		// According to the HTTP spec any request method, but TRACE is allowed to
 		// have a body. Even this is a really bad practice for some of them, like for
 		// GET
-		body, err = createBody(e.r.Logger(), conf.TemplateURI, data)
+		body, err = createBody(e.r.Logger(), conf.TemplateURI, data, httpClient)
 		if err != nil {
 			return fmt.Errorf("failed to create web hook body: %w", err)
 		}
@@ -271,20 +273,18 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		body = bytes.NewReader(make([]byte, 0))
 	}
 
-	httpClient := e.r.HTTPClient(ctx)
-
 	if err = doHttpCall(conf.Method, conf.URL, conf.Auth, body, httpClient); err != nil {
 		return fmt.Errorf("failed to call web hook %w", err)
 	}
 	return nil
 }
 
-func createBody(l *logrusx.Logger, templateURI string, data *templateContext) (*bytes.Reader, error) {
+func createBody(l *logrusx.Logger, templateURI string, data *templateContext, hc *retryablehttp.Client) (*bytes.Reader, error) {
 	if len(templateURI) == 0 {
 		return bytes.NewReader(make([]byte, 0)), nil
 	}
 
-	f := fetcher.NewFetcher()
+	f := fetcher.NewFetcher(fetcher.WithClient(hc))
 
 	template, err := f.Fetch(templateURI)
 	if errors.Is(err, fetcher.ErrUnknownScheme) {

@@ -28,7 +28,7 @@ func NewValidator(d validatorDependencies) *Validator {
 }
 
 func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners ...schema.Extension) error {
-	runner, err := schema.NewExtensionRunner(runners...)
+	runner, err := schema.NewExtensionRunner(ctx, runners...)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 		return err
 	}
 
-	return v.v.Validate(s.URL.String(), traits, schema.WithExtensionRunner(runner))
+	return v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner))
 }
 
 func (v *Validator) Validate(ctx context.Context, i *Identity) error {

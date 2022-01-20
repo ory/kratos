@@ -74,7 +74,7 @@ func ValidateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema SchemaG
 		}
 
 		// compile swagger payload definition
-		swaggerSchema, err = schemaCompiler.Compile(createIdentityPath)
+		swaggerSchema, err = schemaCompiler.Compile(cmd.Context(), createIdentityPath)
 		if err != nil {
 			return errors.Wrap(err, "Could not compile the identity schema. This is an error with the binary you use and should be reported. Thanks ;)")
 		}
@@ -112,7 +112,7 @@ func ValidateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema SchemaG
 		}
 
 		// compile custom identity schema
-		customSchema, err = jsonschema.CompileString("identity_traits.schema.json", string(sf))
+		customSchema, err = jsonschema.CompileString(cmd.Context(), "identity_traits.schema.json", string(sf))
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not compile the traits schema: %s\n", src, err)
 			return cmdx.FailSilently(cmd)

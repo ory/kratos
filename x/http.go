@@ -2,6 +2,7 @@ package x
 
 import (
 	"context"
+	"github.com/ory/x/httpx"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -136,5 +137,5 @@ func AcceptsJSON(r *http.Request) bool {
 }
 
 type HTTPClientProvider interface {
-	HTTPClient(ctx context.Context) *retryablehttp.Client
+	HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 }
