@@ -66,6 +66,30 @@ func loadBuiltInTemplate(osdir, name string, html bool) (Template, error) {
 	return tpl, nil
 }
 
+func loadTemplateFs(fs embed.FS, name, pattern string, html bool) (Template, error) {
+	if t, found := cache.Get(name); found {
+		return t.(Template), nil
+	}
+
+	var tpl Template
+	if html {
+		t, err := htemplate.New(filepath.Base(name)).Funcs(sprig.HtmlFuncMap()).ParseFS(fs, pattern)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		tpl = t
+	} else {
+		t, err := template.New(filepath.Base(name)).Funcs(sprig.TxtFuncMap()).ParseFS(fs, pattern)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		tpl = t
+	}
+
+	_ = cache.Add(name, tpl)
+	return tpl, nil
+}
+
 func loadTemplate(osdir, name, pattern string, html bool) (Template, error) {
 	if t, found := cache.Get(name); found {
 		return t.(Template), nil
@@ -105,11 +129,20 @@ func loadTemplate(osdir, name, pattern string, html bool) (Template, error) {
 	return tpl, nil
 }
 
-func LoadTextTemplate(osdir, name, pattern string, model interface{}) (string, error) {
-	t, err := loadTemplate(osdir, name, pattern, false)
+func LoadTextTemplate(osdir, name, pattern string, model interface{}, fs ...embed.FS) (string, error) {
+	var t Template
+	var err error
+
+	if len(fs) != 0 && osdir == "" {
+		t, err = loadTemplateFs(fs[0], name, pattern, false)
+	} else {
+		t, err = loadTemplate(osdir, name, pattern, false)
+	}
+
 	if err != nil {
 		return "", err
 	}
+
 	var b bytes.Buffer
 	if err := t.Execute(&b, model); err != nil {
 		return "", err
@@ -117,11 +150,20 @@ func LoadTextTemplate(osdir, name, pattern string, model interface{}) (string, e
 	return b.String(), nil
 }
 
-func LoadHTMLTemplate(osdir, name, pattern string, model interface{}) (string, error) {
-	t, err := loadTemplate(osdir, name, pattern, true)
+func LoadHTMLTemplate(osdir, name, pattern string, model interface{}, fs ...embed.FS) (string, error) {
+	var t Template
+	var err error
+
+	if len(fs) != 0 && osdir == "" {
+		t, err = loadTemplateFs(fs[0], name, pattern, true)
+	} else {
+		t, err = loadTemplate(osdir, name, pattern, true)
+	}
+
 	if err != nil {
 		return "", err
 	}
+
 	var b bytes.Buffer
 	if err := t.Execute(&b, model); err != nil {
 		return "", err
