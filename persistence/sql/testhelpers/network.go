@@ -11,10 +11,10 @@ import (
 	"github.com/ory/kratos/persistence"
 )
 
-func DefaultNetworkWrapper(t *testing.T, ctx context.Context, p persistence.Persister) (courier.NetworkWrapper, courier.NetworkWrapper) {
-	return func() (db.UUID, courier.PersisterWrapper) {
+func DefaultNetworkWrapper(p persistence.Persister) (courier.NetworkWrapper, courier.NetworkWrapper) {
+	return func(t *testing.T, ctx context.Context) (db.UUID, courier.PersisterWrapper) {
 			return testhelpers.NewNetworkUnlessExisting(t, ctx, p)
-		}, func() (db.UUID, courier.PersisterWrapper) {
+		}, func(t *testing.T, ctx context.Context) (db.UUID, courier.PersisterWrapper) {
 			return testhelpers.NewNetwork(t, ctx, p)
 		}
 }
