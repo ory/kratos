@@ -46,6 +46,12 @@ func TestViperProvider(t *testing.T) {
 		p := config.MustNew(t, logrusx.New("", ""), os.Stderr,
 			configx.WithConfigFiles("stub/.kratos.yaml"))
 
+		t.Run("gourp=client config", func(t *testing.T) {
+			assert.False(t, p.ClientHTTPNoPrivateIPRanges(), "Should not have private IP ranges disabled per default")
+			p.MustSet(config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+			assert.True(t, p.ClientHTTPNoPrivateIPRanges(), "Should disallow private IP ranges if set")
+		})
+
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.SelfServiceFlowLoginUI().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SelfServiceFlowSettingsUI().String())
