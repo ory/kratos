@@ -23,15 +23,15 @@ func (t *RecoveryInvalid) EmailRecipient() (string, error) {
 }
 
 func (t *RecoveryInvalid) EmailSubject() (string, error) {
-	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.subject.gotmpl", "recovery/invalid/email.subject*", t.m)
+	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.subject.gotmpl", "recovery/invalid/email.subject*", t.m, nil)
 }
 
 func (t *RecoveryInvalid) EmailBody() (string, error) {
-	return LoadHTMLTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.body.gotmpl", "recovery/invalid/email.body*", t.m)
+	return LoadHTMLTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.body.gotmpl", "recovery/invalid/email.body*", t.m, nil)
 }
 
 func (t *RecoveryInvalid) EmailBodyPlaintext() (string, error) {
-	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.body.plaintext.gotmpl", "recovery/invalid/email.body.plaintext*", t.m)
+	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "recovery/invalid/email.body.plaintext.gotmpl", "recovery/invalid/email.body.plaintext*", t.m, nil)
 }
 
 func (t *RecoveryInvalid) MarshalJSON() ([]byte, error) {

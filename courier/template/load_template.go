@@ -66,7 +66,7 @@ func loadBuiltInTemplate(osdir, name string, html bool) (Template, error) {
 	return tpl, nil
 }
 
-func loadTemplateFs(fs embed.FS, name, pattern string, html bool) (Template, error) {
+func loadTemplateFs(fs *embed.FS, name, pattern string, html bool) (Template, error) {
 	if t, found := cache.Get(name); found {
 		return t.(Template), nil
 	}
@@ -129,12 +129,12 @@ func loadTemplate(osdir, name, pattern string, html bool) (Template, error) {
 	return tpl, nil
 }
 
-func LoadTextTemplate(osdir, name, pattern string, model interface{}, fs ...embed.FS) (string, error) {
+func LoadTextTemplate(osdir, name, pattern string, model interface{}, fs *embed.FS) (string, error) {
 	var t Template
 	var err error
 
-	if len(fs) != 0 && osdir == "" {
-		t, err = loadTemplateFs(fs[0], name, pattern, false)
+	if fs != nil && osdir == "" {
+		t, err = loadTemplateFs(fs, name, pattern, false)
 	} else {
 		t, err = loadTemplate(osdir, name, pattern, false)
 	}
@@ -150,12 +150,12 @@ func LoadTextTemplate(osdir, name, pattern string, model interface{}, fs ...embe
 	return b.String(), nil
 }
 
-func LoadHTMLTemplate(osdir, name, pattern string, model interface{}, fs ...embed.FS) (string, error) {
+func LoadHTMLTemplate(osdir, name, pattern string, model interface{}, fs *embed.FS) (string, error) {
 	var t Template
 	var err error
 
-	if len(fs) != 0 && osdir == "" {
-		t, err = loadTemplateFs(fs[0], name, pattern, true)
+	if fs != nil && osdir == "" {
+		t, err = loadTemplateFs(fs, name, pattern, true)
 	} else {
 		t, err = loadTemplate(osdir, name, pattern, true)
 	}
