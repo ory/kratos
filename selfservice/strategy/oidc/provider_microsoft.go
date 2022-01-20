@@ -2,7 +2,6 @@ package oidc
 
 import (
 	"context"
-	"net/url"
 	"strings"
 
 	"github.com/gofrs/uuid"
@@ -21,12 +20,12 @@ type ProviderMicrosoft struct {
 
 func NewProviderMicrosoft(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderMicrosoft {
 	return &ProviderMicrosoft{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
-			public: public,
+			reg:    reg,
 		},
 	}
 }
@@ -42,7 +41,7 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 		TokenURL: endpointPrefix + "/oauth2/v2.0/token",
 	}
 
-	return m.oauth2ConfigFromEndpoint(endpoint), nil
+	return m.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
 func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {

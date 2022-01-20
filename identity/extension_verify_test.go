@@ -2,6 +2,7 @@ package identity
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -21,6 +22,8 @@ const (
 	emailSchemaPath = "file://./stub/extension/verify/email.schema.json"
 	phoneSchemaPath = "file://./stub/extension/verify/phone.schema.json"
 )
+
+var ctx = context.Background()
 
 func TestSchemaExtensionVerification(t *testing.T) {
 	t.Run("address verification", func(t *testing.T) {
@@ -330,13 +333,13 @@ func TestSchemaExtensionVerification(t *testing.T) {
 
 				c := jsonschema.NewCompiler()
 
-				runner, err := schema.NewExtensionRunner()
+				runner, err := schema.NewExtensionRunner(ctx)
 				require.NoError(t, err)
 
 				e := NewSchemaExtensionVerification(id, time.Minute)
 				runner.AddRunner(e).Register(c)
 
-				err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
+				err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))
 				if tc.expectErr != nil {
 					require.EqualError(t, err, tc.expectErr.Error())
 					return

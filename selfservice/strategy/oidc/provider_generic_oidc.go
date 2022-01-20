@@ -2,8 +2,6 @@ package oidc
 
 import (
 	"context"
-	"net/url"
-
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
@@ -18,16 +16,16 @@ var _ Provider = new(ProviderGenericOIDC)
 type ProviderGenericOIDC struct {
 	p      *gooidc.Provider
 	config *Configuration
-	public *url.URL
+	reg    dependencies
 }
 
 func NewProviderGenericOIDC(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderGenericOIDC {
 	return &ProviderGenericOIDC{
 		config: config,
-		public: public,
+		reg:    reg,
 	}
 }
 
@@ -46,7 +44,7 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 	return g.p, nil
 }
 
-func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(endpoint oauth2.Endpoint) *oauth2.Config {
+func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endpoint oauth2.Endpoint) *oauth2.Config {
 	scope := g.config.Scope
 	if !stringslice.Has(scope, gooidc.ScopeOpenID) {
 		scope = append(scope, gooidc.ScopeOpenID)
@@ -57,7 +55,7 @@ func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(endpoint oauth2.Endpoint)
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     endpoint,
 		Scopes:       scope,
-		RedirectURL:  g.config.Redir(g.public),
+		RedirectURL:  g.config.Redir(g.reg.Config(ctx).SelfPublicURL()),
 	}
 }
 
@@ -69,7 +67,7 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 
 	endpoint := p.Endpoint()
 
-	return g.oauth2ConfigFromEndpoint(endpoint), nil
+	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
 func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {

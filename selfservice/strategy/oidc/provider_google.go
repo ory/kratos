@@ -1,22 +1,18 @@
 package oidc
 
-import (
-	"net/url"
-)
-
 type ProviderGoogle struct {
 	*ProviderGenericOIDC
 }
 
 func NewProviderGoogle(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderGoogle {
 	config.IssuerURL = "https://accounts.google.com"
 	return &ProviderGoogle{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
-			public: public,
+			reg:    reg,
 		},
 	}
 }

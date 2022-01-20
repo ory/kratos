@@ -6,6 +6,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/x/httpx"
 	"io"
 	"net/http"
 	"net/url"
@@ -284,14 +286,14 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 			if c == nil {
 				panic(errors.New("the config provider did not initialise correctly in time"))
 			}
-			if err := c.validateIdentitySchemas(); err != nil {
+			if err := c.validateIdentitySchemas(ctx); err != nil {
 				l.WithError(err).
 					Errorf("The changed identity schema configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting the process.")
 			}
 		}),
 	}, opts...)
 
-	p, err := configx.New([]byte(embedx.ConfigSchema), opts...)
+	p, err := configx.New(ctx, []byte(embedx.ConfigSchema), opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +303,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 	c = &Config{l: l, p: p, stdOutOrErr: stdOutOrErr}
 
 	if !p.SkipValidation() {
-		if err := c.validateIdentitySchemas(); err != nil {
+		if err := c.validateIdentitySchemas(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -309,14 +311,14 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 	return c, nil
 }
 
-func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
+func (p *Config) getIdentitySchemaValidator(ctx context.Context) (*jsonschema.Schema, error) {
 	if p.identitySchema == nil {
 		c := jsonschema.NewCompiler()
 		err := embedx.AddSchemaResources(c, embedx.IdentityMeta)
 		if err != nil {
 			return nil, err
 		}
-		p.identitySchema, err = c.Compile(embedx.IdentityMeta.GetSchemaID())
+		p.identitySchema, err = c.Compile(ctx, embedx.IdentityMeta.GetSchemaID())
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -325,8 +327,20 @@ func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
 	return p.identitySchema, nil
 }
 
-func (p *Config) validateIdentitySchemas() error {
-	j, err := p.getIdentitySchemaValidator()
+func (p *Config) validateIdentitySchemas(ctx context.Context) error {
+	opts := []httpx.ResilientOptions{
+		httpx.ResilientClientWithLogger(p.l),
+		httpx.ResilientClientWithMaxRetry(2),
+		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
+	}
+
+	if p.ClientHTTPNoPrivateIPRanges() {
+		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
+	}
+
+	ctx = context.WithValue(ctx, httploader.ContextKey, httpx.NewResilientClient(opts...))
+
+	j, err := p.getIdentitySchemaValidator(ctx)
 	if err != nil {
 		return err
 	}
@@ -337,7 +351,7 @@ func (p *Config) validateIdentitySchemas() error {
 	}
 
 	for _, s := range ss {
-		resource, err := jsonschema.LoadURL(s.URL)
+		resource, err := jsonschema.LoadURL(ctx, s.URL)
 		if err != nil {
 			return errors.WithStack(err)
 		}
