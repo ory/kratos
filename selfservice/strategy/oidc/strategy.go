@@ -311,7 +311,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	conf, err := provider.OAuth2(context.Background())
+	conf, err := provider.OAuth2(r.Context())
 	if err != nil {
 		s.forwardError(w, r, req, s.handleError(w, r, req, pid, nil, err))
 		return

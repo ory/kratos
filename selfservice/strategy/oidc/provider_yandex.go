@@ -3,12 +3,12 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/x/httpx"
-	"net/url"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/herodot"
 )
@@ -60,12 +60,7 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	}
 
 	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
-
-	u, err := url.Parse("https://login.yandex.ru/info?format=json&oauth_token=" + exchange.AccessToken)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
+	req, err := retryablehttp.NewRequest("GET", "https://login.yandex.ru/info?format=json&oauth_token="+exchange.AccessToken, nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -98,7 +93,7 @@ func (g *ProviderYandex) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	}
 
 	return &Claims{
-		Issuer:     u.String(),
+		Issuer:     "https://login.yandex.ru/info",
 		Subject:    user.Id,
 		GivenName:  user.FirstName,
 		FamilyName: user.LastName,

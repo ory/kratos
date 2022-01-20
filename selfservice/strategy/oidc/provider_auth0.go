@@ -3,13 +3,15 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/x/httpx"
 	"io/ioutil"
 	"net/url"
 	"path"
 	"strconv"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -66,13 +68,11 @@ func (g *ProviderAuth0) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 
 func (g *ProviderAuth0) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
 	o, err := g.OAuth2(ctx)
-
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
-
+	client := g.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 	u, err := url.Parse(g.config.IssuerURL)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

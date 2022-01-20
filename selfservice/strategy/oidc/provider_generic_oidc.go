@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
@@ -35,7 +36,7 @@ func (g *ProviderGenericOIDC) Config() *Configuration {
 
 func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, error) {
 	if g.p == nil {
-		p, err := gooidc.NewProvider(ctx, g.config.IssuerURL)
+		p, err := gooidc.NewProvider(context.WithValue(ctx, oauth2.HTTPClient, g.reg.HTTPClient(ctx).HTTPClient), g.config.IssuerURL)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}
@@ -66,7 +67,6 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 	}
 
 	endpoint := p.Endpoint()
-
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
@@ -84,11 +84,7 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 }
 
 func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
-	token, err := provider.
-		Verifier(&gooidc.Config{
-			ClientID: g.config.ClientID,
-		}).
-		Verify(ctx, raw)
+	token, err := provider.Verifier(&gooidc.Config{ClientID: g.config.ClientID}).Verify(ctx, raw)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}
