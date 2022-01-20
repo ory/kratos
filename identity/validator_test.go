@@ -3,15 +3,17 @@ package identity_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/jsonschema/v3/httploader"
-	"github.com/ory/kratos/x"
-	"github.com/ory/x/httpx"
-	"github.com/stretchr/testify/assert"
-	"github.com/urfave/negroni"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/urfave/negroni"
+
+	"github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
 
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"

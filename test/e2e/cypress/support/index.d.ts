@@ -440,6 +440,12 @@ declare global {
        * @param schema
        */
       setIdentitySchema(schema: string): Chainable<void>
+
+      /**
+       * Set the default schema
+       * @param id
+       */
+      setDefaultIdentitySchema(id: string): Chainable<void>
     }
   }
 }
