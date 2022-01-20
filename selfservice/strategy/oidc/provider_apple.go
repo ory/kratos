@@ -21,8 +21,6 @@ func NewProviderApple(
 	config *Configuration,
 	reg dependencies,
 ) *ProviderApple {
-	config.IssuerURL = "https://appleid.apple.com"
-
 	return &ProviderApple{
 		ProviderGenericOIDC: &ProviderGenericOIDC{
 			config: config,
@@ -72,8 +70,8 @@ func (a *ProviderApple) oauth2(ctx context.Context) (*oauth2.Config, error) {
 	a.config.ClientSecret = secret
 
 	endpoint := oauth2.Endpoint{
-		AuthURL:  a.config.IssuerURL + "/auth/authorize",
-		TokenURL: a.config.IssuerURL + "/auth/token",
+		AuthURL:  "https://appleid.apple.com/auth/authorize",
+		TokenURL: "https://appleid.apple.com/auth/token",
 	}
 	return a.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
