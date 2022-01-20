@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"path"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -71,17 +72,38 @@ func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, 
 		return t.(Template), nil
 	}
 
+	contains := func(filesystem fs.FS, match func(path string) (bool, error)) []string {
+		var matches []string
+		fs.WalkDir(filesystem, ".", func(path string, d fs.DirEntry, err error) error {
+			if ok, err := match(path); err != nil {
+				return err
+			} else if ok {
+				matches = append(matches, path)
+			}
+			return nil
+		})
+		return matches
+	}
+
+	matches := contains(filesystem, func(path string) (bool, error) {
+		return strings.Contains(path, name), nil
+	})
+
 	// make sure the file exists in the fs, otherwise fallback to built in templates
-	f, _ := fs.Glob(filesystem, name)
-	if f == nil {
+	if matches == nil {
 		return loadBuiltInTemplate(filesystem, name, html)
 	}
 
 	glob := name
 	if pattern != "" {
-		// make sure the file exists in the fs, otherwise fallback to built in templates
-		f, _ := fs.Glob(filesystem, pattern)
-		if f != nil {
+		// pattern matching is used when we have more than one gotmpl for different use cases, such as i18n support
+		// e.g. some_template/template_name* will match some_template/template_name.body.DE.gotmpl
+		matches := contains(filesystem, func(path string) (bool, error) {
+			return filepath.Match(pattern, path)
+		})
+
+		// set the glob string to match patterns
+		if matches != nil {
 			glob = pattern
 		}
 	}
