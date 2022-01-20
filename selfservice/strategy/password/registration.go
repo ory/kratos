@@ -69,8 +69,12 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *SubmitSelfServiceRegistrationFlowWithPasswordMethodBody, r *http.Request) error {
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return err
+	}
 	raw, err := sjson.SetBytes(registrationSchema,
-		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+		"properties.traits.$ref", ds.String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -151,7 +155,12 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
-	nodes, err := container.NodesFromJSONSchema(node.PasswordGroup, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return err
+	}
+
+	nodes, err := container.NodesFromJSONSchema(node.PasswordGroup, ds.String(), "", nil)
 	if err != nil {
 		return err
 	}

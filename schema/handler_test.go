@@ -78,7 +78,6 @@ func TestHandler(t *testing.T) {
 
 		require.EqualValues(t, expectCode, res.StatusCode, "%s", body)
 		return body
-
 	}
 
 	getFromTSById := func(id string, expectCode int) []byte {
@@ -108,18 +107,16 @@ func TestHandler(t *testing.T) {
 		schemas = newSchemas
 		var schemasConfig []config.Schema
 		for _, s := range schemas {
-			if s.ID != config.DefaultIdentityTraitsSchemaID {
-				schemasConfig = append(schemasConfig, config.Schema{
-					ID:  s.ID,
-					URL: s.RawURL,
-				})
-			}
+			schemasConfig = append(schemasConfig, config.Schema{
+				ID:  s.ID,
+				URL: s.RawURL,
+			})
 		}
 		conf.MustSet(config.ViperKeyIdentitySchemas, schemasConfig)
 	}
 
 	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, getSchemaById(config.DefaultIdentityTraitsSchemaID).RawURL)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaID, config.DefaultIdentityTraitsSchemaID)
 	setSchemas(schemas)
 
 	t.Run("case=get default schema", func(t *testing.T) {

@@ -51,11 +51,16 @@ func TestPool(ctx context.Context, conf *config.Config, p interface {
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
-		conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{{
-			ID:  altSchema.ID,
-			URL: altSchema.RawURL,
-		}})
+		conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
+			{
+				ID:  altSchema.ID,
+				URL: altSchema.RawURL,
+			},
+			{
+				ID:  defaultSchema.ID,
+				URL: defaultSchema.RawURL,
+			},
+		})
 
 		var createdIDs []uuid.UUID
 

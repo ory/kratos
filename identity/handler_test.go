@@ -39,11 +39,12 @@ func TestHandler(t *testing.T) {
 	defaultSchemaExternalURL := (&schema.Schema{ID: "default"}).SchemaURL(mockServerURL).String()
 
 	conf.MustSet(config.ViperKeyAdminBaseURL, adminTS.URL)
-	testhelpers.SetDefaultIdentitySchema(t, conf, "file://./stub/identity.schema.json")
 	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
+		"default":  "file://./stub/identity.schema.json",
 		"customer": "file://./stub/handler/customer.schema.json",
 		"employee": "file://./stub/handler/employee.schema.json",
 	})
+
 	conf.MustSet(config.ViperKeyPublicBaseURL, mockServerURL.String())
 
 	var get = func(t *testing.T, base *httptest.Server, href string, expectCode int) gjson.Result {

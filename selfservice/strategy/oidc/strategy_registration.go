@@ -70,8 +70,11 @@ type SubmitSelfServiceRegistrationFlowWithOidcMethodBody struct {
 }
 
 func (s *Strategy) newLinkDecoder(p interface{}, r *http.Request) error {
-	raw, err := sjson.SetBytes(linkSchema,
-		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+	ds, err := s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL()
+	if err != nil {
+		return err
+	}
+	raw, err := sjson.SetBytes(linkSchema, "properties.traits.$ref", ds.String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}

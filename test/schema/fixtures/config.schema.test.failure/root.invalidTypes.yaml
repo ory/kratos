@@ -62,7 +62,7 @@ log:
 
 identity:
   traits:
-    default_schema_url: 1
+    default_schema_id: 1123
     schemas:
       - id: 1
         url: 1
