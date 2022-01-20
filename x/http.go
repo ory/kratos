@@ -2,13 +2,14 @@ package x
 
 import (
 	"context"
-	"github.com/ory/x/httpx"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"testing"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/hashicorp/go-retryablehttp"
 
