@@ -21,8 +21,8 @@ When preparing for production it is paramount to omit the `--dev` flag from
 
 ### HTTP Clients
 
-In some scenarios you might want to disallow HTTP calls to private IP ranges.
-To configure this feature, set the following configuration:
+In some scenarios you might want to disallow HTTP calls to private IP ranges. To
+configure this feature, set the following configuration:
 
 ```yaml
 clients:
@@ -31,8 +31,8 @@ clients:
 ```
 
 If enabled, all outgoing HTTP calls done by Ory Kratos will be checked whether
-they are against a private IP range. If that is the case, the request
-will fail with an error.
+they are against a private IP range. If that is the case, the request will fail
+with an error.
 
 ### Admin API
 
