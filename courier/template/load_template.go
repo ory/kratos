@@ -5,7 +5,7 @@ import (
 	"embed"
 	htemplate "html/template"
 	"io"
-	"os"
+	"io/fs"
 	"path"
 	"path/filepath"
 	"text/template"
@@ -24,12 +24,12 @@ type Template interface {
 	Execute(wr io.Writer, data interface{}) error
 }
 
-func loadBuiltInTemplate(osdir, name string, html bool) (Template, error) {
+func loadBuiltInTemplate(filesytem fs.FS, name string, html bool) (Template, error) {
 	if t, found := cache.Get(name); found {
 		return t.(Template), nil
 	}
 
-	file, err := os.DirFS(osdir).Open(name)
+	file, err := filesytem.Open(name)
 	if err != nil {
 		// try to fallback to bundled templates
 		var fallbackErr error
@@ -66,59 +66,35 @@ func loadBuiltInTemplate(osdir, name string, html bool) (Template, error) {
 	return tpl, nil
 }
 
-func loadTemplateFs(fs *embed.FS, name, pattern string, html bool) (Template, error) {
+func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, error) {
 	if t, found := cache.Get(name); found {
 		return t.(Template), nil
 	}
 
-	var tpl Template
-	if html {
-		t, err := htemplate.New(filepath.Base(name)).Funcs(sprig.HtmlFuncMap()).ParseFS(fs, pattern)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		tpl = t
-	} else {
-		t, err := template.New(filepath.Base(name)).Funcs(sprig.TxtFuncMap()).ParseFS(fs, pattern)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		tpl = t
-	}
-
-	_ = cache.Add(name, tpl)
-	return tpl, nil
-}
-
-func loadTemplate(osdir, name, pattern string, html bool) (Template, error) {
-	if t, found := cache.Get(name); found {
-		return t.(Template), nil
-	}
-
-	// make sure osdir and template name exists, otherwise fallback to built in templates
-	f, _ := filepath.Glob(path.Join(osdir, name))
+	// make sure the file exists in the fs, otherwise fallback to built in templates
+	f, _ := fs.Glob(filesystem, name)
 	if f == nil {
-		return loadBuiltInTemplate(osdir, name, html)
+		return loadBuiltInTemplate(filesystem, name, html)
 	}
 
-	// if pattern is defined, use it for glob
-	var glob string = name
+	glob := name
 	if pattern != "" {
-		m, _ := filepath.Glob(path.Join(osdir, pattern))
-		if m != nil {
+		// make sure the file exists in the fs, otherwise fallback to built in templates
+		f, _ := fs.Glob(filesystem, pattern)
+		if f != nil {
 			glob = pattern
 		}
 	}
 
 	var tpl Template
 	if html {
-		t, err := htemplate.New(filepath.Base(name)).Funcs(sprig.HtmlFuncMap()).ParseGlob(path.Join(osdir, glob))
+		t, err := htemplate.New(filepath.Base(name)).Funcs(sprig.HtmlFuncMap()).ParseFS(filesystem, glob)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		tpl = t
 	} else {
-		t, err := template.New(filepath.Base(name)).Funcs(sprig.TxtFuncMap()).ParseGlob(path.Join(osdir, glob))
+		t, err := template.New(filepath.Base(name)).Funcs(sprig.TxtFuncMap()).ParseFS(filesystem, glob)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -129,15 +105,8 @@ func loadTemplate(osdir, name, pattern string, html bool) (Template, error) {
 	return tpl, nil
 }
 
-func LoadTextTemplate(osdir, name, pattern string, model interface{}, fs *embed.FS) (string, error) {
-	var t Template
-	var err error
-
-	if fs != nil && osdir == "" {
-		t, err = loadTemplateFs(fs, name, pattern, false)
-	} else {
-		t, err = loadTemplate(osdir, name, pattern, false)
-	}
+func LoadTextTemplate(file fs.FS, name, pattern string, model interface{}) (string, error) {
+	t, err := loadTemplate(file, name, pattern, false)
 
 	if err != nil {
 		return "", err
@@ -150,15 +119,8 @@ func LoadTextTemplate(osdir, name, pattern string, model interface{}, fs *embed.
 	return b.String(), nil
 }
 
-func LoadHTMLTemplate(osdir, name, pattern string, model interface{}, fs *embed.FS) (string, error) {
-	var t Template
-	var err error
-
-	if fs != nil && osdir == "" {
-		t, err = loadTemplateFs(fs, name, pattern, true)
-	} else {
-		t, err = loadTemplate(osdir, name, pattern, true)
-	}
+func LoadHTMLTemplate(file fs.FS, name, pattern string, model interface{}) (string, error) {
+	t, err := loadTemplate(file, name, pattern, true)
 
 	if err != nil {
 		return "", err
