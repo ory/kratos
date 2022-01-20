@@ -2,12 +2,14 @@ package driver
 
 import (
 	"context"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/x/httpx"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/gobuffalo/pop/v6"
 

@@ -31,7 +31,7 @@ const mergeFields = (form, fields) => {
 const updateConfigFile = (cb: (arg: any) => any) => {
   cy.readFile(configFile).then((contents) => {
     cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
-    cy.wait(200)
+    cy.wait(500)
   })
 }
 
@@ -40,7 +40,7 @@ Cypress.Commands.add('useConfigProfile', (profile: string) => {
   cy.readFile(`kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
-  cy.wait(200)
+  cy.wait(500)
 })
 
 Cypress.Commands.add('proxy', (app: string) => {
@@ -72,6 +72,13 @@ Cypress.Commands.add('setIdentitySchema', (schema: string) => {
         url: schema
       }
     ]
+    return config
+  })
+})
+
+Cypress.Commands.add('setDefaultIdentitySchema', (id: string) => {
+  updateConfigFile((config) => {
+    config.identity.default_schema_id = id
     return config
   })
 })
