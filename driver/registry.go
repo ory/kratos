@@ -67,6 +67,7 @@ type Registry interface {
 	x.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
+	x.HTTPClientProvider
 
 	continuity.ManagementProvider
 	continuity.PersistenceProvider

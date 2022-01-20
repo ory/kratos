@@ -2,6 +2,7 @@ package identity_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var ctx = context.Background()
 
 func TestSchemaExtensionCredentials(t *testing.T) {
 	for k, tc := range []struct {
@@ -44,7 +47,7 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c := jsonschema.NewCompiler()
-			runner, err := schema.NewExtensionRunner()
+			runner, err := schema.NewExtensionRunner(ctx)
 			require.NoError(t, err)
 
 			i := new(identity.Identity)
@@ -54,7 +57,7 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			}
 
 			runner.AddRunner(e).Register(c)
-			err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
+			err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
 			}

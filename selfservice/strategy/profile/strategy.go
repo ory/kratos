@@ -92,7 +92,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-	nodes, err := container.NodesFromJSONSchema(node.ProfileGroup, traitsSchema.URL, "", schemaCompiler)
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.ProfileGroup, traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
 		return err
 	}

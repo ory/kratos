@@ -12,9 +12,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
-	_ "github.com/ory/jsonschema/v3/base64loader"
-	_ "github.com/ory/jsonschema/v3/fileloader"
-	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/pagination"
 	"github.com/ory/x/urlx"
@@ -73,12 +70,12 @@ func computeKeyPositions(schema []byte, dest *[]string, parents []string) {
 	}
 }
 
-func GetKeysInOrder(schemaRef string) ([]string, error) {
+func GetKeysInOrder(ctx context.Context, schemaRef string) ([]string, error) {
 	orderedKeyCacheMutex.RLock()
 	keysInOrder, ok := orderedKeyCache[schemaRef]
 	orderedKeyCacheMutex.RUnlock()
 	if !ok {
-		sio, err := jsonschema.LoadURL(schemaRef)
+		sio, err := jsonschema.LoadURL(ctx, schemaRef)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

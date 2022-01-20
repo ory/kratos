@@ -3,8 +3,6 @@ package oidc
 import (
 	"context"
 	"fmt"
-	"net/url"
-
 	"golang.org/x/oauth2/spotify"
 
 	"github.com/pkg/errors"
@@ -21,16 +19,16 @@ import (
 
 type ProviderSpotify struct {
 	config *Configuration
-	public *url.URL
+	reg    dependencies
 }
 
 func NewProviderSpotify(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderSpotify {
 	return &ProviderSpotify{
 		config: config,
-		public: public,
+		reg:    reg,
 	}
 }
 
@@ -38,18 +36,18 @@ func (g *ProviderSpotify) Config() *Configuration {
 	return g.config
 }
 
-func (g *ProviderSpotify) oauth2() *oauth2.Config {
+func (g *ProviderSpotify) oauth2(ctx context.Context) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
 		Endpoint:     spotify.Endpoint,
 		Scopes:       g.config.Scope,
-		RedirectURL:  g.config.Redir(g.public),
+		RedirectURL:  g.config.Redir(g.reg.Config(ctx).SelfPublicURL()),
 	}
 }
 
 func (g *ProviderSpotify) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return g.oauth2(), nil
+	return g.oauth2(ctx), nil
 }
 
 func (g *ProviderSpotify) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
@@ -65,7 +63,7 @@ func (g *ProviderSpotify) Claims(ctx context.Context, exchange *oauth2.Token) (*
 	}
 
 	auth := spotifyauth.New(
-		spotifyauth.WithRedirectURL(g.config.Redir(g.public)),
+		spotifyauth.WithRedirectURL(g.config.Redir(g.reg.Config(ctx).SelfPublicURL())),
 		spotifyauth.WithScopes(spotifyauth.ScopeUserReadPrivate))
 
 	client := spotifyapi.New(auth.Client(ctx, exchange))

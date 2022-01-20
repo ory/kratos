@@ -3,8 +3,6 @@ package oidc
 import (
 	"context"
 	"fmt"
-	"net/url"
-
 	"github.com/ory/kratos/x"
 
 	"github.com/bwmarrin/discordgo"
@@ -18,16 +16,16 @@ import (
 
 type ProviderDiscord struct {
 	config *Configuration
-	public *url.URL
+	reg    dependencies
 }
 
 func NewProviderDiscord(
 	config *Configuration,
-	public *url.URL,
+	reg dependencies,
 ) *ProviderDiscord {
 	return &ProviderDiscord{
 		config: config,
-		public: public,
+		reg:    reg,
 	}
 }
 
@@ -35,7 +33,7 @@ func (d *ProviderDiscord) Config() *Configuration {
 	return d.config
 }
 
-func (d *ProviderDiscord) oauth2() *oauth2.Config {
+func (d *ProviderDiscord) oauth2(ctx context.Context) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     d.config.ClientID,
 		ClientSecret: d.config.ClientSecret,
@@ -43,13 +41,13 @@ func (d *ProviderDiscord) oauth2() *oauth2.Config {
 			AuthURL:  discordgo.EndpointOauth2 + "authorize",
 			TokenURL: discordgo.EndpointOauth2 + "token",
 		},
-		RedirectURL: d.config.Redir(d.public),
+		RedirectURL: d.config.Redir(d.reg.Config(ctx).SelfPublicURL()),
 		Scopes:      d.config.Scope,
 	}
 }
 
 func (d *ProviderDiscord) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return d.oauth2(), nil
+	return d.oauth2(ctx), nil
 }
 
 func (d *ProviderDiscord) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {

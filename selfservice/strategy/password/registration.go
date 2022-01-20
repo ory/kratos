@@ -160,7 +160,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		return err
 	}
 
-	nodes, err := container.NodesFromJSONSchema(node.PasswordGroup, ds.String(), "", nil)
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.PasswordGroup, ds.String(), "", nil)
 	if err != nil {
 		return err
 	}

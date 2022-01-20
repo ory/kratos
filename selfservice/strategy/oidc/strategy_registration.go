@@ -3,6 +3,7 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/fetcher"
 	"net/http"
 	"time"
 
@@ -179,7 +180,8 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, nil
 	}
 
-	jn, err := s.f.Fetch(provider.Config().Mapper)
+	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(r.Context())))
+	jn, err := fetch.Fetch(provider.Config().Mapper)
 	if err != nil {
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}

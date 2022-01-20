@@ -1,9 +1,14 @@
 package login
 
-import "github.com/ory/kratos/ui/node"
+import (
+	"context"
+	"github.com/ory/kratos/ui/node"
+)
+
+var ctx = context.Background()
 
 func sortNodes(n node.Nodes) error {
-	return n.SortBySchema(
+	return n.SortBySchema(ctx,
 		node.SortByGroups([]node.Group{
 			node.DefaultGroup,
 			node.OpenIDConnectGroup,
