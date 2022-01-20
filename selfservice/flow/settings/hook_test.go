@@ -32,7 +32,7 @@ func TestSettingsExecutor(t *testing.T) {
 		t.Run("strategy="+strategy, func(t *testing.T) {
 
 			conf, reg := internal.NewFastRegistryWithMocks(t)
-			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 			conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
 			reg.WithHooks(map[string]func(config.SelfServiceHook) interface{}{

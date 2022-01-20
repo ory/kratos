@@ -11,7 +11,7 @@ import (
 
 type (
 	validatorDependencies interface {
-		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
 		config.Provider
 	}
 	Validator struct {
@@ -33,7 +33,12 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 		return err
 	}
 
-	s, err := v.d.IdentityTraitsSchemas(ctx).GetByID(i.SchemaID)
+	ss, err := v.d.IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return err
+	}
+
+	s, err := ss.GetByID(i.SchemaID)
 	if err != nil {
 		return err
 	}

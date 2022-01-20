@@ -40,7 +40,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
@@ -66,7 +66,7 @@ func TestInitFlow(t *testing.T) {
 
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
 		if isApi {
@@ -174,7 +174,7 @@ func TestDisabledFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, false)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
@@ -230,7 +230,7 @@ func TestDisabledFlow(t *testing.T) {
 func TestGetFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceRegistrationEnabled, true)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 

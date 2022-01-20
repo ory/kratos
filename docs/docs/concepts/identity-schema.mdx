@@ -53,9 +53,6 @@ credentials:
         identifier: 83475891
 
 # This is the JSON Schema ID used for validating the identities' traits.
-# `default` is a special keyword to set this to the schema set by
-# `default_schema_url`, but it can be any another schema as well.
-# e.g. customer, employee, employee-v2
 schema_id: default
 
 # Traits represent information about the identity, such as the first or last name. The traits content is completely
@@ -142,13 +139,15 @@ identity:
   # Admin API, or a user signs up using a selfservice flow, this schema will be used.
   #
   # This is a required configuration field!
-  default_schema_url: http://foo.bar.com/person.schema.json
+  default_schema_id: person
 
   # Optionally define additional schemas here:
   schemas:
     # When creating an identity that uses this schema, `traits_schema_id: customer` would be set for that identity.
     - id: customer
       url: http://foo.bar.com/customer.schema.json
+    - id: person
+      url: http://foo.bar.com/person.schema.json
 ```
 
 Ory Kratos validates the Identity Traits against the corresponding schema on all
@@ -325,6 +324,41 @@ contains more information and examples.
 
 There are currently no other extensions supported for Identity Traits. Further
 fields will be added in future releases!
+
+## Best Practices for Updating Identity Schemas
+
+We strongly encourage everyone to specify unique (e.g. versioned) identifiers
+for every identity schema defined. This allows you to gradually update your
+identity schema without affecting existing identities. Assume you just defined
+your first Identity Schema:
+
+```yaml
+identity:
+  default_schema_id: user_v0
+  schemas:
+    - id: user_v0
+      url: file://path/to/user_v0.json
+```
+
+A few weeks later you might notice that you want some additional fields, or want
+to break compatibility with your current schema. Just add another version to the
+schema and change the `default_schema_id`:
+
+```yaml
+identity:
+  default_schema_id: user_v1
+  schemas:
+    - id: user_v0
+      url: file://path/to/user_v0.json
+    - id: user_v1
+      url: file://path/to/user_v1.json
+```
+
+All existing identities will continue to work as expected, having their identity
+schema ID be `user_v0`. All new identities will user `user_v1`! If you are ready
+to do a migration, you can list all identities in your system with `user_v0` as
+the schema, and update them to `user_v1` with the required data transformations
+using the REST APIs!
 
 ### Sanitize Usernames/Traits
 

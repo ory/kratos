@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/ory/kratos/internal/testhelpers"
+
 	"github.com/ory/kratos/corpx"
 
 	"github.com/bxcodec/faker/v3"
@@ -29,7 +31,7 @@ func TestSessionDestroyer(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	conf.MustSet(config.ViperKeyPublicBaseURL, "http://localhost/")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/stub.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/stub.schema.json")
 
 	h := hook.NewSessionDestroyer(reg)
 

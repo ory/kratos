@@ -109,7 +109,6 @@ func TestViperProvider(t *testing.T) {
 				"#/login",
 				"test.kratos.ory.sh/login",
 			} {
-
 				logger := logrusx.New("", "")
 				logger.Logger.ExitFunc = func(code int) { panic("") }
 				hook := new(test.Hook)
@@ -151,9 +150,12 @@ func TestViperProvider(t *testing.T) {
 				configx.WithConfigFiles("stub/.kratos.mock.identities.yaml"),
 				configx.SkipValidation())
 
-			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", c.DefaultIdentityTraitsSchemaURL().String())
+			ds, err := c.DefaultIdentityTraitsSchemaURL()
+			require.NoError(t, err)
+			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", ds.String())
 
-			ss := c.IdentityTraitsSchemas()
+			ss, err := c.IdentityTraitsSchemas()
+			require.NoError(t, err)
 			assert.Equal(t, 2, len(ss))
 
 			assert.Contains(t, ss, config.Schema{
@@ -868,8 +870,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 	files := []string{"stub/.identity.test.json", "stub/.identity.other.json"}
 
 	type identity struct {
-		DefaultSchemaUrl string   `json:"default_schema_url"`
-		Schemas          []string `json:"schemas"`
+		Schemas []map[string]string `json:"schemas"`
 	}
 
 	type configFile struct {
@@ -895,8 +896,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 			},
 			DSN: "memory",
 			Identity: &identity{
-				DefaultSchemaUrl: "base64://" + base64.StdEncoding.EncodeToString(identityTest),
-				Schemas:          []string{},
+				Schemas: []map[string]string{{"id": "default", "url": "base64://" + base64.StdEncoding.EncodeToString(identityTest)}},
 			},
 		}
 	}
@@ -994,7 +994,7 @@ func TestIdentitySchemaValidation(t *testing.T) {
 
 				_, hook, tmpConfig, i, c := testWatch(t, ctx, &cobra.Command{}, i)
 				// Change the identity config to an invalid file
-				i.Identity.DefaultSchemaUrl = invalidIdentity.Identity.DefaultSchemaUrl
+				i.Identity.Schemas = invalidIdentity.Identity.Schemas
 
 				t.Cleanup(func() {
 					cancel()
