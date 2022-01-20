@@ -6,8 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/jsonschema/v3/httploader"
-	"github.com/ory/x/httpx"
 	"io"
 	"net/http"
 	"net/url"
@@ -16,6 +14,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/x/httpx"
 
 	"golang.org/x/net/publicsuffix"
 
