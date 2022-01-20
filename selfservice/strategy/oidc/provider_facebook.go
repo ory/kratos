@@ -3,9 +3,11 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/x/httpx"
 	"net/url"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/kratos/x"
 
@@ -39,14 +41,8 @@ func (g *ProviderFacebook) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	}
 
 	endpoint := p.Endpoint()
-
-	if endpoint.AuthURL == "" {
-		endpoint.AuthURL = "https://facebook.com/dialog/oauth"
-	}
-	if endpoint.TokenURL == "" {
-		endpoint.TokenURL = "https://graph.facebook.com/oauth/access_token"
-	}
-
+	endpoint.AuthURL = "https://facebook.com/dialog/oauth"
+	endpoint.TokenURL = "https://graph.facebook.com/oauth/access_token"
 	return g.oauth2ConfigFromEndpoint(ctx, endpoint), nil
 }
 
@@ -56,12 +52,12 @@ func (g *ProviderFacebook) Claims(ctx context.Context, exchange *oauth2.Token) (
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
-	client := g.reg.HTTPClient(ctx, httpx.ResilientClientDisallowInternalIPs(), httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
-
+	client := g.reg.HTTPClient(ctx, httpx.ResilientClientWithClient(o.Client(ctx, exchange)))
 	u, err := url.Parse("https://graph.facebook.com/me?fields=id,name,first_name,last_name,middle_name,email,picture,birthday,gender")
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
+
 	req, err := retryablehttp.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))

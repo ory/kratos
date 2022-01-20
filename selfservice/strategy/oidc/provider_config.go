@@ -109,6 +109,10 @@ func (c ConfigurationCollection) Provider(id string, reg dependencies) (Provider
 				return pn
 			}
 
+			// !!! WARNING !!!
+			//
+			// If you add a provider here, please also add a test to
+			// provider_private_net_test.go
 			switch p.Provider {
 			case addProviderName("generic"):
 				return NewProviderGenericOIDC(&p, reg), nil

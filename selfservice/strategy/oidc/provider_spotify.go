@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+
 	"golang.org/x/oauth2/spotify"
 
 	"github.com/pkg/errors"

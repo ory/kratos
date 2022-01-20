@@ -3,12 +3,13 @@ package oidc_test
 import (
 	"context"
 	"encoding/json"
+	"net/url"
+	"testing"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"net/url"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -72,10 +73,10 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	})
 
 	t.Run("case=does not allow calling issuers in the internal network", func(t *testing.T) {
-
+		t.Fatal("asdf")
 	})
 
 	t.Run("case=does not allow calling mappers in the internal network", func(t *testing.T) {
-
+		t.Fatal("asdf")
 	})
 }

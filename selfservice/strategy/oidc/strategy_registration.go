@@ -3,9 +3,10 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/fetcher"
 	"net/http"
 	"time"
+
+	"github.com/ory/x/fetcher"
 
 	"github.com/tidwall/sjson"
 
@@ -25,7 +26,6 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -191,7 +191,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return nil, s.handleError(w, r, a, provider.Config().ID, nil, err)
 	}
 
-	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+	i := identity.NewIdentity(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaID())
 
 	vm := jsonnet.MakeVM()
 	vm.ExtCode("claims", jsonClaims.String())
