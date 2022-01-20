@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/jsonschema/v3/httploader"
-	"github.com/ory/x/httpx"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/x/httpx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
