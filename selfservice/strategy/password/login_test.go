@@ -56,7 +56,7 @@ func TestCompleteLogin(t *testing.T) {
 	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
 	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
@@ -584,7 +584,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 
 		var check = func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)

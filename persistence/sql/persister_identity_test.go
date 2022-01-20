@@ -30,7 +30,7 @@ func TestPersister_CreateIdentityRacy(t *testing.T) {
 	for name, p := range createCleanDatabases(t) {
 		t.Run(fmt.Sprintf("db=%s", name), func(t *testing.T) {
 			var wg sync.WaitGroup
-			p.Config(context.Background()).MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+			testhelpers.SetDefaultIdentitySchema(p.Config(context.Background()), defaultSchema.RawURL)
 			_, ps := testhelpers.NewNetwork(t, ctx, p.Persister())
 
 			for i := 0; i < 10; i++ {

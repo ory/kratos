@@ -63,7 +63,15 @@ Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
 
 Cypress.Commands.add('setIdentitySchema', (schema: string) => {
   updateConfigFile((config) => {
-    config.identity.default_schema_url = schema
+    const id = gen.password()
+    config.identity.default_schema_id = id
+    config.identity.schemas = [
+      ...(config.identity.schemas || []),
+      {
+        id,
+        url: schema
+      }
+    ]
     return config
   })
 })

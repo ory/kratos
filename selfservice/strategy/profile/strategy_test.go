@@ -57,7 +57,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 
 func TestStrategyTraits(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
@@ -601,7 +601,7 @@ func TestStrategyTraits(t *testing.T) {
 
 func TestDisabledEndpoint(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, false)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 

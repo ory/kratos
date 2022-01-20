@@ -62,7 +62,7 @@ func newEmptyIdentity() *identity.Identity {
 func TestSettings(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/profile.schema.json")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 

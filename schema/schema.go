@@ -22,7 +22,7 @@ import (
 
 type Schemas []Schema
 type IdentityTraitsProvider interface {
-	IdentityTraitsSchemas(ctx context.Context) Schemas
+	IdentityTraitsSchemas(ctx context.Context) (Schemas, error)
 }
 
 func (s Schemas) GetByID(id string) (*Schema, error) {

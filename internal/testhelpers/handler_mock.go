@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal"
-
 	"github.com/bxcodec/faker/v3"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -124,8 +122,8 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 	}
 	sess.SetAuthenticatorAssuranceLevel()
 
-	if reg.Config(context.Background()).Source().String(config.ViperKeyDefaultIdentitySchemaURL) == internal.UnsetDefaultIdentitySchema {
-		reg.Config(context.Background()).MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
+	if _, err := reg.Config(context.Background()).DefaultIdentityTraitsSchemaURL(); err != nil {
+		SetDefaultIdentitySchema(reg.Config(context.Background()), "file://./stub/fake-session.schema.json")
 	}
 
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
