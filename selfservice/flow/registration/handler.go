@@ -113,7 +113,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		return nil, err
 	}
 
-	if err := SortNodes(f.UI.Nodes, ds.String()); err != nil {
+	if err := SortNodes(r.Context(), f.UI.Nodes, ds.String()); err != nil {
 		return nil, err
 	}
 

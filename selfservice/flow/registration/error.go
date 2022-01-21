@@ -104,7 +104,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := SortNodes(f.UI.Nodes, ds.String()); err != nil {
+	if err := SortNodes(r.Context(), f.UI.Nodes, ds.String()); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}
