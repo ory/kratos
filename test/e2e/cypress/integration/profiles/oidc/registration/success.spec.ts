@@ -1,6 +1,6 @@
-import {appPrefix, gen, website} from '../../../../helpers'
-import {routes as react} from '../../../../helpers/react'
-import {routes as express} from '../../../../helpers/express'
+import { appPrefix, gen, website } from '../../../../helpers'
+import { routes as react } from '../../../../helpers/react'
+import { routes as express } from '../../../../helpers/express'
 
 context('Social Sign Up Successes', () => {
   ;[
@@ -16,7 +16,7 @@ context('Social Sign Up Successes', () => {
       app: 'express' as 'express',
       profile: 'oidc'
     }
-  ].forEach(({registration, login, profile, app}) => {
+  ].forEach(({ registration, login, profile, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
@@ -32,7 +32,7 @@ context('Social Sign Up Successes', () => {
       })
 
       const shouldSession = (email) => (session) => {
-        const {identity} = session
+        const { identity } = session
         expect(identity.id).to.not.be.empty
         expect(identity.traits.website).to.equal(website)
         expect(identity.traits.email).to.equal(email)
@@ -41,7 +41,7 @@ context('Social Sign Up Successes', () => {
       it('should be able to sign up with incomplete data and finally be signed in', () => {
         const email = gen.email()
 
-        cy.registerOidc({email, expectSession: false, route: registration})
+        cy.registerOidc({ email, expectSession: false, route: registration })
 
         cy.get('#registration-password').should('not.exist')
         cy.get(appPrefix(app) + '[name="traits.email"]').should(
@@ -97,14 +97,14 @@ context('Social Sign Up Successes', () => {
       it('should be able to sign up with complete data', () => {
         const email = gen.email()
 
-        cy.registerOidc({email, website, route: registration})
+        cy.registerOidc({ email, website, route: registration })
         cy.getSession().should(shouldSession(email))
       })
 
       it('should be able to convert a sign up flow to a sign in flow', () => {
         const email = gen.email()
 
-        cy.registerOidc({email, website, route: registration})
+        cy.registerOidc({ email, website, route: registration })
         cy.logout()
         cy.noSession()
         cy.visit(registration)
