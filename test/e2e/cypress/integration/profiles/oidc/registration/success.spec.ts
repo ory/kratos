@@ -1,6 +1,6 @@
-import { APP_URL, appPrefix, gen, website } from '../../../../helpers'
-import { routes as react } from '../../../../helpers/react'
-import { routes as express } from '../../../../helpers/express'
+import {appPrefix, gen, website} from '../../../../helpers'
+import {routes as react} from '../../../../helpers/react'
+import {routes as express} from '../../../../helpers/express'
 
 context('Social Sign Up Successes', () => {
   ;[
@@ -16,7 +16,7 @@ context('Social Sign Up Successes', () => {
       app: 'express' as 'express',
       profile: 'oidc'
     }
-  ].forEach(({ registration, login, profile, app }) => {
+  ].forEach(({registration, login, profile, app}) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.useConfigProfile(profile)
@@ -32,10 +32,8 @@ context('Social Sign Up Successes', () => {
       })
 
       const shouldSession = (email) => (session) => {
-        const { identity } = session
+        const {identity} = session
         expect(identity.id).to.not.be.empty
-        expect(identity.schema_id).to.equal('default')
-        expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
         expect(identity.traits.website).to.equal(website)
         expect(identity.traits.email).to.equal(email)
       }
@@ -43,7 +41,7 @@ context('Social Sign Up Successes', () => {
       it('should be able to sign up with incomplete data and finally be signed in', () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, expectSession: false, route: registration })
+        cy.registerOidc({email, expectSession: false, route: registration})
 
         cy.get('#registration-password').should('not.exist')
         cy.get(appPrefix(app) + '[name="traits.email"]').should(
@@ -84,9 +82,11 @@ context('Social Sign Up Successes', () => {
         cy.get('[name="traits.consent"]').should('be.checked')
         cy.get('[name="traits.newsletter"]').should('be.checked')
 
-        cy.triggerOidc()
+        cy.triggerOidc(app)
 
-        cy.location('pathname').should('not.contain', '/consent')
+        cy.location('pathname').should((loc) => {
+          expect(loc).to.be.oneOf(['/welcome', '/'])
+        })
 
         cy.getSession().should((session) => {
           shouldSession(email)(session)
@@ -97,18 +97,18 @@ context('Social Sign Up Successes', () => {
       it('should be able to sign up with complete data', () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({email, website, route: registration})
         cy.getSession().should(shouldSession(email))
       })
 
       it('should be able to convert a sign up flow to a sign in flow', () => {
         const email = gen.email()
 
-        cy.registerOidc({ email, website, route: registration })
+        cy.registerOidc({email, website, route: registration})
         cy.logout()
         cy.noSession()
         cy.visit(registration)
-        cy.triggerOidc()
+        cy.triggerOidc(app)
 
         cy.location('pathname').should((path) => {
           expect(path).to.oneOf(['/', '/welcome'])
@@ -124,7 +124,7 @@ context('Social Sign Up Successes', () => {
 
         const email = gen.email()
         cy.visit(login)
-        cy.triggerOidc()
+        cy.triggerOidc(app)
 
         cy.get('#username').clear().type(email)
         cy.get('#remember').click()
@@ -139,7 +139,7 @@ context('Social Sign Up Successes', () => {
         )
         cy.get('[name="traits.website"]').type('http://s')
 
-        cy.triggerOidc()
+        cy.triggerOidc(app)
 
         cy.get('[data-testid="ui/message/4000001"]').should(
           'contain.text',
@@ -152,7 +152,7 @@ context('Social Sign Up Successes', () => {
           .should('have.value', 'http://s')
           .clear()
           .type(website)
-        cy.triggerOidc()
+        cy.triggerOidc(app)
 
         cy.location('pathname').should('not.contain', '/registration')
 
