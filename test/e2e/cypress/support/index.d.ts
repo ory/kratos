@@ -278,9 +278,10 @@ declare global {
       /**
        * Triggers a Social Sign In flow for the given provider
        *
+       * @param app
        * @param provider
        */
-      triggerOidc(provider?: string): Chainable<void>
+      triggerOidc(app: 'react' | 'express', provider?: string): Chainable<void>
 
       /**
        * Changes the config so that the recovery privileged lifespan is very long.
