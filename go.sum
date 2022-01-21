@@ -1567,8 +1567,8 @@ github.com/ory/instrumentedsql/opentracing v0.0.0-20210903114257-c8963b546c5c/go
 github.com/ory/jsonschema/v3 v3.0.1/go.mod h1:jgLHekkFk0uiGdEWGleC+tOm6JSSP8cbf17PnBuGXlw=
 github.com/ory/jsonschema/v3 v3.0.3/go.mod h1:JvXwbx7IxAkIAo7Qo5OSC1lea+w12DtYGV8h+MTAfnA=
 github.com/ory/jsonschema/v3 v3.0.4/go.mod h1:lC4vfZfOalFjz1P1bSHcXbCQXbLjrKvTfX83SmyU6BU=
-github.com/ory/jsonschema/v3 v3.0.5-0.20211222152031-b530fb44a010 h1:EAoq3pyp2tfTHJpfHTruF7mfGDtpiOiLgMTM/oG4dyA=
-github.com/ory/jsonschema/v3 v3.0.5-0.20211222152031-b530fb44a010/go.mod h1:BYoDlVglsc+iEG4x+dH3GGz850bOI5ZnokRF6xorA9w=
+github.com/ory/jsonschema/v3 v3.0.6 h1:G6H6Cy0+EbxSgIvfaylbkZphHSARH5hbVoLcQtHhbAA=
+github.com/ory/jsonschema/v3 v3.0.6/go.mod h1:kC/obPwscQ8BQus1OZl4Ezi0u5ITVpJyEtSAXgKJtLQ=
 github.com/ory/mail v2.3.1+incompatible h1:vHntHDHtQXamt2T+iwTTlCoBkDvILUeujE9Ocwe9md4=
 github.com/ory/mail v2.3.1+incompatible/go.mod h1:87D9/1gB6ewElQoN0lXJ0ayfqcj3cW3qCTXh+5E9mfU=
 github.com/ory/mail/v3 v3.0.0 h1:8LFMRj473vGahFD/ntiotWEd4S80FKYFtiZTDfOQ+sM=
