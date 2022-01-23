@@ -1144,15 +1144,21 @@ Spotify is now an option to log in via Kratos.
 
 ## Twitter
 
-To setup Twitter you first have to create an App in [Developer Portal](https://developer.twitter.com/). There are two ways
-to create an App as of now. Either by:
-1. [Creating a Project](https://developer.twitter.com/en/portal/projects/new)  and an Application in the project
+To setup Twitter you first have to create an App in
+[Developer Portal](https://developer.twitter.com/). There are two ways to create
+an App as of now. Either by:
+
+1. [Creating a Project](https://developer.twitter.com/en/portal/projects/new)
+   and an Application in the project
 2. [Creating a Standalone-App](https://developer.twitter.com/en/portal/apps/new)
 
-The quickest option is to create a [Standalone-App](https://developer.twitter.com/en/portal/apps/new). You'll get an `API Key` and `API Key Secret` as the last 
-step. Note them down as they will not be shown completely from then on and are required for configuration.
+The quickest option is to create a
+[Standalone-App](https://developer.twitter.com/en/portal/apps/new). You'll get
+an `API Key` and `API Key Secret` as the last step. Note them down as they will
+not be shown completely from then on and are required for configuration.
 
-Once you have the App created, enable OAuth 1.0a in Settings -> User authentication settings.
+Once you have the App created, enable OAuth 1.0a in Settings -> User
+authentication settings.
 
 Next set the `Callback URI / Redirect URL` to:
 
@@ -1180,17 +1186,19 @@ selfservice:
               - email
 ```
 
-:::note 
+:::note
 
-Twitter uses OAuth1 and does not support fine-grained scopes. However, user information
-endpoint does not provide email by default unless explicitly specified. We take this 
-detail into account and retrieve email optionally if specified in `scope` configuration. 
+Twitter uses OAuth1 and does not support fine-grained scopes. However, user
+information endpoint does not provide email by default unless explicitly
+specified. We take this detail into account and retrieve email optionally if
+specified in `scope` configuration.
 
-If `email` scope is not included in `scope` 
-configuration, the email address will not be retrieved and therefore not included in claims data.
+If `email` scope is not included in `scope` configuration, the email address
+will not be retrieved and therefore not included in claims data.
 
-Please check [developer documentation](https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/manage-account-settings/api-reference/get-account-verify_credentials#request-a-user-s-email-address) on how to enable retrieving email address of user for Applications.
-:::
+Please check
+[developer documentation](https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/manage-account-settings/api-reference/get-account-verify_credentials#request-a-user-s-email-address)
+on how to enable retrieving email address of user for Applications. :::
 
 ## LinkedIn
 
