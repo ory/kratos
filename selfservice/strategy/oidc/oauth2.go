@@ -4,10 +4,11 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/cipher"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/cipher"
 )
 
 type oAuth2Provider interface {

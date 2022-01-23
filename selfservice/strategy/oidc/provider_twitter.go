@@ -9,8 +9,9 @@ import (
 
 	"github.com/dghubble/oauth1"
 	"github.com/dghubble/oauth1/twitter"
-	"github.com/ory/herodot"
 	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 )
 
 var _ Provider = (*ProviderTwitter)(nil)

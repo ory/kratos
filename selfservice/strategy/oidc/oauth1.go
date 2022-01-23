@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dghubble/oauth1"
+
 	"github.com/ory/kratos/cipher"
 )
 
