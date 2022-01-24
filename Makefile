@@ -37,7 +37,7 @@ docs/cli:
 		go run ./cmd/clidoc/. .
 
 .bin/ory: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.0
+		bash <(curl https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin ory v0.1.14
 		touch -a -m .bin/ory
 
 node_modules: package.json Makefile

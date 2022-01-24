@@ -152,6 +152,7 @@ const (
 	ViperKeyWebAuthnRPID                                     = "selfservice.methods.webauthn.config.rp.id"
 	ViperKeyWebAuthnRPOrigin                                 = "selfservice.methods.webauthn.config.rp.origin"
 	ViperKeyWebAuthnRPIcon                                   = "selfservice.methods.webauthn.config.rp.issuer"
+	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyVersion                                          = "version"
 )
 
@@ -516,6 +517,10 @@ func (p *Config) DisableAPIFlowEnforcement() bool {
 		return true
 	}
 	return false
+}
+
+func (p *Config) ClientHTTPNoPrivateIPRanges() bool {
+	return p.p.Bool(ViperKeyClientHTTPNoPrivateIPRanges)
 }
 
 func (p *Config) SelfServiceFlowRegistrationEnabled() bool {

@@ -48,8 +48,10 @@ describe('Basic email profile with succeeding login flows', () => {
         })
       })
 
-      it('should sign in with case insensitive identifier', () => {
-        cy.get('input[name="password_identifier"]').type(email.toUpperCase())
+      it('should sign in with case insensitive identifier surrounded by whitespace', () => {
+        cy.get('input[name="password_identifier"]').type(
+          '  ' + email.toUpperCase() + '  '
+        )
         cy.get('input[name="password"]').type(password)
         cy.submitPasswordForm()
         cy.location('pathname').should('not.contain', '/login')

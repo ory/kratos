@@ -2,6 +2,7 @@ package template
 
 import (
 	"encoding/json"
+	"os"
 )
 
 type (
@@ -25,15 +26,15 @@ func (t *VerificationValid) EmailRecipient() (string, error) {
 }
 
 func (t *VerificationValid) EmailSubject() (string, error) {
-	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "verification/valid/email.subject.gotmpl", "verification/valid/email.subject*", t.m)
+	return LoadTextTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "verification/valid/email.subject.gotmpl", "verification/valid/email.subject*", t.m)
 }
 
 func (t *VerificationValid) EmailBody() (string, error) {
-	return LoadHTMLTemplate(t.c.CourierTemplatesRoot(), "verification/valid/email.body.gotmpl", "verification/valid/email.body*", t.m)
+	return LoadHTMLTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "verification/valid/email.body.gotmpl", "verification/valid/email.body*", t.m)
 }
 
 func (t *VerificationValid) EmailBodyPlaintext() (string, error) {
-	return LoadTextTemplate(t.c.CourierTemplatesRoot(), "verification/valid/email.body.plaintext.gotmpl", "verification/valid/email.body.plaintext*", t.m)
+	return LoadTextTemplate(os.DirFS(t.c.CourierTemplatesRoot()), "verification/valid/email.body.plaintext.gotmpl", "verification/valid/email.body.plaintext*", t.m)
 }
 
 func (t *VerificationValid) MarshalJSON() ([]byte, error) {
