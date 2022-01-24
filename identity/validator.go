@@ -11,7 +11,7 @@ import (
 
 type (
 	validatorDependencies interface {
-		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) (schema.Schemas, error)
 		config.Provider
 	}
 	Validator struct {
@@ -28,12 +28,17 @@ func NewValidator(d validatorDependencies) *Validator {
 }
 
 func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners ...schema.Extension) error {
-	runner, err := schema.NewExtensionRunner(runners...)
+	runner, err := schema.NewExtensionRunner(ctx, runners...)
 	if err != nil {
 		return err
 	}
 
-	s, err := v.d.IdentityTraitsSchemas(ctx).GetByID(i.SchemaID)
+	ss, err := v.d.IdentityTraitsSchemas(ctx)
+	if err != nil {
+		return err
+	}
+
+	s, err := ss.GetByID(i.SchemaID)
 	if err != nil {
 		return err
 	}
@@ -43,7 +48,7 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 		return err
 	}
 
-	return v.v.Validate(s.URL.String(), traits, schema.WithExtensionRunner(runner))
+	return v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner))
 }
 
 func (v *Validator) Validate(ctx context.Context, i *Identity) error {

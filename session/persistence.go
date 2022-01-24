@@ -61,7 +61,9 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	return func(t *testing.T) {
-		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		conf.MustSet(config.ViperKeyIdentitySchemas, config.Schemas{
+			{ID: "default", URL: "file://./stub/identity.schema.json"},
+		})
 
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.GetSession(ctx, x.NewUUID())

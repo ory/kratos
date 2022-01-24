@@ -15,6 +15,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/x/httpx"
+
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/duo-labs/webauthn/protocol"
@@ -126,7 +129,7 @@ const (
 	ViperKeySelfServiceVerificationRequestLifespan           = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo    = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceVerificationAfter                     = "selfservice.flows.verification.after"
-	ViperKeyDefaultIdentitySchemaURL                         = "identity.default_schema_url"
+	ViperKeyDefaultIdentitySchemaID                          = "identity.default_schema_id"
 	ViperKeyIdentitySchemas                                  = "identity.schemas"
 	ViperKeyHasherAlgorithm                                  = "hashers.algorithm"
 	ViperKeyHasherArgon2ConfigMemory                         = "hashers.argon2.memory"
@@ -261,7 +264,7 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 		}
 	}
 
-	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
+	return nil, errors.Errorf("unable to find identity schema with id: %s", id)
 }
 
 func MustNew(t *testing.T, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...configx.OptionModifier) *Config {
@@ -284,14 +287,14 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 			if c == nil {
 				panic(errors.New("the config provider did not initialise correctly in time"))
 			}
-			if err := c.validateIdentitySchemas(); err != nil {
+			if err := c.validateIdentitySchemas(ctx); err != nil {
 				l.WithError(err).
 					Errorf("The changed identity schema configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting the process.")
 			}
 		}),
 	}, opts...)
 
-	p, err := configx.New([]byte(embedx.ConfigSchema), opts...)
+	p, err := configx.New(ctx, []byte(embedx.ConfigSchema), opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +304,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 	c = &Config{l: l, p: p, stdOutOrErr: stdOutOrErr}
 
 	if !p.SkipValidation() {
-		if err := c.validateIdentitySchemas(); err != nil {
+		if err := c.validateIdentitySchemas(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -309,14 +312,14 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, opts ...
 	return c, nil
 }
 
-func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
+func (p *Config) getIdentitySchemaValidator(ctx context.Context) (*jsonschema.Schema, error) {
 	if p.identitySchema == nil {
 		c := jsonschema.NewCompiler()
 		err := embedx.AddSchemaResources(c, embedx.IdentityMeta)
 		if err != nil {
 			return nil, err
 		}
-		p.identitySchema, err = c.Compile(embedx.IdentityMeta.GetSchemaID())
+		p.identitySchema, err = c.Compile(ctx, embedx.IdentityMeta.GetSchemaID())
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -325,14 +328,31 @@ func (p *Config) getIdentitySchemaValidator() (*jsonschema.Schema, error) {
 	return p.identitySchema, nil
 }
 
-func (p *Config) validateIdentitySchemas() error {
-	j, err := p.getIdentitySchemaValidator()
+func (p *Config) validateIdentitySchemas(ctx context.Context) error {
+	opts := []httpx.ResilientOptions{
+		httpx.ResilientClientWithLogger(p.l),
+		httpx.ResilientClientWithMaxRetry(2),
+		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
+	}
+
+	if p.ClientHTTPNoPrivateIPRanges() {
+		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
+	}
+
+	ctx = context.WithValue(ctx, httploader.ContextKey, httpx.NewResilientClient(opts...))
+
+	j, err := p.getIdentitySchemaValidator(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, s := range p.IdentityTraitsSchemas() {
-		resource, err := jsonschema.LoadURL(s.URL)
+	ss, err := p.IdentityTraitsSchemas()
+	if err != nil {
+		return err
+	}
+
+	for _, s := range ss {
+		resource, err := jsonschema.LoadURL(ctx, s.URL)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -434,42 +454,46 @@ func (p *Config) listenOn(key string) string {
 	return configx.GetAddress(p.p.String("serve."+key+".host"), port)
 }
 
-func (p *Config) DefaultIdentityTraitsSchemaURL() *url.URL {
-	return p.ParseURIOrFail(ViperKeyDefaultIdentitySchemaURL)
+func (p *Config) DefaultIdentityTraitsSchemaURL() (*url.URL, error) {
+	ss, err := p.IdentityTraitsSchemas()
+	if err != nil {
+		return nil, err
+	}
+
+	search := p.p.String(ViperKeyDefaultIdentitySchemaID)
+	found, err := ss.FindSchemaByID(search)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.ParseURI(found.URL)
+}
+
+func (p *Config) DefaultIdentityTraitsSchemaID() string {
+	return p.p.String(ViperKeyDefaultIdentitySchemaID)
 }
 
 func (p *Config) TOTPIssuer() string {
 	return p.Source().StringF(ViperKeyTOTPIssuer, p.SelfPublicURL().Hostname())
 }
 
-func (p *Config) IdentityTraitsSchemas() Schemas {
-	ds := Schema{
-		ID:  DefaultIdentityTraitsSchemaID,
-		URL: p.DefaultIdentityTraitsSchemaURL().String(),
-	}
-
-	if !p.p.Exists(ViperKeyIdentitySchemas) {
-		return Schemas{ds}
-	}
-
+func (p *Config) IdentityTraitsSchemas() (Schemas, error) {
 	var ss Schemas
 	out, err := p.p.Marshal(kjson.Parser())
 	if err != nil {
-		p.l.WithError(err).Fatalf("Unable to dencode values from %s.", ViperKeyIdentitySchemas)
-		return Schemas{ds}
+		return ss, nil
 	}
 
 	config := gjson.GetBytes(out, ViperKeyIdentitySchemas).Raw
 	if len(config) == 0 {
-		return Schemas{ds}
+		return ss, nil
 	}
 
 	if err := json.NewDecoder(bytes.NewBufferString(config)).Decode(&ss); err != nil {
-		p.l.WithError(err).Fatalf("Unable to encode values from %s.", ViperKeyIdentitySchemas)
-		return Schemas{ds}
+		return ss, nil
 	}
 
-	return append(ss, ds)
+	return ss, nil
 }
 
 func (p *Config) AdminListenOn() string {
@@ -835,26 +859,46 @@ func splitUrlAndFragment(s string) (string, string) {
 }
 
 func (p *Config) ParseAbsoluteOrRelativeURIOrFail(key string) *url.URL {
-	u, frag := splitUrlAndFragment(p.p.String(key))
-	parsed, err := url.ParseRequestURI(u)
+	parsed, err := p.ParseAbsoluteOrRelativeURI(p.p.String(key))
 	if err != nil {
 		p.l.WithError(errors.WithStack(err)).
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
-	}
-
-	if frag != "" {
-		parsed.Fragment = frag
 	}
 	return parsed
 }
 
 func (p *Config) ParseURIOrFail(key string) *url.URL {
-	parsed := p.ParseAbsoluteOrRelativeURIOrFail(key)
-	if parsed.Scheme == "" {
+	parsed, err := p.ParseURI(p.p.String(key))
+	if err != nil {
 		p.l.WithField("reason", "expected scheme to be set").
 			Fatalf("Configuration value from key %s is not a valid URL: %s", key, p.p.String(key))
 	}
 	return parsed
+}
+
+func (p *Config) ParseAbsoluteOrRelativeURI(rawUrl string) (*url.URL, error) {
+	u, frag := splitUrlAndFragment(rawUrl)
+	parsed, err := url.ParseRequestURI(u)
+	if err != nil {
+		return nil, errors.Wrapf(err, "configuration value not a valid URL: %s", rawUrl)
+	}
+
+	if frag != "" {
+		parsed.Fragment = frag
+	}
+
+	return parsed, nil
+}
+
+func (p *Config) ParseURI(rawUrl string) (*url.URL, error) {
+	parsed, err := p.ParseAbsoluteOrRelativeURI(rawUrl)
+	if err != nil {
+		return nil, err
+	}
+	if parsed.Scheme == "" {
+		return nil, errors.Errorf("configuration value is not a valid URL: %s", rawUrl)
+	}
+	return parsed, nil
 }
 
 func (p *Config) Tracing() *tracing.Config {

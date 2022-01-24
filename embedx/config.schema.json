@@ -1778,20 +1778,15 @@
     "identity": {
       "type": "object",
       "properties": {
-        "default_schema_url": {
-          "title": "JSON Schema URL for default identity traits",
-          "description": "URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string. Will have ID: \"default\"",
+        "default_schema_id": {
+          "title": "The default Identity Schema",
+          "description": "This Identity Schema will be used as the default for self-service flows. Its ID needs to exist in the \"schemas\" list.",
           "type": "string",
-          "format": "uri",
-          "examples": [
-            "file://path/to/identity.traits.schema.json",
-            "https://foo.bar.com/path/to/identity.traits.schema.json",
-            "base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9"
-          ]
+          "default": "default"
         },
         "schemas": {
           "type": "array",
-          "title": "Additional JSON Schemas for Identity Traits",
+          "title": "All JSON Schemas for Identity Traits",
           "examples": [
             [
               {
@@ -1808,6 +1803,7 @@
               }
             ]
           ],
+          "minItems": 1,
           "items": {
             "type": "object",
             "properties": {
@@ -1833,21 +1829,12 @@
             "required": [
               "id",
               "url"
-            ],
-            "not": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "const": "default"
-                }
-              },
-              "additionalProperties": true
-            }
+            ]
           }
         }
       },
       "required": [
-        "default_schema_url"
+        "schemas"
       ],
       "additionalProperties": false
     },

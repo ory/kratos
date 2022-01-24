@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ory/x/httpx"
+
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/golang/gddo/httputil"
@@ -136,5 +138,5 @@ func AcceptsJSON(r *http.Request) bool {
 }
 
 type HTTPClientProvider interface {
-	HTTPClient(ctx context.Context) *retryablehttp.Client
+	HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client
 }

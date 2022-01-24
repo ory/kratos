@@ -17,6 +17,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/corp"
+	"github.com/ory/kratos/driver"
+	"github.com/ory/x/dbal"
+
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/x/tlsx"
@@ -33,6 +37,13 @@ import (
 )
 
 type ConfigOptions map[string]interface{}
+
+func init() {
+	corp.SetContextualizer(new(corp.ContextNoOp))
+	dbal.RegisterDriver(func() dbal.Driver {
+		return driver.NewRegistryDefault()
+	})
+}
 
 func StartE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptions ConfigOptions) (publicPort, adminPort int) {
 	return startE2EServerOnly(t, configFile, isTLS, configOptions, 0)

@@ -684,10 +684,11 @@ func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
 	return m.pmm
 }
 
-func (m *RegistryDefault) HTTPClient(ctx context.Context) *retryablehttp.Client {
-	opts := []httpx.ResilientOptions{
+func (m *RegistryDefault) HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
+	opts = append(opts,
 		httpx.ResilientClientWithLogger(m.Logger()),
 		httpx.ResilientClientWithMaxRetry(2),
+
 		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
 	}
 
@@ -698,7 +699,6 @@ func (m *RegistryDefault) HTTPClient(ctx context.Context) *retryablehttp.Client 
 
 	if m.Config(ctx).ClientHTTPNoPrivateIPRanges() {
 		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
-
 	}
 	return httpx.NewResilientClient(opts...)
 }

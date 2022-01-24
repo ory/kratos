@@ -54,7 +54,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
-	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/settings.schema.json")
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
 	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	t.Run("case=device unlinking is available when identity has totp", func(t *testing.T) {

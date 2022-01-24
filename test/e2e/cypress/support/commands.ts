@@ -31,7 +31,7 @@ const mergeFields = (form, fields) => {
 const updateConfigFile = (cb: (arg: any) => any) => {
   cy.readFile(configFile).then((contents) => {
     cy.writeFile(configFile, YAML.stringify(cb(YAML.parse(contents))))
-    cy.wait(200)
+    cy.wait(500)
   })
 }
 
@@ -40,7 +40,7 @@ Cypress.Commands.add('useConfigProfile', (profile: string) => {
   cy.readFile(`kratos.${profile}.yml`).then((contents) =>
     cy.writeFile(configFile, contents)
   )
-  cy.wait(200)
+  cy.wait(500)
 })
 
 Cypress.Commands.add('proxy', (app: string) => {
@@ -50,8 +50,7 @@ Cypress.Commands.add('proxy', (app: string) => {
   cy.wait(200)
   cy.visit(APP_URL + '/')
   cy.get(`[data-testid="app-${app}"]`).should('exist')
-  cy.clearAllCookies()
-  cy.visit(APP_URL + '/')
+  cy.wait(500)
 })
 
 Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
@@ -63,7 +62,22 @@ Cypress.Commands.add('shortPrivilegedSessionTime', ({} = {}) => {
 
 Cypress.Commands.add('setIdentitySchema', (schema: string) => {
   updateConfigFile((config) => {
-    config.identity.default_schema_url = schema
+    const id = gen.password()
+    config.identity.default_schema_id = id
+    config.identity.schemas = [
+      ...(config.identity.schemas || []),
+      {
+        id,
+        url: schema
+      }
+    ]
+    return config
+  })
+})
+
+Cypress.Commands.add('setDefaultIdentitySchema', (id: string) => {
+  updateConfigFile((config) => {
+    config.identity.default_schema_id = id
     return config
   })
 })
@@ -889,6 +903,20 @@ Cypress.Commands.add(
   }
 )
 
-Cypress.Commands.add('triggerOidc', (provider: string = 'hydra') => {
-  cy.get('[name="provider"][value="' + provider + '"]').click()
-})
+Cypress.Commands.add(
+  'triggerOidc',
+  (app: 'react' | 'express', provider: string = 'hydra') => {
+    let initial, didHaveSearch
+    cy.location().then((loc) => {
+      didHaveSearch = loc.search.length > 0
+      initial = loc.pathname + loc.search
+    })
+    cy.get('[name="provider"][value="' + provider + '"]').click()
+    cy.location().then((loc) => {
+      if (app === 'express' || didHaveSearch) {
+        return
+      }
+      expect(loc.pathname + loc.search).not.to.eql(initial)
+    })
+  }
+)

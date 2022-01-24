@@ -4,7 +4,7 @@ set -euxo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
-make .bin/hydra
+#make .bin/hydra
 make .bin/yq
 make .bin/modd
 
@@ -204,7 +204,7 @@ run() {
   ! nc -zv localhost 4433
 
   ls -la .
-  for profile in email mobile oidc recovery verification mfa spa; do
+  for profile in email mobile oidc recovery verification mfa spa network; do
     yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.${profile}.yml
     cp test/e2e/kratos.email.yml test/e2e/kratos.generated.yml
   done

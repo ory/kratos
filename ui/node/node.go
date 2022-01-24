@@ -2,6 +2,7 @@ package node
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -221,14 +222,14 @@ func SortUpdateOrder(f func([]string) []string) func(*sortOptions) {
 	}
 }
 
-func (n Nodes) SortBySchema(opts ...SortOption) error {
+func (n Nodes) SortBySchema(ctx context.Context, opts ...SortOption) error {
 	var o sortOptions
 	for _, f := range opts {
 		f(&o)
 	}
 
 	if o.schemaRef != "" {
-		schemaKeys, err := schema.GetKeysInOrder(o.schemaRef)
+		schemaKeys, err := schema.GetKeysInOrder(ctx, o.schemaRef)
 		if err != nil {
 			return err
 		}
