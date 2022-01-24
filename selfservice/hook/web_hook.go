@@ -273,8 +273,6 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		body = bytes.NewReader(make([]byte, 0))
 	}
 
-	httpClient := e.r.HTTPClient(ctx)
-
 	if err = doHttpCall(ctx, conf.Method, conf.URL, conf.Auth, body, httpClient); err != nil {
 		return fmt.Errorf("failed to call web hook %w", err)
 	}
