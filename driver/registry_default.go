@@ -690,6 +690,12 @@ func (m *RegistryDefault) HTTPClient(ctx context.Context) *retryablehttp.Client 
 		httpx.ResilientClientWithMaxRetry(2),
 		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
 	}
+
+	tracer := m.Tracer(ctx)
+	if tracer.IsLoaded() {
+		opts = append(opts, httpx.ResilientClientWithTracer(tracer.Tracer()))
+	}
+
 	if m.Config(ctx).ClientHTTPNoPrivateIPRanges() {
 		opts = append(opts, httpx.ResilientClientDisallowInternalIPs())
 
