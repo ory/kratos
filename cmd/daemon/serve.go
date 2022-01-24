@@ -95,7 +95,6 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	if tracer := r.Tracer(ctx); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
-
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterPublic()
