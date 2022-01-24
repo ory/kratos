@@ -1,0 +1,10 @@
+{{define "en_US"}}
+{{ $l := cat "lang=" .lang }}
+{{ nospace $l }}
+{{end}}
+
+{{define "base"}}
+{{- if eq .lang "en_US" -}}
+{{ template "en_US" . }}
+{{- end -}}
+{{end}}

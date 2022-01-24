@@ -3,6 +3,7 @@ package template
 import (
 	"bytes"
 	"embed"
+	"github.com/ory/x/fetcher"
 	htemplate "html/template"
 	"io"
 	"io/fs"
@@ -23,12 +24,31 @@ type Template interface {
 	Execute(wr io.Writer, data interface{}) error
 }
 
-func loadBuiltInTemplate(filesytem fs.FS, name string, html bool) (Template, error) {
+type options struct {
+	root      string
+	remoteURL string
+}
+
+type LoadTemplateOption func(*options)
+
+func WithRemoteResource(url string) LoadTemplateOption {
+	return func(o *options) {
+		o.remoteURL = url
+	}
+}
+
+func WithRemoteResourceRoot(root string) LoadTemplateOption {
+	return func(o *options) {
+		o.root = root
+	}
+}
+
+func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, error) {
 	if t, found := cache.Get(name); found {
 		return t.(Template), nil
 	}
 
-	file, err := filesytem.Open(name)
+	file, err := filesystem.Open(name)
 	if err != nil {
 		// try to fallback to bundled templates
 		var fallbackErr error
@@ -63,6 +83,32 @@ func loadBuiltInTemplate(filesytem fs.FS, name string, html bool) (Template, err
 
 	_ = cache.Add(name, tpl)
 	return tpl, nil
+}
+
+func loadRemoteTemplate(url string, name string, html bool, root string) (Template, error) {
+	if t, found := cache.Get(name); found {
+		return t.(Template), nil
+	}
+
+	f := fetcher.NewFetcher()
+	bb, err := f.Fetch(url)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	var t Template
+	if html {
+		t, err = htemplate.New(root).Funcs(sprig.HtmlFuncMap()).Parse(bb.String())
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	} else {
+		t, err = template.New(root).Funcs(sprig.TxtFuncMap()).Parse(bb.String())
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+	return t, nil
 }
 
 func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, error) {
@@ -106,9 +152,17 @@ func loadTemplate(filesystem fs.FS, name, pattern string, html bool) (Template, 
 	return tpl, nil
 }
 
-func LoadTextTemplate(filesystem fs.FS, name, pattern string, model interface{}) (string, error) {
-	t, err := loadTemplate(filesystem, name, pattern, false)
+func LoadTextTemplate(filesystem fs.FS, name, pattern string, model interface{}, remoteURL, remoteTemplateRoot string) (string, error) {
+	var t Template
+	var err error
+	if remoteURL != "" {
+		t, err = loadRemoteTemplate(remoteURL, name, false, remoteTemplateRoot)
+		if err != nil {
+			return "", err
+		}
+	}
 
+	t, err = loadTemplate(filesystem, name, pattern, false)
 	if err != nil {
 		return "", err
 	}
@@ -120,11 +174,19 @@ func LoadTextTemplate(filesystem fs.FS, name, pattern string, model interface{})
 	return b.String(), nil
 }
 
-func LoadHTMLTemplate(filesystem fs.FS, name, pattern string, model interface{}) (string, error) {
-	t, err := loadTemplate(filesystem, name, pattern, true)
-
-	if err != nil {
-		return "", err
+func LoadHTMLTemplate(filesystem fs.FS, name, pattern string, model interface{}, remoteURL, remoteTemplateRoot string) (string, error) {
+	var t Template
+	var err error
+	if remoteURL != "" {
+		t, err = loadRemoteTemplate(remoteURL, name, true, remoteTemplateRoot)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		t, err = loadTemplate(filesystem, name, pattern, true)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	var b bytes.Buffer

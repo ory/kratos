@@ -14,13 +14,13 @@ import (
 
 func TestLoadTextTemplate(t *testing.T) {
 	var executeTextTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		tp, err := LoadTextTemplate(os.DirFS(dir), name, pattern, model)
+		tp, err := LoadTextTemplate(os.DirFS(dir), name, pattern, model, "", "")
 		require.NoError(t, err)
 		return tp
 	}
 
 	var executeHTMLTemplate = func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		tp, err := LoadHTMLTemplate(os.DirFS(dir), name, pattern, model)
+		tp, err := LoadHTMLTemplate(os.DirFS(dir), name, pattern, model, "", "")
 		require.NoError(t, err)
 		return tp
 	}
@@ -60,5 +60,25 @@ func TestLoadTextTemplate(t *testing.T) {
 
 		require.NoError(t, os.RemoveAll(fp))
 		assert.Contains(t, executeTextTemplate(t, dir, name, "", nil), "cached stub body")
+	})
+
+	t.Run("method=remote resource", func(t *testing.T) {
+		t.Run("case=base64 encoded data", func(t *testing.T) {
+
+		})
+
+		t.Run("case=file resource", func(t *testing.T) {
+			m := map[string]interface{}{"lang": "en_US"}
+			tp, err := LoadHTMLTemplate(nil, "", "", m,
+				"file://courier/builtin/templates/test_stub/email.body.html.nested.gotmpl",
+				"base",
+			)
+			require.NoError(t, err)
+			assert.Contains(t, tp, "lang=en_US")
+		})
+
+		t.Run("case=http resource", func(t *testing.T) {
+
+		})
 	})
 }

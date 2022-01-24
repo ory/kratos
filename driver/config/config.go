@@ -62,8 +62,10 @@ const (
 	ViperKeyDSN                                              = "dsn"
 	ViperKeyCourierSMTPURL                                   = "courier.smtp.connection_uri"
 	ViperKeyCourierTemplatesPath                             = "courier.template_override_path"
-	ViperKeyCourierTemplatesRecovery                         = "courier.templates.recovery"
-	ViperKeyCourierTemplatesVerification                     = "courier.templates.verification"
+	ViperKeyCourierTemplatesRecoveryInvalid                  = "courier.templates.recovery.invalid"
+	ViperKeyCourierTemplatesRecoveryValid                    = "courier.templates.recovery.valid"
+	ViperKeyCourierTemplatesVerificationInvalid              = "courier.templates.verification.invalid"
+	ViperKeyCourierTemplatesVerificationValid                = "courier.templates.verification.valid"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -216,22 +218,16 @@ type (
 		HTML      string `json:"html"`
 	}
 	CourierEmailTemplate struct {
-		Body    *CourierEmailBodyTemplate `json:"body"`
-		Subject string                    `json:"subject"`
+		TemplateRoot string                    `json:"template_root"`
+		Body         *CourierEmailBodyTemplate `json:"body"`
+		Subject      string                    `json:"subject"`
 	}
-	CourierFlowTemplate struct {
-		Invalid *CourierEmailTemplate `json:"invalid"`
-		Valid   *CourierEmailTemplate `json:"valid"`
-	}
-	CourierVerificationTemplate CourierFlowTemplate
-	CourierRecoveryTemplate     CourierFlowTemplate
-	Config                      struct {
+	Config struct {
 		l              *logrusx.Logger
 		p              *configx.Provider
 		identitySchema *jsonschema.Schema
 		stdOutOrErr    io.Writer
 	}
-
 	Provider interface {
 		Config(ctx context.Context) *Config
 	}
@@ -862,20 +858,52 @@ func (p *Config) CourierTemplatesRoot() string {
 	return p.p.StringF(ViperKeyCourierTemplatesPath, "courier/builtin/templates")
 }
 
-func (p *Config) CourierTemplatesVerification() (*CourierVerificationTemplate, error) {
-	var templates *CourierVerificationTemplate
-	if err := p.p.Unmarshal(ViperKeyCourierTemplatesVerification, &templates); err != nil {
-		return nil, err
+func (p *Config) courierTemplatesHelper(key string) *CourierEmailTemplate {
+	courierTemplate := &CourierEmailTemplate{
+		TemplateRoot: "",
+		Body: &CourierEmailBodyTemplate{
+			PlainText: "",
+			HTML:      "",
+		},
+		Subject: "",
 	}
-	return templates, nil
+
+	if !p.p.Exists(key) {
+		return courierTemplate
+	}
+
+	out, err := p.p.Marshal(kjson.Parser())
+	if err != nil {
+		p.l.WithError(err).Fatalf("Unable to dencode values from %s.", key)
+		return courierTemplate
+	}
+
+	config := gjson.GetBytes(out, key).Raw
+	if len(config) == 0 {
+		return courierTemplate
+	}
+
+	if err := json.NewDecoder(bytes.NewBufferString(config)).Decode(&courierTemplate); err != nil {
+		p.l.WithError(err).Fatalf("Unable to encode values from %s.", key)
+		return courierTemplate
+	}
+	return courierTemplate
 }
 
-func (p *Config) CourierTemplatesRecovery() (*CourierRecoveryTemplate, error) {
-	var templates *CourierRecoveryTemplate
-	if err := p.p.Unmarshal(ViperKeyCourierTemplatesRecovery, &templates); err != nil {
-		return nil, err
-	}
-	return templates, nil
+func (p *Config) CourierTemplatesVerificationInvalid() *CourierEmailTemplate {
+	return p.courierTemplatesHelper(ViperKeyCourierTemplatesVerificationInvalid)
+}
+
+func (p *Config) CourierTemplatesVerificationValid() *CourierEmailTemplate {
+	return p.courierTemplatesHelper(ViperKeyCourierTemplatesVerificationValid)
+}
+
+func (p *Config) CourierTemplatesRecoveryInvalid() *CourierEmailTemplate {
+	return p.courierTemplatesHelper(ViperKeyCourierTemplatesRecoveryInvalid)
+}
+
+func (p *Config) CourierTemplatesRecoveryValid() *CourierEmailTemplate {
+	return p.courierTemplatesHelper(ViperKeyCourierTemplatesRecoveryValid)
 }
 
 func (p *Config) CourierSMTPHeaders() map[string]string {

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/driver/config"
 	"net/url"
 	"strconv"
 	"time"
@@ -27,6 +28,10 @@ type (
 		CourierSMTPFromName() string
 		CourierSMTPHeaders() map[string]string
 		CourierTemplatesRoot() string
+		CourierTemplatesVerificationInvalid() *config.CourierEmailTemplate
+		CourierTemplatesVerificationValid() *config.CourierEmailTemplate
+		CourierTemplatesRecoveryInvalid() *config.CourierEmailTemplate
+		CourierTemplatesRecoveryValid() *config.CourierEmailTemplate
 	}
 	SMTPDependencies interface {
 		PersistenceProvider
