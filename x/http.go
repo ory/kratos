@@ -1,12 +1,15 @@
 package x
 
 import (
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"testing"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/golang/gddo/httputil"
 
@@ -130,4 +133,8 @@ func AcceptsJSON(r *http.Request) bool {
 		"text/html",
 		"application/json",
 	}, "text/html") == "application/json"
+}
+
+type HTTPClientProvider interface {
+	HTTPClient(ctx context.Context) *retryablehttp.Client
 }

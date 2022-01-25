@@ -1,0 +1,3 @@
+#only-fixed: true
+ignore:
+  - vulnerability: CVE-2015-5237
