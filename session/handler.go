@@ -553,7 +553,6 @@ func (h *Handler) adminSessionRefresh(w http.ResponseWriter, r *http.Request, ps
 //       500: jsonError
 func (h *Handler) adminCurrentSessionRefresh(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
-	fmt.Printf("\n %+v \n", r.Cookies())
 	if err != nil {
 		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))

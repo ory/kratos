@@ -740,7 +740,6 @@ func TestHandlerRefreshCurrentSession(t *testing.T) {
 		var apiRes Session
 		err = json.NewDecoder(res.Body).Decode(&apiRes)
 		require.NoError(t, err)
-		fmt.Print(apiRes)
 
 		return apiRes
 	}
