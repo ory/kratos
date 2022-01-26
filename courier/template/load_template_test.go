@@ -1,6 +1,11 @@
 package template
 
 import (
+	"encoding/base64"
+	"github.com/julienschmidt/httprouter"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -64,20 +69,79 @@ func TestLoadTextTemplate(t *testing.T) {
 
 	t.Run("method=remote resource", func(t *testing.T) {
 		t.Run("case=base64 encoded data", func(t *testing.T) {
+			t.Run("html template", func(t *testing.T) {
+				m := map[string]interface{}{"lang": "en_US"}
+				f, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.html.nested.gotmpl")
+				require.NoError(t, err)
+				b64 := base64.StdEncoding.EncodeToString(f)
+				tp, err := LoadHTMLTemplate(nil, "", "", m, "base64://"+b64, "base")
+				require.NoError(t, err)
+				assert.Contains(t, tp, "lang=en_US")
+			})
+
+			t.Run("case=plaintext", func(t *testing.T) {
+				m := map[string]interface{}{"Body": "something"}
+				f, err := ioutil.ReadFile("courier/builtin/templates/test_stub/email.body.plaintext.gotmpl")
+				require.NoError(t, err)
+
+				b64 := base64.StdEncoding.EncodeToString(f)
+
+				tp, err := LoadTextTemplate(nil, "", "", m,
+					"base64://"+b64, "base")
+				require.NoError(t, err)
+				assert.Contains(t, tp, "stub email body something")
+			})
 
 		})
 
 		t.Run("case=file resource", func(t *testing.T) {
-			m := map[string]interface{}{"lang": "en_US"}
-			tp, err := LoadHTMLTemplate(nil, "", "", m,
-				"file://courier/builtin/templates/test_stub/email.body.html.nested.gotmpl",
-				"base",
-			)
-			require.NoError(t, err)
-			assert.Contains(t, tp, "lang=en_US")
+			t.Run("case=html template", func(t *testing.T) {
+				m := map[string]interface{}{"lang": "en_US"}
+				tp, err := LoadHTMLTemplate(nil, "", "", m,
+					"file://courier/builtin/templates/test_stub/email.body.html.nested.gotmpl",
+					"base",
+				)
+				require.NoError(t, err)
+				assert.Contains(t, tp, "lang=en_US")
+			})
+
+			t.Run("case=plaintext", func(t *testing.T) {
+				m := map[string]interface{}{"Body": "something"}
+				tp, err := LoadTextTemplate(nil, "", "", m,
+					"file://courier/builtin/templates/test_stub/email.body.plaintext.gotmpl",
+					"base")
+				require.NoError(t, err)
+				assert.Contains(t, tp, "stub email body something")
+			})
 		})
 
 		t.Run("case=http resource", func(t *testing.T) {
+			router := httprouter.New()
+			router.Handle("GET", "/html", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+				http.ServeFile(writer, request, "courier/builtin/templates/test_stub/email.body.html.nested.gotmpl")
+			})
+			router.Handle("GET", "/plaintext", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+				http.ServeFile(writer, request, "courier/builtin/templates/test_stub/email.body.plaintext.gotmpl")
+			})
+			ts := httptest.NewServer(router)
+			defer ts.Close()
+
+			t.Run("case=html template", func(t *testing.T) {
+				m := map[string]interface{}{"lang": "en_US"}
+				tp, err := LoadHTMLTemplate(nil, "", "", m,
+					ts.URL+"/html",
+					"base",
+				)
+				require.NoError(t, err)
+				assert.Contains(t, tp, "lang=en_US")
+			})
+
+			t.Run("case=plaintext", func(t *testing.T) {
+				m := map[string]interface{}{"Body": "something"}
+				tp, err := LoadTextTemplate(nil, "", "", m, ts.URL+"/plaintext", "base")
+				require.NoError(t, err)
+				assert.Contains(t, tp, "stub email body something")
+			})
 
 		})
 	})

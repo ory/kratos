@@ -160,11 +160,11 @@ func LoadTextTemplate(filesystem fs.FS, name, pattern string, model interface{},
 		if err != nil {
 			return "", err
 		}
-	}
-
-	t, err = loadTemplate(filesystem, name, pattern, false)
-	if err != nil {
-		return "", err
+	} else {
+		t, err = loadTemplate(filesystem, name, pattern, false)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	var b bytes.Buffer
